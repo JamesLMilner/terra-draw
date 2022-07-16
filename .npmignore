@@ -1,0 +1,4 @@
+example/
+.vscode
+coverage/
+node_modules/

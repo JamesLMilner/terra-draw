@@ -1,0 +1,45 @@
+{
+  "name": "terra-draw",
+  "version": "0.0.1",
+  "description": "Frictionless map drawing across mapping provider",
+  "scripts": {
+    "build": "microbundle",
+    "watch": "microbundle watch",
+    "test": "jest",
+    "test:coverage": "jest --coverage"
+  },
+  "type": "module",
+  "source": "src/terra-draw.ts",
+  "exports": {
+    "require": "./dist/terra-draw.cjs",
+    "default": "./dist/terra-draw.modern.js"
+  },
+  "main": "./dist/terra-draw.cjs",
+  "module": "./dist/terra-draw.module.js",
+  "unpkg": "./dist/terra-draw.umd.js",
+  "author": "James Milner",
+  "license": "MIT",
+  "repository": "JamesLMilner/terra-draw",
+  "dependencies": {},
+  "devDependencies": {
+    "@types/geojson": "^7946.0.8",
+    "@types/google.maps": "^3.49.2",
+    "@types/jest": "^28.1.5",
+    "@types/leaflet": "^1.7.11",
+    "@types/mapbox-gl": "^2.7.3",
+    "@types/rbush": "^3.0.0",
+    "@googlemaps/js-api-loader": "^1.14.3",
+    "leaflet": "^1.8.0",
+    "mapbox-gl": "^2.9.1",
+    "jest": "^28.1.2",
+    "serve": "^13.0.4",
+    "ts-jest": "^28.0.5",
+    "ts-loader": "^9.3.1",
+    "typescript": "^4.7.4",
+    "microbundle": "^0.15.0"
+  },
+  "jest": {
+    "preset": "ts-jest",
+    "testEnvironment": "node"
+  }
+}

@@ -78,7 +78,7 @@ describe("TerraDrawPointMode", () => {
       });
 
       expect(mockOnChange).toBeCalledTimes(1);
-      expect(mockOnChange).toBeCalledWith(expect.any(String), "create");
+      expect(mockOnChange).toBeCalledWith([expect.any(String)], "create");
     });
   });
 
@@ -108,6 +108,36 @@ describe("TerraDrawPointMode", () => {
 
       expect(() => {
         pointMode.cleanUp();
+      }).not.toThrowError();
+    });
+  });
+
+  describe("onDrag", () => {
+    it("does nothing", () => {
+      const pointMode = new TerraDrawPointMode();
+
+      expect(() => {
+        pointMode.onDrag();
+      }).not.toThrowError();
+    });
+  });
+
+  describe("onDragStart", () => {
+    it("does nothing", () => {
+      const pointMode = new TerraDrawPointMode();
+
+      expect(() => {
+        pointMode.onDragStart();
+      }).not.toThrowError();
+    });
+  });
+
+  describe("onDragEnd", () => {
+    it("does nothing", () => {
+      const pointMode = new TerraDrawPointMode();
+
+      expect(() => {
+        pointMode.onDragEnd();
       }).not.toThrowError();
     });
   });

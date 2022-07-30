@@ -10,6 +10,10 @@ import { haversineDistanceKilometers } from "../geometry/haversine-distance";
 import { GeoJSONStore } from "../store/store";
 import { getDefaultStyling } from "../util/styling";
 
+type TerraDrawCircleModeKeyEvents = {
+  cancel: KeyboardEvent["key"];
+};
+
 export class TerraDrawCircleMode implements TerraDrawMode {
   mode = "circle";
 
@@ -18,12 +22,19 @@ export class TerraDrawCircleMode implements TerraDrawMode {
   private center: [number, number];
   private clickCount: number = 0;
   private currentCircleId: string;
+  private keyEvents: TerraDrawCircleModeKeyEvents;
 
-  constructor(options?: { styling?: Partial<TerraDrawAdapterStyling> }) {
+  constructor(options?: {
+    styling?: Partial<TerraDrawAdapterStyling>;
+    keyEvents?: TerraDrawCircleModeKeyEvents;
+  }) {
     this.styling =
       options && options.styling
         ? { ...getDefaultStyling(), ...options.styling }
         : getDefaultStyling();
+
+    this.keyEvents =
+      options && options.keyEvents ? options.keyEvents : { cancel: "Escape" };
   }
 
   styling: TerraDrawAdapterStyling;
@@ -42,10 +53,15 @@ export class TerraDrawCircleMode implements TerraDrawMode {
         radiusKilometers: 0.00001,
       });
 
-      this.currentCircleId = this.store.create(startingCircle.geometry, {
-        mode: this.mode,
-      });
-
+      const [createdId] = this.store.create([
+        {
+          geometry: startingCircle.geometry,
+          properties: {
+            mode: this.mode,
+          },
+        },
+      ]);
+      this.currentCircleId = createdId;
       this.clickCount++;
     } else {
       // Finish drawing
@@ -66,17 +82,22 @@ export class TerraDrawCircleMode implements TerraDrawMode {
         radiusKilometers: distanceKm,
       });
 
-      this.store.updateGeometry(this.currentCircleId, updatedCircle.geometry);
+      this.store.updateGeometry([
+        { id: this.currentCircleId, geometry: updatedCircle.geometry },
+      ]);
     }
   }
   onKeyPress(event: TerraDrawKeyboardEvent) {
-    if (event.key === "Escape") {
+    if (event.key === this.keyEvents.cancel) {
       this.cleanUp();
     }
   }
+  onDragStart() {}
+  onDrag() {}
+  onDragEnd() {}
   cleanUp() {
     try {
-      this.store.delete(this.currentCircleId);
+      this.store.delete([this.currentCircleId]);
     } catch (error) {}
     this.center = undefined;
     this.currentCircleId = undefined;

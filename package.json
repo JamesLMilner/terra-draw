@@ -4,7 +4,7 @@
   "description": "Frictionless map drawing across mapping provider",
   "scripts": {
     "build": "microbundle",
-    "watch": "microbundle watch",
+    "watch": "microbundle --watch --format modern",
     "test": "jest",
     "test:coverage": "jest --coverage"
   },

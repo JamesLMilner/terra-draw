@@ -3,6 +3,8 @@ import {
   TerraDrawAdapter,
   TerraDrawModeRegisterConfig,
   TerraDrawAdapterStyling,
+  TerraDrawChanges,
+  TerraDrawMouseEvent,
 } from "../common";
 import { Feature, GeoJsonObject } from "geojson";
 
@@ -21,7 +23,7 @@ export class TerraDrawGoogleMapsAdapter implements TerraDrawAdapter {
         ? config.coordinatePrecision
         : 9;
 
-    this.project = (lng: number, lat: number) => {
+    this.project = (lng, lat) => {
       const bounds = this._map.getBounds();
       const northWest = new this._lib.LatLng(
         bounds.getNorthEast().lat(),
@@ -36,6 +38,26 @@ export class TerraDrawGoogleMapsAdapter implements TerraDrawAdapter {
         x: Math.floor((projected.x - projectedNorthWest.x) * scale),
         y: Math.floor((projected.y - projectedNorthWest.y) * scale),
       };
+    };
+
+    this.unproject = (point: { x: number; y: number }) => {
+      const topRight = this._map
+        .getProjection()
+        .fromLatLngToPoint(this._map.getBounds().getNorthEast());
+      const bottomLeft = this._map
+        .getProjection()
+        .fromLatLngToPoint(this._map.getBounds().getSouthWest());
+      const scale = Math.pow(2, this._map.getZoom());
+
+      const worldPoint = new google.maps.Point(
+        point.x / scale + bottomLeft.x,
+        point.y / scale + topRight.y
+      );
+      const { lng, lat } = this._map
+        .getProjection()
+        .fromPointToLatLng(worldPoint);
+
+      return { lng: lng(), lat: lat() };
     };
   }
 
@@ -55,8 +77,15 @@ export class TerraDrawGoogleMapsAdapter implements TerraDrawAdapter {
     }
   ) => void;
   private _onKeyUpListener: any;
+  private _onDragStartListener: (event: MouseEvent) => void;
+  private _onDragListener: (event: MouseEvent) => void;
+  private _onDragEndListener: (event: MouseEvent) => void;
   private _layers: boolean;
 
+  public unproject: (point: {
+    x: number;
+    y: number;
+  }) => { lng: number; lat: number };
   public project: TerraDrawModeRegisterConfig["project"];
 
   // https://stackoverflow.com/a/27905268/1363484
@@ -124,6 +153,71 @@ export class TerraDrawGoogleMapsAdapter implements TerraDrawAdapter {
     };
 
     this._map.getDiv().addEventListener("keyup", this._onKeyUpListener);
+
+    let dragState: "not-dragging" | "pre-dragging" | "dragging" =
+      "not-dragging";
+
+    this._onDragStartListener = (event) => {
+      dragState = "pre-dragging";
+    };
+
+    const container = this._map.getDiv();
+
+    container.addEventListener("mousedown", this._onDragStartListener);
+
+    this._onDragListener = (event) => {
+      const point = {
+        x: event.clientX - container.offsetLeft,
+        y: event.clientY - container.offsetTop,
+      } as L.Point;
+
+      const { lng, lat } = this.unproject(point);
+
+      const drawEvent: TerraDrawMouseEvent = {
+        lng: limitPrecision(lng, this._coordinatePrecision),
+        lat: limitPrecision(lat, this._coordinatePrecision),
+        containerX: event.clientX - container.offsetLeft,
+        containerY: event.clientY - container.offsetTop,
+      };
+
+      if (dragState === "pre-dragging") {
+        dragState = "dragging";
+        callbacks.onDragStart(drawEvent, (enabled) => {
+          this._map.setOptions({ draggable: false });
+        });
+      } else if (dragState === "dragging") {
+        callbacks.onDrag(drawEvent);
+      }
+    };
+
+    container.addEventListener("mousemove", this._onDragListener);
+
+    this._onDragEndListener = (event) => {
+      if (dragState === "dragging") {
+        const point = {
+          x: event.clientX - container.offsetLeft,
+          y: event.clientY - container.offsetTop,
+        } as L.Point;
+
+        const { lng, lat } = this.unproject(point);
+
+        callbacks.onDragEnd(
+          {
+            lng: limitPrecision(lng, this._coordinatePrecision),
+            lat: limitPrecision(lat, this._coordinatePrecision),
+            containerX: event.clientX - container.offsetLeft,
+            containerY: event.clientY - container.offsetTop,
+          },
+          (enabled) => {
+            this._map.setOptions({ draggable: enabled });
+          }
+        );
+      }
+
+      dragState = "not-dragging";
+    };
+
+    container.addEventListener("mouseup", this._onDragEndListener);
   }
 
   unregister() {
@@ -145,12 +239,91 @@ export class TerraDrawGoogleMapsAdapter implements TerraDrawAdapter {
   }
 
   render(
-    features: Feature[],
+    changes: TerraDrawChanges,
     styling: { [mode: string]: TerraDrawAdapterStyling }
   ) {
     if (this._layers) {
-      this._map.data.forEach((layer) => {
-        this._map.data.remove(layer);
+      changes.deletedIds.forEach((deletedId) => {
+        const featureToDelete = this._map.data.getFeatureById(deletedId);
+        this._map.data.remove(featureToDelete);
+      });
+
+      changes.updated.forEach((updatedFeature) => {
+        const featureToUpdate = this._map.data.getFeatureById(
+          updatedFeature.id
+        );
+
+        // Remove all keys
+        featureToUpdate.forEachProperty((property, name) => {
+          featureToUpdate.setProperty(name, undefined);
+        });
+
+        // Update all keys
+        Object.keys(updatedFeature.properties).forEach((property) => {
+          featureToUpdate.setProperty(
+            property,
+            updatedFeature.properties[property]
+          );
+        });
+
+        switch (updatedFeature.geometry.type) {
+          case "Point":
+            {
+              const coordinates = updatedFeature.geometry.coordinates;
+
+              featureToUpdate.setGeometry(
+                new google.maps.Data.Point(
+                  new google.maps.LatLng(coordinates[1], coordinates[0])
+                )
+              );
+            }
+            break;
+          case "LineString":
+            {
+              const coordinates = updatedFeature.geometry.coordinates;
+
+              const path = [];
+              for (let i = 0; i < coordinates.length; i++) {
+                const coordinate = coordinates[i];
+                const latLng = new google.maps.LatLng(
+                  coordinate[1],
+                  coordinate[0]
+                );
+                path.push(latLng);
+              }
+
+              featureToUpdate.setGeometry(
+                new google.maps.Data.LineString(path)
+              );
+            }
+            break;
+          case "Polygon":
+            {
+              const coordinates = updatedFeature.geometry.coordinates;
+
+              const paths = [];
+              for (let i = 0; i < coordinates.length; i++) {
+                const path = [];
+                for (let j = 0; j < coordinates[i].length; j++) {
+                  const latLng = new google.maps.LatLng(
+                    coordinates[i][j][1],
+                    coordinates[i][j][0]
+                  );
+                  path.push(latLng);
+                }
+                paths.push(path);
+              }
+
+              featureToUpdate.setGeometry(new google.maps.Data.Polygon(paths));
+            }
+
+            break;
+        }
+      });
+
+      // Create new features
+      changes.created.forEach((createdFeature) => {
+        this._map.data.addGeoJson(createdFeature);
       });
     } else {
       // Clicking on data geometries triggers
@@ -181,7 +354,7 @@ export class TerraDrawGoogleMapsAdapter implements TerraDrawAdapter {
 
     const featureCollection = {
       type: "FeatureCollection",
-      features,
+      features: [...changes.created],
     } as GeoJsonObject;
 
     this._map.data.addGeoJson(featureCollection);
@@ -191,18 +364,17 @@ export class TerraDrawGoogleMapsAdapter implements TerraDrawAdapter {
       const type = feature.getGeometry().getType();
       const selected = feature.getProperty("selected");
 
+      const selectionPoint = feature.getProperty("selectionPoint");
+
       switch (type) {
         case "Point":
           return {
             icon: {
-              path: this.circlePath(
-                styling[mode].pointWidth,
-                styling[mode].pointWidth,
-                styling[mode].pointWidth
-              ),
-              fillColor: selected
-                ? styling[mode].selectedColor
-                : styling[mode].pointColor,
+              path: this.circlePath(0, 0, styling[mode].pointWidth),
+              fillColor:
+                selected || selectionPoint
+                  ? styling[mode].selectedColor
+                  : styling[mode].pointColor,
               fillOpacity: 1,
               strokeWeight: 0,
               rotation: 0,
@@ -219,7 +391,9 @@ export class TerraDrawGoogleMapsAdapter implements TerraDrawAdapter {
           };
         case "Polygon":
           return {
-            strokeColor: styling[mode].polygonOutlineColor,
+            strokeColor: selected
+              ? styling[mode].selectedColor
+              : styling[mode].polygonOutlineColor,
             strokeWeight: styling[mode].polygonOutlineWidth,
             fillOpacity: styling[mode].polygonFillOpacity,
             fillColor: selected

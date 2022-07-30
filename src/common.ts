@@ -1,4 +1,8 @@
-import { StoreChangeHandler, GeoJSONStore } from "./store/store";
+import {
+  StoreChangeHandler,
+  GeoJSONStore,
+  GeoJSONStoreFeatures,
+} from "./store/store";
 import { Feature } from "geojson";
 
 export interface TerraDrawAdapterStyling {
@@ -12,6 +16,7 @@ export interface TerraDrawAdapterStyling {
   lineStringWidth: number;
   lineStringColor: string;
   selectedColor: string;
+  selectedPointColor: string;
 }
 
 export interface TerraDrawMouseEvent {
@@ -29,7 +34,7 @@ export interface TerraDrawModeRegisterConfig {
   store: GeoJSONStore;
   onChange: StoreChangeHandler;
   onSelect: (selectedId: string) => void;
-  onDeselect: () => void;
+  onDeselect: (deselectedId: string) => void;
   project: (lng: number, lat: number) => { x: number; y: number };
 }
 
@@ -40,6 +45,15 @@ export interface TerraDrawMode {
   onKeyPress: (event: TerraDrawKeyboardEvent) => void;
   onMouseMove: (event: TerraDrawMouseEvent) => void;
   onClick: (event: TerraDrawMouseEvent) => void;
+  onDragStart: (
+    event: TerraDrawMouseEvent,
+    setMapDraggability: (enabled: boolean) => void
+  ) => void;
+  onDrag: (event: TerraDrawMouseEvent) => void;
+  onDragEnd: (
+    event: TerraDrawMouseEvent,
+    setMapDraggability: (enabled: boolean) => void
+  ) => void;
   register: (config: TerraDrawModeRegisterConfig) => void;
 }
 
@@ -47,6 +61,22 @@ export interface TerraDrawCallbacks {
   onKeyPress: (event: TerraDrawKeyboardEvent) => void;
   onClick: (event: TerraDrawMouseEvent) => void;
   onMouseMove: (event: TerraDrawMouseEvent) => void;
+  onDragStart: (
+    event: TerraDrawMouseEvent,
+    setMapDraggability: (enabled: boolean) => void
+  ) => void;
+  onDrag: (event: TerraDrawMouseEvent) => void;
+  onDragEnd: (
+    event: TerraDrawMouseEvent,
+    setMapDraggability: (enabled: boolean) => void
+  ) => void;
+}
+
+export interface TerraDrawChanges {
+  created: GeoJSONStoreFeatures[];
+  updated: GeoJSONStoreFeatures[];
+  unchanged: GeoJSONStoreFeatures[];
+  deletedIds: string[];
 }
 
 export interface TerraDrawAdapter {
@@ -54,7 +84,8 @@ export interface TerraDrawAdapter {
   register(callbacks: TerraDrawCallbacks): void;
   unregister(): void;
   render(
-    features: Feature[],
+    changes: TerraDrawChanges,
+    // features: GeoJSONStoreFeatures[],
     styling: { [mode: string]: TerraDrawAdapterStyling }
   ): void;
 }

@@ -15,6 +15,7 @@ describe("TerraDrawLineStringMode", () => {
     it("constructs with options", () => {
       const lineStringMode = new TerraDrawLineStringMode({
         styling: { lineStringColor: "#ffffff" },
+        keyEvents: { cancel: "Backspace" },
       });
       expect(lineStringMode.styling).toStrictEqual({
         ...defaultStyles,
@@ -414,6 +415,36 @@ describe("TerraDrawLineStringMode", () => {
 
       // Removes the LineString that was being created
       expect(store.copyAll().length).toBe(0);
+    });
+  });
+
+  describe("onDrag", () => {
+    it("does nothing", () => {
+      const lineStringMode = new TerraDrawLineStringMode();
+
+      expect(() => {
+        lineStringMode.onDrag();
+      }).not.toThrowError();
+    });
+  });
+
+  describe("onDragStart", () => {
+    it("does nothing", () => {
+      const lineStringMode = new TerraDrawLineStringMode();
+
+      expect(() => {
+        lineStringMode.onDragStart();
+      }).not.toThrowError();
+    });
+  });
+
+  describe("onDragEnd", () => {
+    it("does nothing", () => {
+      const lineStringMode = new TerraDrawLineStringMode();
+
+      expect(() => {
+        lineStringMode.onDragEnd();
+      }).not.toThrowError();
     });
   });
 });

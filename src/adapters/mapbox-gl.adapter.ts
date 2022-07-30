@@ -3,10 +3,13 @@ import {
   TerraDrawAdapter,
   TerraDrawModeRegisterConfig,
   TerraDrawAdapterStyling,
+  TerraDrawChanges,
+  TerraDrawMouseEvent,
 } from "../common";
 import { Feature, LineString, Point, Polygon } from "geojson";
 import { limitPrecision } from "../geometry/limit-decimal-precision";
-import { CircleLayer, FillLayer, LineLayer } from "mapbox-gl";
+import mapboxgl, { CircleLayer, FillLayer, LineLayer } from "mapbox-gl";
+import { GeoJSONStoreFeatures, GeoJSONStoreGeometries } from "../store/store";
 
 export class TerraDrawMapboxGLAdapter implements TerraDrawAdapter {
   constructor(config: { map: mapboxgl.Map; coordinatePrecision: number }) {
@@ -30,6 +33,9 @@ export class TerraDrawMapboxGLAdapter implements TerraDrawAdapter {
   private _onClickListener: (
     event: mapboxgl.MapMouseEvent & mapboxgl.EventData
   ) => void;
+  private _onDragStartListener: (event: MouseEvent) => void;
+  private _onDragListener: (event: MouseEvent) => void;
+  private _onDragEndListener: (event: MouseEvent) => void;
   private _onKeyPressListener: (event: KeyboardEvent) => any;
   private _rendered: boolean = false;
 
@@ -147,7 +153,7 @@ export class TerraDrawMapboxGLAdapter implements TerraDrawAdapter {
     }
   }
 
-  private _addGeoJSONLayer<T extends Polygon | LineString | Point>(
+  private _addGeoJSONLayer<T extends GeoJSONStoreGeometries>(
     mode: string,
     featureType: Feature<T>["geometry"]["type"],
     features: Feature<T>[],
@@ -160,7 +166,7 @@ export class TerraDrawMapboxGLAdapter implements TerraDrawAdapter {
     this._addLayer(id, mode, featureType, styling);
   }
 
-  private _setGeoJSONLayerData<T extends Polygon | LineString | Point>(
+  private _setGeoJSONLayerData<T extends GeoJSONStoreGeometries>(
     mode: string,
     featureType: Feature<T>["geometry"]["type"],
     features: Feature<T>[]
@@ -173,8 +179,6 @@ export class TerraDrawMapboxGLAdapter implements TerraDrawAdapter {
   }
   register(callbacks: TerraDrawCallbacks) {
     this._onClickListener = (event) => {
-      event.preventDefault();
-
       callbacks.onClick({
         lng: limitPrecision(event.lngLat.lng, this._coordinatePrecision),
         lat: limitPrecision(event.lngLat.lat, this._coordinatePrecision),
@@ -187,8 +191,6 @@ export class TerraDrawMapboxGLAdapter implements TerraDrawAdapter {
     this._map.on("click", this._onClickListener);
 
     this._onMouseMoveListener = (event) => {
-      event.preventDefault();
-
       callbacks.onMouseMove({
         lng: limitPrecision(event.lngLat.lng, this._coordinatePrecision),
         lat: limitPrecision(event.lngLat.lat, this._coordinatePrecision),
@@ -200,13 +202,85 @@ export class TerraDrawMapboxGLAdapter implements TerraDrawAdapter {
     };
     this._map.on("mousemove", this._onMouseMoveListener);
 
+    let dragState: "not-dragging" | "pre-dragging" | "dragging" =
+      "not-dragging";
+
+    this._onDragStartListener = (event) => {
+      dragState = "pre-dragging";
+    };
+
+    const container = this._map.getContainer();
+
+    container.addEventListener("mousedown", this._onDragStartListener);
+
+    this._onDragListener = (event) => {
+      const { lng, lat } = this._map.unproject({
+        x: event.clientX - container.offsetLeft,
+        y: event.clientY - container.offsetTop,
+      } as any);
+
+      const drawEvent: TerraDrawMouseEvent = {
+        lng: limitPrecision(lng, this._coordinatePrecision),
+        lat: limitPrecision(lat, this._coordinatePrecision),
+        containerX: event.clientX - container.offsetLeft,
+        containerY: event.clientY - container.offsetTop,
+      };
+
+      if (dragState === "pre-dragging") {
+        dragState = "dragging";
+
+        callbacks.onDragStart(drawEvent, (enabled) => {
+          if (enabled) {
+            this._map.dragPan.enable();
+          } else {
+            this._map.dragPan.disable();
+          }
+        });
+      } else if (dragState === "dragging") {
+        callbacks.onDrag(drawEvent);
+      }
+    };
+
+    container.addEventListener("mousemove", this._onDragListener);
+
+    this._onDragEndListener = (event) => {
+      if (dragState === "dragging") {
+        const point = {
+          x: event.clientX - container.offsetLeft,
+          y: event.clientY - container.offsetTop,
+        } as mapboxgl.Point;
+
+        const { lng, lat } = this._map.unproject(point);
+
+        callbacks.onDragEnd(
+          {
+            lng: limitPrecision(lng, this._coordinatePrecision),
+            lat: limitPrecision(lat, this._coordinatePrecision),
+            containerX: event.clientX - container.offsetLeft,
+            containerY: event.clientY - container.offsetTop,
+          },
+          (enabled) => {
+            if (enabled) {
+              this._map.dragPan.enable();
+            } else {
+              this._map.dragPan.disable();
+            }
+          }
+        );
+      }
+
+      dragState = "not-dragging";
+    };
+
+    container.addEventListener("mouseup", this._onDragEndListener);
+
     // map has no keypress event, so we add one to the canvas itself
     this._onKeyPressListener = (event: KeyboardEvent) => {
       event.preventDefault();
 
       callbacks.onKeyPress({ key: event.key });
     };
-    this._map.getCanvas().addEventListener("keyup", this._onKeyPressListener);
+    container.addEventListener("keyup", this._onKeyPressListener);
   }
 
   unregister() {
@@ -224,15 +298,39 @@ export class TerraDrawMapboxGLAdapter implements TerraDrawAdapter {
         .getCanvas()
         .removeEventListener("keypress", this._onKeyPressListener);
     }
+
+    if (this._onDragStartListener) {
+      this._map
+        .getCanvas()
+        .removeEventListener("mousedown", this._onDragStartListener);
+    }
+
+    if (this._onDragListener) {
+      this._map
+        .getCanvas()
+        .removeEventListener("mousemove", this._onDragListener);
+    }
+
+    if (this._onDragEndListener) {
+      this._map
+        .getCanvas()
+        .removeEventListener("mouseup", this._onDragEndListener);
+    }
   }
 
   render(
-    features: (Feature<Point> | Feature<LineString> | Feature<Polygon>)[],
+    changes: TerraDrawChanges,
     styling: { [mode: string]: TerraDrawAdapterStyling }
   ) {
-    const getFeatureOfType = <T extends Point | LineString | Polygon>(
+    const features = [
+      ...changes.created,
+      ...changes.updated,
+      ...changes.unchanged,
+    ];
+
+    const getFeatureOfType = <T extends GeoJSONStoreGeometries>(
       type: T["type"],
-      features: (Feature<Polygon> | Feature<LineString> | Feature<Point>)[]
+      features: GeoJSONStoreFeatures[]
     ) => {
       return features.filter((f) => f.geometry.type === type) as Feature<T>[];
     };
@@ -246,7 +344,10 @@ export class TerraDrawMapboxGLAdapter implements TerraDrawAdapter {
         const points = getFeatureOfType<Point>("Point", modeFeatures);
 
         points.forEach((feature) => {
-          if (feature.properties.selected) {
+          if (
+            feature.properties.selected ||
+            feature.properties.selectionPoint
+          ) {
             feature.properties.selectedStyle = styles.selectedColor;
           } else {
             feature.properties.selectedStyle = styles.pointColor;

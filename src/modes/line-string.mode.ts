@@ -11,6 +11,9 @@ import { selfIntersects } from "../geometry/self-intersects";
 import { getPixelDistance } from "../geometry/get-pixel-distance";
 import { getDefaultStyling } from "../util/styling";
 
+type TerraDrawLineStringModeKeyEvents = {
+  cancel: KeyboardEvent["key"];
+};
 export class TerraDrawLineStringMode implements TerraDrawMode {
   public mode = "linestring";
 
@@ -21,11 +24,13 @@ export class TerraDrawLineStringMode implements TerraDrawMode {
   private currentCoordinate = 0;
   private currentId: string;
   private allowSelfIntersections;
+  private keyEvents: TerraDrawLineStringModeKeyEvents;
 
   constructor(options?: {
     allowSelfIntersections?: boolean;
     styling?: Partial<TerraDrawAdapterStyling>;
     pointerDistance?: number;
+    keyEvents?: TerraDrawLineStringModeKeyEvents;
   }) {
     this.styling =
       options && options.styling
@@ -38,6 +43,9 @@ export class TerraDrawLineStringMode implements TerraDrawMode {
       options && options.allowSelfIntersections !== undefined
         ? options.allowSelfIntersections
         : true;
+
+    this.keyEvents =
+      options && options.keyEvents ? options.keyEvents : { cancel: "Escape" };
   }
 
   styling: TerraDrawAdapterStyling;
@@ -60,38 +68,54 @@ export class TerraDrawLineStringMode implements TerraDrawMode {
     currentLineGeometry.coordinates.pop();
 
     // Update the 'live' point
-    this.store.updateGeometry(this.currentId, {
-      type: "LineString",
-      coordinates: [...currentLineGeometry.coordinates, [event.lng, event.lat]],
-    });
+    this.store.updateGeometry([
+      {
+        id: this.currentId,
+        geometry: {
+          type: "LineString",
+          coordinates: [
+            ...currentLineGeometry.coordinates,
+            [event.lng, event.lat],
+          ],
+        },
+      },
+    ]);
   }
 
   onClick(event: TerraDrawMouseEvent) {
     if (this.currentCoordinate === 0) {
-      this.currentId = this.store.create(
+      const [createdId] = this.store.create([
         {
-          type: "LineString",
-          coordinates: [
-            [event.lng, event.lat],
-            [event.lng, event.lat], // This is the 'live' point that changes on mouse move
-          ],
+          geometry: {
+            type: "LineString",
+            coordinates: [
+              [event.lng, event.lat],
+              [event.lng, event.lat], // This is the 'live' point that changes on mouse move
+            ],
+          },
+          properties: { mode: this.mode },
         },
-        { mode: this.mode }
-      );
+      ]);
+      this.currentId = createdId;
       this.currentCoordinate++;
     } else if (this.currentCoordinate === 1) {
       const currentLineGeometry = this.store.getGeometryCopy<LineString>(
         this.currentId
       );
 
-      this.store.updateGeometry(this.currentId, {
-        type: "LineString",
-        coordinates: [
-          currentLineGeometry.coordinates[0],
-          [event.lng, event.lat],
-          [event.lng, event.lat],
-        ],
-      });
+      this.store.updateGeometry([
+        {
+          id: this.currentId,
+          geometry: {
+            type: "LineString",
+            coordinates: [
+              currentLineGeometry.coordinates[0],
+              [event.lng, event.lat],
+              [event.lng, event.lat],
+            ],
+          },
+        },
+      ]);
 
       this.currentCoordinate++;
     } else {
@@ -113,10 +137,15 @@ export class TerraDrawLineStringMode implements TerraDrawMode {
       if (isClosingClick) {
         // Finish off the drawing
         currentLineGeometry.coordinates.pop();
-        this.store.updateGeometry(this.currentId, {
-          type: "LineString",
-          coordinates: [...currentLineGeometry.coordinates],
-        });
+        this.store.updateGeometry([
+          {
+            id: this.currentId,
+            geometry: {
+              type: "LineString",
+              coordinates: [...currentLineGeometry.coordinates],
+            },
+          },
+        ]);
 
         this.currentCoordinate = 0;
         this.currentId = undefined;
@@ -142,19 +171,24 @@ export class TerraDrawLineStringMode implements TerraDrawMode {
           }
         }
 
-        this.store.updateGeometry(this.currentId, newLineString);
+        this.store.updateGeometry([
+          { id: this.currentId, geometry: newLineString },
+        ]);
         this.currentCoordinate++;
       }
     }
   }
   onKeyPress(event: TerraDrawKeyboardEvent) {
-    if (event.key === "Escape") {
+    if (event.key === this.keyEvents.cancel) {
       this.cleanUp();
     }
   }
+  onDragStart() {}
+  onDrag() {}
+  onDragEnd() {}
   cleanUp() {
     try {
-      this.store.delete(this.currentId);
+      this.store.delete([this.currentId]);
     } catch (error) {}
 
     this.currentId = undefined;

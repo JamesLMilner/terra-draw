@@ -1,26 +1,164 @@
 import { GeoJSONStore } from "./store";
 
 describe("GeoJSONStore", () => {
+  describe("constructor", () => {
+    it("can take data", () => {
+      const store = new GeoJSONStore({
+        data: [
+          {
+            id: "e3ccd3b9-afb1-4f0b-91d8-22a768d5f284",
+            type: "Feature",
+            geometry: { type: "Point", coordinates: [0, 0] },
+            properties: {},
+          },
+        ],
+      });
+
+      expect(store.copyAll().length).toBe(1);
+    });
+
+    it("throws on data with non object feature", () => {
+      expect(() => {
+        const store = new GeoJSONStore({
+          data: [undefined],
+        });
+      }).toThrowError();
+    });
+
+    it("throws on data with no id", () => {
+      expect(() => {
+        const store = new GeoJSONStore({
+          data: [
+            {
+              id: undefined,
+            } as any,
+          ],
+        });
+      }).toThrowError();
+    });
+
+    it("throws on data with non string id", () => {
+      expect(() => {
+        const store = new GeoJSONStore({
+          data: [
+            {
+              id: 1,
+            } as any,
+          ],
+        });
+      }).toThrowError();
+    });
+
+    it("throws on data with non uuid4 id", () => {
+      expect(() => {
+        const store = new GeoJSONStore({
+          data: [
+            {
+              id: "1",
+            } as any,
+          ],
+        });
+      }).toThrowError();
+    });
+
+    it("throws on data with non uuid4 id", () => {
+      expect(() => {
+        const store = new GeoJSONStore({
+          data: [
+            {
+              id: "1",
+            } as any,
+          ],
+        });
+      }).toThrowError();
+    });
+
+    it("throws on data with no geometry", () => {
+      expect(() => {
+        const store = new GeoJSONStore({
+          data: [
+            {
+              id: "e3ccd3b9-afb1-4f0b-91d8-22a768d5f284",
+            } as any,
+          ],
+        });
+      }).toThrowError();
+    });
+
+    it("throws on data with no properties", () => {
+      expect(() => {
+        const store = new GeoJSONStore({
+          data: [
+            {
+              id: "e3ccd3b9-afb1-4f0b-91d8-22a768d5f284",
+              geometry: {},
+            } as any,
+          ],
+        });
+      }).toThrowError();
+    });
+
+    it("throws on data with non Point, LineString, Polygon geometry type", () => {
+      expect(() => {
+        const store = new GeoJSONStore({
+          data: [
+            {
+              id: "e3ccd3b9-afb1-4f0b-91d8-22a768d5f284",
+              geometry: {
+                type: "MultiLineString",
+              },
+              properties: {},
+            } as any,
+          ],
+        });
+      }).toThrowError();
+    });
+
+    it("throws on data with non Point, LineString, Polygon geometry type", () => {
+      expect(() => {
+        const store = new GeoJSONStore({
+          data: [
+            {
+              id: "e3ccd3b9-afb1-4f0b-91d8-22a768d5f284",
+              geometry: {
+                type: "Point",
+                coordinates: "[]",
+              },
+              properties: {},
+            } as any,
+          ],
+        });
+      }).toThrowError();
+    });
+  });
+
   describe("creates", () => {
     it("Point", () => {
       const store = new GeoJSONStore();
 
-      const id = store.create({ type: "Point", coordinates: [0, 0] });
+      const [id] = store.create([
+        { geometry: { type: "Point", coordinates: [0, 0] } },
+      ]);
 
       expect(typeof id).toBe("string");
+
       expect(id.length).toBe(36);
     });
 
     it("LineString", () => {
       const store = new GeoJSONStore();
 
-      const id = store.create({
-        type: "LineString",
-        coordinates: [
-          [0, 0],
-          [1, 1],
-        ],
-      });
+      const [id] = store.create([
+        {
+          geometry: {
+            type: "LineString",
+            coordinates: [
+              [0, 0],
+              [1, 1],
+            ],
+          },
+        },
+      ]);
 
       expect(typeof id).toBe("string");
       expect(id.length).toBe(36);
@@ -29,17 +167,21 @@ describe("GeoJSONStore", () => {
     it("Polygon", () => {
       const store = new GeoJSONStore();
 
-      const id = store.create({
-        type: "Polygon",
-        coordinates: [
-          [
-            [0, 0],
-            [1, 1],
-            [2, 2],
-            [0, 0],
-          ],
-        ],
-      });
+      const [id] = store.create([
+        {
+          geometry: {
+            type: "Polygon",
+            coordinates: [
+              [
+                [0, 0],
+                [1, 1],
+                [2, 2],
+                [0, 0],
+              ],
+            ],
+          },
+        },
+      ]);
 
       expect(typeof id).toBe("string");
       expect(id.length).toBe(36);
@@ -50,12 +192,14 @@ describe("GeoJSONStore", () => {
     it("removes geometry from the store", () => {
       const store = new GeoJSONStore();
 
-      const id = store.create({ type: "Point", coordinates: [0, 0] });
+      const ids = store.create([
+        { geometry: { type: "Point", coordinates: [0, 0] } },
+      ]);
 
-      store.delete(id);
+      store.delete(ids);
 
       expect(() => {
-        store.getGeometryCopy(id);
+        store.getGeometryCopy(ids[0]);
       }).toThrowError();
     });
 
@@ -63,7 +207,7 @@ describe("GeoJSONStore", () => {
       const store = new GeoJSONStore();
 
       expect(() => {
-        store.delete("non-existant-id");
+        store.delete(["non-existant-id"]);
       }).toThrowError();
     });
   });
@@ -72,9 +216,11 @@ describe("GeoJSONStore", () => {
     it("copy existing geometry", () => {
       const store = new GeoJSONStore();
 
-      const id = store.create({ type: "Point", coordinates: [0, 0] });
+      const ids = store.create([
+        { geometry: { type: "Point", coordinates: [0, 0] } },
+      ]);
 
-      expect(store.getGeometryCopy(id)).toStrictEqual({
+      expect(store.getGeometryCopy(ids[0])).toStrictEqual({
         type: "Point",
         coordinates: [0, 0],
       });
@@ -89,13 +235,42 @@ describe("GeoJSONStore", () => {
     });
   });
 
+  describe("getPropertiesCopy", () => {
+    it("copy existing properties", () => {
+      const store = new GeoJSONStore();
+
+      const ids = store.create([
+        {
+          geometry: { type: "Point", coordinates: [0, 0] },
+          properties: { mode: "test" },
+        },
+      ]);
+
+      expect(store.getPropertiesCopy(ids[0])).toStrictEqual({
+        mode: "test",
+      });
+    });
+
+    it("throws error on missing feature", () => {
+      const store = new GeoJSONStore();
+
+      expect(() => {
+        store.getPropertiesCopy("non-existant-id");
+      }).toThrowError();
+    });
+  });
+
   describe("updateGeometry", () => {
     it("updates geometry", () => {
       const store = new GeoJSONStore();
 
-      const id = store.create({ type: "Point", coordinates: [0, 0] });
+      const [id] = store.create([
+        { geometry: { type: "Point", coordinates: [0, 0] } },
+      ]);
 
-      store.updateGeometry(id, { type: "Point", coordinates: [1, 1] });
+      store.updateGeometry([
+        { id, geometry: { type: "Point", coordinates: [1, 1] } },
+      ]);
 
       expect(store.getGeometryCopy(id)).toStrictEqual({
         type: "Point",
@@ -107,10 +282,41 @@ describe("GeoJSONStore", () => {
       const store = new GeoJSONStore();
 
       expect(() => {
-        store.updateGeometry("non-existant-id", {
-          type: "Point",
-          coordinates: [1, 1],
-        });
+        store.updateGeometry([
+          {
+            id: "non-existant-id",
+            geometry: {
+              type: "Point",
+              coordinates: [1, 1],
+            },
+          },
+        ]);
+      }).toThrowError();
+    });
+  });
+
+  describe("updateProperty", () => {
+    it("updates geometry", () => {
+      const store = new GeoJSONStore();
+
+      const [id] = store.create([
+        { geometry: { type: "Point", coordinates: [0, 0] } },
+      ]);
+
+      store.updateProperty([{ id, property: "test", value: 1 }]);
+
+      expect(store.copyAll()[0].properties).toStrictEqual({
+        test: 1,
+      });
+    });
+
+    it("throws error on missing feature", () => {
+      const store = new GeoJSONStore();
+
+      expect(() => {
+        store.updateProperty([
+          { id: "non-existant-id", property: "test", value: 1 },
+        ]);
       }).toThrowError();
     });
   });
@@ -122,15 +328,19 @@ describe("GeoJSONStore", () => {
       const mockCallback = jest.fn();
       store.registerOnChange(mockCallback);
 
-      const id = store.create({ type: "Point", coordinates: [0, 0] });
+      const [id] = store.create([
+        { geometry: { type: "Point", coordinates: [0, 0] } },
+      ]);
 
-      store.updateGeometry(id, { type: "Point", coordinates: [1, 1] });
-      store.delete(id);
+      store.updateGeometry([
+        { id, geometry: { type: "Point", coordinates: [1, 1] } },
+      ]);
+      store.delete([id]);
 
       expect(mockCallback).toBeCalledTimes(3);
-      expect(mockCallback).toHaveBeenNthCalledWith(1, id, "create");
-      expect(mockCallback).toHaveBeenNthCalledWith(2, id, "update");
-      expect(mockCallback).toHaveBeenNthCalledWith(3, id, "delete");
+      expect(mockCallback).toHaveBeenNthCalledWith(1, [id], "create");
+      expect(mockCallback).toHaveBeenNthCalledWith(2, [id], "update");
+      expect(mockCallback).toHaveBeenNthCalledWith(3, [id], "delete");
     });
   });
 
@@ -138,13 +348,20 @@ describe("GeoJSONStore", () => {
     it("deletes feature", () => {
       const store = new GeoJSONStore();
 
-      const id = store.create({ type: "Point", coordinates: [0, 0] });
-      store.delete(id);
+      const [id] = store.create([
+        { geometry: { type: "Point", coordinates: [0, 0] } },
+      ]);
+      store.delete([id]);
 
       // No longer exists so should throw errors
       expect(() => store.getGeometryCopy(id)).toThrowError();
       expect(() =>
-        store.updateGeometry(id, { type: "Point", coordinates: [1, 1] })
+        store.updateGeometry([
+          {
+            id,
+            geometry: { type: "Point", coordinates: [1, 1] },
+          },
+        ])
       ).toThrowError();
     });
   });
@@ -156,8 +373,12 @@ describe("GeoJSONStore", () => {
       const mockCallback = jest.fn();
       store.registerOnChange(mockCallback);
 
-      const one = store.create({ type: "Point", coordinates: [0, 0] });
-      const two = store.create({ type: "Point", coordinates: [1, 1] });
+      const [one] = store.create([
+        { geometry: { type: "Point", coordinates: [0, 0] } },
+      ]);
+      const [two] = store.create([
+        { geometry: { type: "Point", coordinates: [1, 1] } },
+      ]);
 
       const copies = store.copyAll();
 

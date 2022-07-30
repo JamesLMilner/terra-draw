@@ -7,6 +7,9 @@ export class TerraDrawStaticMode implements TerraDrawMode {
   register() {}
   onKeyPress() {}
   onClick() {}
+  onDragStart() {}
+  onDrag() {}
+  onDragEnd() {}
   onMouseMove() {}
   cleanUp() {}
 }

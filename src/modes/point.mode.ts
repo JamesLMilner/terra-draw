@@ -31,15 +31,20 @@ export class TerraDrawPointMode implements TerraDrawMode {
       throw new Error("Mode must be registered first");
     }
 
-    this.store.create(
+    this.store.create([
       {
-        type: "Point",
-        coordinates: [event.lng, event.lat],
+        geometry: {
+          type: "Point",
+          coordinates: [event.lng, event.lat],
+        },
+        properties: { mode: this.mode },
       },
-      { mode: this.mode }
-    );
+    ]);
   }
   onMouseMove() {}
   onKeyPress() {}
   cleanUp() {}
+  onDragStart() {}
+  onDrag() {}
+  onDragEnd() {}
 }

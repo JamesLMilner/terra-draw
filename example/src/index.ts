@@ -9,10 +9,11 @@ import {
   TerraDrawLineStringMode,
   TerraDrawPolygonMode,
   TerraDrawSelectMode,
+  TerraDrawFreehandMode,
   TerraDrawMapboxGLAdapter,
   TerraDrawLeafletAdapter,
   TerraDrawGoogleMapsAdapter,
-} from "terra-draw";
+} from "../../src/terra-draw";
 
 const example = {
   lng: -0.118092,
@@ -36,22 +37,34 @@ const example = {
         '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
     }).addTo(map);
 
-    const adapter = new TerraDrawLeafletAdapter({
-      lib: L,
-      map,
-      coordinatePrecision: 9,
-    });
-    const draw = new TerraDraw(adapter, {
-      select: new TerraDrawSelectMode(),
-      point: new TerraDrawPointMode(),
-      linestring: new TerraDrawLineStringMode({
-        allowSelfIntersections: false,
+    // const dataString = localStorage.getItem("snapshot");
+
+    // console.log(dataString, Boolean(dataString));
+    // const data = Boolean(dataString) ? JSON.parse(dataString) : undefined;
+
+    const draw = new TerraDraw({
+      adapter: new TerraDrawLeafletAdapter({
+        lib: L,
+        map,
+        coordinatePrecision: 9,
       }),
-      polygon: new TerraDrawPolygonMode({
-        allowSelfIntersections: false,
-      }),
-      circle: new TerraDrawCircleMode(),
+      modes: {
+        select: new TerraDrawSelectMode({
+          draggable: ["polygon"],
+        }),
+        point: new TerraDrawPointMode(),
+        linestring: new TerraDrawLineStringMode({
+          allowSelfIntersections: false,
+        }),
+        polygon: new TerraDrawPolygonMode({
+          allowSelfIntersections: false,
+        }),
+        circle: new TerraDrawCircleMode(),
+        freehand: new TerraDrawFreehandMode(),
+      },
+      // data,
     });
+
     draw.start();
 
     // draw.on("select", (id) => {
@@ -62,15 +75,19 @@ const example = {
     //   console.log("deselected");
     // });
 
-    // draw.on("change", (id, changeType) => {
+    // draw.on("change", (id: string, changeType: string) => {
+    //   localStorage.setItem("snapshot", JSON.stringify(draw.getSnapshot()));
+
     //   console.log("feature changed", id, changeType);
     // });
 
-    ["select", "point", "linestring", "polygon", "circle"].forEach((mode) => {
-      document.getElementById(mode).addEventListener("click", () => {
-        draw.changeMode(mode);
-      });
-    });
+    ["select", "point", "linestring", "polygon", "freehand", "circle"].forEach(
+      (mode) => {
+        document.getElementById(mode).addEventListener("click", () => {
+          draw.changeMode(mode);
+        });
+      }
+    );
 
     this.initialised.push("leaflet");
   },
@@ -95,29 +112,33 @@ const example = {
     });
 
     map.on("style.load", () => {
-      const adapter = new TerraDrawMapboxGLAdapter({
-        map,
-        coordinatePrecision: 9,
-      });
-      const draw = new TerraDraw(adapter, {
-        select: new TerraDrawSelectMode(),
-        point: new TerraDrawPointMode(),
-        linestring: new TerraDrawLineStringMode({
-          styling: {
-            lineStringColor: "#1B821E",
-            lineStringWidth: 8,
-          },
-          allowSelfIntersections: false,
+      const draw = new TerraDraw({
+        adapter: new TerraDrawMapboxGLAdapter({
+          map,
+          coordinatePrecision: 9,
         }),
-        polygon: new TerraDrawPolygonMode({
-          allowSelfIntersections: false,
-          styling: {
-            polygonFillColor: "#ff0000",
-            polygonOutlineColor: "#00ff2d",
-          },
-        }),
-        circle: new TerraDrawCircleMode(),
+        modes: {
+          select: new TerraDrawSelectMode(),
+          point: new TerraDrawPointMode(),
+          linestring: new TerraDrawLineStringMode({
+            // styling: {
+            //   lineStringColor: "#1B821E",
+            //   lineStringWidth: 8,
+            // },
+            allowSelfIntersections: false,
+          }),
+          polygon: new TerraDrawPolygonMode({
+            allowSelfIntersections: false,
+            // styling: {
+            //   polygonFillColor: "#ff0000",
+            //   polygonOutlineColor: "#00ff2d",
+            // },
+          }),
+          freehand: new TerraDrawFreehandMode(),
+          circle: new TerraDrawCircleMode(),
+        },
       });
+
       draw.start();
 
       // draw.on("select", (id) => {
@@ -128,7 +149,14 @@ const example = {
       //   console.log("deselected");
       // });
 
-      ["select", "point", "linestring", "polygon", "circle"].forEach((mode) => {
+      [
+        "select",
+        "point",
+        "linestring",
+        "polygon",
+        "freehand",
+        "circle",
+      ].forEach((mode) => {
         document.getElementById(mode).addEventListener("click", () => {
           draw.changeMode(mode);
         });
@@ -160,25 +188,37 @@ const example = {
         }
       );
 
-      const adapter = new TerraDrawGoogleMapsAdapter({
-        lib: google.maps,
-        map,
-        coordinatePrecision: 9,
-      });
-      const draw = new TerraDraw(adapter, {
-        select: new TerraDrawSelectMode(),
-        point: new TerraDrawPointMode(),
-        linestring: new TerraDrawLineStringMode({
-          allowSelfIntersections: false,
+      const draw = new TerraDraw({
+        adapter: new TerraDrawGoogleMapsAdapter({
+          lib: google.maps,
+          map,
+          coordinatePrecision: 9,
         }),
-        polygon: new TerraDrawPolygonMode({
-          allowSelfIntersections: false,
-        }),
-        circle: new TerraDrawCircleMode(),
+        modes: {
+          select: new TerraDrawSelectMode({
+            draggable: ["point"],
+          }),
+          point: new TerraDrawPointMode(),
+          linestring: new TerraDrawLineStringMode({
+            allowSelfIntersections: false,
+          }),
+          polygon: new TerraDrawPolygonMode({
+            allowSelfIntersections: false,
+          }),
+          circle: new TerraDrawCircleMode(),
+          freehand: new TerraDrawFreehandMode(),
+        },
       });
       draw.start();
 
-      ["select", "point", "linestring", "polygon", "circle"].forEach((mode) => {
+      [
+        "select",
+        "point",
+        "linestring",
+        "polygon",
+        "freehand",
+        "circle",
+      ].forEach((mode) => {
         document.getElementById(mode).addEventListener("click", () => {
           draw.changeMode(mode);
         });
@@ -189,14 +229,8 @@ const example = {
   },
 };
 
-example.initGoogleMaps(
-  "google-map",
-  process.env.MODE === "dev" ? process.env.GOOGLE_API_KEY : ""
-);
+console.log(process.env);
 
 example.initLeaflet("leaflet-map");
-
-example.initMapbox(
-  "mapbox-map",
-  process.env.MODE === "dev" ? process.env.MAPBOX_ACCESS_TOKEN : ""
-);
+example.initMapbox("mapbox-map", process.env.MAPBOX_ACCESS_TOKEN);
+example.initGoogleMaps("google-map", process.env.GOOGLE_API_KEY);

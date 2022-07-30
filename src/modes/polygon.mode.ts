@@ -11,6 +11,9 @@ import { getPixelDistance } from "../geometry/get-pixel-distance";
 import { selfIntersects } from "../geometry/self-intersects";
 import { getDefaultStyling } from "../util/styling";
 
+type TerraDrawPolygonModeKeyEvents = {
+  cancel: KeyboardEvent["key"];
+};
 export class TerraDrawPolygonMode implements TerraDrawMode {
   mode = "polygon";
 
@@ -21,11 +24,13 @@ export class TerraDrawPolygonMode implements TerraDrawMode {
   private currentId: string;
   private allowSelfIntersections: boolean;
   private pointerDistance: number;
+  private keyEvents: TerraDrawPolygonModeKeyEvents;
 
   constructor(options?: {
     allowSelfIntersections?: boolean;
     styling?: Partial<TerraDrawAdapterStyling>;
     pointerDistance?: number;
+    keyEvents?: TerraDrawPolygonModeKeyEvents;
   }) {
     this.pointerDistance = (options && options.pointerDistance) || 40;
 
@@ -38,6 +43,9 @@ export class TerraDrawPolygonMode implements TerraDrawMode {
       options && options.allowSelfIntersections !== undefined
         ? options.allowSelfIntersections
         : true;
+
+    this.keyEvents =
+      options && options.keyEvents ? options.keyEvents : { cancel: "Escape" };
   }
 
   styling: TerraDrawAdapterStyling;
@@ -53,49 +61,120 @@ export class TerraDrawPolygonMode implements TerraDrawMode {
       return;
     }
 
-    const currentLineGeometry = this.store.getGeometryCopy<Polygon>(
+    const currentLineCoordinates = this.store.getGeometryCopy<Polygon>(
       this.currentId
-    );
+    ).coordinates[0];
 
-    currentLineGeometry.coordinates[0].pop();
-    this.store.updateGeometry(this.currentId, {
-      type: "Polygon",
-      coordinates: [
-        [...currentLineGeometry.coordinates[0], [event.lng, event.lat]],
-      ],
-    });
+    let updatedCoordinates;
+
+    if (this.currentCoordinate === 1) {
+      updatedCoordinates = [
+        currentLineCoordinates[0],
+        [event.lng, event.lat],
+        currentLineCoordinates[0],
+        currentLineCoordinates[0],
+      ];
+    } else if (this.currentCoordinate === 2) {
+      updatedCoordinates = [
+        currentLineCoordinates[0],
+        currentLineCoordinates[1],
+        [event.lng, event.lat],
+        currentLineCoordinates[0],
+      ];
+    } else {
+      updatedCoordinates = [
+        ...currentLineCoordinates.slice(0, -2),
+        [event.lng, event.lat],
+        currentLineCoordinates[0],
+      ];
+    }
+
+    this.store.updateGeometry([
+      {
+        id: this.currentId,
+        geometry: {
+          type: "Polygon",
+          coordinates: [updatedCoordinates],
+        },
+      },
+    ]);
   }
 
   onClick(event: TerraDrawMouseEvent) {
     if (this.currentCoordinate === 0) {
-      this.currentId = this.store.create(
+      const [newId] = this.store.create([
         {
-          type: "Polygon",
-          coordinates: [
-            [
-              [event.lng, event.lat],
-              [event.lng, event.lat],
+          geometry: {
+            type: "Polygon",
+            coordinates: [
+              [
+                [event.lng, event.lat],
+                [event.lng, event.lat],
+                [event.lng, event.lat],
+                [event.lng, event.lat],
+              ],
             ],
-          ],
+          },
+          properties: { mode: this.mode },
         },
-        { mode: this.mode }
-      );
+      ]);
+      this.currentId = newId;
       this.currentCoordinate++;
     } else if (this.currentCoordinate === 1) {
       const currentPolygonGeometry = this.store.getGeometryCopy<Polygon>(
         this.currentId
       );
 
-      this.store.updateGeometry(this.currentId, {
-        type: "Polygon",
-        coordinates: [
-          [
-            currentPolygonGeometry.coordinates[0][0],
-            [event.lng, event.lat],
-            [event.lng, event.lat],
-          ],
-        ],
-      });
+      // if (
+      //   coordinatesIdentical(
+      //     currentPolygonGeometry.coordinates[0][0] as [number, number],
+      //     [event.lng, event.lat]
+      //   )
+      // ) {
+      //   return;
+      // }
+
+      this.store.updateGeometry([
+        {
+          id: this.currentId,
+          geometry: {
+            type: "Polygon",
+            coordinates: [
+              [
+                currentPolygonGeometry.coordinates[0][0],
+                [event.lng, event.lat],
+                [event.lng, event.lat],
+                currentPolygonGeometry.coordinates[0][0],
+              ],
+            ],
+          },
+        },
+      ]);
+
+      this.currentCoordinate++;
+    } else if (this.currentCoordinate === 2) {
+      const currentPolygonGeometry = this.store.getGeometryCopy<Polygon>(
+        this.currentId
+      );
+
+      this.store.updateGeometry([
+        {
+          id: this.currentId,
+          geometry: {
+            type: "Polygon",
+            coordinates: [
+              [
+                currentPolygonGeometry.coordinates[0][0],
+                currentPolygonGeometry.coordinates[0][1],
+                [event.lng, event.lat],
+                [event.lng, event.lat],
+                currentPolygonGeometry.coordinates[0][0],
+              ],
+            ],
+          },
+        },
+      ]);
+
       this.currentCoordinate++;
     } else {
       const currentPolygonGeometry = this.store.getGeometryCopy<Polygon>(
@@ -112,56 +191,69 @@ export class TerraDrawPolygonMode implements TerraDrawMode {
       const isClosingClick = distance < this.pointerDistance;
 
       if (isClosingClick) {
-        // Finish off the drawing
-        const newGeometry = {
+        this.store.updateGeometry([
+          {
+            id: this.currentId,
+            geometry: {
+              type: "Polygon",
+              coordinates: [
+                [
+                  ...currentPolygonGeometry.coordinates[0].slice(0, -2),
+                  currentPolygonGeometry.coordinates[0][0],
+                ],
+              ],
+            },
+          },
+        ]);
+
+        this.currentCoordinate = 0;
+        this.currentId = undefined;
+      } else {
+        const updatedPolygon = {
           type: "Polygon",
           coordinates: [
             [
               ...currentPolygonGeometry.coordinates[0].slice(0, -1),
+              [event.lng, event.lat], // New point that onMouseMove can manipulate
               currentPolygonGeometry.coordinates[0][0],
             ],
-          ],
-        } as Polygon;
-
-        this.store.updateGeometry(this.currentId, newGeometry);
-        this.currentCoordinate = 0;
-        this.currentId = undefined;
-      } else {
-        const newPolygon = {
-          type: "Polygon",
-          coordinates: [
-            [...currentPolygonGeometry.coordinates[0], [event.lng, event.lat]],
           ],
         } as Polygon;
 
         if (this.currentCoordinate > 2 && !this.allowSelfIntersections) {
           const hasSelfIntersections = selfIntersects({
             type: "Feature",
-            geometry: newPolygon,
+            geometry: updatedPolygon,
             properties: {},
           });
 
           if (hasSelfIntersections) {
-            this.store.updateGeometry(this.currentId, currentPolygonGeometry);
+            // Don't update the geometry!
             return;
           }
         }
 
         // If not close to the final point, keep adding points
-        this.store.updateGeometry(this.currentId, newPolygon);
+        this.store.updateGeometry([
+          { id: this.currentId, geometry: updatedPolygon },
+        ]);
         this.currentCoordinate++;
       }
     }
   }
   onKeyPress(event: TerraDrawKeyboardEvent) {
-    if (event.key === "Escape") {
+    if (event.key === this.keyEvents.cancel) {
       this.cleanUp();
     }
   }
 
+  onDragStart() {}
+  onDrag() {}
+  onDragEnd() {}
+
   cleanUp() {
     try {
-      this.store.delete(this.currentId);
+      this.store.delete([this.currentId]);
     } catch (error) {}
     this.currentId = undefined;
     this.currentCoordinate = 0;

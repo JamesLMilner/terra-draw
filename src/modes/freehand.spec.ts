@@ -1,25 +1,26 @@
 import { GeoJSONStore } from "../store/store";
 import { getDefaultStyling } from "../util/styling";
-import { TerraDrawCircleMode } from "./circle.mode";
+import { TerraDrawFreehandMode } from "./freehand.mode";
 
-describe("TerraDrawCircleMode", () => {
+describe("TerraDrawFreehandMode", () => {
   const defaultStyles = getDefaultStyling();
 
   describe("constructor", () => {
     it("constructs with no options", () => {
-      const circleMode = new TerraDrawCircleMode();
-      expect(circleMode.mode).toBe("circle");
-      expect(circleMode.styling).toStrictEqual(defaultStyles);
+      const freehandMode = new TerraDrawFreehandMode();
+      expect(freehandMode.mode).toBe("freehand");
+      expect(freehandMode.styling).toStrictEqual(defaultStyles);
     });
 
     it("constructs with options", () => {
-      const circleMode = new TerraDrawCircleMode({
+      const freehandMode = new TerraDrawFreehandMode({
         styling: { polygonOutlineColor: "#ffffff" },
+        everyNthMouseEvent: 5,
         keyEvents: {
           cancel: "Backspace",
         },
       });
-      expect(circleMode.styling).toStrictEqual({
+      expect(freehandMode.styling).toStrictEqual({
         ...defaultStyles,
         polygonOutlineColor: "#ffffff",
       });
@@ -28,9 +29,9 @@ describe("TerraDrawCircleMode", () => {
 
   describe("register", () => {
     it("registers correctly", () => {
-      const circleMode = new TerraDrawCircleMode();
+      const freehandMode = new TerraDrawFreehandMode();
 
-      circleMode.register({
+      freehandMode.register({
         onChange: () => {},
         onSelect: (selectedId: string) => {},
         onDeselect: () => {},
@@ -43,19 +44,19 @@ describe("TerraDrawCircleMode", () => {
   });
 
   describe("onClick", () => {
-    let circleMode: TerraDrawCircleMode;
+    let freehandMode: TerraDrawFreehandMode;
     let store: GeoJSONStore;
     let onChange: jest.Mock;
 
     beforeEach(() => {
-      circleMode = new TerraDrawCircleMode();
+      freehandMode = new TerraDrawFreehandMode();
       store = new GeoJSONStore();
       onChange = jest.fn();
     });
 
     it("throws an error if not registered", () => {
       expect(() => {
-        circleMode.onClick({
+        freehandMode.onClick({
           lng: 0,
           lat: 0,
           containerX: 0,
@@ -66,7 +67,7 @@ describe("TerraDrawCircleMode", () => {
 
     describe("registered", () => {
       beforeEach(() => {
-        circleMode.register({
+        freehandMode.register({
           store,
           onChange,
           onSelect: (selectedId: string) => {},
@@ -76,8 +77,8 @@ describe("TerraDrawCircleMode", () => {
           },
         });
       });
-      it("adds a circle to store if registered", () => {
-        circleMode.onClick({
+      it("adds a polygon to store if registered", () => {
+        freehandMode.onClick({
           lng: 0,
           lat: 0,
           containerX: 0,
@@ -88,8 +89,8 @@ describe("TerraDrawCircleMode", () => {
         expect(onChange).toBeCalledWith([expect.any(String)], "create");
       });
 
-      it("finishes drawing circle on second click", () => {
-        circleMode.onClick({
+      it("finishes drawing polygon on second click", () => {
+        freehandMode.onClick({
           lng: 0,
           lat: 0,
           containerX: 0,
@@ -99,7 +100,7 @@ describe("TerraDrawCircleMode", () => {
         let features = store.copyAll();
         expect(features.length).toBe(1);
 
-        circleMode.onClick({
+        freehandMode.onClick({
           lng: 0,
           lat: 0,
           containerX: 0,
@@ -115,21 +116,17 @@ describe("TerraDrawCircleMode", () => {
     });
   });
 
-  describe("onKeyPress", () => {
-    it("does nothing", () => {});
-  });
-
   describe("onMouseMove", () => {
-    let circleMode: TerraDrawCircleMode;
+    let freehandMode: TerraDrawFreehandMode;
     let store: GeoJSONStore;
     let onChange: jest.Mock;
 
     beforeEach(() => {
-      circleMode = new TerraDrawCircleMode();
+      freehandMode = new TerraDrawFreehandMode();
       store = new GeoJSONStore();
       onChange = jest.fn();
 
-      circleMode.register({
+      freehandMode.register({
         store,
         onChange,
         onSelect: (selectedId: string) => {},
@@ -140,8 +137,8 @@ describe("TerraDrawCircleMode", () => {
       });
     });
 
-    it("updates the circle size", () => {
-      circleMode.onClick({
+    it("updates the freehand polygon on 10th mouse event", () => {
+      freehandMode.onClick({
         lng: 0,
         lat: 0,
         containerX: 0,
@@ -157,12 +154,15 @@ describe("TerraDrawCircleMode", () => {
 
       const feature = store.copyAll()[0];
 
-      circleMode.onMouseMove({
-        lng: 1,
-        lat: 1,
-        containerX: 1,
-        containerY: 1,
-      });
+      for (let i = 0; i < 12; i++) {
+        freehandMode.onMouseMove({
+          lng: i,
+          lat: i,
+          containerX: i,
+          containerY: i,
+        });
+      }
+
       expect(onChange).toBeCalledTimes(2);
       expect(onChange).toHaveBeenNthCalledWith(
         2,
@@ -177,19 +177,30 @@ describe("TerraDrawCircleMode", () => {
         updatedFeature.geometry.coordinates
       );
     });
+
+    it("does nothing if no first click", () => {
+      freehandMode.onMouseMove({
+        lng: 1,
+        lat: 1,
+        containerX: 1,
+        containerY: 1,
+      });
+
+      expect(onChange).toBeCalledTimes(0);
+    });
   });
 
   describe("cleanUp", () => {
-    let circleMode: TerraDrawCircleMode;
+    let freehandMode: TerraDrawFreehandMode;
     let store: GeoJSONStore;
     let onChange: jest.Mock;
 
     beforeEach(() => {
-      circleMode = new TerraDrawCircleMode();
+      freehandMode = new TerraDrawFreehandMode();
       store = new GeoJSONStore();
       onChange = jest.fn();
 
-      circleMode.register({
+      freehandMode.register({
         store,
         onChange,
         onSelect: (selectedId: string) => {},
@@ -200,20 +211,20 @@ describe("TerraDrawCircleMode", () => {
       });
     });
 
-    it("does not delete if no circle has been created", () => {
-      circleMode.cleanUp();
+    it("does not delete if no freehand has been created", () => {
+      freehandMode.cleanUp();
       expect(onChange).toBeCalledTimes(0);
     });
 
-    it("does delete if a circle has been created", () => {
-      circleMode.onClick({
+    it("does delete if a freehand has been created", () => {
+      freehandMode.onClick({
         lng: 0,
         lat: 0,
         containerX: 0,
         containerY: 0,
       });
 
-      circleMode.cleanUp();
+      freehandMode.cleanUp();
 
       expect(onChange).toBeCalledTimes(2);
       expect(onChange).toHaveBeenNthCalledWith(
@@ -226,7 +237,7 @@ describe("TerraDrawCircleMode", () => {
 
   describe("onKeyPress", () => {
     let store: GeoJSONStore;
-    let circleMode: TerraDrawCircleMode;
+    let freehandMode: TerraDrawFreehandMode;
     let onChange: jest.Mock;
     let project: jest.Mock;
 
@@ -234,11 +245,11 @@ describe("TerraDrawCircleMode", () => {
       jest.resetAllMocks();
 
       store = new GeoJSONStore();
-      circleMode = new TerraDrawCircleMode();
+      freehandMode = new TerraDrawFreehandMode();
       onChange = jest.fn();
       project = jest.fn();
 
-      circleMode.register({
+      freehandMode.register({
         onChange: onChange as any,
         onSelect: (selectedId: string) => {},
         onDeselect: () => {},
@@ -247,12 +258,12 @@ describe("TerraDrawCircleMode", () => {
       });
     });
 
-    it("Escape - does nothing when no circle is present", () => {
-      circleMode.onKeyPress({ key: "Escape" });
+    it("Escape - does nothing when no freehand is present", () => {
+      freehandMode.onKeyPress({ key: "Escape" });
     });
 
-    it("Escape - deletes the circle when currently editing", () => {
-      circleMode.onClick({
+    it("Escape - deletes the freehand when currently editing", () => {
+      freehandMode.onClick({
         lng: 0,
         lat: 0,
         containerX: 0,
@@ -262,7 +273,7 @@ describe("TerraDrawCircleMode", () => {
       let features = store.copyAll();
       expect(features.length).toBe(1);
 
-      circleMode.onKeyPress({ key: "Escape" });
+      freehandMode.onKeyPress({ key: "Escape" });
 
       features = store.copyAll();
       expect(features.length).toBe(0);
@@ -271,30 +282,30 @@ describe("TerraDrawCircleMode", () => {
 
   describe("onDrag", () => {
     it("does nothing", () => {
-      const circleMode = new TerraDrawCircleMode();
+      const freehandMode = new TerraDrawFreehandMode();
 
       expect(() => {
-        circleMode.onDrag();
+        freehandMode.onDrag();
       }).not.toThrowError();
     });
   });
 
   describe("onDragStart", () => {
     it("does nothing", () => {
-      const circleMode = new TerraDrawCircleMode();
+      const freehandMode = new TerraDrawFreehandMode();
 
       expect(() => {
-        circleMode.onDragStart();
+        freehandMode.onDragStart();
       }).not.toThrowError();
     });
   });
 
   describe("onDragEnd", () => {
     it("does nothing", () => {
-      const circleMode = new TerraDrawCircleMode();
+      const freehandMode = new TerraDrawFreehandMode();
 
       expect(() => {
-        circleMode.onDragEnd();
+        freehandMode.onDragEnd();
       }).not.toThrowError();
     });
   });

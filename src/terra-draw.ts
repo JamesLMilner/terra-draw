@@ -7,14 +7,19 @@ import {
   TerraDrawAdapterStyling,
 } from "./common";
 import { TerraDrawCircleMode } from "./modes/circle.mode";
+import { TerraDrawFreehandMode } from "./modes/freehand.mode";
 import { TerraDrawLineStringMode } from "./modes/line-string.mode";
 import { TerraDrawPointMode } from "./modes/point.mode";
 import { TerraDrawPolygonMode } from "./modes/polygon.mode";
 import { TerraDrawSelectMode } from "./modes/select.mode";
 import { TerraDrawStaticMode } from "./modes/static.mode";
-import { GeoJSONStore, StoreChangeHandler } from "./store/store";
+import {
+  GeoJSONStore,
+  GeoJSONStoreFeatures,
+  StoreChangeHandler,
+} from "./store/store";
 
-type ChangeListener = (id: string, type: string) => void;
+type ChangeListener = (ids: string[], type: string) => void;
 type SelectListener = (id: string) => void;
 type DeselectListener = () => void;
 
@@ -37,31 +42,82 @@ class TerraDraw {
     select: SelectListener[];
     deselect: DeselectListener[];
   };
-  constructor(
-    adapter: TerraDrawAdapter,
-    modes: { [mode: string]: TerraDrawMode }
-  ) {
-    this._adapter = adapter;
+
+  constructor(options: {
+    adapter: TerraDrawAdapter;
+    modes: { [mode: string]: TerraDrawMode };
+    data?: GeoJSONStoreFeatures[];
+  }) {
+    this._adapter = options.adapter;
     this._mode = new TerraDrawStaticMode();
-    this._store = new GeoJSONStore();
-    this._modes = { ...modes, static: this._mode };
+    this._modes = { ...options.modes, static: this._mode };
     this._eventListeners = { change: [], select: [], deselect: [] };
 
-    const getModeStyles = () => {
-      const modeStyles: { [key: string]: TerraDrawAdapterStyling } = {};
-      Object.keys(this._modes).forEach((mode) => {
-        modeStyles[mode] = this._modes[mode].styling;
+    if (options.data) {
+      this._store = new GeoJSONStore({ data: options.data });
+
+      // Remove all non mode features
+      const initialRender = this._store.copyAll().filter((feature) => {
+        if (!Object.keys(this._modes).includes(feature.properties.mode)) {
+          this._store.delete([feature.id as string]);
+          return false;
+        }
+        return true;
       });
-      return modeStyles;
+
+      this._adapter.render(
+        { created: initialRender, deletedIds: [], unchanged: [], updated: [] },
+        this.getModeStyles()
+      );
+    } else {
+      this._store = new GeoJSONStore();
+    }
+
+    const getChanged = (
+      ids: string[]
+    ): {
+      changed: GeoJSONStoreFeatures[];
+      unchanged: GeoJSONStoreFeatures[];
+    } => {
+      let changed: GeoJSONStoreFeatures[] = [];
+
+      const unchanged = this._store.copyAll().filter((f) => {
+        if (ids.includes(f.id as string)) {
+          changed.push(f);
+          return false;
+        }
+
+        return true;
+      });
+
+      return { changed, unchanged };
     };
 
     // Register stores and callbacks
     Object.keys(this._modes).forEach((modeId) => {
-      const onChange: StoreChangeHandler = (id, event) => {
+      const onChange: StoreChangeHandler = (ids, event) => {
         this._eventListeners.change.forEach((listener) => {
-          listener(id, event);
+          listener(ids, event);
         });
-        this._adapter.render(this._store.copyAll(), getModeStyles());
+
+        const { changed, unchanged } = getChanged(ids);
+
+        if (event === "create") {
+          this._adapter.render(
+            { created: changed, deletedIds: [], unchanged, updated: [] },
+            this.getModeStyles()
+          );
+        } else if (event === "update") {
+          this._adapter.render(
+            { created: [], deletedIds: [], unchanged, updated: changed },
+            this.getModeStyles()
+          );
+        } else if (event === "delete") {
+          this._adapter.render(
+            { created: [], deletedIds: ids, unchanged, updated: [] },
+            this.getModeStyles()
+          );
+        }
       };
 
       const onSelect = (selectedId: string) => {
@@ -69,22 +125,30 @@ class TerraDraw {
           listener(selectedId);
         });
 
-        const features = this._store.copyAll();
-        features.forEach((feature) => {
-          if (feature.id === selectedId) {
-            feature.properties.selected = true;
-          }
-        });
-        this._adapter.render(features, getModeStyles());
+        const { changed, unchanged } = getChanged([selectedId]);
+
+        this._adapter.render(
+          { created: [], deletedIds: [], unchanged, updated: changed },
+          this.getModeStyles()
+        );
       };
 
-      const onDeselect = () => {
+      const onDeselect = (deselectedId: string) => {
         this._eventListeners.deselect.forEach((listener) => {
           listener();
         });
 
-        const features = this._store.copyAll();
-        this._adapter.render(features, getModeStyles());
+        const { changed, unchanged } = getChanged([deselectedId]);
+
+        // onDeselect can be called after a delete call which means that
+        // you are deselecting a feature that has been deleted. We
+        // double check here to ensure that the feature still exists.
+        if (changed) {
+          this._adapter.render(
+            { created: [], deletedIds: [], unchanged, updated: changed },
+            this.getModeStyles()
+          );
+        }
       };
 
       this._modes[modeId].register({
@@ -95,6 +159,18 @@ class TerraDraw {
         onDeselect: onDeselect,
       });
     });
+  }
+
+  private getModeStyles() {
+    const modeStyles: { [key: string]: TerraDrawAdapterStyling } = {};
+    Object.keys(this._modes).forEach((mode) => {
+      modeStyles[mode] = this._modes[mode].styling;
+    });
+    return modeStyles;
+  }
+
+  getSnapshot() {
+    return this._store.copyAll();
   }
 
   get enabled() {
@@ -128,6 +204,15 @@ class TerraDraw {
       },
       onKeyPress: (event) => {
         this._mode.onKeyPress(event);
+      },
+      onDragStart: (event, setMapDraggability) => {
+        this._mode.onDragStart(event, setMapDraggability);
+      },
+      onDrag: (event) => {
+        this._mode.onDrag(event);
+      },
+      onDragEnd: (event, setMapDraggability) => {
+        this._mode.onDragEnd(event, setMapDraggability);
       },
     });
   }
@@ -169,6 +254,7 @@ export {
   TerraDrawLineStringMode,
   TerraDrawPolygonMode,
   TerraDrawCircleMode,
+  TerraDrawFreehandMode,
   TerraDrawGoogleMapsAdapter,
   TerraDrawMapboxGLAdapter,
   TerraDrawLeafletAdapter,

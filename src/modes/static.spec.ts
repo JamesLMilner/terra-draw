@@ -1,3 +1,4 @@
+import { getMockModeConfig } from "../test/mock-config";
 import { getDefaultStyling } from "../util/styling";
 import { TerraDrawStaticMode } from "./static.mode";
 
@@ -15,7 +16,27 @@ describe("TerraDrawStaticMode", () => {
       const staticMode = new TerraDrawStaticMode();
 
       expect(() => {
-        staticMode.register();
+        staticMode.register(getMockModeConfig());
+      }).not.toThrowError();
+    });
+  });
+
+  describe("start", () => {
+    it("does nothing", () => {
+      const staticMode = new TerraDrawStaticMode();
+
+      expect(() => {
+        staticMode.start();
+      }).not.toThrowError();
+    });
+  });
+
+  describe("stop", () => {
+    it("does nothing", () => {
+      const staticMode = new TerraDrawStaticMode();
+
+      expect(() => {
+        staticMode.stop();
       }).not.toThrowError();
     });
   });
@@ -46,16 +67,6 @@ describe("TerraDrawStaticMode", () => {
 
       expect(() => {
         staticMode.onMouseMove();
-      }).not.toThrowError();
-    });
-  });
-
-  describe("cleanUp", () => {
-    it("does nothing", () => {
-      const staticMode = new TerraDrawStaticMode();
-
-      expect(() => {
-        staticMode.cleanUp();
       }).not.toThrowError();
     });
   });

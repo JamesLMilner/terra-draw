@@ -1,47 +1,45 @@
 import {
   TerraDrawMouseEvent,
-  TerraDrawMode,
-  TerraDrawModeRegisterConfig,
   TerraDrawKeyboardEvent,
   TerraDrawAdapterStyling,
 } from "../common";
-import { GeoJSONStore } from "../store/store";
 import { pointInPolygon } from "../geometry/point-in-polygon";
 import { getPixelDistance } from "../geometry/get-pixel-distance";
 import { getPixelDistanceToLine } from "../geometry/get-pixel-distance-to-line";
-import { getDefaultStyling } from "../util/styling";
 import { Point, Position } from "geojson";
+import { TerraDrawBaseDrawMode } from "./base.mode";
 
 type TerraDrawSelectModeKeyEvents = {
   deselect: KeyboardEvent["key"];
   delete: KeyboardEvent["key"];
 };
 
-export class TerraDrawSelectMode implements TerraDrawMode {
+type TerraDrawSelectDraggable = {
+  mode: string;
+  coordinate: boolean;
+  feature: boolean;
+}[];
+
+export class TerraDrawSelectMode extends TerraDrawBaseDrawMode {
   mode = "select";
-  private store: GeoJSONStore;
-  private project: TerraDrawModeRegisterConfig["project"];
+
   private selected: string[] = [];
   private pointerDistance: number;
   private selectionPoints: string[] = [];
-  private dragStart: [number, number];
-  private draggable: string[];
+  private dragPosition: Position;
+  private draggableModes: TerraDrawSelectDraggable;
   private keyEvents: TerraDrawSelectModeKeyEvents;
 
   constructor(options?: {
     styling?: Partial<TerraDrawAdapterStyling>;
     pointerDistance?: number;
-    draggable?: string[];
+    draggable?: TerraDrawSelectDraggable;
     keyEvents?: TerraDrawSelectModeKeyEvents;
   }) {
+    super(options);
     this.pointerDistance = (options && options.pointerDistance) || 40;
 
-    this.styling =
-      options && options.styling
-        ? { ...getDefaultStyling(), ...options.styling }
-        : getDefaultStyling();
-
-    this.draggable =
+    this.draggableModes =
       options && options.draggable ? options.draggable.slice() : [];
 
     this.keyEvents =
@@ -70,15 +68,13 @@ export class TerraDrawSelectMode implements TerraDrawMode {
     this.selected = [];
   }
 
-  private createSelectionPoints(selectedCoords: [number, number][]) {
+  private createSelectionPoints(selectedCoords: Position[]) {
     this.selectionPoints = this.store.create(
       selectedCoords.map((coord) => ({
         geometry: { type: "Point", coordinates: coord },
         properties: { mode: this.mode, selectionPoint: true },
       }))
     );
-
-    console.log(this.selectionPoints);
   }
 
   private deleteSelectionPoints() {
@@ -90,7 +86,162 @@ export class TerraDrawSelectMode implements TerraDrawMode {
     }
   }
 
-  styling: TerraDrawAdapterStyling;
+  private distanceBetweenTwoCoords(
+    coord: Position,
+    event: TerraDrawMouseEvent
+  ) {
+    const { x, y } = this.project(coord[0], coord[1]);
+
+    const distance = getPixelDistance(
+      { x, y },
+      { x: event.containerX, y: event.containerY }
+    );
+
+    return distance;
+  }
+
+  private dragFeature(event: TerraDrawMouseEvent) {
+    const selectedId = this.selected[0];
+
+    const geometry = this.store.getGeometryCopy(selectedId);
+    const mouseCoord = [event.lng, event.lat];
+
+    if (geometry.type === "Polygon" || geometry.type === "LineString") {
+      let coords: Position[];
+      let upToCoord: number;
+      if (geometry.type === "Polygon") {
+        coords = geometry.coordinates[0];
+        upToCoord = coords.length - 1;
+      } else if (geometry.type === "LineString") {
+        coords = geometry.coordinates;
+        upToCoord = coords.length;
+      }
+
+      for (let i = 0; i < upToCoord; i++) {
+        const coordinate = coords[i];
+        const delta = [
+          this.dragPosition[0] - mouseCoord[0],
+          this.dragPosition[1] - mouseCoord[1],
+        ];
+        coords[i] = [coordinate[0] - delta[0], coordinate[1] - delta[1]];
+      }
+
+      // Set final coordinate identical to first
+      // We only want to do this for polygons!
+      if (geometry.type === "Polygon") {
+        coords[coords.length - 1] = [coords[0][0], coords[0][1]];
+      }
+
+      this.store.updateGeometry([{ id: this.selected[0], geometry }]);
+
+      this.store.updateGeometry(
+        this.selectionPoints.map((id, i) => {
+          const pointGeometry = this.store.getGeometryCopy<Point>(id);
+          pointGeometry.coordinates[0] = coords[i][0];
+          pointGeometry.coordinates[1] = coords[i][1];
+
+          return { id, geometry: pointGeometry };
+        })
+      );
+    } else if (geometry.type === "Point") {
+      // For mouse points we can simply move it
+      // to the dragged position
+      this.store.updateGeometry([
+        {
+          id: selectedId,
+          geometry: {
+            type: "Point",
+            coordinates: mouseCoord,
+          },
+        },
+      ]);
+    }
+  }
+
+  private dragCoordinate(event: TerraDrawMouseEvent) {
+    const selectedId = this.selected[0];
+
+    const geometry = this.store.getGeometryCopy(selectedId);
+    let coordinates;
+
+    if (geometry.type === "LineString") {
+      coordinates = geometry.coordinates;
+    } else if (geometry.type === "Polygon") {
+      coordinates = geometry.coordinates[0];
+    }
+
+    if (coordinates) {
+      for (let i = 0; i < coordinates.length; i++) {
+        const coord = coordinates[i];
+        const distance = this.distanceBetweenTwoCoords(coord, event);
+
+        if (distance < this.pointerDistance) {
+          const updatedCoord = [event.lng, event.lat];
+
+          const isPolygonFirstOrLastCoord =
+            (geometry.type === "Polygon" && i === 0) ||
+            i === coordinates.length - 1;
+
+          // For Polygons we want the first
+          // and last coordinates to match
+          if (isPolygonFirstOrLastCoord) {
+            coordinates[0] = updatedCoord;
+            coordinates[coordinates.length - 1] = updatedCoord;
+          } else {
+            coordinates[i] = updatedCoord;
+          }
+
+          this.store.updateGeometry([
+            // Update feature
+            {
+              id: selectedId as string,
+              geometry: geometry,
+            },
+
+            // Update selection points
+            ...(isPolygonFirstOrLastCoord
+              ? [
+                  {
+                    id: this.selectionPoints[0] as string,
+                    geometry: {
+                      type: "Point",
+                      coordinates: updatedCoord,
+                    } as Point,
+                  },
+                  {
+                    id: this.selectionPoints[coordinates.length - 1] as string,
+                    geometry: {
+                      type: "Point",
+                      coordinates: updatedCoord,
+                    } as Point,
+                  },
+                ]
+              : [
+                  {
+                    id: this.selectionPoints[i] as string,
+                    geometry: {
+                      type: "Point",
+                      coordinates: updatedCoord,
+                    } as Point,
+                  },
+                ]),
+          ]);
+
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }
+
+  start() {
+    this.setStarted();
+  }
+  stop() {
+    this.setStopped();
+    this.cleanUp();
+  }
 
   onClick(event: TerraDrawMouseEvent) {
     const features = this.store.copyAll();
@@ -108,13 +259,9 @@ export class TerraDrawSelectMode implements TerraDrawMode {
       }
 
       if (geometry.type === "Point") {
-        const { x, y } = this.project(
-          geometry.coordinates[0],
-          geometry.coordinates[1]
-        );
-        const distance = getPixelDistance(
-          { x, y },
-          { x: event.containerX, y: event.containerY }
+        const distance = this.distanceBetweenTwoCoords(
+          geometry.coordinates,
+          event
         );
         if (
           distance < this.pointerDistance &&
@@ -144,7 +291,7 @@ export class TerraDrawSelectMode implements TerraDrawMode {
       } else if (geometry.type === "Polygon") {
         const clickInsidePolygon = pointInPolygon(
           [event.lng, event.lat],
-          geometry.coordinates as [number, number][][]
+          geometry.coordinates
         );
 
         if (clickInsidePolygon) {
@@ -193,7 +340,7 @@ export class TerraDrawSelectMode implements TerraDrawMode {
       }
 
       if (selectedCoords) {
-        this.createSelectionPoints(selectedCoords as [number, number][]);
+        this.createSelectionPoints(selectedCoords);
       }
     } else if (this.selected.length) {
       this.deselect();
@@ -231,88 +378,65 @@ export class TerraDrawSelectMode implements TerraDrawMode {
   ) {
     // We only need to stop the map dragging if
     // we actually have something selected
-    if (this.selected.length) {
-      this.dragStart = [event.lng, event.lat];
-      setMapDraggability(false);
+    if (!this.selected.length) {
+      return;
     }
+
+    // If the selected feature is not draggable
+    // don't do anything
+    const properties = this.store.getPropertiesCopy(this.selected[0]);
+    const featureIsDraggable = this.draggableModes
+      .map((draggable) => draggable.mode)
+      .includes(properties.mode);
+
+    if (!featureIsDraggable) {
+      return;
+    }
+
+    this.setCursor("grabbing");
+    this.dragPosition = [event.lng, event.lat];
+    setMapDraggability(false);
   }
+
   onDrag(event: TerraDrawMouseEvent) {
     const selectedId = this.selected[0];
 
-    if (selectedId) {
-      const properties = this.store.getPropertiesCopy(selectedId);
+    if (!selectedId) {
+      return;
+    }
 
-      if (!this.draggable.includes(properties.mode)) {
+    const properties = this.store.getPropertiesCopy(selectedId);
+    const draggable = this.draggableModes.find(
+      (draggableMode) => draggableMode.mode === properties.mode
+    );
+
+    // If mode is not draggable, return
+    if (!draggable) {
+      return;
+    }
+
+    // Check if coordinate is draggable and is dragged
+    if (draggable.coordinate) {
+      const coordinateWasDragged = this.dragCoordinate(event);
+
+      if (coordinateWasDragged) {
         return;
       }
-      const geometry = this.store.getGeometryCopy(selectedId);
-      const mouseCoord = [event.lng, event.lat] as [number, number];
-
-      if (geometry.type === "Polygon" || geometry.type === "LineString") {
-        let coords: Position[];
-        let upToCoord: number;
-        if (geometry.type === "Polygon") {
-          coords = geometry.coordinates[0];
-          upToCoord = coords.length - 1;
-        } else if (geometry.type === "LineString") {
-          coords = geometry.coordinates;
-          upToCoord = coords.length;
-        }
-
-        for (let i = 0; i < upToCoord; i++) {
-          const coordinate = coords[i];
-          const delta = [
-            this.dragStart[0] - mouseCoord[0],
-            this.dragStart[1] - mouseCoord[1],
-          ];
-          coords[i] = [coordinate[0] - delta[0], coordinate[1] - delta[1]];
-        }
-
-        // Set final coordinate identical to first
-        // We only want to do this for polygons!
-        if (geometry.type === "Polygon") {
-          coords[coords.length - 1] = [coords[0][0], coords[0][1]];
-        }
-
-        this.store.updateGeometry([{ id: this.selected[0], geometry }]);
-
-        this.selectionPoints.forEach((id, i) => {
-          const pointGeometry = this.store.getGeometryCopy<Point>(id);
-          pointGeometry.coordinates[0] = coords[i][0];
-          pointGeometry.coordinates[1] = coords[i][1];
-          this.store.updateGeometry([{ id, geometry: pointGeometry }]);
-        });
-      } else if (geometry.type === "Point") {
-        // For mouse points we can simply move it
-        // to the dragged position
-        this.store.updateGeometry([
-          {
-            id: selectedId,
-            geometry: {
-              type: "Point",
-              coordinates: mouseCoord,
-            },
-          },
-        ]);
-      }
     }
-    this.dragStart = [event.lng, event.lat];
+
+    // Check if feature is draggable and is dragged
+    if (draggable.feature) {
+      this.dragFeature(event);
+      this.dragPosition = [event.lng, event.lat];
+    }
   }
   onDragEnd(
     _: TerraDrawMouseEvent,
     setMapDraggability: (enabled: boolean) => void
   ) {
-    this.dragStart = undefined;
-    setMapDraggability(false);
+    this.setCursor("grab");
+    this.dragPosition = undefined;
+    setMapDraggability(true);
   }
   onMouseMove() {}
-  register(config: TerraDrawModeRegisterConfig) {
-    this.store = config.store;
-    this.store.registerOnChange(config.onChange);
-    this.project = config.project;
-    this.onSelect = config.onSelect;
-    this.onDeselect = config.onDeselect;
-  }
-  onDeselect(deselectedId: string) {}
-  onSelect(selectedId: string) {}
 }

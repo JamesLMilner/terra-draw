@@ -1,4 +1,5 @@
 import { GeoJSONStore } from "../store/store";
+import { getMockModeConfig } from "../test/mock-config";
 import { getDefaultStyling } from "../util/styling";
 import { TerraDrawPolygonMode } from "./polygon.mode";
 
@@ -28,21 +29,72 @@ describe("TerraDrawPolygonMode", () => {
     });
   });
 
-  describe("register", () => {
+  describe("lifecycle", () => {
     it("registers correctly", () => {
+      const polygonMode = new TerraDrawPolygonMode();
+      expect(polygonMode.state).toBe("unregistered");
+      polygonMode.register(getMockModeConfig());
+      expect(polygonMode.state).toBe("registered");
+    });
+
+    it("setting state directly throws error", () => {
       const polygonMode = new TerraDrawPolygonMode();
 
       expect(() => {
-        polygonMode.register({
-          onChange: () => {},
-          onSelect: (selectedId: string) => {},
-          onDeselect: () => {},
-          store: new GeoJSONStore(),
-          project: (lng: number, lat: number) => {
-            return { x: 0, y: 0 };
-          },
-        });
-      }).not.toThrow();
+        polygonMode.state = "started";
+      }).toThrowError();
+    });
+
+    it("stopping before not registering throws error", () => {
+      const polygonMode = new TerraDrawPolygonMode();
+
+      expect(() => {
+        polygonMode.stop();
+      }).toThrowError();
+    });
+
+    it("starting before not registering throws error", () => {
+      const polygonMode = new TerraDrawPolygonMode();
+
+      expect(() => {
+        polygonMode.start();
+      }).toThrowError();
+    });
+
+    it("starting before not registering throws error", () => {
+      const polygonMode = new TerraDrawPolygonMode();
+
+      expect(() => {
+        polygonMode.start();
+      }).toThrowError();
+    });
+
+    it("registering multiple times throws an error", () => {
+      const polygonMode = new TerraDrawPolygonMode();
+
+      expect(() => {
+        polygonMode.register(getMockModeConfig());
+        polygonMode.register(getMockModeConfig());
+      }).toThrowError();
+    });
+
+    it("can start correctly", () => {
+      const polygonMode = new TerraDrawPolygonMode();
+
+      polygonMode.register(getMockModeConfig());
+      polygonMode.start();
+
+      expect(polygonMode.state).toBe("started");
+    });
+
+    it("can stop correctly", () => {
+      const polygonMode = new TerraDrawPolygonMode();
+
+      polygonMode.register(getMockModeConfig());
+      polygonMode.start();
+      polygonMode.stop();
+
+      expect(polygonMode.state).toBe("stopped");
     });
   });
 
@@ -50,25 +102,16 @@ describe("TerraDrawPolygonMode", () => {
     let polygonMode: TerraDrawPolygonMode;
     let store: GeoJSONStore;
     let onChange: jest.Mock;
-    let project: jest.Mock;
-    let onSelect: jest.Mock;
-    let onDeselect: jest.Mock;
 
     beforeEach(() => {
       store = new GeoJSONStore();
       polygonMode = new TerraDrawPolygonMode();
-      onChange = jest.fn();
-      project = jest.fn();
-      onSelect = jest.fn();
-      onDeselect = jest.fn();
+      const mockConfig = getMockModeConfig();
 
-      polygonMode.register({
-        store,
-        onChange,
-        project,
-        onSelect,
-        onDeselect,
-      });
+      store = mockConfig.store;
+      onChange = mockConfig.onChange;
+
+      polygonMode.register(mockConfig);
     });
 
     it("does nothing if no clicks have occurred ", () => {
@@ -219,26 +262,17 @@ describe("TerraDrawPolygonMode", () => {
   describe("onClick", () => {
     let polygonMode: TerraDrawPolygonMode;
     let store: GeoJSONStore;
-    let onChange: jest.Mock;
     let project: jest.Mock;
-    let onSelect: jest.Mock;
-    let onDeselect: jest.Mock;
 
     beforeEach(() => {
-      store = new GeoJSONStore();
       polygonMode = new TerraDrawPolygonMode();
-      onChange = jest.fn();
-      project = jest.fn();
-      onSelect = jest.fn();
-      onDeselect = jest.fn();
 
-      polygonMode.register({
-        store,
-        onChange,
-        project,
-        onSelect,
-        onDeselect,
-      });
+      const mockConfig = getMockModeConfig();
+
+      store = mockConfig.store;
+      project = mockConfig.project;
+
+      polygonMode.register(mockConfig);
     });
 
     it("can create a polygon", () => {
@@ -425,14 +459,12 @@ describe("TerraDrawPolygonMode", () => {
 
     it("does not create a polygon line if it has intersections and allowSelfIntersections is false", () => {
       polygonMode = new TerraDrawPolygonMode({ allowSelfIntersections: false });
+      const mockConfig = getMockModeConfig();
 
-      polygonMode.register({
-        store,
-        onChange,
-        project,
-        onSelect,
-        onDeselect,
-      });
+      store = mockConfig.store;
+      project = mockConfig.project;
+
+      polygonMode.register(mockConfig);
 
       const coordOneEvent = {
         lng: 11.162109375,
@@ -512,24 +544,17 @@ describe("TerraDrawPolygonMode", () => {
   describe("onKeyPress", () => {
     let store: GeoJSONStore;
     let polygonMode: TerraDrawPolygonMode;
-    let onChange: jest.Mock;
-    let project: jest.Mock;
 
     beforeEach(() => {
       jest.resetAllMocks();
 
-      store = new GeoJSONStore();
       polygonMode = new TerraDrawPolygonMode();
-      onChange = jest.fn();
-      project = jest.fn();
 
-      polygonMode.register({
-        onChange: onChange as any,
-        onSelect: (selectedId: string) => {},
-        onDeselect: () => {},
-        store,
-        project,
-      });
+      const mockConfig = getMockModeConfig();
+
+      store = mockConfig.store;
+
+      polygonMode.register(mockConfig);
     });
 
     it("Escape - does nothing when no line is present", () => {
@@ -562,20 +587,16 @@ describe("TerraDrawPolygonMode", () => {
 
     beforeEach(() => {
       jest.resetAllMocks();
-
-      store = new GeoJSONStore();
       polygonMode = new TerraDrawPolygonMode();
-      onChange = jest.fn();
-      project = jest.fn();
 
-      polygonMode.register({
-        onChange: onChange as any,
-        onSelect: (selectedId: string) => {},
-        onDeselect: () => {},
-        store,
-        project,
-      });
+      const mockConfig = getMockModeConfig();
+      store = mockConfig.store;
+      onChange = mockConfig.onChange;
+      project = mockConfig.project;
+
+      polygonMode.register(mockConfig);
     });
+
     it("does not throw error if feature has not been created ", () => {
       expect(() => {
         polygonMode.cleanUp();
@@ -602,6 +623,7 @@ describe("TerraDrawPolygonMode", () => {
   describe("onDrag", () => {
     it("does nothing", () => {
       const polygonMode = new TerraDrawPolygonMode();
+      polygonMode.register(getMockModeConfig());
 
       expect(() => {
         polygonMode.onDrag();
@@ -612,6 +634,7 @@ describe("TerraDrawPolygonMode", () => {
   describe("onDragStart", () => {
     it("does nothing", () => {
       const polygonMode = new TerraDrawPolygonMode();
+      polygonMode.register(getMockModeConfig());
 
       expect(() => {
         polygonMode.onDragStart();
@@ -622,6 +645,7 @@ describe("TerraDrawPolygonMode", () => {
   describe("onDragEnd", () => {
     it("does nothing", () => {
       const polygonMode = new TerraDrawPolygonMode();
+      polygonMode.register(getMockModeConfig());
 
       expect(() => {
         polygonMode.onDragEnd();

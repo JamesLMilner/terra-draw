@@ -12,6 +12,7 @@ export const getDefaultStyling = (): TerraDrawAdapterStyling => {
     lineStringColor: "#3f97e0",
     lineStringWidth: 4,
     selectedColor: "#26a9c8",
-    selectedPointColor: "#26a9c8",
+    selectedPointOutlineColor: "#ffffff",
+    selectionPointWidth: 6,
   };
 };

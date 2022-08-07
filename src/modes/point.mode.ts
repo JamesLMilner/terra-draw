@@ -1,29 +1,30 @@
+import { isThrowStatement, textSpanIsEmpty } from "typescript";
 import {
   TerraDrawMouseEvent,
   TerraDrawMode,
   TerraDrawModeRegisterConfig,
   TerraDrawAdapterStyling,
+  TerraDrawModeState,
 } from "../common";
 import { GeoJSONStore } from "../store/store";
 import { getDefaultStyling } from "../util/styling";
+import { TerraDrawBaseDrawMode } from "./base.mode";
 
-export class TerraDrawPointMode implements TerraDrawMode {
+export class TerraDrawPointMode extends TerraDrawBaseDrawMode {
   mode = "point";
 
-  private store: GeoJSONStore;
-
   constructor(options?: { styling?: Partial<TerraDrawAdapterStyling> }) {
-    this.styling =
-      options && options.styling
-        ? { ...getDefaultStyling(), ...options.styling }
-        : getDefaultStyling();
+    super(options);
   }
 
-  styling: TerraDrawAdapterStyling;
-
-  register(config: TerraDrawModeRegisterConfig) {
-    this.store = config.store;
-    this.store.registerOnChange(config.onChange);
+  start() {
+    this.setStarted();
+    this.setCursor("crosshair");
+  }
+  stop() {
+    this.setStopped();
+    this.setCursor("unset");
+    this.cleanUp();
   }
 
   onClick(event: TerraDrawMouseEvent) {

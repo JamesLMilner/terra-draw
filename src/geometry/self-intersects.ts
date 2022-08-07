@@ -1,4 +1,4 @@
-import { Feature, LineString, Polygon } from "geojson";
+import { Feature, LineString, Polygon, Position } from "geojson";
 // import * as rbush from "rbush";
 
 type SelfIntersectsOptions = {
@@ -56,10 +56,10 @@ export function selfIntersects(
     ring1: number,
     edge1: number
   ) {
-    const start0 = coord[ring0][edge0] as [number, number];
-    const end0 = coord[ring0][edge0 + 1] as [number, number];
-    const start1 = coord[ring1][edge1] as [number, number];
-    const end1 = coord[ring1][edge1 + 1] as [number, number];
+    const start0 = coord[ring0][edge0];
+    const end0 = coord[ring0][edge0 + 1];
+    const start1 = coord[ring1][edge1];
+    const end1 = coord[ring1][edge1 + 1];
 
     const intersection = intersect(start0, end0, start1, end1);
 
@@ -113,16 +113,16 @@ export function selfIntersects(
   }
 }
 
-function equalArrays(array1: [number, number], array2: [number, number]) {
+function equalArrays(array1: Position, array2: Position) {
   return array1[0] === array2[0] && array1[1] === array2[1];
 }
 
 // Function to compute where two lines (not segments) intersect. From https://en.wikipedia.org/wiki/Line%E2%80%93line_intersection
 function intersect(
-  start0: [number, number],
-  end0: [number, number],
-  start1: [number, number],
-  end1: [number, number]
+  start0: Position,
+  end0: Position,
+  start1: Position,
+  end1: Position
 ) {
   if (
     equalArrays(start0, start1) ||

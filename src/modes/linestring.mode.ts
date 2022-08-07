@@ -1,26 +1,20 @@
 import {
   TerraDrawMouseEvent,
-  TerraDrawMode,
-  TerraDrawModeRegisterConfig,
   TerraDrawAdapterStyling,
   TerraDrawKeyboardEvent,
 } from "../common";
-import { GeoJSONStore } from "../store/store";
 import { LineString } from "geojson";
 import { selfIntersects } from "../geometry/self-intersects";
 import { getPixelDistance } from "../geometry/get-pixel-distance";
-import { getDefaultStyling } from "../util/styling";
+import { TerraDrawBaseDrawMode } from "./base.mode";
 
 type TerraDrawLineStringModeKeyEvents = {
   cancel: KeyboardEvent["key"];
 };
-export class TerraDrawLineStringMode implements TerraDrawMode {
-  public mode = "linestring";
+export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode {
+  mode = "linestring";
 
-  private store: GeoJSONStore;
-  private project: TerraDrawModeRegisterConfig["project"];
   private pointerDistance: number;
-
   private currentCoordinate = 0;
   private currentId: string;
   private allowSelfIntersections;
@@ -32,11 +26,7 @@ export class TerraDrawLineStringMode implements TerraDrawMode {
     pointerDistance?: number;
     keyEvents?: TerraDrawLineStringModeKeyEvents;
   }) {
-    this.styling =
-      options && options.styling
-        ? { ...getDefaultStyling(), ...options.styling }
-        : getDefaultStyling();
-
+    super(options);
     this.pointerDistance = (options && options.pointerDistance) || 40;
 
     this.allowSelfIntersections =
@@ -48,12 +38,14 @@ export class TerraDrawLineStringMode implements TerraDrawMode {
       options && options.keyEvents ? options.keyEvents : { cancel: "Escape" };
   }
 
-  styling: TerraDrawAdapterStyling;
-
-  register(config: TerraDrawModeRegisterConfig) {
-    this.store = config.store;
-    this.store.registerOnChange(config.onChange);
-    this.project = config.project;
+  start() {
+    this.setStarted();
+    this.setCursor("crosshair");
+  }
+  stop() {
+    this.setStopped();
+    this.setCursor("unset");
+    this.cleanUp();
   }
 
   onMouseMove(event: TerraDrawMouseEvent) {

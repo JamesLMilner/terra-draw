@@ -1,25 +1,25 @@
+import { Position } from "geojson";
 import {
   TerraDrawMouseEvent,
   TerraDrawMode,
   TerraDrawModeRegisterConfig,
   TerraDrawAdapterStyling,
   TerraDrawKeyboardEvent,
+  TerraDrawModeState,
 } from "../common";
 import { circle } from "../geometry/create-circle";
 import { haversineDistanceKilometers } from "../geometry/haversine-distance";
 import { GeoJSONStore } from "../store/store";
 import { getDefaultStyling } from "../util/styling";
+import { TerraDrawBaseDrawMode } from "./base.mode";
 
 type TerraDrawCircleModeKeyEvents = {
   cancel: KeyboardEvent["key"];
 };
 
-export class TerraDrawCircleMode implements TerraDrawMode {
+export class TerraDrawCircleMode extends TerraDrawBaseDrawMode {
   mode = "circle";
-
-  private store: GeoJSONStore;
-  private project: TerraDrawModeRegisterConfig["project"];
-  private center: [number, number];
+  private center: Position;
   private clickCount: number = 0;
   private currentCircleId: string;
   private keyEvents: TerraDrawCircleModeKeyEvents;
@@ -28,21 +28,21 @@ export class TerraDrawCircleMode implements TerraDrawMode {
     styling?: Partial<TerraDrawAdapterStyling>;
     keyEvents?: TerraDrawCircleModeKeyEvents;
   }) {
-    this.styling =
-      options && options.styling
-        ? { ...getDefaultStyling(), ...options.styling }
-        : getDefaultStyling();
+    super(options);
 
     this.keyEvents =
       options && options.keyEvents ? options.keyEvents : { cancel: "Escape" };
   }
 
-  styling: TerraDrawAdapterStyling;
+  start() {
+    this.setStarted();
+    this.setCursor("crosshair");
+  }
 
-  register(config: TerraDrawModeRegisterConfig) {
-    this.store = config.store;
-    this.store.registerOnChange(config.onChange);
-    this.project = config.project;
+  stop() {
+    this.setStopped();
+    this.setCursor("unset");
+    this.cleanUp();
   }
 
   onClick(event: TerraDrawMouseEvent) {

@@ -1,6 +1,7 @@
 import { GeoJSONStore } from "../store/store";
+import { getMockModeConfig } from "../test/mock-config";
 import { getDefaultStyling } from "../util/styling";
-import { TerraDrawLineStringMode } from "./line-string.mode";
+import { TerraDrawLineStringMode } from "./linestring.mode";
 
 describe("TerraDrawLineStringMode", () => {
   const defaultStyles = getDefaultStyling();
@@ -24,38 +25,90 @@ describe("TerraDrawLineStringMode", () => {
     });
   });
 
-  describe("register", () => {
+  describe("lifecycle", () => {
     it("registers correctly", () => {
+      const lineStringMode = new TerraDrawLineStringMode();
+      expect(lineStringMode.state).toBe("unregistered");
+      lineStringMode.register(getMockModeConfig());
+      expect(lineStringMode.state).toBe("registered");
+    });
+
+    it("setting state directly throws error", () => {
       const lineStringMode = new TerraDrawLineStringMode();
 
       expect(() => {
-        lineStringMode.register({
-          onChange: () => {},
-          onSelect: (selectedId: string) => {},
-          onDeselect: () => {},
-          store: new GeoJSONStore(),
-          project: (lng: number, lat: number) => {
-            return { x: 0, y: 0 };
-          },
-        });
-      }).not.toThrow();
+        lineStringMode.state = "started";
+      }).toThrowError();
+    });
+
+    it("stopping before not registering throws error", () => {
+      const lineStringMode = new TerraDrawLineStringMode();
+
+      expect(() => {
+        lineStringMode.stop();
+      }).toThrowError();
+    });
+
+    it("starting before not registering throws error", () => {
+      const lineStringMode = new TerraDrawLineStringMode();
+
+      expect(() => {
+        lineStringMode.start();
+      }).toThrowError();
+    });
+
+    it("starting before not registering throws error", () => {
+      const lineStringMode = new TerraDrawLineStringMode();
+
+      expect(() => {
+        lineStringMode.start();
+      }).toThrowError();
+    });
+
+    it("registering multiple times throws an error", () => {
+      const lineStringMode = new TerraDrawLineStringMode();
+
+      expect(() => {
+        lineStringMode.register(getMockModeConfig());
+        lineStringMode.register(getMockModeConfig());
+      }).toThrowError();
+    });
+
+    it("can start correctly", () => {
+      const lineStringMode = new TerraDrawLineStringMode();
+
+      lineStringMode.register(getMockModeConfig());
+      lineStringMode.start();
+
+      expect(lineStringMode.state).toBe("started");
+    });
+
+    it("can stop correctly", () => {
+      const lineStringMode = new TerraDrawLineStringMode();
+
+      lineStringMode.register(getMockModeConfig());
+      lineStringMode.start();
+      lineStringMode.stop();
+
+      expect(lineStringMode.state).toBe("stopped");
     });
   });
 
   describe("onMouseMove", () => {
-    it("does nothing if no clicks have occurred ", () => {
-      const lineStringMode = new TerraDrawLineStringMode();
-      const onChange = jest.fn();
-      lineStringMode.register({
-        onChange,
-        onSelect: (selectedId: string) => {},
-        onDeselect: () => {},
-        store: new GeoJSONStore(),
-        project: (lng: number, lat: number) => {
-          return { x: 0, y: 0 };
-        },
-      });
+    let lineStringMode: TerraDrawLineStringMode;
+    let onChange: jest.Mock;
+    let store: GeoJSONStore;
 
+    beforeEach(() => {
+      lineStringMode = new TerraDrawLineStringMode();
+      const mockConfig = getMockModeConfig();
+      onChange = mockConfig.onChange;
+      store = mockConfig.store;
+
+      lineStringMode.register(mockConfig);
+    });
+
+    it("does nothing if no clicks have occurred ", () => {
       lineStringMode.onMouseMove({
         lng: 0,
         lat: 0,
@@ -67,19 +120,6 @@ describe("TerraDrawLineStringMode", () => {
     });
 
     it("updates the coordinate to the mouse position if a coordinate has been created", () => {
-      const lineStringMode = new TerraDrawLineStringMode();
-      const store = new GeoJSONStore();
-      const onChange = jest.fn();
-      lineStringMode.register({
-        onChange,
-        onSelect: (selectedId: string) => {},
-        onDeselect: () => {},
-        store,
-        project: (lng: number, lat: number) => {
-          return { x: 0, y: 0 };
-        },
-      });
-
       lineStringMode.onClick({
         lng: 0,
         lat: 0,
@@ -107,26 +147,18 @@ describe("TerraDrawLineStringMode", () => {
   });
 
   describe("onClick", () => {
-    let store: GeoJSONStore;
     let lineStringMode: TerraDrawLineStringMode;
     let onChange: jest.Mock;
+    let store: GeoJSONStore;
     let project: jest.Mock;
 
     beforeEach(() => {
-      jest.resetAllMocks();
-
-      store = new GeoJSONStore();
       lineStringMode = new TerraDrawLineStringMode();
-      onChange = jest.fn();
-      project = jest.fn();
-
-      lineStringMode.register({
-        onChange: onChange as any,
-        onSelect: (selectedId: string) => {},
-        onDeselect: () => {},
-        store,
-        project,
-      });
+      const mockConfig = getMockModeConfig();
+      onChange = mockConfig.onChange;
+      store = mockConfig.store;
+      project = mockConfig.project;
+      lineStringMode.register(mockConfig);
     });
 
     it("creates two identical coordinates on click", () => {
@@ -243,20 +275,15 @@ describe("TerraDrawLineStringMode", () => {
     });
 
     it("handles self intersection", () => {
-      store = new GeoJSONStore();
       lineStringMode = new TerraDrawLineStringMode({
         allowSelfIntersections: false,
       });
-      onChange = jest.fn();
-      project = jest.fn();
 
-      lineStringMode.register({
-        onChange: onChange as any,
-        onSelect: (selectedId: string) => {},
-        onDeselect: () => {},
-        store,
-        project,
-      });
+      const mockConfig = getMockModeConfig();
+      onChange = mockConfig.onChange;
+      store = mockConfig.store;
+      project = mockConfig.project;
+      lineStringMode.register(mockConfig);
 
       // We don't want there to be a closing click, so we
       // make the distances between points huge (much large than 40 pixels)
@@ -324,26 +351,14 @@ describe("TerraDrawLineStringMode", () => {
   });
 
   describe("onKeyPress", () => {
-    let store: GeoJSONStore;
     let lineStringMode: TerraDrawLineStringMode;
-    let onChange: jest.Mock;
-    let project: jest.Mock;
+    let store: GeoJSONStore;
 
     beforeEach(() => {
-      jest.resetAllMocks();
-
-      store = new GeoJSONStore();
       lineStringMode = new TerraDrawLineStringMode();
-      onChange = jest.fn();
-      project = jest.fn();
-
-      lineStringMode.register({
-        onChange: onChange as any,
-        onSelect: (selectedId: string) => {},
-        onDeselect: () => {},
-        store,
-        project,
-      });
+      const mockConfig = getMockModeConfig();
+      store = mockConfig.store;
+      lineStringMode.register(mockConfig);
     });
 
     it("Escape - does nothing when no line is present", () => {
@@ -369,39 +384,23 @@ describe("TerraDrawLineStringMode", () => {
   });
 
   describe("cleanUp", () => {
+    let lineStringMode: TerraDrawLineStringMode;
+    let store: GeoJSONStore;
+
+    beforeEach(() => {
+      lineStringMode = new TerraDrawLineStringMode();
+      const mockConfig = getMockModeConfig();
+      store = mockConfig.store;
+      lineStringMode.register(mockConfig);
+    });
+
     it("does not throw error if feature has not been created ", () => {
-      const store = new GeoJSONStore();
-      const lineStringMode = new TerraDrawLineStringMode();
-      const onChange = jest.fn();
-      const project = jest.fn();
-
-      lineStringMode.register({
-        onChange: onChange as any,
-        onSelect: (selectedId: string) => {},
-        onDeselect: () => {},
-        store,
-        project,
-      });
-
       expect(() => {
         lineStringMode.cleanUp();
       }).not.toThrowError();
     });
 
     it("cleans up correctly if drawing has started", () => {
-      const store = new GeoJSONStore();
-      const lineStringMode = new TerraDrawLineStringMode();
-      const onChange = jest.fn();
-      const project = jest.fn();
-
-      lineStringMode.register({
-        onChange: onChange as any,
-        onSelect: (selectedId: string) => {},
-        onDeselect: () => {},
-        store,
-        project,
-      });
-
       lineStringMode.onClick({
         lng: 0,
         lat: 0,

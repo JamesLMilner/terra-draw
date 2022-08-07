@@ -1,4 +1,4 @@
-import { Feature, Polygon } from "geojson";
+import { Feature, Polygon, Position } from "geojson";
 
 // Based on Turf.js Circl module
 // https://github.com/Turfjs/turf/blob/master/packages/turf-circle/index.ts
@@ -20,10 +20,10 @@ function radiansToDegrees(radians: number): number {
 }
 
 function destination(
-  origin: [lng: number, lat: number],
+  origin: Position,
   distance: number,
   bearing: number
-): [number, number] {
+): Position {
   const longitude1 = degreesToRadians(origin[0]);
   const latitude1 = degreesToRadians(origin[1]);
   const bearingRad = degreesToRadians(bearing);
@@ -47,14 +47,14 @@ function destination(
 }
 
 export function circle(options: {
-  center: [number, number];
+  center: Position;
   radiusKilometers: number;
   steps?: number;
 }): Feature<Polygon> {
   const { center, radiusKilometers } = options;
   const steps = options.steps ? options.steps : 64;
 
-  const coordinates: [number, number][] = [];
+  const coordinates: Position[] = [];
   for (let i = 0; i < steps; i++) {
     coordinates.push(destination(center, radiusKilometers, (i * -360) / steps));
   }

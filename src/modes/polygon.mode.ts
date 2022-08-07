@@ -1,24 +1,18 @@
 import {
   TerraDrawMouseEvent,
-  TerraDrawMode,
-  TerraDrawModeRegisterConfig,
   TerraDrawAdapterStyling,
   TerraDrawKeyboardEvent,
 } from "../common";
-import { GeoJSONStore } from "../store/store";
 import { Polygon } from "geojson";
 import { getPixelDistance } from "../geometry/get-pixel-distance";
 import { selfIntersects } from "../geometry/self-intersects";
-import { getDefaultStyling } from "../util/styling";
+import { TerraDrawBaseDrawMode } from "./base.mode";
 
 type TerraDrawPolygonModeKeyEvents = {
   cancel: KeyboardEvent["key"];
 };
-export class TerraDrawPolygonMode implements TerraDrawMode {
+export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode {
   mode = "polygon";
-
-  private store: GeoJSONStore;
-  private project: TerraDrawModeRegisterConfig["project"];
 
   private currentCoordinate = 0;
   private currentId: string;
@@ -32,12 +26,8 @@ export class TerraDrawPolygonMode implements TerraDrawMode {
     pointerDistance?: number;
     keyEvents?: TerraDrawPolygonModeKeyEvents;
   }) {
+    super(options);
     this.pointerDistance = (options && options.pointerDistance) || 40;
-
-    this.styling =
-      options && options.styling
-        ? { ...getDefaultStyling(), ...options.styling }
-        : getDefaultStyling();
 
     this.allowSelfIntersections =
       options && options.allowSelfIntersections !== undefined
@@ -48,15 +38,19 @@ export class TerraDrawPolygonMode implements TerraDrawMode {
       options && options.keyEvents ? options.keyEvents : { cancel: "Escape" };
   }
 
-  styling: TerraDrawAdapterStyling;
-
-  register(config: TerraDrawModeRegisterConfig) {
-    this.store = config.store;
-    this.store.registerOnChange(config.onChange);
-    this.project = config.project;
+  start() {
+    this.setStarted();
+    this.setCursor("crosshair");
+  }
+  stop() {
+    this.setStopped();
+    this.setCursor("unset");
+    this.cleanUp();
   }
 
   onMouseMove(event: TerraDrawMouseEvent) {
+    this.setCursor("crosshair");
+
     if (!this.currentId || this.currentCoordinate === 0) {
       return;
     }
@@ -127,7 +121,7 @@ export class TerraDrawPolygonMode implements TerraDrawMode {
 
       // if (
       //   coordinatesIdentical(
-      //     currentPolygonGeometry.coordinates[0][0] as [number, number],
+      //     currentPolygonGeometry.coordinates[0][0] as Position,
       //     [event.lng, event.lat]
       //   )
       // ) {
@@ -247,9 +241,16 @@ export class TerraDrawPolygonMode implements TerraDrawMode {
     }
   }
 
-  onDragStart() {}
+  onDragStart() {
+    // We want to allow the default drag
+    // cursor to exist
+    this.setCursor("unset");
+  }
   onDrag() {}
-  onDragEnd() {}
+  onDragEnd() {
+    // Set it back to crosshair
+    this.setCursor("crosshair");
+  }
 
   cleanUp() {
     try {

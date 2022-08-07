@@ -16,7 +16,8 @@ export interface TerraDrawAdapterStyling {
   lineStringWidth: number;
   lineStringColor: string;
   selectedColor: string;
-  selectedPointColor: string;
+  selectionPointWidth: number;
+  selectedPointOutlineColor: string;
 }
 
 export interface TerraDrawMouseEvent {
@@ -30,18 +31,35 @@ export interface TerraDrawKeyboardEvent {
   key: string;
 }
 
+type SetCursor = (cursor: "unset" | "grab" | "grabbing" | "crosshair") => void;
+
+type Project = (lng: number, lat: number) => { x: number; y: number };
+
 export interface TerraDrawModeRegisterConfig {
   store: GeoJSONStore;
+  setCursor: SetCursor;
   onChange: StoreChangeHandler;
   onSelect: (selectedId: string) => void;
   onDeselect: (deselectedId: string) => void;
-  project: (lng: number, lat: number) => { x: number; y: number };
+  project: Project;
 }
+
+export type TerraDrawModeState =
+  | "unregistered"
+  | "registered"
+  | "started"
+  | "stopped";
 
 export interface TerraDrawMode {
   mode: string;
   styling: TerraDrawAdapterStyling;
-  cleanUp: () => void;
+  state: TerraDrawModeState;
+
+  start: () => void;
+  stop: () => void;
+  register: (config: TerraDrawModeRegisterConfig) => void;
+
+  // cleanUp: () => void;
   onKeyPress: (event: TerraDrawKeyboardEvent) => void;
   onMouseMove: (event: TerraDrawMouseEvent) => void;
   onClick: (event: TerraDrawMouseEvent) => void;
@@ -54,7 +72,6 @@ export interface TerraDrawMode {
     event: TerraDrawMouseEvent,
     setMapDraggability: (enabled: boolean) => void
   ) => void;
-  register: (config: TerraDrawModeRegisterConfig) => void;
 }
 
 export interface TerraDrawCallbacks {
@@ -80,7 +97,9 @@ export interface TerraDrawChanges {
 }
 
 export interface TerraDrawAdapter {
-  project: (lng: number, lat: number) => { x: number; y: number };
+  project: Project;
+  setCursor: SetCursor;
+  getMapContainer: () => HTMLElement;
   register(callbacks: TerraDrawCallbacks): void;
   unregister(): void;
   render(

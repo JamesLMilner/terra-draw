@@ -8,7 +8,7 @@ import {
 } from "./common";
 import { TerraDrawCircleMode } from "./modes/circle.mode";
 import { TerraDrawFreehandMode } from "./modes/freehand.mode";
-import { TerraDrawLineStringMode } from "./modes/line-string.mode";
+import { TerraDrawLineStringMode } from "./modes/linestring.mode";
 import { TerraDrawPointMode } from "./modes/point.mode";
 import { TerraDrawPolygonMode } from "./modes/polygon.mode";
 import { TerraDrawSelectMode } from "./modes/select.mode";
@@ -153,6 +153,7 @@ class TerraDraw {
 
       this._modes[modeId].register({
         store: this._store,
+        setCursor: this._adapter.setCursor,
         project: this._adapter.project,
         onChange: onChange,
         onSelect: onSelect,
@@ -183,10 +184,13 @@ class TerraDraw {
       // clean up any state that has been left behind,
       // for example current drawing geometries
       // and mode state
-      this._mode.cleanUp();
+      this._mode.stop();
 
       // Swap the mode to the new mode
       this._mode = this._modes[mode];
+
+      // Start the new mode
+      this._mode.start();
     } else {
       // If the mode doesn't exist, we throw an error
       throw new Error("No mode with this name present");

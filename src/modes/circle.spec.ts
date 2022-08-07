@@ -1,4 +1,6 @@
+import { circle } from "leaflet";
 import { GeoJSONStore } from "../store/store";
+import { getMockModeConfig } from "../test/mock-config";
 import { getDefaultStyling } from "../util/styling";
 import { TerraDrawCircleMode } from "./circle.mode";
 
@@ -26,19 +28,72 @@ describe("TerraDrawCircleMode", () => {
     });
   });
 
-  describe("register", () => {
+  describe("lifecycle", () => {
     it("registers correctly", () => {
       const circleMode = new TerraDrawCircleMode();
+      expect(circleMode.state).toBe("unregistered");
+      circleMode.register(getMockModeConfig());
+      expect(circleMode.state).toBe("registered");
+    });
 
-      circleMode.register({
-        onChange: () => {},
-        onSelect: (selectedId: string) => {},
-        onDeselect: () => {},
-        store: new GeoJSONStore(),
-        project: (lng: number, lat: number) => {
-          return { x: 0, y: 0 };
-        },
-      });
+    it("setting state directly throws error", () => {
+      const circleMode = new TerraDrawCircleMode();
+
+      expect(() => {
+        circleMode.state = "started";
+      }).toThrowError();
+    });
+
+    it("stopping before not registering throws error", () => {
+      const circleMode = new TerraDrawCircleMode();
+
+      expect(() => {
+        circleMode.stop();
+      }).toThrowError();
+    });
+
+    it("starting before not registering throws error", () => {
+      const circleMode = new TerraDrawCircleMode();
+
+      expect(() => {
+        circleMode.start();
+      }).toThrowError();
+    });
+
+    it("starting before not registering throws error", () => {
+      const circleMode = new TerraDrawCircleMode();
+
+      expect(() => {
+        circleMode.start();
+      }).toThrowError();
+    });
+
+    it("registering multiple times throws an error", () => {
+      const circleMode = new TerraDrawCircleMode();
+
+      expect(() => {
+        circleMode.register(getMockModeConfig());
+        circleMode.register(getMockModeConfig());
+      }).toThrowError();
+    });
+
+    it("can start correctly", () => {
+      const circleMode = new TerraDrawCircleMode();
+
+      circleMode.register(getMockModeConfig());
+      circleMode.start();
+
+      expect(circleMode.state).toBe("started");
+    });
+
+    it("can stop correctly", () => {
+      const circleMode = new TerraDrawCircleMode();
+
+      circleMode.register(getMockModeConfig());
+      circleMode.start();
+      circleMode.stop();
+
+      expect(circleMode.state).toBe("stopped");
     });
   });
 
@@ -66,15 +121,12 @@ describe("TerraDrawCircleMode", () => {
 
     describe("registered", () => {
       beforeEach(() => {
-        circleMode.register({
-          store,
-          onChange,
-          onSelect: (selectedId: string) => {},
-          onDeselect: () => {},
-          project: (lng: number, lat: number) => {
-            return { x: 0, y: 0 };
-          },
-        });
+        const mockConfig = getMockModeConfig();
+
+        store = mockConfig.store;
+        onChange = mockConfig.onChange;
+
+        circleMode.register(mockConfig);
       });
       it("adds a circle to store if registered", () => {
         circleMode.onClick({
@@ -126,18 +178,13 @@ describe("TerraDrawCircleMode", () => {
 
     beforeEach(() => {
       circleMode = new TerraDrawCircleMode();
-      store = new GeoJSONStore();
-      onChange = jest.fn();
 
-      circleMode.register({
-        store,
-        onChange,
-        onSelect: (selectedId: string) => {},
-        onDeselect: () => {},
-        project: (lng: number, lat: number) => {
-          return { x: 0, y: 0 };
-        },
-      });
+      const mockConfig = getMockModeConfig();
+
+      store = mockConfig.store;
+      onChange = mockConfig.onChange;
+
+      circleMode.register(mockConfig);
     });
 
     it("updates the circle size", () => {
@@ -186,18 +233,13 @@ describe("TerraDrawCircleMode", () => {
 
     beforeEach(() => {
       circleMode = new TerraDrawCircleMode();
-      store = new GeoJSONStore();
-      onChange = jest.fn();
 
-      circleMode.register({
-        store,
-        onChange,
-        onSelect: (selectedId: string) => {},
-        onDeselect: () => {},
-        project: (lng: number, lat: number) => {
-          return { x: 0, y: 0 };
-        },
-      });
+      const mockConfig = getMockModeConfig();
+
+      store = mockConfig.store;
+      onChange = mockConfig.onChange;
+
+      circleMode.register(mockConfig);
     });
 
     it("does not delete if no circle has been created", () => {
@@ -232,19 +274,13 @@ describe("TerraDrawCircleMode", () => {
 
     beforeEach(() => {
       jest.resetAllMocks();
-
-      store = new GeoJSONStore();
       circleMode = new TerraDrawCircleMode();
-      onChange = jest.fn();
-      project = jest.fn();
 
-      circleMode.register({
-        onChange: onChange as any,
-        onSelect: (selectedId: string) => {},
-        onDeselect: () => {},
-        store,
-        project,
-      });
+      const mockConfig = getMockModeConfig();
+      store = mockConfig.store;
+      onChange = mockConfig.onChange;
+      project = mockConfig.project;
+      circleMode.register(mockConfig);
     });
 
     it("Escape - does nothing when no circle is present", () => {

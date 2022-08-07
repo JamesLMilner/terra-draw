@@ -1,4 +1,5 @@
 import { GeoJSONStore } from "../store/store";
+import { getMockModeConfig } from "../test/mock-config";
 import { getDefaultStyling } from "../util/styling";
 import { TerraDrawSelectMode } from "./select.mode";
 
@@ -27,27 +28,72 @@ describe("TerraDrawSelectMode", () => {
     });
   });
 
-  describe("register", () => {
-    let selectMode: TerraDrawSelectMode;
-    let store: GeoJSONStore;
-    let onChange: jest.Mock;
-    let project: jest.Mock;
-
-    beforeEach(() => {
-      store = new GeoJSONStore();
-      selectMode = new TerraDrawSelectMode();
-      onChange = jest.fn();
-      project = jest.fn();
+  describe("lifecycle", () => {
+    it("registers correctly", () => {
+      const selectMode = new TerraDrawSelectMode();
+      expect(selectMode.state).toBe("unregistered");
+      selectMode.register(getMockModeConfig());
+      expect(selectMode.state).toBe("registered");
     });
 
-    it("registers correctly", () => {
-      selectMode.register({
-        onChange: onChange as any,
-        onSelect: (selectedId: string) => {},
-        onDeselect: () => {},
-        store,
-        project,
-      });
+    it("setting state directly throws error", () => {
+      const selectMode = new TerraDrawSelectMode();
+
+      expect(() => {
+        selectMode.state = "started";
+      }).toThrowError();
+    });
+
+    it("stopping before not registering throws error", () => {
+      const selectMode = new TerraDrawSelectMode();
+
+      expect(() => {
+        selectMode.stop();
+      }).toThrowError();
+    });
+
+    it("starting before not registering throws error", () => {
+      const selectMode = new TerraDrawSelectMode();
+
+      expect(() => {
+        selectMode.start();
+      }).toThrowError();
+    });
+
+    it("starting before not registering throws error", () => {
+      const selectMode = new TerraDrawSelectMode();
+
+      expect(() => {
+        selectMode.start();
+      }).toThrowError();
+    });
+
+    it("registering multiple times throws an error", () => {
+      const selectMode = new TerraDrawSelectMode();
+
+      expect(() => {
+        selectMode.register(getMockModeConfig());
+        selectMode.register(getMockModeConfig());
+      }).toThrowError();
+    });
+
+    it("can start correctly", () => {
+      const selectMode = new TerraDrawSelectMode();
+
+      selectMode.register(getMockModeConfig());
+      selectMode.start();
+
+      expect(selectMode.state).toBe("started");
+    });
+
+    it("can stop correctly", () => {
+      const selectMode = new TerraDrawSelectMode();
+
+      selectMode.register(getMockModeConfig());
+      selectMode.start();
+      selectMode.stop();
+
+      expect(selectMode.state).toBe("stopped");
     });
   });
 
@@ -60,20 +106,16 @@ describe("TerraDrawSelectMode", () => {
     let onDeselect: jest.Mock;
 
     beforeEach(() => {
-      store = new GeoJSONStore();
       selectMode = new TerraDrawSelectMode();
-      onChange = jest.fn();
-      project = jest.fn();
-      onSelect = jest.fn();
-      onDeselect = jest.fn();
 
-      selectMode.register({
-        store,
-        onChange,
-        project,
-        onSelect,
-        onDeselect,
-      });
+      const mockConfig = getMockModeConfig();
+      store = mockConfig.store;
+      onChange = mockConfig.onChange;
+      project = mockConfig.project;
+      onSelect = mockConfig.onSelect;
+      onDeselect = mockConfig.onDeselect;
+
+      selectMode.register(mockConfig);
     });
 
     it("does not select if no features", () => {
@@ -435,20 +477,16 @@ describe("TerraDrawSelectMode", () => {
     let onDeselect: jest.Mock;
 
     beforeEach(() => {
-      store = new GeoJSONStore();
       selectMode = new TerraDrawSelectMode();
-      onChange = jest.fn();
-      project = jest.fn();
-      onSelect = jest.fn();
-      onDeselect = jest.fn();
 
-      selectMode.register({
-        store,
-        onChange,
-        project,
-        onSelect,
-        onDeselect,
-      });
+      const mockConfig = getMockModeConfig();
+      store = mockConfig.store;
+      onChange = mockConfig.onChange;
+      project = mockConfig.project;
+      onSelect = mockConfig.onSelect;
+      onDeselect = mockConfig.onDeselect;
+
+      selectMode.register(mockConfig);
     });
 
     describe("Delete", () => {
@@ -530,30 +568,708 @@ describe("TerraDrawSelectMode", () => {
     });
   });
 
-  describe("onMouseMove", () => {
+  describe("onDragStart", () => {
     let selectMode: TerraDrawSelectMode;
     let store: GeoJSONStore;
     let onChange: jest.Mock;
     let project: jest.Mock;
     let onSelect: jest.Mock;
     let onDeselect: jest.Mock;
+    let setCursor: jest.Mock;
 
     beforeEach(() => {
-      store = new GeoJSONStore();
       selectMode = new TerraDrawSelectMode();
-      onChange = jest.fn();
-      project = jest.fn();
-      onSelect = jest.fn();
-      onDeselect = jest.fn();
 
-      selectMode.register({
-        store,
-        onChange,
-        project,
-        onSelect,
-        onDeselect,
+      const mockConfig = getMockModeConfig();
+      onChange = mockConfig.onChange;
+      project = mockConfig.project;
+      onSelect = mockConfig.onSelect;
+      onDeselect = mockConfig.onDeselect;
+      setCursor = mockConfig.setCursor;
+      store = mockConfig.store;
+      selectMode.register(mockConfig);
+    });
+
+    it("nothing selected, nothing changes", () => {
+      selectMode.onDragStart(
+        {
+          lng: 0,
+          lat: 0,
+          containerX: 0,
+          containerY: 0,
+        },
+        jest.fn()
+      );
+
+      expect(onChange).toBeCalledTimes(0);
+      expect(onDeselect).toBeCalledTimes(0);
+      expect(onSelect).toBeCalledTimes(0);
+      expect(project).toBeCalledTimes(0);
+    });
+
+    it("does not trigger starting of drag events if mode not draggable", () => {
+      store.create([{ geometry: { type: "Point", coordinates: [0, 0] } }]);
+
+      project.mockReturnValueOnce({
+        x: 0,
+        y: 0,
+      });
+
+      selectMode.onClick({
+        lng: 0,
+        lat: 0,
+        containerX: 0,
+        containerY: 0,
+      });
+
+      expect(onSelect).toBeCalledTimes(1);
+
+      const setMapDraggability = jest.fn();
+      selectMode.onDragStart(
+        {
+          lng: 0,
+          lat: 0,
+          containerX: 0,
+          containerY: 0,
+        },
+        setMapDraggability
+      );
+      expect(setCursor).not.toBeCalled();
+      expect(setMapDraggability).not.toBeCalled();
+    });
+
+    it("does trigger onDragStart events if mode is draggable", () => {
+      selectMode = new TerraDrawSelectMode({
+        draggable: [{ mode: "point", coordinate: false, feature: true }],
+      });
+
+      const mockConfig = getMockModeConfig();
+      onChange = mockConfig.onChange;
+      project = mockConfig.project;
+      onSelect = mockConfig.onSelect;
+      onDeselect = mockConfig.onDeselect;
+      setCursor = mockConfig.setCursor;
+      store = mockConfig.store;
+      selectMode.register(mockConfig);
+
+      store.create([
+        {
+          geometry: { type: "Point", coordinates: [0, 0] },
+          properties: { mode: "point" },
+        },
+      ]);
+
+      project.mockReturnValueOnce({
+        x: 0,
+        y: 0,
+      });
+
+      selectMode.onClick({
+        lng: 0,
+        lat: 0,
+        containerX: 0,
+        containerY: 0,
+      });
+
+      expect(onSelect).toBeCalledTimes(1);
+
+      const setMapDraggability = jest.fn();
+      selectMode.onDragStart(
+        {
+          lng: 0,
+          lat: 0,
+          containerX: 0,
+          containerY: 0,
+        },
+        setMapDraggability
+      );
+      expect(setCursor).toBeCalled();
+      expect(setMapDraggability).toBeCalled();
+    });
+  });
+
+  describe("onDrag", () => {
+    let selectMode: TerraDrawSelectMode;
+    let store: GeoJSONStore;
+    let onChange: jest.Mock;
+    let project: jest.Mock;
+    let onSelect: jest.Mock;
+    let onDeselect: jest.Mock;
+    let setCursor: jest.Mock;
+
+    beforeEach(() => {
+      selectMode = new TerraDrawSelectMode();
+
+      const mockConfig = getMockModeConfig();
+      onChange = mockConfig.onChange;
+      project = mockConfig.project;
+      onSelect = mockConfig.onSelect;
+      onDeselect = mockConfig.onDeselect;
+      setCursor = mockConfig.setCursor;
+      store = mockConfig.store;
+      selectMode.register(mockConfig);
+    });
+
+    it("nothing selected, nothing changes", () => {
+      selectMode.onDrag({
+        lng: 0,
+        lat: 0,
+        containerX: 0,
+        containerY: 0,
+      });
+
+      expect(onChange).toBeCalledTimes(0);
+      expect(onDeselect).toBeCalledTimes(0);
+      expect(onSelect).toBeCalledTimes(0);
+      expect(project).toBeCalledTimes(0);
+    });
+
+    it("does not trigger drag events if mode not draggable", () => {
+      store.create([{ geometry: { type: "Point", coordinates: [0, 0] } }]);
+
+      project.mockReturnValueOnce({
+        x: 0,
+        y: 0,
+      });
+
+      selectMode.onClick({
+        lng: 0,
+        lat: 0,
+        containerX: 0,
+        containerY: 0,
+      });
+
+      expect(onSelect).toBeCalledTimes(1);
+      expect(onChange).toBeCalledTimes(2);
+
+      selectMode.onDrag({
+        lng: 0,
+        lat: 0,
+        containerX: 0,
+        containerY: 0,
+      });
+
+      expect(onChange).toBeCalledTimes(2);
+    });
+
+    describe("drag feature", () => {
+      it("does not trigger coordinate dragging for points", () => {
+        selectMode = new TerraDrawSelectMode({
+          draggable: [{ mode: "point", coordinate: true, feature: true }],
+        });
+
+        const mockConfig = getMockModeConfig();
+        onChange = mockConfig.onChange;
+        project = mockConfig.project;
+        onSelect = mockConfig.onSelect;
+        onDeselect = mockConfig.onDeselect;
+        setCursor = mockConfig.setCursor;
+        store = mockConfig.store;
+        selectMode.register(mockConfig);
+
+        store.create([
+          {
+            geometry: { type: "Point", coordinates: [0, 0] },
+            properties: { mode: "point" },
+          },
+        ]);
+
+        project.mockReturnValueOnce({
+          x: 0,
+          y: 0,
+        });
+
+        selectMode.onClick({
+          lng: 0,
+          lat: 0,
+          containerX: 0,
+          containerY: 0,
+        });
+
+        expect(onSelect).toBeCalledTimes(1);
+        expect(onChange).toBeCalledTimes(2);
+
+        selectMode.onDrag({
+          lng: 1,
+          lat: 1,
+          containerX: 1,
+          containerY: 1,
+        });
+
+        expect(onChange).toBeCalledTimes(3);
+      });
+
+      it("does trigger drag events if mode is draggable for point", () => {
+        selectMode = new TerraDrawSelectMode({
+          draggable: [{ mode: "point", coordinate: false, feature: true }],
+        });
+
+        const mockConfig = getMockModeConfig();
+        onChange = mockConfig.onChange;
+        project = mockConfig.project;
+        onSelect = mockConfig.onSelect;
+        onDeselect = mockConfig.onDeselect;
+        setCursor = mockConfig.setCursor;
+        store = mockConfig.store;
+        selectMode.register(mockConfig);
+
+        store.create([
+          {
+            geometry: { type: "Point", coordinates: [0, 0] },
+            properties: { mode: "point" },
+          },
+        ]);
+
+        project.mockReturnValueOnce({
+          x: 0,
+          y: 0,
+        });
+
+        selectMode.onClick({
+          lng: 0,
+          lat: 0,
+          containerX: 0,
+          containerY: 0,
+        });
+
+        expect(onSelect).toBeCalledTimes(1);
+        expect(onChange).toBeCalledTimes(2);
+
+        selectMode.onDrag({
+          lng: 1,
+          lat: 1,
+          containerX: 1,
+          containerY: 1,
+        });
+
+        expect(onChange).toBeCalledTimes(3);
+      });
+
+      it("does trigger drag events if mode is draggable for linestring", () => {
+        selectMode = new TerraDrawSelectMode({
+          draggable: [{ mode: "linestring", coordinate: false, feature: true }],
+        });
+
+        const mockConfig = getMockModeConfig();
+        onChange = mockConfig.onChange;
+        project = mockConfig.project;
+        onSelect = mockConfig.onSelect;
+        onDeselect = mockConfig.onDeselect;
+        setCursor = mockConfig.setCursor;
+        store = mockConfig.store;
+        selectMode.register(mockConfig);
+
+        store.create([
+          {
+            geometry: {
+              type: "LineString",
+              coordinates: [
+                [0, 0],
+                [1, 1],
+              ],
+            },
+            properties: { mode: "linestring" },
+          },
+        ]);
+
+        project
+          .mockReturnValueOnce({
+            x: 0,
+            y: 0,
+          })
+          .mockReturnValueOnce({
+            x: 1,
+            y: 1,
+          });
+
+        selectMode.onClick({
+          lng: 0,
+          lat: 0,
+          containerX: 0,
+          containerY: 0,
+        });
+
+        expect(onSelect).toBeCalledTimes(1);
+        expect(onChange).toBeCalledTimes(3);
+
+        selectMode.onDragStart(
+          {
+            lng: 1,
+            lat: 1,
+            containerX: 1,
+            containerY: 1,
+          },
+          jest.fn()
+        );
+
+        selectMode.onDrag({
+          lng: 1,
+          lat: 1,
+          containerX: 1,
+          containerY: 1,
+        });
+
+        expect(onChange).toBeCalledTimes(5);
+      });
+
+      it("does trigger drag events if mode is draggable for polygon", () => {
+        selectMode = new TerraDrawSelectMode({
+          draggable: [{ mode: "polygon", coordinate: false, feature: true }],
+        });
+
+        const mockConfig = getMockModeConfig();
+        onChange = mockConfig.onChange;
+        project = mockConfig.project;
+        onSelect = mockConfig.onSelect;
+        onDeselect = mockConfig.onDeselect;
+        setCursor = mockConfig.setCursor;
+        store = mockConfig.store;
+        selectMode.register(mockConfig);
+
+        store.create([
+          {
+            geometry: {
+              type: "Polygon",
+              coordinates: [
+                [
+                  [0, 0],
+                  [0, 1],
+                  [1, 1],
+                  [1, 0],
+                  [0, 0],
+                ],
+              ],
+            },
+            properties: { mode: "polygon" },
+          },
+        ]);
+
+        project
+          .mockReturnValueOnce({
+            x: 0,
+            y: 0,
+          })
+          .mockReturnValueOnce({
+            x: 1,
+            y: 1,
+          });
+
+        selectMode.onClick({
+          lng: 0,
+          lat: 0,
+          containerX: 0,
+          containerY: 0,
+        });
+
+        expect(onSelect).toBeCalledTimes(1);
+        expect(onChange).toBeCalledTimes(3);
+
+        selectMode.onDragStart(
+          {
+            lng: 1,
+            lat: 1,
+            containerX: 1,
+            containerY: 1,
+          },
+          jest.fn()
+        );
+
+        selectMode.onDrag({
+          lng: 1,
+          lat: 1,
+          containerX: 1,
+          containerY: 1,
+        });
+
+        expect(onChange).toBeCalledTimes(5);
       });
     });
+
+    describe("drag coordinate", () => {
+      it("does trigger drag events if mode is draggable for linestring", () => {
+        selectMode = new TerraDrawSelectMode({
+          draggable: [{ mode: "linestring", coordinate: true, feature: false }],
+        });
+
+        const mockConfig = getMockModeConfig();
+        onChange = mockConfig.onChange;
+        project = mockConfig.project;
+        onSelect = mockConfig.onSelect;
+        onDeselect = mockConfig.onDeselect;
+        setCursor = mockConfig.setCursor;
+        store = mockConfig.store;
+        selectMode.register(mockConfig);
+
+        // We want to account for ignoring points branch
+        store.create([
+          {
+            geometry: {
+              type: "Point",
+              coordinates: [100, 89],
+            },
+            properties: { mode: "point" },
+          },
+        ]);
+
+        expect(onChange).toBeCalledTimes(1);
+
+        store.create([
+          {
+            geometry: {
+              type: "LineString",
+              coordinates: [
+                [0, 0],
+                [1, 1],
+              ],
+            },
+            properties: { mode: "linestring" },
+          },
+        ]);
+
+        expect(onChange).toBeCalledTimes(2);
+
+        project
+          .mockReturnValueOnce({
+            x: 100,
+            y: 100,
+          })
+          .mockReturnValue({
+            x: 0,
+            y: 0,
+          });
+
+        selectMode.onClick({
+          lng: 0,
+          lat: 0,
+          containerX: 0,
+          containerY: 0,
+        });
+
+        expect(onSelect).toBeCalledTimes(1);
+        expect(onChange).toBeCalledTimes(4);
+
+        selectMode.onDragStart(
+          {
+            lng: 1,
+            lat: 1,
+            containerX: 1,
+            containerY: 1,
+          },
+          jest.fn()
+        );
+
+        selectMode.onDrag({
+          lng: 1,
+          lat: 1,
+          containerX: 1,
+          containerY: 1,
+        });
+
+        expect(onChange).toBeCalledTimes(5);
+      });
+
+      it("does trigger drag events if mode is draggable for polygon", () => {
+        selectMode = new TerraDrawSelectMode({
+          draggable: [{ mode: "polygon", coordinate: true, feature: false }],
+        });
+
+        const mockConfig = getMockModeConfig();
+        onChange = mockConfig.onChange;
+        project = mockConfig.project;
+        onSelect = mockConfig.onSelect;
+        onDeselect = mockConfig.onDeselect;
+        setCursor = mockConfig.setCursor;
+        store = mockConfig.store;
+        selectMode.register(mockConfig);
+
+        // We want to account for ignoring points branch
+        store.create([
+          {
+            geometry: {
+              type: "Point",
+              coordinates: [100, 89],
+            },
+            properties: { mode: "point" },
+          },
+        ]);
+
+        expect(onChange).toBeCalledTimes(1);
+
+        store.create([
+          {
+            geometry: {
+              type: "Polygon",
+              coordinates: [
+                [
+                  [0, 0],
+                  [0, 1],
+                  [1, 1],
+                  [1, 0],
+                  [0, 0],
+                ],
+              ],
+            },
+            properties: { mode: "polygon" },
+          },
+        ]);
+
+        expect(onChange).toBeCalledTimes(2);
+
+        project
+          .mockReturnValueOnce({
+            x: 100,
+            y: 100,
+          })
+          .mockReturnValue({
+            x: 0,
+            y: 0,
+          });
+
+        selectMode.onClick({
+          lng: 0,
+          lat: 0,
+          containerX: 0,
+          containerY: 0,
+        });
+
+        expect(onSelect).toBeCalledTimes(1);
+        expect(onChange).toBeCalledTimes(4);
+
+        selectMode.onDragStart(
+          {
+            lng: 1,
+            lat: 1,
+            containerX: 1,
+            containerY: 1,
+          },
+          jest.fn()
+        );
+
+        selectMode.onDrag({
+          lng: 1,
+          lat: 1,
+          containerX: 1,
+          containerY: 1,
+        });
+
+        expect(onChange).toBeCalledTimes(5);
+      });
+    });
+
+    it("does trigger drag events if mode is draggable for polygon", () => {
+      selectMode = new TerraDrawSelectMode({
+        draggable: [{ mode: "polygon", coordinate: true, feature: false }],
+      });
+
+      const mockConfig = getMockModeConfig();
+      onChange = mockConfig.onChange;
+      project = mockConfig.project;
+      onSelect = mockConfig.onSelect;
+      onDeselect = mockConfig.onDeselect;
+      setCursor = mockConfig.setCursor;
+      store = mockConfig.store;
+      selectMode.register(mockConfig);
+
+      store.create([
+        {
+          geometry: {
+            type: "Polygon",
+            coordinates: [
+              [
+                [0, 0],
+                [0, 1],
+                [1, 1],
+                [1, 0],
+                [0, 0],
+              ],
+            ],
+          },
+          properties: { mode: "polygon" },
+        },
+      ]);
+
+      project.mockReturnValue({
+        x: 0,
+        y: 0,
+      });
+
+      selectMode.onClick({
+        lng: 0,
+        lat: 0,
+        containerX: 0,
+        containerY: 0,
+      });
+
+      expect(onSelect).toBeCalledTimes(1);
+      expect(onChange).toBeCalledTimes(3);
+
+      selectMode.onDragStart(
+        {
+          lng: 1,
+          lat: 1,
+          containerX: 1,
+          containerY: 1,
+        },
+        jest.fn()
+      );
+
+      selectMode.onDrag({
+        lng: 1,
+        lat: 1,
+        containerX: 1,
+        containerY: 1,
+      });
+
+      expect(onChange).toBeCalledTimes(4);
+    });
+  });
+
+  describe("onDragEnd", () => {
+    let selectMode: TerraDrawSelectMode;
+    let setCursor: jest.Mock;
+
+    beforeEach(() => {
+      selectMode = new TerraDrawSelectMode();
+
+      const mockConfig = getMockModeConfig();
+      setCursor = mockConfig.setCursor;
+
+      selectMode.register(mockConfig);
+    });
+
+    it("sets map draggability back to false, sets cursor to default", () => {
+      const setMapDraggability = jest.fn();
+      selectMode.onDragEnd(
+        { lng: 1, lat: 1, containerX: 1, containerY: 1 },
+        setMapDraggability
+      );
+
+      expect(setMapDraggability).toBeCalledTimes(1);
+      expect(setMapDraggability).toBeCalledWith(true);
+      expect(setCursor).toBeCalledTimes(1);
+      expect(setCursor).toBeCalledWith("grab");
+    });
+  });
+
+  describe("onMouseMove", () => {
+    let selectMode: TerraDrawSelectMode;
+    let onChange: jest.Mock;
+    let project: jest.Mock;
+    let onSelect: jest.Mock;
+    let onDeselect: jest.Mock;
+
+    beforeEach(() => {
+      selectMode = new TerraDrawSelectMode();
+
+      const mockConfig = getMockModeConfig();
+      onChange = mockConfig.onChange;
+      project = mockConfig.project;
+      onSelect = mockConfig.onSelect;
+      onDeselect = mockConfig.onDeselect;
+
+      selectMode.register(mockConfig);
+    });
+
     it("does nothing", () => {
       selectMode.onMouseMove();
 

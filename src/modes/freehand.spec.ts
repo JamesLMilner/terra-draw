@@ -1,4 +1,5 @@
 import { GeoJSONStore } from "../store/store";
+import { getMockModeConfig } from "../test/mock-config";
 import { getDefaultStyling } from "../util/styling";
 import { TerraDrawFreehandMode } from "./freehand.mode";
 
@@ -27,19 +28,72 @@ describe("TerraDrawFreehandMode", () => {
     });
   });
 
-  describe("register", () => {
+  describe("lifecycle", () => {
     it("registers correctly", () => {
       const freehandMode = new TerraDrawFreehandMode();
+      expect(freehandMode.state).toBe("unregistered");
+      freehandMode.register(getMockModeConfig());
+      expect(freehandMode.state).toBe("registered");
+    });
 
-      freehandMode.register({
-        onChange: () => {},
-        onSelect: (selectedId: string) => {},
-        onDeselect: () => {},
-        store: new GeoJSONStore(),
-        project: (lng: number, lat: number) => {
-          return { x: 0, y: 0 };
-        },
-      });
+    it("setting state directly throws error", () => {
+      const freehandMode = new TerraDrawFreehandMode();
+
+      expect(() => {
+        freehandMode.state = "started";
+      }).toThrowError();
+    });
+
+    it("stopping before not registering throws error", () => {
+      const freehandMode = new TerraDrawFreehandMode();
+
+      expect(() => {
+        freehandMode.stop();
+      }).toThrowError();
+    });
+
+    it("starting before not registering throws error", () => {
+      const freehandMode = new TerraDrawFreehandMode();
+
+      expect(() => {
+        freehandMode.start();
+      }).toThrowError();
+    });
+
+    it("starting before not registering throws error", () => {
+      const freehandMode = new TerraDrawFreehandMode();
+
+      expect(() => {
+        freehandMode.start();
+      }).toThrowError();
+    });
+
+    it("registering multiple times throws an error", () => {
+      const freehandMode = new TerraDrawFreehandMode();
+
+      expect(() => {
+        freehandMode.register(getMockModeConfig());
+        freehandMode.register(getMockModeConfig());
+      }).toThrowError();
+    });
+
+    it("can start correctly", () => {
+      const freehandMode = new TerraDrawFreehandMode();
+
+      freehandMode.register(getMockModeConfig());
+      freehandMode.start();
+
+      expect(freehandMode.state).toBe("started");
+    });
+
+    it("can stop correctly", () => {
+      const freehandMode = new TerraDrawFreehandMode();
+
+      freehandMode.register(getMockModeConfig());
+      freehandMode.start();
+      freehandMode.stop();
+
+      expect(freehandMode.state).toBe("stopped");
     });
   });
 
@@ -51,7 +105,6 @@ describe("TerraDrawFreehandMode", () => {
     beforeEach(() => {
       freehandMode = new TerraDrawFreehandMode();
       store = new GeoJSONStore();
-      onChange = jest.fn();
     });
 
     it("throws an error if not registered", () => {
@@ -67,16 +120,12 @@ describe("TerraDrawFreehandMode", () => {
 
     describe("registered", () => {
       beforeEach(() => {
-        freehandMode.register({
-          store,
-          onChange,
-          onSelect: (selectedId: string) => {},
-          onDeselect: () => {},
-          project: (lng: number, lat: number) => {
-            return { x: 0, y: 0 };
-          },
-        });
+        const mockConfig = getMockModeConfig();
+        onChange = mockConfig.onChange;
+        store = mockConfig.store;
+        freehandMode.register(mockConfig);
       });
+
       it("adds a polygon to store if registered", () => {
         freehandMode.onClick({
           lng: 0,
@@ -123,18 +172,11 @@ describe("TerraDrawFreehandMode", () => {
 
     beforeEach(() => {
       freehandMode = new TerraDrawFreehandMode();
-      store = new GeoJSONStore();
-      onChange = jest.fn();
 
-      freehandMode.register({
-        store,
-        onChange,
-        onSelect: (selectedId: string) => {},
-        onDeselect: () => {},
-        project: (lng: number, lat: number) => {
-          return { x: 0, y: 0 };
-        },
-      });
+      const mockConfig = getMockModeConfig();
+      store = mockConfig.store;
+      onChange = mockConfig.onChange;
+      freehandMode.register(mockConfig);
     });
 
     it("updates the freehand polygon on 10th mouse event", () => {
@@ -197,18 +239,10 @@ describe("TerraDrawFreehandMode", () => {
 
     beforeEach(() => {
       freehandMode = new TerraDrawFreehandMode();
-      store = new GeoJSONStore();
-      onChange = jest.fn();
-
-      freehandMode.register({
-        store,
-        onChange,
-        onSelect: (selectedId: string) => {},
-        onDeselect: () => {},
-        project: (lng: number, lat: number) => {
-          return { x: 0, y: 0 };
-        },
-      });
+      const mockConfig = getMockModeConfig();
+      store = mockConfig.store;
+      onChange = mockConfig.onChange;
+      freehandMode.register(mockConfig);
     });
 
     it("does not delete if no freehand has been created", () => {
@@ -244,18 +278,13 @@ describe("TerraDrawFreehandMode", () => {
     beforeEach(() => {
       jest.resetAllMocks();
 
-      store = new GeoJSONStore();
       freehandMode = new TerraDrawFreehandMode();
-      onChange = jest.fn();
-      project = jest.fn();
 
-      freehandMode.register({
-        onChange: onChange as any,
-        onSelect: (selectedId: string) => {},
-        onDeselect: () => {},
-        store,
-        project,
-      });
+      const mockConfig = getMockModeConfig();
+      store = mockConfig.store;
+      onChange = mockConfig.onChange;
+      project = mockConfig.project;
+      freehandMode.register(mockConfig);
     });
 
     it("Escape - does nothing when no freehand is present", () => {

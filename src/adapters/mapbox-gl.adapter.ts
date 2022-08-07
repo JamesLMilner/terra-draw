@@ -23,7 +23,20 @@ export class TerraDrawMapboxGLAdapter implements TerraDrawAdapter {
       const { x, y } = this._map.project({ lng, lat });
       return { x, y };
     };
+
+    this.setCursor = (style) => {
+      this._map.getCanvas().style.cursor = style;
+    };
+
+    this.getMapContainer = () => {
+      return this._map.getContainer();
+    };
   }
+
+  public project: TerraDrawModeRegisterConfig["project"];
+  public setCursor: TerraDrawModeRegisterConfig["setCursor"];
+
+  public getMapContainer: () => HTMLElement;
 
   private _coordinatePrecision: number;
   private _map: mapboxgl.Map;
@@ -38,8 +51,6 @@ export class TerraDrawMapboxGLAdapter implements TerraDrawAdapter {
   private _onDragEndListener: (event: MouseEvent) => void;
   private _onKeyPressListener: (event: KeyboardEvent) => any;
   private _rendered: boolean = false;
-
-  public project: TerraDrawModeRegisterConfig["project"];
 
   private _addGeoJSONSource(id: string, features: Feature[]) {
     this._map.addSource(id, {
@@ -66,7 +77,7 @@ export class TerraDrawMapboxGLAdapter implements TerraDrawAdapter {
         ["match", ["get", "mode"], mode, true, false],
       ],
       paint: {
-        "fill-color": ["get", "selectedStyle"],
+        "fill-color": ["get", "selectedColor"],
         "fill-opacity": styling.polygonFillOpacity,
       },
     } as FillLayer);
@@ -88,7 +99,7 @@ export class TerraDrawMapboxGLAdapter implements TerraDrawAdapter {
       ],
       paint: {
         "line-width": styling.polygonOutlineWidth,
-        "line-color": ["get", "selectedStyle"],
+        "line-color": ["get", "selectedColor"],
       },
     } as LineLayer);
   }
@@ -109,7 +120,7 @@ export class TerraDrawMapboxGLAdapter implements TerraDrawAdapter {
       ],
       paint: {
         "line-width": styling.lineStringWidth,
-        "line-color": ["get", "selectedStyle"],
+        "line-color": ["get", "selectedColor"],
       },
     } as LineLayer);
   }
@@ -129,8 +140,10 @@ export class TerraDrawMapboxGLAdapter implements TerraDrawAdapter {
         ["match", ["get", "mode"], mode, true, false],
       ],
       paint: {
-        "circle-radius": styling.pointWidth,
-        "circle-color": ["get", "selectedStyle"],
+        "circle-stroke-color": ["get", "selectedPointOutlineColor"],
+        "circle-stroke-width": 2,
+        "circle-radius": ["get", "selectionPointWidth"],
+        "circle-color": ["get", "selectedColor"],
       },
     } as CircleLayer);
   }
@@ -183,9 +196,9 @@ export class TerraDrawMapboxGLAdapter implements TerraDrawAdapter {
         lng: limitPrecision(event.lngLat.lng, this._coordinatePrecision),
         lat: limitPrecision(event.lngLat.lat, this._coordinatePrecision),
         containerX:
-          event.originalEvent.clientX - this._map.getContainer().offsetLeft,
+          event.originalEvent.clientX - this.getMapContainer().offsetLeft,
         containerY:
-          event.originalEvent.clientY - this._map.getContainer().offsetTop,
+          event.originalEvent.clientY - this.getMapContainer().offsetTop,
       });
     };
     this._map.on("click", this._onClickListener);
@@ -195,9 +208,9 @@ export class TerraDrawMapboxGLAdapter implements TerraDrawAdapter {
         lng: limitPrecision(event.lngLat.lng, this._coordinatePrecision),
         lat: limitPrecision(event.lngLat.lat, this._coordinatePrecision),
         containerX:
-          event.originalEvent.clientX - this._map.getContainer().offsetLeft,
+          event.originalEvent.clientX - this.getMapContainer().offsetLeft,
         containerY:
-          event.originalEvent.clientY - this._map.getContainer().offsetTop,
+          event.originalEvent.clientY - this.getMapContainer().offsetTop,
       });
     };
     this._map.on("mousemove", this._onMouseMoveListener);
@@ -209,7 +222,7 @@ export class TerraDrawMapboxGLAdapter implements TerraDrawAdapter {
       dragState = "pre-dragging";
     };
 
-    const container = this._map.getContainer();
+    const container = this.getMapContainer();
 
     container.addEventListener("mousedown", this._onDragStartListener);
 
@@ -348,9 +361,14 @@ export class TerraDrawMapboxGLAdapter implements TerraDrawAdapter {
             feature.properties.selected ||
             feature.properties.selectionPoint
           ) {
-            feature.properties.selectedStyle = styles.selectedColor;
+            feature.properties.selectedColor = styles.selectedColor;
+            feature.properties.selectedPointOutlineColor =
+              styles.selectedPointOutlineColor;
+            feature.properties.selectionPointWidth = styles.selectionPointWidth;
           } else {
-            feature.properties.selectedStyle = styles.pointColor;
+            feature.properties.selectedColor = styles.pointColor;
+            feature.properties.selectedPointOutlineColor = styles.pointColor;
+            feature.properties.selectionPointWidth = styles.pointWidth;
           }
         });
 
@@ -358,9 +376,9 @@ export class TerraDrawMapboxGLAdapter implements TerraDrawAdapter {
 
         lines.forEach((feature) => {
           if (feature.properties.selected) {
-            feature.properties.selectedStyle = styles.selectedColor;
+            feature.properties.selectedColor = styles.selectedColor;
           } else {
-            feature.properties.selectedStyle = styles.lineStringColor;
+            feature.properties.selectedColor = styles.lineStringColor;
           }
         });
 
@@ -368,9 +386,9 @@ export class TerraDrawMapboxGLAdapter implements TerraDrawAdapter {
 
         polygons.forEach((feature) => {
           if (feature.properties.selected) {
-            feature.properties.selectedStyle = styles.selectedColor;
+            feature.properties.selectedColor = styles.selectedColor;
           } else {
-            feature.properties.selectedStyle = styles.polygonFillColor;
+            feature.properties.selectedColor = styles.polygonFillColor;
           }
         });
 

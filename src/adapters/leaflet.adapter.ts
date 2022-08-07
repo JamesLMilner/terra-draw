@@ -23,9 +23,21 @@ export class TerraDrawLeafletAdapter implements TerraDrawAdapter {
         ? config.coordinatePrecision
         : 9;
 
+    this.getMapContainer = () => {
+      return this._map.getContainer();
+    };
+
     this.project = (lng: number, lat: number) => {
       const { x, y } = this._map.latLngToContainerPoint({ lng, lat });
       return { x, y };
+    };
+
+    this.setCursor = (cursor) => {
+      if (cursor === "unset") {
+        this.getMapContainer().style.removeProperty("cursor");
+      } else {
+        this.getMapContainer().style.cursor = cursor;
+      }
     };
   }
 
@@ -39,10 +51,24 @@ export class TerraDrawLeafletAdapter implements TerraDrawAdapter {
   private _onDragListener: (event: MouseEvent) => void;
   private _onDragEndListener: (event: MouseEvent) => void;
   private _layer: L.Layer;
+  private _paneZIndexStyleSheet: HTMLStyleElement;
+  private _selectedPane = "selectedPane";
 
   public project: TerraDrawModeRegisterConfig["project"];
+  public setCursor: TerraDrawModeRegisterConfig["setCursor"];
+
+  public getMapContainer: () => HTMLElement;
 
   register(callbacks: TerraDrawCallbacks) {
+    if (!this._paneZIndexStyleSheet) {
+      const style = document.createElement("style");
+      style.type = "text/css";
+      style.innerHTML = `.leaflet-${this._selectedPane} {z-index:10;}`;
+      document.getElementsByTagName("head")[0].appendChild(style);
+      this._paneZIndexStyleSheet = style;
+      this._map.createPane(this._selectedPane);
+    }
+
     this._onClickListener = (event: L.LeafletMouseEvent) => {
       event.originalEvent.preventDefault();
 
@@ -50,9 +76,9 @@ export class TerraDrawLeafletAdapter implements TerraDrawAdapter {
         lng: limitPrecision(event.latlng.lng, this._coordinatePrecision),
         lat: limitPrecision(event.latlng.lat, this._coordinatePrecision),
         containerX:
-          event.originalEvent.clientX - this._map.getContainer().offsetLeft,
+          event.originalEvent.clientX - this.getMapContainer().offsetLeft,
         containerY:
-          event.originalEvent.clientY - this._map.getContainer().offsetTop,
+          event.originalEvent.clientY - this.getMapContainer().offsetTop,
       });
     };
 
@@ -65,9 +91,9 @@ export class TerraDrawLeafletAdapter implements TerraDrawAdapter {
         lng: limitPrecision(event.latlng.lng, this._coordinatePrecision),
         lat: limitPrecision(event.latlng.lat, this._coordinatePrecision),
         containerX:
-          event.originalEvent.clientX - this._map.getContainer().offsetLeft,
+          event.originalEvent.clientX - this.getMapContainer().offsetLeft,
         containerY:
-          event.originalEvent.clientY - this._map.getContainer().offsetTop,
+          event.originalEvent.clientY - this.getMapContainer().offsetTop,
       });
     };
 
@@ -88,7 +114,7 @@ export class TerraDrawLeafletAdapter implements TerraDrawAdapter {
       dragState = "pre-dragging";
     };
 
-    const container = this._map.getContainer();
+    const container = this.getMapContainer();
 
     container.addEventListener("mousedown", this._onDragStartListener);
 
@@ -174,6 +200,8 @@ export class TerraDrawLeafletAdapter implements TerraDrawAdapter {
       this._map.off("click", this._onClickListener);
       this._onClickListener = undefined;
     }
+
+    this._map.getPane(this._selectedPane).remove();
   }
 
   render(
@@ -195,53 +223,63 @@ export class TerraDrawLeafletAdapter implements TerraDrawAdapter {
       features,
     } as GeoJsonObject;
 
-    // Style points - convert markers to circle markers
-    const pointToLayer = (feature: Feature, latlng: L.LatLngExpression) => {
-      const mode = feature.properties.mode;
-      const modeStyle = styling[mode];
-
-      return this._lib.circleMarker(latlng, {
-        radius: modeStyle.pointWidth,
-        fillColor:
-          feature.properties.selected || feature.properties.selectionPoint
+    const layer = this._lib.geoJSON(featureCollection, {
+      // Style points - convert markers to circle markers
+      pointToLayer: (feature: Feature, latlng: L.LatLngExpression) => {
+        const mode = feature.properties.mode;
+        const modeStyle = styling[mode];
+        const isSelected =
+          feature.properties.selected || feature.properties.selectionPoint;
+        const styles = {
+          radius: isSelected
+            ? modeStyle.selectionPointWidth
+            : modeStyle.pointWidth,
+          fillColor: isSelected
             ? modeStyle.selectedColor
             : modeStyle.pointColor,
-        color: modeStyle.pointOutlineColor,
-        weight: 1,
-        opacity: 1,
-        fillOpacity: 0.8,
-      });
-    };
+          stroke: isSelected,
+          color: isSelected
+            ? modeStyle.selectedPointOutlineColor
+            : modeStyle.pointColor,
+          weight: isSelected ? 2 : 0,
 
-    // Style LineStrings and Polygons
-    const style = (feature: Feature) => {
-      const mode = feature.properties.mode;
-      const modeStyle = styling[mode];
+          fillOpacity: 0.8,
+          pane: isSelected ? this._selectedPane : undefined,
+          interactive: false, // Removes mouse hover cursor styles
+        } as L.CircleMarkerOptions;
 
-      if (feature.geometry.type === "LineString") {
-        return {
-          color: feature.properties.selected
-            ? modeStyle.selectedColor
-            : modeStyle.lineStringColor,
+        const marker = this._lib.circleMarker(latlng, styles);
 
-          weight: modeStyle.lineStringWidth,
-        };
-      } else if (feature.geometry.type === "Polygon") {
-        return {
-          fillOpacity: modeStyle.polygonFillOpacity,
-          color: feature.properties.selected
-            ? modeStyle.selectedColor
-            : modeStyle.polygonFillColor,
-        };
-      }
-    };
+        return marker;
+      },
 
-    const layer = this._lib.geoJSON(featureCollection, {
-      pointToLayer,
-      style,
+      // Style LineStrings and Polygons
+      style: (feature) => {
+        const mode = feature.properties.mode;
+        const modeStyle = styling[mode];
+
+        if (feature.geometry.type === "LineString") {
+          return {
+            interactive: false, // Removes mouse hover cursor styles
+            color: feature.properties.selected
+              ? modeStyle.selectedColor
+              : modeStyle.lineStringColor,
+
+            weight: modeStyle.lineStringWidth,
+          };
+        } else if (feature.geometry.type === "Polygon") {
+          return {
+            interactive: false, // Removes mouse hover cursor styles
+            fillOpacity: modeStyle.polygonFillOpacity,
+            color: feature.properties.selected
+              ? modeStyle.selectedColor
+              : modeStyle.polygonFillColor,
+          };
+        }
+      },
     });
 
-    layer.addTo(this._map);
+    this._map.addLayer(layer);
 
     this._layer = layer;
   }

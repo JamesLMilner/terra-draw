@@ -10,15 +10,15 @@ describe("Geometry", () => {
         [100, 0],
         [0, 0],
       ],
-    ] as [number, number][][];
+    ];
 
     it("point is not in polygon", () => {
-      const pointOut = [140, 150] as [number, number];
+      const pointOut = [140, 150];
       expect(pointInPolygon(pointOut, polygon)).toBe(false);
     });
 
     it("point is in polygon", () => {
-      const pointIn = [50, 50] as [number, number];
+      const pointIn = [50, 50];
       expect(pointInPolygon(pointIn, polygon)).toBe(true);
     });
   });

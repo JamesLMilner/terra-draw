@@ -50,7 +50,7 @@ const example = {
       }),
       modes: {
         select: new TerraDrawSelectMode({
-          draggable: ["polygon"],
+          draggable: [{ mode: "polygon", feature: true, coordinate: true }],
         }),
         point: new TerraDrawPointMode(),
         linestring: new TerraDrawLineStringMode({
@@ -118,7 +118,16 @@ const example = {
           coordinatePrecision: 9,
         }),
         modes: {
-          select: new TerraDrawSelectMode(),
+          select: new TerraDrawSelectMode({
+            keyEvents: {
+              delete: "Backspace",
+              deselect: "Escape",
+            },
+            draggable: [
+              { mode: "linestring", feature: true, coordinate: true },
+              { mode: "polygon", feature: true, coordinate: true },
+            ],
+          }),
           point: new TerraDrawPointMode(),
           linestring: new TerraDrawLineStringMode({
             // styling: {
@@ -195,9 +204,7 @@ const example = {
           coordinatePrecision: 9,
         }),
         modes: {
-          select: new TerraDrawSelectMode({
-            draggable: ["point"],
-          }),
+          select: new TerraDrawSelectMode(),
           point: new TerraDrawPointMode(),
           linestring: new TerraDrawLineStringMode({
             allowSelfIntersections: false,
@@ -234,3 +241,6 @@ console.log(process.env);
 example.initLeaflet("leaflet-map");
 example.initMapbox("mapbox-map", process.env.MAPBOX_ACCESS_TOKEN);
 example.initGoogleMaps("google-map", process.env.GOOGLE_API_KEY);
+document.addEventListener("keyup", (event) => {
+  document.getElementById("keybind").innerHTML = event.key;
+});

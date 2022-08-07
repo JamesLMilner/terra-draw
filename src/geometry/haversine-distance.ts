@@ -1,6 +1,8 @@
+import { Position } from "geojson";
+
 export function haversineDistanceKilometers(
-  pointOne: [lng: number, lat: number],
-  pointTwo: [lng: number, lat: number]
+  pointOne: Position,
+  pointTwo: Position
 ) {
   const toRadians = (latOrLng: number) => (latOrLng * Math.PI) / 180;
 

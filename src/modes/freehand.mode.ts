@@ -4,25 +4,23 @@ import {
   TerraDrawModeRegisterConfig,
   TerraDrawAdapterStyling,
   TerraDrawKeyboardEvent,
+  TerraDrawModeState,
 } from "../common";
 import { GeoJSONStore } from "../store/store";
 import { Polygon } from "geojson";
 
 import { getDefaultStyling } from "../util/styling";
+import { TerraDrawBaseDrawMode } from "./base.mode";
 
 type TerraDrawFreehandModeKeyEvents = {
   cancel: KeyboardEvent["key"];
 };
 
-export class TerraDrawFreehandMode implements TerraDrawMode {
+export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode {
   mode = "freehand";
-
-  private store: GeoJSONStore;
-  private project: TerraDrawModeRegisterConfig["project"];
 
   private startingClick = false;
   private currentId: string;
-
   private skip: number = 0;
   private everyNthMouseEvent: number;
   private keyEvents: TerraDrawFreehandModeKeyEvents;
@@ -32,21 +30,21 @@ export class TerraDrawFreehandMode implements TerraDrawMode {
     everyNthMouseEvent?: number;
     keyEvents?: TerraDrawFreehandModeKeyEvents;
   }) {
-    this.styling =
-      options && options.styling
-        ? { ...getDefaultStyling(), ...options.styling }
-        : getDefaultStyling();
+    super(options);
+
     this.everyNthMouseEvent = (options && options.everyNthMouseEvent) || 10;
     this.keyEvents =
       options && options.keyEvents ? options.keyEvents : { cancel: "Escape" };
   }
 
-  styling: TerraDrawAdapterStyling;
-
-  register(config: TerraDrawModeRegisterConfig) {
-    this.store = config.store;
-    this.store.registerOnChange(config.onChange);
-    this.project = config.project;
+  start() {
+    this.setStarted();
+    this.setCursor("crosshair");
+  }
+  stop() {
+    this.setStopped();
+    this.setCursor("unset");
+    this.cleanUp();
   }
 
   onMouseMove(event: TerraDrawMouseEvent) {

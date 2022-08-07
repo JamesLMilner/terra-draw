@@ -23,6 +23,10 @@ export class TerraDrawGoogleMapsAdapter implements TerraDrawAdapter {
         ? config.coordinatePrecision
         : 9;
 
+    this.getMapContainer = () => {
+      return this._map.getDiv();
+    };
+
     this.project = (lng, lat) => {
       const bounds = this._map.getBounds();
       const northWest = new this._lib.LatLng(
@@ -59,8 +63,35 @@ export class TerraDrawGoogleMapsAdapter implements TerraDrawAdapter {
 
       return { lng: lng(), lat: lat() };
     };
+
+    this.setCursor = (cursor) => {
+      console.log(cursor);
+
+      if (cursor === this._cursor) {
+        return;
+      }
+
+      if (cursor === "unset") {
+        this._cursorStyleSheet.remove();
+        this._cursorStyleSheet = undefined;
+      } else {
+        console.log("adding stylesheet");
+        // TODO: We could cache this
+        const div = this.getMapContainer();
+        const style = document.createElement("style");
+        style.type = "text/css";
+        const selector = `#${div.id} [aria-label="Map"]`;
+        style.innerHTML = `${selector} { cursor: ${cursor} !important; }`;
+        document.getElementsByTagName("head")[0].appendChild(style);
+        this._cursorStyleSheet = style;
+      }
+
+      this._cursor = cursor;
+    };
   }
 
+  private _cursor: string;
+  private _cursorStyleSheet: HTMLStyleElement;
   private _coordinatePrecision: number;
   private _lib: typeof google.maps;
   private _map: google.maps.Map;
@@ -82,11 +113,14 @@ export class TerraDrawGoogleMapsAdapter implements TerraDrawAdapter {
   private _onDragEndListener: (event: MouseEvent) => void;
   private _layers: boolean;
 
+  public getMapContainer: () => HTMLElement;
+
   public unproject: (point: {
     x: number;
     y: number;
   }) => { lng: number; lat: number };
   public project: TerraDrawModeRegisterConfig["project"];
+  public setCursor: TerraDrawModeRegisterConfig["setCursor"];
 
   // https://stackoverflow.com/a/27905268/1363484
   private circlePath(cx: number, cy: number, r: number) {
@@ -122,8 +156,8 @@ export class TerraDrawGoogleMapsAdapter implements TerraDrawAdapter {
       callbacks.onClick({
         lng: limitPrecision(event.latLng.lng(), this._coordinatePrecision),
         lat: limitPrecision(event.latLng.lat(), this._coordinatePrecision),
-        containerX: event.domEvent.clientX - this._map.getDiv().offsetLeft,
-        containerY: event.domEvent.clientY - this._map.getDiv().offsetTop,
+        containerX: event.domEvent.clientX - this.getMapContainer().offsetLeft,
+        containerY: event.domEvent.clientY - this.getMapContainer().offsetTop,
       });
     };
     this._onClickListener = this._map.addListener(
@@ -152,7 +186,7 @@ export class TerraDrawGoogleMapsAdapter implements TerraDrawAdapter {
       callbacks.onKeyPress({ key: event.key });
     };
 
-    this._map.getDiv().addEventListener("keyup", this._onKeyUpListener);
+    this.getMapContainer().addEventListener("keyup", this._onKeyUpListener);
 
     let dragState: "not-dragging" | "pre-dragging" | "dragging" =
       "not-dragging";
@@ -161,7 +195,7 @@ export class TerraDrawGoogleMapsAdapter implements TerraDrawAdapter {
       dragState = "pre-dragging";
     };
 
-    const container = this._map.getDiv();
+    const container = this.getMapContainer();
 
     container.addEventListener("mousedown", this._onDragStartListener);
 
@@ -233,7 +267,10 @@ export class TerraDrawGoogleMapsAdapter implements TerraDrawAdapter {
     }
 
     if (this._onKeyUpListener) {
-      this._map.getDiv().removeEventListener("keyup", this._onKeyUpListener);
+      this.getMapContainer().removeEventListener(
+        "keyup",
+        this._onKeyUpListener
+      );
       this._onKeyUpListener = undefined;
     }
   }
@@ -366,17 +403,31 @@ export class TerraDrawGoogleMapsAdapter implements TerraDrawAdapter {
 
       const selectionPoint = feature.getProperty("selectionPoint");
 
+      console.log(
+        selected || selectionPoint,
+        styling[mode].selectedPointOutlineColor
+      );
+
       switch (type) {
         case "Point":
+          const isSelection = selected || selectionPoint;
           return {
             icon: {
-              path: this.circlePath(0, 0, styling[mode].pointWidth),
-              fillColor:
-                selected || selectionPoint
-                  ? styling[mode].selectedColor
-                  : styling[mode].pointColor,
+              path: this.circlePath(
+                0,
+                0,
+                isSelection
+                  ? styling[mode].selectionPointWidth
+                  : styling[mode].pointWidth
+              ),
+              fillColor: isSelection
+                ? styling[mode].selectedColor
+                : styling[mode].pointColor,
               fillOpacity: 1,
-              strokeWeight: 0,
+              strokeColor: isSelection
+                ? styling[mode].selectedPointOutlineColor
+                : undefined,
+              strokeWeight: isSelection ? 2 : 0,
               rotation: 0,
               scale: 1,
             },

@@ -1,4 +1,5 @@
 import { GeoJSONStore } from "../store/store";
+import { getMockModeConfig } from "../test/mock-config";
 import { getDefaultStyling } from "../util/styling";
 import { TerraDrawPointMode } from "./point.mode";
 
@@ -10,6 +11,7 @@ describe("TerraDrawPointMode", () => {
       const pointMode = new TerraDrawPointMode();
       expect(pointMode.mode).toBe("point");
       expect(pointMode.styling).toStrictEqual(defaultStyles);
+      expect(pointMode.state).toBe("unregistered");
     });
 
     it("constructs with options", () => {
@@ -23,21 +25,72 @@ describe("TerraDrawPointMode", () => {
     });
   });
 
-  describe("register", () => {
+  describe("lifecycle", () => {
     it("registers correctly", () => {
+      const pointMode = new TerraDrawPointMode();
+      expect(pointMode.state).toBe("unregistered");
+      pointMode.register(getMockModeConfig());
+      expect(pointMode.state).toBe("registered");
+    });
+
+    it("setting state directly throws error", () => {
       const pointMode = new TerraDrawPointMode();
 
       expect(() => {
-        pointMode.register({
-          onChange: () => {},
-          onSelect: (selectedId: string) => {},
-          onDeselect: () => {},
-          store: new GeoJSONStore(),
-          project: (lng: number, lat: number) => {
-            return { x: 0, y: 0 };
-          },
-        });
-      }).not.toThrow();
+        pointMode.state = "started";
+      }).toThrowError();
+    });
+
+    it("stopping before not registering throws error", () => {
+      const pointMode = new TerraDrawPointMode();
+
+      expect(() => {
+        pointMode.stop();
+      }).toThrowError();
+    });
+
+    it("starting before not registering throws error", () => {
+      const pointMode = new TerraDrawPointMode();
+
+      expect(() => {
+        pointMode.start();
+      }).toThrowError();
+    });
+
+    it("starting before not registering throws error", () => {
+      const pointMode = new TerraDrawPointMode();
+
+      expect(() => {
+        pointMode.start();
+      }).toThrowError();
+    });
+
+    it("registering multiple times throws an error", () => {
+      const pointMode = new TerraDrawPointMode();
+
+      expect(() => {
+        pointMode.register(getMockModeConfig());
+        pointMode.register(getMockModeConfig());
+      }).toThrowError();
+    });
+
+    it("can start correctly", () => {
+      const pointMode = new TerraDrawPointMode();
+
+      pointMode.register(getMockModeConfig());
+      pointMode.start();
+
+      expect(pointMode.state).toBe("started");
+    });
+
+    it("can stop correctly", () => {
+      const pointMode = new TerraDrawPointMode();
+
+      pointMode.register(getMockModeConfig());
+      pointMode.start();
+      pointMode.stop();
+
+      expect(pointMode.state).toBe("stopped");
     });
   });
 
@@ -58,17 +111,9 @@ describe("TerraDrawPointMode", () => {
     it("creates a point if registered", () => {
       const pointMode = new TerraDrawPointMode();
 
-      const mockOnChange = jest.fn();
+      const mockConfig = getMockModeConfig();
 
-      pointMode.register({
-        store: new GeoJSONStore(),
-        onChange: mockOnChange,
-        onSelect: (selectedId: string) => {},
-        onDeselect: () => {},
-        project: (lng: number, lat: number) => {
-          return { x: 0, y: 0 };
-        },
-      });
+      pointMode.register(mockConfig);
 
       pointMode.onClick({
         lng: 0,
@@ -77,8 +122,11 @@ describe("TerraDrawPointMode", () => {
         containerY: 0,
       });
 
-      expect(mockOnChange).toBeCalledTimes(1);
-      expect(mockOnChange).toBeCalledWith([expect.any(String)], "create");
+      expect(mockConfig.onChange).toBeCalledTimes(1);
+      expect(mockConfig.onChange).toBeCalledWith(
+        [expect.any(String)],
+        "create"
+      );
     });
   });
 

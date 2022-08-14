@@ -1,16 +1,11 @@
 import { Position } from "geojson";
 import {
   TerraDrawMouseEvent,
-  TerraDrawMode,
-  TerraDrawModeRegisterConfig,
   TerraDrawAdapterStyling,
   TerraDrawKeyboardEvent,
-  TerraDrawModeState,
 } from "../common";
 import { circle } from "../geometry/create-circle";
 import { haversineDistanceKilometers } from "../geometry/haversine-distance";
-import { GeoJSONStore } from "../store/store";
-import { getDefaultStyling } from "../util/styling";
 import { TerraDrawBaseDrawMode } from "./base.mode";
 
 type TerraDrawCircleModeKeyEvents = {

@@ -3,7 +3,7 @@ import {
   TerraDrawAdapterStyling,
   TerraDrawKeyboardEvent,
 } from "../common";
-import { Polygon } from "geojson";
+import { Feature, Polygon, Position } from "geojson";
 import { getPixelDistance } from "../geometry/get-pixel-distance";
 import { selfIntersects } from "../geometry/self-intersects";
 import { TerraDrawBaseDrawMode } from "./base.mode";
@@ -17,17 +17,34 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode {
   private currentCoordinate = 0;
   private currentId: string;
   private allowSelfIntersections: boolean;
-  private pointerDistance: number;
   private keyEvents: TerraDrawPolygonModeKeyEvents;
+  private getSnappablePolygonCoord: (
+    event: TerraDrawMouseEvent
+  ) => Position | undefined;
+  private snapping: boolean;
 
   constructor(options?: {
     allowSelfIntersections?: boolean;
+    snapping?: boolean;
     styling?: Partial<TerraDrawAdapterStyling>;
     pointerDistance?: number;
     keyEvents?: TerraDrawPolygonModeKeyEvents;
   }) {
     super(options);
-    this.pointerDistance = (options && options.pointerDistance) || 40;
+
+    this.snapping =
+      options && options.snapping !== undefined ? options.snapping : false;
+
+    this.getSnappablePolygonCoord = (event: TerraDrawMouseEvent) => {
+      if (this.snapping) {
+        return this.getSnappableCoord(
+          event,
+          (feature) =>
+            feature.properties.mode === this.mode &&
+            feature.id !== this.currentId
+        );
+      }
+    };
 
     this.allowSelfIntersections =
       options && options.allowSelfIntersections !== undefined
@@ -55,9 +72,16 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode {
       return;
     }
 
+    const closestCoord = this.getSnappablePolygonCoord(event);
+
     const currentLineCoordinates = this.store.getGeometryCopy<Polygon>(
       this.currentId
     ).coordinates[0];
+
+    if (closestCoord) {
+      event.lng = closestCoord[0];
+      event.lat = closestCoord[1];
+    }
 
     let updatedCoordinates;
 
@@ -65,7 +89,10 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode {
       updatedCoordinates = [
         currentLineCoordinates[0],
         [event.lng, event.lat],
-        currentLineCoordinates[0],
+        // TODO: Adding a small value fixes the Mapbox rendering issue when
+        // drawing polygons but it feels a bit hacky
+        // [event.lng, event.lat + 0.00001],
+        [event.lng, event.lat],
         currentLineCoordinates[0],
       ];
     } else if (this.currentCoordinate === 2) {
@@ -95,7 +122,14 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode {
   }
 
   onClick(event: TerraDrawMouseEvent) {
+    const closestCoord = this.getSnappablePolygonCoord(event);
+
     if (this.currentCoordinate === 0) {
+      if (closestCoord) {
+        event.lng = closestCoord[0];
+        event.lat = closestCoord[1];
+      }
+
       const [newId] = this.store.create([
         {
           geometry: {
@@ -115,18 +149,14 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode {
       this.currentId = newId;
       this.currentCoordinate++;
     } else if (this.currentCoordinate === 1) {
+      if (closestCoord) {
+        event.lng = closestCoord[0];
+        event.lat = closestCoord[1];
+      }
+
       const currentPolygonGeometry = this.store.getGeometryCopy<Polygon>(
         this.currentId
       );
-
-      // if (
-      //   coordinatesIdentical(
-      //     currentPolygonGeometry.coordinates[0][0] as Position,
-      //     [event.lng, event.lat]
-      //   )
-      // ) {
-      //   return;
-      // }
 
       this.store.updateGeometry([
         {
@@ -147,6 +177,11 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode {
 
       this.currentCoordinate++;
     } else if (this.currentCoordinate === 2) {
+      if (closestCoord) {
+        event.lng = closestCoord[0];
+        event.lat = closestCoord[1];
+      }
+
       const currentPolygonGeometry = this.store.getGeometryCopy<Polygon>(
         this.currentId
       );
@@ -203,6 +238,11 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode {
         this.currentCoordinate = 0;
         this.currentId = undefined;
       } else {
+        if (closestCoord) {
+          event.lng = closestCoord[0];
+          event.lat = closestCoord[1];
+        }
+
         const updatedPolygon = {
           type: "Polygon",
           coordinates: [

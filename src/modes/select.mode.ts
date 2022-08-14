@@ -6,7 +6,7 @@ import {
 import { pointInPolygon } from "../geometry/point-in-polygon";
 import { getPixelDistance } from "../geometry/get-pixel-distance";
 import { getPixelDistanceToLine } from "../geometry/get-pixel-distance-to-line";
-import { Point, Position } from "geojson";
+import { Feature, Point, Polygon, Position } from "geojson";
 import { TerraDrawBaseDrawMode } from "./base.mode";
 
 type TerraDrawSelectModeKeyEvents = {
@@ -24,7 +24,6 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode {
   mode = "select";
 
   private selected: string[] = [];
-  private pointerDistance: number;
   private selectionPoints: string[] = [];
   private dragPosition: Position;
   private draggableModes: TerraDrawSelectDraggable;
@@ -37,7 +36,6 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode {
     keyEvents?: TerraDrawSelectModeKeyEvents;
   }) {
     super(options);
-    this.pointerDistance = (options && options.pointerDistance) || 40;
 
     this.draggableModes =
       options && options.draggable ? options.draggable.slice() : [];
@@ -84,20 +82,6 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode {
       this.store.delete(this.selectionPoints);
       this.selectionPoints = [];
     }
-  }
-
-  private distanceBetweenTwoCoords(
-    coord: Position,
-    event: TerraDrawMouseEvent
-  ) {
-    const { x, y } = this.project(coord[0], coord[1]);
-
-    const distance = getPixelDistance(
-      { x, y },
-      { x: event.containerX, y: event.containerY }
-    );
-
-    return distance;
   }
 
   private dragFeature(event: TerraDrawMouseEvent) {
@@ -244,10 +228,11 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode {
   }
 
   onClick(event: TerraDrawMouseEvent) {
-    const features = this.store.copyAll();
-
     let clickedFeatureId: string;
     let clickedFeatureDistance = Infinity;
+
+    const bbox = this.createClickBoundingBox(event);
+    const features = this.store.search(bbox);
 
     for (let i = 0; i < features.length; i++) {
       const feature = features[i];
@@ -318,6 +303,9 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode {
 
           // And remove the selection points
           this.deleteSelectionPoints();
+
+          // Ensure onDeselect event is sent
+          this.onDeselect(previouslySelectedId);
         }
       }
 

@@ -1,3 +1,7 @@
+// Based on - https://github.com/mclaeysb/geojson-polygon-self-intersections
+// MIT License
+// Copyright (c) 2016 Manuel Claeys Bouuaert
+
 import { Feature, LineString, Polygon, Position } from "geojson";
 // import * as rbush from "rbush";
 
@@ -31,7 +35,7 @@ export function selfIntersects(
     for (let edge0 = 0; edge0 < coord[ring0].length - 1; edge0++) {
       for (let ring1 = 0; ring1 < coord.length; ring1++) {
         for (let edge1 = 0; edge1 < coord[ring1].length - 1; edge1++) {
-          // TODO: speedup possible if only interested in unique: start last two loops at ring0 and edge0+1
+          // speedup possible if only interested in unique: start last two loops at ring0 and edge0+1
           ifInteresctionAddToOutput(ring0, edge0, ring1, edge1);
         }
       }

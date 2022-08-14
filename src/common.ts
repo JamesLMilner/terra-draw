@@ -34,6 +34,7 @@ export interface TerraDrawKeyboardEvent {
 type SetCursor = (cursor: "unset" | "grab" | "grabbing" | "crosshair") => void;
 
 type Project = (lng: number, lat: number) => { x: number; y: number };
+type Unproject = (x: number, y: number) => { lat: number; lng: number };
 
 export interface TerraDrawModeRegisterConfig {
   store: GeoJSONStore;
@@ -42,6 +43,7 @@ export interface TerraDrawModeRegisterConfig {
   onSelect: (selectedId: string) => void;
   onDeselect: (deselectedId: string) => void;
   project: Project;
+  unproject: Unproject;
 }
 
 export type TerraDrawModeState =
@@ -98,6 +100,7 @@ export interface TerraDrawChanges {
 
 export interface TerraDrawAdapter {
   project: Project;
+  unproject: Unproject;
   setCursor: SetCursor;
   getMapContainer: () => HTMLElement;
   register(callbacks: TerraDrawCallbacks): void;

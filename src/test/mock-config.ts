@@ -9,5 +9,6 @@ export function getMockModeConfig() {
     onSelect: jest.fn(),
     onDeselect: jest.fn(),
     project: jest.fn(),
+    unproject: jest.fn(),
   };
 }

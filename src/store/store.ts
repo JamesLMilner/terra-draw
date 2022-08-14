@@ -1,5 +1,6 @@
 import { Feature, Point, Polygon, LineString } from "geojson";
 import { uuid4 } from "../util/id";
+import { SpatialIndex } from "./spatial-index/spatial-index";
 
 type JSON = string | number | boolean | null | JSONArray | JSONObject;
 
@@ -22,13 +23,31 @@ export type StoreChangeHandler = (
 export class GeoJSONStore {
   constructor(config?: { data: GeoJSONStoreFeatures[] }) {
     this.store = {};
+    this.spatialIndex = new SpatialIndex();
 
     if (config && config.data) {
       config.data.forEach((feature) => {
         this.featureValidation(feature);
         this.store[feature.id] = feature;
       });
+      this.spatialIndex.load(config.data);
     }
+  }
+
+  private spatialIndex: SpatialIndex;
+
+  private store: {
+    [key: string]: GeoJSONStoreFeatures;
+  };
+
+  private _onChange: StoreChangeHandler;
+
+  private getId(): string {
+    return uuid4();
+  }
+
+  private clone<T>(obj: T): T {
+    return JSON.parse(JSON.stringify(obj));
   }
 
   private featureValidation(feature: any) {
@@ -49,18 +68,16 @@ export class GeoJSONStore {
     }
   }
 
-  private store: {
-    [key: string]: GeoJSONStoreFeatures;
-  };
-
-  private _onChange: StoreChangeHandler;
-
-  private getId(): string {
-    return uuid4();
-  }
-
-  private clone<T>(obj: T): T {
-    return JSON.parse(JSON.stringify(obj));
+  search(
+    bbox: Feature<Polygon>,
+    filter?: (feature: GeoJSONStoreFeatures) => boolean
+  ) {
+    const features = this.spatialIndex.search(bbox).map((id) => this.store[id]);
+    if (filter) {
+      return features.filter(filter);
+    } else {
+      return features;
+    }
   }
 
   registerOnChange(onChange: StoreChangeHandler) {
@@ -119,6 +136,8 @@ export class GeoJSONStore {
       }
 
       feature.geometry = this.clone(geometry);
+
+      this.spatialIndex.update(feature);
     });
 
     if (this._onChange) {
@@ -139,7 +158,8 @@ export class GeoJSONStore {
         properties: properties ? properties : {},
       } as GeoJSONStoreFeatures;
 
-      this.store[id] = feature;
+      this.store[feature.id] = feature;
+      this.spatialIndex.insert(feature);
 
       ids.push(id);
     });
@@ -155,6 +175,7 @@ export class GeoJSONStore {
     ids.forEach((id) => {
       if (this.store[id]) {
         delete this.store[id];
+        this.spatialIndex.remove(id as string);
       } else {
         throw new Error("No feature with this id, can not delete");
       }

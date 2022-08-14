@@ -15,6 +15,23 @@ import {
   TerraDrawGoogleMapsAdapter,
 } from "../../src/terra-draw";
 
+const getModes = () => {
+  return {
+    select: new TerraDrawSelectMode({
+      draggable: [{ mode: "polygon", feature: true, coordinate: true }],
+    }),
+    point: new TerraDrawPointMode(),
+    linestring: new TerraDrawLineStringMode({
+      allowSelfIntersections: false,
+    }),
+    polygon: new TerraDrawPolygonMode({
+      allowSelfIntersections: false,
+    }),
+    circle: new TerraDrawCircleMode(),
+    freehand: new TerraDrawFreehandMode(),
+  };
+};
+
 const example = {
   lng: -0.118092,
   lat: 51.509865,
@@ -48,20 +65,7 @@ const example = {
         map,
         coordinatePrecision: 9,
       }),
-      modes: {
-        select: new TerraDrawSelectMode({
-          draggable: [{ mode: "polygon", feature: true, coordinate: true }],
-        }),
-        point: new TerraDrawPointMode(),
-        linestring: new TerraDrawLineStringMode({
-          allowSelfIntersections: false,
-        }),
-        polygon: new TerraDrawPolygonMode({
-          allowSelfIntersections: false,
-        }),
-        circle: new TerraDrawCircleMode(),
-        freehand: new TerraDrawFreehandMode(),
-      },
+      modes: getModes(),
       // data,
     });
 
@@ -117,35 +121,7 @@ const example = {
           map,
           coordinatePrecision: 9,
         }),
-        modes: {
-          select: new TerraDrawSelectMode({
-            keyEvents: {
-              delete: "Backspace",
-              deselect: "Escape",
-            },
-            draggable: [
-              { mode: "linestring", feature: true, coordinate: true },
-              { mode: "polygon", feature: true, coordinate: true },
-            ],
-          }),
-          point: new TerraDrawPointMode(),
-          linestring: new TerraDrawLineStringMode({
-            // styling: {
-            //   lineStringColor: "#1B821E",
-            //   lineStringWidth: 8,
-            // },
-            allowSelfIntersections: false,
-          }),
-          polygon: new TerraDrawPolygonMode({
-            allowSelfIntersections: false,
-            // styling: {
-            //   polygonFillColor: "#ff0000",
-            //   polygonOutlineColor: "#00ff2d",
-            // },
-          }),
-          freehand: new TerraDrawFreehandMode(),
-          circle: new TerraDrawCircleMode(),
-        },
+        modes: getModes(),
       });
 
       draw.start();
@@ -191,47 +167,40 @@ const example = {
       const map = new google.maps.Map(
         document.getElementById(id) as HTMLElement,
         {
-          center: { lat: this.lat, lng: this.lat },
+          center: { lat: this.lat, lng: this.lng },
           zoom: this.zoom,
           clickableIcons: false,
         }
       );
 
-      const draw = new TerraDraw({
-        adapter: new TerraDrawGoogleMapsAdapter({
-          lib: google.maps,
-          map,
-          coordinatePrecision: 9,
-        }),
-        modes: {
-          select: new TerraDrawSelectMode(),
-          point: new TerraDrawPointMode(),
-          linestring: new TerraDrawLineStringMode({
-            allowSelfIntersections: false,
-          }),
-          polygon: new TerraDrawPolygonMode({
-            allowSelfIntersections: false,
-          }),
-          circle: new TerraDrawCircleMode(),
-          freehand: new TerraDrawFreehandMode(),
-        },
-      });
-      draw.start();
+      let interval = setInterval(() => {
+        if (map.getProjection() !== undefined) {
+          const draw = new TerraDraw({
+            adapter: new TerraDrawGoogleMapsAdapter({
+              lib: google.maps,
+              map,
+              coordinatePrecision: 9,
+            }),
+            modes: getModes(),
+          });
+          draw.start();
+          [
+            "select",
+            "point",
+            "linestring",
+            "polygon",
+            "freehand",
+            "circle",
+          ].forEach((mode) => {
+            document.getElementById(mode).addEventListener("click", () => {
+              draw.changeMode(mode);
+            });
+          });
+          this.initialised.push("google");
 
-      [
-        "select",
-        "point",
-        "linestring",
-        "polygon",
-        "freehand",
-        "circle",
-      ].forEach((mode) => {
-        document.getElementById(mode).addEventListener("click", () => {
-          draw.changeMode(mode);
-        });
-      });
-
-      this.initialised.push("google");
+          clearInterval(interval);
+        }
+      }, 100);
     });
   },
 };

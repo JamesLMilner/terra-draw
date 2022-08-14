@@ -1,15 +1,10 @@
 import {
   TerraDrawMouseEvent,
-  TerraDrawMode,
-  TerraDrawModeRegisterConfig,
   TerraDrawAdapterStyling,
   TerraDrawKeyboardEvent,
-  TerraDrawModeState,
 } from "../common";
-import { GeoJSONStore } from "../store/store";
 import { Polygon } from "geojson";
 
-import { getDefaultStyling } from "../util/styling";
 import { TerraDrawBaseDrawMode } from "./base.mode";
 
 type TerraDrawFreehandModeKeyEvents = {

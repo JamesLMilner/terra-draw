@@ -155,6 +155,7 @@ class TerraDraw {
         store: this._store,
         setCursor: this._adapter.setCursor,
         project: this._adapter.project,
+        unproject: this._adapter.unproject,
         onChange: onChange,
         onSelect: onSelect,
         onDeselect: onDeselect,

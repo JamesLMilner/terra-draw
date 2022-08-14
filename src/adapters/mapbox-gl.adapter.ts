@@ -8,7 +8,12 @@ import {
 } from "../common";
 import { Feature, LineString, Point, Polygon } from "geojson";
 import { limitPrecision } from "../geometry/limit-decimal-precision";
-import mapboxgl, { CircleLayer, FillLayer, LineLayer } from "mapbox-gl";
+import mapboxgl, {
+  CircleLayer,
+  FillLayer,
+  LineLayer,
+  PointLike,
+} from "mapbox-gl";
 import { GeoJSONStoreFeatures, GeoJSONStoreGeometries } from "../store/store";
 
 export class TerraDrawMapboxGLAdapter implements TerraDrawAdapter {
@@ -24,6 +29,11 @@ export class TerraDrawMapboxGLAdapter implements TerraDrawAdapter {
       return { x, y };
     };
 
+    this.unproject = (x: number, y: number) => {
+      const { lng, lat } = this._map.unproject({ x, y } as PointLike);
+      return { lng, lat };
+    };
+
     this.setCursor = (style) => {
       this._map.getCanvas().style.cursor = style;
     };
@@ -33,6 +43,7 @@ export class TerraDrawMapboxGLAdapter implements TerraDrawAdapter {
     };
   }
 
+  public unproject: TerraDrawModeRegisterConfig["unproject"];
   public project: TerraDrawModeRegisterConfig["project"];
   public setCursor: TerraDrawModeRegisterConfig["setCursor"];
 

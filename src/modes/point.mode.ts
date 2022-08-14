@@ -1,13 +1,4 @@
-import { isThrowStatement, textSpanIsEmpty } from "typescript";
-import {
-  TerraDrawMouseEvent,
-  TerraDrawMode,
-  TerraDrawModeRegisterConfig,
-  TerraDrawAdapterStyling,
-  TerraDrawModeState,
-} from "../common";
-import { GeoJSONStore } from "../store/store";
-import { getDefaultStyling } from "../util/styling";
+import { TerraDrawMouseEvent, TerraDrawAdapterStyling } from "../common";
 import { TerraDrawBaseDrawMode } from "./base.mode";
 
 export class TerraDrawPointMode extends TerraDrawBaseDrawMode {

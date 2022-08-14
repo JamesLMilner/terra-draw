@@ -1,8 +1,11 @@
+import { Feature, Polygon, Position } from "geojson";
 import {
   TerraDrawAdapterStyling,
   TerraDrawModeRegisterConfig,
   TerraDrawModeState,
+  TerraDrawMouseEvent,
 } from "../common";
+import { getPixelDistance } from "../geometry/get-pixel-distance";
 import { GeoJSONStore } from "../store/store";
 import { getDefaultStyling } from "../util/styling";
 
@@ -16,12 +19,18 @@ export abstract class TerraDrawBaseDrawMode {
   }
   styling: TerraDrawAdapterStyling;
 
+  protected pointerDistance: number;
   protected store: GeoJSONStore;
+  protected unproject: TerraDrawModeRegisterConfig["unproject"];
   protected project: TerraDrawModeRegisterConfig["project"];
   protected setCursor: TerraDrawModeRegisterConfig["setCursor"];
 
-  constructor(options?: { styling?: Partial<TerraDrawAdapterStyling> }) {
+  constructor(options?: {
+    styling?: Partial<TerraDrawAdapterStyling>;
+    pointerDistance?: number;
+  }) {
     this._state = "unregistered";
+    this.pointerDistance = (options && options.pointerDistance) || 40;
     this.styling =
       options && options.styling
         ? { ...getDefaultStyling(), ...options.styling }
@@ -44,12 +53,76 @@ export abstract class TerraDrawBaseDrawMode {
     }
   }
 
+  protected getSnappableCoord(
+    event: TerraDrawMouseEvent,
+    filter: (feature: Feature) => boolean
+  ) {
+    const bbox = this.createClickBoundingBox(event);
+
+    const features = this.store.search(bbox, filter) as Feature<Polygon>[];
+
+    let closest: { coord: undefined | Position; minDist: number } = {
+      coord: undefined,
+      minDist: Infinity,
+    };
+
+    features.forEach((feature) => {
+      feature.geometry.coordinates[0].forEach((coord) => {
+        const dist = this.distanceBetweenTwoCoords(coord, event);
+        if (dist < closest.minDist && dist < this.pointerDistance) {
+          closest.coord = coord;
+        }
+      });
+    });
+
+    return closest.coord;
+  }
+
+  protected createClickBoundingBox(event: TerraDrawMouseEvent) {
+    const { containerX: x, containerY: y } = event;
+    const halfDist = this.pointerDistance / 2;
+
+    const bbox = {
+      type: "Feature",
+      properties: {},
+      geometry: {
+        type: "Polygon",
+        coordinates: [
+          [
+            this.unproject(x - halfDist, y - halfDist), // TopLeft
+            this.unproject(x + halfDist, y - halfDist), // TopRight
+            this.unproject(x + halfDist, y + halfDist), // BottomRight
+            this.unproject(x - halfDist, y + halfDist), // BottomLeft
+            this.unproject(x - halfDist, y - halfDist), // TopLeft
+          ].map((c) => [c.lng, c.lat]),
+        ],
+      },
+    } as Feature<Polygon>;
+
+    return bbox;
+  }
+
+  protected distanceBetweenTwoCoords(
+    coord: Position,
+    event: TerraDrawMouseEvent
+  ) {
+    const { x, y } = this.project(coord[0], coord[1]);
+
+    const distance = getPixelDistance(
+      { x, y },
+      { x: event.containerX, y: event.containerY }
+    );
+
+    return distance;
+  }
+
   register(config: TerraDrawModeRegisterConfig) {
     if (this._state === "unregistered") {
       this._state = "registered";
       this.store = config.store;
       this.store.registerOnChange(config.onChange);
       this.project = config.project;
+      this.unproject = config.unproject;
       this.onSelect = config.onSelect;
       this.onDeselect = config.onDeselect;
       this.setCursor = config.setCursor;

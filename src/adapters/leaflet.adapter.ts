@@ -32,6 +32,11 @@ export class TerraDrawLeafletAdapter implements TerraDrawAdapter {
       return { x, y };
     };
 
+    this.unproject = (x: number, y: number) => {
+      const { lng, lat } = this._map.containerPointToLatLng({ x, y } as L.PointExpression);
+      return { lng, lat };
+    };
+
     this.setCursor = (cursor) => {
       if (cursor === "unset") {
         this.getMapContainer().style.removeProperty("cursor");
@@ -55,6 +60,7 @@ export class TerraDrawLeafletAdapter implements TerraDrawAdapter {
   private _selectedPane = "selectedPane";
 
   public project: TerraDrawModeRegisterConfig["project"];
+  public unproject: TerraDrawModeRegisterConfig["unproject"];
   public setCursor: TerraDrawModeRegisterConfig["setCursor"];
 
   public getMapContainer: () => HTMLElement;

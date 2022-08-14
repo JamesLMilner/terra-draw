@@ -44,7 +44,7 @@ export class TerraDrawGoogleMapsAdapter implements TerraDrawAdapter {
       };
     };
 
-    this.unproject = (point: { x: number; y: number }) => {
+    this.unproject = (x, y) => {
       const topRight = this._map
         .getProjection()
         .fromLatLngToPoint(this._map.getBounds().getNorthEast());
@@ -54,8 +54,8 @@ export class TerraDrawGoogleMapsAdapter implements TerraDrawAdapter {
       const scale = Math.pow(2, this._map.getZoom());
 
       const worldPoint = new google.maps.Point(
-        point.x / scale + bottomLeft.x,
-        point.y / scale + topRight.y
+        x / scale + bottomLeft.x,
+        y / scale + topRight.y
       );
       const { lng, lat } = this._map
         .getProjection()
@@ -65,8 +65,6 @@ export class TerraDrawGoogleMapsAdapter implements TerraDrawAdapter {
     };
 
     this.setCursor = (cursor) => {
-      console.log(cursor);
-
       if (cursor === this._cursor) {
         return;
       }
@@ -75,8 +73,7 @@ export class TerraDrawGoogleMapsAdapter implements TerraDrawAdapter {
         this._cursorStyleSheet.remove();
         this._cursorStyleSheet = undefined;
       } else {
-        console.log("adding stylesheet");
-        // TODO: We could cache this
+        // TODO: We could cache these individually per cursor
         const div = this.getMapContainer();
         const style = document.createElement("style");
         style.type = "text/css";
@@ -115,10 +112,7 @@ export class TerraDrawGoogleMapsAdapter implements TerraDrawAdapter {
 
   public getMapContainer: () => HTMLElement;
 
-  public unproject: (point: {
-    x: number;
-    y: number;
-  }) => { lng: number; lat: number };
+  public unproject: (x: number, y: number) => { lng: number; lat: number };
   public project: TerraDrawModeRegisterConfig["project"];
   public setCursor: TerraDrawModeRegisterConfig["setCursor"];
 
@@ -173,8 +167,8 @@ export class TerraDrawGoogleMapsAdapter implements TerraDrawAdapter {
       callbacks.onMouseMove({
         lng: limitPrecision(event.latLng.lng(), this._coordinatePrecision),
         lat: limitPrecision(event.latLng.lat(), this._coordinatePrecision),
-        containerX: event.domEvent.clientX,
-        containerY: event.domEvent.clientY,
+        containerX: event.domEvent.clientX - this.getMapContainer().offsetLeft,
+        containerY: event.domEvent.clientY - this.getMapContainer().offsetTop,
       });
     };
     this._onMouseMoveListener = this._map.addListener(
@@ -205,7 +199,7 @@ export class TerraDrawGoogleMapsAdapter implements TerraDrawAdapter {
         y: event.clientY - container.offsetTop,
       } as L.Point;
 
-      const { lng, lat } = this.unproject(point);
+      const { lng, lat } = this.unproject(point.x, point.y);
 
       const drawEvent: TerraDrawMouseEvent = {
         lng: limitPrecision(lng, this._coordinatePrecision),
@@ -233,7 +227,7 @@ export class TerraDrawGoogleMapsAdapter implements TerraDrawAdapter {
           y: event.clientY - container.offsetTop,
         } as L.Point;
 
-        const { lng, lat } = this.unproject(point);
+        const { lng, lat } = this.unproject(point.x, point.y);
 
         callbacks.onDragEnd(
           {
@@ -402,11 +396,6 @@ export class TerraDrawGoogleMapsAdapter implements TerraDrawAdapter {
       const selected = feature.getProperty("selected");
 
       const selectionPoint = feature.getProperty("selectionPoint");
-
-      console.log(
-        selected || selectionPoint,
-        styling[mode].selectedPointOutlineColor
-      );
 
       switch (type) {
         case "Point":

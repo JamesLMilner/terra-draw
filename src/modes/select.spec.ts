@@ -4,6 +4,51 @@ import { getDefaultStyling } from "../util/styling";
 import { TerraDrawSelectMode } from "./select.mode";
 
 describe("TerraDrawSelectMode", () => {
+  let selectMode: TerraDrawSelectMode;
+  let store: GeoJSONStore;
+  let onChange: jest.Mock;
+  let setCursor: jest.Mock;
+  let project: jest.Mock;
+  let unproject: jest.Mock;
+  let onSelect: jest.Mock;
+  let onDeselect: jest.Mock;
+
+  beforeEach(() => {
+    selectMode = new TerraDrawSelectMode();
+
+    const mockConfig = getMockModeConfig();
+    store = mockConfig.store;
+    onChange = mockConfig.onChange;
+    project = mockConfig.project;
+    unproject = mockConfig.unproject;
+    onSelect = mockConfig.onSelect;
+    onDeselect = mockConfig.onDeselect;
+    setCursor = mockConfig.setCursor;
+
+    selectMode.register(mockConfig);
+  });
+
+  const mockClickBoundingBox = (
+    bbox: [
+      [number, number],
+      [number, number],
+      [number, number],
+      [number, number]
+    ] = [
+      [0, 0],
+      [0, 0],
+      [0, 0],
+      [0, 0],
+    ]
+  ) => {
+    unproject
+      .mockReturnValueOnce({ lng: bbox[0][0], lat: bbox[0][1] })
+      .mockReturnValueOnce({ lng: bbox[1][0], lat: bbox[1][1] })
+      .mockReturnValueOnce({ lng: bbox[2][0], lat: bbox[2][1] })
+      .mockReturnValueOnce({ lng: bbox[3][0], lat: bbox[3][1] })
+      .mockReturnValueOnce({ lng: bbox[0][0], lat: bbox[0][1] });
+  };
+
   describe("constructor", () => {
     it("constructs", () => {
       const selectMode = new TerraDrawSelectMode();
@@ -98,27 +143,9 @@ describe("TerraDrawSelectMode", () => {
   });
 
   describe("onClick", () => {
-    let selectMode: TerraDrawSelectMode;
-    let store: GeoJSONStore;
-    let onChange: jest.Mock;
-    let project: jest.Mock;
-    let onSelect: jest.Mock;
-    let onDeselect: jest.Mock;
-
-    beforeEach(() => {
-      selectMode = new TerraDrawSelectMode();
-
-      const mockConfig = getMockModeConfig();
-      store = mockConfig.store;
-      onChange = mockConfig.onChange;
-      project = mockConfig.project;
-      onSelect = mockConfig.onSelect;
-      onDeselect = mockConfig.onDeselect;
-
-      selectMode.register(mockConfig);
-    });
-
     it("does not select if no features", () => {
+      mockClickBoundingBox();
+
       selectMode.onClick({
         lng: 0,
         lat: 0,
@@ -133,6 +160,13 @@ describe("TerraDrawSelectMode", () => {
 
     it("Point - does select if feature is clicked", () => {
       store.create([{ geometry: { type: "Point", coordinates: [0, 0] } }]);
+
+      mockClickBoundingBox([
+        [0, 0],
+        [0, 1],
+        [1, 1],
+        [0, 1],
+      ]);
 
       project.mockReturnValueOnce({
         x: 0,
@@ -151,6 +185,13 @@ describe("TerraDrawSelectMode", () => {
 
     it("Point - does not select if feature is not clicked", () => {
       store.create([{ geometry: { type: "Point", coordinates: [0, 0] } }]);
+
+      mockClickBoundingBox([
+        [0, 0],
+        [0, 1],
+        [1, 1],
+        [0, 1],
+      ]);
 
       project.mockReturnValueOnce({
         x: 0,
@@ -178,6 +219,13 @@ describe("TerraDrawSelectMode", () => {
             ],
           },
         },
+      ]);
+
+      mockClickBoundingBox([
+        [0, 0],
+        [0, 1],
+        [1, 1],
+        [0, 1],
       ]);
 
       project
@@ -211,6 +259,13 @@ describe("TerraDrawSelectMode", () => {
             ],
           },
         },
+      ]);
+
+      mockClickBoundingBox([
+        [0, 0],
+        [0, 1],
+        [1, 1],
+        [0, 1],
       ]);
 
       project
@@ -252,6 +307,13 @@ describe("TerraDrawSelectMode", () => {
         },
       ]);
 
+      mockClickBoundingBox([
+        [0, 0],
+        [0, 1],
+        [1, 1],
+        [0, 1],
+      ]);
+
       selectMode.onClick({
         lng: 0.5,
         lat: 0.5,
@@ -279,6 +341,13 @@ describe("TerraDrawSelectMode", () => {
             ],
           },
         },
+      ]);
+
+      mockClickBoundingBox([
+        [0, 0],
+        [0, 1],
+        [1, 1],
+        [0, 1],
       ]);
 
       selectMode.onClick({
@@ -310,6 +379,13 @@ describe("TerraDrawSelectMode", () => {
         },
       ]);
 
+      mockClickBoundingBox([
+        [0, 0],
+        [0, 1],
+        [1, 1],
+        [0, 1],
+      ]);
+
       selectMode.onClick({
         lng: 0.5,
         lat: 0.5,
@@ -318,6 +394,13 @@ describe("TerraDrawSelectMode", () => {
       });
 
       expect(onSelect).toBeCalledTimes(1);
+
+      mockClickBoundingBox([
+        [0, 0],
+        [0, 1],
+        [1, 1],
+        [0, 1],
+      ]);
 
       selectMode.onClick({
         lng: 0.0,
@@ -380,6 +463,14 @@ describe("TerraDrawSelectMode", () => {
       const idOne = onChange.mock.calls[0][0];
       const idTwo = onChange.mock.calls[1][0];
 
+      mockClickBoundingBox([
+        [0, 0],
+        [0, 5],
+        [5, 5],
+        [0, 5],
+      ]);
+
+      // Select polygon
       selectMode.onClick({
         lng: 0.5,
         lat: 0.5,
@@ -389,10 +480,10 @@ describe("TerraDrawSelectMode", () => {
 
       expect(onSelect).toBeCalledTimes(1);
 
-      // first polygon selected set to true
+      // First polygon selected set to true
       expect(onChange).toHaveBeenNthCalledWith(3, idOne, "update");
 
-      // create selection points
+      // Create selection points
       expect(onChange).toHaveBeenNthCalledWith(
         4,
         [
@@ -405,6 +496,14 @@ describe("TerraDrawSelectMode", () => {
         "create"
       );
 
+      mockClickBoundingBox([
+        [0, 0],
+        [0, 5],
+        [5, 5],
+        [0, 5],
+      ]);
+
+      // Deselect first polygon, select second
       selectMode.onClick({
         lng: 2.5,
         lat: 2.5,
@@ -412,12 +511,14 @@ describe("TerraDrawSelectMode", () => {
         containerY: 0,
       });
 
+      // Second polygon selected
       expect(onSelect).toBeCalledTimes(2);
 
-      // deselect first polygon selected set to false
+      // Deselect first polygon selected set to false
+      expect(onDeselect).toBeCalledTimes(1);
       expect(onChange).toHaveBeenNthCalledWith(5, idOne, "update");
 
-      // delete first polygon seelection points
+      // Delete first polygon seelection points
       expect(onChange).toHaveBeenNthCalledWith(
         6,
         [
@@ -430,12 +531,14 @@ describe("TerraDrawSelectMode", () => {
         "delete"
       );
 
-      // second polygon selected set to true
+      // Second polygon selected set to true
       expect(onChange).toHaveBeenNthCalledWith(7, idTwo, "update");
     });
 
     it("deselects if a feature already selected but click is not on a new feature", () => {
       store.create([{ geometry: { type: "Point", coordinates: [0, 0] } }]);
+
+      mockClickBoundingBox();
 
       project
         .mockReturnValueOnce({
@@ -456,6 +559,8 @@ describe("TerraDrawSelectMode", () => {
 
       expect(onSelect).toBeCalledTimes(1);
 
+      mockClickBoundingBox();
+
       selectMode.onClick({
         lng: 50,
         lat: 50,
@@ -469,26 +574,6 @@ describe("TerraDrawSelectMode", () => {
   });
 
   describe("onKeyPress", () => {
-    let selectMode: TerraDrawSelectMode;
-    let store: GeoJSONStore;
-    let onChange: jest.Mock;
-    let project: jest.Mock;
-    let onSelect: jest.Mock;
-    let onDeselect: jest.Mock;
-
-    beforeEach(() => {
-      selectMode = new TerraDrawSelectMode();
-
-      const mockConfig = getMockModeConfig();
-      store = mockConfig.store;
-      onChange = mockConfig.onChange;
-      project = mockConfig.project;
-      onSelect = mockConfig.onSelect;
-      onDeselect = mockConfig.onDeselect;
-
-      selectMode.register(mockConfig);
-    });
-
     describe("Delete", () => {
       it("does nothing with no features selected", () => {
         selectMode.onKeyPress({ key: "Delete" });
@@ -499,6 +584,8 @@ describe("TerraDrawSelectMode", () => {
 
       it("deletes when feature is selected", () => {
         store.create([{ geometry: { type: "Point", coordinates: [0, 0] } }]);
+
+        mockClickBoundingBox();
 
         project.mockReturnValueOnce({
           x: 0,
@@ -546,6 +633,8 @@ describe("TerraDrawSelectMode", () => {
       it("does nothing with no features selected", () => {
         store.create([{ geometry: { type: "Point", coordinates: [0, 0] } }]);
 
+        mockClickBoundingBox();
+
         project.mockReturnValueOnce({
           x: 0,
           y: 0,
@@ -569,27 +658,6 @@ describe("TerraDrawSelectMode", () => {
   });
 
   describe("onDragStart", () => {
-    let selectMode: TerraDrawSelectMode;
-    let store: GeoJSONStore;
-    let onChange: jest.Mock;
-    let project: jest.Mock;
-    let onSelect: jest.Mock;
-    let onDeselect: jest.Mock;
-    let setCursor: jest.Mock;
-
-    beforeEach(() => {
-      selectMode = new TerraDrawSelectMode();
-
-      const mockConfig = getMockModeConfig();
-      onChange = mockConfig.onChange;
-      project = mockConfig.project;
-      onSelect = mockConfig.onSelect;
-      onDeselect = mockConfig.onDeselect;
-      setCursor = mockConfig.setCursor;
-      store = mockConfig.store;
-      selectMode.register(mockConfig);
-    });
-
     it("nothing selected, nothing changes", () => {
       selectMode.onDragStart(
         {
@@ -609,6 +677,8 @@ describe("TerraDrawSelectMode", () => {
 
     it("does not trigger starting of drag events if mode not draggable", () => {
       store.create([{ geometry: { type: "Point", coordinates: [0, 0] } }]);
+
+      mockClickBoundingBox();
 
       project.mockReturnValueOnce({
         x: 0,
@@ -646,6 +716,7 @@ describe("TerraDrawSelectMode", () => {
       const mockConfig = getMockModeConfig();
       onChange = mockConfig.onChange;
       project = mockConfig.project;
+      unproject = mockConfig.unproject;
       onSelect = mockConfig.onSelect;
       onDeselect = mockConfig.onDeselect;
       setCursor = mockConfig.setCursor;
@@ -658,6 +729,8 @@ describe("TerraDrawSelectMode", () => {
           properties: { mode: "point" },
         },
       ]);
+
+      mockClickBoundingBox();
 
       project.mockReturnValueOnce({
         x: 0,
@@ -689,27 +762,6 @@ describe("TerraDrawSelectMode", () => {
   });
 
   describe("onDrag", () => {
-    let selectMode: TerraDrawSelectMode;
-    let store: GeoJSONStore;
-    let onChange: jest.Mock;
-    let project: jest.Mock;
-    let onSelect: jest.Mock;
-    let onDeselect: jest.Mock;
-    let setCursor: jest.Mock;
-
-    beforeEach(() => {
-      selectMode = new TerraDrawSelectMode();
-
-      const mockConfig = getMockModeConfig();
-      onChange = mockConfig.onChange;
-      project = mockConfig.project;
-      onSelect = mockConfig.onSelect;
-      onDeselect = mockConfig.onDeselect;
-      setCursor = mockConfig.setCursor;
-      store = mockConfig.store;
-      selectMode.register(mockConfig);
-    });
-
     it("nothing selected, nothing changes", () => {
       selectMode.onDrag({
         lng: 0,
@@ -731,6 +783,8 @@ describe("TerraDrawSelectMode", () => {
         x: 0,
         y: 0,
       });
+
+      mockClickBoundingBox();
 
       selectMode.onClick({
         lng: 0,
@@ -761,6 +815,7 @@ describe("TerraDrawSelectMode", () => {
         const mockConfig = getMockModeConfig();
         onChange = mockConfig.onChange;
         project = mockConfig.project;
+        unproject = mockConfig.unproject;
         onSelect = mockConfig.onSelect;
         onDeselect = mockConfig.onDeselect;
         setCursor = mockConfig.setCursor;
@@ -773,6 +828,8 @@ describe("TerraDrawSelectMode", () => {
             properties: { mode: "point" },
           },
         ]);
+
+        mockClickBoundingBox();
 
         project.mockReturnValueOnce({
           x: 0,
@@ -807,6 +864,7 @@ describe("TerraDrawSelectMode", () => {
         const mockConfig = getMockModeConfig();
         onChange = mockConfig.onChange;
         project = mockConfig.project;
+        unproject = mockConfig.unproject;
         onSelect = mockConfig.onSelect;
         onDeselect = mockConfig.onDeselect;
         setCursor = mockConfig.setCursor;
@@ -824,6 +882,8 @@ describe("TerraDrawSelectMode", () => {
           x: 0,
           y: 0,
         });
+
+        mockClickBoundingBox();
 
         selectMode.onClick({
           lng: 0,
@@ -853,6 +913,7 @@ describe("TerraDrawSelectMode", () => {
         const mockConfig = getMockModeConfig();
         onChange = mockConfig.onChange;
         project = mockConfig.project;
+        unproject = mockConfig.unproject;
         onSelect = mockConfig.onSelect;
         onDeselect = mockConfig.onDeselect;
         setCursor = mockConfig.setCursor;
@@ -881,6 +942,8 @@ describe("TerraDrawSelectMode", () => {
             x: 1,
             y: 1,
           });
+
+        mockClickBoundingBox();
 
         selectMode.onClick({
           lng: 0,
@@ -918,7 +981,9 @@ describe("TerraDrawSelectMode", () => {
         });
 
         const mockConfig = getMockModeConfig();
+
         onChange = mockConfig.onChange;
+        unproject = mockConfig.unproject;
         project = mockConfig.project;
         onSelect = mockConfig.onSelect;
         onDeselect = mockConfig.onDeselect;
@@ -943,6 +1008,8 @@ describe("TerraDrawSelectMode", () => {
             properties: { mode: "polygon" },
           },
         ]);
+
+        mockClickBoundingBox();
 
         project
           .mockReturnValueOnce({
@@ -994,6 +1061,7 @@ describe("TerraDrawSelectMode", () => {
         const mockConfig = getMockModeConfig();
         onChange = mockConfig.onChange;
         project = mockConfig.project;
+        unproject = mockConfig.unproject;
         onSelect = mockConfig.onSelect;
         onDeselect = mockConfig.onDeselect;
         setCursor = mockConfig.setCursor;
@@ -1027,6 +1095,8 @@ describe("TerraDrawSelectMode", () => {
         ]);
 
         expect(onChange).toBeCalledTimes(2);
+
+        mockClickBoundingBox();
 
         project
           .mockReturnValueOnce({
@@ -1076,6 +1146,7 @@ describe("TerraDrawSelectMode", () => {
         const mockConfig = getMockModeConfig();
         onChange = mockConfig.onChange;
         project = mockConfig.project;
+        unproject = mockConfig.unproject;
         onSelect = mockConfig.onSelect;
         onDeselect = mockConfig.onDeselect;
         setCursor = mockConfig.setCursor;
@@ -1114,6 +1185,8 @@ describe("TerraDrawSelectMode", () => {
         ]);
 
         expect(onChange).toBeCalledTimes(2);
+
+        mockClickBoundingBox();
 
         project
           .mockReturnValueOnce({
@@ -1164,6 +1237,7 @@ describe("TerraDrawSelectMode", () => {
       const mockConfig = getMockModeConfig();
       onChange = mockConfig.onChange;
       project = mockConfig.project;
+      unproject = mockConfig.unproject;
       onSelect = mockConfig.onSelect;
       onDeselect = mockConfig.onDeselect;
       setCursor = mockConfig.setCursor;
@@ -1187,6 +1261,8 @@ describe("TerraDrawSelectMode", () => {
           properties: { mode: "polygon" },
         },
       ]);
+
+      mockClickBoundingBox();
 
       project.mockReturnValue({
         x: 0,

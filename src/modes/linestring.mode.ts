@@ -14,7 +14,6 @@ type TerraDrawLineStringModeKeyEvents = {
 export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode {
   mode = "linestring";
 
-  private pointerDistance: number;
   private currentCoordinate = 0;
   private currentId: string;
   private allowSelfIntersections;
@@ -22,12 +21,11 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode {
 
   constructor(options?: {
     allowSelfIntersections?: boolean;
-    styling?: Partial<TerraDrawAdapterStyling>;
     pointerDistance?: number;
+    styling?: Partial<TerraDrawAdapterStyling>;
     keyEvents?: TerraDrawLineStringModeKeyEvents;
   }) {
     super(options);
-    this.pointerDistance = (options && options.pointerDistance) || 40;
 
     this.allowSelfIntersections =
       options && options.allowSelfIntersections !== undefined

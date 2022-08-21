@@ -14,19 +14,25 @@ Done:
 - Feature: Drag coordinates
 - Chore: Code coverage back to 100% - test custom key bindings
 - Chore: Spatial indexing
+- Bug (Mapbox): Correct zIndexing for layers for Mapbox
+
+Doing:
+
+- Feature: Snapping
+- Feature: Insert midpoints
 
 Todo:
 
-- First two points of Mapbox Adapter polygons don't render
-- Feature: Insert midpoints
+- Feature: Right click to delete coordinate
+- Chore: Figure a more robust way to handle project/unproject in tests
+- Bug (Mapbox): First two points of Mapbox Adapter polygons don't render
 - Feature: Rotation
 - Bug: ? Can drag feature when cursor is not dragging over the feature
-- Bug: Dragging doesn't trigger draggin cursor on mouse down
-- Bug: Correct zIndexing for layers for Mapbox
-- Chore: Identical coordinate protection
+- Bug: Dragging doesn't trigger dragging cursor on mouse down
 - Chore: Type properties for different mode features
+- Bug (Mapbox): More robust implementation for fixing zIndexing for layers for Mapbox
+- Chore: Identical coordinate protection
 
 Could Do:
 
-- Feature: Snapping
 - Feature: Undo/Redo

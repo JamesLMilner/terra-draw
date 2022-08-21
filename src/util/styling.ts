@@ -14,5 +14,8 @@ export const getDefaultStyling = (): TerraDrawAdapterStyling => {
     selectedColor: "#26a9c8",
     selectedPointOutlineColor: "#ffffff",
     selectionPointWidth: 6,
+    midPointColor: "#3f97e0",
+    midPointOutlineColor: "#ffffff",
+    midPointWidth: 4,
   };
 };

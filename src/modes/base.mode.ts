@@ -53,31 +53,6 @@ export abstract class TerraDrawBaseDrawMode {
     }
   }
 
-  protected getSnappableCoord(
-    event: TerraDrawMouseEvent,
-    filter: (feature: Feature) => boolean
-  ) {
-    const bbox = this.createClickBoundingBox(event);
-
-    const features = this.store.search(bbox, filter) as Feature<Polygon>[];
-
-    let closest: { coord: undefined | Position; minDist: number } = {
-      coord: undefined,
-      minDist: Infinity,
-    };
-
-    features.forEach((feature) => {
-      feature.geometry.coordinates[0].forEach((coord) => {
-        const dist = this.distanceBetweenTwoCoords(coord, event);
-        if (dist < closest.minDist && dist < this.pointerDistance) {
-          closest.coord = coord;
-        }
-      });
-    });
-
-    return closest.coord;
-  }
-
   protected createClickBoundingBox(event: TerraDrawMouseEvent) {
     const { containerX: x, containerY: y } = event;
     const halfDist = this.pointerDistance / 2;

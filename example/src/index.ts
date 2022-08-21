@@ -87,15 +87,18 @@ const example = {
 
     ["select", "point", "linestring", "polygon", "freehand", "circle"].forEach(
       (mode) => {
-        document.getElementById(mode).addEventListener("click", () => {
-          draw.changeMode(mode);
-        });
+        (document.getElementById(mode) as HTMLButtonElement).addEventListener(
+          "click",
+          () => {
+            draw.changeMode(mode);
+          }
+        );
       }
     );
 
     this.initialised.push("leaflet");
   },
-  initMapbox(id: string, accessToken: string) {
+  initMapbox(id: string, accessToken: string | undefined) {
     if (this.initialised.includes("mapbox")) {
       return;
     }
@@ -142,14 +145,17 @@ const example = {
         "freehand",
         "circle",
       ].forEach((mode) => {
-        document.getElementById(mode).addEventListener("click", () => {
-          draw.changeMode(mode);
-        });
+        (document.getElementById(mode) as HTMLButtonElement).addEventListener(
+          "click",
+          () => {
+            draw.changeMode(mode);
+          }
+        );
       });
     });
     this.initialised.push("mapbox");
   },
-  initGoogleMaps(id: string, apiKey: string) {
+  initGoogleMaps(id: string, apiKey: string | undefined) {
     if (this.initialised.includes("google")) {
       return;
     }
@@ -173,34 +179,33 @@ const example = {
         }
       );
 
-      let interval = setInterval(() => {
-        if (map.getProjection() !== undefined) {
-          const draw = new TerraDraw({
-            adapter: new TerraDrawGoogleMapsAdapter({
-              lib: google.maps,
-              map,
-              coordinatePrecision: 9,
-            }),
-            modes: getModes(),
-          });
-          draw.start();
-          [
-            "select",
-            "point",
-            "linestring",
-            "polygon",
-            "freehand",
-            "circle",
-          ].forEach((mode) => {
-            document.getElementById(mode).addEventListener("click", () => {
+      map.addListener("projection_changed", () => {
+        const draw = new TerraDraw({
+          adapter: new TerraDrawGoogleMapsAdapter({
+            lib: google.maps,
+            map,
+            coordinatePrecision: 9,
+          }),
+          modes: getModes(),
+        });
+        draw.start();
+        [
+          "select",
+          "point",
+          "linestring",
+          "polygon",
+          "freehand",
+          "circle",
+        ].forEach((mode) => {
+          (document.getElementById(mode) as HTMLButtonElement).addEventListener(
+            "click",
+            () => {
               draw.changeMode(mode);
-            });
-          });
-          this.initialised.push("google");
-
-          clearInterval(interval);
-        }
-      }, 100);
+            }
+          );
+        });
+        this.initialised.push("google");
+      });
     });
   },
 };
@@ -211,5 +216,6 @@ example.initLeaflet("leaflet-map");
 example.initMapbox("mapbox-map", process.env.MAPBOX_ACCESS_TOKEN);
 example.initGoogleMaps("google-map", process.env.GOOGLE_API_KEY);
 document.addEventListener("keyup", (event) => {
-  document.getElementById("keybind").innerHTML = event.key;
+  (document.getElementById("keybind") as HTMLButtonElement).innerHTML =
+    event.key;
 });

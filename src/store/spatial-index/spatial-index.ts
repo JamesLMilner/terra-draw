@@ -1,8 +1,6 @@
-import { Feature, LineString, Point, Polygon } from "geojson";
+import { Position } from "geojson";
+import { GeoJSONStoreFeatures } from "../store";
 import { RBush, Node } from "./rbush";
-
-type AcceptedSpatialIndexGeometries = Point | LineString | Polygon;
-export type AcceptedSpatialIndexFeatures = Feature<AcceptedSpatialIndexGeometries>;
 
 export class SpatialIndex {
   private tree: RBush;
@@ -17,22 +15,24 @@ export class SpatialIndex {
     this.nodeToId = new Map();
   }
 
-  private setMaps(feature: AcceptedSpatialIndexFeatures, bbox: Node) {
+  private setMaps(feature: GeoJSONStoreFeatures, bbox: Node) {
     this.idToNode.set(String(feature.id), bbox);
     this.nodeToId.set(bbox, String(feature.id));
   }
 
-  private toBBox(feature: AcceptedSpatialIndexFeatures) {
+  private toBBox(feature: GeoJSONStoreFeatures) {
     const longitudes: number[] = [];
     const latitudes: number[] = [];
 
-    let coordinates;
+    let coordinates: Position[];
     if (feature.geometry.type === "Polygon") {
       coordinates = feature.geometry.coordinates[0];
     } else if (feature.geometry.type === "LineString") {
       coordinates = feature.geometry.coordinates;
     } else if (feature.geometry.type === "Point") {
       coordinates = [feature.geometry.coordinates];
+    } else {
+      throw new Error("Feature type not supported");
     }
 
     for (var i = 0; i < coordinates.length; i++) {
@@ -53,7 +53,7 @@ export class SpatialIndex {
     } as Node;
   }
 
-  insert(feature: AcceptedSpatialIndexFeatures): void {
+  insert(feature: GeoJSONStoreFeatures): void {
     if (this.idToNode.get(String(feature.id))) {
       throw new Error("Feature already exists");
     }
@@ -62,7 +62,7 @@ export class SpatialIndex {
     this.tree.insert(bbox);
   }
 
-  load(features: AcceptedSpatialIndexFeatures[]): void {
+  load(features: GeoJSONStoreFeatures[]): void {
     const load: Node[] = [];
     const seenIds: Set<string> = new Set();
     features.forEach((feature) => {
@@ -77,7 +77,7 @@ export class SpatialIndex {
     this.tree.load(load);
   }
 
-  update(feature: AcceptedSpatialIndexFeatures): void {
+  update(feature: GeoJSONStoreFeatures): void {
     this.remove(feature.id as string);
     const bbox = this.toBBox(feature);
     this.setMaps(feature, bbox);
@@ -97,13 +97,14 @@ export class SpatialIndex {
     this.tree.clear();
   }
 
-  search(feature: AcceptedSpatialIndexFeatures): string[] {
-    return this.tree.search(this.toBBox(feature)).map((node) => {
-      return this.nodeToId.get(node);
+  search(feature: GeoJSONStoreFeatures): string[] {
+    const found = this.tree.search(this.toBBox(feature));
+    return found.map((node) => {
+      return this.nodeToId.get(node) as string;
     });
   }
 
-  collides(feature: AcceptedSpatialIndexFeatures): boolean {
+  collides(feature: GeoJSONStoreFeatures): boolean {
     return this.tree.collides(this.toBBox(feature));
   }
 }

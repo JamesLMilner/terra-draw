@@ -20,7 +20,7 @@ export function createMockPolygonSquare(
   squareStart = squareStart !== undefined ? squareStart : 0;
   squareEnd = squareEnd !== undefined ? squareEnd : 1;
 
-  return createMockFeature(id, {
+  return createMockFeature(id || "1", {
     type: "Polygon",
     coordinates: [
       [
@@ -45,14 +45,14 @@ export function createMockPoint(
   lng?: number,
   lat?: number
 ): Feature<Point> {
-  return createMockFeature(id, {
+  return createMockFeature(id || "1", {
     type: "Point",
     coordinates: [lng ? lng : 0, lat ? lat : 0],
   });
 }
 
 export function createMockLineString(id?: string): Feature<LineString> {
-  return createMockFeature(id, {
+  return createMockFeature(id || "1", {
     type: "LineString",
     coordinates: [
       [0, 0],

@@ -21,7 +21,7 @@ describe("GeoJSONStore", () => {
       expect(() => {
         const store = new GeoJSONStore({
           data: [undefined],
-        });
+        } as any);
       }).toThrowError();
     });
 

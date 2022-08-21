@@ -15,6 +15,7 @@ import mapboxgl, {
   PointLike,
 } from "mapbox-gl";
 import { GeoJSONStoreFeatures, GeoJSONStoreGeometries } from "../store/store";
+import { point } from "leaflet";
 
 export class TerraDrawMapboxGLAdapter implements TerraDrawAdapter {
   constructor(config: { map: mapboxgl.Map; coordinatePrecision: number }) {
@@ -61,7 +62,7 @@ export class TerraDrawMapboxGLAdapter implements TerraDrawAdapter {
   private _onDragListener: (event: MouseEvent) => void;
   private _onDragEndListener: (event: MouseEvent) => void;
   private _onKeyPressListener: (event: KeyboardEvent) => any;
-  private _rendered: boolean = false;
+  private _rendered: Record<string, boolean> = {};
 
   private _addGeoJSONSource(id: string, features: Feature[]) {
     this._map.addSource(id, {
@@ -97,9 +98,10 @@ export class TerraDrawMapboxGLAdapter implements TerraDrawAdapter {
   private _addFillOutlineLayer(
     id: string,
     mode: string,
-    styling: TerraDrawAdapterStyling
+    styling: TerraDrawAdapterStyling,
+    beneath?: string
   ) {
-    return this._map.addLayer({
+    const layer = this._map.addLayer({
       id: id + "outline",
       source: id,
       type: "line",
@@ -113,14 +115,21 @@ export class TerraDrawMapboxGLAdapter implements TerraDrawAdapter {
         "line-color": ["get", "selectedColor"],
       },
     } as LineLayer);
+
+    if (beneath) {
+      this._map.moveLayer(id, beneath);
+    }
+
+    return layer;
   }
 
   private _addLineLayer(
     id: string,
     mode: string,
-    styling: TerraDrawAdapterStyling
+    styling: TerraDrawAdapterStyling,
+    beneath?: string
   ) {
-    return this._map.addLayer({
+    const layer = this._map.addLayer({
       id,
       source: id,
       type: "line",
@@ -134,14 +143,21 @@ export class TerraDrawMapboxGLAdapter implements TerraDrawAdapter {
         "line-color": ["get", "selectedColor"],
       },
     } as LineLayer);
+
+    if (beneath) {
+      this._map.moveLayer(id, beneath);
+    }
+
+    return layer;
   }
 
   private _addPointLayer(
     id: string,
     mode: string,
-    styling: TerraDrawAdapterStyling
+    styling: TerraDrawAdapterStyling,
+    beneath?: string
   ) {
-    return this._map.addLayer({
+    const layer = this._map.addLayer({
       id,
       source: id,
       type: "circle",
@@ -157,23 +173,28 @@ export class TerraDrawMapboxGLAdapter implements TerraDrawAdapter {
         "circle-color": ["get", "selectedColor"],
       },
     } as CircleLayer);
+    if (beneath) {
+      this._map.moveLayer(id, beneath);
+    }
+    return layer;
   }
 
   private _addLayer(
     id: string,
     mode: string,
     featureType: "Point" | "LineString" | "Polygon",
-    styling: TerraDrawAdapterStyling
+    styling: TerraDrawAdapterStyling,
+    beneath?: string
   ) {
     if (featureType === "Point") {
-      this._addPointLayer(id, mode, styling);
+      this._addPointLayer(id, mode, styling, beneath);
     }
     if (featureType === "LineString") {
-      this._addLineLayer(id, mode, styling);
+      this._addLineLayer(id, mode, styling, beneath);
     }
     if (featureType === "Polygon") {
       this._addFillLayer(id, mode, styling);
-      this._addFillOutlineLayer(id, mode, styling);
+      this._addFillOutlineLayer(id, mode, styling, beneath);
     }
   }
 
@@ -183,11 +204,11 @@ export class TerraDrawMapboxGLAdapter implements TerraDrawAdapter {
     features: Feature<T>[],
     styling: TerraDrawAdapterStyling
   ) {
-    const id = `${mode}-${featureType.toLowerCase()}`;
-
+    const id = `td-${mode}-${featureType.toLowerCase()}`;
     this._addGeoJSONSource(id, features);
-
     this._addLayer(id, mode, featureType, styling);
+
+    return id;
   }
 
   private _setGeoJSONLayerData<T extends GeoJSONStoreGeometries>(
@@ -195,11 +216,12 @@ export class TerraDrawMapboxGLAdapter implements TerraDrawAdapter {
     featureType: Feature<T>["geometry"]["type"],
     features: Feature<T>[]
   ) {
-    const id = `${mode}-${featureType.toLowerCase()}`;
+    const id = `td-${mode}-${featureType.toLowerCase()}`;
     (this._map.getSource(id) as any).setData({
       type: "FeatureCollection",
       features: features,
     });
+    return id;
   }
   register(callbacks: TerraDrawCallbacks) {
     this._onClickListener = (event) => {
@@ -359,67 +381,67 @@ export class TerraDrawMapboxGLAdapter implements TerraDrawAdapter {
       return features.filter((f) => f.geometry.type === type) as Feature<T>[];
     };
 
-    const createUpdateGeoJSONLayers = (method: "create" | "update") => {
-      Object.keys(styling).forEach((mode) => {
-        const styles = styling[mode];
+    Object.keys(styling).forEach((mode) => {
+      const styles = styling[mode];
 
-        const modeFeatures = features.filter((f) => f.properties.mode === mode);
+      const modeFeatures = features.filter((f) => f.properties.mode === mode);
 
-        const points = getFeatureOfType<Point>("Point", modeFeatures);
+      const points = getFeatureOfType<Point>("Point", modeFeatures);
 
-        points.forEach((feature) => {
-          if (
-            feature.properties.selected ||
-            feature.properties.selectionPoint
-          ) {
-            feature.properties.selectedColor = styles.selectedColor;
-            feature.properties.selectedPointOutlineColor =
-              styles.selectedPointOutlineColor;
-            feature.properties.selectionPointWidth = styles.selectionPointWidth;
-          } else {
-            feature.properties.selectedColor = styles.pointColor;
-            feature.properties.selectedPointOutlineColor = styles.pointColor;
-            feature.properties.selectionPointWidth = styles.pointWidth;
-          }
-        });
-
-        const lines = getFeatureOfType<LineString>("LineString", modeFeatures);
-
-        lines.forEach((feature) => {
-          if (feature.properties.selected) {
-            feature.properties.selectedColor = styles.selectedColor;
-          } else {
-            feature.properties.selectedColor = styles.lineStringColor;
-          }
-        });
-
-        const polygons = getFeatureOfType<Polygon>("Polygon", modeFeatures);
-
-        polygons.forEach((feature) => {
-          if (feature.properties.selected) {
-            feature.properties.selectedColor = styles.selectedColor;
-          } else {
-            feature.properties.selectedColor = styles.polygonFillColor;
-          }
-        });
-
-        if (method === "create") {
-          this._addGeoJSONLayer<Point>(mode, "Point", points, styles);
-          this._addGeoJSONLayer<LineString>(mode, "LineString", lines, styles);
-          this._addGeoJSONLayer<Polygon>(mode, "Polygon", polygons, styles);
-        } else if (method === "update") {
-          this._setGeoJSONLayerData<Point>(mode, "Point", points);
-          this._setGeoJSONLayerData<LineString>(mode, "LineString", lines);
-          this._setGeoJSONLayerData<Polygon>(mode, "Polygon", polygons);
+      points.forEach((feature) => {
+        if (feature.properties.selected || feature.properties.selectionPoint) {
+          feature.properties.selectedColor = styles.selectedColor;
+          feature.properties.selectedPointOutlineColor =
+            styles.selectedPointOutlineColor;
+          feature.properties.selectionPointWidth = styles.selectionPointWidth;
+        } else if (feature.properties.midPoint) {
+          feature.properties.selectedColor = styles.midPointColor;
+          feature.properties.selectedPointOutlineColor =
+            styles.midPointOutlineColor;
+          feature.properties.selectionPointWidth = styles.midPointWidth;
+        } else {
+          feature.properties.selectedColor = styles.pointColor;
+          feature.properties.selectedPointOutlineColor = styles.pointColor;
+          feature.properties.selectionPointWidth = styles.pointWidth;
         }
       });
-    };
 
-    if (!this._rendered) {
-      createUpdateGeoJSONLayers("create");
-      this._rendered = true;
-    } else {
-      createUpdateGeoJSONLayers("update");
-    }
+      const lines = getFeatureOfType<LineString>("LineString", modeFeatures);
+
+      lines.forEach((feature) => {
+        if (feature.properties.selected) {
+          feature.properties.selectedColor = styles.selectedColor;
+        } else {
+          feature.properties.selectedColor = styles.lineStringColor;
+        }
+      });
+
+      const polygons = getFeatureOfType<Polygon>("Polygon", modeFeatures);
+
+      polygons.forEach((feature) => {
+        if (feature.properties.selected) {
+          feature.properties.selectedColor = styles.selectedColor;
+        } else {
+          feature.properties.selectedColor = styles.polygonFillColor;
+        }
+      });
+
+      if (!this._rendered[mode]) {
+        this._addGeoJSONLayer<Point>(mode, "Point", points, styles);
+        this._addGeoJSONLayer<LineString>(mode, "LineString", lines, styles);
+        this._addGeoJSONLayer<Polygon>(mode, "Polygon", polygons, styles);
+        this._rendered[mode] = true;
+      } else {
+        const pointId = this._setGeoJSONLayerData<Point>(mode, "Point", points);
+        this._setGeoJSONLayerData<LineString>(mode, "LineString", lines);
+        this._setGeoJSONLayerData<Polygon>(mode, "Polygon", polygons);
+
+        // TODO: This logic could be better - I think this will render the selection points above user
+        // defined layers outside of TerraDraw which is perhaps unideal
+
+        // Ensure selection/mid points are rendered on top
+        this._map.moveLayer(pointId);
+      }
+    });
   }
 }

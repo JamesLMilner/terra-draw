@@ -379,58 +379,6 @@ describe("TerraDrawSelectMode", () => {
         },
       ]);
 
-      mockClickBoundingBox([
-        [0, 0],
-        [0, 1],
-        [1, 1],
-        [0, 1],
-      ]);
-
-      selectMode.onClick({
-        lng: 0.5,
-        lat: 0.5,
-        containerX: 0,
-        containerY: 0,
-      });
-
-      expect(onSelect).toBeCalledTimes(1);
-
-      mockClickBoundingBox([
-        [0, 0],
-        [0, 1],
-        [1, 1],
-        [0, 1],
-      ]);
-
-      selectMode.onClick({
-        lng: 0.0,
-        lat: 0.0,
-        containerX: 0,
-        containerY: 0,
-      });
-
-      expect(onSelect).toBeCalledTimes(1);
-    });
-
-    it("ignores selection points when selecting", () => {
-      // Square Polygon
-      store.create([
-        {
-          geometry: {
-            type: "Polygon",
-            coordinates: [
-              [
-                [0, 0],
-                [0, 1],
-                [1, 1],
-                [1, 0],
-                [0, 0],
-              ],
-            ],
-          },
-        },
-      ]);
-
       store.create([
         {
           geometry: {
@@ -496,12 +444,43 @@ describe("TerraDrawSelectMode", () => {
         "create"
       );
 
+      // Create mid points
+      expect(onChange).toHaveBeenNthCalledWith(
+        5,
+        [
+          expect.any(String),
+          expect.any(String),
+          expect.any(String),
+          expect.any(String),
+        ],
+        "create"
+      );
+
       mockClickBoundingBox([
         [0, 0],
         [0, 5],
         [5, 5],
         [0, 5],
       ]);
+
+      // Mock midpoint distance check
+      project
+        .mockReturnValueOnce({
+          x: 0,
+          y: 0,
+        })
+        .mockReturnValueOnce({
+          x: 0,
+          y: 0,
+        })
+        .mockReturnValueOnce({
+          x: 0,
+          y: 0,
+        })
+        .mockReturnValueOnce({
+          x: 0,
+          y: 0,
+        });
 
       // Deselect first polygon, select second
       selectMode.onClick({
@@ -516,11 +495,12 @@ describe("TerraDrawSelectMode", () => {
 
       // Deselect first polygon selected set to false
       expect(onDeselect).toBeCalledTimes(1);
-      expect(onChange).toHaveBeenNthCalledWith(5, idOne, "update");
 
-      // Delete first polygon seelection points
+      expect(onChange).toHaveBeenNthCalledWith(6, idOne, "update");
+
+      // Delete first polygon selection points
       expect(onChange).toHaveBeenNthCalledWith(
-        6,
+        7,
         [
           expect.any(String),
           expect.any(String),
@@ -531,8 +511,20 @@ describe("TerraDrawSelectMode", () => {
         "delete"
       );
 
+      // Delete first polygon mid points
+      expect(onChange).toHaveBeenNthCalledWith(
+        8,
+        [
+          expect.any(String),
+          expect.any(String),
+          expect.any(String),
+          expect.any(String),
+        ],
+        "delete"
+      );
+
       // Second polygon selected set to true
-      expect(onChange).toHaveBeenNthCalledWith(7, idTwo, "update");
+      expect(onChange).toHaveBeenNthCalledWith(9, idTwo, "update");
     });
 
     it("deselects if a feature already selected but click is not on a new feature", () => {
@@ -953,7 +945,7 @@ describe("TerraDrawSelectMode", () => {
         });
 
         expect(onSelect).toBeCalledTimes(1);
-        expect(onChange).toBeCalledTimes(3);
+        expect(onChange).toBeCalledTimes(4);
 
         selectMode.onDragStart(
           {
@@ -1029,7 +1021,7 @@ describe("TerraDrawSelectMode", () => {
         });
 
         expect(onSelect).toBeCalledTimes(1);
-        expect(onChange).toBeCalledTimes(3);
+        expect(onChange).toBeCalledTimes(4);
 
         selectMode.onDragStart(
           {
@@ -1116,7 +1108,7 @@ describe("TerraDrawSelectMode", () => {
         });
 
         expect(onSelect).toBeCalledTimes(1);
-        expect(onChange).toBeCalledTimes(4);
+        expect(onChange).toBeCalledTimes(5);
 
         selectMode.onDragStart(
           {
@@ -1135,7 +1127,7 @@ describe("TerraDrawSelectMode", () => {
           containerY: 1,
         });
 
-        expect(onChange).toBeCalledTimes(5);
+        expect(onChange).toBeCalledTimes(6);
       });
 
       it("does trigger drag events if mode is draggable for polygon", () => {
@@ -1206,7 +1198,7 @@ describe("TerraDrawSelectMode", () => {
         });
 
         expect(onSelect).toBeCalledTimes(1);
-        expect(onChange).toBeCalledTimes(4);
+        expect(onChange).toBeCalledTimes(5);
 
         selectMode.onDragStart(
           {
@@ -1225,78 +1217,8 @@ describe("TerraDrawSelectMode", () => {
           containerY: 1,
         });
 
-        expect(onChange).toBeCalledTimes(5);
+        expect(onChange).toBeCalledTimes(6);
       });
-    });
-
-    it("does trigger drag events if mode is draggable for polygon", () => {
-      selectMode = new TerraDrawSelectMode({
-        draggable: [{ mode: "polygon", coordinate: true, feature: false }],
-      });
-
-      const mockConfig = getMockModeConfig();
-      onChange = mockConfig.onChange;
-      project = mockConfig.project;
-      unproject = mockConfig.unproject;
-      onSelect = mockConfig.onSelect;
-      onDeselect = mockConfig.onDeselect;
-      setCursor = mockConfig.setCursor;
-      store = mockConfig.store;
-      selectMode.register(mockConfig);
-
-      store.create([
-        {
-          geometry: {
-            type: "Polygon",
-            coordinates: [
-              [
-                [0, 0],
-                [0, 1],
-                [1, 1],
-                [1, 0],
-                [0, 0],
-              ],
-            ],
-          },
-          properties: { mode: "polygon" },
-        },
-      ]);
-
-      mockClickBoundingBox();
-
-      project.mockReturnValue({
-        x: 0,
-        y: 0,
-      });
-
-      selectMode.onClick({
-        lng: 0,
-        lat: 0,
-        containerX: 0,
-        containerY: 0,
-      });
-
-      expect(onSelect).toBeCalledTimes(1);
-      expect(onChange).toBeCalledTimes(3);
-
-      selectMode.onDragStart(
-        {
-          lng: 1,
-          lat: 1,
-          containerX: 1,
-          containerY: 1,
-        },
-        jest.fn()
-      );
-
-      selectMode.onDrag({
-        lng: 1,
-        lat: 1,
-        containerX: 1,
-        containerY: 1,
-      });
-
-      expect(onChange).toBeCalledTimes(4);
     });
   });
 

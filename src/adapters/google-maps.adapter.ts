@@ -392,14 +392,20 @@ export class TerraDrawGoogleMapsAdapter implements TerraDrawAdapter {
 
     this._map.data.setStyle((feature) => {
       const mode = feature.getProperty("mode");
-      const type = feature.getGeometry().getType();
+      const gmGeometry = feature.getGeometry();
+      if (!gmGeometry) {
+        throw new Error("Google Maps geometry not found");
+      }
+      const type = gmGeometry.getType();
       const selected = feature.getProperty("selected");
 
-      const selectionPoint = feature.getProperty("selectionPoint");
+      const selectionPoint = Boolean(feature.getProperty("selectionPoint"));
+      const midPoint = Boolean(feature.getProperty("midPoint"));
 
       switch (type) {
         case "Point":
           const isSelection = selected || selectionPoint;
+          const isMidpoint = midPoint;
           return {
             icon: {
               path: this.circlePath(
@@ -407,16 +413,22 @@ export class TerraDrawGoogleMapsAdapter implements TerraDrawAdapter {
                 0,
                 isSelection
                   ? styling[mode].selectionPointWidth
+                  : isMidpoint
+                  ? styling[mode].midPointWidth
                   : styling[mode].pointWidth
               ),
               fillColor: isSelection
                 ? styling[mode].selectedColor
+                : isMidpoint
+                ? styling[mode].midPointColor
                 : styling[mode].pointColor,
               fillOpacity: 1,
               strokeColor: isSelection
                 ? styling[mode].selectedPointOutlineColor
+                : isMidpoint
+                ? styling[mode].midPointOutlineColor
                 : undefined,
-              strokeWeight: isSelection ? 2 : 0,
+              strokeWeight: isSelection || isMidpoint ? 2 : 0,
               rotation: 0,
               scale: 1,
             },

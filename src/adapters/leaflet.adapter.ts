@@ -33,7 +33,10 @@ export class TerraDrawLeafletAdapter implements TerraDrawAdapter {
     };
 
     this.unproject = (x: number, y: number) => {
-      const { lng, lat } = this._map.containerPointToLatLng({ x, y } as L.PointExpression);
+      const { lng, lat } = this._map.containerPointToLatLng({
+        x,
+        y,
+      } as L.PointExpression);
       return { lng, lat };
     };
 
@@ -56,23 +59,38 @@ export class TerraDrawLeafletAdapter implements TerraDrawAdapter {
   private _onDragListener: (event: MouseEvent) => void;
   private _onDragEndListener: (event: MouseEvent) => void;
   private _layer: L.Layer;
-  private _paneZIndexStyleSheet: HTMLStyleElement;
+  private _midPointPaneZIndexStyleSheet: HTMLStyleElement;
+  private _midPointPane = "midPointPane";
+  private _selectionPaneZIndexStyleSheet: HTMLStyleElement;
   private _selectedPane = "selectedPane";
-
   public project: TerraDrawModeRegisterConfig["project"];
   public unproject: TerraDrawModeRegisterConfig["unproject"];
   public setCursor: TerraDrawModeRegisterConfig["setCursor"];
 
   public getMapContainer: () => HTMLElement;
 
+  private createPaneStyleSheet(pane: string, zIndex: number) {
+    const style = document.createElement("style");
+    style.type = "text/css";
+    style.innerHTML = `.leaflet-${pane} {z-index: ${zIndex};}`;
+    document.getElementsByTagName("head")[0].appendChild(style);
+    this._map.createPane(pane);
+    return style;
+  }
+
   register(callbacks: TerraDrawCallbacks) {
-    if (!this._paneZIndexStyleSheet) {
-      const style = document.createElement("style");
-      style.type = "text/css";
-      style.innerHTML = `.leaflet-${this._selectedPane} {z-index:10;}`;
-      document.getElementsByTagName("head")[0].appendChild(style);
-      this._paneZIndexStyleSheet = style;
-      this._map.createPane(this._selectedPane);
+    if (!this._selectionPaneZIndexStyleSheet) {
+      this._selectionPaneZIndexStyleSheet = this.createPaneStyleSheet(
+        this._selectedPane,
+        10
+      );
+    }
+
+    if (!this._midPointPaneZIndexStyleSheet) {
+      this._midPointPaneZIndexStyleSheet = this.createPaneStyleSheet(
+        this._midPointPane,
+        20
+      );
     }
 
     this._onClickListener = (event: L.LeafletMouseEvent) => {
@@ -236,21 +254,32 @@ export class TerraDrawLeafletAdapter implements TerraDrawAdapter {
         const modeStyle = styling[mode];
         const isSelected =
           feature.properties.selected || feature.properties.selectionPoint;
+        const isMidPoint = feature.properties.midPoint;
+
         const styles = {
           radius: isSelected
             ? modeStyle.selectionPointWidth
+            : isMidPoint
+            ? modeStyle.midPointWidth
             : modeStyle.pointWidth,
           fillColor: isSelected
             ? modeStyle.selectedColor
+            : isMidPoint
+            ? modeStyle.midPointColor
             : modeStyle.pointColor,
-          stroke: isSelected,
+          stroke: isSelected || isMidPoint,
           color: isSelected
             ? modeStyle.selectedPointOutlineColor
-            : modeStyle.pointColor,
-          weight: isSelected ? 2 : 0,
-
+            : isMidPoint
+            ? modeStyle.midPointOutlineColor
+            : modeStyle.pointOutlineColor,
+          weight: isSelected || isMidPoint ? 2 : 0,
           fillOpacity: 0.8,
-          pane: isSelected ? this._selectedPane : undefined,
+          pane: isSelected
+            ? this._selectedPane
+            : isMidPoint
+            ? this._midPointPane
+            : undefined,
           interactive: false, // Removes mouse hover cursor styles
         } as L.CircleMarkerOptions;
 

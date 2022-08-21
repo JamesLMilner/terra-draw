@@ -263,15 +263,36 @@ describe("TerraDrawPolygonMode", () => {
     let polygonMode: TerraDrawPolygonMode;
     let store: GeoJSONStore;
     let project: jest.Mock;
+    let unproject: jest.Mock;
+
+    const mockClickBoundingBox = (
+      bbox: [
+        [number, number],
+        [number, number],
+        [number, number],
+        [number, number]
+      ] = [
+        [0, 0],
+        [0, 0],
+        [0, 0],
+        [0, 0],
+      ]
+    ) => {
+      unproject
+        .mockReturnValueOnce({ lng: bbox[0][0], lat: bbox[0][1] })
+        .mockReturnValueOnce({ lng: bbox[1][0], lat: bbox[1][1] })
+        .mockReturnValueOnce({ lng: bbox[2][0], lat: bbox[2][1] })
+        .mockReturnValueOnce({ lng: bbox[3][0], lat: bbox[3][1] })
+        .mockReturnValueOnce({ lng: bbox[0][0], lat: bbox[0][1] });
+    };
 
     beforeEach(() => {
       polygonMode = new TerraDrawPolygonMode();
-
       const mockConfig = getMockModeConfig();
 
       store = mockConfig.store;
       project = mockConfig.project;
-
+      unproject = mockConfig.project;
       polygonMode.register(mockConfig);
     });
 
@@ -338,6 +359,94 @@ describe("TerraDrawPolygonMode", () => {
 
       let features = store.copyAll();
       expect(features.length).toBe(2);
+
+      // Create a new polygon
+      polygonMode.onClick({
+        lng: 0,
+        lat: 0,
+        containerX: 0,
+        containerY: 0,
+      });
+
+      features = store.copyAll();
+      expect(features.length).toBe(2);
+    });
+
+    it("can create a polygon with snapping enabled", () => {
+      polygonMode = new TerraDrawPolygonMode({ snapping: true });
+      const mockConfig = getMockModeConfig();
+      store = mockConfig.store;
+      project = mockConfig.project;
+      unproject = mockConfig.unproject;
+      polygonMode.register(mockConfig);
+
+      mockClickBoundingBox();
+      polygonMode.onClick({
+        lng: 0,
+        lat: 0,
+        containerX: 0,
+        containerY: 0,
+      });
+
+      mockClickBoundingBox();
+      polygonMode.onMouseMove({
+        lng: 1,
+        lat: 1,
+        containerX: 0,
+        containerY: 0,
+      });
+
+      mockClickBoundingBox();
+      polygonMode.onClick({
+        lng: 1,
+        lat: 1,
+        containerX: 0,
+        containerY: 0,
+      });
+
+      mockClickBoundingBox();
+      polygonMode.onMouseMove({
+        lng: 2,
+        lat: 2,
+        containerX: 0,
+        containerY: 0,
+      });
+
+      mockClickBoundingBox();
+      polygonMode.onClick({
+        lng: 2,
+        lat: 2,
+        containerX: 0,
+        containerY: 0,
+      });
+
+      mockClickBoundingBox();
+      polygonMode.onMouseMove({
+        lng: 3,
+        lat: 3,
+        containerX: 0,
+        containerY: 0,
+      });
+
+      project.mockReturnValueOnce({ x: 0, y: 0 });
+
+      mockClickBoundingBox();
+      polygonMode.onClick({
+        lng: 3,
+        lat: 3,
+        containerX: 0,
+        containerY: 0,
+      });
+
+      let features = store.copyAll();
+      expect(features.length).toBe(1);
+
+      mockClickBoundingBox();
+      project
+        .mockReturnValueOnce({ x: 0, y: 0 })
+        .mockReturnValueOnce({ x: 0, y: 0 })
+        .mockReturnValueOnce({ x: 0, y: 0 })
+        .mockReturnValueOnce({ x: 0, y: 0 });
 
       // Create a new polygon
       polygonMode.onClick({

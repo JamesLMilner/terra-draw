@@ -1,9 +1,9 @@
 import { Feature, Polygon, Position } from "geojson";
 
-// Based on Turf.js Circl module
+// Based on Turf.js Circle module
 // https://github.com/Turfjs/turf/blob/master/packages/turf-circle/index.ts
 
-function degreesToRadians(degrees: number): number {
+export function degreesToRadians(degrees: number): number {
   const radians = degrees % 360;
   return (radians * Math.PI) / 180;
 }
@@ -19,7 +19,7 @@ function radiansToDegrees(radians: number): number {
   return (degrees * 180) / Math.PI;
 }
 
-function destination(
+export function destination(
   origin: Position,
   distance: number,
   bearing: number

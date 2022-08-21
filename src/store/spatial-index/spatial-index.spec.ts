@@ -1,9 +1,9 @@
-import { RBush } from "./rbush";
 import {
   createMockLineString,
   createMockPoint,
   createMockPolygonSquare,
 } from "../../test/mock-features";
+import { GeoJSONStoreFeatures } from "../store";
 import { SpatialIndex } from "./spatial-index";
 
 describe("Spatial Index", () => {
@@ -20,7 +20,7 @@ describe("Spatial Index", () => {
   describe("load", () => {
     it("loads features in without throwing", () => {
       const spatialIndex = new SpatialIndex();
-      spatialIndex.load([createMockPolygonSquare()]);
+      spatialIndex.load([createMockPolygonSquare() as GeoJSONStoreFeatures]);
     });
     it("throws error loading features with the same id", () => {
       const spatialIndex = new SpatialIndex();

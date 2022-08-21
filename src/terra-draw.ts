@@ -58,7 +58,10 @@ class TerraDraw {
 
       // Remove all non mode features
       const initialRender = this._store.copyAll().filter((feature) => {
-        if (!Object.keys(this._modes).includes(feature.properties.mode)) {
+        if (
+          feature.properties &&
+          !Object.keys(this._modes).includes(feature.properties.mode as string)
+        ) {
           this._store.delete([feature.id as string]);
           return false;
         }

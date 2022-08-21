@@ -18,6 +18,9 @@ export interface TerraDrawAdapterStyling {
   selectedColor: string;
   selectionPointWidth: number;
   selectedPointOutlineColor: string;
+  midPointColor: string;
+  midPointWidth: number;
+  midPointOutlineColor: string;
 }
 
 export interface TerraDrawMouseEvent {

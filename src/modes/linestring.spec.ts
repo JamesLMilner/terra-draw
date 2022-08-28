@@ -114,6 +114,7 @@ describe("TerraDrawLineStringMode", () => {
         lat: 0,
         containerX: 0,
         containerY: 0,
+        button: "left",
       });
 
       expect(onChange).not.toBeCalled();
@@ -125,6 +126,7 @@ describe("TerraDrawLineStringMode", () => {
         lat: 0,
         containerX: 0,
         containerY: 0,
+        button: "left",
       });
 
       lineStringMode.onMouseMove({
@@ -132,6 +134,7 @@ describe("TerraDrawLineStringMode", () => {
         lat: 1,
         containerX: 0,
         containerY: 0,
+        button: "left",
       });
 
       expect(onChange).toBeCalledTimes(2);
@@ -167,6 +170,7 @@ describe("TerraDrawLineStringMode", () => {
         lat: 0,
         containerX: 0,
         containerY: 0,
+        button: "left",
       });
 
       expect(onChange).toBeCalledTimes(1);
@@ -186,6 +190,7 @@ describe("TerraDrawLineStringMode", () => {
         lat: 0,
         containerX: 0,
         containerY: 0,
+        button: "left",
       });
 
       lineStringMode.onClick({
@@ -193,6 +198,7 @@ describe("TerraDrawLineStringMode", () => {
         lat: 1,
         containerX: 1,
         containerY: 1,
+        button: "left",
       });
 
       expect(onChange).toBeCalledTimes(2);
@@ -216,6 +222,7 @@ describe("TerraDrawLineStringMode", () => {
         lat: 0,
         containerX: 0,
         containerY: 0,
+        button: "left",
       });
 
       lineStringMode.onMouseMove({
@@ -223,6 +230,7 @@ describe("TerraDrawLineStringMode", () => {
         lat: 1,
         containerX: 50,
         containerY: 50,
+        button: "left",
       });
 
       lineStringMode.onClick({
@@ -230,6 +238,7 @@ describe("TerraDrawLineStringMode", () => {
         lat: 1,
         containerX: 50,
         containerY: 50,
+        button: "left",
       });
 
       let features = store.copyAll();
@@ -246,6 +255,7 @@ describe("TerraDrawLineStringMode", () => {
         lat: 2,
         containerX: 100,
         containerY: 100,
+        button: "left",
       });
 
       lineStringMode.onClick({
@@ -253,6 +263,7 @@ describe("TerraDrawLineStringMode", () => {
         lat: 2,
         containerX: 100,
         containerY: 100,
+        button: "left",
       });
 
       lineStringMode.onClick({
@@ -260,6 +271,7 @@ describe("TerraDrawLineStringMode", () => {
         lat: 2,
         containerX: 100,
         containerY: 100,
+        button: "left",
       });
 
       expect(onChange).toBeCalledTimes(6);
@@ -275,6 +287,8 @@ describe("TerraDrawLineStringMode", () => {
     });
 
     it("handles self intersection", () => {
+      // TODO: Limit precision to 9 decimals
+
       lineStringMode = new TerraDrawLineStringMode({
         allowSelfIntersections: false,
       });
@@ -297,6 +311,7 @@ describe("TerraDrawLineStringMode", () => {
         lat: 32.99023555965106,
         containerX: 6.50390625,
         containerY: 32.99023555965106,
+        button: "left",
       });
 
       lineStringMode.onMouseMove({
@@ -304,6 +319,7 @@ describe("TerraDrawLineStringMode", () => {
         lat: 5.090944175033399,
         containerX: -9.931640625,
         containerY: 5.090944175033399,
+        button: "left",
       });
 
       lineStringMode.onClick({
@@ -311,6 +327,7 @@ describe("TerraDrawLineStringMode", () => {
         lat: 5.090944175033399,
         containerX: -9.931640625,
         containerY: 5.090944175033399,
+        button: "left",
       });
 
       lineStringMode.onMouseMove({
@@ -318,6 +335,7 @@ describe("TerraDrawLineStringMode", () => {
         lat: 2.0210651187669897,
         containerX: 19.86328125,
         containerY: 2.0210651187669897,
+        button: "left",
       });
 
       lineStringMode.onClick({
@@ -325,6 +343,7 @@ describe("TerraDrawLineStringMode", () => {
         lat: 2.0210651187669897,
         containerX: 19.86328125,
         containerY: 2.0210651187669897,
+        button: "left",
       });
 
       // This point is causing self intersection
@@ -333,6 +352,7 @@ describe("TerraDrawLineStringMode", () => {
         lat: 24.367113562651262,
         containerX: -8.173828125,
         containerY: 24.367113562651262,
+        button: "left",
       });
 
       expect(onChange).toBeCalledTimes(6);
@@ -342,6 +362,7 @@ describe("TerraDrawLineStringMode", () => {
         lat: 24.367113562651262,
         containerX: -8.173828125,
         containerY: 24.367113562651262,
+        button: "left",
       });
 
       // Update geometry is NOT called because
@@ -371,6 +392,7 @@ describe("TerraDrawLineStringMode", () => {
         lat: 0,
         containerX: 0,
         containerY: 0,
+        button: "left",
       });
 
       let features = store.copyAll();
@@ -406,6 +428,7 @@ describe("TerraDrawLineStringMode", () => {
         lat: 0,
         containerX: 0,
         containerY: 0,
+        button: "left",
       });
 
       expect(store.copyAll().length).toBe(1);

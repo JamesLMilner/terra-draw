@@ -115,6 +115,7 @@ describe("TerraDrawCircleMode", () => {
           lat: 0,
           containerX: 0,
           containerY: 0,
+          button: "left",
         });
       }).toThrowError();
     });
@@ -134,6 +135,7 @@ describe("TerraDrawCircleMode", () => {
           lat: 0,
           containerX: 0,
           containerY: 0,
+          button: "left",
         });
 
         expect(onChange).toBeCalledTimes(1);
@@ -146,6 +148,7 @@ describe("TerraDrawCircleMode", () => {
           lat: 0,
           containerX: 0,
           containerY: 0,
+          button: "left",
         });
 
         let features = store.copyAll();
@@ -156,6 +159,7 @@ describe("TerraDrawCircleMode", () => {
           lat: 0,
           containerX: 0,
           containerY: 0,
+          button: "left",
         });
 
         features = store.copyAll();
@@ -193,6 +197,7 @@ describe("TerraDrawCircleMode", () => {
         lat: 0,
         containerX: 0,
         containerY: 0,
+        button: "left",
       });
 
       expect(onChange).toBeCalledTimes(1);
@@ -209,6 +214,7 @@ describe("TerraDrawCircleMode", () => {
         lat: 1,
         containerX: 1,
         containerY: 1,
+        button: "left",
       });
       expect(onChange).toBeCalledTimes(2);
       expect(onChange).toHaveBeenNthCalledWith(
@@ -253,6 +259,7 @@ describe("TerraDrawCircleMode", () => {
         lat: 0,
         containerX: 0,
         containerY: 0,
+        button: "left",
       });
 
       circleMode.cleanUp();
@@ -293,6 +300,7 @@ describe("TerraDrawCircleMode", () => {
         lat: 0,
         containerX: 0,
         containerY: 0,
+        button: "left",
       });
 
       let features = store.copyAll();

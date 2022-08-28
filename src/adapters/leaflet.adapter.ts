@@ -93,7 +93,17 @@ export class TerraDrawLeafletAdapter implements TerraDrawAdapter {
       );
     }
 
+    let dragState: "not-dragging" | "pre-dragging" | "dragging" | "post-drag" =
+      "not-dragging";
+
     this._onClickListener = (event: L.LeafletMouseEvent) => {
+      // mouseup also triggers a click event in leaflet, so
+      // we need to ignore this
+      if (dragState === "post-drag") {
+        dragState = "not-dragging";
+        return;
+      }
+
       event.originalEvent.preventDefault();
 
       callbacks.onClick({
@@ -103,10 +113,12 @@ export class TerraDrawLeafletAdapter implements TerraDrawAdapter {
           event.originalEvent.clientX - this.getMapContainer().offsetLeft,
         containerY:
           event.originalEvent.clientY - this.getMapContainer().offsetTop,
+        button: event.originalEvent.button === 0 ? "left" : "right",
       });
     };
 
     this._map.on("click", this._onClickListener);
+    this._map.on("contextmenu", this._onClickListener);
 
     this._onMouseMoveListener = (event: L.LeafletMouseEvent) => {
       event.originalEvent.preventDefault();
@@ -118,6 +130,7 @@ export class TerraDrawLeafletAdapter implements TerraDrawAdapter {
           event.originalEvent.clientX - this.getMapContainer().offsetLeft,
         containerY:
           event.originalEvent.clientY - this.getMapContainer().offsetTop,
+        button: event.originalEvent.button === 0 ? "left" : "right",
       });
     };
 
@@ -130,9 +143,6 @@ export class TerraDrawLeafletAdapter implements TerraDrawAdapter {
     };
 
     this._map.on("keyup", this._onKeyPressListener);
-
-    let dragState: "not-dragging" | "pre-dragging" | "dragging" =
-      "not-dragging";
 
     this._onDragStartListener = (event) => {
       dragState = "pre-dragging";
@@ -155,6 +165,7 @@ export class TerraDrawLeafletAdapter implements TerraDrawAdapter {
         lat: limitPrecision(lat, this._coordinatePrecision),
         containerX: event.clientX - container.offsetLeft,
         containerY: event.clientY - container.offsetTop,
+        button: event.button === 0 ? "left" : "right",
       };
 
       if (dragState === "pre-dragging") {
@@ -175,6 +186,8 @@ export class TerraDrawLeafletAdapter implements TerraDrawAdapter {
     container.addEventListener("mousemove", this._onDragListener);
 
     this._onDragEndListener = (event) => {
+      event.preventDefault();
+
       if (dragState === "dragging") {
         const point = {
           x: event.clientX - container.offsetLeft,
@@ -189,6 +202,7 @@ export class TerraDrawLeafletAdapter implements TerraDrawAdapter {
             lat: limitPrecision(lat, this._coordinatePrecision),
             containerX: event.clientX - container.offsetLeft,
             containerY: event.clientY - container.offsetTop,
+            button: event.button === 0 ? "left" : "right",
           },
           (enabled) => {
             if (enabled) {
@@ -198,10 +212,16 @@ export class TerraDrawLeafletAdapter implements TerraDrawAdapter {
             }
           }
         );
+
+        // Again, we need to handle that mouseup triggers
+        // click in leaflet, so set a state that tells it
+        // to skip the click event (see click handler)
+        dragState = "post-drag";
+      } else {
+        dragState = "not-dragging";
       }
 
       this._map.dragging.enable();
-      dragState = "not-dragging";
     };
 
     container.addEventListener("mouseup", this._onDragEndListener);
@@ -217,6 +237,7 @@ export class TerraDrawLeafletAdapter implements TerraDrawAdapter {
 
   unregister() {
     if (this._onClickListener) {
+      this._map.off("contextmenu", this._onClickListener);
       this._map.off("click", this._onClickListener);
       this._onClickListener = undefined;
     }

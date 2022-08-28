@@ -1,3 +1,4 @@
+import { TerraDrawMouseEvent } from "../common";
 import { GeoJSONStore } from "../store/store";
 import { getMockModeConfig } from "../test/mock-config";
 import { getDefaultStyling } from "../util/styling";
@@ -120,6 +121,7 @@ describe("TerraDrawPolygonMode", () => {
         lat: 0,
         containerX: 0,
         containerY: 0,
+        button: "left",
       });
 
       expect(onChange).not.toBeCalled();
@@ -131,6 +133,7 @@ describe("TerraDrawPolygonMode", () => {
         lat: 0,
         containerX: 0,
         containerY: 0,
+        button: "left",
       });
 
       polygonMode.onMouseMove({
@@ -138,6 +141,7 @@ describe("TerraDrawPolygonMode", () => {
         lat: 1,
         containerX: 0,
         containerY: 0,
+        button: "left",
       });
 
       expect(onChange).toBeCalledTimes(2);
@@ -149,7 +153,7 @@ describe("TerraDrawPolygonMode", () => {
         [
           [0, 0],
           [1, 1],
-          [1, 1],
+          [1, 1.000001], // Small offset to keep Mapbox GL happy
           [0, 0],
         ],
       ]);
@@ -161,6 +165,7 @@ describe("TerraDrawPolygonMode", () => {
         lat: 0,
         containerX: 0,
         containerY: 0,
+        button: "left",
       });
 
       polygonMode.onMouseMove({
@@ -168,6 +173,7 @@ describe("TerraDrawPolygonMode", () => {
         lat: 1,
         containerX: 0,
         containerY: 0,
+        button: "left",
       });
 
       polygonMode.onClick({
@@ -175,6 +181,7 @@ describe("TerraDrawPolygonMode", () => {
         lat: 1,
         containerX: 0,
         containerY: 0,
+        button: "left",
       });
 
       polygonMode.onMouseMove({
@@ -182,6 +189,7 @@ describe("TerraDrawPolygonMode", () => {
         lat: 2,
         containerX: 0,
         containerY: 0,
+        button: "left",
       });
 
       expect(onChange).toBeCalledTimes(4);
@@ -205,6 +213,7 @@ describe("TerraDrawPolygonMode", () => {
         lat: 0,
         containerX: 0,
         containerY: 0,
+        button: "left",
       });
 
       polygonMode.onMouseMove({
@@ -212,6 +221,7 @@ describe("TerraDrawPolygonMode", () => {
         lat: 1,
         containerX: 0,
         containerY: 0,
+        button: "left",
       });
 
       polygonMode.onClick({
@@ -219,6 +229,7 @@ describe("TerraDrawPolygonMode", () => {
         lat: 1,
         containerX: 0,
         containerY: 0,
+        button: "left",
       });
 
       polygonMode.onMouseMove({
@@ -226,6 +237,7 @@ describe("TerraDrawPolygonMode", () => {
         lat: 2,
         containerX: 0,
         containerY: 0,
+        button: "left",
       });
 
       polygonMode.onClick({
@@ -233,6 +245,7 @@ describe("TerraDrawPolygonMode", () => {
         lat: 2,
         containerX: 0,
         containerY: 0,
+        button: "left",
       });
 
       polygonMode.onMouseMove({
@@ -240,6 +253,7 @@ describe("TerraDrawPolygonMode", () => {
         lat: 3,
         containerX: 0,
         containerY: 0,
+        button: "left",
       });
 
       expect(onChange).toBeCalledTimes(6);
@@ -302,6 +316,7 @@ describe("TerraDrawPolygonMode", () => {
         lat: 0,
         containerX: 0,
         containerY: 0,
+        button: "left",
       });
 
       polygonMode.onMouseMove({
@@ -309,6 +324,7 @@ describe("TerraDrawPolygonMode", () => {
         lat: 1,
         containerX: 0,
         containerY: 0,
+        button: "left",
       });
 
       polygonMode.onClick({
@@ -316,6 +332,7 @@ describe("TerraDrawPolygonMode", () => {
         lat: 1,
         containerX: 0,
         containerY: 0,
+        button: "left",
       });
 
       polygonMode.onMouseMove({
@@ -323,6 +340,7 @@ describe("TerraDrawPolygonMode", () => {
         lat: 2,
         containerX: 0,
         containerY: 0,
+        button: "left",
       });
 
       polygonMode.onClick({
@@ -330,6 +348,7 @@ describe("TerraDrawPolygonMode", () => {
         lat: 2,
         containerX: 0,
         containerY: 0,
+        button: "left",
       });
 
       polygonMode.onMouseMove({
@@ -337,6 +356,7 @@ describe("TerraDrawPolygonMode", () => {
         lat: 3,
         containerX: 0,
         containerY: 0,
+        button: "left",
       });
 
       project.mockReturnValueOnce({ x: 0, y: 0 });
@@ -346,6 +366,7 @@ describe("TerraDrawPolygonMode", () => {
         lat: 3,
         containerX: 0,
         containerY: 0,
+        button: "left",
       });
 
       project.mockReturnValueOnce({ x: 0, y: 0 });
@@ -355,6 +376,7 @@ describe("TerraDrawPolygonMode", () => {
         lat: 3,
         containerX: 0,
         containerY: 0,
+        button: "left",
       });
 
       let features = store.copyAll();
@@ -366,6 +388,7 @@ describe("TerraDrawPolygonMode", () => {
         lat: 0,
         containerX: 0,
         containerY: 0,
+        button: "left",
       });
 
       features = store.copyAll();
@@ -386,6 +409,7 @@ describe("TerraDrawPolygonMode", () => {
         lat: 0,
         containerX: 0,
         containerY: 0,
+        button: "left",
       });
 
       mockClickBoundingBox();
@@ -394,6 +418,7 @@ describe("TerraDrawPolygonMode", () => {
         lat: 1,
         containerX: 0,
         containerY: 0,
+        button: "left",
       });
 
       mockClickBoundingBox();
@@ -402,6 +427,7 @@ describe("TerraDrawPolygonMode", () => {
         lat: 1,
         containerX: 0,
         containerY: 0,
+        button: "left",
       });
 
       mockClickBoundingBox();
@@ -410,6 +436,7 @@ describe("TerraDrawPolygonMode", () => {
         lat: 2,
         containerX: 0,
         containerY: 0,
+        button: "left",
       });
 
       mockClickBoundingBox();
@@ -418,6 +445,7 @@ describe("TerraDrawPolygonMode", () => {
         lat: 2,
         containerX: 0,
         containerY: 0,
+        button: "left",
       });
 
       mockClickBoundingBox();
@@ -426,6 +454,7 @@ describe("TerraDrawPolygonMode", () => {
         lat: 3,
         containerX: 0,
         containerY: 0,
+        button: "left",
       });
 
       project.mockReturnValueOnce({ x: 0, y: 0 });
@@ -436,6 +465,7 @@ describe("TerraDrawPolygonMode", () => {
         lat: 3,
         containerX: 0,
         containerY: 0,
+        button: "left",
       });
 
       let features = store.copyAll();
@@ -454,6 +484,7 @@ describe("TerraDrawPolygonMode", () => {
         lat: 0,
         containerX: 0,
         containerY: 0,
+        button: "left",
       });
 
       features = store.copyAll();
@@ -466,6 +497,7 @@ describe("TerraDrawPolygonMode", () => {
         lat: 0,
         containerX: 0,
         containerY: 0,
+        button: "left",
       });
 
       polygonMode.onMouseMove({
@@ -473,6 +505,7 @@ describe("TerraDrawPolygonMode", () => {
         lat: 1,
         containerX: 0,
         containerY: 0,
+        button: "left",
       });
 
       polygonMode.onClick({
@@ -480,6 +513,7 @@ describe("TerraDrawPolygonMode", () => {
         lat: 1,
         containerX: 0,
         containerY: 0,
+        button: "left",
       });
 
       polygonMode.onMouseMove({
@@ -487,6 +521,7 @@ describe("TerraDrawPolygonMode", () => {
         lat: 2,
         containerX: 0,
         containerY: 0,
+        button: "left",
       });
 
       polygonMode.onClick({
@@ -494,6 +529,7 @@ describe("TerraDrawPolygonMode", () => {
         lat: 2,
         containerX: 0,
         containerY: 0,
+        button: "left",
       });
 
       polygonMode.onMouseMove({
@@ -501,6 +537,7 @@ describe("TerraDrawPolygonMode", () => {
         lat: 3,
         containerX: 0,
         containerY: 0,
+        button: "left",
       });
 
       project.mockReturnValueOnce({ x: 100, y: 100 });
@@ -510,6 +547,7 @@ describe("TerraDrawPolygonMode", () => {
         lat: 3,
         containerX: 0,
         containerY: 0,
+        button: "left",
       });
 
       polygonMode.onMouseMove({
@@ -517,6 +555,7 @@ describe("TerraDrawPolygonMode", () => {
         lat: 4,
         containerX: 0,
         containerY: 0,
+        button: "left",
       });
 
       project.mockReturnValueOnce({ x: 100, y: 100 });
@@ -526,6 +565,7 @@ describe("TerraDrawPolygonMode", () => {
         lat: 4,
         containerX: 0,
         containerY: 0,
+        button: "left",
       });
 
       let features = store.copyAll();
@@ -549,6 +589,7 @@ describe("TerraDrawPolygonMode", () => {
         lat: 4,
         containerX: 0,
         containerY: 0,
+        button: "left",
       });
 
       features = store.copyAll();
@@ -580,7 +621,8 @@ describe("TerraDrawPolygonMode", () => {
         lat: 23.322080011,
         containerX: 0,
         containerY: 0,
-      };
+        button: "left",
+      } as TerraDrawMouseEvent;
       polygonMode.onClick(coordOneEvent);
 
       const coordTwoEvent = {
@@ -588,7 +630,8 @@ describe("TerraDrawPolygonMode", () => {
         lat: -8.928487062,
         containerX: 0,
         containerY: 0,
-      };
+        button: "left",
+      } as TerraDrawMouseEvent;
       polygonMode.onMouseMove(coordTwoEvent);
       polygonMode.onClick(coordTwoEvent);
 
@@ -597,7 +640,8 @@ describe("TerraDrawPolygonMode", () => {
         lat: -20.468189222,
         containerX: 0,
         containerY: 0,
-      };
+        button: "left",
+      } as TerraDrawMouseEvent;
       polygonMode.onMouseMove(coordThreeEvent);
       polygonMode.onClick(coordThreeEvent);
 
@@ -607,7 +651,8 @@ describe("TerraDrawPolygonMode", () => {
         lat: 22.187404991,
         containerX: 0,
         containerY: 0,
-      };
+        button: "left",
+      } as TerraDrawMouseEvent;
       project.mockReturnValueOnce({ x: 100, y: 100 });
       polygonMode.onMouseMove(coordFourEvent);
       polygonMode.onClick(coordFourEvent);
@@ -676,6 +721,7 @@ describe("TerraDrawPolygonMode", () => {
         lat: 0,
         containerX: 0,
         containerY: 0,
+        button: "left",
       });
 
       let features = store.copyAll();
@@ -718,6 +764,7 @@ describe("TerraDrawPolygonMode", () => {
         lat: 0,
         containerX: 0,
         containerY: 0,
+        button: "left",
       });
 
       expect(store.copyAll().length).toBe(1);

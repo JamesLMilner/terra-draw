@@ -1,3 +1,4 @@
+import { TerraDrawMouseEvent } from "../common";
 import { getMockModeConfig } from "../test/mock-config";
 import { getDefaultStyling } from "../util/styling";
 import { TerraDrawPointMode } from "./point.mode";
@@ -101,7 +102,7 @@ describe("TerraDrawPointMode", () => {
         lat: 0,
         containerX: 0,
         containerY: 0,
-      };
+      } as TerraDrawMouseEvent;
       expect(() => {
         pointMode.onClick(mockMouseEvent);
       }).toThrowError();
@@ -119,7 +120,7 @@ describe("TerraDrawPointMode", () => {
         lat: 0,
         containerX: 0,
         containerY: 0,
-      });
+      } as TerraDrawMouseEvent);
 
       expect(mockConfig.onChange).toBeCalledTimes(1);
       expect(mockConfig.onChange).toBeCalledWith(

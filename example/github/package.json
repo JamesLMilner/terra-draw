@@ -1,5 +1,5 @@
 {
-  "name": "terra-draw-example",
+  "name": "terra-draw-gh-example",
   "version": "1.0.0",
   "description": "An example of how to use terra draw",
   "main": "index.ts",
@@ -11,6 +11,9 @@
   },
   "author": "James Milner",
   "license": "MIT",
+  "dependencies": {
+    "leaflet": "^1.8.0"
+  },
   "devDependencies": {
     "dotenv-webpack": "^8.0.0",
     "serve": "^13.0.4",

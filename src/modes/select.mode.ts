@@ -4,50 +4,65 @@ import {
   TerraDrawAdapterStyling,
 } from "../common";
 import { pointInPolygon } from "../geometry/point-in-polygon";
-import { getPixelDistance } from "../geometry/get-pixel-distance";
 import { getPixelDistanceToLine } from "../geometry/get-pixel-distance-to-line";
-import { Feature, Point, Polygon, Position } from "geojson";
+import { LineString, Point, Polygon, Position } from "geojson";
 import { TerraDrawBaseDrawMode } from "./base.mode";
-import { midpoint } from "../geometry/midpoint";
-import { setEmitFlags } from "typescript";
 import { GeoJSONStoreFeatures } from "../store/store";
+import { getCoordinatesAsPoints } from "../geometry/get-coordinates-as-points";
+import {
+  getMidPointCoordinates,
+  getMidPoints,
+} from "../geometry/get-midpoints";
 
 type TerraDrawSelectModeKeyEvents = {
   deselect: KeyboardEvent["key"];
   delete: KeyboardEvent["key"];
 };
 
-type TerraDrawSelectDraggable = {
-  mode: string;
-  coordinate: boolean;
-  feature: boolean;
-}[];
+type ModeFlags = {
+  feature?: {
+    draggable?: boolean;
+    coordinates?: {
+      midpoints?: boolean;
+      draggable?: boolean;
+      deletable?: boolean;
+    };
+  };
+};
 
 export class TerraDrawSelectMode extends TerraDrawBaseDrawMode {
   mode = "select";
 
+  private dragEventThrottle = 5;
+  private dragEventCount = 0;
   private selected: string[] = [];
   private midPoints: string[] = [];
   private selectionPoints: string[] = [];
   private dragPosition: Position;
-  private draggableModes: TerraDrawSelectDraggable;
+  private flags: { [mode: string]: ModeFlags };
   private keyEvents: TerraDrawSelectModeKeyEvents;
 
   constructor(options?: {
     styling?: Partial<TerraDrawAdapterStyling>;
     pointerDistance?: number;
-    draggable?: TerraDrawSelectDraggable;
+    flags?: { [mode: string]: ModeFlags };
     keyEvents?: TerraDrawSelectModeKeyEvents;
+    dragEventThrottle?: number;
   }) {
     super(options);
 
-    this.draggableModes =
-      options && options.draggable ? options.draggable.slice() : [];
+    this.flags = options && options.flags ? options.flags : {};
 
     this.keyEvents =
       options && options.keyEvents
         ? options.keyEvents
         : { deselect: "Escape", delete: "Delete" };
+
+    this.dragEventThrottle =
+      (options &&
+        options.dragEventThrottle !== undefined &&
+        options.dragEventThrottle) ||
+      5;
   }
 
   private deselect() {
@@ -71,16 +86,18 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode {
     this.selected = [];
   }
 
-  private getSelectionPoints(selectedCoords: Position[]) {
-    return selectedCoords.map((coord) => ({
-      geometry: { type: "Point", coordinates: coord } as Point,
-      properties: { mode: this.mode, selectionPoint: true },
-    }));
-  }
-
-  private createSelectionPoints(selectedCoords: Position[]) {
+  private createSelectionPoints(
+    selectedCoords: Position[],
+    type: Polygon["type"] | LineString["type"],
+    featureId: string
+  ) {
     this.selectionPoints = this.store.create(
-      this.getSelectionPoints(selectedCoords)
+      getCoordinatesAsPoints(selectedCoords, type, (i) => ({
+        mode: this.mode,
+        selectionPoint: true,
+        selectionPointFeatureId: featureId,
+        index: i,
+      }))
     );
   }
 
@@ -96,20 +113,26 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode {
     const { midPointFeatureId, midPointSegment } = this.store.getPropertiesCopy(
       midPointId
     );
-    const geometry = this.store.getGeometryCopy(midPointFeatureId as string);
+    const geometry = this.store.getGeometryCopy<Polygon | LineString>(
+      midPointFeatureId as string
+    );
 
-    let coordinates: Position[];
-    if (geometry.type === "Polygon") {
-      coordinates = geometry.coordinates[0];
-    } else if (geometry.type === "LineString") {
-      coordinates = geometry.coordinates;
-    }
+    // Update the coordinates to include inserted midpoint
+    const updatedCoordinates =
+      geometry.type === "Polygon"
+        ? geometry.coordinates[0]
+        : geometry.coordinates;
 
-    coordinates.splice(
+    updatedCoordinates.splice(
       (midPointSegment as number) + 1,
       0,
       midPoint.coordinates as Position
     );
+
+    // Update geometry coordinates depending
+    // on if a polygon or linestring
+    geometry.coordinates =
+      geometry.type === "Polygon" ? [updatedCoordinates] : updatedCoordinates;
 
     // Update the selected features geometry to insert
     // the new midpoint
@@ -120,38 +143,29 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode {
     // Recreate the selection points
 
     this.store.delete([...this.midPoints, ...this.selectionPoints]);
-    this.midPoints = this.store.create(
-      this.getMidPoints(coordinates, midPointFeatureId as string)
-    );
-    this.selectionPoints = this.store.create(
-      this.getSelectionPoints(coordinates)
-    );
-  }
 
-  private getMidPointCoordinates(featureCoords: Position[]) {
-    const midPointCoords: Position[] = [];
-    for (let i = 0; i < featureCoords.length - 1; i++) {
-      const mid = midpoint(featureCoords[i], featureCoords[i + 1]);
-      midPointCoords.push(mid);
-    }
-    return midPointCoords;
-  }
-
-  private getMidPoints(selectedCoords: Position[], featureId: string) {
-    return this.getMidPointCoordinates(selectedCoords).map((coord, i) => ({
-      geometry: { type: "Point", coordinates: coord } as Point,
-      properties: {
-        mode: this.mode,
-        midPoint: true,
-        midPointSegment: i,
-        midPointFeatureId: featureId,
-      },
-    }));
+    // We don't need to check if flags are correct
+    // because selection points are prerequiste for midpoints
+    this.createMidPoints(updatedCoordinates, midPointFeatureId as string);
+    this.createSelectionPoints(
+      updatedCoordinates,
+      geometry.type,
+      midPointFeatureId as string
+    );
   }
 
   private createMidPoints(selectedCoords: Position[], featureId: string) {
     this.midPoints = this.store.create(
-      this.getMidPoints(selectedCoords, featureId)
+      getMidPoints(
+        selectedCoords,
+        (i) => ({
+          mode: this.mode,
+          midPoint: true,
+          midPointSegment: i,
+          midPointFeatureId: featureId,
+        }),
+        this.coordinatePrecision
+      )
     );
   }
 
@@ -164,6 +178,14 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode {
 
   private dragFeature(event: TerraDrawMouseEvent) {
     const selectedId = this.selected[0];
+
+    const { clickedFeature } = this.getFeaturesAtMouseEvent(event);
+
+    // If the cursor is not over the selected
+    // feature then we don't want to drag
+    if (!clickedFeature || clickedFeature.id !== selectedId) {
+      return;
+    }
 
     const geometry = this.store.getGeometryCopy(selectedId);
     const mouseCoord = [event.lng, event.lat];
@@ -198,15 +220,17 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode {
         ];
       }
 
-      const updatedMidPoints = this.getMidPointCoordinates(updatedCoords).map(
-        (updatedMidPointCoord, i) => ({
-          id: this.midPoints[i] as string,
-          geometry: {
-            type: "Point",
-            coordinates: updatedMidPointCoord,
-          } as Point,
-        })
-      );
+      const updatedMidPoints = this.midPoints.length
+        ? getMidPointCoordinates(updatedCoords, this.coordinatePrecision).map(
+            (updatedMidPointCoord, i) => ({
+              id: this.midPoints[i] as string,
+              geometry: {
+                type: "Point",
+                coordinates: updatedMidPointCoord,
+              } as Point,
+            })
+          )
+        : [];
 
       const updatedSelectionPoints = this.selectionPoints.map((id, i) => {
         return {
@@ -241,76 +265,82 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode {
     }
   }
 
-  private dragCoordinate(event: TerraDrawMouseEvent) {
+  private dragCoordinate(event: TerraDrawMouseEvent): boolean {
     const selectedId = this.selected[0];
 
     const geometry = this.store.getGeometryCopy(selectedId);
 
-    // We don't want to handle dragging
-    // points here
+    let geomCoordinates: Position[];
+
     if (geometry.type === "Point") {
+      // We don't want to handle dragging
+      // points here
+      return false;
+    } else if (geometry.type === "LineString") {
+      geomCoordinates = geometry.coordinates;
+    } else if (geometry.type === "Polygon") {
+      geomCoordinates = geometry.coordinates[0];
+    }
+
+    const closestCoordinate = {
+      dist: Infinity,
+      index: -1,
+      isFirstOrLastPolygonCoord: false,
+    };
+
+    // Look through the selected features coordinates
+    // and try to find a coordinate that is draggable
+    for (let i = 0; i < geomCoordinates.length; i++) {
+      const coord = geomCoordinates[i];
+      const distance = this.distanceBetweenTwoCoords(coord, event);
+
+      if (
+        distance < this.pointerDistance &&
+        distance < closestCoordinate.dist
+      ) {
+        // We don't create a point for the final
+        // polygon coord, so we must set it to the first
+        // coordinate instead
+        const isFirstOrLastPolygonCoord =
+          geometry.type === "Polygon" &&
+          (i === geomCoordinates.length - 1 || i === 0);
+
+        closestCoordinate.dist = distance;
+        closestCoordinate.index = isFirstOrLastPolygonCoord ? 0 : i;
+        closestCoordinate.isFirstOrLastPolygonCoord = isFirstOrLastPolygonCoord;
+      }
+    }
+
+    // No coordinate was within the pointer distance
+    if (closestCoordinate.index === -1) {
       return false;
     }
 
-    let updatedCoords: Position[];
-    if (geometry.type === "LineString") {
-      updatedCoords = geometry.coordinates;
-    } else if (geometry.type === "Polygon") {
-      updatedCoords = geometry.coordinates[0];
+    // Store the updated coord
+    const updatedCoordinate = [event.lng, event.lat];
+
+    // We want to update the actual Polygon/LineString itself -
+    // for Polygons we want the first and last coordinates to match
+    if (closestCoordinate.isFirstOrLastPolygonCoord) {
+      const lastCoordIndex = geomCoordinates.length - 1;
+      geomCoordinates[0] = updatedCoordinate;
+      geomCoordinates[lastCoordIndex] = updatedCoordinate;
+    } else {
+      geomCoordinates[closestCoordinate.index] = updatedCoordinate;
     }
 
-    if (!updatedCoords) {
-      false;
-    }
+    const updatedSelectionPoints = [
+      {
+        id: this.selectionPoints[closestCoordinate.index] as string,
+        geometry: {
+          type: "Point",
+          coordinates: updatedCoordinate,
+        } as Point,
+      },
+    ];
 
-    for (let i = 0; i < updatedCoords.length; i++) {
-      const coord = updatedCoords[i];
-      const distance = this.distanceBetweenTwoCoords(coord, event);
-
-      if (distance < this.pointerDistance) {
-        const updatedCoord = [event.lng, event.lat];
-
-        const isPolygonFirstOrLastCoord =
-          (geometry.type === "Polygon" && i === 0) ||
-          i === updatedCoords.length - 1;
-
-        // For Polygons we want the first
-        // and last coordinates to match
-        if (isPolygonFirstOrLastCoord) {
-          updatedCoords[0] = updatedCoord;
-          updatedCoords[updatedCoords.length - 1] = updatedCoord;
-        } else {
-          updatedCoords[i] = updatedCoord;
-        }
-
-        const updatedSelectionPoints = isPolygonFirstOrLastCoord
-          ? [
-              {
-                id: this.selectionPoints[0] as string,
-                geometry: {
-                  type: "Point",
-                  coordinates: updatedCoord,
-                } as Point,
-              },
-              {
-                id: this.selectionPoints[updatedCoords.length - 1] as string,
-                geometry: {
-                  type: "Point",
-                  coordinates: updatedCoord,
-                } as Point,
-              },
-            ]
-          : [
-              {
-                id: this.selectionPoints[i] as string,
-                geometry: {
-                  type: "Point",
-                  coordinates: updatedCoord,
-                } as Point,
-              },
-            ];
-
-        const updatedMidPoints = this.getMidPointCoordinates(updatedCoords).map(
+    const updatedMidPoints = this.midPoints.length
+      ? getMidPointCoordinates(geomCoordinates, this.coordinatePrecision).map(
           (updatedMidPointCoord, i) => ({
             id: this.midPoints[i] as string,
             geometry: {
@@ -318,36 +348,31 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode {
               coordinates: updatedMidPointCoord,
             } as Point,
           })
-        );
+        )
+      : [];
 
-        this.store.updateGeometry([
-          // Update feature
-          {
-            id: selectedId as string,
-            geometry: geometry,
-          },
+    // Apply all the updates
+    this.store.updateGeometry([
+      // Update feature
+      {
+        id: selectedId,
+        geometry: geometry,
+      },
+      // Update selection and mid points
+      ...updatedSelectionPoints,
+      ...updatedMidPoints,
+    ]);
 
-          // Update selection and mid points
-          ...updatedSelectionPoints,
-          ...updatedMidPoints,
-        ]);
-
-        return true;
-      }
-    }
+    return true;
   }
 
-  start() {
-    this.setStarted();
-  }
-  stop() {
-    this.setStopped();
-    this.cleanUp();
-  }
-
-  onClick(event: TerraDrawMouseEvent) {
-    let clickedFeature: GeoJSONStoreFeatures;
+  private getFeaturesAtMouseEvent(event: TerraDrawMouseEvent) {
+    let clickedFeature: GeoJSONStoreFeatures | undefined = undefined;
     let clickedFeatureDistance = Infinity;
+    let clickedMidPoint: GeoJSONStoreFeatures | undefined = undefined;
+    let clickedMidPointDistance = Infinity;
+
+    const anyFeaturesSelected = this.selected.length;
 
     const bbox = this.createClickBoundingBox(event);
     const features = this.store.search(bbox);
@@ -356,17 +381,34 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode {
       const feature = features[i];
       const geometry = feature.geometry;
 
-      // Ignore selection and mid points
-      if (feature.properties.selectionPoint) {
-        continue;
-      }
-
       if (geometry.type === "Point") {
+        // Ignore selection points always, and ignore mid points
+        // when nothing is selected
+        const isSelectionPoint = feature.properties.selectionPoint;
+        const isNonSelectedMidPoint =
+          !anyFeaturesSelected && feature.properties.midPoint;
+
+        if (isSelectionPoint || isNonSelectedMidPoint) {
+          continue;
+        }
+
         const distance = this.distanceBetweenTwoCoords(
           geometry.coordinates,
           event
         );
+
+        // We want to catch both clicked
+        // features but also any midpoints
+        // in the clicked area
         if (
+          feature.properties.midPoint &&
+          distance < this.pointerDistance &&
+          distance < clickedMidPointDistance
+        ) {
+          clickedMidPointDistance = distance;
+          clickedMidPoint = feature;
+        } else if (
+          !feature.properties.midPoint &&
           distance < this.pointerDistance &&
           distance < clickedFeatureDistance
         ) {
@@ -404,16 +446,136 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode {
       }
     }
 
-    if (clickedFeature) {
-      const previouslySelectedId = this.selected[0];
+    return { clickedFeature, clickedMidPoint };
+  }
 
+  private onRightClick(event: TerraDrawMouseEvent) {
+    if (!this.selectionPoints) {
+      return;
+    }
+
+    let clickedSelectionPointProps: {
+      selectionPointFeatureId: string;
+      index: number;
+    };
+
+    let clickedFeatureDistance = Infinity;
+
+    this.selectionPoints.forEach((id: string) => {
+      const geometry = this.store.getGeometryCopy<Point>(id);
+      const distance = this.distanceBetweenTwoCoords(
+        geometry.coordinates,
+        event
+      );
       if (
-        clickedFeature.properties.midPoint &&
-        clickedFeature.properties.midPointFeatureId
+        distance < this.pointerDistance &&
+        distance < clickedFeatureDistance
       ) {
-        this.insertMidPoint(clickedFeature.id as string);
+        clickedFeatureDistance = distance;
+        clickedSelectionPointProps = this.store.getPropertiesCopy(id) as {
+          selectionPointFeatureId: string;
+          index: number;
+        };
+      }
+    });
+
+    if (!clickedSelectionPointProps) {
+      return;
+    }
+
+    const featureId = clickedSelectionPointProps.selectionPointFeatureId;
+    const coordinateIndex = clickedSelectionPointProps.index;
+
+    // We allow for preventing deleting coordinates via flags
+    const properties = this.store.getPropertiesCopy(featureId);
+    const modeFlags = this.flags[properties.mode as string];
+
+    if (
+      !modeFlags ||
+      !modeFlags.feature ||
+      !modeFlags.feature.coordinates ||
+      !modeFlags.feature.coordinates.deletable
+    ) {
+      return;
+    }
+
+    const geometry = this.store.getGeometryCopy(featureId);
+
+    let coordinates;
+    if (geometry.type === "Polygon") {
+      coordinates = geometry.coordinates[0];
+
+      // Prevent creating an invalid polygon
+      if (coordinates.length <= 4) {
         return;
       }
+    } else if (geometry.type === "LineString") {
+      coordinates = geometry.coordinates;
+
+      // Prevent creating an invalid linestring
+      if (coordinates.length <= 3) {
+        return;
+      }
+    }
+
+    if (
+      (geometry.type === "Polygon" && coordinateIndex === 0) ||
+      coordinateIndex === coordinates.length - 1
+    ) {
+      // Deleting the final coordinate in a polygon breaks it
+      // because GeoJSON expects a duplicate, so we need to fix
+      // it by adding the new first coordinate to the end
+      coordinates.shift();
+      coordinates.pop();
+      coordinates.push([coordinates[0][0], coordinates[0][1]]);
+    } else {
+      // Remove coordinate from array
+      coordinates.splice(coordinateIndex, 1);
+    }
+
+    this.store.delete([...this.midPoints, ...this.selectionPoints]);
+    this.store.updateGeometry([
+      {
+        id: featureId,
+        geometry,
+      },
+    ]);
+
+    this.createSelectionPoints(
+      coordinates,
+      geometry.type as "Polygon" | "LineString",
+      featureId
+    );
+
+    if (
+      modeFlags &&
+      modeFlags.feature &&
+      modeFlags.feature.coordinates &&
+      modeFlags.feature.coordinates.midpoints
+    ) {
+      this.createMidPoints(coordinates, featureId);
+    }
+  }
+
+  private onLeftClick(event: TerraDrawMouseEvent) {
+    const { clickedFeature, clickedMidPoint } = this.getFeaturesAtMouseEvent(
+      event
+    );
+
+    if (this.selected.length && clickedMidPoint) {
+      // TODO: We probably want to make sure the midpoint
+      // is visible?
+
+      this.insertMidPoint(clickedMidPoint.id as string);
+      return;
+    }
+
+    if (clickedFeature) {
+      const { mode } = this.store.getPropertiesCopy(
+        clickedFeature.id as string
+      );
+
+      const previouslySelectedId = this.selected[0];
 
       // If we have something currently selected
       if (previouslySelectedId) {
@@ -423,26 +585,26 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode {
         } else {
           // If it's a different feature set selected
           // to false on previously selected feature
-          this.store.updateProperty([
-            { id: previouslySelectedId, property: "selected", value: false },
-          ]);
-
-          // And remove the selection points
-          this.deleteSelectionPoints();
-          this.deleteMidPoints();
-
-          // Ensure onDeselect event is sent
-          this.onDeselect(previouslySelectedId);
+          this.deselect();
         }
       }
 
-      // TODO: Handle multi select?
+      // This will be undefined for points
+      const modeFlags = this.flags[mode as string];
+
+      // If feature is not selectable then return
+      if (!modeFlags || !modeFlags.feature) {
+        return;
+      }
+
+      // Select feature
       this.selected = [clickedFeature.id as string];
       this.store.updateProperty([
         { id: clickedFeature.id as string, property: "selected", value: true },
       ]);
       this.onSelect(clickedFeature.id as string);
 
+      // Get the clicked feature
       const { type, coordinates } = this.store.getGeometryCopy(
         clickedFeature.id as string
       );
@@ -454,12 +616,36 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode {
         selectedCoords = coordinates[0];
       }
 
-      if (selectedCoords) {
-        this.createSelectionPoints(selectedCoords);
-        this.createMidPoints(selectedCoords, clickedFeature.id as string);
+      if (selectedCoords && modeFlags && modeFlags.feature.coordinates) {
+        this.createSelectionPoints(
+          selectedCoords,
+          type,
+          clickedFeature.id as string
+        );
+
+        if (modeFlags.feature.coordinates.midpoints) {
+          this.createMidPoints(selectedCoords, clickedFeature.id as string);
+        }
       }
     } else if (this.selected.length) {
       this.deselect();
+    }
+  }
+
+  start() {
+    this.setStarted();
+  }
+  stop() {
+    this.setStopped();
+    this.cleanUp();
+  }
+
+  onClick(event: TerraDrawMouseEvent) {
+    if (event.button === "right") {
+      this.onRightClick(event);
+      return;
+    } else if (event.button === "left") {
+      this.onLeftClick(event);
     }
   }
   onKeyPress(event: TerraDrawKeyboardEvent) {
@@ -502,14 +688,19 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode {
     // If the selected feature is not draggable
     // don't do anything
     const properties = this.store.getPropertiesCopy(this.selected[0]);
-    const featureIsDraggable = this.draggableModes
-      .map((draggable) => draggable.mode)
-      .includes(properties.mode as string);
+    const modeFlags = this.flags[properties.mode as string];
+    const draggable =
+      modeFlags &&
+      modeFlags.feature &&
+      (modeFlags.feature.draggable ||
+        (modeFlags.feature.coordinates &&
+          modeFlags.feature.coordinates.draggable));
 
-    if (!featureIsDraggable) {
+    if (!draggable) {
       return;
     }
 
+    this.dragEventCount = 0;
     this.setCursor("grabbing");
     this.dragPosition = [event.lng, event.lat];
     setMapDraggability(false);
@@ -524,17 +715,24 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode {
     }
 
     const properties = this.store.getPropertiesCopy(selectedId);
-    const draggable = this.draggableModes.find(
-      (draggableMode) => draggableMode.mode === properties.mode
-    );
+    const modeFlags = this.flags[properties.mode as string];
 
-    // If mode is not draggable, return
-    if (!draggable) {
+    // Ensure drag count is incremented
+    this.dragEventCount++;
+
+    // Return if we haven't hit the drag throttle limit
+    // (i.e. we only want to drag every nth event)
+    if (this.dragEventCount % this.dragEventThrottle === 0) {
       return;
     }
 
     // Check if coordinate is draggable and is dragged
-    if (draggable.coordinate) {
+    if (
+      modeFlags &&
+      modeFlags.feature &&
+      modeFlags.feature.coordinates &&
+      modeFlags.feature.coordinates.draggable
+    ) {
       const coordinateWasDragged = this.dragCoordinate(event);
 
       if (coordinateWasDragged) {
@@ -543,11 +741,12 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode {
     }
 
     // Check if feature is draggable and is dragged
-    if (draggable.feature) {
+    if (modeFlags && modeFlags.feature && modeFlags.feature.draggable) {
       this.dragFeature(event);
       this.dragPosition = [event.lng, event.lat];
     }
   }
+
   onDragEnd(
     _: TerraDrawMouseEvent,
     setMapDraggability: (enabled: boolean) => void
@@ -556,5 +755,43 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode {
     this.dragPosition = undefined;
     setMapDraggability(true);
   }
-  onMouseMove() {}
+
+  onMouseMove(event: TerraDrawMouseEvent) {
+    if (!this.selected.length || this.dragPosition) {
+      return;
+    }
+
+    let nearbySelectionPoint = false;
+    this.midPoints.forEach((id: string) => {
+      if (nearbySelectionPoint) {
+        return;
+      }
+      const geometry = this.store.getGeometryCopy<Point>(id);
+      const distance = this.distanceBetweenTwoCoords(
+        geometry.coordinates,
+        event
+      );
+      if (distance < this.pointerDistance) {
+        nearbySelectionPoint = true;
+      }
+    });
+
+    // TODO: Is there a cleaner way to handle prioritising
+    // dragging selection points?
+    this.selectionPoints.forEach((id: string) => {
+      const geometry = this.store.getGeometryCopy<Point>(id);
+      const distance = this.distanceBetweenTwoCoords(
+        geometry.coordinates,
+        event
+      );
+      if (distance < this.pointerDistance) {
+        nearbySelectionPoint = false;
+      }
+    });
+    if (nearbySelectionPoint) {
+      this.setCursor("crosshair");
+    } else {
+      this.setCursor("unset");
+    }
+  }
 }

@@ -69,11 +69,14 @@ export class TerraDrawGoogleMapsAdapter implements TerraDrawAdapter {
         return;
       }
 
-      if (cursor === "unset") {
+      if (this._cursorStyleSheet) {
         this._cursorStyleSheet.remove();
         this._cursorStyleSheet = undefined;
-      } else {
+      }
+
+      if (cursor !== "unset") {
         // TODO: We could cache these individually per cursor
+
         const div = this.getMapContainer();
         const style = document.createElement("style");
         style.type = "text/css";
@@ -99,6 +102,7 @@ export class TerraDrawGoogleMapsAdapter implements TerraDrawAdapter {
     }
   ) => void;
   private _onClickListener: google.maps.MapsEventListener;
+  private _onRightClickListener: google.maps.MapsEventListener;
   private _onClickCallback: (
     event: google.maps.MapMouseEvent & {
       domEvent: MouseEvent;
@@ -152,10 +156,16 @@ export class TerraDrawGoogleMapsAdapter implements TerraDrawAdapter {
         lat: limitPrecision(event.latLng.lat(), this._coordinatePrecision),
         containerX: event.domEvent.clientX - this.getMapContainer().offsetLeft,
         containerY: event.domEvent.clientY - this.getMapContainer().offsetTop,
+        button: event.domEvent.button === 0 ? "left" : "right",
       });
     };
     this._onClickListener = this._map.addListener(
       "click",
+      this._onClickCallback
+    );
+
+    this._onRightClickListener = this._map.addListener(
+      "rightclick",
       this._onClickCallback
     );
 
@@ -169,6 +179,7 @@ export class TerraDrawGoogleMapsAdapter implements TerraDrawAdapter {
         lat: limitPrecision(event.latLng.lat(), this._coordinatePrecision),
         containerX: event.domEvent.clientX - this.getMapContainer().offsetLeft,
         containerY: event.domEvent.clientY - this.getMapContainer().offsetTop,
+        button: event.domEvent.button === 0 ? "left" : "right",
       });
     };
     this._onMouseMoveListener = this._map.addListener(
@@ -206,6 +217,7 @@ export class TerraDrawGoogleMapsAdapter implements TerraDrawAdapter {
         lat: limitPrecision(lat, this._coordinatePrecision),
         containerX: event.clientX - container.offsetLeft,
         containerY: event.clientY - container.offsetTop,
+        button: event.button === 0 ? "left" : "right",
       };
 
       if (dragState === "pre-dragging") {
@@ -235,6 +247,7 @@ export class TerraDrawGoogleMapsAdapter implements TerraDrawAdapter {
             lat: limitPrecision(lat, this._coordinatePrecision),
             containerX: event.clientX - container.offsetLeft,
             containerY: event.clientY - container.offsetTop,
+            button: event.button === 0 ? "left" : "right",
           },
           (enabled) => {
             this._map.setOptions({ draggable: enabled });
@@ -251,6 +264,8 @@ export class TerraDrawGoogleMapsAdapter implements TerraDrawAdapter {
   unregister() {
     if (this._onClickListener) {
       this._onClickCallback = undefined;
+      this._onRightClickListener.remove();
+      this._onRightClickListener = undefined;
       this._onClickListener.remove();
       this._onClickListener = undefined;
     }
@@ -407,6 +422,7 @@ export class TerraDrawGoogleMapsAdapter implements TerraDrawAdapter {
           const isSelection = selected || selectionPoint;
           const isMidpoint = midPoint;
           return {
+            clickable: false,
             icon: {
               path: this.circlePath(
                 0,

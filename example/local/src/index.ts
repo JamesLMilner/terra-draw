@@ -13,12 +13,44 @@ import {
   TerraDrawMapboxGLAdapter,
   TerraDrawLeafletAdapter,
   TerraDrawGoogleMapsAdapter,
-} from "../../src/terra-draw";
+} from "../../../src/terra-draw";
+import { addModeChangeHandler } from "../../common/addModeChangeHandler";
 
 const getModes = () => {
   return {
     select: new TerraDrawSelectMode({
-      draggable: [{ mode: "polygon", feature: true, coordinate: true }],
+      flags: {
+        polygon: {
+          feature: {
+            draggable: true,
+            coordinates: {
+              midpoints: true,
+              draggable: true,
+              deletable: true,
+            },
+          },
+        },
+        linestring: {
+          feature: {
+            draggable: true,
+            coordinates: {
+              midpoints: true,
+              draggable: true,
+              deletable: true,
+            },
+          },
+        },
+        circle: {
+          feature: {
+            draggable: true,
+          },
+        },
+        point: {
+          feature: {
+            draggable: true,
+          },
+        },
+      },
     }),
     point: new TerraDrawPointMode(),
     linestring: new TerraDrawLineStringMode({
@@ -30,6 +62,11 @@ const getModes = () => {
     circle: new TerraDrawCircleMode(),
     freehand: new TerraDrawFreehandMode(),
   };
+};
+
+let currentSelected: { button: undefined | HTMLButtonElement; mode: string } = {
+  button: undefined,
+  mode: "static",
 };
 
 const example = {
@@ -71,30 +108,7 @@ const example = {
 
     draw.start();
 
-    // draw.on("select", (id) => {
-    //   console.log("selected", id);
-    // });
-
-    // draw.on("deselect", () => {
-    //   console.log("deselected");
-    // });
-
-    // draw.on("change", (id: string, changeType: string) => {
-    //   localStorage.setItem("snapshot", JSON.stringify(draw.getSnapshot()));
-
-    //   console.log("feature changed", id, changeType);
-    // });
-
-    ["select", "point", "linestring", "polygon", "freehand", "circle"].forEach(
-      (mode) => {
-        (document.getElementById(mode) as HTMLButtonElement).addEventListener(
-          "click",
-          () => {
-            draw.changeMode(mode);
-          }
-        );
-      }
-    );
+    addModeChangeHandler(draw, currentSelected);
 
     this.initialised.push("leaflet");
   },
@@ -129,29 +143,7 @@ const example = {
 
       draw.start();
 
-      // draw.on("select", (id) => {
-      //   console.log("selected", id);
-      // });
-
-      // draw.on("deselect", () => {
-      //   console.log("deselected");
-      // });
-
-      [
-        "select",
-        "point",
-        "linestring",
-        "polygon",
-        "freehand",
-        "circle",
-      ].forEach((mode) => {
-        (document.getElementById(mode) as HTMLButtonElement).addEventListener(
-          "click",
-          () => {
-            draw.changeMode(mode);
-          }
-        );
-      });
+      addModeChangeHandler(draw, currentSelected);
     });
     this.initialised.push("mapbox");
   },
@@ -189,21 +181,9 @@ const example = {
           modes: getModes(),
         });
         draw.start();
-        [
-          "select",
-          "point",
-          "linestring",
-          "polygon",
-          "freehand",
-          "circle",
-        ].forEach((mode) => {
-          (document.getElementById(mode) as HTMLButtonElement).addEventListener(
-            "click",
-            () => {
-              draw.changeMode(mode);
-            }
-          );
-        });
+
+        addModeChangeHandler(draw, currentSelected);
+
         this.initialised.push("google");
       });
     });

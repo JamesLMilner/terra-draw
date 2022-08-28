@@ -4,7 +4,7 @@ import { SpatialIndex } from "./spatial-index/spatial-index";
 
 type JSON = string | number | boolean | null | JSONArray | JSONObject;
 
-interface JSONObject {
+export interface JSONObject {
   [member: string]: JSON;
 }
 interface JSONArray extends Array<JSON> {}
@@ -82,9 +82,9 @@ export class GeoJSONStore {
   ) {
     const features = this.spatialIndex.search(bbox).map((id) => this.store[id]);
     if (filter) {
-      return features.filter(filter);
+      return this.clone(features.filter(filter));
     } else {
-      return features;
+      return this.clone(features);
     }
   }
 

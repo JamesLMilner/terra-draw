@@ -232,9 +232,11 @@ export class TerraDrawMapboxGLAdapter implements TerraDrawAdapter {
           event.originalEvent.clientX - this.getMapContainer().offsetLeft,
         containerY:
           event.originalEvent.clientY - this.getMapContainer().offsetTop,
+        button: event.originalEvent.button === 0 ? "left" : "right",
       });
     };
     this._map.on("click", this._onClickListener);
+    this._map.on("contextmenu", this._onClickListener);
 
     this._onMouseMoveListener = (event) => {
       callbacks.onMouseMove({
@@ -244,6 +246,7 @@ export class TerraDrawMapboxGLAdapter implements TerraDrawAdapter {
           event.originalEvent.clientX - this.getMapContainer().offsetLeft,
         containerY:
           event.originalEvent.clientY - this.getMapContainer().offsetTop,
+        button: event.originalEvent.button === 0 ? "left" : "right",
       });
     };
     this._map.on("mousemove", this._onMouseMoveListener);
@@ -270,6 +273,7 @@ export class TerraDrawMapboxGLAdapter implements TerraDrawAdapter {
         lat: limitPrecision(lat, this._coordinatePrecision),
         containerX: event.clientX - container.offsetLeft,
         containerY: event.clientY - container.offsetTop,
+        button: event.button === 0 ? "left" : "right",
       };
 
       if (dragState === "pre-dragging") {
@@ -304,6 +308,7 @@ export class TerraDrawMapboxGLAdapter implements TerraDrawAdapter {
             lat: limitPrecision(lat, this._coordinatePrecision),
             containerX: event.clientX - container.offsetLeft,
             containerY: event.clientY - container.offsetTop,
+            button: event.button === 0 ? "left" : "right",
           },
           (enabled) => {
             if (enabled) {
@@ -331,9 +336,11 @@ export class TerraDrawMapboxGLAdapter implements TerraDrawAdapter {
 
   unregister() {
     if (this._onClickListener) {
+      this._map.off("contextmenue", this._onClickListener);
       this._map.off("click", this._onClickListener);
       this._onClickListener = undefined;
     }
+
     if (this._onMouseMoveListener) {
       this._map.off("mousemove", this._onMouseMoveListener);
       this._onMouseMoveListener = undefined;

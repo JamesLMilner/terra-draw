@@ -111,13 +111,15 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode {
     let updatedCoordinates;
 
     if (this.currentCoordinate === 1) {
+      // We must add a very small epsilon value so that Mapbox GL
+      // renders the polygon - There might be a cleaner solution?
+      const epsilon = 1 / Math.pow(10, this.coordinatePrecision - 1);
+      const offset = Math.max(0.000001, epsilon);
+
       updatedCoordinates = [
         currentLineCoordinates[0],
         [event.lng, event.lat],
-        // TODO: Adding a small value fixes the Mapbox rendering issue when
-        // drawing polygons but it feels a bit hacky
-        // [event.lng, event.lat + 0.00001],
-        [event.lng, event.lat],
+        [event.lng, event.lat + offset],
         currentLineCoordinates[0],
       ];
     } else if (this.currentCoordinate === 2) {

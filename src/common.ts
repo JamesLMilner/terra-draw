@@ -28,6 +28,7 @@ export interface TerraDrawMouseEvent {
   lat: number;
   containerX: number;
   containerY: number;
+  button: "left" | "right" | "pointer";
 }
 
 export interface TerraDrawKeyboardEvent {

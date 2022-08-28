@@ -31,8 +31,6 @@ export class SpatialIndex {
       coordinates = feature.geometry.coordinates;
     } else if (feature.geometry.type === "Point") {
       coordinates = [feature.geometry.coordinates];
-    } else {
-      throw new Error("Feature type not supported");
     }
 
     for (var i = 0; i < coordinates.length; i++) {

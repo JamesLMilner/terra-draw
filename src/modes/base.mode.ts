@@ -24,10 +24,12 @@ export abstract class TerraDrawBaseDrawMode {
   protected unproject: TerraDrawModeRegisterConfig["unproject"];
   protected project: TerraDrawModeRegisterConfig["project"];
   protected setCursor: TerraDrawModeRegisterConfig["setCursor"];
+  protected coordinatePrecision: number;
 
   constructor(options?: {
     styling?: Partial<TerraDrawAdapterStyling>;
     pointerDistance?: number;
+    coordinatePrecision?: number;
   }) {
     this._state = "unregistered";
     this.pointerDistance = (options && options.pointerDistance) || 40;
@@ -35,6 +37,7 @@ export abstract class TerraDrawBaseDrawMode {
       options && options.styling
         ? { ...getDefaultStyling(), ...options.styling }
         : getDefaultStyling();
+    this.coordinatePrecision = (options && options.coordinatePrecision) || 9;
   }
 
   protected setStarted() {

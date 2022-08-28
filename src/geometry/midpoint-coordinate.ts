@@ -1,6 +1,7 @@
 import { Position } from "geojson";
 import { degreesToRadians, destination } from "./create-circle";
 import { haversineDistanceKilometers } from "./haversine-distance";
+import { limitPrecision } from "./limit-decimal-precision";
 
 function radiansToDegrees(radians: number): number {
   const degrees = radians % (2 * Math.PI);
@@ -22,10 +23,17 @@ function bearing(coordinates1: Position, coordinates2: Position) {
 
 // Based on turf-midpoint: https://github.com/Turfjs/turf/tree/master/packages/turf-midpoint
 
-export function midpoint(coordinates1: Position, coordinates2: Position) {
+export function midpointCoordinate(
+  coordinates1: Position,
+  coordinates2: Position,
+  precision: number
+) {
   const dist = haversineDistanceKilometers(coordinates1, coordinates2);
   const heading = bearing(coordinates1, coordinates2);
   const midpoint = destination(coordinates1, dist / 2, heading);
 
-  return midpoint;
+  return [
+    limitPrecision(midpoint[0], precision),
+    limitPrecision(midpoint[1], precision),
+  ];
 }

@@ -114,6 +114,7 @@ describe("TerraDrawFreehandMode", () => {
           lat: 0,
           containerX: 0,
           containerY: 0,
+          button: "left",
         });
       }).toThrowError();
     });
@@ -132,6 +133,7 @@ describe("TerraDrawFreehandMode", () => {
           lat: 0,
           containerX: 0,
           containerY: 0,
+          button: "left",
         });
 
         expect(onChange).toBeCalledTimes(1);
@@ -144,6 +146,7 @@ describe("TerraDrawFreehandMode", () => {
           lat: 0,
           containerX: 0,
           containerY: 0,
+          button: "left",
         });
 
         let features = store.copyAll();
@@ -154,6 +157,7 @@ describe("TerraDrawFreehandMode", () => {
           lat: 0,
           containerX: 0,
           containerY: 0,
+          button: "left",
         });
 
         features = store.copyAll();
@@ -185,6 +189,7 @@ describe("TerraDrawFreehandMode", () => {
         lat: 0,
         containerX: 0,
         containerY: 0,
+        button: "left",
       });
 
       expect(onChange).toBeCalledTimes(1);
@@ -202,6 +207,7 @@ describe("TerraDrawFreehandMode", () => {
           lat: i,
           containerX: i,
           containerY: i,
+          button: "left",
         });
       }
 
@@ -226,6 +232,7 @@ describe("TerraDrawFreehandMode", () => {
         lat: 1,
         containerX: 1,
         containerY: 1,
+        button: "left",
       });
 
       expect(onChange).toBeCalledTimes(0);
@@ -256,6 +263,7 @@ describe("TerraDrawFreehandMode", () => {
         lat: 0,
         containerX: 0,
         containerY: 0,
+        button: "left",
       });
 
       freehandMode.cleanUp();
@@ -297,6 +305,7 @@ describe("TerraDrawFreehandMode", () => {
         lat: 0,
         containerX: 0,
         containerY: 0,
+        button: "left",
       });
 
       let features = store.copyAll();

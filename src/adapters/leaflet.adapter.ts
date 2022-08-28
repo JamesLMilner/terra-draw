@@ -93,31 +93,35 @@ export class TerraDrawLeafletAdapter implements TerraDrawAdapter {
       );
     }
 
-    let dragState: "not-dragging" | "pre-dragging" | "dragging" | "post-drag" =
+    const container = this.getMapContainer();
+
+    this._onKeyPressListener = (event: L.LeafletKeyboardEvent) => {
+      event.originalEvent.preventDefault();
+
+      callbacks.onKeyPress({ key: event.originalEvent.key });
+    };
+    this._map.on("keyup", this._onKeyPressListener);
+
+    let dragState: "not-dragging" | "pre-dragging" | "dragging" =
       "not-dragging";
 
     this._onClickListener = (event: L.LeafletMouseEvent) => {
-      // mouseup also triggers a click event in leaflet, so
-      // we need to ignore this
-      if (dragState === "post-drag") {
-        dragState = "not-dragging";
-        return;
+      if (dragState === "not-dragging" || dragState === "pre-dragging") {
+        callbacks.onClick({
+          lng: limitPrecision(event.latlng.lng, this._coordinatePrecision),
+          lat: limitPrecision(event.latlng.lat, this._coordinatePrecision),
+          containerX:
+            event.originalEvent.clientX - this.getMapContainer().offsetLeft,
+          containerY:
+            event.originalEvent.clientY - this.getMapContainer().offsetTop,
+          button: event.originalEvent.button === 0 ? "left" : "right",
+        });
       }
-
-      event.originalEvent.preventDefault();
-
-      callbacks.onClick({
-        lng: limitPrecision(event.latlng.lng, this._coordinatePrecision),
-        lat: limitPrecision(event.latlng.lat, this._coordinatePrecision),
-        containerX:
-          event.originalEvent.clientX - this.getMapContainer().offsetLeft,
-        containerY:
-          event.originalEvent.clientY - this.getMapContainer().offsetTop,
-        button: event.originalEvent.button === 0 ? "left" : "right",
-      });
     };
 
-    this._map.on("click", this._onClickListener);
+    // We can't use 'click' here because it triggers
+    // after drag end in Leaflet for some reason
+    this._map.on("mouseup", this._onClickListener);
     this._map.on("contextmenu", this._onClickListener);
 
     this._onMouseMoveListener = (event: L.LeafletMouseEvent) => {
@@ -133,24 +137,12 @@ export class TerraDrawLeafletAdapter implements TerraDrawAdapter {
         button: event.originalEvent.button === 0 ? "left" : "right",
       });
     };
-
     this._map.on("mousemove", this._onMouseMoveListener);
-
-    this._onKeyPressListener = (event: L.LeafletKeyboardEvent) => {
-      event.originalEvent.preventDefault();
-
-      callbacks.onKeyPress({ key: event.originalEvent.key });
-    };
-
-    this._map.on("keyup", this._onKeyPressListener);
 
     this._onDragStartListener = (event) => {
       dragState = "pre-dragging";
     };
-
-    const container = this.getMapContainer();
-
-    container.addEventListener("mousedown", this._onDragStartListener);
+    container.addEventListener("pointerdown", this._onDragStartListener);
 
     this._onDragListener = (event) => {
       const point = {
@@ -183,7 +175,7 @@ export class TerraDrawLeafletAdapter implements TerraDrawAdapter {
       }
     };
 
-    container.addEventListener("mousemove", this._onDragListener);
+    container.addEventListener("pointermove", this._onDragListener);
 
     this._onDragEndListener = (event) => {
       event.preventDefault();
@@ -212,19 +204,13 @@ export class TerraDrawLeafletAdapter implements TerraDrawAdapter {
             }
           }
         );
-
-        // Again, we need to handle that mouseup triggers
-        // click in leaflet, so set a state that tells it
-        // to skip the click event (see click handler)
-        dragState = "post-drag";
-      } else {
-        dragState = "not-dragging";
       }
 
+      dragState = "not-dragging";
       this._map.dragging.enable();
     };
 
-    container.addEventListener("mouseup", this._onDragEndListener);
+    container.addEventListener("pointerup", this._onDragEndListener);
 
     // map has no keypress event, so we add one to the canvas itself
     this._onKeyPressListener = (event: KeyboardEvent) => {

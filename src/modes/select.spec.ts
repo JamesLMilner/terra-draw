@@ -1315,12 +1315,7 @@ describe("TerraDrawSelectMode", () => {
             },
           });
 
-          store.create([
-            {
-              geometry: { type: "Point", coordinates: [0, 0] },
-              properties: { mode: "point" },
-            },
-          ]);
+          addPointToStore([0, 0]);
 
           project.mockReturnValueOnce({
             x: 0,
@@ -1344,6 +1339,17 @@ describe("TerraDrawSelectMode", () => {
             y: 0,
           });
           mockMouseEventBoundingBox();
+
+          selectMode.onDragStart(
+            {
+              lng: 0,
+              lat: 0,
+              containerX: 0,
+              containerY: 0,
+              button: "left",
+            },
+            jest.fn()
+          );
 
           selectMode.onDrag({
             lng: 1,

@@ -709,8 +709,9 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode {
   onDrag(event: TerraDrawMouseEvent) {
     const selectedId = this.selected[0];
 
-    // If nothing selected, do nothing
-    if (!selectedId) {
+    // If nothing selected or the drag position hasn't been set
+    // do nothing
+    if (!selectedId || !this.dragPosition) {
       return;
     }
 

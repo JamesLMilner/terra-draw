@@ -5,6 +5,7 @@ A simple file for tracking
 ## Doing
 
 - Create demo that can run on GitHub
+- Bug (Leaflet): On click event triggered after dragging coordinate which deselects feature
 
 ## To do
 

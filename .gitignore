@@ -1,6 +1,7 @@
 .vscode
 coverage/
 dist/
+!docs/dist/
 node_modules/
 example/dist/
 example/node_modules/

@@ -9,7 +9,7 @@ import {
   TerraDrawSelectMode,
   TerraDrawFreehandMode,
   TerraDrawLeafletAdapter,
-} from "../../../src/terra-draw";
+} from "../../src/terra-draw";
 import { addModeChangeHandler } from "../../common/addModeChangeHandler";
 
 let currentSelected: { button: undefined | HTMLButtonElement; mode: string } = {

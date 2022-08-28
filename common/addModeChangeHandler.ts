@@ -1,4 +1,4 @@
-import { TerraDraw } from "../../src/terra-draw";
+import { TerraDraw } from "../src/terra-draw";
 
 export const addModeChangeHandler = (
   draw: TerraDraw,

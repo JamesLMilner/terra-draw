@@ -13,7 +13,7 @@ import {
   TerraDrawMapboxGLAdapter,
   TerraDrawLeafletAdapter,
   TerraDrawGoogleMapsAdapter,
-} from "../../../src/terra-draw";
+} from "../../src/terra-draw";
 import { addModeChangeHandler } from "../../common/addModeChangeHandler";
 
 const getModes = () => {

@@ -37,6 +37,10 @@ export class GeoJSONStore {
     this.store = {};
     this.spatialIndex = new SpatialIndex();
 
+    // Setting tracked has to happen first
+    // because we use it in featureValidation
+    this.tracked = config && config.tracked === false ? false : true;
+
     if (config && config.data) {
       config.data.forEach((feature) => {
         this.featureValidation(feature);
@@ -44,8 +48,6 @@ export class GeoJSONStore {
       });
       this.spatialIndex.load(config.data);
     }
-
-    this.tracked = config && config.tracked === false ? false : true;
   }
 
   private tracked: boolean;
@@ -67,21 +69,44 @@ export class GeoJSONStore {
     return JSON.parse(JSON.stringify(obj));
   }
 
-  private featureValidation(feature: any) {
-    if (!feature || !feature.id) {
+  private isObject(
+    feature: unknown
+  ): feature is Record<string | number, unknown> {
+    return (
+      feature &&
+      typeof feature === "object" &&
+      feature !== null &&
+      !Array.isArray(feature)
+    );
+  }
+
+  private featureValidation(feature: unknown) {
+    if (!this.isObject(feature)) {
+      throw new Error("Feature is not object");
+    } else if (!feature.id) {
       throw new Error("Feature has no id");
     } else if (typeof feature.id !== "string" || feature.id.length !== 36) {
       throw new Error(`Feature must have uuid4 ID ${feature.id}`);
-    } else if (!feature.geometry) {
+    } else if (!this.isObject(feature.geometry)) {
       throw new Error("Feature has no geometry");
-    } else if (!feature.properties) {
+    } else if (!this.isObject(feature.properties)) {
       throw new Error("Feature has no properties");
     } else if (
+      typeof feature.geometry.type !== "string" ||
       !["Polygon", "LineString", "Point"].includes(feature.geometry.type)
     ) {
       throw new Error("Feature is not Point, LineString or Polygon");
     } else if (!Array.isArray(feature.geometry.coordinates)) {
       throw new Error("Feature coordinates is not an array");
+    }
+
+    if (this.tracked) {
+      if (
+        isNaN(new Date(feature.properties.createdAt as number).valueOf()) ||
+        isNaN(new Date(feature.properties.updatedAt as number).valueOf())
+      ) {
+        throw new Error("updatedAt and createdAt are not valid timestamps");
+      }
     }
   }
 

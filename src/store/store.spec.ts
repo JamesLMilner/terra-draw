@@ -9,7 +9,10 @@ describe("GeoJSONStore", () => {
             id: "e3ccd3b9-afb1-4f0b-91d8-22a768d5f284",
             type: "Feature",
             geometry: { type: "Point", coordinates: [0, 0] },
-            properties: {},
+            properties: {
+              createdAt: +new Date(),
+              updatedAt: +new Date(),
+            },
           },
         ],
       });
@@ -17,9 +20,40 @@ describe("GeoJSONStore", () => {
       expect(store.copyAll().length).toBe(1);
     });
 
+    it("throws if tracked properties are not provided", () => {
+      expect(() => {
+        new GeoJSONStore({
+          data: [
+            {
+              id: "e3ccd3b9-afb1-4f0b-91d8-22a768d5f284",
+              type: "Feature",
+              geometry: { type: "Point", coordinates: [0, 0] },
+              properties: {},
+            },
+          ],
+        });
+      }).toThrowError();
+    });
+
+    it("does not throw if tracked is false and tracked properties are not provided", () => {
+      expect(() => {
+        new GeoJSONStore({
+          tracked: false,
+          data: [
+            {
+              id: "e3ccd3b9-afb1-4f0b-91d8-22a768d5f284",
+              type: "Feature",
+              geometry: { type: "Point", coordinates: [0, 0] },
+              properties: {},
+            },
+          ],
+        });
+      }).not.toThrowError();
+    });
+
     it("throws on data with non object feature", () => {
       expect(() => {
-        const store = new GeoJSONStore({
+        new GeoJSONStore({
           data: [undefined],
         } as any);
       }).toThrowError();
@@ -27,7 +61,7 @@ describe("GeoJSONStore", () => {
 
     it("throws on data with no id", () => {
       expect(() => {
-        const store = new GeoJSONStore({
+        new GeoJSONStore({
           data: [
             {
               id: undefined,
@@ -39,7 +73,7 @@ describe("GeoJSONStore", () => {
 
     it("throws on data with non string id", () => {
       expect(() => {
-        const store = new GeoJSONStore({
+        new GeoJSONStore({
           data: [
             {
               id: 1,
@@ -51,7 +85,7 @@ describe("GeoJSONStore", () => {
 
     it("throws on data with non uuid4 id", () => {
       expect(() => {
-        const store = new GeoJSONStore({
+        new GeoJSONStore({
           data: [
             {
               id: "1",
@@ -63,7 +97,7 @@ describe("GeoJSONStore", () => {
 
     it("throws on data with non uuid4 id", () => {
       expect(() => {
-        const store = new GeoJSONStore({
+        new GeoJSONStore({
           data: [
             {
               id: "1",
@@ -75,7 +109,7 @@ describe("GeoJSONStore", () => {
 
     it("throws on data with no geometry", () => {
       expect(() => {
-        const store = new GeoJSONStore({
+        new GeoJSONStore({
           data: [
             {
               id: "e3ccd3b9-afb1-4f0b-91d8-22a768d5f284",
@@ -87,7 +121,7 @@ describe("GeoJSONStore", () => {
 
     it("throws on data with no properties", () => {
       expect(() => {
-        const store = new GeoJSONStore({
+        new GeoJSONStore({
           data: [
             {
               id: "e3ccd3b9-afb1-4f0b-91d8-22a768d5f284",
@@ -100,7 +134,7 @@ describe("GeoJSONStore", () => {
 
     it("throws on data with non Point, LineString, Polygon geometry type", () => {
       expect(() => {
-        const store = new GeoJSONStore({
+        new GeoJSONStore({
           data: [
             {
               id: "e3ccd3b9-afb1-4f0b-91d8-22a768d5f284",
@@ -116,7 +150,7 @@ describe("GeoJSONStore", () => {
 
     it("throws on data with non Point, LineString, Polygon geometry type", () => {
       expect(() => {
-        const store = new GeoJSONStore({
+        new GeoJSONStore({
           data: [
             {
               id: "e3ccd3b9-afb1-4f0b-91d8-22a768d5f284",

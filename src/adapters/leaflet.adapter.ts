@@ -102,8 +102,11 @@ export class TerraDrawLeafletAdapter implements TerraDrawAdapter {
     };
     this._map.on("keyup", this._onKeyPressListener);
 
-    let dragState: "not-dragging" | "pre-dragging" | "dragging" =
-      "not-dragging";
+    let dragState:
+      | "not-dragging"
+      | "pre-dragging"
+      | "dragging"
+      | "after-dragging" = "not-dragging";
 
     this._onClickListener = (event: L.LeafletMouseEvent) => {
       if (dragState === "not-dragging" || dragState === "pre-dragging") {
@@ -178,6 +181,8 @@ export class TerraDrawLeafletAdapter implements TerraDrawAdapter {
     container.addEventListener("pointermove", this._onDragListener);
 
     this._onDragEndListener = (event) => {
+      console.log("onpointerup", dragState);
+
       event.preventDefault();
 
       if (dragState === "dragging") {
@@ -204,6 +209,10 @@ export class TerraDrawLeafletAdapter implements TerraDrawAdapter {
             }
           }
         );
+
+        dragState = "after-dragging";
+        this._map.dragging.enable();
+        return;
       }
 
       dragState = "not-dragging";

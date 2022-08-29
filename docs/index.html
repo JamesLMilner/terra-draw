@@ -70,6 +70,28 @@
       #info span {
         margin-bottom: 4px;
       }
+
+      .sidepanel a {
+        color: #27ccff;
+        text-decoration-color: #27ccff;
+        font-weight: bold;
+      }
+
+      #github {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: #fdfdfd;
+        border: solid 2px #bfbfbf;
+        padding: 14px;
+        border-radius: 20px;
+        cursor: pointer;
+      }
+
+      #github img {
+        margin-left: 10px;
+        margin-right: 10px;
+      }
     </style>
     <link
       rel="stylesheet"
@@ -102,6 +124,10 @@
       <div class="sidepanel" id="sidepanel">
         <h1>Information</h1>
         <div id="info" style="display: flex; flex-direction: column"></div>
+        <a href="https://www.github.com/JamesLMilner/terra-draw"
+          ><div id="github">
+            Check out Terra Draw on GitHub <img src="./imgs/github.png" /></div
+        ></a>
       </div>
     </div>
 

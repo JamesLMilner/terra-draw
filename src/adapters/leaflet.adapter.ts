@@ -181,8 +181,6 @@ export class TerraDrawLeafletAdapter implements TerraDrawAdapter {
     container.addEventListener("pointermove", this._onDragListener);
 
     this._onDragEndListener = (event) => {
-      console.log("onpointerup", dragState);
-
       event.preventDefault();
 
       if (dragState === "dragging") {
@@ -210,6 +208,8 @@ export class TerraDrawLeafletAdapter implements TerraDrawAdapter {
           }
         );
 
+        // We want to avoid triggering an click
+        // event after dragging
         dragState = "after-dragging";
         this._map.dragging.enable();
         return;

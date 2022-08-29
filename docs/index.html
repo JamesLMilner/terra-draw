@@ -14,6 +14,27 @@
         border: solid 3px #565656;
       }
 
+      .current,
+      .all {
+        display: flex;
+        flex-direction: column;
+        border-radius: 20px;
+        border: solid 1px #bfbfbf;
+        padding: 20px;
+        margin-bottom: 20px;
+      }
+
+      .current h3,
+      .all h3 {
+        margin-top: 0;
+      }
+
+      .current b,
+      .all b {
+        display: inline-block;
+        width: 150px;
+      }
+
       button:hover {
         background: white;
         border: solid 3px #222222;
@@ -23,8 +44,16 @@
         cursor: pointer;
         font-family: sans-serif;
         height: 100%;
-        width: 100%;
+        width: 70%;
         outline: solid 1px #d7d7d7;
+      }
+
+      .sidepanel {
+        width: 30%;
+        min-width: 200px;
+        padding: 20px;
+        font-family: sans-serif;
+        border-left: solid 2px #565656;
       }
 
       #keybind {
@@ -38,6 +67,9 @@
         font-weight: bold;
         margin-left: 10px;
       }
+      #info span {
+        margin-bottom: 4px;
+      }
     </style>
     <link
       rel="stylesheet"
@@ -48,27 +80,31 @@
   </head>
   <body style="width: 100%; height: 100%; margin: 0">
     <div style="display: flex; flex-direction: row; height: 100%; width: 100%">
-      <div class="example" id="leaflet-map"></div>
+      <div class="example" id="leaflet-map">
+        <div
+          style="
+            position: relative;
+            top: 0;
+            z-index: 1000;
+            margin: auto;
+            display: flex;
+            justify-content: center;
+          "
+        >
+          <button id="select">Select</button>
+          <button id="point">Point</button>
+          <button id="linestring">LineString</button>
+          <button id="polygon">Polygon</button>
+          <button id="freehand">Freehand</button>
+          <button id="circle">Circle</button>
+        </div>
+      </div>
+      <div class="sidepanel" id="sidepanel">
+        <h1>Information</h1>
+        <div id="info" style="display: flex; flex-direction: column"></div>
+      </div>
     </div>
 
-    <div
-      style="
-        position: absolute;
-        top: 0;
-        z-index: 1000;
-        width: 100%;
-        margin: auto 0;
-        display: flex;
-        justify-content: center;
-      "
-    >
-      <button id="select">Select</button>
-      <button id="point">Point</button>
-      <button id="linestring">LineString</button>
-      <button id="polygon">Polygon</button>
-      <button id="freehand">Freehand</button>
-      <button id="circle">Circle</button>
-    </div>
     <script src="./dist/bundle.js"></script>
   </body>
 </html>

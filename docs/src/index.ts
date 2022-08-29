@@ -1,4 +1,6 @@
 import * as L from "leaflet";
+import area from "@turf/area";
+import length from "@turf/length";
 
 import {
   TerraDraw,
@@ -99,6 +101,71 @@ const example = {
     });
 
     draw.start();
+
+    const getHHMMSS = (timestamp: number) =>
+      new Date(timestamp).toTimeString().split(" ")[0];
+
+    const setInfo = function () {
+      const snapshot = draw.getSnapshot();
+      const features = snapshot.filter(
+        (f) => !f.properties.selectionPoint && !f.properties.midPoint
+      );
+
+      const selected = snapshot.find((f) => f.properties.selected);
+
+      document.getElementById("info").innerHTML = `
+      <div class="current">
+        <h3> Current Feature </h3>
+        <span><b>ID</b> ${selected ? selected.id : "N/A"} </span>
+        <span><b>Geometry Type</b> ${
+          selected ? selected.geometry.type : "N/A"
+        } </span>
+        <span><b>Created</b> ${
+          selected ? getHHMMSS(selected.properties.createdAt as number) : "N/A"
+        } </span>
+        <span><b>Updated</b> ${
+          selected ? getHHMMSS(selected.properties.updatedAt as number) : "N/A"
+        } </span>
+        <span><b>Coordinates</b> ${
+          selected && selected.geometry.type === "Polygon"
+            ? selected.geometry.coordinates[0].length
+            : selected && selected.geometry.type === "LineString"
+            ? selected.geometry.coordinates.length
+            : "N/A"
+        }</b> </span>
+        ${
+          selected && selected.geometry.type === "Polygon"
+            ? `<span><b>Area (m2)</b> ${area(selected).toFixed(2)} </span>`
+            : ""
+        }
+        ${
+          selected && selected.geometry.type === "LineString"
+            ? `<span><b>Length (km)</b> ${length(selected).toFixed(2)} </span>`
+            : ""
+        }
+      </div>
+
+      <div class="all">
+        <h3> All Features </h3>
+        <span><b>Total</b> ${features.length}</span>
+        <span><b>Polygons:</b> ${
+          features.filter((f) => f.geometry.type === "Polygon").length
+        }</span>
+        <span><b>LineStrings:</b> ${
+          features.filter((f) => f.geometry.type === "LineString").length
+        }</span>
+        <span><b>Points:</b> ${
+          features.filter((f) => f.geometry.type === "Point").length
+        }</span>
+      </div>
+    `;
+    };
+
+    setInfo();
+
+    draw.on("change", () => {
+      setInfo();
+    });
 
     addModeChangeHandler(draw, currentSelected);
 

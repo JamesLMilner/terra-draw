@@ -12,6 +12,8 @@
   "author": "James Milner",
   "license": "MIT",
   "dependencies": {
+    "@turf/area": "^6.5.0",
+    "@turf/length": "^6.5.0",
     "leaflet": "^1.8.0"
   },
   "devDependencies": {

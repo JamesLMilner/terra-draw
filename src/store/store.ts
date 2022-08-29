@@ -27,8 +27,13 @@ export type StoreChangeHandler = (
   change: StoreChangeEvents
 ) => void;
 
+export type GeoJSONStoreConfig = {
+  data?: GeoJSONStoreFeatures[];
+  tracked?: boolean;
+};
+
 export class GeoJSONStore {
-  constructor(config?: { data: GeoJSONStoreFeatures[] }) {
+  constructor(config?: GeoJSONStoreConfig) {
     this.store = {};
     this.spatialIndex = new SpatialIndex();
 
@@ -39,7 +44,11 @@ export class GeoJSONStore {
       });
       this.spatialIndex.load(config.data);
     }
+
+    this.tracked = config && config.tracked === false ? false : true;
   }
+
+  private tracked: boolean;
 
   private spatialIndex: SpatialIndex;
 
@@ -119,7 +128,6 @@ export class GeoJSONStore {
   ): void {
     const ids: string[] = [];
     propertiesToUpdate.forEach(({ id, property, value }) => {
-      ids.push(id);
       const feature = this.store[id];
 
       if (!feature) {
@@ -128,7 +136,14 @@ export class GeoJSONStore {
         );
       }
 
+      ids.push(id);
+
       feature.properties[property] = value;
+
+      // Update the time the feature was updated
+      if (this.tracked) {
+        feature.properties.updatedAt = +new Date();
+      }
     });
 
     if (this._onChange) {
@@ -154,6 +169,11 @@ export class GeoJSONStore {
       feature.geometry = this.clone(geometry);
 
       this.spatialIndex.update(feature);
+
+      // Update the time the feature was updated
+      if (this.tracked) {
+        feature.properties.updatedAt = +new Date();
+      }
     });
 
     if (this._onChange) {
@@ -162,16 +182,36 @@ export class GeoJSONStore {
   }
 
   create(
-    features: { geometry: GeoJSONStoreGeometries; properties?: JSON }[]
+    features: { geometry: GeoJSONStoreGeometries; properties?: JSONObject }[]
   ): string[] {
     const ids: string[] = [];
     features.forEach(({ geometry, properties }) => {
+      let createdAt;
+      let createdProperties = { ...properties };
+
+      if (this.tracked) {
+        createdAt = +new Date();
+
+        if (properties) {
+          createdProperties.createdAt =
+            typeof properties.createdAt === "number"
+              ? properties.createdAt
+              : createdAt;
+          createdProperties.updatedAt =
+            typeof properties.updatedAt === "number"
+              ? properties.updatedAt
+              : createdAt;
+        } else {
+          createdProperties = { createdAt, updatedAt: createdAt };
+        }
+      }
+
       const id = this.getId();
       const feature = {
         id,
         type: "Feature",
         geometry,
-        properties: properties ? properties : {},
+        properties: createdProperties,
       } as GeoJSONStoreFeatures;
 
       this.store[id] = feature;

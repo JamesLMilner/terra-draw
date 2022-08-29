@@ -247,7 +247,46 @@ describe("GeoJSONStore", () => {
       ]);
 
       expect(store.getPropertiesCopy(ids[0])).toStrictEqual({
+        createdAt: expect.any(Number),
+        updatedAt: expect.any(Number),
         mode: "test",
+      });
+    });
+
+    it("do not expect createdAt and updatedAt in returned properties if flag is disabled", () => {
+      const store = new GeoJSONStore({ tracked: false });
+
+      const ids = store.create([
+        {
+          geometry: { type: "Point", coordinates: [0, 0] },
+          properties: { mode: "test" },
+        },
+      ]);
+
+      expect(store.getPropertiesCopy(ids[0])).toStrictEqual({
+        mode: "test",
+      });
+    });
+
+    it("return original createdAt and updatedAt properties if originally created with them", () => {
+      const store = new GeoJSONStore();
+
+      const createdAt = +new Date();
+      const ids = store.create([
+        {
+          geometry: { type: "Point", coordinates: [0, 0] },
+          properties: {
+            mode: "test",
+            createdAt: createdAt,
+            updatedAt: createdAt,
+          },
+        },
+      ]);
+
+      expect(store.getPropertiesCopy(ids[0])).toStrictEqual({
+        mode: "test",
+        createdAt: createdAt,
+        updatedAt: createdAt,
       });
     });
 
@@ -307,6 +346,8 @@ describe("GeoJSONStore", () => {
 
       expect(store.copyAll()[0].properties).toStrictEqual({
         test: 1,
+        createdAt: expect.any(Number),
+        updatedAt: expect.any(Number),
       });
     });
 

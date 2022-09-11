@@ -1,3 +1,4 @@
+import { mode } from "../development/webpack.config";
 import { TerraDrawGoogleMapsAdapter } from "./adapters/google-maps.adapter";
 import { TerraDrawLeafletAdapter } from "./adapters/leaflet.adapter";
 import { TerraDrawMapboxGLAdapter } from "./adapters/mapbox-gl.adapter";
@@ -11,7 +12,7 @@ import { TerraDrawFreehandMode } from "./modes/freehand.mode";
 import { TerraDrawLineStringMode } from "./modes/linestring.mode";
 import { TerraDrawPointMode } from "./modes/point.mode";
 import { TerraDrawPolygonMode } from "./modes/polygon.mode";
-import { TerraDrawSelectMode } from "./modes/select.mode";
+import { TerraDrawSelectMode } from "./modes/select/select.mode";
 import { TerraDrawStaticMode } from "./modes/static.mode";
 import {
   GeoJSONStore,
@@ -55,23 +56,6 @@ class TerraDraw {
 
     if (options.data) {
       this._store = new GeoJSONStore({ data: options.data });
-
-      // Remove all non mode features
-      const initialRender = this._store.copyAll().filter((feature) => {
-        if (
-          feature.properties &&
-          !Object.keys(this._modes).includes(feature.properties.mode as string)
-        ) {
-          this._store.delete([feature.id as string]);
-          return false;
-        }
-        return true;
-      });
-
-      this._adapter.render(
-        { created: initialRender, deletedIds: [], unchanged: [], updated: [] },
-        this.getModeStyles()
-      );
     } else {
       this._store = new GeoJSONStore();
     }
@@ -96,65 +80,66 @@ class TerraDraw {
       return { changed, unchanged };
     };
 
-    // Register stores and callbacks
-    Object.keys(this._modes).forEach((modeId) => {
-      const onChange: StoreChangeHandler = (ids, event) => {
-        this._eventListeners.change.forEach((listener) => {
-          listener(ids, event);
-        });
+    const onChange: StoreChangeHandler = (ids, event) => {
+      this._eventListeners.change.forEach((listener) => {
+        listener(ids, event);
+      });
 
-        const { changed, unchanged } = getChanged(ids);
+      const { changed, unchanged } = getChanged(ids);
 
-        if (event === "create") {
-          this._adapter.render(
-            { created: changed, deletedIds: [], unchanged, updated: [] },
-            this.getModeStyles()
-          );
-        } else if (event === "update") {
-          this._adapter.render(
-            { created: [], deletedIds: [], unchanged, updated: changed },
-            this.getModeStyles()
-          );
-        } else if (event === "delete") {
-          this._adapter.render(
-            { created: [], deletedIds: ids, unchanged, updated: [] },
-            this.getModeStyles()
-          );
-        }
-      };
-
-      const onSelect = (selectedId: string) => {
-        this._eventListeners.select.forEach((listener) => {
-          listener(selectedId);
-        });
-
-        const { changed, unchanged } = getChanged([selectedId]);
-
+      if (event === "create") {
+        this._adapter.render(
+          { created: changed, deletedIds: [], unchanged, updated: [] },
+          this.getModeStyles()
+        );
+      } else if (event === "update") {
         this._adapter.render(
           { created: [], deletedIds: [], unchanged, updated: changed },
           this.getModeStyles()
         );
-      };
+      } else if (event === "delete") {
+        this._adapter.render(
+          { created: [], deletedIds: ids, unchanged, updated: [] },
+          this.getModeStyles()
+        );
+      }
+    };
 
-      const onDeselect = (deselectedId: string) => {
-        this._eventListeners.deselect.forEach((listener) => {
-          listener();
-        });
+    const onSelect = (selectedId: string) => {
+      this._eventListeners.select.forEach((listener) => {
+        listener(selectedId);
+      });
 
-        const { changed, unchanged } = getChanged([deselectedId]);
+      const { changed, unchanged } = getChanged([selectedId]);
 
-        // onDeselect can be called after a delete call which means that
-        // you are deselecting a feature that has been deleted. We
-        // double check here to ensure that the feature still exists.
-        if (changed) {
-          this._adapter.render(
-            { created: [], deletedIds: [], unchanged, updated: changed },
-            this.getModeStyles()
-          );
-        }
-      };
+      this._adapter.render(
+        { created: [], deletedIds: [], unchanged, updated: changed },
+        this.getModeStyles()
+      );
+    };
 
+    const onDeselect = (deselectedId: string) => {
+      this._eventListeners.deselect.forEach((listener) => {
+        listener();
+      });
+
+      const { changed, unchanged } = getChanged([deselectedId]);
+
+      // onDeselect can be called after a delete call which means that
+      // you are deselecting a feature that has been deleted. We
+      // double check here to ensure that the feature still exists.
+      if (changed) {
+        this._adapter.render(
+          { created: [], deletedIds: [], unchanged, updated: changed },
+          this.getModeStyles()
+        );
+      }
+    };
+
+    // Register stores and callbacks
+    Object.keys(this._modes).forEach((modeId) => {
       this._modes[modeId].register({
+        mode: modeId,
         store: this._store,
         setCursor: this._adapter.setCursor,
         project: this._adapter.project,
@@ -164,6 +149,26 @@ class TerraDraw {
         onDeselect: onDeselect,
       });
     });
+
+    // If we pass in data, we want to render it on startup
+    if (options.data) {
+      // Remove all non mode features
+      const initialRender = this._store.copyAll().filter((feature) => {
+        if (
+          feature.properties &&
+          !Object.keys(this._modes).includes(feature.properties.mode as string)
+        ) {
+          this._store.delete([feature.id as string]);
+          return false;
+        }
+        return true;
+      });
+
+      this._adapter.render(
+        { created: initialRender, deletedIds: [], unchanged: [], updated: [] },
+        this.getModeStyles()
+      );
+    }
   }
 
   private getModeStyles() {
@@ -210,8 +215,11 @@ class TerraDraw {
       onMouseMove: (event) => {
         this._mode.onMouseMove(event);
       },
-      onKeyPress: (event) => {
-        this._mode.onKeyPress(event);
+      onKeyDown: (event) => {
+        this._mode.onKeyDown(event);
+      },
+      onKeyUp: (event) => {
+        this._mode.onKeyUp(event);
       },
       onDragStart: (event, setMapDraggability) => {
         this._mode.onDragStart(event, setMapDraggability);

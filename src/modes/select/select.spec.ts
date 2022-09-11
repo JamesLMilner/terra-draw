@@ -1,7 +1,7 @@
 import { Position } from "geojson";
-import { GeoJSONStore } from "../store/store";
-import { getMockModeConfig } from "../test/mock-config";
-import { getDefaultStyling } from "../util/styling";
+import { GeoJSONStore } from "../../store/store";
+import { getMockModeConfig } from "../../test/mock-config";
+import { getDefaultStyling } from "../../util/styling";
 import { TerraDrawSelectMode } from "./select.mode";
 
 describe("TerraDrawSelectMode", () => {
@@ -19,7 +19,7 @@ describe("TerraDrawSelectMode", () => {
   ) => {
     selectMode = new TerraDrawSelectMode(options);
 
-    const mockConfig = getMockModeConfig();
+    const mockConfig = getMockModeConfig(selectMode.mode);
     onChange = mockConfig.onChange;
     project = mockConfig.project;
     unproject = mockConfig.unproject;
@@ -123,6 +123,8 @@ describe("TerraDrawSelectMode", () => {
         keyEvents: {
           deselect: "Backspace",
           delete: "d",
+          rotate: "r",
+          scale: "s",
         },
       });
 
@@ -137,7 +139,7 @@ describe("TerraDrawSelectMode", () => {
     it("registers correctly", () => {
       const selectMode = new TerraDrawSelectMode();
       expect(selectMode.state).toBe("unregistered");
-      selectMode.register(getMockModeConfig());
+      selectMode.register(getMockModeConfig(selectMode.mode));
       expect(selectMode.state).toBe("registered");
     });
 
@@ -177,15 +179,15 @@ describe("TerraDrawSelectMode", () => {
       const selectMode = new TerraDrawSelectMode();
 
       expect(() => {
-        selectMode.register(getMockModeConfig());
-        selectMode.register(getMockModeConfig());
+        selectMode.register(getMockModeConfig(selectMode.mode));
+        selectMode.register(getMockModeConfig(selectMode.mode));
       }).toThrowError();
     });
 
     it("can start correctly", () => {
       const selectMode = new TerraDrawSelectMode();
 
-      selectMode.register(getMockModeConfig());
+      selectMode.register(getMockModeConfig(selectMode.mode));
       selectMode.start();
 
       expect(selectMode.state).toBe("started");
@@ -194,7 +196,7 @@ describe("TerraDrawSelectMode", () => {
     it("can stop correctly", () => {
       const selectMode = new TerraDrawSelectMode();
 
-      selectMode.register(getMockModeConfig());
+      selectMode.register(getMockModeConfig(selectMode.mode));
       selectMode.start();
       selectMode.stop();
 
@@ -212,6 +214,7 @@ describe("TerraDrawSelectMode", () => {
         containerX: 0,
         containerY: 0,
         button: "left",
+        heldKeys: [],
       });
 
       expect(onChange).not.toBeCalled();
@@ -240,6 +243,7 @@ describe("TerraDrawSelectMode", () => {
           containerX: 0,
           containerY: 0,
           button: "left",
+          heldKeys: [],
         });
 
         expect(onSelect).toBeCalledTimes(1);
@@ -265,6 +269,7 @@ describe("TerraDrawSelectMode", () => {
           containerX: 100,
           containerY: 100,
           button: "left",
+          heldKeys: [],
         });
 
         expect(onSelect).toBeCalledTimes(0);
@@ -292,6 +297,7 @@ describe("TerraDrawSelectMode", () => {
           containerX: 0,
           containerY: 0,
           button: "left",
+          heldKeys: [],
         });
 
         expect(onSelect).toBeCalledTimes(0);
@@ -318,6 +324,7 @@ describe("TerraDrawSelectMode", () => {
           containerX: 0,
           containerY: 0,
           button: "left",
+          heldKeys: [],
         });
 
         expect(onSelect).toBeCalledTimes(1);
@@ -330,6 +337,7 @@ describe("TerraDrawSelectMode", () => {
           containerX: 50,
           containerY: 50,
           button: "left",
+          heldKeys: [],
         });
 
         expect(onSelect).toBeCalledTimes(1);
@@ -367,6 +375,7 @@ describe("TerraDrawSelectMode", () => {
           containerX: 0,
           containerY: 0,
           button: "left",
+          heldKeys: [],
         });
 
         expect(onSelect).toBeCalledTimes(1);
@@ -401,6 +410,7 @@ describe("TerraDrawSelectMode", () => {
           containerX: 100,
           containerY: 100,
           button: "left",
+          heldKeys: [],
         });
 
         expect(onSelect).toBeCalledTimes(0);
@@ -431,6 +441,7 @@ describe("TerraDrawSelectMode", () => {
           containerX: 0,
           containerY: 0,
           button: "left",
+          heldKeys: [],
         });
 
         expect(onSelect).toBeCalledTimes(1);
@@ -459,6 +470,7 @@ describe("TerraDrawSelectMode", () => {
           containerX: 0,
           containerY: 0,
           button: "left",
+          heldKeys: [],
         });
 
         expect(onSelect).toBeCalledTimes(0);
@@ -508,6 +520,7 @@ describe("TerraDrawSelectMode", () => {
           containerX: 0,
           containerY: 0,
           button: "left",
+          heldKeys: [],
         });
 
         expect(onSelect).toBeCalledTimes(1);
@@ -574,6 +587,7 @@ describe("TerraDrawSelectMode", () => {
           containerX: 0,
           containerY: 0,
           button: "left",
+          heldKeys: [],
         });
 
         expect(onSelect).toBeCalledTimes(1);
@@ -663,6 +677,7 @@ describe("TerraDrawSelectMode", () => {
             containerX: 0,
             containerY: 0,
             button: "left",
+            heldKeys: [],
           });
 
           expect(onSelect).toBeCalledTimes(1);
@@ -685,6 +700,7 @@ describe("TerraDrawSelectMode", () => {
             containerX: 0,
             containerY: 0,
             button: "left",
+            heldKeys: [],
           });
 
           // Second polygon selected
@@ -760,6 +776,7 @@ describe("TerraDrawSelectMode", () => {
             containerX: 0,
             containerY: 0,
             button: "left",
+            heldKeys: [],
           });
 
           expect(onSelect).toBeCalledTimes(1);
@@ -796,6 +813,7 @@ describe("TerraDrawSelectMode", () => {
             containerX: 0,
             containerY: 0,
             button: "left",
+            heldKeys: [],
           });
 
           // Second polygon selected
@@ -883,6 +901,7 @@ describe("TerraDrawSelectMode", () => {
             containerX: 0,
             containerY: 0,
             button: "left",
+            heldKeys: [],
           });
 
           expect(onSelect).toBeCalledTimes(1);
@@ -950,6 +969,7 @@ describe("TerraDrawSelectMode", () => {
             containerX: 0,
             containerY: 0,
             button: "left",
+            heldKeys: [],
           });
 
           // Second polygon selected
@@ -994,10 +1014,10 @@ describe("TerraDrawSelectMode", () => {
     });
   });
 
-  describe("onKeyPress", () => {
+  describe("onKeyUp", () => {
     describe("Delete", () => {
       it("does nothing with no features selected", () => {
-        selectMode.onKeyPress({ key: "Delete" });
+        selectMode.onKeyUp({ key: "Delete" });
 
         expect(onChange).not.toBeCalled();
         expect(onDeselect).not.toBeCalled();
@@ -1020,6 +1040,7 @@ describe("TerraDrawSelectMode", () => {
           containerX: 0,
           containerY: 0,
           button: "left",
+          heldKeys: [],
         });
 
         expect(onChange).toBeCalledTimes(2);
@@ -1031,7 +1052,7 @@ describe("TerraDrawSelectMode", () => {
 
         expect(onSelect).toBeCalledTimes(1);
 
-        selectMode.onKeyPress({ key: "Delete" });
+        selectMode.onKeyUp({ key: "Delete" });
 
         expect(onDeselect).toBeCalledTimes(1);
 
@@ -1046,7 +1067,7 @@ describe("TerraDrawSelectMode", () => {
 
     describe("Escape", () => {
       it("does nothing with no features selected", () => {
-        selectMode.onKeyPress({ key: "Escape" });
+        selectMode.onKeyUp({ key: "Escape" });
 
         expect(onChange).not.toBeCalled();
         expect(onDeselect).not.toBeCalled();
@@ -1068,11 +1089,12 @@ describe("TerraDrawSelectMode", () => {
           containerX: 0,
           containerY: 0,
           button: "left",
+          heldKeys: [],
         });
 
         expect(onSelect).toBeCalledTimes(1);
 
-        selectMode.onKeyPress({ key: "Escape" });
+        selectMode.onKeyUp({ key: "Escape" });
 
         expect(onChange).toBeCalledTimes(3);
         expect(onDeselect).toBeCalledTimes(1);
@@ -1089,6 +1111,7 @@ describe("TerraDrawSelectMode", () => {
           containerX: 0,
           containerY: 0,
           button: "left",
+          heldKeys: [],
         },
         jest.fn()
       );
@@ -1115,6 +1138,7 @@ describe("TerraDrawSelectMode", () => {
         containerX: 0,
         containerY: 0,
         button: "left",
+        heldKeys: [],
       });
 
       expect(onSelect).toBeCalledTimes(1);
@@ -1127,6 +1151,7 @@ describe("TerraDrawSelectMode", () => {
           containerX: 0,
           containerY: 0,
           button: "left",
+          heldKeys: [],
         },
         setMapDraggability
       );
@@ -1139,7 +1164,7 @@ describe("TerraDrawSelectMode", () => {
         flags: { point: { feature: { draggable: true } } },
       });
 
-      const mockConfig = getMockModeConfig();
+      const mockConfig = getMockModeConfig(selectMode.mode);
       onChange = mockConfig.onChange;
       project = mockConfig.project;
       unproject = mockConfig.unproject;
@@ -1164,6 +1189,7 @@ describe("TerraDrawSelectMode", () => {
         containerX: 0,
         containerY: 0,
         button: "left",
+        heldKeys: [],
       });
 
       expect(onSelect).toBeCalledTimes(1);
@@ -1176,6 +1202,7 @@ describe("TerraDrawSelectMode", () => {
           containerX: 0,
           containerY: 0,
           button: "left",
+          heldKeys: [],
         },
         setMapDraggability
       );
@@ -1192,6 +1219,7 @@ describe("TerraDrawSelectMode", () => {
         containerX: 0,
         containerY: 0,
         button: "left",
+        heldKeys: [],
       });
 
       expect(onChange).toBeCalledTimes(0);
@@ -1215,6 +1243,7 @@ describe("TerraDrawSelectMode", () => {
         containerX: 0,
         containerY: 0,
         button: "left",
+        heldKeys: [],
       });
 
       expect(onSelect).toBeCalledTimes(1);
@@ -1226,6 +1255,7 @@ describe("TerraDrawSelectMode", () => {
         containerX: 0,
         containerY: 0,
         button: "left",
+        heldKeys: [],
       });
 
       expect(onChange).toBeCalledTimes(2);
@@ -1249,6 +1279,7 @@ describe("TerraDrawSelectMode", () => {
             containerX: 0,
             containerY: 0,
             button: "left",
+            heldKeys: [],
           });
 
           expect(onSelect).toBeCalledTimes(1);
@@ -1260,6 +1291,7 @@ describe("TerraDrawSelectMode", () => {
             containerX: 1,
             containerY: 1,
             button: "left",
+            heldKeys: [],
           });
 
           expect(onChange).toBeCalledTimes(2);
@@ -1292,6 +1324,7 @@ describe("TerraDrawSelectMode", () => {
             containerX: 0,
             containerY: 0,
             button: "left",
+            heldKeys: [],
           });
 
           expect(onSelect).toBeCalledTimes(1);
@@ -1303,6 +1336,7 @@ describe("TerraDrawSelectMode", () => {
             containerX: 1,
             containerY: 1,
             button: "left",
+            heldKeys: [],
           });
 
           expect(onChange).toBeCalledTimes(2);
@@ -1329,6 +1363,7 @@ describe("TerraDrawSelectMode", () => {
             containerX: 0,
             containerY: 0,
             button: "left",
+            heldKeys: [],
           });
 
           expect(onSelect).toBeCalledTimes(1);
@@ -1347,6 +1382,7 @@ describe("TerraDrawSelectMode", () => {
               containerX: 0,
               containerY: 0,
               button: "left",
+              heldKeys: [],
             },
             jest.fn()
           );
@@ -1357,6 +1393,7 @@ describe("TerraDrawSelectMode", () => {
             containerX: 1,
             containerY: 1,
             button: "left",
+            heldKeys: [],
           });
 
           expect(onChange).toBeCalledTimes(3);
@@ -1394,6 +1431,7 @@ describe("TerraDrawSelectMode", () => {
             containerX: 0,
             containerY: 0,
             button: "left",
+            heldKeys: [],
           });
 
           expect(onSelect).toBeCalledTimes(1);
@@ -1406,6 +1444,7 @@ describe("TerraDrawSelectMode", () => {
               containerX: 1,
               containerY: 1,
               button: "left",
+              heldKeys: [],
             },
             jest.fn()
           );
@@ -1428,6 +1467,7 @@ describe("TerraDrawSelectMode", () => {
             containerX: 1,
             containerY: 1,
             button: "left",
+            heldKeys: [],
           });
 
           expect(onChange).toBeCalledTimes(3);
@@ -1468,6 +1508,7 @@ describe("TerraDrawSelectMode", () => {
             containerX: 0,
             containerY: 0,
             button: "left",
+            heldKeys: [],
           });
 
           expect(onSelect).toBeCalledTimes(1);
@@ -1480,6 +1521,7 @@ describe("TerraDrawSelectMode", () => {
               containerX: 1,
               containerY: 1,
               button: "left",
+              heldKeys: [],
             },
             jest.fn()
           );
@@ -1501,6 +1543,7 @@ describe("TerraDrawSelectMode", () => {
             containerX: 0,
             containerY: 0,
             button: "left",
+            heldKeys: [],
           });
 
           expect(onChange).toBeCalledTimes(3);
@@ -1543,6 +1586,7 @@ describe("TerraDrawSelectMode", () => {
           containerX: 0,
           containerY: 0,
           button: "left",
+          heldKeys: [],
         });
 
         expect(onSelect).toBeCalledTimes(1);
@@ -1569,6 +1613,7 @@ describe("TerraDrawSelectMode", () => {
             containerX: 1,
             containerY: 1,
             button: "left",
+            heldKeys: [],
           },
           jest.fn()
         );
@@ -1579,6 +1624,7 @@ describe("TerraDrawSelectMode", () => {
           containerX: 1,
           containerY: 1,
           button: "left",
+          heldKeys: [],
         });
 
         expect(onChange).toBeCalledTimes(5);
@@ -1630,6 +1676,7 @@ describe("TerraDrawSelectMode", () => {
           containerX: 0,
           containerY: 0,
           button: "left",
+          heldKeys: [],
         });
 
         expect(onSelect).toBeCalledTimes(1);
@@ -1661,6 +1708,7 @@ describe("TerraDrawSelectMode", () => {
             containerX: 1,
             containerY: 1,
             button: "left",
+            heldKeys: [],
           },
           jest.fn()
         );
@@ -1671,6 +1719,7 @@ describe("TerraDrawSelectMode", () => {
           containerX: 1,
           containerY: 1,
           button: "left",
+          heldKeys: [],
         });
 
         expect(onChange).toBeCalledTimes(5);
@@ -1693,7 +1742,7 @@ describe("TerraDrawSelectMode", () => {
     beforeEach(() => {
       selectMode = new TerraDrawSelectMode();
 
-      const mockConfig = getMockModeConfig();
+      const mockConfig = getMockModeConfig(selectMode.mode);
       setCursor = mockConfig.setCursor;
 
       selectMode.register(mockConfig);
@@ -1702,7 +1751,14 @@ describe("TerraDrawSelectMode", () => {
     it("sets map draggability back to false, sets cursor to default", () => {
       const setMapDraggability = jest.fn();
       selectMode.onDragEnd(
-        { lng: 1, lat: 1, containerX: 1, containerY: 1, button: "left" },
+        {
+          lng: 1,
+          lat: 1,
+          containerX: 1,
+          containerY: 1,
+          button: "left",
+          heldKeys: [],
+        },
         setMapDraggability
       );
 
@@ -1723,7 +1779,7 @@ describe("TerraDrawSelectMode", () => {
     beforeEach(() => {
       selectMode = new TerraDrawSelectMode();
 
-      const mockConfig = getMockModeConfig();
+      const mockConfig = getMockModeConfig(selectMode.mode);
       onChange = mockConfig.onChange;
       project = mockConfig.project;
       onSelect = mockConfig.onSelect;
@@ -1739,6 +1795,7 @@ describe("TerraDrawSelectMode", () => {
         containerX: 1,
         containerY: 1,
         button: "left",
+        heldKeys: [],
       });
 
       expect(onChange).toBeCalledTimes(0);

@@ -32,7 +32,7 @@ describe("TerraDrawCircleMode", () => {
     it("registers correctly", () => {
       const circleMode = new TerraDrawCircleMode();
       expect(circleMode.state).toBe("unregistered");
-      circleMode.register(getMockModeConfig());
+      circleMode.register(getMockModeConfig(circleMode.mode));
       expect(circleMode.state).toBe("registered");
     });
 
@@ -72,15 +72,15 @@ describe("TerraDrawCircleMode", () => {
       const circleMode = new TerraDrawCircleMode();
 
       expect(() => {
-        circleMode.register(getMockModeConfig());
-        circleMode.register(getMockModeConfig());
+        circleMode.register(getMockModeConfig(circleMode.mode));
+        circleMode.register(getMockModeConfig(circleMode.mode));
       }).toThrowError();
     });
 
     it("can start correctly", () => {
       const circleMode = new TerraDrawCircleMode();
 
-      circleMode.register(getMockModeConfig());
+      circleMode.register(getMockModeConfig(circleMode.mode));
       circleMode.start();
 
       expect(circleMode.state).toBe("started");
@@ -89,7 +89,7 @@ describe("TerraDrawCircleMode", () => {
     it("can stop correctly", () => {
       const circleMode = new TerraDrawCircleMode();
 
-      circleMode.register(getMockModeConfig());
+      circleMode.register(getMockModeConfig(circleMode.mode));
       circleMode.start();
       circleMode.stop();
 
@@ -116,13 +116,14 @@ describe("TerraDrawCircleMode", () => {
           containerX: 0,
           containerY: 0,
           button: "left",
+          heldKeys: [],
         });
       }).toThrowError();
     });
 
     describe("registered", () => {
       beforeEach(() => {
-        const mockConfig = getMockModeConfig();
+        const mockConfig = getMockModeConfig(circleMode.mode);
 
         store = mockConfig.store;
         onChange = mockConfig.onChange;
@@ -136,6 +137,7 @@ describe("TerraDrawCircleMode", () => {
           containerX: 0,
           containerY: 0,
           button: "left",
+          heldKeys: [],
         });
 
         expect(onChange).toBeCalledTimes(1);
@@ -149,6 +151,7 @@ describe("TerraDrawCircleMode", () => {
           containerX: 0,
           containerY: 0,
           button: "left",
+          heldKeys: [],
         });
 
         let features = store.copyAll();
@@ -160,6 +163,7 @@ describe("TerraDrawCircleMode", () => {
           containerX: 0,
           containerY: 0,
           button: "left",
+          heldKeys: [],
         });
 
         features = store.copyAll();
@@ -171,7 +175,7 @@ describe("TerraDrawCircleMode", () => {
     });
   });
 
-  describe("onKeyPress", () => {
+  describe("onKeyUp", () => {
     it("does nothing", () => {});
   });
 
@@ -183,7 +187,7 @@ describe("TerraDrawCircleMode", () => {
     beforeEach(() => {
       circleMode = new TerraDrawCircleMode();
 
-      const mockConfig = getMockModeConfig();
+      const mockConfig = getMockModeConfig(circleMode.mode);
 
       store = mockConfig.store;
       onChange = mockConfig.onChange;
@@ -198,6 +202,7 @@ describe("TerraDrawCircleMode", () => {
         containerX: 0,
         containerY: 0,
         button: "left",
+        heldKeys: [],
       });
 
       expect(onChange).toBeCalledTimes(1);
@@ -215,6 +220,7 @@ describe("TerraDrawCircleMode", () => {
         containerX: 1,
         containerY: 1,
         button: "left",
+        heldKeys: [],
       });
       expect(onChange).toBeCalledTimes(2);
       expect(onChange).toHaveBeenNthCalledWith(
@@ -240,7 +246,7 @@ describe("TerraDrawCircleMode", () => {
     beforeEach(() => {
       circleMode = new TerraDrawCircleMode();
 
-      const mockConfig = getMockModeConfig();
+      const mockConfig = getMockModeConfig(circleMode.mode);
 
       store = mockConfig.store;
       onChange = mockConfig.onChange;
@@ -260,6 +266,7 @@ describe("TerraDrawCircleMode", () => {
         containerX: 0,
         containerY: 0,
         button: "left",
+        heldKeys: [],
       });
 
       circleMode.cleanUp();
@@ -273,7 +280,7 @@ describe("TerraDrawCircleMode", () => {
     });
   });
 
-  describe("onKeyPress", () => {
+  describe("onKeyUp", () => {
     let store: GeoJSONStore;
     let circleMode: TerraDrawCircleMode;
     let onChange: jest.Mock;
@@ -283,7 +290,7 @@ describe("TerraDrawCircleMode", () => {
       jest.resetAllMocks();
       circleMode = new TerraDrawCircleMode();
 
-      const mockConfig = getMockModeConfig();
+      const mockConfig = getMockModeConfig(circleMode.mode);
       store = mockConfig.store;
       onChange = mockConfig.onChange;
       project = mockConfig.project;
@@ -291,7 +298,7 @@ describe("TerraDrawCircleMode", () => {
     });
 
     it("Escape - does nothing when no circle is present", () => {
-      circleMode.onKeyPress({ key: "Escape" });
+      circleMode.onKeyUp({ key: "Escape" });
     });
 
     it("Escape - deletes the circle when currently editing", () => {
@@ -301,12 +308,13 @@ describe("TerraDrawCircleMode", () => {
         containerX: 0,
         containerY: 0,
         button: "left",
+        heldKeys: [],
       });
 
       let features = store.copyAll();
       expect(features.length).toBe(1);
 
-      circleMode.onKeyPress({ key: "Escape" });
+      circleMode.onKeyUp({ key: "Escape" });
 
       features = store.copyAll();
       expect(features.length).toBe(0);

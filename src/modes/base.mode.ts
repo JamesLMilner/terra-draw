@@ -1,11 +1,10 @@
-import { Feature, Polygon, Position } from "geojson";
+import { BehaviorConfig, TerraDrawModeBehavior } from "./common/base.behavior";
 import {
+  Project,
   TerraDrawAdapterStyling,
   TerraDrawModeRegisterConfig,
   TerraDrawModeState,
-  TerraDrawMouseEvent,
 } from "../common";
-import { getPixelDistance } from "../geometry/get-pixel-distance";
 import { GeoJSONStore } from "../store/store";
 import { getDefaultStyling } from "../util/styling";
 
@@ -19,12 +18,14 @@ export abstract class TerraDrawBaseDrawMode {
   }
   styling: TerraDrawAdapterStyling;
 
+  protected behaviors: TerraDrawModeBehavior[] = [];
   protected pointerDistance: number;
   protected store: GeoJSONStore;
   protected unproject: TerraDrawModeRegisterConfig["unproject"];
   protected project: TerraDrawModeRegisterConfig["project"];
   protected setCursor: TerraDrawModeRegisterConfig["setCursor"];
   protected coordinatePrecision: number;
+  protected registerBehaviors(behaviorConfig: BehaviorConfig): void {}
 
   constructor(options?: {
     styling?: Partial<TerraDrawAdapterStyling>;
@@ -32,11 +33,13 @@ export abstract class TerraDrawBaseDrawMode {
     coordinatePrecision?: number;
   }) {
     this._state = "unregistered";
-    this.pointerDistance = (options && options.pointerDistance) || 40;
     this.styling =
       options && options.styling
         ? { ...getDefaultStyling(), ...options.styling }
         : getDefaultStyling();
+
+    this.pointerDistance = (options && options.pointerDistance) || 40;
+
     this.coordinatePrecision = (options && options.coordinatePrecision) || 9;
   }
 
@@ -56,44 +59,6 @@ export abstract class TerraDrawBaseDrawMode {
     }
   }
 
-  protected createClickBoundingBox(event: TerraDrawMouseEvent) {
-    const { containerX: x, containerY: y } = event;
-    const halfDist = this.pointerDistance / 2;
-
-    const bbox = {
-      type: "Feature",
-      properties: {},
-      geometry: {
-        type: "Polygon",
-        coordinates: [
-          [
-            this.unproject(x - halfDist, y - halfDist), // TopLeft
-            this.unproject(x + halfDist, y - halfDist), // TopRight
-            this.unproject(x + halfDist, y + halfDist), // BottomRight
-            this.unproject(x - halfDist, y + halfDist), // BottomLeft
-            this.unproject(x - halfDist, y - halfDist), // TopLeft
-          ].map((c) => [c.lng, c.lat]),
-        ],
-      },
-    } as Feature<Polygon>;
-
-    return bbox;
-  }
-
-  protected distanceBetweenTwoCoords(
-    coord: Position,
-    event: TerraDrawMouseEvent
-  ) {
-    const { x, y } = this.project(coord[0], coord[1]);
-
-    const distance = getPixelDistance(
-      { x, y },
-      { x: event.containerX, y: event.containerY }
-    );
-
-    return distance;
-  }
-
   register(config: TerraDrawModeRegisterConfig) {
     if (this._state === "unregistered") {
       this._state = "registered";
@@ -104,6 +69,15 @@ export abstract class TerraDrawBaseDrawMode {
       this.onSelect = config.onSelect;
       this.onDeselect = config.onDeselect;
       this.setCursor = config.setCursor;
+
+      this.registerBehaviors({
+        mode: config.mode,
+        store: this.store,
+        project: this.project,
+        unproject: this.unproject,
+        pointerDistance: this.pointerDistance,
+        coordinatePrecision: this.coordinatePrecision,
+      });
     } else {
       throw new Error("Can not register unless mode is unregistered");
     }

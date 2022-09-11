@@ -90,6 +90,7 @@ export class TerraDrawGoogleMapsAdapter implements TerraDrawAdapter {
     };
   }
 
+  private _heldKeys: Set<string> = new Set();
   private _cursor: string;
   private _cursorStyleSheet: HTMLStyleElement;
   private _coordinatePrecision: number;
@@ -157,6 +158,7 @@ export class TerraDrawGoogleMapsAdapter implements TerraDrawAdapter {
         containerX: event.domEvent.clientX - this.getMapContainer().offsetLeft,
         containerY: event.domEvent.clientY - this.getMapContainer().offsetTop,
         button: event.domEvent.button === 0 ? "left" : "right",
+        heldKeys: [...this._heldKeys],
       });
     };
     this._onClickListener = this._map.addListener(
@@ -180,6 +182,7 @@ export class TerraDrawGoogleMapsAdapter implements TerraDrawAdapter {
         containerX: event.domEvent.clientX - this.getMapContainer().offsetLeft,
         containerY: event.domEvent.clientY - this.getMapContainer().offsetTop,
         button: event.domEvent.button === 0 ? "left" : "right",
+        heldKeys: [...this._heldKeys],
       });
     };
     this._onMouseMoveListener = this._map.addListener(
@@ -188,7 +191,9 @@ export class TerraDrawGoogleMapsAdapter implements TerraDrawAdapter {
     );
 
     this._onKeyUpListener = (event: KeyboardEvent) => {
-      callbacks.onKeyPress({ key: event.key });
+      callbacks.onKeyUp({
+        key: event.key,
+      });
     };
 
     this.getMapContainer().addEventListener("keyup", this._onKeyUpListener);
@@ -218,6 +223,7 @@ export class TerraDrawGoogleMapsAdapter implements TerraDrawAdapter {
         containerX: event.clientX - container.offsetLeft,
         containerY: event.clientY - container.offsetTop,
         button: event.button === 0 ? "left" : "right",
+        heldKeys: [...this._heldKeys],
       };
 
       if (dragState === "pre-dragging") {
@@ -248,6 +254,7 @@ export class TerraDrawGoogleMapsAdapter implements TerraDrawAdapter {
             containerX: event.clientX - container.offsetLeft,
             containerY: event.clientY - container.offsetTop,
             button: event.button === 0 ? "left" : "right",
+            heldKeys: [...this._heldKeys],
           },
           (enabled) => {
             this._map.setOptions({ draggable: enabled });

@@ -13,6 +13,8 @@ import {
   TerraDrawLeafletAdapter,
 } from "../../src/terra-draw";
 import { addModeChangeHandler } from "../../common/addModeChangeHandler";
+import { TerraDrawRenderMode } from "../../src/modes/render.mode";
+import { uk } from "./sample";
 
 let currentSelected: { button: undefined | HTMLButtonElement; mode: string } = {
   button: undefined,
@@ -50,8 +52,13 @@ const example = {
       modes: {
         select: new TerraDrawSelectMode({
           flags: {
+            arbitary: {
+              feature: {},
+            },
             polygon: {
               feature: {
+                scaleable: true,
+                rotateable: true,
                 draggable: true,
                 coordinates: {
                   midpoints: true,
@@ -97,6 +104,13 @@ const example = {
         }),
         circle: new TerraDrawCircleMode(),
         freehand: new TerraDrawFreehandMode(),
+        arbitary: new TerraDrawRenderMode({
+          styling: {
+            polygonFillColor: "#4357AD",
+            polygonOutlineColor: "#48A9A6",
+            polygonOutlineWidth: 2,
+          },
+        }),
       },
     });
 

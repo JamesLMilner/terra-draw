@@ -1,4 +1,4 @@
-export const getPixelDistanceToLine = (
+export const pixelDistanceToLine = (
   point: { x: number; y: number },
   linePointOne: { x: number; y: number },
   linePointTwo: { x: number; y: number }

@@ -9,6 +9,7 @@ import {
 import { Feature, GeoJsonObject } from "geojson";
 import L from "leaflet";
 import { limitPrecision } from "../geometry/limit-decimal-precision";
+import { Polygon } from "../../docs/dist/bundle";
 
 export class TerraDrawLeafletAdapter implements TerraDrawAdapter {
   constructor(config: {
@@ -49,12 +50,15 @@ export class TerraDrawLeafletAdapter implements TerraDrawAdapter {
     };
   }
 
+  private _heldKeys: Set<string> = new Set();
   private _lib: typeof L;
   private _coordinatePrecision: number;
   private _map: L.Map;
   private _onMouseMoveListener: (ev: any) => void;
   private _onClickListener: (ev: any) => void;
-  private _onKeyPressListener: (ev: any) => void;
+  private _onKeyUpListener: (ev: any) => void;
+  private _onKeyDownListener: (ev: any) => void;
+
   private _onDragStartListener: (event: MouseEvent) => void;
   private _onDragListener: (event: MouseEvent) => void;
   private _onDragEndListener: (event: MouseEvent) => void;
@@ -95,13 +99,6 @@ export class TerraDrawLeafletAdapter implements TerraDrawAdapter {
 
     const container = this.getMapContainer();
 
-    this._onKeyPressListener = (event: L.LeafletKeyboardEvent) => {
-      event.originalEvent.preventDefault();
-
-      callbacks.onKeyPress({ key: event.originalEvent.key });
-    };
-    this._map.on("keyup", this._onKeyPressListener);
-
     let dragState:
       | "not-dragging"
       | "pre-dragging"
@@ -118,6 +115,7 @@ export class TerraDrawLeafletAdapter implements TerraDrawAdapter {
           containerY:
             event.originalEvent.clientY - this.getMapContainer().offsetTop,
           button: event.originalEvent.button === 0 ? "left" : "right",
+          heldKeys: [...this._heldKeys],
         });
       }
     };
@@ -138,6 +136,7 @@ export class TerraDrawLeafletAdapter implements TerraDrawAdapter {
         containerY:
           event.originalEvent.clientY - this.getMapContainer().offsetTop,
         button: event.originalEvent.button === 0 ? "left" : "right",
+        heldKeys: [...this._heldKeys],
       });
     };
     this._map.on("mousemove", this._onMouseMoveListener);
@@ -161,6 +160,7 @@ export class TerraDrawLeafletAdapter implements TerraDrawAdapter {
         containerX: event.clientX - container.offsetLeft,
         containerY: event.clientY - container.offsetTop,
         button: event.button === 0 ? "left" : "right",
+        heldKeys: [...this._heldKeys],
       };
 
       if (dragState === "pre-dragging") {
@@ -198,6 +198,7 @@ export class TerraDrawLeafletAdapter implements TerraDrawAdapter {
             containerX: event.clientX - container.offsetLeft,
             containerY: event.clientY - container.offsetTop,
             button: event.button === 0 ? "left" : "right",
+            heldKeys: [...this._heldKeys],
           },
           (enabled) => {
             if (enabled) {
@@ -222,12 +223,27 @@ export class TerraDrawLeafletAdapter implements TerraDrawAdapter {
     container.addEventListener("pointerup", this._onDragEndListener);
 
     // map has no keypress event, so we add one to the canvas itself
-    this._onKeyPressListener = (event: KeyboardEvent) => {
+    this._onKeyUpListener = (event: KeyboardEvent) => {
       event.preventDefault();
 
-      callbacks.onKeyPress({ key: event.key });
+      this._heldKeys.delete(event.key);
+
+      callbacks.onKeyUp({
+        key: event.key,
+      });
     };
-    container.addEventListener("keyup", this._onKeyPressListener);
+    container.addEventListener("keyup", this._onKeyUpListener);
+
+    this._onKeyDownListener = (event: KeyboardEvent) => {
+      event.preventDefault();
+
+      this._heldKeys.add(event.key);
+
+      callbacks.onKeyDown({
+        key: event.key,
+      });
+    };
+    container.addEventListener("keydown", this._onKeyDownListener);
   }
 
   unregister() {
@@ -322,9 +338,14 @@ export class TerraDrawLeafletAdapter implements TerraDrawAdapter {
           return {
             interactive: false, // Removes mouse hover cursor styles
             fillOpacity: modeStyle.polygonFillOpacity,
-            color: feature.properties.selected
+            fillColor: feature.properties.selected
               ? modeStyle.selectedColor
               : modeStyle.polygonFillColor,
+            weight: modeStyle.polygonOutlineWidth,
+            stroke: true,
+            color: feature.properties.selected
+              ? modeStyle.selectedColor
+              : modeStyle.polygonOutlineColor,
           };
         }
       },

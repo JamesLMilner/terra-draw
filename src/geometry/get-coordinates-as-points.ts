@@ -1,4 +1,4 @@
-import { LineString, Point, Polygon, Position } from "geojson";
+import { Point, Position } from "geojson";
 import { JSONObject } from "../store/store";
 
 export function getCoordinatesAsPoints(

@@ -42,11 +42,7 @@ export class GeoJSONStore {
     this.tracked = config && config.tracked === false ? false : true;
 
     if (config && config.data) {
-      config.data.forEach((feature) => {
-        this.featureValidation(feature);
-        this.store[feature.id as string] = feature;
-      });
-      this.spatialIndex.load(config.data);
+      this.load(config.data);
     }
   }
 
@@ -108,6 +104,40 @@ export class GeoJSONStore {
         throw new Error("updatedAt and createdAt are not valid timestamps");
       }
     }
+
+    if (!feature.properties.mode) {
+      throw new Error("Feature does not have a set mode");
+    }
+  }
+
+  load(data: GeoJSONStoreFeatures[]) {
+    // We don't want to update the original data
+    const clonedData = this.clone(data);
+
+    // We try to be a bit forgiving here as many users
+    // may not set a feature id as UUID or createdAt/updatedAt
+    clonedData.forEach((feature) => {
+      if (!feature.id) {
+        feature.id = uuid4();
+      }
+
+      if (!feature.properties.createdAt) {
+        feature.properties.createdAt = +new Date();
+      }
+
+      if (!feature.properties.updatedAt) {
+        feature.properties.updatedAt = +new Date();
+      }
+    });
+
+    const changes: string[] = [];
+    clonedData.forEach((feature) => {
+      this.featureValidation(feature);
+      this.store[feature.id as string] = feature;
+      changes.push(feature.id as string);
+    });
+    this.spatialIndex.load(clonedData);
+    this._onChange(changes, "create");
   }
 
   search(

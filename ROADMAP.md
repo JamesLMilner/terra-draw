@@ -1,10 +1,9 @@
 ## Roadmap
 
-A simple file for tracking
+A simple file for tracking what's being worked on.
 
 ## Doing
 
-- Create demo that can run on GitHub
 - Bug (Leaflet): On click event triggered after dragging coordinate which deselects feature
 
 ## To do
@@ -24,19 +23,22 @@ A simple file for tracking
 
 ### Chores
 
-- Chore: Refactor select mode
 - Chore: Figure a more robust way to handle project/unproject in tests
 - Chore: Identical coordinate protection
 - Chore: Type properties for different mode features
+- Chore: Add unit tests for rotation/scaling in Select mode
 
 Could Do:
 
 - Consider Tablets/Mobile devices
 - Feature: Undo/Redo
-- Feature: Rotation, Scale, Simplification etc
 
 ## Done
 
+- Chore: Demo that can run on GitHub
+- Feature: Select - Scale
+- Feature: Select - Rotation
+- Chore: Come up with strategy for layering functionality/behaviors
 - Bug: Can drag feature when cursor is not dragging over the feature
 - Bug (Leaflet): Dragging coordinate deselects coordinate after drag
 - Feature: Select renders Polygon and LineString coordinates

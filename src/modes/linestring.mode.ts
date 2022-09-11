@@ -4,9 +4,9 @@ import {
   TerraDrawKeyboardEvent,
 } from "../common";
 import { LineString } from "geojson";
-import { selfIntersects } from "../geometry/self-intersects";
-import { getPixelDistance } from "../geometry/get-pixel-distance";
+import { selfIntersects } from "../geometry/boolean/self-intersects";
 import { TerraDrawBaseDrawMode } from "./base.mode";
+import { pixelDistance } from "../geometry/measure/pixel-distance";
 
 type TerraDrawLineStringModeKeyEvents = {
   cancel: KeyboardEvent["key"];
@@ -117,7 +117,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode {
         currentLineGeometry.coordinates.length - 2
       ];
       const { x, y } = this.project(previousLng, previousLat);
-      const distance = getPixelDistance(
+      const distance = pixelDistance(
         { x, y },
         { x: event.containerX, y: event.containerY }
       );
@@ -168,7 +168,8 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode {
       }
     }
   }
-  onKeyPress(event: TerraDrawKeyboardEvent) {
+  onKeyDown() {}
+  onKeyUp(event: TerraDrawKeyboardEvent) {
     if (event.key === this.keyEvents.cancel) {
       this.cleanUp();
     }

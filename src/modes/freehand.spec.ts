@@ -32,7 +32,7 @@ describe("TerraDrawFreehandMode", () => {
     it("registers correctly", () => {
       const freehandMode = new TerraDrawFreehandMode();
       expect(freehandMode.state).toBe("unregistered");
-      freehandMode.register(getMockModeConfig());
+      freehandMode.register(getMockModeConfig(freehandMode.mode));
       expect(freehandMode.state).toBe("registered");
     });
 
@@ -72,15 +72,15 @@ describe("TerraDrawFreehandMode", () => {
       const freehandMode = new TerraDrawFreehandMode();
 
       expect(() => {
-        freehandMode.register(getMockModeConfig());
-        freehandMode.register(getMockModeConfig());
+        freehandMode.register(getMockModeConfig(freehandMode.mode));
+        freehandMode.register(getMockModeConfig(freehandMode.mode));
       }).toThrowError();
     });
 
     it("can start correctly", () => {
       const freehandMode = new TerraDrawFreehandMode();
 
-      freehandMode.register(getMockModeConfig());
+      freehandMode.register(getMockModeConfig(freehandMode.mode));
       freehandMode.start();
 
       expect(freehandMode.state).toBe("started");
@@ -89,7 +89,7 @@ describe("TerraDrawFreehandMode", () => {
     it("can stop correctly", () => {
       const freehandMode = new TerraDrawFreehandMode();
 
-      freehandMode.register(getMockModeConfig());
+      freehandMode.register(getMockModeConfig(freehandMode.mode));
       freehandMode.start();
       freehandMode.stop();
 
@@ -115,13 +115,14 @@ describe("TerraDrawFreehandMode", () => {
           containerX: 0,
           containerY: 0,
           button: "left",
+          heldKeys: [],
         });
       }).toThrowError();
     });
 
     describe("registered", () => {
       beforeEach(() => {
-        const mockConfig = getMockModeConfig();
+        const mockConfig = getMockModeConfig(freehandMode.mode);
         onChange = mockConfig.onChange;
         store = mockConfig.store;
         freehandMode.register(mockConfig);
@@ -134,6 +135,7 @@ describe("TerraDrawFreehandMode", () => {
           containerX: 0,
           containerY: 0,
           button: "left",
+          heldKeys: [],
         });
 
         expect(onChange).toBeCalledTimes(1);
@@ -147,6 +149,7 @@ describe("TerraDrawFreehandMode", () => {
           containerX: 0,
           containerY: 0,
           button: "left",
+          heldKeys: [],
         });
 
         let features = store.copyAll();
@@ -158,6 +161,7 @@ describe("TerraDrawFreehandMode", () => {
           containerX: 0,
           containerY: 0,
           button: "left",
+          heldKeys: [],
         });
 
         features = store.copyAll();
@@ -177,7 +181,7 @@ describe("TerraDrawFreehandMode", () => {
     beforeEach(() => {
       freehandMode = new TerraDrawFreehandMode();
 
-      const mockConfig = getMockModeConfig();
+      const mockConfig = getMockModeConfig(freehandMode.mode);
       store = mockConfig.store;
       onChange = mockConfig.onChange;
       freehandMode.register(mockConfig);
@@ -190,6 +194,7 @@ describe("TerraDrawFreehandMode", () => {
         containerX: 0,
         containerY: 0,
         button: "left",
+        heldKeys: [],
       });
 
       expect(onChange).toBeCalledTimes(1);
@@ -208,6 +213,7 @@ describe("TerraDrawFreehandMode", () => {
           containerX: i,
           containerY: i,
           button: "left",
+          heldKeys: [],
         });
       }
 
@@ -233,6 +239,7 @@ describe("TerraDrawFreehandMode", () => {
         containerX: 1,
         containerY: 1,
         button: "left",
+        heldKeys: [],
       });
 
       expect(onChange).toBeCalledTimes(0);
@@ -246,7 +253,7 @@ describe("TerraDrawFreehandMode", () => {
 
     beforeEach(() => {
       freehandMode = new TerraDrawFreehandMode();
-      const mockConfig = getMockModeConfig();
+      const mockConfig = getMockModeConfig(freehandMode.mode);
       store = mockConfig.store;
       onChange = mockConfig.onChange;
       freehandMode.register(mockConfig);
@@ -264,6 +271,7 @@ describe("TerraDrawFreehandMode", () => {
         containerX: 0,
         containerY: 0,
         button: "left",
+        heldKeys: [],
       });
 
       freehandMode.cleanUp();
@@ -277,7 +285,7 @@ describe("TerraDrawFreehandMode", () => {
     });
   });
 
-  describe("onKeyPress", () => {
+  describe("onKeyUp", () => {
     let store: GeoJSONStore;
     let freehandMode: TerraDrawFreehandMode;
     let onChange: jest.Mock;
@@ -288,7 +296,7 @@ describe("TerraDrawFreehandMode", () => {
 
       freehandMode = new TerraDrawFreehandMode();
 
-      const mockConfig = getMockModeConfig();
+      const mockConfig = getMockModeConfig(freehandMode.mode);
       store = mockConfig.store;
       onChange = mockConfig.onChange;
       project = mockConfig.project;
@@ -296,7 +304,7 @@ describe("TerraDrawFreehandMode", () => {
     });
 
     it("Escape - does nothing when no freehand is present", () => {
-      freehandMode.onKeyPress({ key: "Escape" });
+      freehandMode.onKeyUp({ key: "Escape" });
     });
 
     it("Escape - deletes the freehand when currently editing", () => {
@@ -306,12 +314,13 @@ describe("TerraDrawFreehandMode", () => {
         containerX: 0,
         containerY: 0,
         button: "left",
+        heldKeys: [],
       });
 
       let features = store.copyAll();
       expect(features.length).toBe(1);
 
-      freehandMode.onKeyPress({ key: "Escape" });
+      freehandMode.onKeyUp({ key: "Escape" });
 
       features = store.copyAll();
       expect(features.length).toBe(0);

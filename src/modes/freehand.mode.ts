@@ -102,8 +102,8 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode {
     this.startingClick = false;
     this.currentId = undefined;
   }
-
-  onKeyPress(event: TerraDrawKeyboardEvent) {
+  onKeyDown() {}
+  onKeyUp(event: TerraDrawKeyboardEvent) {
     if (event.key === this.keyEvents.cancel) {
       this.cleanUp();
     }

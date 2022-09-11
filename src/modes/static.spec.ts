@@ -16,7 +16,7 @@ describe("TerraDrawStaticMode", () => {
       const staticMode = new TerraDrawStaticMode();
 
       expect(() => {
-        staticMode.register(getMockModeConfig());
+        staticMode.register(getMockModeConfig(staticMode.mode));
       }).not.toThrowError();
     });
   });
@@ -51,12 +51,12 @@ describe("TerraDrawStaticMode", () => {
     });
   });
 
-  describe("onKeyPress", () => {
+  describe("onKeyUp", () => {
     it("does nothing", () => {
       const staticMode = new TerraDrawStaticMode();
 
       expect(() => {
-        staticMode.onKeyPress();
+        staticMode.onKeyUp();
       }).not.toThrowError();
     });
   });

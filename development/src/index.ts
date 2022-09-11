@@ -15,11 +15,16 @@ import {
   TerraDrawGoogleMapsAdapter,
 } from "../../src/terra-draw";
 import { addModeChangeHandler } from "../../common/addModeChangeHandler";
+import { TerraDrawRenderMode } from "../../src/modes/render.mode";
+import { uk } from "../../docs/src/sample";
 
 const getModes = () => {
   return {
     select: new TerraDrawSelectMode({
       flags: {
+        arbitary: {
+          feature: {},
+        },
         polygon: {
           feature: {
             draggable: true,
@@ -61,6 +66,13 @@ const getModes = () => {
     }),
     circle: new TerraDrawCircleMode(),
     freehand: new TerraDrawFreehandMode(),
+    arbitary: new TerraDrawRenderMode({
+      styling: {
+        polygonFillColor: "#4357AD",
+        polygonOutlineColor: "#48A9A6",
+        polygonOutlineWidth: 2,
+      },
+    }),
   };
 };
 
@@ -139,6 +151,7 @@ const example = {
           coordinatePrecision: 9,
         }),
         modes: getModes(),
+        data: uk.features as any,
       });
 
       draw.start();

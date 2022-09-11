@@ -29,6 +29,7 @@ export interface TerraDrawMouseEvent {
   containerX: number;
   containerY: number;
   button: "left" | "right" | "pointer";
+  heldKeys: string[];
 }
 
 export interface TerraDrawKeyboardEvent {
@@ -37,10 +38,11 @@ export interface TerraDrawKeyboardEvent {
 
 type SetCursor = (cursor: "unset" | "grab" | "grabbing" | "crosshair") => void;
 
-type Project = (lng: number, lat: number) => { x: number; y: number };
-type Unproject = (x: number, y: number) => { lat: number; lng: number };
+export type Project = (lng: number, lat: number) => { x: number; y: number };
+export type Unproject = (x: number, y: number) => { lat: number; lng: number };
 
 export interface TerraDrawModeRegisterConfig {
+  mode: string;
   store: GeoJSONStore;
   setCursor: SetCursor;
   onChange: StoreChangeHandler;
@@ -66,7 +68,8 @@ export interface TerraDrawMode {
   register: (config: TerraDrawModeRegisterConfig) => void;
 
   // cleanUp: () => void;
-  onKeyPress: (event: TerraDrawKeyboardEvent) => void;
+  onKeyDown: (event: TerraDrawKeyboardEvent) => void;
+  onKeyUp: (event: TerraDrawKeyboardEvent) => void;
   onMouseMove: (event: TerraDrawMouseEvent) => void;
   onClick: (event: TerraDrawMouseEvent) => void;
   onDragStart: (
@@ -81,7 +84,8 @@ export interface TerraDrawMode {
 }
 
 export interface TerraDrawCallbacks {
-  onKeyPress: (event: TerraDrawKeyboardEvent) => void;
+  onKeyUp: (event: TerraDrawKeyboardEvent) => void;
+  onKeyDown: (event: TerraDrawKeyboardEvent) => void;
   onClick: (event: TerraDrawMouseEvent) => void;
   onMouseMove: (event: TerraDrawMouseEvent) => void;
   onDragStart: (

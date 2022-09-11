@@ -1,23 +1,12 @@
 import { Feature, Polygon, Position } from "geojson";
+import {
+  degreesToRadians,
+  lengthToRadians,
+  radiansToDegrees,
+} from "../helpers";
 
 // Based on Turf.js Circle module
 // https://github.com/Turfjs/turf/blob/master/packages/turf-circle/index.ts
-
-export function degreesToRadians(degrees: number): number {
-  const radians = degrees % 360;
-  return (radians * Math.PI) / 180;
-}
-
-function lengthToRadians(distance: number): number {
-  const earthRadius = 6371008.8;
-  const factor = earthRadius / 1000;
-  return distance / factor;
-}
-
-function radiansToDegrees(radians: number): number {
-  const degrees = radians % (2 * Math.PI);
-  return (degrees * 180) / Math.PI;
-}
 
 export function destination(
   origin: Position,

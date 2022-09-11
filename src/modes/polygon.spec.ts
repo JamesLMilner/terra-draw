@@ -34,7 +34,7 @@ describe("TerraDrawPolygonMode", () => {
     it("registers correctly", () => {
       const polygonMode = new TerraDrawPolygonMode();
       expect(polygonMode.state).toBe("unregistered");
-      polygonMode.register(getMockModeConfig());
+      polygonMode.register(getMockModeConfig(polygonMode.mode));
       expect(polygonMode.state).toBe("registered");
     });
 
@@ -74,15 +74,15 @@ describe("TerraDrawPolygonMode", () => {
       const polygonMode = new TerraDrawPolygonMode();
 
       expect(() => {
-        polygonMode.register(getMockModeConfig());
-        polygonMode.register(getMockModeConfig());
+        polygonMode.register(getMockModeConfig(polygonMode.mode));
+        polygonMode.register(getMockModeConfig(polygonMode.mode));
       }).toThrowError();
     });
 
     it("can start correctly", () => {
       const polygonMode = new TerraDrawPolygonMode();
 
-      polygonMode.register(getMockModeConfig());
+      polygonMode.register(getMockModeConfig(polygonMode.mode));
       polygonMode.start();
 
       expect(polygonMode.state).toBe("started");
@@ -91,7 +91,7 @@ describe("TerraDrawPolygonMode", () => {
     it("can stop correctly", () => {
       const polygonMode = new TerraDrawPolygonMode();
 
-      polygonMode.register(getMockModeConfig());
+      polygonMode.register(getMockModeConfig(polygonMode.mode));
       polygonMode.start();
       polygonMode.stop();
 
@@ -107,7 +107,7 @@ describe("TerraDrawPolygonMode", () => {
     beforeEach(() => {
       store = new GeoJSONStore();
       polygonMode = new TerraDrawPolygonMode();
-      const mockConfig = getMockModeConfig();
+      const mockConfig = getMockModeConfig(polygonMode.mode);
 
       store = mockConfig.store;
       onChange = mockConfig.onChange;
@@ -122,6 +122,7 @@ describe("TerraDrawPolygonMode", () => {
         containerX: 0,
         containerY: 0,
         button: "left",
+        heldKeys: [],
       });
 
       expect(onChange).not.toBeCalled();
@@ -134,6 +135,7 @@ describe("TerraDrawPolygonMode", () => {
         containerX: 0,
         containerY: 0,
         button: "left",
+        heldKeys: [],
       });
 
       polygonMode.onMouseMove({
@@ -142,6 +144,7 @@ describe("TerraDrawPolygonMode", () => {
         containerX: 0,
         containerY: 0,
         button: "left",
+        heldKeys: [],
       });
 
       expect(onChange).toBeCalledTimes(2);
@@ -166,6 +169,7 @@ describe("TerraDrawPolygonMode", () => {
         containerX: 0,
         containerY: 0,
         button: "left",
+        heldKeys: [],
       });
 
       polygonMode.onMouseMove({
@@ -174,6 +178,7 @@ describe("TerraDrawPolygonMode", () => {
         containerX: 0,
         containerY: 0,
         button: "left",
+        heldKeys: [],
       });
 
       polygonMode.onClick({
@@ -182,6 +187,7 @@ describe("TerraDrawPolygonMode", () => {
         containerX: 0,
         containerY: 0,
         button: "left",
+        heldKeys: [],
       });
 
       polygonMode.onMouseMove({
@@ -190,6 +196,7 @@ describe("TerraDrawPolygonMode", () => {
         containerX: 0,
         containerY: 0,
         button: "left",
+        heldKeys: [],
       });
 
       expect(onChange).toBeCalledTimes(4);
@@ -214,6 +221,7 @@ describe("TerraDrawPolygonMode", () => {
         containerX: 0,
         containerY: 0,
         button: "left",
+        heldKeys: [],
       });
 
       polygonMode.onMouseMove({
@@ -222,6 +230,7 @@ describe("TerraDrawPolygonMode", () => {
         containerX: 0,
         containerY: 0,
         button: "left",
+        heldKeys: [],
       });
 
       polygonMode.onClick({
@@ -230,6 +239,7 @@ describe("TerraDrawPolygonMode", () => {
         containerX: 0,
         containerY: 0,
         button: "left",
+        heldKeys: [],
       });
 
       polygonMode.onMouseMove({
@@ -238,6 +248,7 @@ describe("TerraDrawPolygonMode", () => {
         containerX: 0,
         containerY: 0,
         button: "left",
+        heldKeys: [],
       });
 
       polygonMode.onClick({
@@ -246,6 +257,7 @@ describe("TerraDrawPolygonMode", () => {
         containerX: 0,
         containerY: 0,
         button: "left",
+        heldKeys: [],
       });
 
       polygonMode.onMouseMove({
@@ -254,6 +266,7 @@ describe("TerraDrawPolygonMode", () => {
         containerX: 0,
         containerY: 0,
         button: "left",
+        heldKeys: [],
       });
 
       expect(onChange).toBeCalledTimes(6);
@@ -302,7 +315,7 @@ describe("TerraDrawPolygonMode", () => {
 
     beforeEach(() => {
       polygonMode = new TerraDrawPolygonMode();
-      const mockConfig = getMockModeConfig();
+      const mockConfig = getMockModeConfig(polygonMode.mode);
 
       store = mockConfig.store;
       project = mockConfig.project;
@@ -317,6 +330,7 @@ describe("TerraDrawPolygonMode", () => {
         containerX: 0,
         containerY: 0,
         button: "left",
+        heldKeys: [],
       });
 
       polygonMode.onMouseMove({
@@ -325,6 +339,7 @@ describe("TerraDrawPolygonMode", () => {
         containerX: 0,
         containerY: 0,
         button: "left",
+        heldKeys: [],
       });
 
       polygonMode.onClick({
@@ -333,6 +348,7 @@ describe("TerraDrawPolygonMode", () => {
         containerX: 0,
         containerY: 0,
         button: "left",
+        heldKeys: [],
       });
 
       polygonMode.onMouseMove({
@@ -341,6 +357,7 @@ describe("TerraDrawPolygonMode", () => {
         containerX: 0,
         containerY: 0,
         button: "left",
+        heldKeys: [],
       });
 
       polygonMode.onClick({
@@ -349,6 +366,7 @@ describe("TerraDrawPolygonMode", () => {
         containerX: 0,
         containerY: 0,
         button: "left",
+        heldKeys: [],
       });
 
       polygonMode.onMouseMove({
@@ -357,6 +375,7 @@ describe("TerraDrawPolygonMode", () => {
         containerX: 0,
         containerY: 0,
         button: "left",
+        heldKeys: [],
       });
 
       project.mockReturnValueOnce({ x: 0, y: 0 });
@@ -367,6 +386,7 @@ describe("TerraDrawPolygonMode", () => {
         containerX: 0,
         containerY: 0,
         button: "left",
+        heldKeys: [],
       });
 
       project.mockReturnValueOnce({ x: 0, y: 0 });
@@ -377,6 +397,7 @@ describe("TerraDrawPolygonMode", () => {
         containerX: 0,
         containerY: 0,
         button: "left",
+        heldKeys: [],
       });
 
       let features = store.copyAll();
@@ -389,6 +410,7 @@ describe("TerraDrawPolygonMode", () => {
         containerX: 0,
         containerY: 0,
         button: "left",
+        heldKeys: [],
       });
 
       features = store.copyAll();
@@ -397,7 +419,7 @@ describe("TerraDrawPolygonMode", () => {
 
     it("can create a polygon with snapping enabled", () => {
       polygonMode = new TerraDrawPolygonMode({ snapping: true });
-      const mockConfig = getMockModeConfig();
+      const mockConfig = getMockModeConfig(polygonMode.mode);
       store = mockConfig.store;
       project = mockConfig.project;
       unproject = mockConfig.unproject;
@@ -410,6 +432,7 @@ describe("TerraDrawPolygonMode", () => {
         containerX: 0,
         containerY: 0,
         button: "left",
+        heldKeys: [],
       });
 
       mockClickBoundingBox();
@@ -419,6 +442,7 @@ describe("TerraDrawPolygonMode", () => {
         containerX: 0,
         containerY: 0,
         button: "left",
+        heldKeys: [],
       });
 
       mockClickBoundingBox();
@@ -428,6 +452,7 @@ describe("TerraDrawPolygonMode", () => {
         containerX: 0,
         containerY: 0,
         button: "left",
+        heldKeys: [],
       });
 
       mockClickBoundingBox();
@@ -437,6 +462,7 @@ describe("TerraDrawPolygonMode", () => {
         containerX: 0,
         containerY: 0,
         button: "left",
+        heldKeys: [],
       });
 
       mockClickBoundingBox();
@@ -446,6 +472,7 @@ describe("TerraDrawPolygonMode", () => {
         containerX: 0,
         containerY: 0,
         button: "left",
+        heldKeys: [],
       });
 
       mockClickBoundingBox();
@@ -455,6 +482,7 @@ describe("TerraDrawPolygonMode", () => {
         containerX: 0,
         containerY: 0,
         button: "left",
+        heldKeys: [],
       });
 
       project.mockReturnValueOnce({ x: 0, y: 0 });
@@ -466,6 +494,7 @@ describe("TerraDrawPolygonMode", () => {
         containerX: 0,
         containerY: 0,
         button: "left",
+        heldKeys: [],
       });
 
       let features = store.copyAll();
@@ -485,6 +514,7 @@ describe("TerraDrawPolygonMode", () => {
         containerX: 0,
         containerY: 0,
         button: "left",
+        heldKeys: [],
       });
 
       features = store.copyAll();
@@ -498,6 +528,7 @@ describe("TerraDrawPolygonMode", () => {
         containerX: 0,
         containerY: 0,
         button: "left",
+        heldKeys: [],
       });
 
       polygonMode.onMouseMove({
@@ -506,6 +537,7 @@ describe("TerraDrawPolygonMode", () => {
         containerX: 0,
         containerY: 0,
         button: "left",
+        heldKeys: [],
       });
 
       polygonMode.onClick({
@@ -514,6 +546,7 @@ describe("TerraDrawPolygonMode", () => {
         containerX: 0,
         containerY: 0,
         button: "left",
+        heldKeys: [],
       });
 
       polygonMode.onMouseMove({
@@ -522,6 +555,7 @@ describe("TerraDrawPolygonMode", () => {
         containerX: 0,
         containerY: 0,
         button: "left",
+        heldKeys: [],
       });
 
       polygonMode.onClick({
@@ -530,6 +564,7 @@ describe("TerraDrawPolygonMode", () => {
         containerX: 0,
         containerY: 0,
         button: "left",
+        heldKeys: [],
       });
 
       polygonMode.onMouseMove({
@@ -538,6 +573,7 @@ describe("TerraDrawPolygonMode", () => {
         containerX: 0,
         containerY: 0,
         button: "left",
+        heldKeys: [],
       });
 
       project.mockReturnValueOnce({ x: 100, y: 100 });
@@ -548,6 +584,7 @@ describe("TerraDrawPolygonMode", () => {
         containerX: 0,
         containerY: 0,
         button: "left",
+        heldKeys: [],
       });
 
       polygonMode.onMouseMove({
@@ -556,6 +593,7 @@ describe("TerraDrawPolygonMode", () => {
         containerX: 0,
         containerY: 0,
         button: "left",
+        heldKeys: [],
       });
 
       project.mockReturnValueOnce({ x: 100, y: 100 });
@@ -566,6 +604,7 @@ describe("TerraDrawPolygonMode", () => {
         containerX: 0,
         containerY: 0,
         button: "left",
+        heldKeys: [],
       });
 
       let features = store.copyAll();
@@ -590,6 +629,7 @@ describe("TerraDrawPolygonMode", () => {
         containerX: 0,
         containerY: 0,
         button: "left",
+        heldKeys: [],
       });
 
       features = store.copyAll();
@@ -609,7 +649,7 @@ describe("TerraDrawPolygonMode", () => {
 
     it("does not create a polygon line if it has intersections and allowSelfIntersections is false", () => {
       polygonMode = new TerraDrawPolygonMode({ allowSelfIntersections: false });
-      const mockConfig = getMockModeConfig();
+      const mockConfig = getMockModeConfig(polygonMode.mode);
 
       store = mockConfig.store;
       project = mockConfig.project;
@@ -622,6 +662,7 @@ describe("TerraDrawPolygonMode", () => {
         containerX: 0,
         containerY: 0,
         button: "left",
+        heldKeys: [],
       } as TerraDrawMouseEvent;
       polygonMode.onClick(coordOneEvent);
 
@@ -631,6 +672,7 @@ describe("TerraDrawPolygonMode", () => {
         containerX: 0,
         containerY: 0,
         button: "left",
+        heldKeys: [],
       } as TerraDrawMouseEvent;
       polygonMode.onMouseMove(coordTwoEvent);
       polygonMode.onClick(coordTwoEvent);
@@ -641,6 +683,7 @@ describe("TerraDrawPolygonMode", () => {
         containerX: 0,
         containerY: 0,
         button: "left",
+        heldKeys: [],
       } as TerraDrawMouseEvent;
       polygonMode.onMouseMove(coordThreeEvent);
       polygonMode.onClick(coordThreeEvent);
@@ -652,6 +695,7 @@ describe("TerraDrawPolygonMode", () => {
         containerX: 0,
         containerY: 0,
         button: "left",
+        heldKeys: [],
       } as TerraDrawMouseEvent;
       project.mockReturnValueOnce({ x: 100, y: 100 });
       polygonMode.onMouseMove(coordFourEvent);
@@ -695,7 +739,7 @@ describe("TerraDrawPolygonMode", () => {
     });
   });
 
-  describe("onKeyPress", () => {
+  describe("onKeyUp", () => {
     let store: GeoJSONStore;
     let polygonMode: TerraDrawPolygonMode;
 
@@ -704,7 +748,7 @@ describe("TerraDrawPolygonMode", () => {
 
       polygonMode = new TerraDrawPolygonMode();
 
-      const mockConfig = getMockModeConfig();
+      const mockConfig = getMockModeConfig(polygonMode.mode);
 
       store = mockConfig.store;
 
@@ -712,7 +756,7 @@ describe("TerraDrawPolygonMode", () => {
     });
 
     it("Escape - does nothing when no line is present", () => {
-      polygonMode.onKeyPress({ key: "Escape" });
+      polygonMode.onKeyUp({ key: "Escape" });
     });
 
     it("Escape - deletes the line when currently editing", () => {
@@ -722,12 +766,13 @@ describe("TerraDrawPolygonMode", () => {
         containerX: 0,
         containerY: 0,
         button: "left",
+        heldKeys: [],
       });
 
       let features = store.copyAll();
       expect(features.length).toBe(1);
 
-      polygonMode.onKeyPress({ key: "Escape" });
+      polygonMode.onKeyUp({ key: "Escape" });
 
       features = store.copyAll();
       expect(features.length).toBe(0);
@@ -744,7 +789,7 @@ describe("TerraDrawPolygonMode", () => {
       jest.resetAllMocks();
       polygonMode = new TerraDrawPolygonMode();
 
-      const mockConfig = getMockModeConfig();
+      const mockConfig = getMockModeConfig(polygonMode.mode);
       store = mockConfig.store;
       onChange = mockConfig.onChange;
       project = mockConfig.project;
@@ -765,6 +810,7 @@ describe("TerraDrawPolygonMode", () => {
         containerX: 0,
         containerY: 0,
         button: "left",
+        heldKeys: [],
       });
 
       expect(store.copyAll().length).toBe(1);
@@ -779,7 +825,7 @@ describe("TerraDrawPolygonMode", () => {
   describe("onDrag", () => {
     it("does nothing", () => {
       const polygonMode = new TerraDrawPolygonMode();
-      polygonMode.register(getMockModeConfig());
+      polygonMode.register(getMockModeConfig(polygonMode.mode));
 
       expect(() => {
         polygonMode.onDrag();
@@ -790,7 +836,7 @@ describe("TerraDrawPolygonMode", () => {
   describe("onDragStart", () => {
     it("does nothing", () => {
       const polygonMode = new TerraDrawPolygonMode();
-      polygonMode.register(getMockModeConfig());
+      polygonMode.register(getMockModeConfig(polygonMode.mode));
 
       expect(() => {
         polygonMode.onDragStart();
@@ -801,7 +847,7 @@ describe("TerraDrawPolygonMode", () => {
   describe("onDragEnd", () => {
     it("does nothing", () => {
       const polygonMode = new TerraDrawPolygonMode();
-      polygonMode.register(getMockModeConfig());
+      polygonMode.register(getMockModeConfig(polygonMode.mode));
 
       expect(() => {
         polygonMode.onDragEnd();

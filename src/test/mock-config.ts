@@ -1,8 +1,8 @@
-import { TerraDrawModeRegisterConfig } from "../common";
 import { GeoJSONStore } from "../store/store";
 
-export function getMockModeConfig() {
+export function getMockModeConfig(mode: string) {
   return {
+    mode,
     store: new GeoJSONStore(),
     setCursor: jest.fn(),
     onChange: jest.fn(),

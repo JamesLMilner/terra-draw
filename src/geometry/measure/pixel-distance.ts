@@ -1,4 +1,4 @@
-export const getPixelDistance = (
+export const pixelDistance = (
   pointOne: { x: number; y: number },
   pointTwo: { x: number; y: number }
 ) => {

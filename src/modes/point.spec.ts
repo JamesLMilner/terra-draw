@@ -29,7 +29,7 @@ describe("TerraDrawPointMode", () => {
     it("registers correctly", () => {
       const pointMode = new TerraDrawPointMode();
       expect(pointMode.state).toBe("unregistered");
-      pointMode.register(getMockModeConfig());
+      pointMode.register(getMockModeConfig(pointMode.mode));
       expect(pointMode.state).toBe("registered");
     });
 
@@ -69,15 +69,15 @@ describe("TerraDrawPointMode", () => {
       const pointMode = new TerraDrawPointMode();
 
       expect(() => {
-        pointMode.register(getMockModeConfig());
-        pointMode.register(getMockModeConfig());
+        pointMode.register(getMockModeConfig(pointMode.mode));
+        pointMode.register(getMockModeConfig(pointMode.mode));
       }).toThrowError();
     });
 
     it("can start correctly", () => {
       const pointMode = new TerraDrawPointMode();
 
-      pointMode.register(getMockModeConfig());
+      pointMode.register(getMockModeConfig(pointMode.mode));
       pointMode.start();
 
       expect(pointMode.state).toBe("started");
@@ -86,7 +86,7 @@ describe("TerraDrawPointMode", () => {
     it("can stop correctly", () => {
       const pointMode = new TerraDrawPointMode();
 
-      pointMode.register(getMockModeConfig());
+      pointMode.register(getMockModeConfig(pointMode.mode));
       pointMode.start();
       pointMode.stop();
 
@@ -111,7 +111,7 @@ describe("TerraDrawPointMode", () => {
     it("creates a point if registered", () => {
       const pointMode = new TerraDrawPointMode();
 
-      const mockConfig = getMockModeConfig();
+      const mockConfig = getMockModeConfig(pointMode.mode);
 
       pointMode.register(mockConfig);
 
@@ -130,12 +130,12 @@ describe("TerraDrawPointMode", () => {
     });
   });
 
-  describe("onKeyPress", () => {
+  describe("onKeyUp", () => {
     it("does nothing", () => {
       const pointMode = new TerraDrawPointMode();
 
       expect(() => {
-        pointMode.onKeyPress();
+        pointMode.onKeyUp();
       }).not.toThrowError();
     });
   });

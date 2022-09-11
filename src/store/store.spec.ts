@@ -10,6 +10,7 @@ describe("GeoJSONStore", () => {
             type: "Feature",
             geometry: { type: "Point", coordinates: [0, 0] },
             properties: {
+              mode: "test",
               createdAt: +new Date(),
               updatedAt: +new Date(),
             },
@@ -44,7 +45,9 @@ describe("GeoJSONStore", () => {
               id: "e3ccd3b9-afb1-4f0b-91d8-22a768d5f284",
               type: "Feature",
               geometry: { type: "Point", coordinates: [0, 0] },
-              properties: {},
+              properties: {
+                mode: "test",
+              },
             },
           ],
         });

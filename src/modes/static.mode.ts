@@ -6,7 +6,8 @@ export class TerraDrawStaticMode extends TerraDrawBaseDrawMode {
   mode = "static";
   start() {}
   stop() {}
-  onKeyPress() {}
+  onKeyUp() {}
+  onKeyDown() {}
   onClick() {}
   onDragStart() {}
   onDrag() {}

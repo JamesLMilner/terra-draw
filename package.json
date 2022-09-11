@@ -5,8 +5,10 @@
   "scripts": {
     "build": "microbundle",
     "watch": "microbundle --watch --format modern",
-    "test": "jest",
-    "test:coverage": "jest --coverage"
+    "test": "jest --config jest.config.json",
+    "test:coverage": "jest --config jest.config.json --coverage",
+    "test:nocheck": "jest --config swc.jest.config.json",
+    "test:nocheck:coverage": "jest --config swc.jest.config.json --coverage"
   },
   "type": "module",
   "source": "src/terra-draw.ts",
@@ -20,29 +22,22 @@
   "author": "James Milner",
   "license": "MIT",
   "repository": "JamesLMilner/terra-draw",
-  "dependencies": {},
   "devDependencies": {
+    "@swc/jest": "^0.2.22",
+    "@googlemaps/js-api-loader": "^1.14.3",
     "@types/geojson": "^7946.0.8",
     "@types/google.maps": "^3.49.2",
     "@types/jest": "^28.1.5",
     "@types/leaflet": "^1.7.11",
     "@types/mapbox-gl": "^2.7.3",
     "@types/rbush": "^3.0.0",
-    "@googlemaps/js-api-loader": "^1.14.3",
+    "jest": "^28.1.2",
     "leaflet": "^1.8.0",
     "mapbox-gl": "^2.9.1",
-    "jest": "^28.1.2",
+    "microbundle": "^0.15.0",
     "serve": "^13.0.4",
     "ts-jest": "^28.0.5",
     "ts-loader": "^9.3.1",
-    "typescript": "^4.7.4",
-    "microbundle": "^0.15.0"
-  },
-  "jest": {
-    "preset": "ts-jest",
-    "testEnvironment": "node",
-    "coveragePathIgnorePatterns": [
-      "<rootDir>/src/test/"
-    ]
+    "typescript": "^4.7.4"
   }
 }

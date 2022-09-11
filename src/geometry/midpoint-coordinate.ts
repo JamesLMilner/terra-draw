@@ -1,12 +1,8 @@
 import { Position } from "geojson";
-import { degreesToRadians, destination } from "./create-circle";
-import { haversineDistanceKilometers } from "./haversine-distance";
+import { destination } from "./shape/create-circle";
+import { degreesToRadians, radiansToDegrees } from "./helpers";
 import { limitPrecision } from "./limit-decimal-precision";
-
-function radiansToDegrees(radians: number): number {
-  const degrees = radians % (2 * Math.PI);
-  return (degrees * 180) / Math.PI;
-}
+import { haversineDistanceKilometers } from "./measure/haversine-distance";
 
 function bearing(coordinates1: Position, coordinates2: Position) {
   const lon1 = degreesToRadians(coordinates1[0]);

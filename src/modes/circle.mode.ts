@@ -4,8 +4,8 @@ import {
   TerraDrawAdapterStyling,
   TerraDrawKeyboardEvent,
 } from "../common";
-import { circle } from "../geometry/create-circle";
-import { haversineDistanceKilometers } from "../geometry/haversine-distance";
+import { haversineDistanceKilometers } from "../geometry/measure/haversine-distance";
+import { circle } from "../geometry/shape/create-circle";
 import { TerraDrawBaseDrawMode } from "./base.mode";
 
 type TerraDrawCircleModeKeyEvents = {
@@ -82,7 +82,8 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode {
       ]);
     }
   }
-  onKeyPress(event: TerraDrawKeyboardEvent) {
+  onKeyDown() {}
+  onKeyUp(event: TerraDrawKeyboardEvent) {
     if (event.key === this.keyEvents.cancel) {
       this.cleanUp();
     }

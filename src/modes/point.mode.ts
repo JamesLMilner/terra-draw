@@ -34,7 +34,8 @@ export class TerraDrawPointMode extends TerraDrawBaseDrawMode {
     ]);
   }
   onMouseMove() {}
-  onKeyPress() {}
+  onKeyDown() {}
+  onKeyUp() {}
   cleanUp() {}
   onDragStart() {}
   onDrag() {}

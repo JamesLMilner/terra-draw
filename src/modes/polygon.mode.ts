@@ -4,9 +4,12 @@ import {
   TerraDrawKeyboardEvent,
 } from "../common";
 import { Feature, Polygon, Position } from "geojson";
-import { getPixelDistance } from "../geometry/get-pixel-distance";
-import { selfIntersects } from "../geometry/self-intersects";
+import { selfIntersects } from "../geometry/boolean/self-intersects";
 import { TerraDrawBaseDrawMode } from "./base.mode";
+import { PixelDistanceBehavior } from "./common/pixel-distance.behavior";
+import { ClickBoundingBoxBehavior } from "./common/click-bounding-box.behavior";
+import { BehaviorConfig } from "./common/base.behavior";
+import { pixelDistance } from "../geometry/measure/pixel-distance";
 
 type TerraDrawPolygonModeKeyEvents = {
   cancel: KeyboardEvent["key"];
@@ -22,6 +25,10 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode {
     event: TerraDrawMouseEvent
   ) => Position | undefined;
   private snapping: boolean;
+
+  // Behaviors
+  private pixelDistance: PixelDistanceBehavior;
+  private clickBoundingBox: ClickBoundingBoxBehavior;
 
   constructor(options?: {
     allowSelfIntersections?: boolean;
@@ -55,11 +62,16 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode {
       options && options.keyEvents ? options.keyEvents : { cancel: "Escape" };
   }
 
+  public registerBehaviors(config: BehaviorConfig) {
+    this.pixelDistance = new PixelDistanceBehavior(config);
+    this.clickBoundingBox = new ClickBoundingBoxBehavior(config);
+  }
+
   protected getSnappableCoord(
     event: TerraDrawMouseEvent,
     filter: (feature: Feature) => boolean
   ) {
-    const bbox = this.createClickBoundingBox(event);
+    const bbox = this.clickBoundingBox.create(event);
 
     const features = this.store.search(bbox, filter) as Feature<Polygon>[];
 
@@ -70,7 +82,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode {
 
     features.forEach((feature) => {
       feature.geometry.coordinates[0].forEach((coord) => {
-        const dist = this.distanceBetweenTwoCoords(coord, event);
+        const dist = this.pixelDistance.measure(event, coord);
         if (dist < closest.minDist && dist < this.pointerDistance) {
           closest.coord = coord;
         }
@@ -239,7 +251,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode {
 
       const [firstLng, firstLat] = currentPolygonGeometry.coordinates[0][0];
       const { x, y } = this.project(firstLng, firstLat);
-      const distance = getPixelDistance(
+      const distance = pixelDistance(
         { x, y },
         { x: event.containerX, y: event.containerY }
       );
@@ -302,11 +314,14 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode {
       }
     }
   }
-  onKeyPress(event: TerraDrawKeyboardEvent) {
+
+  onKeyUp(event: TerraDrawKeyboardEvent) {
     if (event.key === this.keyEvents.cancel) {
       this.cleanUp();
     }
   }
+
+  onKeyDown() {}
 
   onDragStart() {
     // We want to allow the default drag

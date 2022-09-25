@@ -1,7 +1,7 @@
 import { Feature, Polygon } from "geojson";
 import { BehaviorConfig, TerraDrawModeBehavior } from "./base.behavior";
 
-import { TerraDrawMouseEvent, Unproject } from "../../common";
+import { TerraDrawMouseEvent } from "../common";
 
 export class ClickBoundingBoxBehavior extends TerraDrawModeBehavior {
   constructor(config: BehaviorConfig) {

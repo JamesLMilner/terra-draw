@@ -1,5 +1,5 @@
-import { getMockModeConfig } from "../test/mock-config";
-import { getDefaultStyling } from "../util/styling";
+import { getMockModeConfig } from "../../test/mock-config";
+import { getDefaultStyling } from "../../util/styling";
 import { TerraDrawStaticMode } from "./static.mode";
 
 describe("TerraDrawStaticMode", () => {
@@ -57,6 +57,16 @@ describe("TerraDrawStaticMode", () => {
 
       expect(() => {
         staticMode.onKeyUp();
+      }).not.toThrowError();
+    });
+  });
+
+  describe("onKeyDown", () => {
+    it("does nothing", () => {
+      const staticMode = new TerraDrawStaticMode();
+
+      expect(() => {
+        staticMode.onKeyDown();
       }).not.toThrowError();
     });
   });

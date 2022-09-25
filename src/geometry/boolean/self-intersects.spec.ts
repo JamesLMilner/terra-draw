@@ -3,6 +3,21 @@ import { selfIntersects } from "./self-intersects";
 
 describe("Geometry", () => {
   describe("selfIntersects", () => {
+    describe("points", () => {
+      it("throws an error", () => {
+        expect(() => {
+          selfIntersects({
+            type: "Feature",
+            properties: {},
+            geometry: {
+              type: "Point",
+              coordinates: [17.138671875, 25.799891182088334],
+            },
+          } as any);
+        }).toThrowError();
+      });
+    });
+
     describe("polygons", () => {
       it("polygon does not self intersect", () => {
         expect(

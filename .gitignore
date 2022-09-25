@@ -6,3 +6,5 @@ node_modules/
 example/dist/
 example/node_modules/
 example/.env
+ROADMAP.md
+data/

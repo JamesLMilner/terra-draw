@@ -5,11 +5,11 @@ import {
   TerraDrawAdapterStyling,
   TerraDrawChanges,
   TerraDrawMouseEvent,
+  SELECT_PROPERTIES,
 } from "../common";
 import { Feature, GeoJsonObject } from "geojson";
 import L from "leaflet";
 import { limitPrecision } from "../geometry/limit-decimal-precision";
-import { Polygon } from "../../docs/dist/bundle";
 
 export class TerraDrawLeafletAdapter implements TerraDrawAdapter {
   constructor(config: {
@@ -54,18 +54,18 @@ export class TerraDrawLeafletAdapter implements TerraDrawAdapter {
   private _lib: typeof L;
   private _coordinatePrecision: number;
   private _map: L.Map;
-  private _onMouseMoveListener: (ev: any) => void;
-  private _onClickListener: (ev: any) => void;
-  private _onKeyUpListener: (ev: any) => void;
-  private _onKeyDownListener: (ev: any) => void;
+  private _onMouseMoveListener: ((ev: any) => void) | undefined;
+  private _onClickListener: ((ev: any) => void) | undefined;
+  private _onKeyUpListener: ((ev: any) => void) | undefined;
+  private _onKeyDownListener: ((ev: any) => void) | undefined;
 
-  private _onDragStartListener: (event: MouseEvent) => void;
-  private _onDragListener: (event: MouseEvent) => void;
-  private _onDragEndListener: (event: MouseEvent) => void;
-  private _layer: L.Layer;
-  private _midPointPaneZIndexStyleSheet: HTMLStyleElement;
+  private _onDragStartListener: ((event: MouseEvent) => void) | undefined;
+  private _onDragListener: ((event: MouseEvent) => void) | undefined;
+  private _onDragEndListener: ((event: MouseEvent) => void) | undefined;
+  private _layer: L.Layer | undefined;
+  private _midPointPaneZIndexStyleSheet: HTMLStyleElement | undefined;
   private _midPointPane = "midPointPane";
-  private _selectionPaneZIndexStyleSheet: HTMLStyleElement;
+  private _selectionPaneZIndexStyleSheet: HTMLStyleElement | undefined;
   private _selectedPane = "selectedPane";
   public project: TerraDrawModeRegisterConfig["project"];
   public unproject: TerraDrawModeRegisterConfig["unproject"];
@@ -257,7 +257,10 @@ export class TerraDrawLeafletAdapter implements TerraDrawAdapter {
       this._onClickListener = undefined;
     }
 
-    this._map.getPane(this._selectedPane).remove();
+    const selectedPane = this._map.getPane(this._selectedPane);
+    if (selectedPane) {
+      selectedPane.remove();
+    }
   }
 
   render(
@@ -282,11 +285,16 @@ export class TerraDrawLeafletAdapter implements TerraDrawAdapter {
     const layer = this._lib.geoJSON(featureCollection, {
       // Style points - convert markers to circle markers
       pointToLayer: (feature: Feature, latlng: L.LatLngExpression) => {
+        if (!feature.properties) {
+          throw new Error("Feature has no properties");
+        }
+
         const mode = feature.properties.mode;
         const modeStyle = styling[mode];
         const isSelected =
-          feature.properties.selected || feature.properties.selectionPoint;
-        const isMidPoint = feature.properties.midPoint;
+          feature.properties[SELECT_PROPERTIES.SELECTED] ||
+          feature.properties.selectionPoint;
+        const isMidPoint = feature.properties[SELECT_PROPERTIES.MID_POINT];
 
         const styles = {
           radius: isSelected
@@ -322,13 +330,17 @@ export class TerraDrawLeafletAdapter implements TerraDrawAdapter {
 
       // Style LineStrings and Polygons
       style: (feature) => {
+        if (!feature || !feature.properties) {
+          return {};
+        }
+
         const mode = feature.properties.mode;
         const modeStyle = styling[mode];
 
         if (feature.geometry.type === "LineString") {
           return {
             interactive: false, // Removes mouse hover cursor styles
-            color: feature.properties.selected
+            color: feature.properties[SELECT_PROPERTIES.SELECTED]
               ? modeStyle.selectedColor
               : modeStyle.lineStringColor,
 
@@ -338,16 +350,18 @@ export class TerraDrawLeafletAdapter implements TerraDrawAdapter {
           return {
             interactive: false, // Removes mouse hover cursor styles
             fillOpacity: modeStyle.polygonFillOpacity,
-            fillColor: feature.properties.selected
+            fillColor: feature.properties[SELECT_PROPERTIES.SELECTED]
               ? modeStyle.selectedColor
               : modeStyle.polygonFillColor,
             weight: modeStyle.polygonOutlineWidth,
             stroke: true,
-            color: feature.properties.selected
+            color: feature.properties[SELECT_PROPERTIES.SELECTED]
               ? modeStyle.selectedColor
               : modeStyle.polygonOutlineColor,
           };
         }
+
+        return {};
       },
     });
 

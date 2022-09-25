@@ -5,8 +5,9 @@ import {
   TerraDrawAdapterStyling,
   TerraDrawChanges,
   TerraDrawMouseEvent,
+  SELECT_PROPERTIES,
 } from "../common";
-import { Feature, GeoJsonObject } from "geojson";
+import { GeoJsonObject } from "geojson";
 
 import { limitPrecision } from "../geometry/limit-decimal-precision";
 
@@ -29,15 +30,37 @@ export class TerraDrawGoogleMapsAdapter implements TerraDrawAdapter {
 
     this.project = (lng, lat) => {
       const bounds = this._map.getBounds();
+
+      if (bounds === undefined) {
+        throw new Error("cannot get bounds");
+      }
+
       const northWest = new this._lib.LatLng(
         bounds.getNorthEast().lat(),
         bounds.getSouthWest().lng()
       );
-      const projection = this._map.getProjection();
-      const projectedNorthWest = projection.fromLatLngToPoint(northWest);
-      const projected = projection.fromLatLngToPoint({ lng, lat });
 
-      const scale = Math.pow(2, this._map.getZoom());
+      const projection = this._map.getProjection();
+      if (projection === undefined) {
+        throw new Error("cannot get projection");
+      }
+
+      const projectedNorthWest = projection.fromLatLngToPoint(northWest);
+      if (projectedNorthWest === null) {
+        throw new Error("cannot get projectedNorthWest");
+      }
+
+      const projected = projection.fromLatLngToPoint({ lng, lat });
+      if (projected === null) {
+        throw new Error("cannot get projected lng lat");
+      }
+
+      const zoom = this._map.getZoom();
+      if (zoom === undefined) {
+        throw new Error("cannot get zoom");
+      }
+
+      const scale = Math.pow(2, zoom);
       return {
         x: Math.floor((projected.x - projectedNorthWest.x) * scale),
         y: Math.floor((projected.y - projectedNorthWest.y) * scale),
@@ -45,23 +68,44 @@ export class TerraDrawGoogleMapsAdapter implements TerraDrawAdapter {
     };
 
     this.unproject = (x, y) => {
-      const topRight = this._map
-        .getProjection()
-        .fromLatLngToPoint(this._map.getBounds().getNorthEast());
-      const bottomLeft = this._map
-        .getProjection()
-        .fromLatLngToPoint(this._map.getBounds().getSouthWest());
-      const scale = Math.pow(2, this._map.getZoom());
+      const projection = this._map.getProjection();
+      if (projection === undefined) {
+        throw new Error("cannot get projection");
+      }
+
+      const bounds = this._map.getBounds();
+      if (bounds === undefined) {
+        throw new Error("cannot get bounds");
+      }
+
+      const topRight = projection.fromLatLngToPoint(bounds.getNorthEast());
+      if (topRight === null) {
+        throw new Error("cannot get topRight");
+      }
+
+      const bottomLeft = projection.fromLatLngToPoint(bounds.getSouthWest());
+      if (bottomLeft === null) {
+        throw new Error("cannot get bottomLeft");
+      }
+
+      const zoom = this._map.getZoom();
+      if (zoom === undefined) {
+        throw new Error("zoom get bounds");
+      }
+
+      const scale = Math.pow(2, zoom);
 
       const worldPoint = new google.maps.Point(
         x / scale + bottomLeft.x,
         y / scale + topRight.y
       );
-      const { lng, lat } = this._map
-        .getProjection()
-        .fromPointToLatLng(worldPoint);
+      const lngLat = projection.fromPointToLatLng(worldPoint);
 
-      return { lng: lng(), lat: lat() };
+      if (lngLat === null) {
+        throw new Error("zoom get bounds");
+      }
+
+      return { lng: lngLat.lng(), lat: lngLat.lat() };
     };
 
     this.setCursor = (cursor) => {
@@ -91,29 +135,33 @@ export class TerraDrawGoogleMapsAdapter implements TerraDrawAdapter {
   }
 
   private _heldKeys: Set<string> = new Set();
-  private _cursor: string;
-  private _cursorStyleSheet: HTMLStyleElement;
+  private _cursor: string | undefined;
+  private _cursorStyleSheet: HTMLStyleElement | undefined;
   private _coordinatePrecision: number;
   private _lib: typeof google.maps;
   private _map: google.maps.Map;
-  private _onMouseMoveListener: google.maps.MapsEventListener;
-  private _onMouseMoveCallback: (
-    event: google.maps.MapMouseEvent & {
-      domEvent: MouseEvent;
-    }
-  ) => void;
-  private _onClickListener: google.maps.MapsEventListener;
-  private _onRightClickListener: google.maps.MapsEventListener;
-  private _onClickCallback: (
-    event: google.maps.MapMouseEvent & {
-      domEvent: MouseEvent;
-    }
-  ) => void;
+  private _onMouseMoveListener: google.maps.MapsEventListener | undefined;
+  private _onMouseMoveCallback:
+    | ((
+        event: google.maps.MapMouseEvent & {
+          domEvent: MouseEvent;
+        }
+      ) => void)
+    | undefined;
+  private _onClickListener: google.maps.MapsEventListener | undefined;
+  private _onRightClickListener: google.maps.MapsEventListener | undefined;
+  private _onClickCallback:
+    | ((
+        event: google.maps.MapMouseEvent & {
+          domEvent: MouseEvent;
+        }
+      ) => void)
+    | undefined;
   private _onKeyUpListener: any;
-  private _onDragStartListener: (event: MouseEvent) => void;
-  private _onDragListener: (event: MouseEvent) => void;
-  private _onDragEndListener: (event: MouseEvent) => void;
-  private _layers: boolean;
+  private _onDragStartListener: ((event: MouseEvent) => void) | undefined;
+  private _onDragListener: ((event: MouseEvent) => void) | undefined;
+  private _onDragEndListener: ((event: MouseEvent) => void) | undefined;
+  private _layers: boolean = false;
 
   public getMapContainer: () => HTMLElement;
 
@@ -152,6 +200,9 @@ export class TerraDrawGoogleMapsAdapter implements TerraDrawAdapter {
         domEvent: MouseEvent;
       }
     ) => {
+      if (!event.latLng) {
+        return;
+      }
       callbacks.onClick({
         lng: limitPrecision(event.latLng.lng(), this._coordinatePrecision),
         lat: limitPrecision(event.latLng.lat(), this._coordinatePrecision),
@@ -176,6 +227,9 @@ export class TerraDrawGoogleMapsAdapter implements TerraDrawAdapter {
         domEvent: MouseEvent;
       }
     ) => {
+      if (!event.latLng) {
+        return;
+      }
       callbacks.onMouseMove({
         lng: limitPrecision(event.latLng.lng(), this._coordinatePrecision),
         lat: limitPrecision(event.latLng.lat(), this._coordinatePrecision),
@@ -271,10 +325,13 @@ export class TerraDrawGoogleMapsAdapter implements TerraDrawAdapter {
   unregister() {
     if (this._onClickListener) {
       this._onClickCallback = undefined;
-      this._onRightClickListener.remove();
-      this._onRightClickListener = undefined;
       this._onClickListener.remove();
       this._onClickListener = undefined;
+    }
+    if (this._onRightClickListener) {
+      this._onClickCallback = undefined;
+      this._onRightClickListener.remove();
+      this._onRightClickListener = undefined;
     }
     if (this._onMouseMoveListener) {
       this._onMouseMoveCallback = undefined;
@@ -298,13 +355,21 @@ export class TerraDrawGoogleMapsAdapter implements TerraDrawAdapter {
     if (this._layers) {
       changes.deletedIds.forEach((deletedId) => {
         const featureToDelete = this._map.data.getFeatureById(deletedId);
-        this._map.data.remove(featureToDelete);
+        featureToDelete && this._map.data.remove(featureToDelete);
       });
 
       changes.updated.forEach((updatedFeature) => {
+        if (!updatedFeature || !updatedFeature.id) {
+          throw new Error("Feature is not valid");
+        }
+
         const featureToUpdate = this._map.data.getFeatureById(
           updatedFeature.id
         );
+
+        if (!featureToUpdate) {
+          throw new Error("Feature could not be found by Google Maps API");
+        }
 
         // Remove all keys
         featureToUpdate.forEachProperty((property, name) => {
@@ -389,7 +454,7 @@ export class TerraDrawGoogleMapsAdapter implements TerraDrawAdapter {
             domEvent: MouseEvent;
           }
         ) => {
-          this._onClickCallback(event);
+          this._onClickCallback && this._onClickCallback(event);
         }
       );
 
@@ -400,7 +465,7 @@ export class TerraDrawGoogleMapsAdapter implements TerraDrawAdapter {
             domEvent: MouseEvent;
           }
         ) => {
-          this._onMouseMoveCallback(event);
+          this._onMouseMoveCallback && this._onMouseMoveCallback(event);
         }
       );
     }
@@ -419,10 +484,14 @@ export class TerraDrawGoogleMapsAdapter implements TerraDrawAdapter {
         throw new Error("Google Maps geometry not found");
       }
       const type = gmGeometry.getType();
-      const selected = feature.getProperty("selected");
+      const selected = feature.getProperty(SELECT_PROPERTIES.SELECTED);
 
-      const selectionPoint = Boolean(feature.getProperty("selectionPoint"));
-      const midPoint = Boolean(feature.getProperty("midPoint"));
+      const selectionPoint = Boolean(
+        feature.getProperty(SELECT_PROPERTIES.SELECTION_POINT)
+      );
+      const midPoint = Boolean(
+        feature.getProperty(SELECT_PROPERTIES.MID_POINT)
+      );
 
       switch (type) {
         case "Point":
@@ -477,7 +546,7 @@ export class TerraDrawGoogleMapsAdapter implements TerraDrawAdapter {
           };
       }
 
-      return;
+      throw Error("Unknown feature type");
     });
 
     this._layers = true;

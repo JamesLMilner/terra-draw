@@ -1,7 +1,6 @@
 import { Position } from "geojson";
 import { GeoJSONStore } from "../../store/store";
 import { getMockModeConfig } from "../../test/mock-config";
-import { getDefaultStyling } from "../../util/styling";
 import { TerraDrawSelectMode } from "./select.mode";
 
 describe("TerraDrawSelectMode", () => {
@@ -45,7 +44,7 @@ describe("TerraDrawSelectMode", () => {
   };
 
   const addLineStringToStore = (coords: Position[]) => {
-    store.create([
+    return store.create([
       {
         geometry: {
           type: "LineString",
@@ -55,7 +54,7 @@ describe("TerraDrawSelectMode", () => {
           mode: "linestring",
         },
       },
-    ]);
+    ])[0];
   };
 
   const addPointToStore = (coords: Position) => {
@@ -113,24 +112,17 @@ describe("TerraDrawSelectMode", () => {
     it("constructs", () => {
       const selectMode = new TerraDrawSelectMode();
       expect(selectMode.mode).toBe("select");
-      expect(selectMode.styling).toStrictEqual(getDefaultStyling());
     });
 
     it("constructs with options", () => {
       const selectMode = new TerraDrawSelectMode({
         pointerDistance: 40,
-        styling: { ...getDefaultStyling(), selectedColor: "#ffffff" },
         keyEvents: {
           deselect: "Backspace",
           delete: "d",
           rotate: "r",
           scale: "s",
         },
-      });
-
-      expect(selectMode.styling).toStrictEqual({
-        ...getDefaultStyling(),
-        selectedColor: "#ffffff",
       });
     });
   });
@@ -229,7 +221,7 @@ describe("TerraDrawSelectMode", () => {
           [0, 0],
           [0, 1],
           [1, 1],
-          [0, 1],
+          [1, 0],
         ]);
 
         project.mockReturnValueOnce({
@@ -255,7 +247,7 @@ describe("TerraDrawSelectMode", () => {
           [0, 0],
           [0, 1],
           [1, 1],
-          [0, 1],
+          [1, 0],
         ]);
 
         project.mockReturnValueOnce({
@@ -283,7 +275,7 @@ describe("TerraDrawSelectMode", () => {
           [0, 0],
           [0, 1],
           [1, 1],
-          [0, 1],
+          [1, 0],
         ]);
 
         project.mockReturnValueOnce({
@@ -347,7 +339,7 @@ describe("TerraDrawSelectMode", () => {
 
     describe("linestring", () => {
       it("does select if feature is clicked", () => {
-        addLineStringToStore([
+        const id = addLineStringToStore([
           [0, 0],
           [1, 1],
         ]);
@@ -356,7 +348,7 @@ describe("TerraDrawSelectMode", () => {
           [0, 0],
           [0, 1],
           [1, 1],
-          [0, 1],
+          [1, 0],
         ]);
 
         project
@@ -391,7 +383,7 @@ describe("TerraDrawSelectMode", () => {
           [0, 0],
           [0, 1],
           [1, 1],
-          [0, 1],
+          [1, 0],
         ]);
 
         project
@@ -432,7 +424,7 @@ describe("TerraDrawSelectMode", () => {
           [0, 0],
           [0, 1],
           [1, 1],
-          [0, 1],
+          [1, 0],
         ]);
 
         selectMode.onClick({
@@ -461,7 +453,7 @@ describe("TerraDrawSelectMode", () => {
           [0, 0],
           [0, 1],
           [1, 1],
-          [0, 1],
+          [1, 0],
         ]);
 
         selectMode.onClick({
@@ -1406,7 +1398,7 @@ describe("TerraDrawSelectMode", () => {
             flags: { linestring: { feature: { draggable: true } } },
           });
 
-          addLineStringToStore([
+          const id = addLineStringToStore([
             [0, 0],
             [1, 1],
           ]);
@@ -1435,6 +1427,7 @@ describe("TerraDrawSelectMode", () => {
           });
 
           expect(onSelect).toBeCalledTimes(1);
+          expect(onSelect).toHaveBeenNthCalledWith(1, id);
           expect(onChange).toBeCalledTimes(2);
 
           selectMode.onDragStart(

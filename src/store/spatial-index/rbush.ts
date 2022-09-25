@@ -27,7 +27,7 @@ function distBBox(
   toBBox: (node: Node) => Node,
   destNode?: Node
 ) {
-  if (!destNode) destNode = createNode(null);
+  if (!destNode) destNode = createNode([]);
   destNode.minX = Infinity;
   destNode.minY = Infinity;
   destNode.maxX = -Infinity;
@@ -121,8 +121,8 @@ function multiSelect<T>(
   const stack = [left, right];
 
   while (stack.length) {
-    right = stack.pop();
-    left = stack.pop();
+    right = stack.pop() as number;
+    left = stack.pop() as number;
 
     if (right - left <= n) continue;
 
@@ -136,7 +136,7 @@ function multiSelect<T>(
 export class RBush {
   private _maxEntries: number;
   private _minEntries: number;
-  private data: Node;
+  private data!: Node;
 
   constructor(maxEntries: number) {
     // max entries in a node is 9 by default; min node fill is 40% for best performance
@@ -167,7 +167,7 @@ export class RBush {
           else nodesToSearch.push(child);
         }
       }
-      node = nodesToSearch.pop();
+      node = nodesToSearch.pop() as Node;
     }
 
     return result;
@@ -191,7 +191,7 @@ export class RBush {
             nodesToSearch.push(child);
           }
         }
-        node = nodesToSearch.pop();
+        node = nodesToSearch.pop() as Node;
       }
     }
 
@@ -237,19 +237,21 @@ export class RBush {
   }
 
   remove(item: Node): void {
-    let node = this.data;
+    let node: Node | null = this.data;
     const bbox = this.toBBox(item);
     const path = [];
     const indexes: number[] = [];
-    let i, parent, goingUp;
+    let i: number | undefined;
+    let parent: Node | undefined;
+    let goingUp: boolean = false;
 
     // depth-first iterative tree traversal
     while (node || path.length) {
       if (!node) {
         // go up
-        node = path.pop();
+        node = path.pop() as Node;
         parent = path[path.length - 1];
-        i = indexes.pop();
+        i = indexes.pop() as number;
         goingUp = true;
       }
 
@@ -269,14 +271,14 @@ export class RBush {
       if (!goingUp && !node.leaf && contains(node, bbox)) {
         // go down
         path.push(node);
-        indexes.push(i);
+        indexes.push(i as number);
         i = 0;
         parent = node;
         node = node.children[0];
       } else if (parent) {
         // go right
-        i++;
-        node = parent.children[i];
+        (i as number)++;
+        node = parent.children[i as number];
         goingUp = false;
       } else {
         node = null; // nothing found
@@ -301,7 +303,7 @@ export class RBush {
       if (node.leaf) result.push(...node.children);
       else nodesToSearch.push(...node.children);
 
-      node = nodesToSearch.pop();
+      node = nodesToSearch.pop() as Node;
     }
     return result;
   }

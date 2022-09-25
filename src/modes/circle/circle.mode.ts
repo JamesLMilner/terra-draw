@@ -3,10 +3,10 @@ import {
   TerraDrawMouseEvent,
   TerraDrawAdapterStyling,
   TerraDrawKeyboardEvent,
-} from "../common";
-import { haversineDistanceKilometers } from "../geometry/measure/haversine-distance";
-import { circle } from "../geometry/shape/create-circle";
-import { TerraDrawBaseDrawMode } from "./base.mode";
+} from "../../common";
+import { haversineDistanceKilometers } from "../../geometry/measure/haversine-distance";
+import { circle } from "../../geometry/shape/create-circle";
+import { TerraDrawBaseDrawMode } from "../base.mode";
 
 type TerraDrawCircleModeKeyEvents = {
   cancel: KeyboardEvent["key"];
@@ -14,9 +14,9 @@ type TerraDrawCircleModeKeyEvents = {
 
 export class TerraDrawCircleMode extends TerraDrawBaseDrawMode {
   mode = "circle";
-  private center: Position;
+  private center: Position | undefined;
   private clickCount: number = 0;
-  private currentCircleId: string;
+  private currentCircleId: string | undefined;
   private keyEvents: TerraDrawCircleModeKeyEvents;
 
   constructor(options?: {
@@ -66,7 +66,7 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode {
     }
   }
   onMouseMove(event: TerraDrawMouseEvent) {
-    if (this.clickCount === 1) {
+    if (this.clickCount === 1 && this.center && this.currentCircleId) {
       const distanceKm = haversineDistanceKilometers(this.center, [
         event.lng,
         event.lat,
@@ -93,7 +93,9 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode {
   onDragEnd() {}
   cleanUp() {
     try {
-      this.store.delete([this.currentCircleId]);
+      if (this.currentCircleId) {
+        this.store.delete([this.currentCircleId]);
+      }
     } catch (error) {}
     this.center = undefined;
     this.currentCircleId = undefined;

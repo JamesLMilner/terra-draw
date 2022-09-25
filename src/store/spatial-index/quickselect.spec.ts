@@ -3,7 +3,7 @@ import { quickselect } from "./quickselect";
 describe("quickselect", () => {
   test("selection rearranges items so that all items in the [left, k] are the smallest", function () {
     const arr = [65, 28, 59, 33, 21, 56, 22, 95, 50, 12, 90, 53, 28, 77, 39];
-    quickselect(arr, 8, undefined, undefined, (a: number, b: number) => {
+    quickselect(arr, 8, 0, arr.length - 1, (a: number, b: number) => {
       return a < b ? -1 : a > b ? 1 : 0;
     });
 
@@ -49,7 +49,7 @@ describe("quickselect", () => {
       ]);
     }
 
-    quickselect(arr, 8, undefined, undefined, (a: number, b: number) => {
+    quickselect(arr, 8, 0, arr.length - 1, (a: number, b: number) => {
       return a < b ? -1 : a > b ? 1 : 0;
     });
 

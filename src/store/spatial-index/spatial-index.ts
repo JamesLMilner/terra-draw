@@ -31,6 +31,8 @@ export class SpatialIndex {
       coordinates = feature.geometry.coordinates;
     } else if (feature.geometry.type === "Point") {
       coordinates = [feature.geometry.coordinates];
+    } else {
+      throw new Error("Not a valid feature to turn into a bounding box");
     }
 
     for (var i = 0; i < coordinates.length; i++) {

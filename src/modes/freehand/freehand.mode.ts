@@ -2,10 +2,10 @@ import {
   TerraDrawMouseEvent,
   TerraDrawAdapterStyling,
   TerraDrawKeyboardEvent,
-} from "../common";
+} from "../../common";
 import { Polygon } from "geojson";
 
-import { TerraDrawBaseDrawMode } from "./base.mode";
+import { TerraDrawBaseDrawMode } from "../base.mode";
 
 type TerraDrawFreehandModeKeyEvents = {
   cancel: KeyboardEvent["key"];
@@ -15,7 +15,7 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode {
   mode = "freehand";
 
   private startingClick = false;
-  private currentId: string;
+  private currentId: string | undefined;
   private skip: number = 0;
   private everyNthMouseEvent: number;
   private keyEvents: TerraDrawFreehandModeKeyEvents;
@@ -114,7 +114,9 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode {
 
   cleanUp() {
     try {
-      this.store.delete([this.currentId]);
+      if (this.currentId) {
+        this.store.delete([this.currentId]);
+      }
     } catch (error) {}
     this.currentId = undefined;
     this.startingClick = false;

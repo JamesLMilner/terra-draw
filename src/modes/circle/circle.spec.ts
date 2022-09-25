@@ -1,7 +1,6 @@
-import { circle } from "leaflet";
-import { GeoJSONStore } from "../store/store";
-import { getMockModeConfig } from "../test/mock-config";
-import { getDefaultStyling } from "../util/styling";
+import { GeoJSONStore } from "../../store/store";
+import { getMockModeConfig } from "../../test/mock-config";
+import { getDefaultStyling } from "../../util/styling";
 import { TerraDrawCircleMode } from "./circle.mode";
 
 describe("TerraDrawCircleMode", () => {

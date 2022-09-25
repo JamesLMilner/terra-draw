@@ -1,5 +1,5 @@
-import { Project, Unproject } from "../../common";
-import { GeoJSONStore } from "../../store/store";
+import { Project, Unproject } from "../common";
+import { GeoJSONStore } from "../store/store";
 
 export type BehaviorConfig = {
   store: GeoJSONStore;
@@ -11,8 +11,8 @@ export type BehaviorConfig = {
 };
 
 export class TerraDrawModeBehavior {
-  protected store: GeoJSONStore | undefined;
-  protected mode: string | undefined;
+  protected store: GeoJSONStore;
+  protected mode: string;
   protected project: Project;
   protected unproject: Unproject;
   protected pointerDistance: number;

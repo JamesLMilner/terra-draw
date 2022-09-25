@@ -13,8 +13,7 @@ import {
   TerraDrawLeafletAdapter,
 } from "../../src/terra-draw";
 import { addModeChangeHandler } from "../../common/addModeChangeHandler";
-import { TerraDrawRenderMode } from "../../src/modes/render.mode";
-import { uk } from "./sample";
+import { TerraDrawRenderMode } from "../../src/modes/render/render.mode";
 
 let currentSelected: { button: undefined | HTMLButtonElement; mode: string } = {
   button: undefined,
@@ -96,6 +95,7 @@ const example = {
         }),
         point: new TerraDrawPointMode(),
         linestring: new TerraDrawLineStringMode({
+          snapping: true,
           allowSelfIntersections: false,
         }),
         polygon: new TerraDrawPolygonMode({
@@ -126,8 +126,13 @@ const example = {
       );
 
       const selected = snapshot.find((f) => f.properties.selected);
+      const div = document.getElementById("info");
 
-      document.getElementById("info").innerHTML = `
+      if (!div) {
+        return;
+      }
+
+      div.innerHTML = `
       <div class="current">
         <h3> Current Feature </h3>
         <span><b>ID</b> ${selected ? selected.id : "N/A"} </span>

@@ -1,18 +1,18 @@
 import {
   TerraDrawMouseEvent,
   TerraDrawKeyboardEvent,
-  TerraDrawAdapterStyling,
+  SELECT_PROPERTIES,
 } from "../../common";
 import { Point, Position } from "geojson";
 import { TerraDrawBaseDrawMode } from "../base.mode";
 import { MidPointBehavior } from "./behaviors/midpoint.behavior";
 import { SelectionPointBehavior } from "./behaviors/selection-point.behavior";
 import { FeaturesAtMouseEventBehavior } from "./behaviors/features-at-mouse-event.behavior";
-import { PixelDistanceBehavior } from "../common/pixel-distance.behavior";
-import { ClickBoundingBoxBehavior } from "../common/click-bounding-box.behavior";
+import { PixelDistanceBehavior } from "../pixel-distance.behavior";
+import { ClickBoundingBoxBehavior } from "../click-bounding-box.behavior";
 import { DragFeatureBehavior } from "./behaviors/drag-feature.behavior";
 import { DragCoordinateBehavior } from "./behaviors/drag-coordinate.behavior";
-import { BehaviorConfig } from "../common/base.behavior";
+import { BehaviorConfig } from "../base.behavior";
 import { RotateFeatureBehavior } from "./behaviors/rotate-feature.behavior";
 import { ScaleFeatureBehavior } from "./behaviors/scale-feature.behavior";
 
@@ -46,20 +46,18 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode {
   private flags: { [mode: string]: ModeFlags };
   private keyEvents: TerraDrawSelectModeKeyEvents;
 
-  private selectionPoints: SelectionPointBehavior;
-  private midPoints: MidPointBehavior;
-
   // Behaviors
-  private featuresAtMouseEvent: FeaturesAtMouseEventBehavior;
-  private pixelDistance: PixelDistanceBehavior;
-  private clickBoundingBox: ClickBoundingBoxBehavior;
-  private dragFeature: DragFeatureBehavior;
-  private dragCoordinate: DragCoordinateBehavior;
-  private rotateFeature: RotateFeatureBehavior;
-  private scaleFeature: ScaleFeatureBehavior;
+  private selectionPoints!: SelectionPointBehavior;
+  private midPoints!: MidPointBehavior;
+  private featuresAtMouseEvent!: FeaturesAtMouseEventBehavior;
+  private pixelDistance!: PixelDistanceBehavior;
+  private clickBoundingBox!: ClickBoundingBoxBehavior;
+  private dragFeature!: DragFeatureBehavior;
+  private dragCoordinate!: DragCoordinateBehavior;
+  private rotateFeature!: RotateFeatureBehavior;
+  private scaleFeature!: ScaleFeatureBehavior;
 
   constructor(options?: {
-    styling?: Partial<TerraDrawAdapterStyling>;
     pointerDistance?: number;
     flags?: { [mode: string]: ModeFlags };
     keyEvents?: TerraDrawSelectModeKeyEvents;
@@ -89,6 +87,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode {
       this.clickBoundingBox,
       this.pixelDistance
     );
+
     this.selectionPoints = new SelectionPointBehavior(config);
     this.midPoints = new MidPointBehavior(config, this.selectionPoints);
 
@@ -120,7 +119,11 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode {
 
   private deselect() {
     this.store.updateProperty(
-      this.selected.map((id) => ({ id, property: "selected", value: false }))
+      this.selected.map((id) => ({
+        id,
+        property: SELECT_PROPERTIES.SELECTED,
+        value: false,
+      }))
     );
 
     this.onDeselect(this.selected[0]);
@@ -144,10 +147,12 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode {
       return;
     }
 
-    let clickedSelectionPointProps: {
-      selectionPointFeatureId: string;
-      index: number;
-    };
+    let clickedSelectionPointProps:
+      | {
+          selectionPointFeatureId: string;
+          index: number;
+        }
+      | undefined;
 
     let clickedFeatureDistance = Infinity;
 
@@ -203,6 +208,11 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode {
       if (coordinates.length <= 3) {
         return;
       }
+    }
+
+    // Geometry is not Polygon or LineString
+    if (!coordinates) {
+      return;
     }
 
     if (
@@ -302,7 +312,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode {
         clickedFeature.id as string
       );
 
-      let selectedCoords: Position[];
+      let selectedCoords: Position[] | undefined;
       if (type === "LineString") {
         selectedCoords = coordinates;
       } else if (type === "Polygon") {

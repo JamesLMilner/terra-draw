@@ -30,6 +30,7 @@ export type StoreChangeHandler = (
 export type GeoJSONStoreConfig = {
   data?: GeoJSONStoreFeatures[];
   tracked?: boolean;
+  validateFeature?: (feature: unknown, tracked?: boolean) => void;
 };
 
 export class GeoJSONStore {
@@ -42,7 +43,7 @@ export class GeoJSONStore {
     this.tracked = config && config.tracked === false ? false : true;
 
     if (config && config.data) {
-      this.load(config.data);
+      this.load(config.data, config.validateFeature);
     }
   }
 
@@ -65,52 +66,18 @@ export class GeoJSONStore {
     return JSON.parse(JSON.stringify(obj));
   }
 
-  private isObject(
-    feature: unknown
-  ): feature is Record<string | number, unknown> {
-    return (
-      feature &&
-      typeof feature === "object" &&
-      feature !== null &&
-      !Array.isArray(feature)
-    );
+  has(id: string): boolean {
+    return Boolean(this.store[id]);
   }
 
-  private featureValidation(feature: unknown) {
-    if (!this.isObject(feature)) {
-      throw new Error("Feature is not object");
-    } else if (!feature.id) {
-      throw new Error("Feature has no id");
-    } else if (typeof feature.id !== "string" || feature.id.length !== 36) {
-      throw new Error(`Feature must have uuid4 ID ${feature.id}`);
-    } else if (!this.isObject(feature.geometry)) {
-      throw new Error("Feature has no geometry");
-    } else if (!this.isObject(feature.properties)) {
-      throw new Error("Feature has no properties");
-    } else if (
-      typeof feature.geometry.type !== "string" ||
-      !["Polygon", "LineString", "Point"].includes(feature.geometry.type)
-    ) {
-      throw new Error("Feature is not Point, LineString or Polygon");
-    } else if (!Array.isArray(feature.geometry.coordinates)) {
-      throw new Error("Feature coordinates is not an array");
+  load(
+    data: GeoJSONStoreFeatures[],
+    featureValidation?: (feature: unknown, tracked?: boolean) => void
+  ) {
+    if (data.length === 0) {
+      return;
     }
 
-    if (this.tracked) {
-      if (
-        isNaN(new Date(feature.properties.createdAt as number).valueOf()) ||
-        isNaN(new Date(feature.properties.updatedAt as number).valueOf())
-      ) {
-        throw new Error("updatedAt and createdAt are not valid timestamps");
-      }
-    }
-
-    if (!feature.properties.mode) {
-      throw new Error("Feature does not have a set mode");
-    }
-  }
-
-  load(data: GeoJSONStoreFeatures[]) {
     // We don't want to update the original data
     const clonedData = this.clone(data);
 
@@ -121,18 +88,22 @@ export class GeoJSONStore {
         feature.id = uuid4();
       }
 
-      if (!feature.properties.createdAt) {
-        feature.properties.createdAt = +new Date();
-      }
+      if (this.tracked) {
+        if (!feature.properties.createdAt) {
+          feature.properties.createdAt = +new Date();
+        }
 
-      if (!feature.properties.updatedAt) {
-        feature.properties.updatedAt = +new Date();
+        if (!feature.properties.updatedAt) {
+          feature.properties.updatedAt = +new Date();
+        }
       }
     });
 
     const changes: string[] = [];
     clonedData.forEach((feature) => {
-      this.featureValidation(feature);
+      if (featureValidation) {
+        featureValidation(feature);
+      }
       this.store[feature.id as string] = feature;
       changes.push(feature.id as string);
     });

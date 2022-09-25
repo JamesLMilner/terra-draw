@@ -1,9 +1,9 @@
-import { TerraDrawAdapterStyling } from "../common";
-import { TerraDrawBaseDrawMode } from "./base.mode";
-import { BehaviorConfig } from "./common/base.behavior";
+import { TerraDrawAdapterStyling } from "../../common";
+import { TerraDrawBaseDrawMode } from "../base.mode";
+import { BehaviorConfig } from "../base.behavior";
 
 export class TerraDrawRenderMode extends TerraDrawBaseDrawMode {
-  public mode: string | undefined;
+  public mode: string = "render"; // This gets changed dynamically
 
   constructor(options: { styling: Partial<TerraDrawAdapterStyling> }) {
     super({ styling: options.styling });
@@ -16,8 +16,12 @@ export class TerraDrawRenderMode extends TerraDrawBaseDrawMode {
     this.mode = behaviorConfig.mode;
   }
 
-  start() {}
-  stop() {}
+  start() {
+    this.setStarted();
+  }
+  stop() {
+    this.setStopped();
+  }
   onKeyUp() {}
   onKeyDown() {}
   onClick() {}

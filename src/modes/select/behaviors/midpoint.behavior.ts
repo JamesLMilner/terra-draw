@@ -1,17 +1,15 @@
 import { LineString, Point, Polygon, Position } from "geojson";
-import {
-  BehaviorConfig,
-  TerraDrawModeBehavior,
-} from "../../common/base.behavior";
+import { BehaviorConfig, TerraDrawModeBehavior } from "../../base.behavior";
 import {
   getMidPointCoordinates,
   getMidPoints,
 } from "../../../geometry/get-midpoints";
 import { SelectionPointBehavior } from "./selection-point.behavior";
+import { SELECT_PROPERTIES } from "../../../common";
 
 export class MidPointBehavior extends TerraDrawModeBehavior {
   constructor(
-    config: BehaviorConfig,
+    readonly config: BehaviorConfig,
     private readonly selectionPointBehavior: SelectionPointBehavior
   ) {
     super(config);
@@ -80,12 +78,16 @@ export class MidPointBehavior extends TerraDrawModeBehavior {
     featureId: string,
     coordinatePrecision: number
   ) {
+    if (!this.store.has(featureId)) {
+      throw new Error("Store does not have feature with this id");
+    }
+
     this._midPoints = this.store.create(
       getMidPoints(
         selectedCoords,
         (i) => ({
           mode: this.mode,
-          midPoint: true,
+          [SELECT_PROPERTIES.MID_POINT]: true,
           midPointSegment: i,
           midPointFeatureId: featureId,
         }),
@@ -101,17 +103,20 @@ export class MidPointBehavior extends TerraDrawModeBehavior {
     }
   }
 
-  public getUpdated(updatedCoords: Position[]) {
-    return this._midPoints.length
-      ? getMidPointCoordinates(updatedCoords, this.coordinatePrecision).map(
-          (updatedMidPointCoord, i) => ({
-            id: this._midPoints[i] as string,
-            geometry: {
-              type: "Point",
-              coordinates: updatedMidPointCoord,
-            } as Point,
-          })
-        )
-      : [];
+  public getUpdated(updatedCoordinates: Position[]) {
+    if (this._midPoints.length === 0) {
+      return undefined;
+    }
+
+    return getMidPointCoordinates(
+      updatedCoordinates,
+      this.coordinatePrecision
+    ).map((updatedMidPointCoord, i) => ({
+      id: this._midPoints[i] as string,
+      geometry: {
+        type: "Point",
+        coordinates: updatedMidPointCoord,
+      } as Point,
+    }));
   }
 }

@@ -1,7 +1,7 @@
-import { TerraDrawMouseEvent } from "../common";
-import { GeoJSONStore } from "../store/store";
-import { getMockModeConfig } from "../test/mock-config";
-import { getDefaultStyling } from "../util/styling";
+import { TerraDrawMouseEvent } from "../../common";
+import { GeoJSONStore } from "../../store/store";
+import { getMockModeConfig } from "../../test/mock-config";
+import { getDefaultStyling } from "../../util/styling";
 import { TerraDrawPolygonMode } from "./polygon.mode";
 
 describe("TerraDrawPolygonMode", () => {
@@ -852,6 +852,40 @@ describe("TerraDrawPolygonMode", () => {
       expect(() => {
         polygonMode.onDragEnd();
       }).not.toThrowError();
+    });
+  });
+
+  describe("styling", () => {
+    it("gets", () => {
+      const polygonMode = new TerraDrawPolygonMode();
+      polygonMode.register(getMockModeConfig(polygonMode.mode));
+
+      expect(polygonMode.styling).toStrictEqual(getDefaultStyling());
+    });
+
+    it("set fails if non valid styling", () => {
+      const polygonMode = new TerraDrawPolygonMode();
+      polygonMode.register(getMockModeConfig(polygonMode.mode));
+
+      expect(() => {
+        (polygonMode.styling as unknown) = "test";
+      }).toThrowError();
+
+      expect(polygonMode.styling).toStrictEqual(getDefaultStyling());
+    });
+
+    it("sets", () => {
+      const polygonMode = new TerraDrawPolygonMode();
+      polygonMode.register(getMockModeConfig(polygonMode.mode));
+
+      const newStyling = {
+        ...getDefaultStyling(),
+        polygonFillColor: "#fffff",
+      };
+
+      polygonMode.styling = { ...newStyling };
+
+      expect(polygonMode.styling).toStrictEqual(newStyling);
     });
   });
 });

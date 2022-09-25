@@ -1,9 +1,5 @@
-import { Project, TerraDrawMouseEvent, Unproject } from "../../../common";
-import { GeoJSONStore } from "../../../store/store";
-import {
-  BehaviorConfig,
-  TerraDrawModeBehavior,
-} from "../../common/base.behavior";
+import { TerraDrawMouseEvent } from "../../../common";
+import { BehaviorConfig, TerraDrawModeBehavior } from "../../base.behavior";
 import { FeaturesAtMouseEventBehavior } from "./features-at-mouse-event.behavior";
 import { Position } from "geojson";
 import { SelectionPointBehavior } from "./selection-point.behavior";
@@ -11,7 +7,7 @@ import { MidPointBehavior } from "./midpoint.behavior";
 
 export class DragFeatureBehavior extends TerraDrawModeBehavior {
   constructor(
-    config: BehaviorConfig,
+    readonly config: BehaviorConfig,
     private readonly featuresAtMouseEvent: FeaturesAtMouseEventBehavior,
     private readonly selectionPoints: SelectionPointBehavior,
     private readonly midPoints: MidPointBehavior
@@ -47,7 +43,6 @@ export class DragFeatureBehavior extends TerraDrawModeBehavior {
     const hasSelection = true;
     const { clickedFeature } = this.featuresAtMouseEvent.find(
       event,
-
       hasSelection
     );
 
@@ -62,14 +57,19 @@ export class DragFeatureBehavior extends TerraDrawModeBehavior {
 
     // Update the geometry of the dragged feature
     if (geometry.type === "Polygon" || geometry.type === "LineString") {
-      let updatedCoords: Position[];
-      let upToCoord: number;
+      let updatedCoords: Position[] | undefined;
+      let upToCoord: number | undefined;
+
       if (geometry.type === "Polygon") {
         updatedCoords = geometry.coordinates[0];
         upToCoord = updatedCoords.length - 1;
       } else if (geometry.type === "LineString") {
         updatedCoords = geometry.coordinates;
         upToCoord = updatedCoords.length;
+      }
+
+      if (upToCoord === undefined || !updatedCoords || !this.dragPosition) {
+        return false;
       }
 
       for (let i = 0; i < upToCoord; i++) {
@@ -90,11 +90,10 @@ export class DragFeatureBehavior extends TerraDrawModeBehavior {
         ];
       }
 
-      const updatedMidPoints = this.midPoints.getUpdated(updatedCoords);
+      const updatedSelectionPoints =
+        this.selectionPoints.getUpdated(updatedCoords) || [];
 
-      const updatedSelectionPoints = this.selectionPoints.getUpdated(
-        updatedCoords
-      );
+      const updatedMidPoints = this.midPoints.getUpdated(updatedCoords) || [];
 
       // Issue the update to the selected feature
       this.store.updateGeometry([

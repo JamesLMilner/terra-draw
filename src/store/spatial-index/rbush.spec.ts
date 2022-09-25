@@ -21,13 +21,13 @@ describe("RBush", () => {
   }
 
   it("insert adds an item to an existing tree correctly", () => {
-    const items = [
+    const items = ([
       [0, 0, 0, 0],
       [1, 1, 1, 1],
       [2, 2, 2, 2],
       [3, 3, 3, 3],
       [1, 1, 2, 2],
-    ].map(arrToBBox);
+    ] as [number, number, number, number][]).map(arrToBBox);
 
     const tree = new RBush(4);
     tree.load(items.slice(0, 3));
@@ -40,7 +40,7 @@ describe("RBush", () => {
   it("insert forms a valid tree if items are inserted one by one", () => {
     const tree = new RBush(4);
 
-    const data = [
+    const data = ([
       [0, 0, 0, 0],
       [10, 10, 10, 10],
       [20, 20, 20, 20],
@@ -89,7 +89,7 @@ describe("RBush", () => {
       [75, 75, 75, 75],
       [85, 85, 85, 85],
       [95, 95, 95, 95],
-    ].map(arrToBBox);
+    ] as [number, number, number, number][]).map(arrToBBox);
 
     for (let i = 0; i < data.length; i++) {
       tree.insert(data[i]);
@@ -99,14 +99,14 @@ describe("RBush", () => {
   });
 
   it("insert handles the insertion of maxEntries + 2 empty bboxes", () => {
-    const emptyData = [
+    const emptyData = ([
       [-Infinity, -Infinity, Infinity, Infinity],
       [-Infinity, -Infinity, Infinity, Infinity],
       [-Infinity, -Infinity, Infinity, Infinity],
       [-Infinity, -Infinity, Infinity, Infinity],
       [-Infinity, -Infinity, Infinity, Infinity],
       [-Infinity, -Infinity, Infinity, Infinity],
-    ].map(arrToBBox);
+    ] as [number, number, number, number][]).map(arrToBBox);
 
     const tree = new RBush(4);
 

@@ -7,13 +7,13 @@ import {
   TerraDrawAdapter,
   TerraDrawAdapterStyling,
 } from "./common";
-import { TerraDrawCircleMode } from "./modes/circle.mode";
-import { TerraDrawFreehandMode } from "./modes/freehand.mode";
-import { TerraDrawLineStringMode } from "./modes/linestring.mode";
-import { TerraDrawPointMode } from "./modes/point.mode";
-import { TerraDrawPolygonMode } from "./modes/polygon.mode";
+import { TerraDrawCircleMode } from "./modes/circle/circle.mode";
+import { TerraDrawFreehandMode } from "./modes/freehand/freehand.mode";
+import { TerraDrawLineStringMode } from "./modes/linestring/linestring.mode";
+import { TerraDrawPointMode } from "./modes/point/point.mode";
+import { TerraDrawPolygonMode } from "./modes/polygon/polygon.mode";
 import { TerraDrawSelectMode } from "./modes/select/select.mode";
-import { TerraDrawStaticMode } from "./modes/static.mode";
+import { TerraDrawStaticMode } from "./modes/static/static.mode";
 import {
   GeoJSONStore,
   GeoJSONStoreFeatures,
@@ -102,6 +102,11 @@ class TerraDraw {
           { created: [], deletedIds: ids, unchanged, updated: [] },
           this.getModeStyles()
         );
+      } else if (event === "styling") {
+        this._adapter.render(
+          { created: [], deletedIds: [], unchanged, updated: [] },
+          this.getModeStyles()
+        );
       }
     };
 
@@ -179,12 +184,20 @@ class TerraDraw {
     return modeStyles;
   }
 
+  setModeStyling(mode: string, styling: TerraDrawAdapterStyling) {
+    this._modes[mode].styling = styling;
+  }
+
   getSnapshot() {
     return this._store.copyAll();
   }
 
-  get enabled() {
+  get enabled(): boolean {
     return this._enabled;
+  }
+
+  getCurrentMode(): string {
+    return this._mode.mode;
   }
 
   changeMode(mode: string) {

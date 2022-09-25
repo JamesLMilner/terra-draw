@@ -1,6 +1,6 @@
-import { TerraDrawMouseEvent } from "../common";
-import { getMockModeConfig } from "../test/mock-config";
-import { getDefaultStyling } from "../util/styling";
+import { TerraDrawMouseEvent } from "../../common";
+import { getMockModeConfig } from "../../test/mock-config";
+import { getDefaultStyling } from "../../util/styling";
 import { TerraDrawPointMode } from "./point.mode";
 
 describe("TerraDrawPointMode", () => {

@@ -1,8 +1,5 @@
 import { TerraDrawMouseEvent } from "../../../common";
-import {
-  BehaviorConfig,
-  TerraDrawModeBehavior,
-} from "../../common/base.behavior";
+import { BehaviorConfig, TerraDrawModeBehavior } from "../../base.behavior";
 import { LineString, Polygon, Position } from "geojson";
 import { SelectionPointBehavior } from "./selection-point.behavior";
 import { MidPointBehavior } from "./midpoint.behavior";
@@ -13,14 +10,14 @@ import { limitPrecision } from "../../../geometry/limit-decimal-precision";
 
 export class ScaleFeatureBehavior extends TerraDrawModeBehavior {
   constructor(
-    config: BehaviorConfig,
+    readonly config: BehaviorConfig,
     private readonly selectionPoints: SelectionPointBehavior,
     private readonly midPoints: MidPointBehavior
   ) {
     super(config);
   }
 
-  private lastDistance: number;
+  private lastDistance: number | undefined;
 
   reset() {
     this.lastDistance = undefined;
@@ -53,12 +50,14 @@ export class ScaleFeatureBehavior extends TerraDrawModeBehavior {
 
     transformScale({ type: "Feature", geometry, properties: {} }, scale);
 
-    let updatedCoords: Position[];
+    let updatedCoords: Position[] | undefined;
 
     if (geometry.type === "Polygon") {
       updatedCoords = geometry.coordinates[0];
     } else if (geometry.type === "LineString") {
       updatedCoords = geometry.coordinates;
+    } else {
+      return;
     }
 
     // Ensure that coordinate precision is maintained
@@ -67,11 +66,10 @@ export class ScaleFeatureBehavior extends TerraDrawModeBehavior {
       coordinate[1] = limitPrecision(coordinate[1], this.coordinatePrecision);
     });
 
-    const updatedMidPoints = this.midPoints.getUpdated(updatedCoords);
+    const updatedMidPoints = this.midPoints.getUpdated(updatedCoords) || [];
 
-    const updatedSelectionPoints = this.selectionPoints.getUpdated(
-      updatedCoords
-    );
+    const updatedSelectionPoints =
+      this.selectionPoints.getUpdated(updatedCoords) || [];
 
     // Issue the update to the selected feature
     this.store.updateGeometry([

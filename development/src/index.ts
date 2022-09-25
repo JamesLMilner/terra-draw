@@ -15,8 +15,8 @@ import {
   TerraDrawGoogleMapsAdapter,
 } from "../../src/terra-draw";
 import { addModeChangeHandler } from "../../common/addModeChangeHandler";
-import { TerraDrawRenderMode } from "../../src/modes/render.mode";
-import { uk } from "../../docs/src/sample";
+import { TerraDrawRenderMode } from "../../src/modes/render/render.mode";
+import { getDefaultStyling } from "../../src/util/styling";
 
 const getModes = () => {
   return {
@@ -81,6 +81,153 @@ let currentSelected: { button: undefined | HTMLButtonElement; mode: string } = {
   mode: "static",
 };
 
+const callbacks: Function[] = [];
+
+document.addEventListener("mousemove", (event) => {
+  callbacks.forEach((cb) => {
+    cb(event);
+  });
+});
+
+function HSLToHex(hsl: { h: number; s: number; l: number }): string {
+  const { h, s, l } = hsl;
+
+  const hDecimal = l / 100;
+  const a = (s * Math.min(hDecimal, 1 - hDecimal)) / 100;
+  const f = (n: number) => {
+    const k = (n + h / 30) % 12;
+    const color = hDecimal - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+
+    // Convert to Hex and prefix with "0" if required
+    return Math.round(255 * color)
+      .toString(16)
+      .padStart(2, "0");
+  };
+  return `#${f(0)}${f(8)}${f(4)}`;
+}
+
+function HexToHSL(hex: string): { h: number; s: number; l: number } {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+
+  if (!result) {
+    throw new Error("Could not parse Hex Color");
+  }
+
+  const rHex = parseInt(result[1], 16);
+  const gHex = parseInt(result[2], 16);
+  const bHex = parseInt(result[3], 16);
+
+  const r = rHex / 255;
+  const g = gHex / 255;
+  const b = bHex / 255;
+
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+
+  let h = (max + min) / 2;
+  let s = h;
+  let l = h;
+
+  if (max === min) {
+    // Achromatic
+    return { h: 0, s: 0, l };
+  }
+
+  const d = max - min;
+  s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+  switch (max) {
+    case r:
+      h = (g - b) / d + (g < b ? 6 : 0);
+      break;
+    case g:
+      h = (b - r) / d + 2;
+      break;
+    case b:
+      h = (r - g) / d + 4;
+      break;
+  }
+  h /= 6;
+
+  s = s * 100;
+  s = Math.round(s);
+  l = l * 100;
+  l = Math.round(l);
+  h = Math.round(360 * h);
+
+  return { h, s, l };
+}
+
+function genColor(seed: number) {
+  let color = Math.floor(Math.abs(Math.sin(seed) * 16777215));
+  let colorStr = color.toString(16);
+  // pad any colors shorter than 6 characters with leading 0s
+  while (colorStr.length < 6) {
+    colorStr = "0" + colorStr;
+  }
+
+  return "#" + colorStr;
+}
+
+function getRounded(N: number) {
+  return Math.ceil(N / 100) * 100;
+}
+
+const c = { lastMousePos: { x: 0, y: 0 }, color: genColor(1000) };
+
+const mouseMoveSetStyle = (draw: TerraDraw) => {
+  const pair = (x: number, y: number) => {
+    return x >= y ? x * x + x + y : y * y + x;
+  };
+
+  callbacks.push((event: MouseEvent) => {
+    console.log("event");
+
+    const previousPaired = getRounded(pair(c.lastMousePos.x, c.lastMousePos.y));
+
+    const paired = getRounded(pair(event.x, event.y));
+    const hslColor = HexToHSL(c.color);
+
+    console.log(hslColor, previousPaired, paired);
+
+    if (previousPaired > paired) {
+      hslColor.h = hslColor.h - 1;
+    } else if (previousPaired < paired) {
+      hslColor.h = hslColor.h + 1;
+    }
+
+    c.color = HSLToHex({
+      h: Math.round(hslColor.h),
+      s: hslColor.s,
+      l: hslColor.l,
+    });
+
+    c.lastMousePos.x = event.x;
+    c.lastMousePos.y = event.y;
+
+    console.log(c.color);
+
+    if (draw) {
+      draw.setModeStyling(draw.getCurrentMode(), {
+        polygonFillColor: c.color,
+        polygonOutlineColor: c.color,
+        polygonOutlineWidth: 4,
+        polygonFillOpacity: 0.3,
+        pointColor: c.color,
+        pointOutlineColor: c.color,
+        pointWidth: 6,
+        lineStringColor: c.color,
+        lineStringWidth: 4,
+        selectedColor: c.color,
+        selectedPointOutlineColor: c.color,
+        selectionPointWidth: 6,
+        midPointColor: c.color,
+        midPointOutlineColor: c.color,
+        midPointWidth: 4,
+      });
+    }
+  });
+};
+
 const example = {
   lng: -0.118092,
   lat: 51.509865,
@@ -123,6 +270,8 @@ const example = {
     addModeChangeHandler(draw, currentSelected);
 
     this.initialised.push("leaflet");
+
+    mouseMoveSetStyle(draw);
   },
   initMapbox(id: string, accessToken: string | undefined) {
     if (this.initialised.includes("mapbox")) {
@@ -151,12 +300,17 @@ const example = {
           coordinatePrecision: 9,
         }),
         modes: getModes(),
-        data: uk.features as any,
+        // data: uk.features.map((feature) => {
+        //   feature.properties = feature.properties || {};
+        //   (feature.properties as any).mode = "arbitary";
+        // }) as any,
       });
 
       draw.start();
 
       addModeChangeHandler(draw, currentSelected);
+
+      mouseMoveSetStyle(draw);
     });
     this.initialised.push("mapbox");
   },
@@ -198,6 +352,8 @@ const example = {
         addModeChangeHandler(draw, currentSelected);
 
         this.initialised.push("google");
+
+        mouseMoveSetStyle(draw);
       });
     });
   },

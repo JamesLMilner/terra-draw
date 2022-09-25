@@ -1,5 +1,5 @@
-import { TerraDrawMouseEvent, TerraDrawAdapterStyling } from "../common";
-import { TerraDrawBaseDrawMode } from "./base.mode";
+import { TerraDrawMouseEvent, TerraDrawAdapterStyling } from "../../common";
+import { TerraDrawBaseDrawMode } from "../base.mode";
 
 export class TerraDrawPointMode extends TerraDrawBaseDrawMode {
   mode = "point";

@@ -1,19 +1,14 @@
-import { Project, TerraDrawMouseEvent, Unproject } from "../../../common";
-import { GeoJSONStore, GeoJSONStoreFeatures } from "../../../store/store";
-
-import {
-  BehaviorConfig,
-  TerraDrawModeBehavior,
-} from "../../common/base.behavior";
+import { TerraDrawMouseEvent } from "../../../common";
+import { BehaviorConfig, TerraDrawModeBehavior } from "../../base.behavior";
 
 import { Position } from "geojson";
-import { PixelDistanceBehavior } from "../../common/pixel-distance.behavior";
+import { PixelDistanceBehavior } from "../../pixel-distance.behavior";
 import { MidPointBehavior } from "./midpoint.behavior";
 import { SelectionPointBehavior } from "./selection-point.behavior";
 
 export class DragCoordinateBehavior extends TerraDrawModeBehavior {
   constructor(
-    config: BehaviorConfig,
+    readonly config: BehaviorConfig,
     private readonly pixelDistance: PixelDistanceBehavior,
     private readonly selectionPoints: SelectionPointBehavior,
     private readonly midPoints: MidPointBehavior
@@ -24,16 +19,16 @@ export class DragCoordinateBehavior extends TerraDrawModeBehavior {
   public drag(event: TerraDrawMouseEvent, selectedId: string): boolean {
     const geometry = this.store.getGeometryCopy(selectedId);
 
-    let geomCoordinates: Position[];
+    let geomCoordinates: Position[] | undefined;
 
-    if (geometry.type === "Point") {
-      // We don't want to handle dragging
-      // points here
-      return false;
-    } else if (geometry.type === "LineString") {
+    if (geometry.type === "LineString") {
       geomCoordinates = geometry.coordinates;
     } else if (geometry.type === "Polygon") {
       geomCoordinates = geometry.coordinates[0];
+    } else {
+      // We don't want to handle dragging
+      // points here
+      return false;
     }
 
     const closestCoordinate = {
@@ -83,12 +78,16 @@ export class DragCoordinateBehavior extends TerraDrawModeBehavior {
       geomCoordinates[closestCoordinate.index] = updatedCoordinate;
     }
 
-    const updatedSelectionPoints = this.selectionPoints.getOneUpdated(
+    const updatedSelectionPoint = this.selectionPoints.getOneUpdated(
       closestCoordinate.index,
       updatedCoordinate
     );
 
-    const updatedMidPoints = this.midPoints.getUpdated(geomCoordinates);
+    const updatedSelectionPoints = updatedSelectionPoint
+      ? [updatedSelectionPoint]
+      : [];
+
+    const updatedMidPoints = this.midPoints.getUpdated(geomCoordinates) || [];
 
     // Apply all the updates
     this.store.updateGeometry([
@@ -98,7 +97,7 @@ export class DragCoordinateBehavior extends TerraDrawModeBehavior {
         geometry: geometry,
       },
       // Update selection and mid points
-      updatedSelectionPoints,
+      ...updatedSelectionPoints,
       ...updatedMidPoints,
     ]);
 

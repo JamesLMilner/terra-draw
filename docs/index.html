@@ -1,98 +1,7 @@
 <html>
   <head>
-    <style>
-      button {
-        padding: 20px;
-        background: #fdfdfd;
-        border: solid 1px #ebebeb;
-        cursor: pointer;
-        border-radius: 10px;
-        font-weight: bold;
-        font-size: 20px;
-        color: #565656;
-        margin: 5px;
-        border: solid 3px #565656;
-      }
-
-      .current,
-      .all {
-        display: flex;
-        flex-direction: column;
-        border-radius: 20px;
-        border: solid 1px #bfbfbf;
-        padding: 20px;
-        margin-bottom: 20px;
-      }
-
-      .current h3,
-      .all h3 {
-        margin-top: 0;
-      }
-
-      .current b,
-      .all b {
-        display: inline-block;
-        width: 150px;
-      }
-
-      button:hover {
-        background: white;
-        border: solid 3px #222222;
-      }
-
-      .example {
-        cursor: pointer;
-        font-family: sans-serif;
-        height: 100%;
-        width: 70%;
-        outline: solid 1px #d7d7d7;
-      }
-
-      .sidepanel {
-        width: 30%;
-        min-width: 200px;
-        padding: 20px;
-        font-family: sans-serif;
-        border-left: solid 2px #565656;
-      }
-
-      #keybind {
-        font-family: sans-serif;
-        background: white;
-        width: 100px;
-        align-items: center;
-        display: flex;
-        justify-content: center;
-        border: solid 1px black;
-        font-weight: bold;
-        margin-left: 10px;
-      }
-      #info span {
-        margin-bottom: 4px;
-      }
-
-      .sidepanel a {
-        color: #27ccff;
-        text-decoration-color: #27ccff;
-        font-weight: bold;
-      }
-
-      #github {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        background: #fdfdfd;
-        border: solid 2px #bfbfbf;
-        padding: 14px;
-        border-radius: 20px;
-        cursor: pointer;
-      }
-
-      #github img {
-        margin-left: 10px;
-        margin-right: 10px;
-      }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="./index.css" />
     <link
       rel="stylesheet"
       href="https://unpkg.com/leaflet@1.8.0/dist/leaflet.css"
@@ -101,29 +10,20 @@
     />
   </head>
   <body style="width: 100%; height: 100%; margin: 0">
-    <div style="display: flex; flex-direction: row; height: 100%; width: 100%">
+    <div class="container">
       <div class="example" id="leaflet-map">
-        <div
-          style="
-            position: relative;
-            top: 0;
-            z-index: 1000;
-            margin: auto;
-            display: flex;
-            justify-content: center;
-          "
-        >
+        <div class="buttons">
           <button id="select">Select</button>
           <button id="point">Point</button>
           <button id="linestring">LineString</button>
           <button id="polygon">Polygon</button>
-          <button id="freehand">Freehand</button>
-          <button id="circle">Circle</button>
+          <button id="freehand" class="hideButton">Freehand</button>
+          <button id="circle" class="hideButton">Circle</button>
         </div>
       </div>
       <div class="sidepanel" id="sidepanel">
         <h1>Information</h1>
-        <div id="info" style="display: flex; flex-direction: column"></div>
+        <div class="info" id="info"></div>
         <a href="https://www.github.com/JamesLMilner/terra-draw"
           ><div id="github">
             Check out Terra Draw on GitHub <img src="./imgs/github.png" /></div

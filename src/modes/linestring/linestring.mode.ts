@@ -2,11 +2,15 @@ import {
   TerraDrawMouseEvent,
   TerraDrawAdapterStyling,
   TerraDrawKeyboardEvent,
-} from "../common";
+} from "../../common";
 import { LineString } from "geojson";
-import { selfIntersects } from "../geometry/boolean/self-intersects";
-import { TerraDrawBaseDrawMode } from "./base.mode";
-import { pixelDistance } from "../geometry/measure/pixel-distance";
+import { selfIntersects } from "../../geometry/boolean/self-intersects";
+import { TerraDrawBaseDrawMode } from "../base.mode";
+import { pixelDistance } from "../../geometry/measure/pixel-distance";
+import { BehaviorConfig } from "../base.behavior";
+import { ClickBoundingBoxBehavior } from "../click-bounding-box.behavior";
+import { PixelDistanceBehavior } from "../pixel-distance.behavior";
+import { SnappingBehavior } from "../snapping.behavior";
 
 type TerraDrawLineStringModeKeyEvents = {
   cancel: KeyboardEvent["key"];
@@ -15,17 +19,25 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode {
   mode = "linestring";
 
   private currentCoordinate = 0;
-  private currentId: string;
+  private currentId: string | undefined;
   private allowSelfIntersections;
   private keyEvents: TerraDrawLineStringModeKeyEvents;
+  private snappingEnabled: boolean;
+
+  // Behaviors
+  private snapping!: SnappingBehavior;
 
   constructor(options?: {
+    snapping?: boolean;
     allowSelfIntersections?: boolean;
     pointerDistance?: number;
     styling?: Partial<TerraDrawAdapterStyling>;
     keyEvents?: TerraDrawLineStringModeKeyEvents;
   }) {
     super(options);
+
+    this.snappingEnabled =
+      options && options.snapping !== undefined ? options.snapping : false;
 
     this.allowSelfIntersections =
       options && options.allowSelfIntersections !== undefined
@@ -34,6 +46,14 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode {
 
     this.keyEvents =
       options && options.keyEvents ? options.keyEvents : { cancel: "Escape" };
+  }
+
+  public registerBehaviors(config: BehaviorConfig) {
+    this.snapping = new SnappingBehavior(
+      config,
+      new PixelDistanceBehavior(config),
+      new ClickBoundingBoxBehavior(config)
+    );
   }
 
   start() {
@@ -57,30 +77,38 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode {
     // Remove the 'live' point that changes on mouse move
     currentLineGeometry.coordinates.pop();
 
+    const snappedCoord =
+      this.snappingEnabled &&
+      this.snapping.getSnappableCoordinate(event, this.currentId);
+    const updatedCoord = snappedCoord ? snappedCoord : [event.lng, event.lat];
+
     // Update the 'live' point
     this.store.updateGeometry([
       {
         id: this.currentId,
         geometry: {
           type: "LineString",
-          coordinates: [
-            ...currentLineGeometry.coordinates,
-            [event.lng, event.lat],
-          ],
+          coordinates: [...currentLineGeometry.coordinates, updatedCoord],
         },
       },
     ]);
   }
 
   onClick(event: TerraDrawMouseEvent) {
+    const snappedCoord =
+      this.currentId &&
+      this.snappingEnabled &&
+      this.snapping.getSnappableCoordinate(event, this.currentId);
+    const updatedCoord = snappedCoord ? snappedCoord : [event.lng, event.lat];
+
     if (this.currentCoordinate === 0) {
       const [createdId] = this.store.create([
         {
           geometry: {
             type: "LineString",
             coordinates: [
-              [event.lng, event.lat],
-              [event.lng, event.lat], // This is the 'live' point that changes on mouse move
+              updatedCoord,
+              updatedCoord, // This is the 'live' point that changes on mouse move
             ],
           },
           properties: { mode: this.mode },
@@ -88,7 +116,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode {
       ]);
       this.currentId = createdId;
       this.currentCoordinate++;
-    } else if (this.currentCoordinate === 1) {
+    } else if (this.currentCoordinate === 1 && this.currentId) {
       const currentLineGeometry = this.store.getGeometryCopy<LineString>(
         this.currentId
       );
@@ -100,15 +128,15 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode {
             type: "LineString",
             coordinates: [
               currentLineGeometry.coordinates[0],
-              [event.lng, event.lat],
-              [event.lng, event.lat],
+              updatedCoord,
+              updatedCoord,
             ],
           },
         },
       ]);
 
       this.currentCoordinate++;
-    } else {
+    } else if (this.currentId) {
       const currentLineGeometry = this.store.getGeometryCopy<LineString>(
         this.currentId
       );
@@ -143,10 +171,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode {
         // If not close to the final point, keep adding points
         const newLineString = {
           type: "LineString",
-          coordinates: [
-            ...currentLineGeometry.coordinates,
-            [event.lng, event.lat],
-          ],
+          coordinates: [...currentLineGeometry.coordinates, updatedCoord],
         } as LineString;
 
         if (!this.allowSelfIntersections) {
@@ -179,7 +204,9 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode {
   onDragEnd() {}
   cleanUp() {
     try {
-      this.store.delete([this.currentId]);
+      if (this.currentId) {
+        this.store.delete([this.currentId]);
+      }
     } catch (error) {}
 
     this.currentId = undefined;

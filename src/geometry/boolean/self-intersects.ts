@@ -26,6 +26,8 @@ export function selfIntersects(
     coord = feature.geometry.coordinates;
   } else if (feature.geometry.type === "LineString") {
     coord = [feature.geometry.coordinates];
+  } else {
+    throw new Error("Self intersects only accepts Polygons and LineStrings");
   }
 
   var output: number[][] = [];

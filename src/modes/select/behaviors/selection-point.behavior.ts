@@ -1,8 +1,5 @@
 import { LineString, Point, Polygon, Position } from "geojson";
-import {
-  BehaviorConfig,
-  TerraDrawModeBehavior,
-} from "../../common/base.behavior";
+import { BehaviorConfig, TerraDrawModeBehavior } from "../../base.behavior";
 import { getCoordinatesAsPoints } from "../../../geometry/get-coordinates-as-points";
 
 export class SelectionPointBehavior extends TerraDrawModeBehavior {
@@ -41,6 +38,10 @@ export class SelectionPointBehavior extends TerraDrawModeBehavior {
   }
 
   public getUpdated(updatedCoordinates: Position[]) {
+    if (this._selectionPoints.length === 0) {
+      return undefined;
+    }
+
     return this._selectionPoints.map((id, i) => {
       return {
         id,
@@ -53,6 +54,10 @@ export class SelectionPointBehavior extends TerraDrawModeBehavior {
   }
 
   public getOneUpdated(index: number, updatedCoordinate: Position) {
+    if (this._selectionPoints[index] === undefined) {
+      return undefined;
+    }
+
     return {
       id: this._selectionPoints[index] as string,
       geometry: {

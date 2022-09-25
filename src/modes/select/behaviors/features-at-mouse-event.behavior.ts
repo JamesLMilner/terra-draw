@@ -1,19 +1,16 @@
-import { TerraDrawMouseEvent } from "../../../common";
-import { GeoJSONStoreFeatures } from "../../../store/store";
+import { SELECT_PROPERTIES, TerraDrawMouseEvent } from "../../../common";
+import { BBoxPolygon, GeoJSONStoreFeatures } from "../../../store/store";
 
-import {
-  BehaviorConfig,
-  TerraDrawModeBehavior,
-} from "../../common/base.behavior";
-import { ClickBoundingBoxBehavior } from "../../common/click-bounding-box.behavior";
+import { BehaviorConfig, TerraDrawModeBehavior } from "../../base.behavior";
+import { ClickBoundingBoxBehavior } from "../../click-bounding-box.behavior";
 
 import { pointInPolygon } from "../../../geometry/boolean/point-in-polygon";
-import { PixelDistanceBehavior } from "../../common/pixel-distance.behavior";
+import { PixelDistanceBehavior } from "../../pixel-distance.behavior";
 import { pixelDistanceToLine } from "../../../geometry/measure/pixel-distance-to-line";
 
 export class FeaturesAtMouseEventBehavior extends TerraDrawModeBehavior {
   constructor(
-    config: BehaviorConfig,
+    readonly config: BehaviorConfig,
     private readonly createClickBoundingBox: ClickBoundingBoxBehavior,
     private readonly pixelDistance: PixelDistanceBehavior
   ) {
@@ -27,7 +24,7 @@ export class FeaturesAtMouseEventBehavior extends TerraDrawModeBehavior {
     let clickedMidPointDistance = Infinity;
 
     const bbox = this.createClickBoundingBox.create(event);
-    const features = this.store.search(bbox);
+    const features = this.store.search(bbox as BBoxPolygon);
 
     for (let i = 0; i < features.length; i++) {
       const feature = features[i];
@@ -38,7 +35,7 @@ export class FeaturesAtMouseEventBehavior extends TerraDrawModeBehavior {
         // when nothing is selected
         const isSelectionPoint = feature.properties.selectionPoint;
         const isNonSelectedMidPoint =
-          !hasSelection && feature.properties.midPoint;
+          !hasSelection && feature.properties[SELECT_PROPERTIES.MID_POINT];
 
         if (isSelectionPoint || isNonSelectedMidPoint) {
           continue;
@@ -54,14 +51,14 @@ export class FeaturesAtMouseEventBehavior extends TerraDrawModeBehavior {
         // features but also any midpoints
         // in the clicked area
         if (
-          feature.properties.midPoint &&
+          feature.properties[SELECT_PROPERTIES.MID_POINT] &&
           distance < this.pointerDistance &&
           distance < clickedMidPointDistance
         ) {
           clickedMidPointDistance = distance;
           clickedMidPoint = feature;
         } else if (
-          !feature.properties.midPoint &&
+          !feature.properties[SELECT_PROPERTIES.MID_POINT] &&
           distance < this.pointerDistance &&
           distance < clickedFeatureDistance
         ) {

@@ -7,7 +7,7 @@ describe("getCoordinatesAsPoints", () => {
         [0, 0],
         [0, 1],
         [1, 1],
-        [0, 1],
+        [1, 0],
         [0, 0],
       ],
       "Polygon",
@@ -27,7 +27,7 @@ describe("getCoordinatesAsPoints", () => {
         [0, 0],
         [0, 1],
         [1, 1],
-        [0, 1],
+        [1, 0],
       ],
       "LineString",
       (_: number) => {

@@ -1,4 +1,6 @@
+import { validateLocaleAndSetLanguage } from "typescript";
 import { GeoJSONStore } from "./store";
+import { validateStoreFeature } from "./store-feature-validation";
 
 describe("GeoJSONStore", () => {
   describe("constructor", () => {
@@ -21,151 +23,150 @@ describe("GeoJSONStore", () => {
       expect(store.copyAll().length).toBe(1);
     });
 
-    it("throws if tracked properties are not provided", () => {
-      expect(() => {
-        new GeoJSONStore({
-          data: [
-            {
-              id: "e3ccd3b9-afb1-4f0b-91d8-22a768d5f284",
-              type: "Feature",
-              geometry: { type: "Point", coordinates: [0, 0] },
-              properties: {},
-            },
-          ],
-        });
-      }).toThrowError();
-    });
-
-    it("does not throw if tracked is false and tracked properties are not provided", () => {
-      expect(() => {
-        new GeoJSONStore({
-          tracked: false,
-          data: [
-            {
-              id: "e3ccd3b9-afb1-4f0b-91d8-22a768d5f284",
-              type: "Feature",
-              geometry: { type: "Point", coordinates: [0, 0] },
-              properties: {
-                mode: "test",
+    describe("with validation", () => {
+      it("throws if tracked properties are not provided", () => {
+        expect(() => {
+          new GeoJSONStore({
+            validateFeature: validateStoreFeature,
+            data: [
+              {
+                id: "e3ccd3b9-afb1-4f0b-91d8-22a768d5f284",
+                type: "Feature",
+                geometry: { type: "Point", coordinates: [0, 0] },
+                properties: {},
               },
-            },
-          ],
-        });
-      }).not.toThrowError();
-    });
+            ],
+          });
+        }).toThrowError();
+      });
 
-    it("throws on data with non object feature", () => {
-      expect(() => {
-        new GeoJSONStore({
-          data: [undefined],
-        } as any);
-      }).toThrowError();
-    });
-
-    it("throws on data with no id", () => {
-      expect(() => {
-        new GeoJSONStore({
-          data: [
-            {
-              id: undefined,
-            } as any,
-          ],
-        });
-      }).toThrowError();
-    });
-
-    it("throws on data with non string id", () => {
-      expect(() => {
-        new GeoJSONStore({
-          data: [
-            {
-              id: 1,
-            } as any,
-          ],
-        });
-      }).toThrowError();
-    });
-
-    it("throws on data with non uuid4 id", () => {
-      expect(() => {
-        new GeoJSONStore({
-          data: [
-            {
-              id: "1",
-            } as any,
-          ],
-        });
-      }).toThrowError();
-    });
-
-    it("throws on data with non uuid4 id", () => {
-      expect(() => {
-        new GeoJSONStore({
-          data: [
-            {
-              id: "1",
-            } as any,
-          ],
-        });
-      }).toThrowError();
-    });
-
-    it("throws on data with no geometry", () => {
-      expect(() => {
-        new GeoJSONStore({
-          data: [
-            {
-              id: "e3ccd3b9-afb1-4f0b-91d8-22a768d5f284",
-            } as any,
-          ],
-        });
-      }).toThrowError();
-    });
-
-    it("throws on data with no properties", () => {
-      expect(() => {
-        new GeoJSONStore({
-          data: [
-            {
-              id: "e3ccd3b9-afb1-4f0b-91d8-22a768d5f284",
-              geometry: {},
-            } as any,
-          ],
-        });
-      }).toThrowError();
-    });
-
-    it("throws on data with non Point, LineString, Polygon geometry type", () => {
-      expect(() => {
-        new GeoJSONStore({
-          data: [
-            {
-              id: "e3ccd3b9-afb1-4f0b-91d8-22a768d5f284",
-              geometry: {
-                type: "MultiLineString",
+      it("does not throw if tracked is false and tracked properties are not provided", () => {
+        expect(() => {
+          new GeoJSONStore({
+            validateFeature: validateStoreFeature,
+            tracked: false,
+            data: [
+              {
+                id: "e3ccd3b9-afb1-4f0b-91d8-22a768d5f284",
+                type: "Feature",
+                geometry: { type: "Point", coordinates: [0, 0] },
+                properties: {
+                  mode: "test",
+                },
               },
-              properties: {},
-            } as any,
-          ],
-        });
-      }).toThrowError();
-    });
+            ],
+          });
+        }).not.toThrowError();
+      });
 
-    it("throws on data with non Point, LineString, Polygon geometry type", () => {
-      expect(() => {
-        new GeoJSONStore({
-          data: [
-            {
-              id: "e3ccd3b9-afb1-4f0b-91d8-22a768d5f284",
-              geometry: {
-                type: "Point",
-                coordinates: "[]",
-              },
-              properties: {},
-            } as any,
-          ],
-        });
-      }).toThrowError();
+      it("throws on data with non object feature", () => {
+        expect(() => {
+          new GeoJSONStore({
+            validateFeature: validateStoreFeature,
+            data: [undefined],
+          } as any);
+        }).toThrowError();
+      });
+
+      it("throws on data with no id", () => {
+        expect(() => {
+          new GeoJSONStore({
+            data: [
+              {
+                id: undefined,
+              } as any,
+            ],
+          });
+        }).toThrowError();
+      });
+
+      it("throws on data with non string id", () => {
+        expect(() => {
+          new GeoJSONStore({
+            validateFeature: validateStoreFeature,
+            data: [
+              {
+                id: 1,
+              } as any,
+            ],
+          });
+        }).toThrowError();
+      });
+
+      it("throws on data with non uuid4 id", () => {
+        expect(() => {
+          new GeoJSONStore({
+            validateFeature: validateStoreFeature,
+            data: [
+              {
+                id: "1",
+              } as any,
+            ],
+          });
+        }).toThrowError();
+      });
+
+      it("throws on data with no geometry", () => {
+        expect(() => {
+          new GeoJSONStore({
+            validateFeature: validateStoreFeature,
+            data: [
+              {
+                id: "e3ccd3b9-afb1-4f0b-91d8-22a768d5f284",
+              } as any,
+            ],
+          });
+        }).toThrowError();
+      });
+
+      it("throws on data with no properties", () => {
+        expect(() => {
+          new GeoJSONStore({
+            validateFeature: validateStoreFeature,
+            data: [
+              {
+                id: "e3ccd3b9-afb1-4f0b-91d8-22a768d5f284",
+                geometry: {},
+              } as any,
+            ],
+          });
+        }).toThrowError();
+      });
+
+      it("throws on data with non Point, LineString, Polygon geometry type", () => {
+        expect(() => {
+          new GeoJSONStore({
+            validateFeature: validateStoreFeature,
+            data: [
+              {
+                id: "e3ccd3b9-afb1-4f0b-91d8-22a768d5f284",
+                geometry: {
+                  type: "MultiLineString",
+                },
+                properties: {},
+              } as any,
+            ],
+          });
+        }).toThrowError();
+      });
+
+      it("throws on data with non array coordinates", () => {
+        expect(() => {
+          new GeoJSONStore({
+            validateFeature: validateStoreFeature,
+            data: [
+              {
+                id: "e3ccd3b9-afb1-4f0b-91d8-22a768d5f284",
+                geometry: {
+                  type: "Point",
+                  coordinates: "[]",
+                },
+                properties: {},
+              } as any,
+            ],
+          });
+        }).toThrowError();
+      });
     });
   });
 
@@ -177,9 +178,7 @@ describe("GeoJSONStore", () => {
         { geometry: { type: "Point", coordinates: [0, 0] } },
       ]);
 
-      expect(typeof id).toBe("string");
-
-      expect(id.length).toBe(36);
+      expect(id).toBeUUID4();
     });
 
     it("LineString", () => {
@@ -222,6 +221,24 @@ describe("GeoJSONStore", () => {
 
       expect(typeof id).toBe("string");
       expect(id.length).toBe(36);
+    });
+  });
+
+  describe("has", () => {
+    it("returns false for non exisiting store feature", () => {
+      const store = new GeoJSONStore();
+
+      expect(store.has("e3ccd3b9-afb1-4f0b-91d8-22a768d5f284")).toBe(false);
+    });
+
+    it("returns true for existing store feature", () => {
+      const store = new GeoJSONStore();
+
+      const [id] = store.create([
+        { geometry: { type: "Point", coordinates: [0, 0] } },
+      ]);
+
+      expect(store.has(id)).toBe(true);
     });
   });
 
@@ -441,6 +458,59 @@ describe("GeoJSONStore", () => {
           },
         ])
       ).toThrowError();
+    });
+  });
+
+  describe("load", () => {
+    it("does nothing if empty data array is passed", () => {
+      const store = new GeoJSONStore();
+      store.load([]);
+      expect(store.copyAll()).toStrictEqual([]);
+    });
+
+    it("attempts to add ids if missing", () => {
+      const store = new GeoJSONStore({ tracked: false });
+      store.load([
+        {
+          type: "Feature",
+          properties: {},
+          geometry: { type: "Point", coordinates: [0, 0] },
+        },
+      ]);
+      const result = store.copyAll();
+      expect(result).toStrictEqual([
+        {
+          id: expect.any(String),
+          type: "Feature",
+          properties: {},
+          geometry: { type: "Point", coordinates: [0, 0] },
+        },
+      ]);
+      expect(result[0].id).toBeUUID4();
+    });
+
+    it("attempts to add tracking properties if enabled and they are missing", () => {
+      const store = new GeoJSONStore({ tracked: true });
+      store.load([
+        {
+          type: "Feature",
+          properties: {},
+          geometry: { type: "Point", coordinates: [0, 0] },
+        },
+      ]);
+      const result = store.copyAll();
+      expect(result).toStrictEqual([
+        {
+          id: expect.any(String),
+          type: "Feature",
+          properties: {
+            createdAt: expect.any(Number),
+            updatedAt: expect.any(Number),
+          },
+          geometry: { type: "Point", coordinates: [0, 0] },
+        },
+      ]);
+      expect(result[0].id).toBeUUID4();
     });
   });
 

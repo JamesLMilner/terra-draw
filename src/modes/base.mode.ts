@@ -1,6 +1,5 @@
-import { BehaviorConfig, TerraDrawModeBehavior } from "./common/base.behavior";
+import { BehaviorConfig, TerraDrawModeBehavior } from "./base.behavior";
 import {
-  Project,
   TerraDrawAdapterStyling,
   TerraDrawModeRegisterConfig,
   TerraDrawModeState,
@@ -10,21 +9,34 @@ import { getDefaultStyling } from "../util/styling";
 
 export abstract class TerraDrawBaseDrawMode {
   _state: TerraDrawModeState;
+  _styling: TerraDrawAdapterStyling;
   get state() {
     return this._state;
   }
   set state(_) {
     throw new Error("Please use the modes lifecycle methods");
   }
-  styling: TerraDrawAdapterStyling;
+
+  get styling(): TerraDrawAdapterStyling {
+    return this._styling;
+  }
+  set styling(styling: TerraDrawAdapterStyling) {
+    if (typeof styling !== "object") {
+      throw new Error("Styling must be an object");
+    }
+
+    this.onStyleChange([], "styling");
+    this._styling = styling;
+  }
 
   protected behaviors: TerraDrawModeBehavior[] = [];
   protected pointerDistance: number;
-  protected store: GeoJSONStore;
-  protected unproject: TerraDrawModeRegisterConfig["unproject"];
-  protected project: TerraDrawModeRegisterConfig["project"];
-  protected setCursor: TerraDrawModeRegisterConfig["setCursor"];
   protected coordinatePrecision: number;
+  protected onStyleChange: any;
+  protected store!: GeoJSONStore;
+  protected unproject!: TerraDrawModeRegisterConfig["unproject"];
+  protected project!: TerraDrawModeRegisterConfig["project"];
+  protected setCursor!: TerraDrawModeRegisterConfig["setCursor"];
   protected registerBehaviors(behaviorConfig: BehaviorConfig): void {}
 
   constructor(options?: {
@@ -33,7 +45,7 @@ export abstract class TerraDrawBaseDrawMode {
     coordinatePrecision?: number;
   }) {
     this._state = "unregistered";
-    this.styling =
+    this._styling =
       options && options.styling
         ? { ...getDefaultStyling(), ...options.styling }
         : getDefaultStyling();
@@ -69,6 +81,7 @@ export abstract class TerraDrawBaseDrawMode {
       this.onSelect = config.onSelect;
       this.onDeselect = config.onDeselect;
       this.setCursor = config.setCursor;
+      this.onStyleChange = config.onChange;
 
       this.registerBehaviors({
         mode: config.mode,

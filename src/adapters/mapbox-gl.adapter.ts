@@ -5,6 +5,7 @@ import {
   TerraDrawAdapterStyling,
   TerraDrawChanges,
   TerraDrawMouseEvent,
+  SELECT_PROPERTIES,
 } from "../common";
 import { Feature, LineString, Point, Polygon } from "geojson";
 import { limitPrecision } from "../geometry/limit-decimal-precision";
@@ -15,7 +16,6 @@ import mapboxgl, {
   PointLike,
 } from "mapbox-gl";
 import { GeoJSONStoreFeatures, GeoJSONStoreGeometries } from "../store/store";
-import { point } from "leaflet";
 
 export class TerraDrawMapboxGLAdapter implements TerraDrawAdapter {
   constructor(config: { map: mapboxgl.Map; coordinatePrecision: number }) {
@@ -53,17 +53,17 @@ export class TerraDrawMapboxGLAdapter implements TerraDrawAdapter {
   private _heldKeys: Set<string> = new Set();
   private _coordinatePrecision: number;
   private _map: mapboxgl.Map;
-  private _onMouseMoveListener: (
-    event: mapboxgl.MapMouseEvent & mapboxgl.EventData
-  ) => void;
-  private _onClickListener: (
-    event: mapboxgl.MapMouseEvent & mapboxgl.EventData
-  ) => void;
-  private _onDragStartListener: (event: MouseEvent) => void;
-  private _onDragListener: (event: MouseEvent) => void;
-  private _onDragEndListener: (event: MouseEvent) => void;
-  private _onKeyDownListener: (event: KeyboardEvent) => void;
-  private _onKeyUpListener: (event: KeyboardEvent) => any;
+  private _onMouseMoveListener:
+    | ((event: mapboxgl.MapMouseEvent & mapboxgl.EventData) => void)
+    | undefined;
+  private _onClickListener:
+    | ((event: mapboxgl.MapMouseEvent & mapboxgl.EventData) => void)
+    | undefined;
+  private _onDragStartListener: ((event: MouseEvent) => void) | undefined;
+  private _onDragListener: ((event: MouseEvent) => void) | undefined;
+  private _onDragEndListener: ((event: MouseEvent) => void) | undefined;
+  private _onKeyDownListener: ((event: KeyboardEvent) => void) | undefined;
+  private _onKeyUpListener: ((event: KeyboardEvent) => any) | undefined;
   private _rendered: Record<string, boolean> = {};
 
   private _addGeoJSONSource(id: string, features: Feature[]) {
@@ -430,14 +430,14 @@ export class TerraDrawMapboxGLAdapter implements TerraDrawAdapter {
 
         if (feature.geometry.type === "Point") {
           if (
-            feature.properties.selected ||
+            feature.properties[SELECT_PROPERTIES.SELECTED] ||
             feature.properties.selectionPoint
           ) {
             feature.properties.pointColor = styles.selectedColor;
             feature.properties.selectedPointOutlineColor =
               styles.selectedPointOutlineColor;
             feature.properties.pointWidth = styles.selectionPointWidth;
-          } else if (feature.properties.midPoint) {
+          } else if (feature.properties[SELECT_PROPERTIES.MID_POINT]) {
             feature.properties.pointColor = styles.midPointColor;
             feature.properties.selectedPointOutlineColor =
               styles.midPointOutlineColor;
@@ -449,14 +449,14 @@ export class TerraDrawMapboxGLAdapter implements TerraDrawAdapter {
           }
           modeFeatures[mode].points.push(feature);
         } else if (feature.geometry.type === "LineString") {
-          if (feature.properties.selected) {
+          if (feature.properties[SELECT_PROPERTIES.SELECTED]) {
             feature.properties.lineStringColor = styles.selectedColor;
           } else {
             feature.properties.lineStringColor = styles.lineStringColor;
           }
           modeFeatures[mode].linestrings.push(feature);
         } else if (feature.geometry.type === "Polygon") {
-          if (feature.properties.selected) {
+          if (feature.properties[SELECT_PROPERTIES.SELECTED]) {
             feature.properties.polygonFillColor = styles.selectedColor;
             feature.properties.polygonOutlineColor = styles.selectedColor;
           } else {

@@ -3,7 +3,6 @@ import {
   GeoJSONStore,
   GeoJSONStoreFeatures,
 } from "./store/store";
-import { Feature } from "geojson";
 
 export interface TerraDrawAdapterStyling {
   pointColor: string;
@@ -119,3 +118,9 @@ export interface TerraDrawAdapter {
     styling: { [mode: string]: TerraDrawAdapterStyling }
   ): void;
 }
+
+export const SELECT_PROPERTIES = {
+  SELECTED: "selected",
+  MID_POINT: "midPoint",
+  SELECTION_POINT: "selectionPoint",
+} as const;

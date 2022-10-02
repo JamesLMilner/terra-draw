@@ -10,8 +10,9 @@
         "test:nocheck": "jest --config swc.jest.config.json",
         "test:nocheck:coverage": "jest --config swc.jest.config.json --coverage",
         "lint": "eslint --ext .ts src/",
-        "lint:error": "eslint --ext .ts --quiet src/",
+        "lint:quiet": "eslint --ext .ts --quiet src/",
         "lint:fix": "eslint --fix --ext .ts src/",
+        "lint:fix:quiet": "eslint --fix --ext .ts src/",
         "prepare": "husky install"
     },
     "type": "module",

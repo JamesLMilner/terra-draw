@@ -1,7 +1,7 @@
 import {
-  StoreChangeHandler,
-  GeoJSONStore,
-  GeoJSONStoreFeatures,
+    StoreChangeHandler,
+    GeoJSONStore,
+    GeoJSONStoreFeatures,
 } from "./store/store";
 
 export interface TerraDrawAdapterStyling {
@@ -120,7 +120,7 @@ export interface TerraDrawAdapter {
 }
 
 export const SELECT_PROPERTIES = {
-  SELECTED: "selected",
-  MID_POINT: "midPoint",
-  SELECTION_POINT: "selectionPoint",
+    SELECTED: "selected",
+    MID_POINT: "midPoint",
+    SELECTION_POINT: "selectionPoint",
 } as const;

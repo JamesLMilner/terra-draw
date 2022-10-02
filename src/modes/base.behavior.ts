@@ -11,26 +11,26 @@ export type BehaviorConfig = {
 };
 
 export class TerraDrawModeBehavior {
-  protected store: GeoJSONStore;
-  protected mode: string;
-  protected project: Project;
-  protected unproject: Unproject;
-  protected pointerDistance: number;
-  protected coordinatePrecision: number;
+    protected store: GeoJSONStore;
+    protected mode: string;
+    protected project: Project;
+    protected unproject: Unproject;
+    protected pointerDistance: number;
+    protected coordinatePrecision: number;
 
-  constructor({
-    store,
-    mode,
-    project,
-    unproject,
-    pointerDistance,
-    coordinatePrecision,
-  }: BehaviorConfig) {
-    this.store = store;
-    this.mode = mode;
-    this.project = project;
-    this.unproject = unproject;
-    this.pointerDistance = pointerDistance;
-    this.coordinatePrecision = coordinatePrecision;
-  }
+    constructor({
+        store,
+        mode,
+        project,
+        unproject,
+        pointerDistance,
+        coordinatePrecision,
+    }: BehaviorConfig) {
+        this.store = store;
+        this.mode = mode;
+        this.project = project;
+        this.unproject = unproject;
+        this.pointerDistance = pointerDistance;
+        this.coordinatePrecision = coordinatePrecision;
+    }
 }

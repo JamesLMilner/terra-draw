@@ -4,162 +4,162 @@ import { getDefaultStyling } from "../../util/styling";
 import { TerraDrawRenderMode } from "./render.mode";
 
 describe("TerraDrawRenderMode", () => {
-  const stylingOptions = {
-    styling: { ...getDefaultStyling(), selectedColor: "#ffffff" },
-  };
+    const stylingOptions = {
+        styling: { ...getDefaultStyling(), selectedColor: "#ffffff" },
+    };
 
-  describe("constructor", () => {
-    it("constructs with required parameter options", () => {
-      const renderMode = new TerraDrawRenderMode(stylingOptions);
-      expect(renderMode.mode).toBe("render");
-      expect(renderMode.styling).toStrictEqual(stylingOptions.styling);
-    });
-  });
-
-  describe("lifecycle", () => {
-    it("registers correctly", () => {
-      const renderMode = new TerraDrawRenderMode(stylingOptions);
-      expect(renderMode.state).toBe("unregistered");
-      renderMode.register(getMockModeConfig(renderMode.mode));
-      expect(renderMode.state).toBe("registered");
+    describe("constructor", () => {
+        it("constructs with required parameter options", () => {
+            const renderMode = new TerraDrawRenderMode(stylingOptions);
+            expect(renderMode.mode).toBe("render");
+            expect(renderMode.styling).toStrictEqual(stylingOptions.styling);
+        });
     });
 
-    it("setting state directly throws error", () => {
-      const renderMode = new TerraDrawRenderMode(stylingOptions);
+    describe("lifecycle", () => {
+        it("registers correctly", () => {
+            const renderMode = new TerraDrawRenderMode(stylingOptions);
+            expect(renderMode.state).toBe("unregistered");
+            renderMode.register(getMockModeConfig(renderMode.mode));
+            expect(renderMode.state).toBe("registered");
+        });
 
-      expect(() => {
-        renderMode.state = "started";
-      }).toThrowError();
+        it("setting state directly throws error", () => {
+            const renderMode = new TerraDrawRenderMode(stylingOptions);
+
+            expect(() => {
+                renderMode.state = "started";
+            }).toThrowError();
+        });
+
+        it("stopping before not registering throws error", () => {
+            const renderMode = new TerraDrawRenderMode(stylingOptions);
+
+            expect(() => {
+                renderMode.stop();
+            }).toThrowError();
+        });
+
+        it("starting before not registering throws error", () => {
+            const renderMode = new TerraDrawRenderMode(stylingOptions);
+
+            expect(() => {
+                renderMode.start();
+            }).toThrowError();
+        });
+
+        it("starting before not registering throws error", () => {
+            const renderMode = new TerraDrawRenderMode(stylingOptions);
+
+            expect(() => {
+                renderMode.start();
+            }).toThrowError();
+        });
+
+        it("registering multiple times throws an error", () => {
+            const renderMode = new TerraDrawRenderMode(stylingOptions);
+
+            expect(() => {
+                renderMode.register(getMockModeConfig(renderMode.mode));
+                renderMode.register(getMockModeConfig(renderMode.mode));
+            }).toThrowError();
+        });
+
+        it("can start correctly", () => {
+            const renderMode = new TerraDrawRenderMode(stylingOptions);
+
+            renderMode.register(getMockModeConfig(renderMode.mode));
+            renderMode.start();
+
+            expect(renderMode.state).toBe("started");
+        });
+
+        it("can stop correctly", () => {
+            const renderMode = new TerraDrawRenderMode(stylingOptions);
+
+            renderMode.register(getMockModeConfig(renderMode.mode));
+            renderMode.start();
+            renderMode.stop();
+
+            expect(renderMode.state).toBe("stopped");
+        });
     });
 
-    it("stopping before not registering throws error", () => {
-      const renderMode = new TerraDrawRenderMode(stylingOptions);
-
-      expect(() => {
-        renderMode.stop();
-      }).toThrowError();
+    describe("registerBehaviors", () => {
+        it("changes the mode name when registerBehaviors called", () => {
+            const renderMode = new TerraDrawRenderMode(stylingOptions);
+            const config = mockBehaviorConfig("test");
+            renderMode.registerBehaviors(config);
+            expect(renderMode.mode).toBe("test");
+        });
     });
 
-    it("starting before not registering throws error", () => {
-      const renderMode = new TerraDrawRenderMode(stylingOptions);
+    describe("onClick", () => {
+        it("does nothing", () => {
+            const renderMode = new TerraDrawRenderMode(stylingOptions);
 
-      expect(() => {
-        renderMode.start();
-      }).toThrowError();
+            expect(() => {
+                renderMode.onClick();
+            }).not.toThrowError();
+        });
     });
 
-    it("starting before not registering throws error", () => {
-      const renderMode = new TerraDrawRenderMode(stylingOptions);
+    describe("onKeyUp", () => {
+        it("does nothing", () => {
+            const renderMode = new TerraDrawRenderMode(stylingOptions);
 
-      expect(() => {
-        renderMode.start();
-      }).toThrowError();
+            expect(() => {
+                renderMode.onKeyUp();
+            }).not.toThrowError();
+        });
     });
 
-    it("registering multiple times throws an error", () => {
-      const renderMode = new TerraDrawRenderMode(stylingOptions);
-
-      expect(() => {
-        renderMode.register(getMockModeConfig(renderMode.mode));
-        renderMode.register(getMockModeConfig(renderMode.mode));
-      }).toThrowError();
+    describe("onKeyDown", () => {
+        it("does nothing", () => {
+            const renderMode = new TerraDrawRenderMode(stylingOptions);
+            expect(() => {
+                renderMode.onKeyDown();
+            }).not.toThrowError();
+        });
     });
 
-    it("can start correctly", () => {
-      const renderMode = new TerraDrawRenderMode(stylingOptions);
+    describe("onMouseMove", () => {
+        it("does nothing", () => {
+            const renderMode = new TerraDrawRenderMode(stylingOptions);
 
-      renderMode.register(getMockModeConfig(renderMode.mode));
-      renderMode.start();
-
-      expect(renderMode.state).toBe("started");
+            expect(() => {
+                renderMode.onMouseMove();
+            }).not.toThrowError();
+        });
     });
 
-    it("can stop correctly", () => {
-      const renderMode = new TerraDrawRenderMode(stylingOptions);
+    describe("onDrag", () => {
+        it("does nothing", () => {
+            const renderMode = new TerraDrawRenderMode(stylingOptions);
 
-      renderMode.register(getMockModeConfig(renderMode.mode));
-      renderMode.start();
-      renderMode.stop();
-
-      expect(renderMode.state).toBe("stopped");
+            expect(() => {
+                renderMode.onDrag();
+            }).not.toThrowError();
+        });
     });
-  });
 
-  describe("registerBehaviors", () => {
-    it("changes the mode name when registerBehaviors called", () => {
-      const renderMode = new TerraDrawRenderMode(stylingOptions);
-      const config = mockBehaviorConfig("test");
-      renderMode.registerBehaviors(config);
-      expect(renderMode.mode).toBe("test");
+    describe("onDragStart", () => {
+        it("does nothing", () => {
+            const renderMode = new TerraDrawRenderMode(stylingOptions);
+
+            expect(() => {
+                renderMode.onDragStart();
+            }).not.toThrowError();
+        });
     });
-  });
 
-  describe("onClick", () => {
-    it("does nothing", () => {
-      const renderMode = new TerraDrawRenderMode(stylingOptions);
+    describe("onDragEnd", () => {
+        it("does nothing", () => {
+            const renderMode = new TerraDrawRenderMode(stylingOptions);
 
-      expect(() => {
-        renderMode.onClick();
-      }).not.toThrowError();
+            expect(() => {
+                renderMode.onDragEnd();
+            }).not.toThrowError();
+        });
     });
-  });
-
-  describe("onKeyUp", () => {
-    it("does nothing", () => {
-      const renderMode = new TerraDrawRenderMode(stylingOptions);
-
-      expect(() => {
-        renderMode.onKeyUp();
-      }).not.toThrowError();
-    });
-  });
-
-  describe("onKeyDown", () => {
-    it("does nothing", () => {
-      const renderMode = new TerraDrawRenderMode(stylingOptions);
-      expect(() => {
-        renderMode.onKeyDown();
-      }).not.toThrowError();
-    });
-  });
-
-  describe("onMouseMove", () => {
-    it("does nothing", () => {
-      const renderMode = new TerraDrawRenderMode(stylingOptions);
-
-      expect(() => {
-        renderMode.onMouseMove();
-      }).not.toThrowError();
-    });
-  });
-
-  describe("onDrag", () => {
-    it("does nothing", () => {
-      const renderMode = new TerraDrawRenderMode(stylingOptions);
-
-      expect(() => {
-        renderMode.onDrag();
-      }).not.toThrowError();
-    });
-  });
-
-  describe("onDragStart", () => {
-    it("does nothing", () => {
-      const renderMode = new TerraDrawRenderMode(stylingOptions);
-
-      expect(() => {
-        renderMode.onDragStart();
-      }).not.toThrowError();
-    });
-  });
-
-  describe("onDragEnd", () => {
-    it("does nothing", () => {
-      const renderMode = new TerraDrawRenderMode(stylingOptions);
-
-      expect(() => {
-        renderMode.onDragEnd();
-      }).not.toThrowError();
-    });
-  });
 });

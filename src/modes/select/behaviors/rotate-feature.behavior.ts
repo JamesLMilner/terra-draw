@@ -9,75 +9,75 @@ import { rhumbBearing } from "../../../geometry/measure/rhumb-bearing";
 import { limitPrecision } from "../../../geometry/limit-decimal-precision";
 
 export class RotateFeatureBehavior extends TerraDrawModeBehavior {
-  constructor(
+    constructor(
     readonly config: BehaviorConfig,
     private readonly selectionPoints: SelectionPointBehavior,
     private readonly midPoints: MidPointBehavior
-  ) {
-    super(config);
-  }
-
-  private lastBearing: number | undefined;
-
-  reset() {
-    this.lastBearing = undefined;
-  }
-
-  rotate(event: TerraDrawMouseEvent, selectedId: string) {
-    const geometry = this.store.getGeometryCopy<LineString | Polygon>(
-      selectedId
-    );
-
-    // Update the geometry of the dragged feature
-    if (geometry.type !== "Polygon" && geometry.type !== "LineString") {
-      return;
+    ) {
+        super(config);
     }
 
-    const mouseCoord = [event.lng, event.lat];
+    private lastBearing: number | undefined;
 
-    const bearing = rhumbBearing(
-      centroid({ type: "Feature", geometry, properties: {} }),
-      mouseCoord
-    );
-
-    // We need an original bearing to compare against
-    if (!this.lastBearing) {
-      this.lastBearing = bearing + 180;
-      return;
+    reset() {
+        this.lastBearing = undefined;
     }
 
-    const angle = this.lastBearing - (bearing + 180);
+    rotate(event: TerraDrawMouseEvent, selectedId: string) {
+        const geometry = this.store.getGeometryCopy<LineString | Polygon>(
+            selectedId
+        );
 
-    transformRotate({ type: "Feature", geometry, properties: {} }, -angle);
+        // Update the geometry of the dragged feature
+        if (geometry.type !== "Polygon" && geometry.type !== "LineString") {
+            return;
+        }
 
-    let updatedCoords: Position[] | undefined;
+        const mouseCoord = [event.lng, event.lat];
 
-    if (geometry.type === "Polygon") {
-      updatedCoords = geometry.coordinates[0];
-    } else if (geometry.type === "LineString") {
-      updatedCoords = geometry.coordinates;
-    } else {
-      return;
-    }
+        const bearing = rhumbBearing(
+            centroid({ type: "Feature", geometry, properties: {} }),
+            mouseCoord
+        );
 
-    // Ensure that coordinate precision is maintained
-    updatedCoords.forEach((coordinate) => {
-      coordinate[0] = limitPrecision(coordinate[0], this.coordinatePrecision);
-      coordinate[1] = limitPrecision(coordinate[1], this.coordinatePrecision);
-    });
+        // We need an original bearing to compare against
+        if (!this.lastBearing) {
+            this.lastBearing = bearing + 180;
+            return;
+        }
 
-    const updatedMidPoints = this.midPoints.getUpdated(updatedCoords) || [];
+        const angle = this.lastBearing - (bearing + 180);
 
-    const updatedSelectionPoints =
+        transformRotate({ type: "Feature", geometry, properties: {} }, -angle);
+
+        let updatedCoords: Position[] | undefined;
+
+        if (geometry.type === "Polygon") {
+            updatedCoords = geometry.coordinates[0];
+        } else if (geometry.type === "LineString") {
+            updatedCoords = geometry.coordinates;
+        } else {
+            return;
+        }
+
+        // Ensure that coordinate precision is maintained
+        updatedCoords.forEach((coordinate) => {
+            coordinate[0] = limitPrecision(coordinate[0], this.coordinatePrecision);
+            coordinate[1] = limitPrecision(coordinate[1], this.coordinatePrecision);
+        });
+
+        const updatedMidPoints = this.midPoints.getUpdated(updatedCoords) || [];
+
+        const updatedSelectionPoints =
       this.selectionPoints.getUpdated(updatedCoords) || [];
 
-    // Issue the update to the selected feature
-    this.store.updateGeometry([
-      { id: selectedId, geometry },
-      ...updatedSelectionPoints,
-      ...updatedMidPoints,
-    ]);
+        // Issue the update to the selected feature
+        this.store.updateGeometry([
+            { id: selectedId, geometry },
+            ...updatedSelectionPoints,
+            ...updatedMidPoints,
+        ]);
 
-    this.lastBearing = bearing + 180;
-  }
+        this.lastBearing = bearing + 180;
+    }
 }

@@ -1,0 +1,17 @@
+{
+    "parser": "@typescript-eslint/parser",
+    "plugins": [
+        "@typescript-eslint"
+    ],
+    "rules": {
+        "indent": [
+            "error",
+            4
+        ],
+        "@typescript-eslint/no-empty-function": "warn"
+    },
+    "extends": [
+        "plugin:@typescript-eslint/recommended",
+        "prettier"
+    ]
+}

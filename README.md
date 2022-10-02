@@ -6,10 +6,14 @@ Frictionless map drawing across mapping providers.
 
 TerraDraw centralises map drawing logic and provides a host of out the box drawing modes that work across map providers (currently Leaflet, Mapbox, Google) via adapters.
 
-# Development
+### Development
 
-# Contributing
+Please see the [the development documentation](./DEVELOPMENT.md)
 
-# License
+### Contributing
+
+Please see the [the contributing documentation](./CONTRIBUTING.md)
+
+### License
 
 MIT

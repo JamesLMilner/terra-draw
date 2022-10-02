@@ -8,6 +8,10 @@
             "error",
             4
         ],
+        "semi": [
+            "error",
+            "always"
+        ],
         "@typescript-eslint/no-empty-function": "warn"
     },
     "extends": [

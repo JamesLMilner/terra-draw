@@ -1,4 +1,3 @@
-import { validateLocaleAndSetLanguage } from "typescript";
 import { GeoJSONStore } from "./store";
 import { validateStoreFeature } from "./store-feature-validation";
 
@@ -78,9 +77,9 @@ describe("GeoJSONStore", () => {
                 expect(() => {
                     new GeoJSONStore({
                         data: [
-              {
-                  id: undefined,
-              } as any,
+                            {
+                                id: undefined,
+                            } as any,
                         ],
                     });
                 }).toThrowError();
@@ -91,9 +90,9 @@ describe("GeoJSONStore", () => {
                     new GeoJSONStore({
                         validateFeature: validateStoreFeature,
                         data: [
-              {
-                  id: 1,
-              } as any,
+                            {
+                                id: 1,
+                            } as any,
                         ],
                     });
                 }).toThrowError();
@@ -104,9 +103,9 @@ describe("GeoJSONStore", () => {
                     new GeoJSONStore({
                         validateFeature: validateStoreFeature,
                         data: [
-              {
-                  id: "1",
-              } as any,
+                            {
+                                id: "1",
+                            } as any,
                         ],
                     });
                 }).toThrowError();
@@ -117,9 +116,9 @@ describe("GeoJSONStore", () => {
                     new GeoJSONStore({
                         validateFeature: validateStoreFeature,
                         data: [
-              {
-                  id: "e3ccd3b9-afb1-4f0b-91d8-22a768d5f284",
-              } as any,
+                            {
+                                id: "e3ccd3b9-afb1-4f0b-91d8-22a768d5f284",
+                            } as any,
                         ],
                     });
                 }).toThrowError();
@@ -130,10 +129,10 @@ describe("GeoJSONStore", () => {
                     new GeoJSONStore({
                         validateFeature: validateStoreFeature,
                         data: [
-              {
-                  id: "e3ccd3b9-afb1-4f0b-91d8-22a768d5f284",
-                  geometry: {},
-              } as any,
+                            {
+                                id: "e3ccd3b9-afb1-4f0b-91d8-22a768d5f284",
+                                geometry: {},
+                            } as any,
                         ],
                     });
                 }).toThrowError();
@@ -144,13 +143,13 @@ describe("GeoJSONStore", () => {
                     new GeoJSONStore({
                         validateFeature: validateStoreFeature,
                         data: [
-              {
-                  id: "e3ccd3b9-afb1-4f0b-91d8-22a768d5f284",
-                  geometry: {
-                      type: "MultiLineString",
-                  },
-                  properties: {},
-              } as any,
+                            {
+                                id: "e3ccd3b9-afb1-4f0b-91d8-22a768d5f284",
+                                geometry: {
+                                    type: "MultiLineString",
+                                },
+                                properties: {},
+                            } as any,
                         ],
                     });
                 }).toThrowError();
@@ -161,14 +160,14 @@ describe("GeoJSONStore", () => {
                     new GeoJSONStore({
                         validateFeature: validateStoreFeature,
                         data: [
-              {
-                  id: "e3ccd3b9-afb1-4f0b-91d8-22a768d5f284",
-                  geometry: {
-                      type: "Point",
-                      coordinates: "[]",
-                  },
-                  properties: {},
-              } as any,
+                            {
+                                id: "e3ccd3b9-afb1-4f0b-91d8-22a768d5f284",
+                                geometry: {
+                                    type: "Point",
+                                    coordinates: "[]",
+                                },
+                                properties: {},
+                            } as any,
                         ],
                     });
                 }).toThrowError();

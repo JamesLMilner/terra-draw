@@ -1,4 +1,3 @@
-import { pixelDistance } from "./pixel-distance";
 import { rhumbDistance } from "./rhumb-distance";
 
 describe("rhumbDistance", () => {

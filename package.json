@@ -12,7 +12,7 @@
         "lint": "eslint --ext .ts src/",
         "lint:quiet": "eslint --ext .ts --quiet src/",
         "lint:fix": "eslint --fix --ext .ts src/",
-        "lint:fix:quiet": "eslint --fix --ext .ts src/",
+        "lint:fix:quiet": "eslint --fix --quiet --ext .ts src/",
         "prepare": "husky install"
     },
     "type": "module",
@@ -28,6 +28,8 @@
     "license": "MIT",
     "repository": "JamesLMilner/terra-draw",
     "devDependencies": {
+        "@commitlint/cli": "^17.1.2",
+        "@commitlint/config-conventional": "^17.1.0",
         "@googlemaps/js-api-loader": "^1.14.3",
         "@swc/jest": "^0.2.22",
         "@types/geojson": "^7946.0.8",

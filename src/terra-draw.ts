@@ -202,6 +202,7 @@ class TerraDraw {
         });
         return modeStyles;
     }
+
     setModeStyling(mode: string, styling: TerraDrawAdapterStyling) {
         this._modes[mode].styling = styling;
     }
@@ -212,6 +213,10 @@ class TerraDraw {
 
     get enabled(): boolean {
         return this._enabled;
+    }
+
+    set enabled(_) {
+        throw new Error("Enabled is read only");
     }
 
     getCurrentMode(): string {

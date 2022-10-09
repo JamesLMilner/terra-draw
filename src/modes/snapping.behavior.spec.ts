@@ -1,7 +1,7 @@
 import { createStorePolygon } from "../test/create-store-features";
 import { mockBehaviorConfig } from "../test/mock-behavior-config";
 import { mockDrawEvent } from "../test/mock-mouse-event";
-import { mockBboxProject } from "../test/mock-project";
+import { mockProject } from "../test/mock-project";
 import { mockBoundingBoxUnproject } from "../test/mock-unproject";
 import { BehaviorConfig } from "./base.behavior";
 import { ClickBoundingBoxBehavior } from "./click-bounding-box.behavior";
@@ -58,7 +58,7 @@ describe("SnappingBehavior", () => {
 
                 // Pixel distance will project each point to check the distance
                 // for snapping
-                mockBboxProject(config.project as jest.Mock);
+                mockProject(config.project as jest.Mock);
 
                 const snappedCoord = snappingBehavior.getSnappableCoordinate(
                     mockDrawEvent(),

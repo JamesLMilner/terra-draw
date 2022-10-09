@@ -1,8 +1,6 @@
-function mockProject(project: jest.Mock, value: { x: number; y: number }) {
-    return project.mockReturnValueOnce({ x: 0, y: 0 });
-}
 
-export function mockBboxProject(
+
+export function mockProject(
     project: jest.Mock,
     coordinates = [
         [0, 0],

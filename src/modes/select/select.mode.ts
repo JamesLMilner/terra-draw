@@ -17,23 +17,23 @@ import { RotateFeatureBehavior } from "./behaviors/rotate-feature.behavior";
 import { ScaleFeatureBehavior } from "./behaviors/scale-feature.behavior";
 
 type TerraDrawSelectModeKeyEvents = {
-  deselect: KeyboardEvent["key"];
-  delete: KeyboardEvent["key"];
-  rotate: KeyboardEvent["key"];
-  scale: KeyboardEvent["key"];
+    deselect: KeyboardEvent["key"];
+    delete: KeyboardEvent["key"];
+    rotate: KeyboardEvent["key"];
+    scale: KeyboardEvent["key"];
 };
 
 type ModeFlags = {
-  feature?: {
-    draggable?: boolean;
-    rotateable?: boolean;
-    scaleable?: boolean;
-    coordinates?: {
-      midpoints?: boolean;
-      draggable?: boolean;
-      deletable?: boolean;
+    feature?: {
+        draggable?: boolean;
+        rotateable?: boolean;
+        scaleable?: boolean;
+        coordinates?: {
+            midpoints?: boolean;
+            draggable?: boolean;
+            deletable?: boolean;
+        };
     };
-  };
 };
 
 export class TerraDrawSelectMode extends TerraDrawBaseDrawMode {
@@ -58,25 +58,25 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode {
     private scaleFeature!: ScaleFeatureBehavior;
 
     constructor(options?: {
-    pointerDistance?: number;
-    flags?: { [mode: string]: ModeFlags };
-    keyEvents?: TerraDrawSelectModeKeyEvents;
-    dragEventThrottle?: number;
-  }) {
+        pointerDistance?: number;
+        flags?: { [mode: string]: ModeFlags };
+        keyEvents?: TerraDrawSelectModeKeyEvents;
+        dragEventThrottle?: number;
+    }) {
         super(options);
 
         this.flags = options && options.flags ? options.flags : {};
 
         this.keyEvents =
-      options && options.keyEvents
-          ? options.keyEvents
-          : { deselect: "Escape", delete: "Delete", rotate: "r", scale: "s" };
+            options && options.keyEvents
+                ? options.keyEvents
+                : { deselect: "Escape", delete: "Delete", rotate: "r", scale: "s" };
 
         this.dragEventThrottle =
-      (options &&
-        options.dragEventThrottle !== undefined &&
-        options.dragEventThrottle) ||
-      5;
+            (options &&
+                options.dragEventThrottle !== undefined &&
+                options.dragEventThrottle) ||
+            5;
     }
 
     public registerBehaviors(config: BehaviorConfig) {
@@ -133,10 +133,10 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode {
     }
 
     private deleteSelected() {
-    // Delete all selected features
-    // from the store and clear selected
-    // We don't need to set selected false
-    // as we're going to delete the feature
+        // Delete all selected features
+        // from the store and clear selected
+        // We don't need to set selected false
+        // as we're going to delete the feature
 
         this.store.delete(this.selected);
         this.selected = [];
@@ -148,26 +148,27 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode {
         }
 
         let clickedSelectionPointProps:
-      | {
-          selectionPointFeatureId: string;
-          index: number;
-        }
-      | undefined;
+            | {
+                selectionPointFeatureId: string;
+                index: number;
+            }
+            | undefined;
 
         let clickedFeatureDistance = Infinity;
 
         this.selectionPoints.ids.forEach((id: string) => {
             const geometry = this.store.getGeometryCopy<Point>(id);
             const distance = this.pixelDistance.measure(event, geometry.coordinates);
+
             if (
                 distance < this.pointerDistance &&
-        distance < clickedFeatureDistance
+                distance < clickedFeatureDistance
             ) {
                 clickedFeatureDistance = distance;
                 clickedSelectionPointProps = this.store.getPropertiesCopy(id) as {
-          selectionPointFeatureId: string;
-          index: number;
-        };
+                    selectionPointFeatureId: string;
+                    index: number;
+                };
             }
         });
 
@@ -184,9 +185,9 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode {
 
         if (
             !modeFlags ||
-      !modeFlags.feature ||
-      !modeFlags.feature.coordinates ||
-      !modeFlags.feature.coordinates.deletable
+            !modeFlags.feature ||
+            !modeFlags.feature.coordinates ||
+            !modeFlags.feature.coordinates.deletable
         ) {
             return;
         }
@@ -217,7 +218,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode {
 
         if (
             (geometry.type === "Polygon" && coordinateIndex === 0) ||
-      coordinateIndex === coordinates.length - 1
+            coordinateIndex === coordinates.length - 1
         ) {
             // Deleting the final coordinate in a polygon breaks it
             // because GeoJSON expects a duplicate, so we need to fix
@@ -240,15 +241,15 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode {
 
         this.selectionPoints.create(
             coordinates,
-      geometry.type as "Polygon" | "LineString",
-      featureId
+            geometry.type as "Polygon" | "LineString",
+            featureId
         );
 
         if (
             modeFlags &&
-      modeFlags.feature &&
-      modeFlags.feature.coordinates &&
-      modeFlags.feature.coordinates.midpoints
+            modeFlags.feature &&
+            modeFlags.feature.coordinates &&
+            modeFlags.feature.coordinates.midpoints
         ) {
             this.midPoints.create(coordinates, featureId, this.coordinatePrecision);
         }
@@ -266,8 +267,8 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode {
             // is visible?
 
             this.midPoints.insert(
-        clickedMidPoint.id as string,
-        this.coordinatePrecision
+                clickedMidPoint.id as string,
+                this.coordinatePrecision
             );
 
             return;
@@ -275,7 +276,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode {
 
         if (clickedFeature) {
             const { mode } = this.store.getPropertiesCopy(
-        clickedFeature.id as string
+                clickedFeature.id as string
             );
 
             const previouslySelectedId = this.selected[0];
@@ -309,7 +310,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode {
 
             // Get the clicked feature
             const { type, coordinates } = this.store.getGeometryCopy(
-        clickedFeature.id as string
+                clickedFeature.id as string
             );
 
             let selectedCoords: Position[] | undefined;
@@ -323,14 +324,14 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode {
                 this.selectionPoints.create(
                     selectedCoords,
                     type,
-          clickedFeature.id as string
+                    clickedFeature.id as string
                 );
 
                 if (modeFlags.feature.coordinates.midpoints) {
                     this.midPoints.create(
                         selectedCoords,
-            clickedFeature.id as string,
-            this.coordinatePrecision
+                        clickedFeature.id as string,
+                        this.coordinatePrecision
                     );
                 }
             }
@@ -356,7 +357,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode {
             this.onLeftClick(event);
         }
     }
-    onKeyDown() {}
+    onKeyDown() { }
     onKeyUp(event: TerraDrawKeyboardEvent) {
         if (event.key === this.keyEvents.delete) {
             if (!this.selected.length) {
@@ -388,8 +389,8 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode {
         event: TerraDrawMouseEvent,
         setMapDraggability: (enabled: boolean) => void
     ) {
-    // We only need to stop the map dragging if
-    // we actually have something selected
+        // We only need to stop the map dragging if
+        // we actually have something selected
         if (!this.selected.length) {
             return;
         }
@@ -399,11 +400,11 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode {
         const properties = this.store.getPropertiesCopy(this.selected[0]);
         const modeFlags = this.flags[properties.mode as string];
         const draggable =
-      modeFlags &&
-      modeFlags.feature &&
-      (modeFlags.feature.draggable ||
-        (modeFlags.feature.coordinates &&
-          modeFlags.feature.coordinates.draggable));
+            modeFlags &&
+            modeFlags.feature &&
+            (modeFlags.feature.draggable ||
+                (modeFlags.feature.coordinates &&
+                    modeFlags.feature.coordinates.draggable));
 
         if (!draggable) {
             return;
@@ -440,9 +441,9 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode {
         // Check if should rotate
         if (
             modeFlags &&
-      modeFlags.feature &&
-      modeFlags.feature.rotateable &&
-      event.heldKeys.includes("r")
+            modeFlags.feature &&
+            modeFlags.feature.rotateable &&
+            event.heldKeys.includes("r")
         ) {
             this.rotateFeature.rotate(event, selectedId);
             return;
@@ -451,9 +452,9 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode {
         // Check if should scale
         if (
             modeFlags &&
-      modeFlags.feature &&
-      modeFlags.feature.scaleable &&
-      event.heldKeys.includes("s")
+            modeFlags.feature &&
+            modeFlags.feature.scaleable &&
+            event.heldKeys.includes("s")
         ) {
             this.scaleFeature.scale(event, selectedId);
             return;
@@ -462,9 +463,9 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode {
         // Check if coordinate is draggable and is dragged
         if (
             modeFlags &&
-      modeFlags.feature &&
-      modeFlags.feature.coordinates &&
-      modeFlags.feature.coordinates.draggable
+            modeFlags.feature &&
+            modeFlags.feature.coordinates &&
+            modeFlags.feature.coordinates.draggable
         ) {
             const coordinateWasDragged = this.dragCoordinate.drag(event, selectedId);
 

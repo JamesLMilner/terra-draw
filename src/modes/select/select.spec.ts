@@ -1,6 +1,7 @@
 import { Position } from "geojson";
 import { GeoJSONStore } from "../../store/store";
 import { getMockModeConfig } from "../../test/mock-config";
+import { mockProject } from "../../test/mock-project";
 import { TerraDrawSelectMode } from "./select.mode";
 
 describe("TerraDrawSelectMode", () => {
@@ -27,6 +28,8 @@ describe("TerraDrawSelectMode", () => {
         setCursor = mockConfig.setCursor;
         store = mockConfig.store;
         selectMode.register(mockConfig);
+
+        return mockConfig;
     };
 
     const addPolygonToStore = (coords: Position[]) => {
@@ -197,171 +200,11 @@ describe("TerraDrawSelectMode", () => {
     });
 
     describe("onClick", () => {
-        it("does not select if no features", () => {
-            mockMouseEventBoundingBox();
-
-            selectMode.onClick({
-                lng: 0,
-                lat: 0,
-                containerX: 0,
-                containerY: 0,
-                button: "left",
-                heldKeys: [],
-            });
-
-            expect(onChange).not.toBeCalled();
-            expect(onDeselect).not.toBeCalled();
-            expect(onSelect).not.toBeCalled();
-        });
-
-        describe("point", () => {
-            it("does select if feature is clicked", () => {
-                addPointToStore([0, 0]);
-                mockMouseEventBoundingBox([
-                    [0, 0],
-                    [0, 1],
-                    [1, 1],
-                    [1, 0],
-                ]);
-
-                project.mockReturnValueOnce({
-                    x: 0,
-                    y: 0,
-                });
-
-                selectMode.onClick({
-                    lng: 0,
-                    lat: 0,
-                    containerX: 0,
-                    containerY: 0,
-                    button: "left",
-                    heldKeys: [],
-                });
-
-                expect(onSelect).toBeCalledTimes(1);
-            });
-
-            it("does not select if feature is not clicked", () => {
-                addPointToStore([0, 0]);
-                mockMouseEventBoundingBox([
-                    [0, 0],
-                    [0, 1],
-                    [1, 1],
-                    [1, 0],
-                ]);
-
-                project.mockReturnValueOnce({
-                    x: 0,
-                    y: 0,
-                });
-
-                selectMode.onClick({
-                    lng: 50,
-                    lat: 100,
-                    containerX: 100,
-                    containerY: 100,
-                    button: "left",
-                    heldKeys: [],
-                });
-
-                expect(onSelect).toBeCalledTimes(0);
-            });
-
-            it("does not select if selectable flag is false", () => {
-                setSelectMode({ flags: { point: {} } });
-
-                addPointToStore([0, 0]);
-                mockMouseEventBoundingBox([
-                    [0, 0],
-                    [0, 1],
-                    [1, 1],
-                    [1, 0],
-                ]);
-
-                project.mockReturnValueOnce({
-                    x: 0,
-                    y: 0,
-                });
-
-                selectMode.onClick({
-                    lng: 0,
-                    lat: 0,
-                    containerX: 0,
-                    containerY: 0,
-                    button: "left",
-                    heldKeys: [],
-                });
-
-                expect(onSelect).toBeCalledTimes(0);
-            });
-
-            it("deselects selected when click is not on same or different feature", () => {
-                addPointToStore([0, 0]);
-
-                mockMouseEventBoundingBox();
-
-                project
-                    .mockReturnValueOnce({
-                        x: 0,
-                        y: 0,
-                    })
-                    .mockReturnValueOnce({
-                        x: 0,
-                        y: 0,
-                    });
-
-                selectMode.onClick({
-                    lng: 0,
-                    lat: 0,
-                    containerX: 0,
-                    containerY: 0,
-                    button: "left",
-                    heldKeys: [],
-                });
-
-                expect(onSelect).toBeCalledTimes(1);
-
+        describe('left click', () => {
+            it("does not select if no features", () => {
                 mockMouseEventBoundingBox();
 
                 selectMode.onClick({
-                    lng: 50,
-                    lat: 50,
-                    containerX: 50,
-                    containerY: 50,
-                    button: "left",
-                    heldKeys: [],
-                });
-
-                expect(onSelect).toBeCalledTimes(1);
-                expect(onDeselect).toBeCalledTimes(1);
-            });
-        });
-
-        describe("linestring", () => {
-            it("does select if feature is clicked", () => {
-                const id = addLineStringToStore([
-                    [0, 0],
-                    [1, 1],
-                ]);
-
-                mockMouseEventBoundingBox([
-                    [0, 0],
-                    [0, 1],
-                    [1, 1],
-                    [1, 0],
-                ]);
-
-                project
-                    .mockReturnValueOnce({
-                        x: 0,
-                        y: 0,
-                    })
-                    .mockReturnValueOnce({
-                        x: 0,
-                        y: 0,
-                    });
-
-                selectMode.onClick({
                     lng: 0,
                     lat: 0,
                     containerX: 0,
@@ -370,290 +213,140 @@ describe("TerraDrawSelectMode", () => {
                     heldKeys: [],
                 });
 
-                expect(onSelect).toBeCalledTimes(1);
+                expect(onChange).not.toBeCalled();
+                expect(onDeselect).not.toBeCalled();
+                expect(onSelect).not.toBeCalled();
             });
 
-            it("does not select if feature is not clicked", () => {
-                addLineStringToStore([
-                    [0, 0],
-                    [1, 1],
-                ]);
-
-                mockMouseEventBoundingBox([
-                    [0, 0],
-                    [0, 1],
-                    [1, 1],
-                    [1, 0],
-                ]);
-
-                project
-                    .mockReturnValueOnce({
-                        x: 0,
-                        y: 0,
-                    })
-                    .mockReturnValueOnce({
-                        x: 0,
-                        y: 0,
-                    });
-
-                selectMode.onClick({
-                    lng: 50,
-                    lat: 100,
-                    containerX: 100,
-                    containerY: 100,
-                    button: "left",
-                    heldKeys: [],
-                });
-
-                expect(onSelect).toBeCalledTimes(0);
-            });
-        });
-
-        describe("polygon", () => {
-            it("does select if feature is clicked", () => {
-                // Square Polygon
-                addPolygonToStore([
-                    [0, 0],
-                    [0, 1],
-                    [1, 1],
-                    [1, 0],
-                    [0, 0],
-                ]);
-
-                mockMouseEventBoundingBox([
-                    [0, 0],
-                    [0, 1],
-                    [1, 1],
-                    [1, 0],
-                ]);
-
-                selectMode.onClick({
-                    lng: 0.5,
-                    lat: 0.5,
-                    containerX: 0,
-                    containerY: 0,
-                    button: "left",
-                    heldKeys: [],
-                });
-
-                expect(onSelect).toBeCalledTimes(1);
-            });
-
-            it("does not select if feature is not clicked", () => {
-                // Square Polygon
-                addPolygonToStore([
-                    [0, 0],
-                    [0, 1],
-                    [1, 1],
-                    [1, 0],
-                    [0, 0],
-                ]);
-
-                mockMouseEventBoundingBox([
-                    [0, 0],
-                    [0, 1],
-                    [1, 1],
-                    [1, 0],
-                ]);
-
-                selectMode.onClick({
-                    lng: 2,
-                    lat: 2,
-                    containerX: 0,
-                    containerY: 0,
-                    button: "left",
-                    heldKeys: [],
-                });
-
-                expect(onSelect).toBeCalledTimes(0);
-            });
-
-            it("creates selection points when feature selection flag enabled", () => {
-                setSelectMode({
-                    flags: {
-                        polygon: {
-                            feature: {
-                                coordinates: {
-                                    draggable: false,
-                                },
-                            },
-                        },
-                    },
-                });
-
-                addPolygonToStore([
-                    [0, 0],
-                    [0, 1],
-                    [1, 1],
-                    [1, 0],
-                    [0, 0],
-                ]);
-
-                expect(onChange).toHaveBeenNthCalledWith(
-                    1,
-                    [expect.any(String)],
-                    "create"
-                );
-
-                // Store the ids of the created feature
-                const idOne = onChange.mock.calls[0][0] as string[];
-
-                mockMouseEventBoundingBox([
-                    [0, 0],
-                    [0, 1],
-                    [1, 1],
-                    [1, 0],
-                ]);
-
-                // Select polygon
-                selectMode.onClick({
-                    lng: 0.5,
-                    lat: 0.5,
-                    containerX: 0,
-                    containerY: 0,
-                    button: "left",
-                    heldKeys: [],
-                });
-
-                expect(onSelect).toBeCalledTimes(1);
-                expect(onSelect).toHaveBeenNthCalledWith(1, idOne[0]);
-
-                // Polygon selected set to true
-                expect(onChange).toHaveBeenNthCalledWith(2, idOne, "update");
-
-                // Create selection points
-                expect(onChange).toHaveBeenNthCalledWith(
-                    3,
-                    [
-                        expect.any(String),
-                        expect.any(String),
-                        expect.any(String),
-                        expect.any(String),
-                        // We only create 4, not one for the closing coord
-                        // as it is identical to to the first
-                    ],
-                    "create"
-                );
-            });
-
-            it("creates midpoints when flag enabled", () => {
-                setSelectMode({
-                    flags: {
-                        polygon: {
-                            feature: {
-                                draggable: false,
-                                coordinates: { draggable: false, midpoints: true },
-                            },
-                        },
-                    },
-                });
-
-                addPolygonToStore([
-                    [0, 0],
-                    [0, 1],
-                    [1, 1],
-                    [1, 0],
-                    [0, 0],
-                ]);
-
-                expect(onChange).toHaveBeenNthCalledWith(
-                    1,
-                    [expect.any(String)],
-                    "create"
-                );
-
-                // Store the ids of the created feature
-                const idOne = onChange.mock.calls[0][0] as string[];
-
-                mockMouseEventBoundingBox([
-                    [0, 0],
-                    [0, 1],
-                    [1, 1],
-                    [1, 0],
-                ]);
-
-                // Select polygon
-                selectMode.onClick({
-                    lng: 0.5,
-                    lat: 0.5,
-                    containerX: 0,
-                    containerY: 0,
-                    button: "left",
-                    heldKeys: [],
-                });
-
-                expect(onSelect).toBeCalledTimes(1);
-                expect(onSelect).toHaveBeenNthCalledWith(1, idOne[0]);
-
-                // Polygon selected set to true
-                expect(onChange).toHaveBeenNthCalledWith(2, idOne, "update");
-
-                // Create selection points
-                expect(onChange).toHaveBeenNthCalledWith(
-                    3,
-                    [
-                        expect.any(String),
-                        expect.any(String),
-                        expect.any(String),
-                        expect.any(String),
-                        // We only create 4, not one for the closing coord
-                        // as it is identical to to the first
-                    ],
-                    "create"
-                );
-
-                // Create mid points
-                expect(onChange).toHaveBeenNthCalledWith(
-                    4,
-                    [
-                        expect.any(String),
-                        expect.any(String),
-                        expect.any(String),
-                        expect.any(String),
-                    ],
-                    "create"
-                );
-            });
-
-            describe("switch selected", () => {
-                it("without selection points flag", () => {
-                    setSelectMode({
-                        flags: {
-                            polygon: { feature: { draggable: false } },
-                        },
-                    });
-
-                    addPolygonToStore([
+            describe("point", () => {
+                it("does select if feature is clicked", () => {
+                    addPointToStore([0, 0]);
+                    mockMouseEventBoundingBox([
                         [0, 0],
                         [0, 1],
                         [1, 1],
                         [1, 0],
+                    ]);
+
+                    project.mockReturnValueOnce({
+                        x: 0,
+                        y: 0,
+                    });
+
+                    selectMode.onClick({
+                        lng: 0,
+                        lat: 0,
+                        containerX: 0,
+                        containerY: 0,
+                        button: "left",
+                        heldKeys: [],
+                    });
+
+                    expect(onSelect).toBeCalledTimes(1);
+                });
+
+                it("does not select if feature is not clicked", () => {
+                    addPointToStore([0, 0]);
+                    mockMouseEventBoundingBox([
                         [0, 0],
+                        [0, 1],
+                        [1, 1],
+                        [1, 0],
                     ]);
 
-                    expect(onChange).toHaveBeenNthCalledWith(
-                        1,
-                        [expect.any(String)],
-                        "create"
-                    );
+                    project.mockReturnValueOnce({
+                        x: 0,
+                        y: 0,
+                    });
 
-                    addPolygonToStore([
-                        [2, 2],
-                        [2, 3],
-                        [3, 3],
-                        [3, 2],
-                        [2, 2],
+                    selectMode.onClick({
+                        lng: 50,
+                        lat: 100,
+                        containerX: 100,
+                        containerY: 100,
+                        button: "left",
+                        heldKeys: [],
+                    });
+
+                    expect(onSelect).toBeCalledTimes(0);
+                });
+
+                it("does not select if selectable flag is false", () => {
+                    setSelectMode({ flags: { point: {} } });
+
+                    addPointToStore([0, 0]);
+                    mockMouseEventBoundingBox([
+                        [0, 0],
+                        [0, 1],
+                        [1, 1],
+                        [1, 0],
                     ]);
 
-                    expect(onChange).toHaveBeenNthCalledWith(
-                        2,
-                        [expect.any(String)],
-                        "create"
-                    );
+                    project.mockReturnValueOnce({
+                        x: 0,
+                        y: 0,
+                    });
 
-                    // Store the ids of the created features
-                    const idOne = onChange.mock.calls[0][0] as string[];
-                    const idTwo = onChange.mock.calls[1][0] as string[];
+                    selectMode.onClick({
+                        lng: 0,
+                        lat: 0,
+                        containerX: 0,
+                        containerY: 0,
+                        button: "left",
+                        heldKeys: [],
+                    });
+
+                    expect(onSelect).toBeCalledTimes(0);
+                });
+
+                it("deselects selected when click is not on same or different feature", () => {
+                    addPointToStore([0, 0]);
+
+                    mockMouseEventBoundingBox();
+
+                    project
+                        .mockReturnValueOnce({
+                            x: 0,
+                            y: 0,
+                        })
+                        .mockReturnValueOnce({
+                            x: 0,
+                            y: 0,
+                        });
+
+                    selectMode.onClick({
+                        lng: 0,
+                        lat: 0,
+                        containerX: 0,
+                        containerY: 0,
+                        button: "left",
+                        heldKeys: [],
+                    });
+
+                    expect(onSelect).toBeCalledTimes(1);
+
+                    mockMouseEventBoundingBox();
+
+                    selectMode.onClick({
+                        lng: 50,
+                        lat: 50,
+                        containerX: 50,
+                        containerY: 50,
+                        button: "left",
+                        heldKeys: [],
+                    });
+
+                    expect(onSelect).toBeCalledTimes(1);
+                    expect(onDeselect).toBeCalledTimes(1);
+                });
+            });
+
+            describe("linestring", () => {
+                it("does select if feature is clicked", () => {
+                    const id = addLineStringToStore([
+                        [0, 0],
+                        [1, 1],
+                    ]);
 
                     mockMouseEventBoundingBox([
                         [0, 0],
@@ -662,7 +355,82 @@ describe("TerraDrawSelectMode", () => {
                         [1, 0],
                     ]);
 
-                    // Select polygon
+                    project
+                        .mockReturnValueOnce({
+                            x: 0,
+                            y: 0,
+                        })
+                        .mockReturnValueOnce({
+                            x: 0,
+                            y: 0,
+                        });
+
+                    selectMode.onClick({
+                        lng: 0,
+                        lat: 0,
+                        containerX: 0,
+                        containerY: 0,
+                        button: "left",
+                        heldKeys: [],
+                    });
+
+                    expect(onSelect).toBeCalledTimes(1);
+                });
+
+                it("does not select if feature is not clicked", () => {
+                    addLineStringToStore([
+                        [0, 0],
+                        [1, 1],
+                    ]);
+
+                    mockMouseEventBoundingBox([
+                        [0, 0],
+                        [0, 1],
+                        [1, 1],
+                        [1, 0],
+                    ]);
+
+                    project
+                        .mockReturnValueOnce({
+                            x: 0,
+                            y: 0,
+                        })
+                        .mockReturnValueOnce({
+                            x: 0,
+                            y: 0,
+                        });
+
+                    selectMode.onClick({
+                        lng: 50,
+                        lat: 100,
+                        containerX: 100,
+                        containerY: 100,
+                        button: "left",
+                        heldKeys: [],
+                    });
+
+                    expect(onSelect).toBeCalledTimes(0);
+                });
+            });
+
+            describe("polygon", () => {
+                it("does select if feature is clicked", () => {
+                    // Square Polygon
+                    addPolygonToStore([
+                        [0, 0],
+                        [0, 1],
+                        [1, 1],
+                        [1, 0],
+                        [0, 0],
+                    ]);
+
+                    mockMouseEventBoundingBox([
+                        [0, 0],
+                        [0, 1],
+                        [1, 1],
+                        [1, 0],
+                    ]);
+
                     selectMode.onClick({
                         lng: 0.5,
                         lat: 0.5,
@@ -673,50 +441,45 @@ describe("TerraDrawSelectMode", () => {
                     });
 
                     expect(onSelect).toBeCalledTimes(1);
-                    expect(onSelect).toHaveBeenNthCalledWith(1, idOne[0]);
+                });
 
-                    // First polygon selected set to true
-                    expect(onChange).toHaveBeenNthCalledWith(3, idOne, "update");
-
-                    mockMouseEventBoundingBox([
-                        [2, 2],
-                        [2, 3],
-                        [3, 3],
-                        [3, 2],
+                it("does not select if feature is not clicked", () => {
+                    // Square Polygon
+                    addPolygonToStore([
+                        [0, 0],
+                        [0, 1],
+                        [1, 1],
+                        [1, 0],
+                        [0, 0],
                     ]);
 
-                    // Deselect first polygon, select second
+                    mockMouseEventBoundingBox([
+                        [0, 0],
+                        [0, 1],
+                        [1, 1],
+                        [1, 0],
+                    ]);
+
                     selectMode.onClick({
-                        lng: 2.5,
-                        lat: 2.5,
+                        lng: 2,
+                        lat: 2,
                         containerX: 0,
                         containerY: 0,
                         button: "left",
                         heldKeys: [],
                     });
 
-                    // Second polygon selected
-                    expect(onSelect).toBeCalledTimes(2);
-                    expect(onSelect).toHaveBeenNthCalledWith(2, idTwo[0]);
-
-                    // Deselect first polygon
-                    expect(onDeselect).toBeCalledTimes(1);
-                    expect(onDeselect).toHaveBeenNthCalledWith(1, idOne[0]);
-
-                    // First polygon selected set to false
-                    expect(onChange).toHaveBeenNthCalledWith(4, idOne, "update");
-
-                    // Second polygon selected set to true
-                    expect(onChange).toHaveBeenNthCalledWith(5, idTwo, "update");
+                    expect(onSelect).toBeCalledTimes(0);
                 });
 
-                it("with selection points flag", () => {
+                it("creates selection points when feature selection flag enabled", () => {
                     setSelectMode({
                         flags: {
                             polygon: {
                                 feature: {
-                                    draggable: false,
-                                    coordinates: { draggable: false },
+                                    coordinates: {
+                                        draggable: false,
+                                    },
                                 },
                             },
                         },
@@ -736,23 +499,8 @@ describe("TerraDrawSelectMode", () => {
                         "create"
                     );
 
-                    addPolygonToStore([
-                        [2, 2],
-                        [2, 3],
-                        [3, 3],
-                        [3, 2],
-                        [2, 2],
-                    ]);
-
-                    expect(onChange).toHaveBeenNthCalledWith(
-                        2,
-                        [expect.any(String)],
-                        "create"
-                    );
-
-                    // Store the ids of the created features
+                    // Store the ids of the created feature
                     const idOne = onChange.mock.calls[0][0] as string[];
-                    const idTwo = onChange.mock.calls[1][0] as string[];
 
                     mockMouseEventBoundingBox([
                         [0, 0],
@@ -774,12 +522,12 @@ describe("TerraDrawSelectMode", () => {
                     expect(onSelect).toBeCalledTimes(1);
                     expect(onSelect).toHaveBeenNthCalledWith(1, idOne[0]);
 
-                    // First polygon selected set to true
-                    expect(onChange).toHaveBeenNthCalledWith(3, idOne, "update");
+                    // Polygon selected set to true
+                    expect(onChange).toHaveBeenNthCalledWith(2, idOne, "update");
 
                     // Create selection points
                     expect(onChange).toHaveBeenNthCalledWith(
-                        4,
+                        3,
                         [
                             expect.any(String),
                             expect.any(String),
@@ -790,52 +538,9 @@ describe("TerraDrawSelectMode", () => {
                         ],
                         "create"
                     );
-
-                    mockMouseEventBoundingBox([
-                        [2, 2],
-                        [2, 3],
-                        [3, 3],
-                        [3, 2],
-                    ]);
-
-                    // Deselect first polygon, select second
-                    selectMode.onClick({
-                        lng: 2.5,
-                        lat: 2.5,
-                        containerX: 0,
-                        containerY: 0,
-                        button: "left",
-                        heldKeys: [],
-                    });
-
-                    // Second polygon selected
-                    expect(onSelect).toBeCalledTimes(2);
-                    expect(onSelect).toHaveBeenNthCalledWith(2, idTwo[0]);
-
-                    // Deselect first polygon selected set to false
-                    expect(onDeselect).toBeCalledTimes(1);
-                    expect(onDeselect).toHaveBeenNthCalledWith(1, idOne[0]);
-
-                    expect(onChange).toHaveBeenNthCalledWith(5, idOne, "update");
-
-                    // Delete first polygon selection points
-                    expect(onChange).toHaveBeenNthCalledWith(
-                        6,
-                        [
-                            expect.any(String),
-                            expect.any(String),
-                            expect.any(String),
-                            expect.any(String),
-                            // Again only 4 points as we skip closing coord
-                        ],
-                        "delete"
-                    );
-
-                    // Second polygon selected set to true
-                    expect(onChange).toHaveBeenNthCalledWith(7, idTwo, "update");
                 });
 
-                it("with mid points flag", () => {
+                it("creates midpoints when flag enabled", () => {
                     setSelectMode({
                         flags: {
                             polygon: {
@@ -861,23 +566,8 @@ describe("TerraDrawSelectMode", () => {
                         "create"
                     );
 
-                    addPolygonToStore([
-                        [2, 2],
-                        [2, 3],
-                        [3, 3],
-                        [3, 2],
-                        [2, 2],
-                    ]);
-
-                    expect(onChange).toHaveBeenNthCalledWith(
-                        2,
-                        [expect.any(String)],
-                        "create"
-                    );
-
-                    // Store the ids of the created features
+                    // Store the ids of the created feature
                     const idOne = onChange.mock.calls[0][0] as string[];
-                    const idTwo = onChange.mock.calls[1][0] as string[];
 
                     mockMouseEventBoundingBox([
                         [0, 0],
@@ -899,12 +589,12 @@ describe("TerraDrawSelectMode", () => {
                     expect(onSelect).toBeCalledTimes(1);
                     expect(onSelect).toHaveBeenNthCalledWith(1, idOne[0]);
 
-                    // First polygon selected set to true
-                    expect(onChange).toHaveBeenNthCalledWith(3, idOne, "update");
+                    // Polygon selected set to true
+                    expect(onChange).toHaveBeenNthCalledWith(2, idOne, "update");
 
                     // Create selection points
                     expect(onChange).toHaveBeenNthCalledWith(
-                        4,
+                        3,
                         [
                             expect.any(String),
                             expect.any(String),
@@ -918,7 +608,7 @@ describe("TerraDrawSelectMode", () => {
 
                     // Create mid points
                     expect(onChange).toHaveBeenNthCalledWith(
-                        5,
+                        4,
                         [
                             expect.any(String),
                             expect.any(String),
@@ -927,84 +617,582 @@ describe("TerraDrawSelectMode", () => {
                         ],
                         "create"
                     );
+                });
 
-                    mockMouseEventBoundingBox([
-                        [2, 2],
-                        [2, 3],
-                        [3, 3],
-                        [3, 2],
-                    ]);
-
-                    // Mock midpoint distance check
-                    project
-                        .mockReturnValueOnce({
-                            x: 0,
-                            y: 0,
-                        })
-                        .mockReturnValueOnce({
-                            x: 0,
-                            y: 0,
-                        })
-                        .mockReturnValueOnce({
-                            x: 0,
-                            y: 0,
-                        })
-                        .mockReturnValueOnce({
-                            x: 0,
-                            y: 0,
+                describe("switch selected", () => {
+                    it("without selection points flag", () => {
+                        setSelectMode({
+                            flags: {
+                                polygon: { feature: { draggable: false } },
+                            },
                         });
 
-                    // Deselect first polygon, select second
-                    selectMode.onClick({
-                        lng: 2.5,
-                        lat: 2.5,
-                        containerX: 0,
-                        containerY: 0,
-                        button: "left",
-                        heldKeys: [],
+                        addPolygonToStore([
+                            [0, 0],
+                            [0, 1],
+                            [1, 1],
+                            [1, 0],
+                            [0, 0],
+                        ]);
+
+                        expect(onChange).toHaveBeenNthCalledWith(
+                            1,
+                            [expect.any(String)],
+                            "create"
+                        );
+
+                        addPolygonToStore([
+                            [2, 2],
+                            [2, 3],
+                            [3, 3],
+                            [3, 2],
+                            [2, 2],
+                        ]);
+
+                        expect(onChange).toHaveBeenNthCalledWith(
+                            2,
+                            [expect.any(String)],
+                            "create"
+                        );
+
+                        // Store the ids of the created features
+                        const idOne = onChange.mock.calls[0][0] as string[];
+                        const idTwo = onChange.mock.calls[1][0] as string[];
+
+                        mockMouseEventBoundingBox([
+                            [0, 0],
+                            [0, 1],
+                            [1, 1],
+                            [1, 0],
+                        ]);
+
+                        // Select polygon
+                        selectMode.onClick({
+                            lng: 0.5,
+                            lat: 0.5,
+                            containerX: 0,
+                            containerY: 0,
+                            button: "left",
+                            heldKeys: [],
+                        });
+
+                        expect(onSelect).toBeCalledTimes(1);
+                        expect(onSelect).toHaveBeenNthCalledWith(1, idOne[0]);
+
+                        // First polygon selected set to true
+                        expect(onChange).toHaveBeenNthCalledWith(3, idOne, "update");
+
+                        mockMouseEventBoundingBox([
+                            [2, 2],
+                            [2, 3],
+                            [3, 3],
+                            [3, 2],
+                        ]);
+
+                        // Deselect first polygon, select second
+                        selectMode.onClick({
+                            lng: 2.5,
+                            lat: 2.5,
+                            containerX: 0,
+                            containerY: 0,
+                            button: "left",
+                            heldKeys: [],
+                        });
+
+                        // Second polygon selected
+                        expect(onSelect).toBeCalledTimes(2);
+                        expect(onSelect).toHaveBeenNthCalledWith(2, idTwo[0]);
+
+                        // Deselect first polygon
+                        expect(onDeselect).toBeCalledTimes(1);
+                        expect(onDeselect).toHaveBeenNthCalledWith(1, idOne[0]);
+
+                        // First polygon selected set to false
+                        expect(onChange).toHaveBeenNthCalledWith(4, idOne, "update");
+
+                        // Second polygon selected set to true
+                        expect(onChange).toHaveBeenNthCalledWith(5, idTwo, "update");
                     });
 
-                    // Second polygon selected
-                    expect(onSelect).toBeCalledTimes(2);
-                    expect(onSelect).toHaveBeenNthCalledWith(2, idTwo[0]);
+                    it("with selection points flag", () => {
+                        setSelectMode({
+                            flags: {
+                                polygon: {
+                                    feature: {
+                                        draggable: false,
+                                        coordinates: { draggable: false },
+                                    },
+                                },
+                            },
+                        });
 
-                    // Deselect first polygon selected set to false
-                    expect(onDeselect).toBeCalledTimes(1);
-                    expect(onDeselect).toHaveBeenNthCalledWith(1, idOne[0]);
+                        addPolygonToStore([
+                            [0, 0],
+                            [0, 1],
+                            [1, 1],
+                            [1, 0],
+                            [0, 0],
+                        ]);
 
-                    expect(onChange).toHaveBeenNthCalledWith(6, idOne, "update");
+                        expect(onChange).toHaveBeenNthCalledWith(
+                            1,
+                            [expect.any(String)],
+                            "create"
+                        );
 
-                    // Delete first polygon selection points
-                    expect(onChange).toHaveBeenNthCalledWith(
-                        7,
-                        [
-                            expect.any(String),
-                            expect.any(String),
-                            expect.any(String),
-                            expect.any(String),
-                            // Again only 4 points as we skip closing coord
-                        ],
-                        "delete"
-                    );
+                        addPolygonToStore([
+                            [2, 2],
+                            [2, 3],
+                            [3, 3],
+                            [3, 2],
+                            [2, 2],
+                        ]);
 
-                    // Delete first polygon mid points
-                    expect(onChange).toHaveBeenNthCalledWith(
-                        8,
-                        [
-                            expect.any(String),
-                            expect.any(String),
-                            expect.any(String),
-                            expect.any(String),
-                        ],
-                        "delete"
-                    );
+                        expect(onChange).toHaveBeenNthCalledWith(
+                            2,
+                            [expect.any(String)],
+                            "create"
+                        );
 
-                    // Second polygon selected set to true
-                    expect(onChange).toHaveBeenNthCalledWith(
-                        9,
-                        idTwo,
-                        "update"
-                    );
+                        // Store the ids of the created features
+                        const idOne = onChange.mock.calls[0][0] as string[];
+                        const idTwo = onChange.mock.calls[1][0] as string[];
+
+                        mockMouseEventBoundingBox([
+                            [0, 0],
+                            [0, 1],
+                            [1, 1],
+                            [1, 0],
+                        ]);
+
+                        // Select polygon
+                        selectMode.onClick({
+                            lng: 0.5,
+                            lat: 0.5,
+                            containerX: 0,
+                            containerY: 0,
+                            button: "left",
+                            heldKeys: [],
+                        });
+
+                        expect(onSelect).toBeCalledTimes(1);
+                        expect(onSelect).toHaveBeenNthCalledWith(1, idOne[0]);
+
+                        // First polygon selected set to true
+                        expect(onChange).toHaveBeenNthCalledWith(3, idOne, "update");
+
+                        // Create selection points
+                        expect(onChange).toHaveBeenNthCalledWith(
+                            4,
+                            [
+                                expect.any(String),
+                                expect.any(String),
+                                expect.any(String),
+                                expect.any(String),
+                                // We only create 4, not one for the closing coord
+                                // as it is identical to to the first
+                            ],
+                            "create"
+                        );
+
+                        mockMouseEventBoundingBox([
+                            [2, 2],
+                            [2, 3],
+                            [3, 3],
+                            [3, 2],
+                        ]);
+
+                        // Deselect first polygon, select second
+                        selectMode.onClick({
+                            lng: 2.5,
+                            lat: 2.5,
+                            containerX: 0,
+                            containerY: 0,
+                            button: "left",
+                            heldKeys: [],
+                        });
+
+                        // Second polygon selected
+                        expect(onSelect).toBeCalledTimes(2);
+                        expect(onSelect).toHaveBeenNthCalledWith(2, idTwo[0]);
+
+                        // Deselect first polygon selected set to false
+                        expect(onDeselect).toBeCalledTimes(1);
+                        expect(onDeselect).toHaveBeenNthCalledWith(1, idOne[0]);
+
+                        expect(onChange).toHaveBeenNthCalledWith(5, idOne, "update");
+
+                        // Delete first polygon selection points
+                        expect(onChange).toHaveBeenNthCalledWith(
+                            6,
+                            [
+                                expect.any(String),
+                                expect.any(String),
+                                expect.any(String),
+                                expect.any(String),
+                                // Again only 4 points as we skip closing coord
+                            ],
+                            "delete"
+                        );
+
+                        // Second polygon selected set to true
+                        expect(onChange).toHaveBeenNthCalledWith(7, idTwo, "update");
+                    });
+
+                    it("with mid points flag", () => {
+                        setSelectMode({
+                            flags: {
+                                polygon: {
+                                    feature: {
+                                        draggable: false,
+                                        coordinates: { draggable: false, midpoints: true },
+                                    },
+                                },
+                            },
+                        });
+
+                        addPolygonToStore([
+                            [0, 0],
+                            [0, 1],
+                            [1, 1],
+                            [1, 0],
+                            [0, 0],
+                        ]);
+
+                        expect(onChange).toHaveBeenNthCalledWith(
+                            1,
+                            [expect.any(String)],
+                            "create"
+                        );
+
+                        addPolygonToStore([
+                            [2, 2],
+                            [2, 3],
+                            [3, 3],
+                            [3, 2],
+                            [2, 2],
+                        ]);
+
+                        expect(onChange).toHaveBeenNthCalledWith(
+                            2,
+                            [expect.any(String)],
+                            "create"
+                        );
+
+                        // Store the ids of the created features
+                        const idOne = onChange.mock.calls[0][0] as string[];
+                        const idTwo = onChange.mock.calls[1][0] as string[];
+
+                        mockMouseEventBoundingBox([
+                            [0, 0],
+                            [0, 1],
+                            [1, 1],
+                            [1, 0],
+                        ]);
+
+                        // Select polygon
+                        selectMode.onClick({
+                            lng: 0.5,
+                            lat: 0.5,
+                            containerX: 0,
+                            containerY: 0,
+                            button: "left",
+                            heldKeys: [],
+                        });
+
+                        expect(onSelect).toBeCalledTimes(1);
+                        expect(onSelect).toHaveBeenNthCalledWith(1, idOne[0]);
+
+                        // First polygon selected set to true
+                        expect(onChange).toHaveBeenNthCalledWith(3, idOne, "update");
+
+                        // Create selection points
+                        expect(onChange).toHaveBeenNthCalledWith(
+                            4,
+                            [
+                                expect.any(String),
+                                expect.any(String),
+                                expect.any(String),
+                                expect.any(String),
+                                // We only create 4, not one for the closing coord
+                                // as it is identical to to the first
+                            ],
+                            "create"
+                        );
+
+                        // Create mid points
+                        expect(onChange).toHaveBeenNthCalledWith(
+                            5,
+                            [
+                                expect.any(String),
+                                expect.any(String),
+                                expect.any(String),
+                                expect.any(String),
+                            ],
+                            "create"
+                        );
+
+                        mockMouseEventBoundingBox([
+                            [2, 2],
+                            [2, 3],
+                            [3, 3],
+                            [3, 2],
+                        ]);
+
+                        // Mock midpoint distance check
+                        project
+                            .mockReturnValueOnce({
+                                x: 0,
+                                y: 0,
+                            })
+                            .mockReturnValueOnce({
+                                x: 0,
+                                y: 0,
+                            })
+                            .mockReturnValueOnce({
+                                x: 0,
+                                y: 0,
+                            })
+                            .mockReturnValueOnce({
+                                x: 0,
+                                y: 0,
+                            });
+
+                        // Deselect first polygon, select second
+                        selectMode.onClick({
+                            lng: 2.5,
+                            lat: 2.5,
+                            containerX: 0,
+                            containerY: 0,
+                            button: "left",
+                            heldKeys: [],
+                        });
+
+                        // Second polygon selected
+                        expect(onSelect).toBeCalledTimes(2);
+                        expect(onSelect).toHaveBeenNthCalledWith(2, idTwo[0]);
+
+                        // Deselect first polygon selected set to false
+                        expect(onDeselect).toBeCalledTimes(1);
+                        expect(onDeselect).toHaveBeenNthCalledWith(1, idOne[0]);
+
+                        expect(onChange).toHaveBeenNthCalledWith(6, idOne, "update");
+
+                        // Delete first polygon selection points
+                        expect(onChange).toHaveBeenNthCalledWith(
+                            7,
+                            [
+                                expect.any(String),
+                                expect.any(String),
+                                expect.any(String),
+                                expect.any(String),
+                                // Again only 4 points as we skip closing coord
+                            ],
+                            "delete"
+                        );
+
+                        // Delete first polygon mid points
+                        expect(onChange).toHaveBeenNthCalledWith(
+                            8,
+                            [
+                                expect.any(String),
+                                expect.any(String),
+                                expect.any(String),
+                                expect.any(String),
+                            ],
+                            "delete"
+                        );
+
+                        // Second polygon selected set to true
+                        expect(onChange).toHaveBeenNthCalledWith(
+                            9,
+                            idTwo,
+                            "update"
+                        );
+                    });
+                });
+            });
+        });
+
+        describe('right click', () => {
+            it("does not select if no features", () => {
+                mockMouseEventBoundingBox();
+
+                selectMode.onClick({
+                    lng: 0,
+                    lat: 0,
+                    containerX: 0,
+                    containerY: 0,
+                    button: "right",
+                    heldKeys: [],
+                });
+
+                expect(onChange).not.toBeCalled();
+                expect(onDeselect).not.toBeCalled();
+                expect(onSelect).not.toBeCalled();
+            });
+
+            it("returns if different feature than selected is clicked on", () => {
+                const config = setSelectMode({
+                    flags: {
+                        polygon: { feature: { draggable: false, coordinates: {} } },
+                    },
+                });
+
+                addPolygonToStore([
+                    [0, 0],
+                    [0, 1],
+                    [1, 1],
+                    [1, 0],
+                    [0, 0],
+                ]);
+
+                expect(onChange).toHaveBeenNthCalledWith(
+                    1,
+                    [expect.any(String)],
+                    "create"
+                );
+
+                addPolygonToStore([
+                    [80, 80],
+                    [80, 81],
+                    [81, 81],
+                    [81, 80],
+                    [81, 81],
+                ]);
+
+                expect(onChange).toHaveBeenNthCalledWith(
+                    2,
+                    [expect.any(String)],
+                    "create"
+                );
+
+                // Store the ids of the created features
+                const idOne = onChange.mock.calls[0][0] as string[];
+
+                mockMouseEventBoundingBox([
+                    [0, 0],
+                    [0, 1],
+                    [1, 1],
+                    [1, 0],
+                ]);
+
+                // Select polygon
+                selectMode.onClick({
+                    lng: 0.5,
+                    lat: 0.5,
+                    containerX: 0,
+                    containerY: 0,
+                    button: "left",
+                    heldKeys: [],
+                });
+
+                expect(onSelect).toBeCalledTimes(1);
+                expect(onSelect).toHaveBeenNthCalledWith(1, idOne[0]);
+
+                // First polygon selected set to true
+                expect(onChange).toHaveBeenNthCalledWith(3, idOne, "update");
+
+                mockMouseEventBoundingBox([
+                    [80, 80],
+                    [80, 81],
+                    [81, 81],
+                    [81, 80],
+                ]);
+
+                jest.spyOn(store, 'getGeometryCopy');
+                jest.spyOn(store, 'getPropertiesCopy');
+
+                // Mock selection point locations
+                mockProject(config.project, [
+                    [0, 0],
+                    [0, 1],
+                    [1, 1],
+                    [1, 0],
+                    [0, 0]
+                ]);
+
+                selectMode.onClick({
+                    lng: 80.5,
+                    lat: 80.5,
+                    containerX: 80.5,
+                    containerY: 80.5,
+                    button: "right",
+                    heldKeys: [],
+                });
+
+                expect(store.getGeometryCopy).toBeCalledTimes(4);
+                expect(onDeselect).toBeCalledTimes(0);
+                expect(store.getPropertiesCopy).toBeCalledTimes(0);
+            });
+
+            it("returns if selected feature is clicked on but deleteable is false", () => {
+                const config = setSelectMode({
+                    flags: {
+                        polygon: { feature: { draggable: false, coordinates: { deletable: true } } },
+                    },
+                });
+
+                addPolygonToStore([
+                    [0, 0],
+                    [0, 1],
+                    [1, 1],
+                    [1, 0],
+                    [0, 0],
+                ]);
+
+                expect(onChange).toHaveBeenNthCalledWith(
+                    1,
+                    [expect.any(String)],
+                    "create"
+                );
+
+                // Store the ids of the created features
+                const idOne = onChange.mock.calls[0][0] as string[];
+
+                mockMouseEventBoundingBox([
+                    [0, 0],
+                    [0, 1],
+                    [1, 1],
+                    [1, 0],
+                ]);
+
+                // Select polygon
+                selectMode.onClick({
+                    lng: 0.5,
+                    lat: 0.5,
+                    containerX: 0,
+                    containerY: 0,
+                    button: "left",
+                    heldKeys: [],
+                });
+
+                expect(onSelect).toBeCalledTimes(1);
+                expect(onSelect).toHaveBeenNthCalledWith(1, idOne[0]);
+
+                // First polygon selected set to true
+                expect(onChange).toHaveBeenNthCalledWith(2, idOne, "update");
+
+                mockMouseEventBoundingBox([
+                    [2, 2],
+                    [2, 3],
+                    [3, 3],
+                    [3, 2],
+                ]);
+
+
+                jest.spyOn(store, 'getGeometryCopy');
+
+                mockProject(config.project);
+
+                // Deselect first polygon, select second
+                selectMode.onClick({
+                    lng: 0,
+                    lat: 0,
+                    containerX: 0,
+                    containerY: 0,
+                    button: "right",
+                    heldKeys: [],
                 });
             });
         });

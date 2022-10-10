@@ -183,12 +183,13 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode {
         const properties = this.store.getPropertiesCopy(featureId);
         const modeFlags = this.flags[properties.mode as string];
 
-        if (
-            !modeFlags ||
+        // Check if we can actually delete the coordinate
+        const cannotDelete = !modeFlags ||
             !modeFlags.feature ||
             !modeFlags.feature.coordinates ||
-            !modeFlags.feature.coordinates.deletable
-        ) {
+            !modeFlags.feature.coordinates.deletable;
+
+        if (cannotDelete) {
             return;
         }
 

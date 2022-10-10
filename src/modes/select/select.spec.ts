@@ -1129,6 +1129,229 @@ describe("TerraDrawSelectMode", () => {
             it("returns if selected feature is clicked on but deleteable is false", () => {
                 const config = setSelectMode({
                     flags: {
+                        polygon: { feature: { draggable: false, coordinates: { deletable: false } } },
+                    },
+                });
+
+                addPolygonToStore([
+                    [0, 0],
+                    [0, 1],
+                    [1, 1],
+                    [1, 0],
+                    [0, 0],
+                ]);
+
+                expect(onChange).toHaveBeenNthCalledWith(
+                    1,
+                    [expect.any(String)],
+                    "create"
+                );
+
+                // Store the ids of the created features
+                const idOne = onChange.mock.calls[0][0] as string[];
+
+                mockMouseEventBoundingBox([
+                    [0, 0],
+                    [0, 1],
+                    [1, 1],
+                    [1, 0],
+                ]);
+
+                // Select polygon
+                selectMode.onClick({
+                    lng: 0.5,
+                    lat: 0.5,
+                    containerX: 0,
+                    containerY: 0,
+                    button: "left",
+                    heldKeys: [],
+                });
+
+                expect(onSelect).toBeCalledTimes(1);
+                expect(onSelect).toHaveBeenNthCalledWith(1, idOne[0]);
+
+                // First polygon selected set to true
+                expect(onChange).toHaveBeenNthCalledWith(2, idOne, "update");
+
+                mockMouseEventBoundingBox([
+                    [0, 0],
+                    [0, 1],
+                    [1, 1],
+                    [1, 0],
+                ]);
+
+
+                jest.spyOn(store, 'getGeometryCopy');
+
+                mockProject(config.project);
+
+                // Deselect first polygon, select second
+                selectMode.onClick({
+                    lng: 0,
+                    lat: 0,
+                    containerX: 0,
+                    containerY: 0,
+                    button: "right",
+                    heldKeys: [],
+                });
+
+                // Only called for checking distance to selection points, 
+                // should hit early return otherwise
+                expect(store.getGeometryCopy).toBeCalledTimes(4);
+            });
+
+            it("returns if selected feature is clicked on but deleteable is false", () => {
+                const config = setSelectMode({
+                    flags: {
+                        polygon: { feature: { draggable: false, coordinates: { deletable: false } } },
+                    },
+                });
+
+                addPolygonToStore([
+                    [0, 0],
+                    [0, 1],
+                    [1, 1],
+                    [1, 0],
+                    [0, 0],
+                ]);
+
+                expect(onChange).toHaveBeenNthCalledWith(
+                    1,
+                    [expect.any(String)],
+                    "create"
+                );
+
+                // Store the ids of the created features
+                const idOne = onChange.mock.calls[0][0] as string[];
+
+                mockMouseEventBoundingBox([
+                    [0, 0],
+                    [0, 1],
+                    [1, 1],
+                    [1, 0],
+                ]);
+
+                // Select polygon
+                selectMode.onClick({
+                    lng: 0.5,
+                    lat: 0.5,
+                    containerX: 0,
+                    containerY: 0,
+                    button: "left",
+                    heldKeys: [],
+                });
+
+                expect(onSelect).toBeCalledTimes(1);
+                expect(onSelect).toHaveBeenNthCalledWith(1, idOne[0]);
+
+                // First polygon selected set to true
+                expect(onChange).toHaveBeenNthCalledWith(2, idOne, "update");
+
+                mockMouseEventBoundingBox([
+                    [0, 0],
+                    [0, 1],
+                    [1, 1],
+                    [1, 0],
+                ]);
+
+
+                jest.spyOn(store, 'getGeometryCopy');
+
+                mockProject(config.project);
+
+                // Deselect first polygon, select second
+                selectMode.onClick({
+                    lng: 0,
+                    lat: 0,
+                    containerX: 0,
+                    containerY: 0,
+                    button: "right",
+                    heldKeys: [],
+                });
+
+                // Only called for checking distance to selection points, 
+                // should hit early return otherwise
+                expect(store.getGeometryCopy).toBeCalledTimes(4);
+            });
+
+
+            it("returns early if creates a invalid polygon by deleting coordinate", () => {
+                const config = setSelectMode({
+                    flags: {
+                        polygon: { feature: { draggable: false, coordinates: { deletable: true } } },
+                    },
+                });
+
+                addPolygonToStore([
+                    [0, 0],
+                    [0, 1],
+                    [1, 1],
+                    [0, 0],
+                ]);
+
+                expect(onChange).toHaveBeenNthCalledWith(
+                    1,
+                    [expect.any(String)],
+                    "create"
+                );
+
+                // Store the ids of the created features
+                const idOne = onChange.mock.calls[0][0] as string[];
+
+                mockMouseEventBoundingBox([
+                    [0, 0],
+                    [0, 1],
+                    [1, 1],
+                    [1, 0],
+                ]);
+
+                // Select polygon
+                selectMode.onClick({
+                    lng: 0.322723,
+                    lat: 0.672897,
+                    containerX: 0,
+                    containerY: 0,
+                    button: "left",
+                    heldKeys: [],
+                });
+
+                expect(onSelect).toBeCalledTimes(1);
+                expect(onSelect).toHaveBeenNthCalledWith(1, idOne[0]);
+
+                // First polygon selected set to true
+                expect(onChange).toHaveBeenNthCalledWith(2, idOne, "update");
+
+                mockMouseEventBoundingBox([
+                    [0, 0],
+                    [0, 1],
+                    [1, 1],
+                    [1, 0],
+                ]);
+
+
+                jest.spyOn(store, 'delete');
+                jest.spyOn(store, 'updateGeometry');
+
+                mockProject(config.project);
+
+                // Deselect first polygon, select second
+                selectMode.onClick({
+                    lng: 0,
+                    lat: 0,
+                    containerX: 0,
+                    containerY: 0,
+                    button: "right",
+                    heldKeys: [],
+                });
+
+
+                expect(store.delete).toBeCalledTimes(0);
+                expect(store.updateGeometry).toBeCalledTimes(0);
+            });
+
+            it("deletes a coordinate in deleteable set to true and a coordinate is clicked on", () => {
+                const config = setSelectMode({
+                    flags: {
                         polygon: { feature: { draggable: false, coordinates: { deletable: true } } },
                     },
                 });
@@ -1174,14 +1397,15 @@ describe("TerraDrawSelectMode", () => {
                 expect(onChange).toHaveBeenNthCalledWith(2, idOne, "update");
 
                 mockMouseEventBoundingBox([
-                    [2, 2],
-                    [2, 3],
-                    [3, 3],
-                    [3, 2],
+                    [0, 0],
+                    [0, 1],
+                    [1, 1],
+                    [1, 0],
                 ]);
 
 
-                jest.spyOn(store, 'getGeometryCopy');
+                jest.spyOn(store, 'delete');
+                jest.spyOn(store, 'updateGeometry');
 
                 mockProject(config.project);
 
@@ -1194,6 +1418,10 @@ describe("TerraDrawSelectMode", () => {
                     button: "right",
                     heldKeys: [],
                 });
+
+
+                expect(store.delete).toBeCalledTimes(1);
+                expect(store.updateGeometry).toBeCalledTimes(1);
             });
         });
     });

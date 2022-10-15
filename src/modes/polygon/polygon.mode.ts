@@ -9,12 +9,12 @@ import { TerraDrawBaseDrawMode } from "../base.mode";
 import { PixelDistanceBehavior } from "../pixel-distance.behavior";
 import { ClickBoundingBoxBehavior } from "../click-bounding-box.behavior";
 import { BehaviorConfig } from "../base.behavior";
-import { pixelDistance } from "../../geometry/measure/pixel-distance";
 import { createPolygon } from "../../util/geoms";
 import { SnappingBehavior } from "../snapping.behavior";
+import { coordinatesIdentical } from "../../geometry/identical-coordinates";
 
 type TerraDrawPolygonModeKeyEvents = {
-  cancel: KeyboardEvent["key"];
+    cancel: KeyboardEvent["key"];
 };
 export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode {
     mode = "polygon";
@@ -24,35 +24,38 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode {
     private allowSelfIntersections: boolean;
     private keyEvents: TerraDrawPolygonModeKeyEvents;
     private snappingEnabled: boolean;
+    private isClosed = false;
 
     // Behaviors
     private snapping!: SnappingBehavior;
+    private pixelDistance!: PixelDistanceBehavior;
 
     constructor(options?: {
-    allowSelfIntersections?: boolean;
-    snapping?: boolean;
-    styling?: Partial<TerraDrawAdapterStyling>;
-    pointerDistance?: number;
-    keyEvents?: TerraDrawPolygonModeKeyEvents;
-  }) {
+        allowSelfIntersections?: boolean;
+        snapping?: boolean;
+        styling?: Partial<TerraDrawAdapterStyling>;
+        pointerDistance?: number;
+        keyEvents?: TerraDrawPolygonModeKeyEvents;
+    }) {
         super(options);
 
         this.snappingEnabled =
-      options && options.snapping !== undefined ? options.snapping : false;
+            options && options.snapping !== undefined ? options.snapping : false;
 
         this.allowSelfIntersections =
-      options && options.allowSelfIntersections !== undefined
-          ? options.allowSelfIntersections
-          : true;
+            options && options.allowSelfIntersections !== undefined
+                ? options.allowSelfIntersections
+                : true;
 
         this.keyEvents =
-      options && options.keyEvents ? options.keyEvents : { cancel: "Escape" };
+            options && options.keyEvents ? options.keyEvents : { cancel: "Escape" };
     }
 
     public registerBehaviors(config: BehaviorConfig) {
+        this.pixelDistance = new PixelDistanceBehavior(config);
         this.snapping = new SnappingBehavior(
             config,
-            new PixelDistanceBehavior(config),
+            this.pixelDistance,
             new ClickBoundingBoxBehavior(config)
         );
     }
@@ -78,7 +81,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode {
             ? this.snapping.getSnappableCoordinate(event, this.currentId)
             : undefined;
 
-        const currentLineCoordinates = this.store.getGeometryCopy<Polygon>(
+        const currentPolygonCoordinates = this.store.getGeometryCopy<Polygon>(
             this.currentId
         ).coordinates[0];
 
@@ -96,24 +99,54 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode {
             const offset = Math.max(0.000001, epsilon);
 
             updatedCoordinates = [
-                currentLineCoordinates[0],
+                currentPolygonCoordinates[0],
                 [event.lng, event.lat],
                 [event.lng, event.lat + offset],
-                currentLineCoordinates[0],
+                currentPolygonCoordinates[0],
             ];
         } else if (this.currentCoordinate === 2) {
+
             updatedCoordinates = [
-                currentLineCoordinates[0],
-                currentLineCoordinates[1],
+                currentPolygonCoordinates[0],
+                currentPolygonCoordinates[1],
                 [event.lng, event.lat],
-                currentLineCoordinates[0],
+                currentPolygonCoordinates[0],
             ];
         } else {
-            updatedCoordinates = [
-                ...currentLineCoordinates.slice(0, -2),
-                [event.lng, event.lat],
-                currentLineCoordinates[0],
-            ];
+
+            const distance = this.pixelDistance.measure(
+                event,
+                currentPolygonCoordinates[0]
+            );
+
+            const isClosing = distance < this.pointerDistance;
+
+            if (isClosing) {
+                if (!this.isClosed) {
+                    updatedCoordinates = [
+                        ...currentPolygonCoordinates.slice(0, -2),
+                        currentPolygonCoordinates[0],
+                        currentPolygonCoordinates[0]
+                    ];
+
+                    this.isClosed = true;
+                } else {
+                    updatedCoordinates = [
+                        ...currentPolygonCoordinates
+                    ];
+                }
+            } else {
+
+                if (this.isClosed) {
+                    this.isClosed = false;
+                }
+
+                updatedCoordinates = [
+                    ...currentPolygonCoordinates.slice(0, -2),
+                    [event.lng, event.lat],
+                    currentPolygonCoordinates[0],
+                ];
+            }
         }
 
         this.store.updateGeometry([
@@ -129,9 +162,9 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode {
 
     onClick(event: TerraDrawMouseEvent) {
         const closestCoord =
-      this.currentId && this.snappingEnabled
-          ? this.snapping.getSnappableCoordinate(event, this.currentId)
-          : undefined;
+            this.currentId && this.snappingEnabled
+                ? this.snapping.getSnappableCoordinate(event, this.currentId)
+                : undefined;
 
         if (this.currentCoordinate === 0) {
             if (closestCoord) {
@@ -167,6 +200,13 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode {
                 this.currentId
             );
 
+            const previousCoordinate = currentPolygonGeometry.coordinates[0][0];
+            const isIdentical = coordinatesIdentical([event.lng, event.lat], previousCoordinate);
+
+            if (isIdentical) {
+                return;
+            }
+
             this.store.updateGeometry([
                 {
                     id: this.currentId,
@@ -195,6 +235,13 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode {
                 this.currentId
             );
 
+            const previousCoordinate = currentPolygonGeometry.coordinates[0][1];
+            const isIdentical = coordinatesIdentical([event.lng, event.lat], previousCoordinate);
+
+            if (isIdentical) {
+                return;
+            }
+
             this.store.updateGeometry([
                 {
                     id: this.currentId,
@@ -219,14 +266,13 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode {
                 this.currentId
             );
 
-            const [firstLng, firstLat] = currentPolygonGeometry.coordinates[0][0];
-            const { x, y } = this.project(firstLng, firstLat);
-            const distance = pixelDistance(
-                { x, y },
-                { x: event.containerX, y: event.containerY }
+            const distance = this.pixelDistance.measure(
+                event,
+                currentPolygonGeometry.coordinates[0][0]
             );
 
             const isClosingClick = distance < this.pointerDistance;
+
 
             if (isClosingClick) {
                 this.store.updateGeometry([
@@ -251,6 +297,14 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode {
                     event.lng = closestCoord[0];
                     event.lat = closestCoord[1];
                 }
+
+                const previousCoordinate = currentPolygonGeometry.coordinates[0][this.currentCoordinate - 1];
+                const isIdentical = coordinatesIdentical([event.lng, event.lat], previousCoordinate);
+
+                if (isIdentical) {
+                    return;
+                }
+
 
                 const updatedPolygon = createPolygon([
                     [
@@ -284,16 +338,16 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode {
         }
     }
 
-    onKeyDown() {}
+    onKeyDown() { }
 
     onDragStart() {
-    // We want to allow the default drag
-    // cursor to exist
+        // We want to allow the default drag
+        // cursor to exist
         this.setCursor("unset");
     }
-    onDrag() {}
+    onDrag() { }
     onDragEnd() {
-    // Set it back to crosshair
+        // Set it back to crosshair
         this.setCursor("crosshair");
     }
 
@@ -302,7 +356,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode {
             if (this.currentId) {
                 this.store.delete([this.currentId]);
             }
-        } catch (error) {}
+        } catch (error) { }
         this.currentId = undefined;
         this.currentCoordinate = 0;
     }

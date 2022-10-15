@@ -1,6 +1,8 @@
+import { ConfigSet } from "ts-jest";
 import { TerraDrawMouseEvent } from "../../common";
 import { GeoJSONStore } from "../../store/store";
 import { getMockModeConfig } from "../../test/mock-config";
+import { mockDrawEvent } from "../../test/mock-mouse-event";
 import { getDefaultStyling } from "../../util/styling";
 import { TerraDrawPolygonMode } from "./polygon.mode";
 
@@ -102,6 +104,7 @@ describe("TerraDrawPolygonMode", () => {
     describe("onMouseMove", () => {
         let polygonMode: TerraDrawPolygonMode;
         let store: GeoJSONStore;
+        let project: jest.Mock;
         let onChange: jest.Mock;
 
         beforeEach(() => {
@@ -111,6 +114,7 @@ describe("TerraDrawPolygonMode", () => {
 
             store = mockConfig.store;
             onChange = mockConfig.onChange;
+            project = mockConfig.project;
 
             polygonMode.register(mockConfig);
         });
@@ -260,6 +264,9 @@ describe("TerraDrawPolygonMode", () => {
                 heldKeys: [],
             });
 
+            // Snapping branch
+            project.mockReturnValueOnce({ x: 0, y: 0 });
+
             polygonMode.onMouseMove({
                 lng: 3,
                 lat: 3,
@@ -271,7 +278,7 @@ describe("TerraDrawPolygonMode", () => {
 
             expect(onChange).toBeCalledTimes(6);
 
-            const features = store.copyAll();
+            let features = store.copyAll();
             expect(features.length).toBe(1);
 
             expect(features[0].geometry.coordinates).toStrictEqual([
@@ -279,10 +286,36 @@ describe("TerraDrawPolygonMode", () => {
                     [0, 0],
                     [1, 1],
                     [2, 2],
-                    [3, 3],
+                    [0, 0],
                     [0, 0],
                 ],
             ]);
+
+            // No snapping branch
+            project.mockReturnValueOnce({ x: 0, y: 0 });
+
+            polygonMode.onMouseMove({
+                lng: 4,
+                lat: 4,
+                containerX: 41,
+                containerY: 41,
+                button: "left",
+                heldKeys: [],
+            });
+
+            features = store.copyAll();
+
+            expect(features[0].geometry.coordinates).toStrictEqual([
+                [
+                    [0, 0],
+                    [1, 1],
+                    [2, 2],
+                    [4, 4],
+                    [0, 0],
+                ],
+            ]);
+
+
         });
     });
 
@@ -294,11 +327,11 @@ describe("TerraDrawPolygonMode", () => {
 
         const mockClickBoundingBox = (
             bbox: [
-        [number, number],
-        [number, number],
-        [number, number],
-        [number, number]
-      ] = [
+                [number, number],
+                [number, number],
+                [number, number],
+                [number, number]
+            ] = [
                 [0, 0],
                 [0, 0],
                 [0, 0],
@@ -368,6 +401,9 @@ describe("TerraDrawPolygonMode", () => {
                 button: "left",
                 heldKeys: [],
             });
+
+
+            project.mockReturnValueOnce({ x: 0, y: 0 });
 
             polygonMode.onMouseMove({
                 lng: 3,
@@ -476,6 +512,8 @@ describe("TerraDrawPolygonMode", () => {
             });
 
             mockClickBoundingBox();
+            project.mockReturnValueOnce({ x: 0, y: 0 });
+
             polygonMode.onMouseMove({
                 lng: 3,
                 lat: 3,
@@ -567,40 +605,11 @@ describe("TerraDrawPolygonMode", () => {
                 heldKeys: [],
             });
 
+            project.mockReturnValueOnce({ x: 100, y: 100 });
+
             polygonMode.onMouseMove({
                 lng: 3,
                 lat: 3,
-                containerX: 0,
-                containerY: 0,
-                button: "left",
-                heldKeys: [],
-            });
-
-            project.mockReturnValueOnce({ x: 100, y: 100 });
-
-            polygonMode.onClick({
-                lng: 3,
-                lat: 3,
-                containerX: 0,
-                containerY: 0,
-                button: "left",
-                heldKeys: [],
-            });
-
-            polygonMode.onMouseMove({
-                lng: 4,
-                lat: 4,
-                containerX: 0,
-                containerY: 0,
-                button: "left",
-                heldKeys: [],
-            });
-
-            project.mockReturnValueOnce({ x: 100, y: 100 });
-
-            polygonMode.onClick({
-                lng: 4,
-                lat: 4,
                 containerX: 0,
                 containerY: 0,
                 button: "left",
@@ -608,6 +617,64 @@ describe("TerraDrawPolygonMode", () => {
             });
 
             let features = store.copyAll();
+            expect(features.length).toBe(1);
+            expect(features[0].geometry.coordinates).toStrictEqual([
+                [
+                    [0, 0],
+                    [1, 1],
+                    [2, 2],
+                    [3, 3],
+                    [0, 0],
+                ],
+            ]);
+
+            project.mockReturnValueOnce({ x: 100, y: 100 });
+
+            polygonMode.onClick({
+                lng: 3,
+                lat: 3,
+                containerX: 0,
+                containerY: 0,
+                button: "left",
+                heldKeys: [],
+            });
+
+            features = store.copyAll();
+            expect(features.length).toBe(1);
+            expect(features[0].geometry.coordinates).toStrictEqual([
+                [
+                    [0, 0],
+                    [1, 1],
+                    [2, 2],
+                    [3, 3],
+                    [3, 3],
+                    [0, 0],
+                ],
+            ]);
+
+            project.mockReturnValueOnce({ x: 100, y: 100 });
+
+            polygonMode.onMouseMove({
+                lng: 4,
+                lat: 4,
+                containerX: 0,
+                containerY: 0,
+                button: "left",
+                heldKeys: [],
+            });
+
+            project.mockReturnValueOnce({ x: 100, y: 100 });
+
+            polygonMode.onClick({
+                lng: 4,
+                lat: 4,
+                containerX: 0,
+                containerY: 0,
+                button: "left",
+                heldKeys: [],
+            });
+
+            features = store.copyAll();
             expect(features.length).toBe(1);
             expect(features[0].geometry.coordinates).toStrictEqual([
                 [
@@ -641,10 +708,92 @@ describe("TerraDrawPolygonMode", () => {
                     [2, 2],
                     [3, 3],
                     [4, 4],
-
                     [0, 0],
                 ],
             ]);
+        });
+
+        it("it early returns early if a duplicate coordinate is provided", () => {
+            polygonMode = new TerraDrawPolygonMode({
+                allowSelfIntersections: false,
+            });
+            const mockConfig = getMockModeConfig(polygonMode.mode);
+
+            store = mockConfig.store;
+            project = mockConfig.project;
+
+            polygonMode.register(mockConfig);
+            jest.spyOn(store, 'updateGeometry');
+            jest.spyOn(store, 'create');
+
+            const firstPoint = mockDrawEvent({
+                lng: 1,
+                lat: 1
+            });
+            polygonMode.onMouseMove(firstPoint);
+            polygonMode.onClick(firstPoint);
+
+            expect(store.updateGeometry).toBeCalledTimes(0);
+            expect(store.create).toBeCalledTimes(1);
+
+
+
+            polygonMode.onMouseMove(firstPoint);
+            expect(store.updateGeometry).toBeCalledTimes(1);
+
+            // Nothing happens here because the coordinates 
+            // are identical
+
+            polygonMode.onClick(firstPoint);
+            expect(store.updateGeometry).toBeCalledTimes(1);
+
+            const secondPoint = mockDrawEvent({
+                lng: 2,
+                lat: 2
+            });
+            polygonMode.onMouseMove(secondPoint);
+            expect(store.updateGeometry).toBeCalledTimes(2);
+
+            // This now updates because the coordinate is different
+
+            polygonMode.onClick(secondPoint);
+            expect(store.updateGeometry).toBeCalledTimes(3);
+
+
+            polygonMode.onMouseMove(secondPoint);
+            expect(store.updateGeometry).toBeCalledTimes(4);
+
+            // Again nothing happens because the coordinate is identical
+
+            polygonMode.onClick(secondPoint);
+            expect(store.updateGeometry).toBeCalledTimes(4);
+
+            const thirdPoint = mockDrawEvent({
+                lng: 3,
+                lat: 3
+            });
+
+            polygonMode.onMouseMove(thirdPoint);
+            expect(store.updateGeometry).toBeCalledTimes(5);
+
+            // This now updates because the coordinate is different
+
+            polygonMode.onClick(thirdPoint);
+            expect(store.updateGeometry).toBeCalledTimes(6);
+
+
+            // We have to mock project in the final block 
+            project.mockReturnValueOnce({ x: 0, y: 0 });
+
+            // Again nothing happens because the coordinate is identical
+            polygonMode.onMouseMove(thirdPoint);
+            expect(store.updateGeometry).toBeCalledTimes(7);
+
+            // We have to mock project in the final block 
+            project.mockReturnValueOnce({ x: 100, y: 100 });
+
+            polygonMode.onClick(thirdPoint);
+            expect(store.updateGeometry).toBeCalledTimes(7);
         });
 
         it("does not create a polygon line if it has intersections and allowSelfIntersections is false", () => {
@@ -701,6 +850,8 @@ describe("TerraDrawPolygonMode", () => {
             } as TerraDrawMouseEvent;
             project.mockReturnValueOnce({ x: 100, y: 100 });
             polygonMode.onMouseMove(coordFourEvent);
+
+            project.mockReturnValueOnce({ x: 100, y: 100 });
             polygonMode.onClick(coordFourEvent);
 
             let features = store.copyAll();
@@ -721,13 +872,15 @@ describe("TerraDrawPolygonMode", () => {
             const closingCoordEvent = {
                 ...coordOneEvent,
             };
+            project.mockReturnValueOnce({ x: 0, y: 0 });
             polygonMode.onMouseMove(closingCoordEvent);
+
             project.mockReturnValueOnce({ x: 0, y: 0 });
             polygonMode.onClick(closingCoordEvent);
 
             features = store.copyAll();
             expect(features.length).toBe(1);
-            expect(project).toBeCalledTimes(2);
+            expect(project).toBeCalledTimes(4);
 
             // The overlapping coordinate is not included
             expect(features[0].geometry.coordinates).toStrictEqual([

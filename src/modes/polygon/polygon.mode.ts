@@ -11,7 +11,8 @@ import { ClickBoundingBoxBehavior } from "../click-bounding-box.behavior";
 import { BehaviorConfig } from "../base.behavior";
 import { createPolygon } from "../../util/geoms";
 import { SnappingBehavior } from "../snapping.behavior";
-import { coordinatesIdentical } from "../../geometry/identical-coordinates";
+import { coordinatesIdentical } from "../../geometry/coordinates-identical";
+import { ClosingPointsBehavior } from "./behaviors/closing-points.behavior";
 
 type TerraDrawPolygonModeKeyEvents = {
     cancel: KeyboardEvent["key"];
@@ -29,6 +30,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode {
     // Behaviors
     private snapping!: SnappingBehavior;
     private pixelDistance!: PixelDistanceBehavior;
+    private closingPoints!: ClosingPointsBehavior;
 
     constructor(options?: {
         allowSelfIntersections?: boolean;
@@ -58,6 +60,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode {
             this.pixelDistance,
             new ClickBoundingBoxBehavior(config)
         );
+        this.closingPoints = new ClosingPointsBehavior(config, this.pixelDistance);
     }
 
     start() {
@@ -114,26 +117,18 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode {
             ];
         } else {
 
-            const distance = this.pixelDistance.measure(
-                event,
-                currentPolygonCoordinates[0]
-            );
+            const { isClosing, isPreviousClosing } = this.closingPoints.isClosingPoint(event);
 
-            const isClosing = distance < this.pointerDistance;
+            if (isPreviousClosing || isClosing) {
+                this.setCursor('pointer');
+                updatedCoordinates = [
+                    ...currentPolygonCoordinates.slice(0, -2),
+                    currentPolygonCoordinates[0],
+                    currentPolygonCoordinates[0]
+                ];
 
-            if (isClosing) {
                 if (!this.isClosed) {
-                    updatedCoordinates = [
-                        ...currentPolygonCoordinates.slice(0, -2),
-                        currentPolygonCoordinates[0],
-                        currentPolygonCoordinates[0]
-                    ];
-
                     this.isClosed = true;
-                } else {
-                    updatedCoordinates = [
-                        ...currentPolygonCoordinates
-                    ];
                 }
             } else {
 
@@ -158,6 +153,10 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode {
                 },
             },
         ]);
+
+        if (this.closingPoints.ids.length) {
+            this.closingPoints.update(updatedCoordinates);
+        }
     }
 
     onClick(event: TerraDrawMouseEvent) {
@@ -231,15 +230,19 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode {
                 event.lat = closestCoord[1];
             }
 
-            const currentPolygonGeometry = this.store.getGeometryCopy<Polygon>(
+            const currentPolygonCoordinates = this.store.getGeometryCopy<Polygon>(
                 this.currentId
-            );
+            ).coordinates[0];
 
-            const previousCoordinate = currentPolygonGeometry.coordinates[0][1];
+            const previousCoordinate = currentPolygonCoordinates[1];
             const isIdentical = coordinatesIdentical([event.lng, event.lat], previousCoordinate);
 
             if (isIdentical) {
                 return;
+            }
+
+            if (this.currentCoordinate === 2) {
+                this.closingPoints.create(currentPolygonCoordinates, 'polygon');
             }
 
             this.store.updateGeometry([
@@ -249,11 +252,11 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode {
                         type: "Polygon",
                         coordinates: [
                             [
-                                currentPolygonGeometry.coordinates[0][0],
-                                currentPolygonGeometry.coordinates[0][1],
+                                currentPolygonCoordinates[0],
+                                currentPolygonCoordinates[1],
                                 [event.lng, event.lat],
                                 [event.lng, event.lat],
-                                currentPolygonGeometry.coordinates[0][0],
+                                currentPolygonCoordinates[0],
                             ],
                         ],
                     },
@@ -262,19 +265,16 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode {
 
             this.currentCoordinate++;
         } else if (this.currentId) {
-            const currentPolygonGeometry = this.store.getGeometryCopy<Polygon>(
+
+
+            const currentPolygonCoordinates = this.store.getGeometryCopy<Polygon>(
                 this.currentId
-            );
+            ).coordinates[0];
 
-            const distance = this.pixelDistance.measure(
-                event,
-                currentPolygonGeometry.coordinates[0][0]
-            );
+            const { isClosing, isPreviousClosing } = this.closingPoints.isClosingPoint(event);
 
-            const isClosingClick = distance < this.pointerDistance;
+            if (isPreviousClosing || isClosing) {
 
-
-            if (isClosingClick) {
                 this.store.updateGeometry([
                     {
                         id: this.currentId,
@@ -282,8 +282,8 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode {
                             type: "Polygon",
                             coordinates: [
                                 [
-                                    ...currentPolygonGeometry.coordinates[0].slice(0, -2),
-                                    currentPolygonGeometry.coordinates[0][0],
+                                    ...currentPolygonCoordinates.slice(0, -2),
+                                    currentPolygonCoordinates[0],
                                 ],
                             ],
                         },
@@ -292,25 +292,25 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode {
 
                 this.currentCoordinate = 0;
                 this.currentId = undefined;
+                this.closingPoints.delete();
             } else {
                 if (closestCoord) {
                     event.lng = closestCoord[0];
                     event.lat = closestCoord[1];
                 }
 
-                const previousCoordinate = currentPolygonGeometry.coordinates[0][this.currentCoordinate - 1];
+                const previousCoordinate = currentPolygonCoordinates[this.currentCoordinate - 1];
                 const isIdentical = coordinatesIdentical([event.lng, event.lat], previousCoordinate);
 
                 if (isIdentical) {
                     return;
                 }
 
-
                 const updatedPolygon = createPolygon([
                     [
-                        ...currentPolygonGeometry.coordinates[0].slice(0, -1),
+                        ...currentPolygonCoordinates.slice(0, -1),
                         [event.lng, event.lat], // New point that onMouseMove can manipulate
-                        currentPolygonGeometry.coordinates[0][0],
+                        currentPolygonCoordinates[0],
                     ],
                 ]);
 
@@ -355,6 +355,9 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode {
         try {
             if (this.currentId) {
                 this.store.delete([this.currentId]);
+            }
+            if (this.closingPoints.ids.length) {
+                this.closingPoints.delete();
             }
         } catch (error) { }
         this.currentId = undefined;

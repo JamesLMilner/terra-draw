@@ -1,4 +1,3 @@
-import { ConfigSet } from "ts-jest";
 import { TerraDrawMouseEvent } from "../../common";
 import { GeoJSONStore } from "../../store/store";
 import { getMockModeConfig } from "../../test/mock-config";
@@ -266,6 +265,7 @@ describe("TerraDrawPolygonMode", () => {
 
             // Snapping branch
             project.mockReturnValueOnce({ x: 0, y: 0 });
+            project.mockReturnValueOnce({ x: 0, y: 0 });
 
             polygonMode.onMouseMove({
                 lng: 3,
@@ -276,10 +276,14 @@ describe("TerraDrawPolygonMode", () => {
                 heldKeys: [],
             });
 
-            expect(onChange).toBeCalledTimes(6);
+            // 6 times for the polygon and 
+            // 2 times for the closing points
+            expect(onChange).toBeCalledTimes(8);
 
+            // 1 times for the polygon
+            // 2 times for the closing points
             let features = store.copyAll();
-            expect(features.length).toBe(1);
+            expect(features.length).toBe(3);
 
             expect(features[0].geometry.coordinates).toStrictEqual([
                 [
@@ -292,6 +296,7 @@ describe("TerraDrawPolygonMode", () => {
             ]);
 
             // No snapping branch
+            project.mockReturnValueOnce({ x: 0, y: 0 });
             project.mockReturnValueOnce({ x: 0, y: 0 });
 
             polygonMode.onMouseMove({
@@ -402,7 +407,8 @@ describe("TerraDrawPolygonMode", () => {
                 heldKeys: [],
             });
 
-
+            // closingPoints
+            project.mockReturnValueOnce({ x: 0, y: 0 });
             project.mockReturnValueOnce({ x: 0, y: 0 });
 
             polygonMode.onMouseMove({
@@ -414,6 +420,8 @@ describe("TerraDrawPolygonMode", () => {
                 heldKeys: [],
             });
 
+            // closingPoints
+            project.mockReturnValueOnce({ x: 0, y: 0 });
             project.mockReturnValueOnce({ x: 0, y: 0 });
 
             polygonMode.onClick({
@@ -425,6 +433,8 @@ describe("TerraDrawPolygonMode", () => {
                 heldKeys: [],
             });
 
+            // closingPoints
+            project.mockReturnValueOnce({ x: 0, y: 0 });
             project.mockReturnValueOnce({ x: 0, y: 0 });
 
             polygonMode.onClick({
@@ -513,6 +523,7 @@ describe("TerraDrawPolygonMode", () => {
 
             mockClickBoundingBox();
             project.mockReturnValueOnce({ x: 0, y: 0 });
+            project.mockReturnValueOnce({ x: 0, y: 0 });
 
             polygonMode.onMouseMove({
                 lng: 3,
@@ -523,6 +534,7 @@ describe("TerraDrawPolygonMode", () => {
                 heldKeys: [],
             });
 
+            project.mockReturnValueOnce({ x: 0, y: 0 });
             project.mockReturnValueOnce({ x: 0, y: 0 });
 
             mockClickBoundingBox();
@@ -606,6 +618,7 @@ describe("TerraDrawPolygonMode", () => {
             });
 
             project.mockReturnValueOnce({ x: 100, y: 100 });
+            project.mockReturnValueOnce({ x: 150, y: 150 });
 
             polygonMode.onMouseMove({
                 lng: 3,
@@ -616,8 +629,11 @@ describe("TerraDrawPolygonMode", () => {
                 heldKeys: [],
             });
 
+
+            // 1 times for the polygon
+            // 2 times for the closing points
             let features = store.copyAll();
-            expect(features.length).toBe(1);
+            expect(features.length).toBe(3);
             expect(features[0].geometry.coordinates).toStrictEqual([
                 [
                     [0, 0],
@@ -629,6 +645,7 @@ describe("TerraDrawPolygonMode", () => {
             ]);
 
             project.mockReturnValueOnce({ x: 100, y: 100 });
+            project.mockReturnValueOnce({ x: 150, y: 150 });
 
             polygonMode.onClick({
                 lng: 3,
@@ -639,8 +656,10 @@ describe("TerraDrawPolygonMode", () => {
                 heldKeys: [],
             });
 
+            // 1 times for the polygon
+            // 2 times for the closing points
             features = store.copyAll();
-            expect(features.length).toBe(1);
+            expect(features.length).toBe(3);
             expect(features[0].geometry.coordinates).toStrictEqual([
                 [
                     [0, 0],
@@ -653,6 +672,7 @@ describe("TerraDrawPolygonMode", () => {
             ]);
 
             project.mockReturnValueOnce({ x: 100, y: 100 });
+            project.mockReturnValueOnce({ x: 150, y: 150 });
 
             polygonMode.onMouseMove({
                 lng: 4,
@@ -664,6 +684,7 @@ describe("TerraDrawPolygonMode", () => {
             });
 
             project.mockReturnValueOnce({ x: 100, y: 100 });
+            project.mockReturnValueOnce({ x: 150, y: 150 });
 
             polygonMode.onClick({
                 lng: 4,
@@ -674,8 +695,10 @@ describe("TerraDrawPolygonMode", () => {
                 heldKeys: [],
             });
 
+            // 1 times for the polygon
+            // 2 times for the closing points
             features = store.copyAll();
-            expect(features.length).toBe(1);
+            expect(features.length).toBe(3);
             expect(features[0].geometry.coordinates).toStrictEqual([
                 [
                     [0, 0],
@@ -689,7 +712,9 @@ describe("TerraDrawPolygonMode", () => {
             ]);
 
             project.mockReturnValueOnce({ x: 0, y: 0 });
+            project.mockReturnValueOnce({ x: 50, y: 50 });
 
+            // Close off the polygon
             polygonMode.onClick({
                 lng: 4,
                 lat: 4,
@@ -699,6 +724,8 @@ describe("TerraDrawPolygonMode", () => {
                 heldKeys: [],
             });
 
+
+            // No closing points as polygon is closed
             features = store.copyAll();
             expect(features.length).toBe(1);
             expect(features[0].geometry.coordinates).toStrictEqual([
@@ -781,19 +808,19 @@ describe("TerraDrawPolygonMode", () => {
             polygonMode.onClick(thirdPoint);
             expect(store.updateGeometry).toBeCalledTimes(6);
 
-
             // We have to mock project in the final block 
             project.mockReturnValueOnce({ x: 0, y: 0 });
+            project.mockReturnValueOnce({ x: 0, y: 0 });
 
-            // Again nothing happens because the coordinate is identical
             polygonMode.onMouseMove(thirdPoint);
-            expect(store.updateGeometry).toBeCalledTimes(7);
+            expect(store.updateGeometry).toBeCalledTimes(8);
 
             // We have to mock project in the final block 
             project.mockReturnValueOnce({ x: 100, y: 100 });
+            project.mockReturnValueOnce({ x: 100, y: 100 });
 
             polygonMode.onClick(thirdPoint);
-            expect(store.updateGeometry).toBeCalledTimes(7);
+            expect(store.updateGeometry).toBeCalledTimes(8);
         });
 
         it("does not create a polygon line if it has intersections and allowSelfIntersections is false", () => {
@@ -849,13 +876,15 @@ describe("TerraDrawPolygonMode", () => {
                 heldKeys: [],
             } as TerraDrawMouseEvent;
             project.mockReturnValueOnce({ x: 100, y: 100 });
+            project.mockReturnValueOnce({ x: 100, y: 100 });
             polygonMode.onMouseMove(coordFourEvent);
 
+            project.mockReturnValueOnce({ x: 100, y: 100 });
             project.mockReturnValueOnce({ x: 100, y: 100 });
             polygonMode.onClick(coordFourEvent);
 
             let features = store.copyAll();
-            expect(features.length).toBe(1);
+            expect(features.length).toBe(3);
 
             // Here we still have the coordinate but it's not committed
             // to the finished polygon
@@ -873,14 +902,17 @@ describe("TerraDrawPolygonMode", () => {
                 ...coordOneEvent,
             };
             project.mockReturnValueOnce({ x: 0, y: 0 });
+            project.mockReturnValueOnce({ x: 0, y: 0 });
             polygonMode.onMouseMove(closingCoordEvent);
 
             project.mockReturnValueOnce({ x: 0, y: 0 });
+            project.mockReturnValueOnce({ x: 0, y: 0 });
             polygonMode.onClick(closingCoordEvent);
 
+            // No closing points as feature is closed
             features = store.copyAll();
             expect(features.length).toBe(1);
-            expect(project).toBeCalledTimes(4);
+            expect(project).toBeCalledTimes(8);
 
             // The overlapping coordinate is not included
             expect(features[0].geometry.coordinates).toStrictEqual([

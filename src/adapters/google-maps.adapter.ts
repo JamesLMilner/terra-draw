@@ -6,6 +6,7 @@ import {
     TerraDrawChanges,
     TerraDrawMouseEvent,
     SELECT_PROPERTIES,
+    POLYGON_PROPERTIES,
 } from "../common";
 import { GeoJsonObject } from "geojson";
 
@@ -492,11 +493,16 @@ export class TerraDrawGoogleMapsAdapter implements TerraDrawAdapter {
             const midPoint = Boolean(
                 feature.getProperty(SELECT_PROPERTIES.MID_POINT)
             );
+            const closingPoint = Boolean(
+                feature.getProperty(POLYGON_PROPERTIES.CLOSING_POINT)
+            );
+
 
             switch (type) {
             case "Point":
                 const isSelection = selected || selectionPoint;
                 const isMidpoint = midPoint;
+                const isClosing = closingPoint;
                 return {
                     clickable: false,
                     icon: {
@@ -507,20 +513,20 @@ export class TerraDrawGoogleMapsAdapter implements TerraDrawAdapter {
                                 ? styling[mode].selectionPointWidth
                                 : isMidpoint
                                     ? styling[mode].midPointWidth
-                                    : styling[mode].pointWidth
+                                    : isClosing ? styling[mode].closingPointWidth : styling[mode].pointWidth
                         ),
                         fillColor: isSelection
                             ? styling[mode].selectedColor
                             : isMidpoint
                                 ? styling[mode].midPointColor
-                                : styling[mode].pointColor,
+                                : closingPoint ? styling[mode].closingPointColor : styling[mode].pointColor,
                         fillOpacity: 1,
                         strokeColor: isSelection
                             ? styling[mode].selectedPointOutlineColor
                             : isMidpoint
                                 ? styling[mode].midPointOutlineColor
-                                : undefined,
-                        strokeWeight: isSelection || isMidpoint ? 2 : 0,
+                                : closingPoint ? styling[mode].closingPointOutlineColor : styling[mode].pointOutlineColor,
+                        strokeWeight: isSelection || isMidpoint || isClosing ? 2 : 0,
                         rotation: 0,
                         scale: 1,
                     },

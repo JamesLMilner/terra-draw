@@ -17,5 +17,8 @@ export const getDefaultStyling = (): TerraDrawAdapterStyling => {
         midPointColor: "#3f97e0",
         midPointOutlineColor: "#ffffff",
         midPointWidth: 4,
+        closingPointColor: "#4c98e0",
+        closingPointWidth: 6,
+        closingPointOutlineColor: "#ffffff",
     };
 };

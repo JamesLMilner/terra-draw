@@ -6,6 +6,7 @@ import {
     TerraDrawChanges,
     TerraDrawMouseEvent,
     SELECT_PROPERTIES,
+    POLYGON_PROPERTIES,
 } from "../common";
 import { Feature, GeoJsonObject } from "geojson";
 import L from "leaflet";
@@ -13,16 +14,16 @@ import { limitPrecision } from "../geometry/limit-decimal-precision";
 
 export class TerraDrawLeafletAdapter implements TerraDrawAdapter {
     constructor(config: {
-    lib: typeof L;
-    map: L.Map;
-    coordinatePrecision?: number;
-  }) {
+        lib: typeof L;
+        map: L.Map;
+        coordinatePrecision?: number;
+    }) {
         this._lib = config.lib;
         this._map = config.map;
         this._coordinatePrecision =
-      typeof config.coordinatePrecision === "number"
-          ? config.coordinatePrecision
-          : 9;
+            typeof config.coordinatePrecision === "number"
+                ? config.coordinatePrecision
+                : 9;
 
         this.getMapContainer = () => {
             return this._map.getContainer();
@@ -63,6 +64,8 @@ export class TerraDrawLeafletAdapter implements TerraDrawAdapter {
     private _onDragListener: ((event: MouseEvent) => void) | undefined;
     private _onDragEndListener: ((event: MouseEvent) => void) | undefined;
     private _layer: L.Layer | undefined;
+    private _closingPointPaneZIndexStyleSheet: HTMLStyleElement | undefined;
+    private _closingPointPane = "closingPointPane";
     private _midPointPaneZIndexStyleSheet: HTMLStyleElement | undefined;
     private _midPointPane = "midPointPane";
     private _selectionPaneZIndexStyleSheet: HTMLStyleElement | undefined;
@@ -97,13 +100,20 @@ export class TerraDrawLeafletAdapter implements TerraDrawAdapter {
             );
         }
 
+        if (!this._closingPointPaneZIndexStyleSheet) {
+            this._closingPointPaneZIndexStyleSheet = this.createPaneStyleSheet(
+                this._closingPointPane,
+                30
+            );
+        }
+
         const container = this.getMapContainer();
 
         let dragState:
-      | "not-dragging"
-      | "pre-dragging"
-      | "dragging"
-      | "after-dragging" = "not-dragging";
+            | "not-dragging"
+            | "pre-dragging"
+            | "dragging"
+            | "after-dragging" = "not-dragging";
 
         this._onClickListener = (event: L.LeafletMouseEvent) => {
             if (dragState === "not-dragging" || dragState === "pre-dragging") {
@@ -111,9 +121,9 @@ export class TerraDrawLeafletAdapter implements TerraDrawAdapter {
                     lng: limitPrecision(event.latlng.lng, this._coordinatePrecision),
                     lat: limitPrecision(event.latlng.lat, this._coordinatePrecision),
                     containerX:
-            event.originalEvent.clientX - this.getMapContainer().offsetLeft,
+                        event.originalEvent.clientX - this.getMapContainer().offsetLeft,
                     containerY:
-            event.originalEvent.clientY - this.getMapContainer().offsetTop,
+                        event.originalEvent.clientY - this.getMapContainer().offsetTop,
                     button: event.originalEvent.button === 0 ? "left" : "right",
                     heldKeys: [...this._heldKeys],
                 });
@@ -132,9 +142,9 @@ export class TerraDrawLeafletAdapter implements TerraDrawAdapter {
                 lng: limitPrecision(event.latlng.lng, this._coordinatePrecision),
                 lat: limitPrecision(event.latlng.lat, this._coordinatePrecision),
                 containerX:
-          event.originalEvent.clientX - this.getMapContainer().offsetLeft,
+                    event.originalEvent.clientX - this.getMapContainer().offsetLeft,
                 containerY:
-          event.originalEvent.clientY - this.getMapContainer().offsetTop,
+                    event.originalEvent.clientY - this.getMapContainer().offsetTop,
                 button: event.originalEvent.button === 0 ? "left" : "right",
                 heldKeys: [...this._heldKeys],
             });
@@ -292,9 +302,14 @@ export class TerraDrawLeafletAdapter implements TerraDrawAdapter {
                 const mode = feature.properties.mode;
                 const modeStyle = styling[mode];
                 const isSelected =
-          feature.properties[SELECT_PROPERTIES.SELECTED] ||
-          feature.properties.selectionPoint;
+                    feature.properties[SELECT_PROPERTIES.SELECTED] ||
+                    feature.properties.selectionPoint;
                 const isMidPoint = feature.properties[SELECT_PROPERTIES.MID_POINT];
+                const isClosingPoint = feature.properties[POLYGON_PROPERTIES.CLOSING_POINT];
+
+                console.log(isClosingPoint);
+
+                const isAssistancePoint = isSelected || isMidPoint || isClosingPoint;
 
                 const styles = {
                     radius: isSelected
@@ -306,22 +321,26 @@ export class TerraDrawLeafletAdapter implements TerraDrawAdapter {
                         ? modeStyle.selectedColor
                         : isMidPoint
                             ? modeStyle.midPointColor
-                            : modeStyle.pointColor,
-                    stroke: isSelected || isMidPoint,
+                            : isClosingPoint ? modeStyle.closingPointColor : modeStyle.pointColor,
+                    stroke: isAssistancePoint,
                     color: isSelected
                         ? modeStyle.selectedPointOutlineColor
                         : isMidPoint
                             ? modeStyle.midPointOutlineColor
-                            : modeStyle.pointOutlineColor,
-                    weight: isSelected || isMidPoint ? 2 : 0,
+                            : isClosingPoint ? modeStyle.closingPointOutlineColor : modeStyle.pointOutlineColor,
+                    weight: isAssistancePoint ? 2 : 0,
                     fillOpacity: 0.8,
                     pane: isSelected
                         ? this._selectedPane
                         : isMidPoint
-                            ? this._midPointPane
-                            : undefined,
+                            ? this._midPointPane :
+                            isClosingPoint
+                                ? this._closingPointPane
+                                : undefined,
                     interactive: false, // Removes mouse hover cursor styles
                 } as L.CircleMarkerOptions;
+
+                console.log(styles);
 
                 const marker = this._lib.circleMarker(latlng, styles);
 

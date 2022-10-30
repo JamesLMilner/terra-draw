@@ -1,4 +1,4 @@
-<img src="logo.png" alt="Terra Draw Logo" width="400"/>
+<img src="docs/logo.png" alt="Terra Draw Logo" width="400"/>
 
 ![Terra Draw CI Badge](https://github.com/JamesLMilner/terra-draw/actions/workflows/ci.yml/badge.svg)
 

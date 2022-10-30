@@ -5,10 +5,10 @@
     "scripts": {
         "build": "microbundle",
         "watch": "microbundle --watch --format modern",
-        "test": "jest --config jest.config.json",
-        "test:coverage": "jest --config jest.config.json --coverage",
-        "test:nocheck": "jest --config swc.jest.config.json",
-        "test:nocheck:coverage": "jest --config swc.jest.config.json --coverage",
+        "test": "jest --config jest.config.ts",
+        "test:coverage": "jest --config jest.config.ts --coverage",
+        "test:nocheck": "NO_CHECK=true jest --config jest.config.ts",
+        "test:nocheck:coverage": "NO_CHECK=true jest --config jest.config.ts --coverage",
         "lint": "eslint --ext .ts src/",
         "lint:quiet": "eslint --ext .ts --quiet src/",
         "lint:fix": "eslint --fix --ext .ts src/",
@@ -52,5 +52,35 @@
         "ts-jest": "^28.0.5",
         "ts-loader": "^9.3.1",
         "typescript": "^4.7.4"
+    },
+    "commitlint": {
+        "extends": [
+            "@commitlint/config-conventional"
+        ]
+    },
+    "eslintConfig": {
+        "parser": "@typescript-eslint/parser",
+        "plugins": [
+            "@typescript-eslint"
+        ],
+        "rules": {
+            "indent": [
+                "error",
+                4
+            ],
+            "semi": [
+                "error",
+                "always"
+            ],
+            "@typescript-eslint/no-empty-function": "warn"
+        },
+        "extends": [
+            "plugin:@typescript-eslint/recommended",
+            "prettier"
+        ]
+    },
+    "prettier": {
+        "printWidth": 80,
+        "semi": true
     }
 }

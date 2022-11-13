@@ -22,6 +22,7 @@
         "default": "./dist/terra-draw.modern.js",
         "types": "./dist/terra-draw.d.ts"
     },
+    "types": "./dist/foo.d.ts",
     "main": "./dist/terra-draw.cjs",
     "module": "./dist/terra-draw.module.js",
     "unpkg": "./dist/terra-draw.umd.js",

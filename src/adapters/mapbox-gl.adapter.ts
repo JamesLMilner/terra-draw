@@ -4,9 +4,7 @@ import {
     TerraDrawModeRegisterConfig,
     TerraDrawAdapterStyling,
     TerraDrawChanges,
-    TerraDrawMouseEvent,
-    SELECT_PROPERTIES,
-    POLYGON_PROPERTIES,
+    TerraDrawMouseEvent
 } from "../common";
 import { Feature, LineString, Point, Polygon } from "geojson";
 import { limitPrecision } from "../geometry/limit-decimal-precision";

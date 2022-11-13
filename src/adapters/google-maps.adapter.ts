@@ -4,9 +4,7 @@ import {
     TerraDrawModeRegisterConfig,
     TerraDrawAdapterStyling,
     TerraDrawChanges,
-    TerraDrawMouseEvent,
-    SELECT_PROPERTIES,
-    POLYGON_PROPERTIES,
+    TerraDrawMouseEvent
 } from "../common";
 import { GeoJsonObject } from "geojson";
 

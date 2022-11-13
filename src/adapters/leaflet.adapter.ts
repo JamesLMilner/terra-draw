@@ -4,11 +4,8 @@ import {
     TerraDrawModeRegisterConfig,
     TerraDrawAdapterStyling,
     TerraDrawChanges,
-    TerraDrawMouseEvent,
-    SELECT_PROPERTIES,
-    POLYGON_PROPERTIES,
+    TerraDrawMouseEvent
 } from "../common";
-import { Feature, FeatureCollection, GeoJsonObject } from "geojson";
 import L from "leaflet";
 import { limitPrecision } from "../geometry/limit-decimal-precision";
 import { GeoJSONStoreFeatures } from "../store/store";

@@ -60,7 +60,6 @@ export interface TerraDrawMode {
     styleFeature: (feature: GeoJSONStoreFeatures) => TerraDrawAdapterStyling;
     styles: any;
     state: TerraDrawModeState;
-
     start: () => void;
     stop: () => void;
     register: (config: TerraDrawModeRegisterConfig) => void;

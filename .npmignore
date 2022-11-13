@@ -2,3 +2,4 @@ example/
 .vscode
 coverage/
 node_modules/
+src/

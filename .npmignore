@@ -5,3 +5,8 @@ node_modules/
 src/
 docs/
 development/
+data/
+.husky/
+.github/
+ROADMAP.md
+common/

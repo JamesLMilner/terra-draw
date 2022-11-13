@@ -18,9 +18,9 @@
     "type": "module",
     "source": "src/terra-draw.ts",
     "exports": {
+        "types": "./dist/terra-draw.d.ts",
         "require": "./dist/terra-draw.cjs",
-        "default": "./dist/terra-draw.modern.js",
-        "types": "./dist/terra-draw.d.ts"
+        "default": "./dist/terra-draw.modern.js"
     },
     "types": "./dist/terra-draw.d.ts",
     "main": "./dist/terra-draw.cjs",

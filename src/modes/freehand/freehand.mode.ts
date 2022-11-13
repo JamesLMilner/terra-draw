@@ -2,16 +2,26 @@ import {
     TerraDrawMouseEvent,
     TerraDrawAdapterStyling,
     TerraDrawKeyboardEvent,
+    HexColor,
 } from "../../common";
 import { Polygon } from "geojson";
 
 import { TerraDrawBaseDrawMode } from "../base.mode";
+import { getDefaultStyling } from "../../util/styling";
+import { GeoJSONStoreFeatures } from "../../store/store";
 
 type TerraDrawFreehandModeKeyEvents = {
-  cancel: KeyboardEvent["key"];
+    cancel: KeyboardEvent["key"];
 };
 
-export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode {
+type FreehandPolygonStyling = {
+    fillColor: HexColor,
+    outlineColor: HexColor,
+    outlineWidth: number,
+    fillOpacity: number,
+}
+
+export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygonStyling> {
     mode = "freehand";
 
     private startingClick = false;
@@ -21,15 +31,15 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode {
     private keyEvents: TerraDrawFreehandModeKeyEvents;
 
     constructor(options?: {
-    styling?: Partial<TerraDrawAdapterStyling>;
-    everyNthMouseEvent?: number;
-    keyEvents?: TerraDrawFreehandModeKeyEvents;
-  }) {
+        styles?: Partial<FreehandPolygonStyling>;
+        everyNthMouseEvent?: number;
+        keyEvents?: TerraDrawFreehandModeKeyEvents;
+    }) {
         super(options);
 
         this.everyNthMouseEvent = (options && options.everyNthMouseEvent) || 10;
         this.keyEvents =
-      options && options.keyEvents ? options.keyEvents : { cancel: "Escape" };
+            options && options.keyEvents ? options.keyEvents : { cancel: "Escape" };
     }
 
     start() {
@@ -102,23 +112,55 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode {
         this.startingClick = false;
         this.currentId = undefined;
     }
-    onKeyDown() {}
+    onKeyDown() { }
     onKeyUp(event: TerraDrawKeyboardEvent) {
         if (event.key === this.keyEvents.cancel) {
             this.cleanUp();
         }
     }
-    onDragStart() {}
-    onDrag() {}
-    onDragEnd() {}
+    onDragStart() { }
+    onDrag() { }
+    onDragEnd() { }
 
     cleanUp() {
         try {
             if (this.currentId) {
                 this.store.delete([this.currentId]);
             }
-        } catch (error) {}
+        } catch (error) { }
         this.currentId = undefined;
         this.startingClick = false;
     }
+
+    styleFeature(
+        feature: GeoJSONStoreFeatures
+    ): TerraDrawAdapterStyling {
+        const styles = { ...getDefaultStyling() };
+
+        if (
+            feature.type === 'Feature' &&
+            feature.geometry.type === 'Polygon' &&
+            feature.properties.mode === this.mode
+        ) {
+
+            if (this.styles.fillColor) {
+                styles.polygonFillColor = this.styles.fillColor;
+            }
+            if (this.styles.outlineColor) {
+                styles.polygonOutlineColor = this.styles.outlineColor;
+            }
+            if (this.styles.outlineWidth) {
+                styles.polygonOutlineWidth = this.styles.outlineWidth;
+            }
+            if (this.styles.fillOpacity) {
+                styles.polygonFillOpacity = this.styles.fillOpacity;
+            }
+
+            return styles;
+        }
+
+        return styles;
+
+    }
+
 }

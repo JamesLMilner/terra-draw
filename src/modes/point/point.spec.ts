@@ -10,16 +10,15 @@ describe("TerraDrawPointMode", () => {
         it("constructs with no options", () => {
             const pointMode = new TerraDrawPointMode();
             expect(pointMode.mode).toBe("point");
-            expect(pointMode.styling).toStrictEqual(defaultStyles);
+            expect(pointMode.styles).toStrictEqual({});
             expect(pointMode.state).toBe("unregistered");
         });
 
         it("constructs with options", () => {
             const pointMode = new TerraDrawPointMode({
-                styling: { pointOutlineColor: "#ffffff" },
+                styles: { pointOutlineColor: "#ffffff" },
             });
-            expect(pointMode.styling).toStrictEqual({
-                ...defaultStyles,
+            expect(pointMode.styles).toStrictEqual({
                 pointOutlineColor: "#ffffff",
             });
         });
@@ -187,6 +186,39 @@ describe("TerraDrawPointMode", () => {
             expect(() => {
                 pointMode.onDragEnd();
             }).not.toThrowError();
+        });
+    });
+
+
+    describe("styling", () => {
+        it("gets", () => {
+            const pointMode = new TerraDrawPointMode();
+            pointMode.register(getMockModeConfig(pointMode.mode));
+            expect(pointMode.styles).toStrictEqual({});
+        });
+
+        it("set fails if non valid styling", () => {
+            const pointMode = new TerraDrawPointMode();
+            pointMode.register(getMockModeConfig(pointMode.mode));
+
+            expect(() => {
+                (pointMode.styles as unknown) = "test";
+            }).toThrowError();
+
+            expect(pointMode.styles).toStrictEqual({});
+        });
+
+        it("sets", () => {
+            const pointMode = new TerraDrawPointMode();
+            pointMode.register(getMockModeConfig(pointMode.mode));
+
+            pointMode.styles = {
+                pointColor: "#ffffff",
+            };
+
+            expect(pointMode.styles).toStrictEqual({
+                pointColor: "#ffffff",
+            });
         });
     });
 });

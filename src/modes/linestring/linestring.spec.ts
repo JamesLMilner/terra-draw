@@ -10,18 +10,15 @@ describe("TerraDrawLineStringMode", () => {
         it("constructs with no options", () => {
             const lineStringMode = new TerraDrawLineStringMode();
             expect(lineStringMode.mode).toBe("linestring");
-            expect(lineStringMode.styling).toStrictEqual(defaultStyles);
+            expect(lineStringMode.styles).toStrictEqual({});
         });
 
         it("constructs with options", () => {
             const lineStringMode = new TerraDrawLineStringMode({
-                styling: { lineStringColor: "#ffffff" },
+                styles: { lineStringColor: "#ffffff" },
                 keyEvents: { cancel: "Backspace" },
             });
-            expect(lineStringMode.styling).toStrictEqual({
-                ...defaultStyles,
-                lineStringColor: "#ffffff",
-            });
+            expect(lineStringMode.styles).toStrictEqual({ lineStringColor: "#ffffff" });
         });
     });
 
@@ -488,6 +485,38 @@ describe("TerraDrawLineStringMode", () => {
             expect(() => {
                 lineStringMode.onDragEnd();
             }).not.toThrowError();
+        });
+    });
+
+    describe("styling", () => {
+        it("gets", () => {
+            const lineStringMode = new TerraDrawLineStringMode();
+            lineStringMode.register(getMockModeConfig(lineStringMode.mode));
+            expect(lineStringMode.styles).toStrictEqual({});
+        });
+
+        it("set fails if non valid styling", () => {
+            const lineStringMode = new TerraDrawLineStringMode();
+            lineStringMode.register(getMockModeConfig(lineStringMode.mode));
+
+            expect(() => {
+                (lineStringMode.styles as unknown) = "test";
+            }).toThrowError();
+
+            expect(lineStringMode.styles).toStrictEqual({});
+        });
+
+        it("sets", () => {
+            const lineStringMode = new TerraDrawLineStringMode();
+            lineStringMode.register(getMockModeConfig(lineStringMode.mode));
+
+            lineStringMode.styles = {
+                lineStringColor: "#ffffff",
+            };
+
+            expect(lineStringMode.styles).toStrictEqual({
+                lineStringColor: "#ffffff",
+            });
         });
     });
 });

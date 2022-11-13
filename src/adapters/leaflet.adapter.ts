@@ -8,9 +8,10 @@ import {
     SELECT_PROPERTIES,
     POLYGON_PROPERTIES,
 } from "../common";
-import { Feature, GeoJsonObject } from "geojson";
+import { Feature, FeatureCollection, GeoJsonObject } from "geojson";
 import L from "leaflet";
 import { limitPrecision } from "../geometry/limit-decimal-precision";
+import { GeoJSONStoreFeatures } from "../store/store";
 
 export class TerraDrawLeafletAdapter implements TerraDrawAdapter {
     constructor(config: {
@@ -64,12 +65,7 @@ export class TerraDrawLeafletAdapter implements TerraDrawAdapter {
     private _onDragListener: ((event: MouseEvent) => void) | undefined;
     private _onDragEndListener: ((event: MouseEvent) => void) | undefined;
     private _layer: L.Layer | undefined;
-    private _closingPointPaneZIndexStyleSheet: HTMLStyleElement | undefined;
-    private _closingPointPane = "closingPointPane";
-    private _midPointPaneZIndexStyleSheet: HTMLStyleElement | undefined;
-    private _midPointPane = "midPointPane";
-    private _selectionPaneZIndexStyleSheet: HTMLStyleElement | undefined;
-    private _selectedPane = "selectedPane";
+    private _panes: Record<string, HTMLStyleElement | undefined> = {};
     public project: TerraDrawModeRegisterConfig["project"];
     public unproject: TerraDrawModeRegisterConfig["unproject"];
     public setCursor: TerraDrawModeRegisterConfig["setCursor"];
@@ -86,26 +82,6 @@ export class TerraDrawLeafletAdapter implements TerraDrawAdapter {
     }
 
     register(callbacks: TerraDrawCallbacks) {
-        if (!this._selectionPaneZIndexStyleSheet) {
-            this._selectionPaneZIndexStyleSheet = this.createPaneStyleSheet(
-                this._selectedPane,
-                10
-            );
-        }
-
-        if (!this._midPointPaneZIndexStyleSheet) {
-            this._midPointPaneZIndexStyleSheet = this.createPaneStyleSheet(
-                this._midPointPane,
-                20
-            );
-        }
-
-        if (!this._closingPointPaneZIndexStyleSheet) {
-            this._closingPointPaneZIndexStyleSheet = this.createPaneStyleSheet(
-                this._closingPointPane,
-                30
-            );
-        }
 
         const container = this.getMapContainer();
 
@@ -267,15 +243,17 @@ export class TerraDrawLeafletAdapter implements TerraDrawAdapter {
             this._onClickListener = undefined;
         }
 
-        const selectedPane = this._map.getPane(this._selectedPane);
-        if (selectedPane) {
-            selectedPane.remove();
-        }
+        Object.keys(this._panes).forEach((pane) => {
+            const selectedPane = this._map.getPane(pane);
+            if (selectedPane) {
+                selectedPane.remove();
+            }
+        });
     }
 
     render(
         changes: TerraDrawChanges,
-        styling: { [mode: string]: TerraDrawAdapterStyling }
+        styling: { [mode: string]: (feature: GeoJSONStoreFeatures) => TerraDrawAdapterStyling }
     ) {
         const features = [
             ...changes.created,
@@ -290,57 +268,38 @@ export class TerraDrawLeafletAdapter implements TerraDrawAdapter {
         const featureCollection = {
             type: "FeatureCollection",
             features,
-        } as GeoJsonObject;
+        } as { type: "FeatureCollection", features: GeoJSONStoreFeatures[] };
 
         const layer = this._lib.geoJSON(featureCollection, {
             // Style points - convert markers to circle markers
-            pointToLayer: (feature: Feature, latlng: L.LatLngExpression) => {
+            pointToLayer: (feature: GeoJSONStoreFeatures, latlng: L.LatLngExpression) => {
                 if (!feature.properties) {
                     throw new Error("Feature has no properties");
+                }
+                if (typeof feature.properties.mode !== 'string') {
+                    throw new Error("Feature mode is not a string");
                 }
 
                 const mode = feature.properties.mode;
                 const modeStyle = styling[mode];
-                const isSelected =
-                    feature.properties[SELECT_PROPERTIES.SELECTED] ||
-                    feature.properties.selectionPoint;
-                const isMidPoint = feature.properties[SELECT_PROPERTIES.MID_POINT];
-                const isClosingPoint = feature.properties[POLYGON_PROPERTIES.CLOSING_POINT];
+                const featureStyles = modeStyle(feature);
+                const paneId = String(featureStyles.zIndex);
+                const pane = this._panes[paneId];
 
-                console.log(isClosingPoint);
-
-                const isAssistancePoint = isSelected || isMidPoint || isClosingPoint;
+                if (!pane) {
+                    this._panes[paneId] = this.createPaneStyleSheet(paneId, featureStyles.zIndex);
+                }
 
                 const styles = {
-                    radius: isSelected
-                        ? modeStyle.selectionPointWidth
-                        : isMidPoint
-                            ? modeStyle.midPointWidth
-                            : modeStyle.pointWidth,
-                    fillColor: isSelected
-                        ? modeStyle.selectedColor
-                        : isMidPoint
-                            ? modeStyle.midPointColor
-                            : isClosingPoint ? modeStyle.closingPointColor : modeStyle.pointColor,
-                    stroke: isAssistancePoint,
-                    color: isSelected
-                        ? modeStyle.selectedPointOutlineColor
-                        : isMidPoint
-                            ? modeStyle.midPointOutlineColor
-                            : isClosingPoint ? modeStyle.closingPointOutlineColor : modeStyle.pointOutlineColor,
-                    weight: isAssistancePoint ? 2 : 0,
+                    radius: featureStyles.pointWidth,
+                    stroke: featureStyles.pointOutlineWidth || false,
+                    color: featureStyles.pointOutlineColor,
+                    weight: featureStyles.pointOutlineWidth,
                     fillOpacity: 0.8,
-                    pane: isSelected
-                        ? this._selectedPane
-                        : isMidPoint
-                            ? this._midPointPane :
-                            isClosingPoint
-                                ? this._closingPointPane
-                                : undefined,
+                    fillColor: featureStyles.pointColor,
+                    pane: paneId,
                     interactive: false, // Removes mouse hover cursor styles
                 } as L.CircleMarkerOptions;
-
-                console.log(styles);
 
                 const marker = this._lib.circleMarker(latlng, styles);
 
@@ -348,35 +307,31 @@ export class TerraDrawLeafletAdapter implements TerraDrawAdapter {
             },
 
             // Style LineStrings and Polygons
-            style: (feature) => {
-                if (!feature || !feature.properties) {
+            style: (_feature) => {
+                if (!_feature || !_feature.properties) {
                     return {};
                 }
 
-                const mode = feature.properties.mode;
+                const feature = _feature as GeoJSONStoreFeatures;
+
+                const mode = feature.properties.mode as string;
                 const modeStyle = styling[mode];
+                const featureStyles = modeStyle(feature);
 
                 if (feature.geometry.type === "LineString") {
                     return {
                         interactive: false, // Removes mouse hover cursor styles
-                        color: feature.properties[SELECT_PROPERTIES.SELECTED]
-                            ? modeStyle.selectedColor
-                            : modeStyle.lineStringColor,
-
-                        weight: modeStyle.lineStringWidth,
+                        color: featureStyles.lineStringColor,
+                        weight: featureStyles.lineStringWidth,
                     };
                 } else if (feature.geometry.type === "Polygon") {
                     return {
                         interactive: false, // Removes mouse hover cursor styles
-                        fillOpacity: modeStyle.polygonFillOpacity,
-                        fillColor: feature.properties[SELECT_PROPERTIES.SELECTED]
-                            ? modeStyle.selectedColor
-                            : modeStyle.polygonFillColor,
-                        weight: modeStyle.polygonOutlineWidth,
+                        fillOpacity: featureStyles.polygonFillOpacity,
+                        fillColor: featureStyles.polygonFillColor,
+                        weight: featureStyles.polygonOutlineWidth,
                         stroke: true,
-                        color: feature.properties[SELECT_PROPERTIES.SELECTED]
-                            ? modeStyle.selectedColor
-                            : modeStyle.polygonOutlineColor,
+                        color: featureStyles.polygonFillColor
                     };
                 }
 

@@ -7,7 +7,6 @@ describe("TerraDrawStaticMode", () => {
         it("constructs", () => {
             const staticMode = new TerraDrawStaticMode();
             expect(staticMode.mode).toBe("static");
-            expect(staticMode.styling).toStrictEqual(getDefaultStyling());
         });
     });
 

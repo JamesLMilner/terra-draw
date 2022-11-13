@@ -4,25 +4,20 @@ import {
     GeoJSONStoreFeatures,
 } from "./store/store";
 
+export type HexColor = `#${string}`
+
 export interface TerraDrawAdapterStyling {
-    pointColor: string;
+    pointColor: HexColor;
     pointWidth: number;
-    pointOutlineColor: string;
-    polygonFillColor: string;
+    pointOutlineColor: HexColor;
+    pointOutlineWidth: number,
+    polygonFillColor: HexColor;
     polygonFillOpacity: number;
-    polygonOutlineColor: string;
+    polygonOutlineColor: HexColor;
     polygonOutlineWidth: number;
     lineStringWidth: number;
-    lineStringColor: string;
-    selectedColor: string;
-    selectionPointWidth: number;
-    selectedPointOutlineColor: string;
-    midPointColor: string;
-    midPointWidth: number;
-    midPointOutlineColor: string;
-    closingPointColor: string,
-    closingPointOutlineColor: string,
-    closingPointWidth: number,
+    lineStringColor: HexColor;
+    zIndex: number
 }
 
 export interface TerraDrawMouseEvent {
@@ -62,7 +57,8 @@ export type TerraDrawModeState =
 
 export interface TerraDrawMode {
     mode: string;
-    styling: TerraDrawAdapterStyling;
+    styleFeature: (feature: GeoJSONStoreFeatures) => TerraDrawAdapterStyling;
+    styles: any;
     state: TerraDrawModeState;
 
     start: () => void;
@@ -108,6 +104,8 @@ export interface TerraDrawChanges {
     deletedIds: string[];
 }
 
+type TerraDrawStylingFunction = { [mode: string]: (feature: GeoJSONStoreFeatures) => TerraDrawAdapterStyling }
+
 export interface TerraDrawAdapter {
     project: Project;
     unproject: Unproject;
@@ -117,8 +115,7 @@ export interface TerraDrawAdapter {
     unregister(): void;
     render(
         changes: TerraDrawChanges,
-        // features: GeoJSONStoreFeatures[],
-        styling: { [mode: string]: TerraDrawAdapterStyling }
+        styling: TerraDrawStylingFunction
     ): void;
 }
 

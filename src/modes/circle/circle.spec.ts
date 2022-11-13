@@ -4,25 +4,23 @@ import { getDefaultStyling } from "../../util/styling";
 import { TerraDrawCircleMode } from "./circle.mode";
 
 describe("TerraDrawCircleMode", () => {
-    const defaultStyles = getDefaultStyling();
 
     describe("constructor", () => {
         it("constructs with no options", () => {
             const circleMode = new TerraDrawCircleMode();
             expect(circleMode.mode).toBe("circle");
-            expect(circleMode.styling).toStrictEqual(defaultStyles);
+            expect(circleMode.styles).toStrictEqual({});
         });
 
         it("constructs with options", () => {
             const circleMode = new TerraDrawCircleMode({
-                styling: { polygonOutlineColor: "#ffffff" },
+                styles: { fillColor: "#ffffff" },
                 keyEvents: {
                     cancel: "Backspace",
                 },
             });
-            expect(circleMode.styling).toStrictEqual({
-                ...defaultStyles,
-                polygonOutlineColor: "#ffffff",
+            expect(circleMode.styles).toStrictEqual({
+                fillColor: "#ffffff",
             });
         });
     });
@@ -175,7 +173,7 @@ describe("TerraDrawCircleMode", () => {
     });
 
     describe("onKeyUp", () => {
-        it("does nothing", () => {});
+        it("does nothing", () => { });
     });
 
     describe("onMouseMove", () => {

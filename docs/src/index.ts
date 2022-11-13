@@ -105,7 +105,7 @@ const example = {
                 circle: new TerraDrawCircleMode(),
                 freehand: new TerraDrawFreehandMode(),
                 arbitary: new TerraDrawRenderMode({
-                    styling: {
+                    styles: {
                         polygonFillColor: "#4357AD",
                         polygonOutlineColor: "#48A9A6",
                         polygonOutlineWidth: 2,

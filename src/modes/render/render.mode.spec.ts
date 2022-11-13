@@ -5,14 +5,13 @@ import { TerraDrawRenderMode } from "./render.mode";
 
 describe("TerraDrawRenderMode", () => {
     const stylingOptions = {
-        styling: { ...getDefaultStyling(), selectedColor: "#ffffff" },
+        styles: { ...getDefaultStyling(), selectedColor: "#ffffff" },
     };
 
     describe("constructor", () => {
         it("constructs with required parameter options", () => {
             const renderMode = new TerraDrawRenderMode(stylingOptions);
             expect(renderMode.mode).toBe("render");
-            expect(renderMode.styling).toStrictEqual(stylingOptions.styling);
         });
     });
 

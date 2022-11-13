@@ -2,8 +2,9 @@ import {
     TerraDrawMouseEvent,
     TerraDrawAdapterStyling,
     TerraDrawKeyboardEvent,
+    HexColor,
 } from "../../common";
-import { LineString } from "geojson";
+import { Feature, LineString } from "geojson";
 import { selfIntersects } from "../../geometry/boolean/self-intersects";
 import { TerraDrawBaseDrawMode } from "../base.mode";
 import { pixelDistance } from "../../geometry/measure/pixel-distance";
@@ -11,11 +12,20 @@ import { BehaviorConfig } from "../base.behavior";
 import { ClickBoundingBoxBehavior } from "../click-bounding-box.behavior";
 import { PixelDistanceBehavior } from "../pixel-distance.behavior";
 import { SnappingBehavior } from "../snapping.behavior";
+import { getDefaultStyling } from "../../util/styling";
+import { GeoJSONStoreFeatures } from "../../store/store";
 
 type TerraDrawLineStringModeKeyEvents = {
-  cancel: KeyboardEvent["key"];
+    cancel: KeyboardEvent["key"];
 };
-export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode {
+
+type LineStringStyling = {
+    lineStringWidth: number,
+    lineStringColor: HexColor,
+}
+
+
+export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringStyling> {
     mode = "linestring";
 
     private currentCoordinate = 0;
@@ -28,24 +38,24 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode {
     private snapping!: SnappingBehavior;
 
     constructor(options?: {
-    snapping?: boolean;
-    allowSelfIntersections?: boolean;
-    pointerDistance?: number;
-    styling?: Partial<TerraDrawAdapterStyling>;
-    keyEvents?: TerraDrawLineStringModeKeyEvents;
-  }) {
+        snapping?: boolean;
+        allowSelfIntersections?: boolean;
+        pointerDistance?: number;
+        styles?: Partial<LineStringStyling>;
+        keyEvents?: TerraDrawLineStringModeKeyEvents;
+    }) {
         super(options);
 
         this.snappingEnabled =
-      options && options.snapping !== undefined ? options.snapping : false;
+            options && options.snapping !== undefined ? options.snapping : false;
 
         this.allowSelfIntersections =
-      options && options.allowSelfIntersections !== undefined
-          ? options.allowSelfIntersections
-          : true;
+            options && options.allowSelfIntersections !== undefined
+                ? options.allowSelfIntersections
+                : true;
 
         this.keyEvents =
-      options && options.keyEvents ? options.keyEvents : { cancel: "Escape" };
+            options && options.keyEvents ? options.keyEvents : { cancel: "Escape" };
     }
 
     public registerBehaviors(config: BehaviorConfig) {
@@ -78,8 +88,8 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode {
         currentLineGeometry.coordinates.pop();
 
         const snappedCoord =
-      this.snappingEnabled &&
-      this.snapping.getSnappableCoordinate(event, this.currentId);
+            this.snappingEnabled &&
+            this.snapping.getSnappableCoordinate(event, this.currentId);
         const updatedCoord = snappedCoord ? snappedCoord : [event.lng, event.lat];
 
         // Update the 'live' point
@@ -96,9 +106,9 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode {
 
     onClick(event: TerraDrawMouseEvent) {
         const snappedCoord =
-      this.currentId &&
-      this.snappingEnabled &&
-      this.snapping.getSnappableCoordinate(event, this.currentId);
+            this.currentId &&
+            this.snappingEnabled &&
+            this.snapping.getSnappableCoordinate(event, this.currentId);
         const updatedCoord = snappedCoord ? snappedCoord : [event.lng, event.lat];
 
         if (this.currentCoordinate === 0) {
@@ -142,9 +152,9 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode {
             );
 
             const [previousLng, previousLat] =
-        currentLineGeometry.coordinates[
-            currentLineGeometry.coordinates.length - 2
-        ];
+                currentLineGeometry.coordinates[
+                    currentLineGeometry.coordinates.length - 2
+                ];
             const { x, y } = this.project(previousLng, previousLat);
             const distance = pixelDistance(
                 { x, y },
@@ -194,23 +204,47 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode {
             }
         }
     }
-    onKeyDown() {}
+    onKeyDown() { }
     onKeyUp(event: TerraDrawKeyboardEvent) {
         if (event.key === this.keyEvents.cancel) {
             this.cleanUp();
         }
     }
-    onDragStart() {}
-    onDrag() {}
-    onDragEnd() {}
+    onDragStart() { }
+    onDrag() { }
+    onDragEnd() { }
     cleanUp() {
         try {
             if (this.currentId) {
                 this.store.delete([this.currentId]);
             }
-        } catch (error) {}
+        } catch (error) { }
 
         this.currentId = undefined;
         this.currentCoordinate = 0;
+    }
+
+    styleFeature(
+        feature: GeoJSONStoreFeatures
+    ): TerraDrawAdapterStyling {
+        const styles = { ...getDefaultStyling() };
+
+        if (
+            feature.type === 'Feature' &&
+            feature.geometry.type === 'LineString' &&
+            feature.properties.mode === this.mode
+        ) {
+
+            if (this.styles.lineStringColor) {
+                styles.lineStringColor = this.styles.lineStringColor;
+            }
+            if (this.styles.lineStringWidth) {
+                styles.lineStringWidth = this.styles.lineStringWidth;
+            }
+
+            return styles;
+        }
+
+        return styles;
     }
 }

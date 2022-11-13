@@ -2,8 +2,9 @@ import {
     TerraDrawMouseEvent,
     TerraDrawAdapterStyling,
     TerraDrawKeyboardEvent,
+    HexColor,
 } from "../../common";
-import { Polygon } from "geojson";
+import { Feature, Point, Polygon } from "geojson";
 import { selfIntersects } from "../../geometry/boolean/self-intersects";
 import { TerraDrawBaseDrawMode } from "../base.mode";
 import { PixelDistanceBehavior } from "../pixel-distance.behavior";
@@ -13,11 +14,25 @@ import { createPolygon } from "../../util/geoms";
 import { SnappingBehavior } from "../snapping.behavior";
 import { coordinatesIdentical } from "../../geometry/coordinates-identical";
 import { ClosingPointsBehavior } from "./behaviors/closing-points.behavior";
+import { getDefaultStyling } from "../../util/styling";
+import { GeoJSONStoreFeatures } from "../../store/store";
 
 type TerraDrawPolygonModeKeyEvents = {
     cancel: KeyboardEvent["key"];
 };
-export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode {
+
+type PolygonStyling = {
+    fillColor: HexColor,
+    outlineColor: HexColor,
+    outlineWidth: number,
+    fillOpacity: number,
+    closingPointWidth: number,
+    closingPointColor: HexColor,
+    closingPointOutlineWidth: number,
+    closingPointOutlineColor: HexColor
+}
+
+export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> {
     mode = "polygon";
 
     private currentCoordinate = 0;
@@ -35,8 +50,8 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode {
     constructor(options?: {
         allowSelfIntersections?: boolean;
         snapping?: boolean;
-        styling?: Partial<TerraDrawAdapterStyling>;
         pointerDistance?: number;
+        styles?: Partial<PolygonStyling>;
         keyEvents?: TerraDrawPolygonModeKeyEvents;
     }) {
         super(options);
@@ -362,5 +377,34 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode {
         } catch (error) { }
         this.currentId = undefined;
         this.currentCoordinate = 0;
+    }
+
+    styleFeature(
+        feature: GeoJSONStoreFeatures
+    ): TerraDrawAdapterStyling {
+
+        const styles = { ...getDefaultStyling() };
+
+        if (feature.properties.mode === this.mode) {
+            if (feature.geometry.type === 'Polygon') {
+                styles.polygonFillColor = this.styles.fillColor || styles.polygonFillColor;
+                styles.polygonOutlineColor = this.styles.outlineColor || styles.polygonOutlineColor;
+                styles.polygonOutlineWidth = this.styles.outlineWidth || styles.polygonOutlineWidth;
+                styles.polygonFillColor = this.styles.fillColor || styles.polygonFillColor;
+                styles.zIndex = 10;
+                return styles;
+            }
+
+            else if (feature.geometry.type === 'Point') {
+                styles.pointWidth = this.styles.closingPointWidth || styles.pointWidth;
+                styles.pointColor = this.styles.closingPointColor || styles.pointColor;
+                styles.pointOutlineColor = this.styles.closingPointOutlineColor || "#ffffff";
+                styles.pointOutlineWidth = this.styles.closingPointOutlineWidth || 2;
+                styles.zIndex = 30;
+                return styles;
+            }
+        }
+
+        return styles;
     }
 }

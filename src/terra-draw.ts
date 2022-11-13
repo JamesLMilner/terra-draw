@@ -196,15 +196,15 @@ class TerraDraw {
     }
 
     private getModeStyles() {
-        const modeStyles: { [key: string]: TerraDrawAdapterStyling } = {};
+        const modeStyles: { [key: string]: (feature: GeoJSONStoreFeatures) => TerraDrawAdapterStyling } = {};
         Object.keys(this._modes).forEach((mode) => {
-            modeStyles[mode] = this._modes[mode].styling;
+            modeStyles[mode] = this._modes[mode].styleFeature.bind(this._modes[mode]);
         });
         return modeStyles;
     }
 
-    setModeStyling(mode: string, styling: TerraDrawAdapterStyling) {
-        this._modes[mode].styling = styling;
+    setModeStyles(mode: string, styles: TerraDrawAdapterStyling) {
+        this._modes[mode].styles = styles;
     }
 
     getSnapshot() {

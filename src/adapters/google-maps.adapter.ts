@@ -11,6 +11,7 @@ import {
 import { GeoJsonObject } from "geojson";
 
 import { limitPrecision } from "../geometry/limit-decimal-precision";
+import { GeoJSONStoreFeatures } from "../store/store";
 
 export class TerraDrawGoogleMapsAdapter implements TerraDrawAdapter {
     constructor(config: {
@@ -351,7 +352,7 @@ export class TerraDrawGoogleMapsAdapter implements TerraDrawAdapter {
 
     render(
         changes: TerraDrawChanges,
-        styling: { [mode: string]: TerraDrawAdapterStyling }
+        styling: { [mode: string]: (feature: GeoJSONStoreFeatures) => TerraDrawAdapterStyling }
     ) {
         if (this._layers) {
             changes.deletedIds.forEach((deletedId) => {
@@ -485,48 +486,39 @@ export class TerraDrawGoogleMapsAdapter implements TerraDrawAdapter {
                 throw new Error("Google Maps geometry not found");
             }
             const type = gmGeometry.getType();
-            const selected = feature.getProperty(SELECT_PROPERTIES.SELECTED);
+            const properties: Record<string, any> = {};
 
-            const selectionPoint = Boolean(
-                feature.getProperty(SELECT_PROPERTIES.SELECTION_POINT)
-            );
-            const midPoint = Boolean(
-                feature.getProperty(SELECT_PROPERTIES.MID_POINT)
-            );
-            const closingPoint = Boolean(
-                feature.getProperty(POLYGON_PROPERTIES.CLOSING_POINT)
-            );
+            feature.forEachProperty((value, property) => {
+                properties[property] = value;
+            });
+
+            const calculatedStyles = styling[mode]({
+                type: "Feature",
+                geometry: {
+                    type: type as "Point" | "LineString" | "Polygon",
+                    coordinates: []
+                },
+                properties
+            });
 
 
             switch (type) {
             case "Point":
-                const isSelection = selected || selectionPoint;
-                const isMidpoint = midPoint;
-                const isClosing = closingPoint;
+
+                const path = this.circlePath(
+                    0,
+                    0,
+                    calculatedStyles.pointWidth
+                );
+
                 return {
                     clickable: false,
                     icon: {
-                        path: this.circlePath(
-                            0,
-                            0,
-                            isSelection
-                                ? styling[mode].selectionPointWidth
-                                : isMidpoint
-                                    ? styling[mode].midPointWidth
-                                    : isClosing ? styling[mode].closingPointWidth : styling[mode].pointWidth
-                        ),
-                        fillColor: isSelection
-                            ? styling[mode].selectedColor
-                            : isMidpoint
-                                ? styling[mode].midPointColor
-                                : closingPoint ? styling[mode].closingPointColor : styling[mode].pointColor,
+                        path,
+                        fillColor: calculatedStyles.pointColor,
                         fillOpacity: 1,
-                        strokeColor: isSelection
-                            ? styling[mode].selectedPointOutlineColor
-                            : isMidpoint
-                                ? styling[mode].midPointOutlineColor
-                                : closingPoint ? styling[mode].closingPointOutlineColor : styling[mode].pointOutlineColor,
-                        strokeWeight: isSelection || isMidpoint || isClosing ? 2 : 0,
+                        strokeColor: calculatedStyles.pointOutlineColor,
+                        strokeWeight: calculatedStyles.pointOutlineWidth,
                         rotation: 0,
                         scale: 1,
                     },
@@ -534,21 +526,15 @@ export class TerraDrawGoogleMapsAdapter implements TerraDrawAdapter {
 
             case "LineString":
                 return {
-                    strokeColor: selected
-                        ? styling[mode].selectedColor
-                        : styling[mode].lineStringColor,
-                    strokeWeight: styling[mode].lineStringWidth,
+                    strokeColor: calculatedStyles.lineStringColor,
+                    strokeWeight: calculatedStyles.lineStringWidth,
                 };
             case "Polygon":
                 return {
-                    strokeColor: selected
-                        ? styling[mode].selectedColor
-                        : styling[mode].polygonOutlineColor,
-                    strokeWeight: styling[mode].polygonOutlineWidth,
-                    fillOpacity: styling[mode].polygonFillOpacity,
-                    fillColor: selected
-                        ? styling[mode].selectedColor
-                        : styling[mode].polygonFillColor,
+                    strokeColor: calculatedStyles.polygonOutlineColor,
+                    strokeWeight: calculatedStyles.polygonOutlineWidth,
+                    fillOpacity: calculatedStyles.polygonFillOpacity,
+                    fillColor: calculatedStyles.polygonFillColor,
                 };
             }
 

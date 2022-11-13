@@ -80,7 +80,6 @@ export class TerraDrawMapboxGLAdapter implements TerraDrawAdapter {
     private _addFillLayer(
         id: string,
         mode: string,
-        styling: TerraDrawAdapterStyling
     ) {
         return this._map.addLayer({
             id,
@@ -93,7 +92,7 @@ export class TerraDrawMapboxGLAdapter implements TerraDrawAdapter {
             ],
             paint: {
                 "fill-color": ["get", "polygonFillColor"],
-                "fill-opacity": styling.polygonFillOpacity,
+                "fill-opacity": ["get", "polygonFillOpacity"]
             },
         } as FillLayer);
     }
@@ -101,7 +100,6 @@ export class TerraDrawMapboxGLAdapter implements TerraDrawAdapter {
     private _addFillOutlineLayer(
         id: string,
         mode: string,
-        styling: TerraDrawAdapterStyling,
         beneath?: string
     ) {
         const layer = this._map.addLayer({
@@ -114,7 +112,7 @@ export class TerraDrawMapboxGLAdapter implements TerraDrawAdapter {
                 ["match", ["get", "mode"], mode, true, false],
             ],
             paint: {
-                "line-width": styling.polygonOutlineWidth,
+                "line-width": ["get", "polygonOutlineWidth"],
                 "line-color": ["get", "polygonOutlineColor"],
             },
         } as LineLayer);
@@ -129,7 +127,6 @@ export class TerraDrawMapboxGLAdapter implements TerraDrawAdapter {
     private _addLineLayer(
         id: string,
         mode: string,
-        styling: TerraDrawAdapterStyling,
         beneath?: string
     ) {
         const layer = this._map.addLayer({
@@ -142,7 +139,7 @@ export class TerraDrawMapboxGLAdapter implements TerraDrawAdapter {
                 ["match", ["get", "mode"], mode, true, false],
             ],
             paint: {
-                "line-width": styling.lineStringWidth,
+                "line-width": ["get", "lineStringWidth"],
                 "line-color": ["get", "lineStringColor"],
             },
         } as LineLayer);
@@ -157,7 +154,6 @@ export class TerraDrawMapboxGLAdapter implements TerraDrawAdapter {
     private _addPointLayer(
         id: string,
         mode: string,
-        styling: TerraDrawAdapterStyling,
         beneath?: string
     ) {
         const layer = this._map.addLayer({
@@ -170,8 +166,8 @@ export class TerraDrawMapboxGLAdapter implements TerraDrawAdapter {
                 ["match", ["get", "mode"], mode, true, false],
             ],
             paint: {
-                "circle-stroke-color": ["get", "selectedPointOutlineColor"],
-                "circle-stroke-width": 2,
+                "circle-stroke-color": ["get", "pointOutlineColor"],
+                "circle-stroke-width": ["get", "pointOutlineWidth"],
                 "circle-radius": ["get", "pointWidth"],
                 "circle-color": ["get", "pointColor"],
             },
@@ -186,18 +182,17 @@ export class TerraDrawMapboxGLAdapter implements TerraDrawAdapter {
         id: string,
         mode: string,
         featureType: "Point" | "LineString" | "Polygon",
-        styling: TerraDrawAdapterStyling,
         beneath?: string
     ) {
         if (featureType === "Point") {
-            this._addPointLayer(id, mode, styling, beneath);
+            this._addPointLayer(id, mode, beneath);
         }
         if (featureType === "LineString") {
-            this._addLineLayer(id, mode, styling, beneath);
+            this._addLineLayer(id, mode, beneath);
         }
         if (featureType === "Polygon") {
-            this._addFillLayer(id, mode, styling);
-            this._addFillOutlineLayer(id, mode, styling, beneath);
+            this._addFillLayer(id, mode);
+            this._addFillOutlineLayer(id, mode, beneath);
         }
     }
 
@@ -205,11 +200,10 @@ export class TerraDrawMapboxGLAdapter implements TerraDrawAdapter {
         mode: string,
         featureType: Feature<T>["geometry"]["type"],
         features: Feature<T>[],
-        styling: TerraDrawAdapterStyling
     ) {
         const id = `td-${mode}-${featureType.toLowerCase()}`;
         this._addGeoJSONSource(id, features);
-        this._addLayer(id, mode, featureType, styling);
+        this._addLayer(id, mode, featureType,);
 
         return id;
     }
@@ -395,7 +389,7 @@ export class TerraDrawMapboxGLAdapter implements TerraDrawAdapter {
 
     render(
         changes: TerraDrawChanges,
-        styling: { [mode: string]: TerraDrawAdapterStyling }
+        styling: { [mode: string]: (feature: GeoJSONStoreFeatures) => TerraDrawAdapterStyling }
     ) {
         const features = [
             ...changes.created,
@@ -411,95 +405,71 @@ export class TerraDrawMapboxGLAdapter implements TerraDrawAdapter {
             };
         } = {};
 
+        Object.keys(styling).forEach((mode) => {
+            if (!modeFeatures[mode]) {
+                modeFeatures[mode] = {
+                    points: [],
+                    linestrings: [],
+                    polygons: [],
+                };
+            }
+        });
+
         for (let i = 0; i < features.length; i++) {
             const feature = features[i];
 
             Object.keys(styling).forEach((mode) => {
-                const styles = styling[mode];
-
                 const { properties } = feature;
 
                 if (properties.mode !== mode) {
                     return;
                 }
 
-                if (!modeFeatures[mode]) {
-                    modeFeatures[mode] = {
-                        points: [],
-                        linestrings: [],
-                        polygons: [],
-                    };
-                }
+                const styles = styling[mode](feature);
 
                 if (feature.geometry.type === "Point") {
-                    if (
-                        properties[SELECT_PROPERTIES.SELECTED] ||
-                        properties.selectionPoint
-                    ) {
-                        properties.pointColor = styles.selectedColor;
-                        properties.selectedPointOutlineColor =
-                            styles.selectedPointOutlineColor;
-                        properties.pointWidth = styles.selectionPointWidth;
-                    } else if (properties[SELECT_PROPERTIES.MID_POINT]) {
-                        properties.pointColor = styles.midPointColor;
-                        properties.selectedPointOutlineColor =
-                            styles.midPointOutlineColor;
-                        properties.pointWidth = styles.midPointWidth;
-                    } else if (properties[POLYGON_PROPERTIES.CLOSING_POINT]) {
-                        properties.pointColor = styles.closingPointColor;
-                        properties.selectedPointOutlineColor = styles.closingPointOutlineColor;
-                        properties.pointWidth = styles.closingPointWidth;
-                    } else {
-                        properties.pointColor = styles.pointColor;
-                        properties.selectedPointOutlineColor = styles.pointColor;
-                        properties.pointWidth = styles.pointWidth;
-                    }
+                    properties.pointColor = styles.pointColor;
+                    properties.pointOutlineColor = styles.pointOutlineColor;
+                    properties.pointOutlineWidth = styles.pointOutlineWidth;
+                    properties.pointWidth = styles.pointWidth;
                     modeFeatures[mode].points.push(feature);
                 } else if (feature.geometry.type === "LineString") {
-                    if (properties[SELECT_PROPERTIES.SELECTED]) {
-                        properties.lineStringColor = styles.selectedColor;
-                    } else {
-                        properties.lineStringColor = styles.lineStringColor;
-                    }
+                    properties.lineStringColor = styles.lineStringColor;
+                    properties.lineStringWidth = styles.lineStringWidth;
                     modeFeatures[mode].linestrings.push(feature);
                 } else if (feature.geometry.type === "Polygon") {
-                    if (properties[SELECT_PROPERTIES.SELECTED]) {
-                        properties.polygonFillColor = styles.selectedColor;
-                        properties.polygonOutlineColor = styles.selectedColor;
-                    } else {
-                        properties.polygonFillColor = styles.polygonFillColor;
-                        properties.polygonOutlineColor = styles.polygonOutlineColor;
-                    }
+                    properties.polygonFillColor = styles.polygonFillColor;
+                    properties.polygonFillOpacity = styles.polygonFillOpacity;
+                    properties.polygonOutlineColor = styles.polygonOutlineColor;
+                    properties.polygonOutlineWidth = styles.polygonOutlineWidth;
                     modeFeatures[mode].polygons.push(feature);
                 }
             });
         }
 
         Object.keys(styling).forEach((mode) => {
-            const styles = styling[mode];
-            if (!modeFeatures[mode] || !styles) {
+            if (!modeFeatures[mode]) {
                 return;
             }
+
             const { points, linestrings, polygons } = modeFeatures[mode];
+
 
             if (!this._rendered[mode]) {
                 this._addGeoJSONLayer<Point>(
                     mode,
                     "Point",
                     points as Feature<Point>[],
-                    styles
                 );
                 this._addGeoJSONLayer<LineString>(
                     mode,
                     "LineString",
                     linestrings as Feature<LineString>[],
-                    styles
                 );
                 this._addGeoJSONLayer<Polygon>(
                     mode,
                     "Polygon",
                     polygons as Feature<Polygon>[],
-                    styles
                 );
                 this._rendered[mode] = true;
             } else {
@@ -526,5 +496,14 @@ export class TerraDrawMapboxGLAdapter implements TerraDrawAdapter {
                 this._map.moveLayer(pointId);
             }
         });
+
+        if ((this._map as any).style) {
+            // cancel the scheduled update
+            if ((this._map as any)._frame) {
+                (this._map as any)._frame.cancel();
+                (this._map as any)._frame = null;
+            }
+            (this._map as any)._render();
+        }
     }
 }

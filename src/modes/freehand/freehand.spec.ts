@@ -4,26 +4,24 @@ import { getDefaultStyling } from "../../util/styling";
 import { TerraDrawFreehandMode } from "./freehand.mode";
 
 describe("TerraDrawFreehandMode", () => {
-    const defaultStyles = getDefaultStyling();
 
     describe("constructor", () => {
         it("constructs with no options", () => {
             const freehandMode = new TerraDrawFreehandMode();
             expect(freehandMode.mode).toBe("freehand");
-            expect(freehandMode.styling).toStrictEqual(defaultStyles);
+            expect(freehandMode.styles).toStrictEqual({});
         });
 
         it("constructs with options", () => {
             const freehandMode = new TerraDrawFreehandMode({
-                styling: { polygonOutlineColor: "#ffffff" },
+                styles: { outlineColor: "#ffffff" },
                 everyNthMouseEvent: 5,
                 keyEvents: {
                     cancel: "Backspace",
                 },
             });
-            expect(freehandMode.styling).toStrictEqual({
-                ...defaultStyles,
-                polygonOutlineColor: "#ffffff",
+            expect(freehandMode.styles).toStrictEqual({
+                outlineColor: "#ffffff",
             });
         });
     });

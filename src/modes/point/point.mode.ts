@@ -1,10 +1,18 @@
-import { TerraDrawMouseEvent, TerraDrawAdapterStyling } from "../../common";
+import { Feature, Point } from "geojson";
+import { TerraDrawMouseEvent, TerraDrawAdapterStyling, HexColor } from "../../common";
+import { GeoJSONStoreFeatures } from "../../store/store";
+import { getDefaultStyling } from "../../util/styling";
 import { TerraDrawBaseDrawMode } from "../base.mode";
 
-export class TerraDrawPointMode extends TerraDrawBaseDrawMode {
+type PointModeStyling = {
+    pointWidth: number,
+    pointColor: HexColor,
+    pointOutlineColor: HexColor
+}
+export class TerraDrawPointMode extends TerraDrawBaseDrawMode<PointModeStyling> {
     mode = "point";
 
-    constructor(options?: { styling?: Partial<TerraDrawAdapterStyling> }) {
+    constructor(options?: { styles?: Partial<PointModeStyling> }) {
         super(options);
     }
 
@@ -33,11 +41,34 @@ export class TerraDrawPointMode extends TerraDrawBaseDrawMode {
             },
         ]);
     }
-    onMouseMove() {}
-    onKeyDown() {}
-    onKeyUp() {}
-    cleanUp() {}
-    onDragStart() {}
-    onDrag() {}
-    onDragEnd() {}
+    onMouseMove() { }
+    onKeyDown() { }
+    onKeyUp() { }
+    cleanUp() { }
+    onDragStart() { }
+    onDrag() { }
+    onDragEnd() { }
+
+    styleFeature(
+        feature: GeoJSONStoreFeatures
+    ): TerraDrawAdapterStyling {
+        const styles = { ...getDefaultStyling() };
+
+        if (feature.type === 'Feature' && feature.geometry.type === 'Point' && feature.properties.mode === this.mode) {
+
+            if (this.styles.pointColor) {
+                styles.pointColor = this.styles.pointColor;
+            }
+            if (this.styles.pointOutlineColor) {
+                styles.pointOutlineColor = this.styles.pointOutlineColor;
+            }
+            if (this.styles.pointWidth) {
+                styles.pointWidth = this.styles.pointWidth;
+            }
+
+            return styles;
+        }
+
+        return styles;
+    }
 }

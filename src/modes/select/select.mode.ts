@@ -2,6 +2,8 @@ import {
     TerraDrawMouseEvent,
     TerraDrawKeyboardEvent,
     SELECT_PROPERTIES,
+    HexColor,
+    TerraDrawAdapterStyling,
 } from "../../common";
 import { Point, Position } from "geojson";
 import { TerraDrawBaseDrawMode } from "../base.mode";
@@ -15,6 +17,8 @@ import { DragCoordinateBehavior } from "./behaviors/drag-coordinate.behavior";
 import { BehaviorConfig } from "../base.behavior";
 import { RotateFeatureBehavior } from "./behaviors/rotate-feature.behavior";
 import { ScaleFeatureBehavior } from "./behaviors/scale-feature.behavior";
+import { GeoJSONStoreFeatures } from "../../store/store";
+import { getDefaultStyling } from "../../util/styling";
 
 type TerraDrawSelectModeKeyEvents = {
     deselect: KeyboardEvent["key"];
@@ -36,7 +40,21 @@ type ModeFlags = {
     };
 };
 
-export class TerraDrawSelectMode extends TerraDrawBaseDrawMode {
+type SelectionStyling = {
+    selectedColor: HexColor,
+    selectedPointOutlineColor: HexColor,
+    selectPointOutlineWidth: number,
+    selectionPointWidth: number,
+    selectionPointColor: HexColor,
+    selectionPointOutlineColor: HexColor,
+    selectionPointOutlineWidth: number,
+    midPointColor: HexColor,
+    midPointOutlineColor: HexColor,
+    midPointWidth: number,
+    midPointOutlineWidth: number,
+}
+
+export class TerraDrawSelectMode extends TerraDrawBaseDrawMode<SelectionStyling> {
     mode = "select";
 
     private dragEventThrottle = 5;
@@ -58,6 +76,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode {
     private scaleFeature!: ScaleFeatureBehavior;
 
     constructor(options?: {
+        styles?: Partial<SelectionStyling>
         pointerDistance?: number;
         flags?: { [mode: string]: ModeFlags };
         keyEvents?: TerraDrawSelectModeKeyEvents;
@@ -526,5 +545,52 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode {
         } else {
             this.setCursor("unset");
         }
+    }
+
+    styleFeature(
+        feature: GeoJSONStoreFeatures
+    ): TerraDrawAdapterStyling {
+
+        const styles = { ...getDefaultStyling() };
+
+
+        if (feature.properties.mode === this.mode) {
+            if (feature.geometry.type === 'Polygon') {
+                if (this.styles.selectedColor) {
+                    styles.polygonFillColor = this.styles.selectedColor;
+                }
+                if (this.styles.selectedColor) {
+                    styles.polygonOutlineColor = this.styles.selectedColor;
+                }
+                styles.zIndex = 10;
+                return styles;
+            }
+
+            if (feature.geometry.type === 'Point') {
+                if (feature.properties.selectionPoint) {
+                    styles.pointColor = this.styles.selectionPointColor || styles.pointColor;
+                    styles.pointOutlineColor = this.styles.selectionPointOutlineColor || styles.pointOutlineColor;
+                    styles.pointWidth = this.styles.selectionPointWidth || styles.pointWidth;
+                    styles.pointOutlineWidth = this.styles.midPointOutlineWidth || 2;
+                    styles.zIndex = 30;
+
+                    return styles;
+                }
+
+                if (feature.properties.midPoint) {
+                    styles.pointColor = this.styles.midPointColor || styles.pointColor;
+                    styles.pointOutlineColor = this.styles.midPointOutlineColor || styles.pointOutlineColor;
+                    styles.pointWidth = this.styles.midPointWidth || 4;
+                    styles.pointOutlineWidth = this.styles.midPointOutlineWidth || 2;
+                    styles.zIndex = 40;
+
+                    return styles;
+                }
+
+            }
+        }
+
+
+        return styles;
     }
 }

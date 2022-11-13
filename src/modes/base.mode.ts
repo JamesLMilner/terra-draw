@@ -4,12 +4,12 @@ import {
     TerraDrawModeRegisterConfig,
     TerraDrawModeState,
 } from "../common";
-import { GeoJSONStore } from "../store/store";
-import { getDefaultStyling } from "../util/styling";
+import { GeoJSONStore, GeoJSONStoreFeatures } from "../store/store";
 
-export abstract class TerraDrawBaseDrawMode {
-    _state: TerraDrawModeState;
-    _styling: TerraDrawAdapterStyling;
+type CustomStyling = Record<string, string | number>
+
+export abstract class TerraDrawBaseDrawMode<T extends CustomStyling> {
+    protected _state: TerraDrawModeState;
     get state() {
         return this._state;
     }
@@ -17,16 +17,18 @@ export abstract class TerraDrawBaseDrawMode {
         throw new Error("Please use the modes lifecycle methods");
     }
 
-    get styling(): TerraDrawAdapterStyling {
-        return this._styling;
+    protected _styles: Partial<T>;
+
+    get styles(): Partial<T> {
+        return this._styles;
     }
-    set styling(styling: TerraDrawAdapterStyling) {
+    set styles(styling: Partial<T>) {
         if (typeof styling !== "object") {
             throw new Error("Styling must be an object");
         }
 
         this.onStyleChange([], "styling");
-        this._styling = styling;
+        this._styles = styling;
     }
 
     protected behaviors: TerraDrawModeBehavior[] = [];
@@ -37,18 +39,18 @@ export abstract class TerraDrawBaseDrawMode {
     protected unproject!: TerraDrawModeRegisterConfig["unproject"];
     protected project!: TerraDrawModeRegisterConfig["project"];
     protected setCursor!: TerraDrawModeRegisterConfig["setCursor"];
-    protected registerBehaviors(behaviorConfig: BehaviorConfig): void {}
+    protected registerBehaviors(behaviorConfig: BehaviorConfig): void { }
 
     constructor(options?: {
-    styling?: Partial<TerraDrawAdapterStyling>;
-    pointerDistance?: number;
-    coordinatePrecision?: number;
-  }) {
+        styles?: Partial<T>;
+        pointerDistance?: number;
+        coordinatePrecision?: number;
+    }) {
         this._state = "unregistered";
-        this._styling =
-      options && options.styling
-          ? { ...getDefaultStyling(), ...options.styling }
-          : getDefaultStyling();
+        this._styles =
+            options && options.styles
+                ? { ...options.styles }
+                : {} as Partial<T>;
 
         this.pointerDistance = (options && options.pointerDistance) || 40;
 
@@ -96,6 +98,7 @@ export abstract class TerraDrawBaseDrawMode {
         }
     }
 
-    onDeselect(deselectedId: string) {}
-    onSelect(selectedId: string) {}
+    onDeselect(deselectedId: string) { }
+    onSelect(selectedId: string) { }
+    styleFeature(feature: GeoJSONStoreFeatures) { }
 }

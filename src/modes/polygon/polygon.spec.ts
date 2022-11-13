@@ -12,22 +12,18 @@ describe("TerraDrawPolygonMode", () => {
         it("constructs with no options", () => {
             const polygonMode = new TerraDrawPolygonMode();
             expect(polygonMode.mode).toBe("polygon");
-            expect(polygonMode.styling).toStrictEqual(defaultStyles);
         });
 
         it("constructs with options", () => {
             const polygonMode = new TerraDrawPolygonMode({
-                styling: { pointOutlineColor: "#ffffff" },
+                styles: { closingPointColor: "#ffffff" },
                 allowSelfIntersections: true,
                 pointerDistance: 40,
                 keyEvents: {
                     cancel: "Backspace",
                 },
             });
-            expect(polygonMode.styling).toStrictEqual({
-                ...defaultStyles,
-                pointOutlineColor: "#ffffff",
-            });
+            expect(polygonMode.styles).toStrictEqual({ closingPointColor: "#ffffff" });
         });
     });
 
@@ -1046,8 +1042,7 @@ describe("TerraDrawPolygonMode", () => {
         it("gets", () => {
             const polygonMode = new TerraDrawPolygonMode();
             polygonMode.register(getMockModeConfig(polygonMode.mode));
-
-            expect(polygonMode.styling).toStrictEqual(getDefaultStyling());
+            expect(polygonMode.styles).toStrictEqual({});
         });
 
         it("set fails if non valid styling", () => {
@@ -1055,24 +1050,23 @@ describe("TerraDrawPolygonMode", () => {
             polygonMode.register(getMockModeConfig(polygonMode.mode));
 
             expect(() => {
-                (polygonMode.styling as unknown) = "test";
+                (polygonMode.styles as unknown) = "test";
             }).toThrowError();
 
-            expect(polygonMode.styling).toStrictEqual(getDefaultStyling());
+            expect(polygonMode.styles).toStrictEqual({});
         });
 
         it("sets", () => {
             const polygonMode = new TerraDrawPolygonMode();
             polygonMode.register(getMockModeConfig(polygonMode.mode));
 
-            const newStyling = {
-                ...getDefaultStyling(),
-                polygonFillColor: "#fffff",
+            polygonMode.styles = {
+                closingPointColor: "#ffffff",
             };
 
-            polygonMode.styling = { ...newStyling };
-
-            expect(polygonMode.styling).toStrictEqual(newStyling);
+            expect(polygonMode.styles).toStrictEqual({
+                closingPointColor: "#ffffff",
+            });
         });
     });
 });

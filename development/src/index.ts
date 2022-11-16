@@ -16,7 +16,6 @@ import {
 } from "../../src/terra-draw";
 import { TerraDrawRenderMode } from "../../src/modes/render/render.mode";
 
-
 const addModeChangeHandler = (
     draw: TerraDraw,
     currentSelected: { button: undefined | HTMLButtonElement; mode: string }

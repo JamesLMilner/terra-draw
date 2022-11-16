@@ -13,10 +13,6 @@ MAPBOX_ACCESS_TOKEN=YOUR_ACCESS_TOKEN_HERE
 
 You can then create a watching build that allows you to test out both changes in the example but also the Terra Draw source itself, like so:
 
-`npm run watch`
-
-You can run a simple web server that serves the example app by calling:
-
 `npm run serve`
 
-You probably want to run them in concurrently in seperate terminal windows.
+This will start a hot reloading development server on port 9000 that you can explore via [http://localhost:9000](http://localhost:9000). 

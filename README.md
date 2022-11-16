@@ -14,9 +14,9 @@ Please see the [the development documentation](./DEVELOPMENT.md)
 
 Please see the [the contributing documentation](./CONTRIBUTING.md)
 
-### Official Website
+### Project Website
 
-You can checkout the offical Terra Draw website at [https://www.terradraw.io](https://www.terradraw.io). If you are interested in contributing to the official website please see [this repository](https://www.github.com/JamesLMilner/terra-draw-website).
+You can checkout the offical Terra Draw website at [terradraw.io](https://www.terradraw.io). If you are interested in contributing to the website please see [this repository](https://www.github.com/JamesLMilner/terra-draw-website).
 
 ### License
 

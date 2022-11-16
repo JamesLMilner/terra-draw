@@ -14,8 +14,34 @@ import {
     TerraDrawLeafletAdapter,
     TerraDrawGoogleMapsAdapter,
 } from "../../src/terra-draw";
-import { addModeChangeHandler } from "../../common/addModeChangeHandler";
 import { TerraDrawRenderMode } from "../../src/modes/render/render.mode";
+
+
+const addModeChangeHandler = (
+    draw: TerraDraw,
+    currentSelected: { button: undefined | HTMLButtonElement; mode: string }
+) => {
+    ["select", "point", "linestring", "polygon", "freehand", "circle"].forEach(
+        (mode) => {
+            (document.getElementById(mode) as HTMLButtonElement).addEventListener(
+                "click",
+                () => {
+                    currentSelected.mode = mode;
+                    draw.changeMode(currentSelected.mode);
+
+                    if (currentSelected.button) {
+                        currentSelected.button.style.color = "565656";
+                    }
+                    currentSelected.button = document.getElementById(
+                        mode
+                    ) as HTMLButtonElement;
+                    currentSelected.button.style.color = "#27ccff";
+                }
+            );
+        }
+    );
+};
+
 
 const getModes = () => {
     return {
@@ -67,7 +93,7 @@ const getModes = () => {
         circle: new TerraDrawCircleMode(),
         freehand: new TerraDrawFreehandMode(),
         arbitary: new TerraDrawRenderMode({
-            styling: {
+            styles: {
                 polygonFillColor: "#4357AD",
                 polygonOutlineColor: "#48A9A6",
                 polygonOutlineWidth: 2,

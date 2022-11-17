@@ -6,6 +6,16 @@ Frictionless map drawing across mapping libraries.
 
 TerraDraw centralises map drawing logic and provides a host of out the box drawing modes that work across map providers (currently Leaflet, Mapbox, Google) via adapters.
 
+### Install
+
+You can install the Terra Draw into your project like so:
+
+```shell
+npm install terra-draw
+```
+
+Be aware Terra Draw is currently in alpha, the initial API is still being finalised  
+
 ### Development
 
 Please see the [the development documentation](./DEVELOPMENT.md)

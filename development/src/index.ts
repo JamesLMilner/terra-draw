@@ -52,6 +52,8 @@ const getModes = () => {
                 polygon: {
                     feature: {
                         draggable: true,
+                        rotateable: true,
+                        scaleable: true,
                         coordinates: {
                             midpoints: true,
                             draggable: true,

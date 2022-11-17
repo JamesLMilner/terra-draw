@@ -1,8 +1,9 @@
-// Based on which-polygon
-
 import { Position } from "geojson";
 
+// Based on which-polygon (Mapbox)
 // https://github.com/mapbox/which-polygon/blob/2eb5b8a427d018ebd964c05acd3b9166c4558b2c/index.js#L81
+// ISC License - Copyright (c) 2017, Mapbox
+
 export function pointInPolygon(point: Position, rings: Position[][]) {
     let inside = false;
     for (let i = 0, len = rings.length; i < len; i++) {
@@ -19,6 +20,6 @@ export function pointInPolygon(point: Position, rings: Position[][]) {
 function rayIntersect(p: Position, p1: Position, p2: Position) {
     return (
         p1[1] > p[1] !== p2[1] > p[1] &&
-    p[0] < ((p2[0] - p1[0]) * (p[1] - p1[1])) / (p2[1] - p1[1]) + p1[0]
+        p[0] < ((p2[0] - p1[0]) * (p[1] - p1[1])) / (p2[1] - p1[1]) + p1[0]
     );
 }

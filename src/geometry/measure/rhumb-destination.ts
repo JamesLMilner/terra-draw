@@ -1,5 +1,8 @@
 import { Position } from "geojson";
-import { degreesToRadians, radiansToDegrees, earthRadius } from "../helpers";
+import { degreesToRadians, earthRadius } from "../helpers";
+
+// Based on Turf.js Rhumb Destination module
+// https://github.com/Turfjs/turf/blob/master/packages/turf-rhumb-destination/index.ts
 
 export function rhumbDestination(
     origin: Position,
@@ -44,10 +47,10 @@ export function rhumbDestination(
     // compensate the crossing of the 180th meridian (https://macwright.org/2016/09/26/the-180th-meridian.html)
     // solution from https://github.com/mapbox/mapbox-gl-js/issues/3250#issuecomment-294887678
     destination[0] +=
-    destination[0] - origin[0] > 180
-        ? -360
-        : origin[0] - destination[0] > 180
-            ? 360
-            : 0;
+        destination[0] - origin[0] > 180
+            ? -360
+            : origin[0] - destination[0] > 180
+                ? 360
+                : 0;
     return destination;
 }

@@ -4,6 +4,8 @@ import { rhumbBearing } from "../measure/rhumb-bearing";
 import { rhumbDestination } from "../measure/rhumb-destination";
 import { rhumbDistance } from "../measure/rhumb-distance";
 
+// Based on turf-transform-scale: https://github.com/Turfjs/turf/tree/master/packages/turf-transform-scale
+
 export function transformScale(
     feature: Feature<Polygon | LineString>,
     factor: number
@@ -16,9 +18,9 @@ export function transformScale(
     const origin = centroid(feature);
 
     const cooordinates =
-    feature.geometry.type === "Polygon"
-        ? feature.geometry.coordinates[0]
-        : feature.geometry.coordinates;
+        feature.geometry.type === "Polygon"
+            ? feature.geometry.coordinates[0]
+            : feature.geometry.coordinates;
 
     cooordinates.forEach((pointCoords: Position) => {
         const originalDistance = rhumbDistance(origin, pointCoords);

@@ -1,14 +1,13 @@
 // Based on - https://github.com/mclaeysb/geojson-polygon-self-intersections
-// MIT License
-// Copyright (c) 2016 Manuel Claeys Bouuaert
+// MIT License - Copyright (c) 2016 Manuel Claeys Bouuaert
 
 import { Feature, LineString, Polygon, Position } from "geojson";
 // import * as rbush from "rbush";
 
 type SelfIntersectsOptions = {
-  epsilon: number;
-  // reportVertexOnVertex: boolean;
-  // reportVertexOnEdge: boolean;
+    epsilon: number;
+    // reportVertexOnVertex: boolean;
+    // reportVertexOnEdge: boolean;
 };
 
 export function selfIntersects(
@@ -16,8 +15,8 @@ export function selfIntersects(
 ): boolean {
     const options: SelfIntersectsOptions = {
         epsilon: 0,
-    // reportVertexOnVertex: false,
-    // reportVertexOnEdge: false,
+        // reportVertexOnVertex: false,
+        // reportVertexOnEdge: false,
     };
 
     let coord: number[][][];
@@ -132,9 +131,9 @@ function intersect(
 ) {
     if (
         equalArrays(start0, start1) ||
-    equalArrays(start0, end1) ||
-    equalArrays(end0, start1) ||
-    equalArrays(end1, start1)
+        equalArrays(start0, end1) ||
+        equalArrays(end0, start1) ||
+        equalArrays(end1, start1)
     ) {
         return null;
     }
@@ -154,10 +153,10 @@ function intersect(
     }
 
     const x4 =
-    ((x0 * y1 - y0 * x1) * (x2 - x3) - (x0 - x1) * (x2 * y3 - y2 * x3)) / denom;
+        ((x0 * y1 - y0 * x1) * (x2 - x3) - (x0 - x1) * (x2 * y3 - y2 * x3)) / denom;
 
     const y4 =
-    ((x0 * y1 - y0 * x1) * (y2 - y3) - (y0 - y1) * (x2 * y3 - y2 * x3)) / denom;
+        ((x0 * y1 - y0 * x1) * (y2 - y3) - (y0 - y1) * (x2 * y3 - y2 * x3)) / denom;
 
     return [x4, y4];
 }

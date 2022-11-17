@@ -4,6 +4,8 @@ import { degreesToRadians, radiansToDegrees } from "./helpers";
 import { limitPrecision } from "./limit-decimal-precision";
 import { haversineDistanceKilometers } from "./measure/haversine-distance";
 
+// Based on turf-bearing: https://github.com/Turfjs/turf/tree/master/packages/turf-bearing
+
 function bearing(coordinates1: Position, coordinates2: Position) {
     const lon1 = degreesToRadians(coordinates1[0]);
     const lon2 = degreesToRadians(coordinates2[0]);
@@ -11,8 +13,8 @@ function bearing(coordinates1: Position, coordinates2: Position) {
     const lat2 = degreesToRadians(coordinates2[1]);
     const a = Math.sin(lon2 - lon1) * Math.cos(lat2);
     const b =
-    Math.cos(lat1) * Math.sin(lat2) -
-    Math.sin(lat1) * Math.cos(lat2) * Math.cos(lon2 - lon1);
+        Math.cos(lat1) * Math.sin(lat2) -
+        Math.sin(lat1) * Math.cos(lat2) * Math.cos(lon2 - lon1);
 
     return radiansToDegrees(Math.atan2(a, b));
 }

@@ -12,6 +12,7 @@ import { GeoJSONStoreFeatures } from "../../store/store";
 
 type TerraDrawFreehandModeKeyEvents = {
     cancel: KeyboardEvent["key"];
+    finish: KeyboardEvent["key"];
 };
 
 type FreehandPolygonStyling = {
@@ -39,7 +40,12 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 
         this.everyNthMouseEvent = (options && options.everyNthMouseEvent) || 10;
         this.keyEvents =
-            options && options.keyEvents ? options.keyEvents : { cancel: "Escape" };
+            options && options.keyEvents ? options.keyEvents : { cancel: "Escape", finish: 'Enter' };
+    }
+
+    private close() {
+        this.startingClick = false;
+        this.currentId = undefined;
     }
 
     start() {
@@ -109,13 +115,14 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
             return;
         }
 
-        this.startingClick = false;
-        this.currentId = undefined;
+        this.close();
     }
     onKeyDown() { }
     onKeyUp(event: TerraDrawKeyboardEvent) {
         if (event.key === this.keyEvents.cancel) {
             this.cleanUp();
+        } else if (event.key === this.keyEvents.finish) {
+            this.close();
         }
     }
     onDragStart() { }

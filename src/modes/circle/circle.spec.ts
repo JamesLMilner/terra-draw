@@ -17,6 +17,7 @@ describe("TerraDrawCircleMode", () => {
                 styles: { fillColor: "#ffffff" },
                 keyEvents: {
                     cancel: "Backspace",
+                    finish: 'Enter'
                 },
             });
             expect(circleMode.styles).toStrictEqual({
@@ -173,7 +174,44 @@ describe("TerraDrawCircleMode", () => {
     });
 
     describe("onKeyUp", () => {
-        it("does nothing", () => { });
+
+        let circleMode: TerraDrawCircleMode;
+        let store: GeoJSONStore;
+        let onChange: jest.Mock;
+
+        beforeEach(() => {
+            circleMode = new TerraDrawCircleMode();
+
+            const mockConfig = getMockModeConfig(circleMode.mode);
+            store = new GeoJSONStore();
+            store = mockConfig.store;
+            onChange = mockConfig.onChange;
+            circleMode.register(mockConfig);
+        });
+
+        it("finishes drawing circle on finish key press", () => {
+            circleMode.onClick({
+                lng: 0,
+                lat: 0,
+                containerX: 0,
+                containerY: 0,
+                button: "left",
+                heldKeys: [],
+            });
+
+            let features = store.copyAll();
+            expect(features.length).toBe(1);
+
+            circleMode.onKeyUp({
+                key: 'Enter'
+            });
+
+            features = store.copyAll();
+            expect(features.length).toBe(1);
+
+            expect(onChange).toBeCalledTimes(1);
+            expect(onChange).toBeCalledWith([expect.any(String)], "create");
+        });
     });
 
     describe("onMouseMove", () => {

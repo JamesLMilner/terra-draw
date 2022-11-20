@@ -19,6 +19,7 @@ import { GeoJSONStoreFeatures } from "../../store/store";
 
 type TerraDrawPolygonModeKeyEvents = {
     cancel: KeyboardEvent["key"];
+    finish: KeyboardEvent["key"]
 };
 
 type PolygonStyling = {
@@ -65,10 +66,46 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
                 : true;
 
         this.keyEvents =
-            options && options.keyEvents ? options.keyEvents : { cancel: "Escape" };
+            options && options.keyEvents ? options.keyEvents : { cancel: "Escape", finish: 'Enter' };
     }
 
-    public registerBehaviors(config: BehaviorConfig) {
+    private close() {
+        if (!this.currentId) {
+            return;
+        }
+
+        const currentPolygonCoordinates = this.store.getGeometryCopy<Polygon>(
+            this.currentId
+        ).coordinates[0];
+
+        // We don't want to allow closing if there is not enough 
+        // coordinates. We have extra because we insert them on mouse
+        // move
+        if (currentPolygonCoordinates.length < 5) {
+            return;
+        }
+
+        this.store.updateGeometry([
+            {
+                id: this.currentId,
+                geometry: {
+                    type: "Polygon",
+                    coordinates: [
+                        [
+                            ...currentPolygonCoordinates.slice(0, -2),
+                            currentPolygonCoordinates[0],
+                        ],
+                    ],
+                },
+            },
+        ]);
+
+        this.currentCoordinate = 0;
+        this.currentId = undefined;
+        this.closingPoints.delete();
+    }
+
+    registerBehaviors(config: BehaviorConfig) {
         this.pixelDistance = new PixelDistanceBehavior(config);
         this.snapping = new SnappingBehavior(
             config,
@@ -289,25 +326,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
             const { isClosing, isPreviousClosing } = this.closingPoints.isClosingPoint(event);
 
             if (isPreviousClosing || isClosing) {
-
-                this.store.updateGeometry([
-                    {
-                        id: this.currentId,
-                        geometry: {
-                            type: "Polygon",
-                            coordinates: [
-                                [
-                                    ...currentPolygonCoordinates.slice(0, -2),
-                                    currentPolygonCoordinates[0],
-                                ],
-                            ],
-                        },
-                    },
-                ]);
-
-                this.currentCoordinate = 0;
-                this.currentId = undefined;
-                this.closingPoints.delete();
+                this.close();
             } else {
                 if (closestCoord) {
                     event.lng = closestCoord[0];
@@ -350,6 +369,8 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
     onKeyUp(event: TerraDrawKeyboardEvent) {
         if (event.key === this.keyEvents.cancel) {
             this.cleanUp();
+        } else if (event.key === this.keyEvents.finish) {
+            this.close();
         }
     }
 

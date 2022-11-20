@@ -98,7 +98,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode<SelectionStyling>
             5;
     }
 
-    public registerBehaviors(config: BehaviorConfig) {
+    registerBehaviors(config: BehaviorConfig) {
         this.pixelDistance = new PixelDistanceBehavior(config);
         this.clickBoundingBox = new ClickBoundingBoxBehavior(config);
         this.featuresAtMouseEvent = new FeaturesAtMouseEventBehavior(

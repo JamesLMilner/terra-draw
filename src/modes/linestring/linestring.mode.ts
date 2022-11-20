@@ -14,9 +14,11 @@ import { PixelDistanceBehavior } from "../pixel-distance.behavior";
 import { SnappingBehavior } from "../snapping.behavior";
 import { getDefaultStyling } from "../../util/styling";
 import { GeoJSONStoreFeatures } from "../../store/store";
+import { createSourceMapSource } from "typescript";
 
 type TerraDrawLineStringModeKeyEvents = {
     cancel: KeyboardEvent["key"];
+    finish: KeyboardEvent["key"]
 };
 
 type LineStringStyling = {
@@ -60,10 +62,38 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
                 : true;
 
         this.keyEvents =
-            options && options.keyEvents ? options.keyEvents : { cancel: "Escape" };
+            options && options.keyEvents ? options.keyEvents : { cancel: "Escape", finish: "Enter" };
     }
 
-    public registerBehaviors(config: BehaviorConfig) {
+    private close() {
+        if (!this.currentId) {
+            return;
+        }
+
+        const currentLineGeometry = this.store.getGeometryCopy<LineString>(
+            this.currentId
+        );
+
+        // Finish off the drawing
+        currentLineGeometry.coordinates.pop();
+        this.store.updateGeometry([
+            {
+                id: this.currentId,
+                geometry: {
+                    type: "LineString",
+                    coordinates: [...currentLineGeometry.coordinates],
+                },
+            },
+        ]);
+
+        // Reset the state back to starting state
+        this.closingPointId && this.store.delete([this.closingPointId]);
+        this.currentCoordinate = 0;
+        this.currentId = undefined;
+        this.closingPointId = undefined;
+    }
+
+    registerBehaviors(config: BehaviorConfig) {
         this.snapping = new SnappingBehavior(
             config,
             new PixelDistanceBehavior(config),
@@ -210,24 +240,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
             const isClosingClick = distance < this.pointerDistance;
 
             if (isClosingClick) {
-                // Finish off the drawing
-                currentLineGeometry.coordinates.pop();
-                this.store.updateGeometry([
-                    {
-                        id: this.currentId,
-                        geometry: {
-                            type: "LineString",
-                            coordinates: [...currentLineGeometry.coordinates],
-                        },
-                    },
-                ]);
-
-
-                // Reset the state back to starting state
-                this.closingPointId && this.store.delete([this.closingPointId]);
-                this.currentCoordinate = 0;
-                this.currentId = undefined;
-                this.closingPointId = undefined;
+                this.close();
             } else {
                 // If not close to the final point, keep adding points
                 const newLineString = {
@@ -269,6 +282,10 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
     onKeyUp(event: TerraDrawKeyboardEvent) {
         if (event.key === this.keyEvents.cancel) {
             this.cleanUp();
+        }
+
+        if (event.key === this.keyEvents.finish) {
+            this.close();
         }
     }
     onDragStart() { }

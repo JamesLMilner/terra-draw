@@ -13,6 +13,7 @@ import { TerraDrawBaseDrawMode } from "../base.mode";
 
 type TerraDrawCircleModeKeyEvents = {
     cancel: KeyboardEvent["key"];
+    finish: KeyboardEvent["key"];
 };
 
 type FreehandPolygonStyling = {
@@ -37,7 +38,13 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<FreehandPolygonSt
         super(options);
 
         this.keyEvents =
-            options && options.keyEvents ? options.keyEvents : { cancel: "Escape" };
+            options && options.keyEvents ? options.keyEvents : { cancel: "Escape", finish: 'Enter' };
+    }
+
+    private close() {
+        this.center = undefined;
+        this.currentCircleId = undefined;
+        this.clickCount = 0;
     }
 
     start() {
@@ -71,9 +78,7 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<FreehandPolygonSt
             this.clickCount++;
         } else {
             // Finish drawing
-            this.center = undefined;
-            this.currentCircleId = undefined;
-            this.clickCount = 0;
+            this.close();
         }
     }
     onMouseMove(event: TerraDrawMouseEvent) {
@@ -97,6 +102,8 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<FreehandPolygonSt
     onKeyUp(event: TerraDrawKeyboardEvent) {
         if (event.key === this.keyEvents.cancel) {
             this.cleanUp();
+        } else if (event.key === this.keyEvents.finish) {
+            this.close();
         }
     }
     onDragStart() { }

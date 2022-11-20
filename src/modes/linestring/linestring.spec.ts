@@ -4,7 +4,6 @@ import { getDefaultStyling } from "../../util/styling";
 import { TerraDrawLineStringMode } from "./linestring.mode";
 
 describe("TerraDrawLineStringMode", () => {
-    const defaultStyles = getDefaultStyling();
 
     describe("constructor", () => {
         it("constructs with no options", () => {
@@ -16,7 +15,7 @@ describe("TerraDrawLineStringMode", () => {
         it("constructs with options", () => {
             const lineStringMode = new TerraDrawLineStringMode({
                 styles: { lineStringColor: "#ffffff" },
-                keyEvents: { cancel: "Backspace" },
+                keyEvents: { cancel: "Backspace", finish: 'Enter' },
             });
             expect(lineStringMode.styles).toStrictEqual({ lineStringColor: "#ffffff" });
         });
@@ -204,10 +203,12 @@ describe("TerraDrawLineStringMode", () => {
                 heldKeys: [],
             });
 
-            expect(onChange).toBeCalledTimes(2);
+            expect(onChange).toBeCalledTimes(3);
 
             const features = store.copyAll();
-            expect(features.length).toBe(1);
+
+            // Drawn LineString and Closing point 
+            expect(features.length).toBe(2);
 
             expect(features[0].geometry.coordinates).toStrictEqual([
                 [0, 0],
@@ -218,7 +219,10 @@ describe("TerraDrawLineStringMode", () => {
 
         it("finishes the line on the the third click", () => {
             project.mockReturnValueOnce({ x: 50, y: 50 });
+            project.mockReturnValueOnce({ x: 50, y: 50 });
             project.mockReturnValueOnce({ x: 100, y: 100 });
+            project.mockReturnValueOnce({ x: 100, y: 100 });
+
 
             lineStringMode.onClick({
                 lng: 0,
@@ -248,13 +252,17 @@ describe("TerraDrawLineStringMode", () => {
             });
 
             let features = store.copyAll();
-            expect(features.length).toBe(1);
+
+            // Drawn LineString and Closing point 
+            expect(features.length).toBe(2);
 
             expect(features[0].geometry.coordinates).toStrictEqual([
                 [0, 0],
                 [1, 1],
                 [1, 1],
             ]);
+
+            expect(features[1].geometry.coordinates).toStrictEqual([1, 1]);
 
             lineStringMode.onMouseMove({
                 lng: 2,
@@ -274,6 +282,8 @@ describe("TerraDrawLineStringMode", () => {
                 heldKeys: [],
             });
 
+            expect(onChange).not.toBeCalledWith([expect.any(String)], 'delete');
+
             lineStringMode.onClick({
                 lng: 2,
                 lat: 2,
@@ -283,7 +293,10 @@ describe("TerraDrawLineStringMode", () => {
                 heldKeys: [],
             });
 
-            expect(onChange).toBeCalledTimes(6);
+            expect(onChange).toBeCalledTimes(8);
+
+            expect(onChange).toHaveBeenNthCalledWith(8, [expect.any(String)], 'delete');
+
 
             features = store.copyAll();
             expect(features.length).toBe(1);
@@ -370,7 +383,7 @@ describe("TerraDrawLineStringMode", () => {
                 heldKeys: [],
             });
 
-            expect(onChange).toBeCalledTimes(6);
+            expect(onChange).toBeCalledTimes(7);
 
             lineStringMode.onClick({
                 lng: -8.173828125,
@@ -383,43 +396,139 @@ describe("TerraDrawLineStringMode", () => {
 
             // Update geometry is NOT called because
             // there is a self intersection
-            expect(onChange).toBeCalledTimes(6);
+            expect(onChange).toBeCalledTimes(7);
         });
     });
 
     describe("onKeyUp", () => {
         let lineStringMode: TerraDrawLineStringMode;
+        let onChange: jest.Mock;
         let store: GeoJSONStore;
+        let project: jest.Mock;
 
         beforeEach(() => {
             lineStringMode = new TerraDrawLineStringMode();
             const mockConfig = getMockModeConfig(lineStringMode.mode);
+            onChange = mockConfig.onChange;
             store = mockConfig.store;
+            project = mockConfig.project;
             lineStringMode.register(mockConfig);
         });
 
-        it("Escape - does nothing when no line is present", () => {
-            lineStringMode.onKeyUp({ key: "Escape" });
-        });
-
-        it("Escape - deletes the line when currently editing", () => {
-            lineStringMode.onClick({
-                lng: 0,
-                lat: 0,
-                containerX: 0,
-                containerY: 0,
-                button: "left",
-                heldKeys: [],
+        describe('cancel', () => {
+            it("does nothing when no line is present", () => {
+                lineStringMode.onKeyUp({ key: "Escape" });
             });
 
-            let features = store.copyAll();
-            expect(features.length).toBe(1);
+            it("deletes the line when currently editing", () => {
+                lineStringMode.onClick({
+                    lng: 0,
+                    lat: 0,
+                    containerX: 0,
+                    containerY: 0,
+                    button: "left",
+                    heldKeys: [],
+                });
 
-            lineStringMode.onKeyUp({ key: "Escape" });
+                let features = store.copyAll();
+                expect(features.length).toBe(1);
 
-            features = store.copyAll();
-            expect(features.length).toBe(0);
+                lineStringMode.onKeyUp({ key: "Escape" });
+
+                features = store.copyAll();
+                expect(features.length).toBe(0);
+            });
         });
+
+        describe('finish', () => {
+
+            it("finishes the line on finish key press", () => {
+                project.mockReturnValueOnce({ x: 50, y: 50 });
+                project.mockReturnValueOnce({ x: 50, y: 50 });
+                project.mockReturnValueOnce({ x: 100, y: 100 });
+                project.mockReturnValueOnce({ x: 100, y: 100 });
+
+
+                lineStringMode.onClick({
+                    lng: 0,
+                    lat: 0,
+                    containerX: 0,
+                    containerY: 0,
+                    button: "left",
+                    heldKeys: [],
+                });
+
+                lineStringMode.onMouseMove({
+                    lng: 1,
+                    lat: 1,
+                    containerX: 50,
+                    containerY: 50,
+                    button: "left",
+                    heldKeys: [],
+                });
+
+                lineStringMode.onClick({
+                    lng: 1,
+                    lat: 1,
+                    containerX: 50,
+                    containerY: 50,
+                    button: "left",
+                    heldKeys: [],
+                });
+
+                let features = store.copyAll();
+
+                // Drawn LineString and Closing point 
+                expect(features.length).toBe(2);
+
+                expect(features[0].geometry.coordinates).toStrictEqual([
+                    [0, 0],
+                    [1, 1],
+                    [1, 1],
+                ]);
+
+                expect(features[1].geometry.coordinates).toStrictEqual([1, 1]);
+
+                lineStringMode.onMouseMove({
+                    lng: 2,
+                    lat: 2,
+                    containerX: 100,
+                    containerY: 100,
+                    button: "left",
+                    heldKeys: [],
+                });
+
+                lineStringMode.onClick({
+                    lng: 2,
+                    lat: 2,
+                    containerX: 100,
+                    containerY: 100,
+                    button: "left",
+                    heldKeys: [],
+                });
+
+                expect(onChange).not.toBeCalledWith([expect.any(String)], 'delete');
+
+                lineStringMode.onKeyUp({
+                    key: 'Enter'
+                });
+
+                expect(onChange).toBeCalledTimes(8);
+
+                expect(onChange).toHaveBeenNthCalledWith(8, [expect.any(String)], 'delete');
+
+
+                features = store.copyAll();
+                expect(features.length).toBe(1);
+
+                expect(features[0].geometry.coordinates).toStrictEqual([
+                    [0, 0],
+                    [1, 1],
+                    [2, 2],
+                ]);
+            });
+        });
+
     });
 
     describe("cleanUp", () => {

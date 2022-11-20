@@ -21,6 +21,7 @@ describe("TerraDrawPolygonMode", () => {
                 pointerDistance: 40,
                 keyEvents: {
                     cancel: "Backspace",
+                    finish: 'Enter'
                 },
             });
             expect(polygonMode.styles).toStrictEqual({ closingPointColor: "#ffffff" });
@@ -923,42 +924,164 @@ describe("TerraDrawPolygonMode", () => {
     });
 
     describe("onKeyUp", () => {
-        let store: GeoJSONStore;
         let polygonMode: TerraDrawPolygonMode;
+        let store: GeoJSONStore;
+        let project: jest.Mock;
+        let unproject: jest.Mock;
+
+        const mockClickBoundingBox = (
+            bbox: [
+                [number, number],
+                [number, number],
+                [number, number],
+                [number, number]
+            ] = [
+                [0, 0],
+                [0, 0],
+                [0, 0],
+                [0, 0],
+            ]
+        ) => {
+            unproject
+                .mockReturnValueOnce({ lng: bbox[0][0], lat: bbox[0][1] })
+                .mockReturnValueOnce({ lng: bbox[1][0], lat: bbox[1][1] })
+                .mockReturnValueOnce({ lng: bbox[2][0], lat: bbox[2][1] })
+                .mockReturnValueOnce({ lng: bbox[3][0], lat: bbox[3][1] })
+                .mockReturnValueOnce({ lng: bbox[0][0], lat: bbox[0][1] });
+        };
 
         beforeEach(() => {
-            jest.resetAllMocks();
-
             polygonMode = new TerraDrawPolygonMode();
-
             const mockConfig = getMockModeConfig(polygonMode.mode);
 
             store = mockConfig.store;
-
+            project = mockConfig.project;
+            unproject = mockConfig.project;
             polygonMode.register(mockConfig);
         });
 
-        it("Escape - does nothing when no line is present", () => {
-            polygonMode.onKeyUp({ key: "Escape" });
-        });
-
-        it("Escape - deletes the line when currently editing", () => {
-            polygonMode.onClick({
-                lng: 0,
-                lat: 0,
-                containerX: 0,
-                containerY: 0,
-                button: "left",
-                heldKeys: [],
+        describe('cancel', () => {
+            it("does nothing when no line is present", () => {
+                polygonMode.onKeyUp({ key: "Escape" });
             });
 
-            let features = store.copyAll();
-            expect(features.length).toBe(1);
+            it("deletes the line when currently editing", () => {
+                polygonMode.onClick({
+                    lng: 0,
+                    lat: 0,
+                    containerX: 0,
+                    containerY: 0,
+                    button: "left",
+                    heldKeys: [],
+                });
 
-            polygonMode.onKeyUp({ key: "Escape" });
+                let features = store.copyAll();
+                expect(features.length).toBe(1);
 
-            features = store.copyAll();
-            expect(features.length).toBe(0);
+                polygonMode.onKeyUp({ key: "Escape" });
+
+                features = store.copyAll();
+                expect(features.length).toBe(0);
+            });
+        });
+
+        describe('finish', () => {
+            it("can create a polygon", () => {
+                polygonMode.onClick({
+                    lng: 0,
+                    lat: 0,
+                    containerX: 0,
+                    containerY: 0,
+                    button: "left",
+                    heldKeys: [],
+                });
+
+                polygonMode.onMouseMove({
+                    lng: 1,
+                    lat: 1,
+                    containerX: 0,
+                    containerY: 0,
+                    button: "left",
+                    heldKeys: [],
+                });
+
+                polygonMode.onClick({
+                    lng: 1,
+                    lat: 1,
+                    containerX: 0,
+                    containerY: 0,
+                    button: "left",
+                    heldKeys: [],
+                });
+
+                polygonMode.onMouseMove({
+                    lng: 2,
+                    lat: 2,
+                    containerX: 0,
+                    containerY: 0,
+                    button: "left",
+                    heldKeys: [],
+                });
+
+                polygonMode.onClick({
+                    lng: 2,
+                    lat: 2,
+                    containerX: 0,
+                    containerY: 0,
+                    button: "left",
+                    heldKeys: [],
+                });
+
+                // closingPoints
+                project.mockReturnValueOnce({ x: 0, y: 0 });
+                project.mockReturnValueOnce({ x: 0, y: 0 });
+
+                polygonMode.onMouseMove({
+                    lng: 3,
+                    lat: 3,
+                    containerX: 0,
+                    containerY: 0,
+                    button: "left",
+                    heldKeys: [],
+                });
+
+                // closingPoints
+                project.mockReturnValueOnce({ x: 0, y: 0 });
+                project.mockReturnValueOnce({ x: 0, y: 0 });
+
+                polygonMode.onClick({
+                    lng: 3,
+                    lat: 3,
+                    containerX: 0,
+                    containerY: 0,
+                    button: "left",
+                    heldKeys: [],
+                });
+
+                // closingPoints
+                project.mockReturnValueOnce({ x: 0, y: 0 });
+                project.mockReturnValueOnce({ x: 0, y: 0 });
+
+                polygonMode.onClick({
+                    lng: 3,
+                    lat: 3,
+                    containerX: 0,
+                    containerY: 0,
+                    button: "left",
+                    heldKeys: [],
+                });
+
+                let features = store.copyAll();
+                expect(features.length).toBe(2);
+
+                // Create a new polygon
+                polygonMode.onKeyUp({
+                    key: 'Enter'
+                });
+
+                features = store.copyAll();
+                expect(features.length).toBe(2);
+            });
         });
     });
 

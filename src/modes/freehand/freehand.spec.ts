@@ -18,6 +18,7 @@ describe("TerraDrawFreehandMode", () => {
                 everyNthMouseEvent: 5,
                 keyEvents: {
                     cancel: "Backspace",
+                    finish: 'Enter'
                 },
             });
             expect(freehandMode.styles).toStrictEqual({
@@ -301,28 +302,59 @@ describe("TerraDrawFreehandMode", () => {
             freehandMode.register(mockConfig);
         });
 
-        it("Escape - does nothing when no freehand is present", () => {
-            freehandMode.onKeyUp({ key: "Escape" });
-        });
-
-        it("Escape - deletes the freehand when currently editing", () => {
-            freehandMode.onClick({
-                lng: 0,
-                lat: 0,
-                containerX: 0,
-                containerY: 0,
-                button: "left",
-                heldKeys: [],
+        describe('cancel', () => {
+            it("does nothing when no freehand is present", () => {
+                freehandMode.onKeyUp({ key: "Escape" });
             });
 
-            let features = store.copyAll();
-            expect(features.length).toBe(1);
+            it("deletes the freehand when currently editing", () => {
+                freehandMode.onClick({
+                    lng: 0,
+                    lat: 0,
+                    containerX: 0,
+                    containerY: 0,
+                    button: "left",
+                    heldKeys: [],
+                });
 
-            freehandMode.onKeyUp({ key: "Escape" });
+                let features = store.copyAll();
+                expect(features.length).toBe(1);
 
-            features = store.copyAll();
-            expect(features.length).toBe(0);
+                freehandMode.onKeyUp({ key: "Escape" });
+
+                features = store.copyAll();
+                expect(features.length).toBe(0);
+            });
         });
+
+        describe('finish', () => {
+
+            it("finishes drawing polygon on finish key press", () => {
+                freehandMode.onClick({
+                    lng: 0,
+                    lat: 0,
+                    containerX: 0,
+                    containerY: 0,
+                    button: "left",
+                    heldKeys: [],
+                });
+
+                let features = store.copyAll();
+                expect(features.length).toBe(1);
+
+                freehandMode.onKeyUp({
+                    key: 'Enter'
+                });
+
+                features = store.copyAll();
+                expect(features.length).toBe(1);
+
+                expect(onChange).toBeCalledTimes(1);
+                expect(onChange).toBeCalledWith([expect.any(String)], "create");
+            });
+        });
+
+
     });
 
     describe("onDrag", () => {

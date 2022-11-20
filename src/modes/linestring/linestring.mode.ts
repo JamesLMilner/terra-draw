@@ -4,7 +4,7 @@ import {
     TerraDrawKeyboardEvent,
     HexColor,
 } from "../../common";
-import { Feature, LineString } from "geojson";
+import { LineString } from "geojson";
 import { selfIntersects } from "../../geometry/boolean/self-intersects";
 import { TerraDrawBaseDrawMode } from "../base.mode";
 import { pixelDistance } from "../../geometry/measure/pixel-distance";
@@ -22,6 +22,10 @@ type TerraDrawLineStringModeKeyEvents = {
 type LineStringStyling = {
     lineStringWidth: number,
     lineStringColor: HexColor,
+    closingPointColor: HexColor,
+    closingPointWidth: number,
+    closingPointOutlineColor: HexColor,
+    closingPointOutlineWidth: number
 }
 
 
@@ -30,6 +34,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 
     private currentCoordinate = 0;
     private currentId: string | undefined;
+    private closingPointId: string | undefined;
     private allowSelfIntersections;
     private keyEvents: TerraDrawLineStringModeKeyEvents;
     private snappingEnabled: boolean;
@@ -77,6 +82,8 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
     }
 
     onMouseMove(event: TerraDrawMouseEvent) {
+        this.setCursor("crosshair");
+
         if (!this.currentId || this.currentCoordinate === 0) {
             return;
         }
@@ -91,6 +98,28 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
             this.snappingEnabled &&
             this.snapping.getSnappableCoordinate(event, this.currentId);
         const updatedCoord = snappedCoord ? snappedCoord : [event.lng, event.lat];
+
+
+        // We want to ensure that when we are hovering over
+        // the losign point that the pointer cursor is shown
+        if (this.closingPointId) {
+            const [previousLng, previousLat] =
+                currentLineGeometry.coordinates[
+                    currentLineGeometry.coordinates.length - 1
+                ];
+            const { x, y } = this.project(previousLng, previousLat);
+            const distance = pixelDistance(
+                { x, y },
+                { x: event.containerX, y: event.containerY }
+            );
+
+            const isClosingClick = distance < this.pointerDistance;
+
+            if (isClosingClick) {
+                this.setCursor('pointer');
+            }
+        }
+
 
         // Update the 'live' point
         this.store.updateGeometry([
@@ -131,6 +160,21 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
                 this.currentId
             );
 
+            const [pointId] = this.store.create([
+                {
+                    geometry: {
+                        type: "Point",
+                        coordinates: [...updatedCoord],
+                    },
+                    properties: { mode: this.mode },
+                },
+            ]);
+            this.closingPointId = pointId;
+
+            // We are creating the point so we immediately want
+            // to set the point cursor to show it can be closed
+            this.setCursor('pointer');
+
             this.store.updateGeometry([
                 {
                     id: this.currentId,
@@ -144,6 +188,8 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
                     },
                 },
             ]);
+
+
 
             this.currentCoordinate++;
         } else if (this.currentId) {
@@ -176,8 +222,12 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
                     },
                 ]);
 
+
+                // Reset the state back to starting state
+                this.closingPointId && this.store.delete([this.closingPointId]);
                 this.currentCoordinate = 0;
                 this.currentId = undefined;
+                this.closingPointId = undefined;
             } else {
                 // If not close to the final point, keep adding points
                 const newLineString = {
@@ -197,10 +247,21 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
                     }
                 }
 
-                this.store.updateGeometry([
-                    { id: this.currentId, geometry: newLineString },
-                ]);
-                this.currentCoordinate++;
+                if (this.closingPointId) {
+                    this.setCursor('pointer');
+
+                    this.store.updateGeometry([
+                        { id: this.currentId, geometry: newLineString },
+                        {
+                            id: this.closingPointId,
+                            geometry: {
+                                type: "Point",
+                                coordinates: currentLineGeometry.coordinates[currentLineGeometry.coordinates.length - 1]
+                            }
+                        }
+                    ]);
+                    this.currentCoordinate++;
+                }
             }
         }
     }
@@ -218,8 +279,12 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
             if (this.currentId) {
                 this.store.delete([this.currentId]);
             }
+            if (this.closingPointId) {
+                this.store.delete([this.closingPointId]);
+            }
         } catch (error) { }
 
+        this.closingPointId = undefined;
         this.currentId = undefined;
         this.currentCoordinate = 0;
     }
@@ -241,6 +306,25 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
             if (this.styles.lineStringWidth) {
                 styles.lineStringWidth = this.styles.lineStringWidth;
             }
+
+            return styles;
+        } else if (
+            feature.type === 'Feature' &&
+            feature.geometry.type === 'Point' &&
+            feature.properties.mode === this.mode
+        ) {
+
+            if (this.styles.closingPointColor) {
+                styles.pointColor = this.styles.closingPointColor;
+            }
+            if (this.styles.closingPointWidth) {
+                styles.pointWidth = this.styles.closingPointWidth;
+            }
+
+            styles.pointOutlineColor = this.styles.closingPointOutlineColor !== undefined ?
+                this.styles.closingPointOutlineColor : '#ffffff';
+            styles.pointOutlineWidth = this.styles.closingPointOutlineWidth !== undefined ?
+                this.styles.closingPointOutlineWidth : 2;
 
             return styles;
         }

@@ -9,6 +9,7 @@ import { Polygon } from "geojson";
 import { TerraDrawBaseDrawMode } from "../base.mode";
 import { getDefaultStyling } from "../../util/styling";
 import { GeoJSONStoreFeatures } from "../../store/store";
+import { pixelDistance } from "../../geometry/measure/pixel-distance";
 
 type TerraDrawFreehandModeKeyEvents = {
     cancel: KeyboardEvent["key"];
@@ -20,6 +21,10 @@ type FreehandPolygonStyling = {
     outlineColor: HexColor,
     outlineWidth: number,
     fillOpacity: number,
+    closingPointColor: HexColor,
+    closingPointWidth: number,
+    closingPointOutlineColor: HexColor,
+    closingPointOutlineWidth: number
 }
 
 export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygonStyling> {
@@ -27,25 +32,27 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 
     private startingClick = false;
     private currentId: string | undefined;
-    private skip = 0;
-    private everyNthMouseEvent: number;
+    private closingPointId: string | undefined;
+    private minDistance: number;
     private keyEvents: TerraDrawFreehandModeKeyEvents;
 
     constructor(options?: {
         styles?: Partial<FreehandPolygonStyling>;
-        everyNthMouseEvent?: number;
+        minDistance?: number;
         keyEvents?: TerraDrawFreehandModeKeyEvents;
     }) {
         super(options);
 
-        this.everyNthMouseEvent = (options && options.everyNthMouseEvent) || 10;
+        this.minDistance = (options && options.minDistance) || 20;
         this.keyEvents =
             options && options.keyEvents ? options.keyEvents : { cancel: "Escape", finish: 'Enter' };
     }
 
     private close() {
+        this.closingPointId && this.store.delete([this.closingPointId]);
         this.startingClick = false;
         this.currentId = undefined;
+        this.closingPointId = undefined;
     }
 
     start() {
@@ -63,37 +70,61 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
             return;
         }
 
-        if (this.skip > this.everyNthMouseEvent) {
-            this.skip = 0;
-            const currentLineGeometry = this.store.getGeometryCopy<Polygon>(
-                this.currentId
-            );
+        const currentLineGeometry = this.store.getGeometryCopy<Polygon>(
+            this.currentId
+        );
 
-            currentLineGeometry.coordinates[0].pop();
+        const [previousLng, previousLat] =
+            currentLineGeometry.coordinates[0][
+                currentLineGeometry.coordinates[0].length - 2
+            ];
+        const { x, y } = this.project(previousLng, previousLat);
+        const distance = pixelDistance(
+            { x, y },
+            { x: event.containerX, y: event.containerY }
+        );
 
-            this.store.updateGeometry([
-                {
-                    id: this.currentId,
-                    geometry: {
-                        type: "Polygon",
-                        coordinates: [
-                            [
-                                ...currentLineGeometry.coordinates[0],
-                                [event.lng, event.lat],
-                                currentLineGeometry.coordinates[0][0],
-                            ],
-                        ],
-                    },
-                },
-            ]);
+        const [closingLng, closingLat] = currentLineGeometry.coordinates[0][0];
+        const { x: closingX, y: closingY } = this.project(closingLng, closingLat);
+        const closingDistance = pixelDistance(
+            { x: closingX, y: closingY },
+            { x: event.containerX, y: event.containerY }
+        );
+
+        if (closingDistance < this.pointerDistance) {
+            this.setCursor('pointer');
+        } else {
+            this.setCursor('crosshair');
         }
 
-        this.skip++;
+        // The cusor must have moved a minimum distance
+        // before we add another coordinate
+        if (distance < this.minDistance) {
+            return;
+        }
+
+        currentLineGeometry.coordinates[0].pop();
+
+        this.store.updateGeometry([
+            {
+                id: this.currentId,
+                geometry: {
+                    type: "Polygon",
+                    coordinates: [
+                        [
+                            ...currentLineGeometry.coordinates[0],
+                            [event.lng, event.lat],
+                            currentLineGeometry.coordinates[0][0],
+                        ],
+                    ],
+                },
+            },
+        ]);
     }
 
     onClick(event: TerraDrawMouseEvent) {
         if (this.startingClick === false) {
-            const [createdId] = this.store.create([
+            const [createdId, closingPointId] = this.store.create([
                 {
                     geometry: {
                         type: "Polygon",
@@ -108,9 +139,17 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
                     },
                     properties: { mode: this.mode },
                 },
+                {
+                    geometry: {
+                        type: "Point",
+                        coordinates: [event.lng, event.lat],
+                    },
+                    properties: { mode: this.mode },
+                },
             ]);
 
             this.currentId = createdId;
+            this.closingPointId = closingPointId;
             this.startingClick = true;
             return;
         }
@@ -134,7 +173,11 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
             if (this.currentId) {
                 this.store.delete([this.currentId]);
             }
+            if (this.closingPointId) {
+                this.store.delete([this.closingPointId]);
+            }
         } catch (error) { }
+        this.closingPointId = undefined;
         this.currentId = undefined;
         this.startingClick = false;
     }
@@ -162,6 +205,25 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
             if (this.styles.fillOpacity) {
                 styles.polygonFillOpacity = this.styles.fillOpacity;
             }
+
+            return styles;
+        } else if (
+            feature.type === 'Feature' &&
+            feature.geometry.type === 'Point' &&
+            feature.properties.mode === this.mode
+        ) {
+
+            if (this.styles.closingPointColor) {
+                styles.pointColor = this.styles.closingPointColor;
+            }
+            if (this.styles.closingPointWidth) {
+                styles.pointWidth = this.styles.closingPointWidth;
+            }
+
+            styles.pointOutlineColor = this.styles.closingPointOutlineColor !== undefined ?
+                this.styles.closingPointOutlineColor : '#ffffff';
+            styles.pointOutlineWidth = this.styles.closingPointOutlineWidth !== undefined ?
+                this.styles.closingPointOutlineWidth : 2;
 
             return styles;
         }

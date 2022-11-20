@@ -61,6 +61,9 @@ const getModes = () => {
                         },
                     },
                 },
+                freehand: {
+                    feature: { draggable: true, coordinates: {} }
+                },
                 linestring: {
                     feature: {
                         draggable: true,
@@ -85,6 +88,7 @@ const getModes = () => {
         }),
         point: new TerraDrawPointMode(),
         linestring: new TerraDrawLineStringMode({
+            snapping: true,
             allowSelfIntersections: false,
         }),
         polygon: new TerraDrawPolygonMode({

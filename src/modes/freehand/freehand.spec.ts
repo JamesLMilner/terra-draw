@@ -1,6 +1,6 @@
+import { Project } from "../../common";
 import { GeoJSONStore } from "../../store/store";
 import { getMockModeConfig } from "../../test/mock-config";
-import { getDefaultStyling } from "../../util/styling";
 import { TerraDrawFreehandMode } from "./freehand.mode";
 
 describe("TerraDrawFreehandMode", () => {
@@ -15,7 +15,7 @@ describe("TerraDrawFreehandMode", () => {
         it("constructs with options", () => {
             const freehandMode = new TerraDrawFreehandMode({
                 styles: { outlineColor: "#ffffff" },
-                everyNthMouseEvent: 5,
+                minDistance: 5,
                 keyEvents: {
                     cancel: "Backspace",
                     finish: 'Enter'
@@ -127,7 +127,7 @@ describe("TerraDrawFreehandMode", () => {
                 freehandMode.register(mockConfig);
             });
 
-            it("adds a polygon to store if registered", () => {
+            it("adds a polygon and closing point to store if registered", () => {
                 freehandMode.onClick({
                     lng: 0,
                     lat: 0,
@@ -138,7 +138,7 @@ describe("TerraDrawFreehandMode", () => {
                 });
 
                 expect(onChange).toBeCalledTimes(1);
-                expect(onChange).toBeCalledWith([expect.any(String)], "create");
+                expect(onChange).toBeCalledWith([expect.any(String), expect.any(String)], "create");
             });
 
             it("finishes drawing polygon on second click", () => {
@@ -152,7 +152,7 @@ describe("TerraDrawFreehandMode", () => {
                 });
 
                 let features = store.copyAll();
-                expect(features.length).toBe(1);
+                expect(features.length).toBe(2);
 
                 freehandMode.onClick({
                     lng: 0,
@@ -163,11 +163,12 @@ describe("TerraDrawFreehandMode", () => {
                     heldKeys: [],
                 });
 
+                // No more closing coordinate so we drop to 1 feature
                 features = store.copyAll();
                 expect(features.length).toBe(1);
 
-                expect(onChange).toBeCalledTimes(1);
-                expect(onChange).toBeCalledWith([expect.any(String)], "create");
+                expect(onChange).toBeCalledTimes(2);
+                expect(onChange).toBeCalledWith([expect.any(String), expect.any(String)], "create");
             });
         });
     });
@@ -176,6 +177,7 @@ describe("TerraDrawFreehandMode", () => {
         let freehandMode: TerraDrawFreehandMode;
         let store: GeoJSONStore;
         let onChange: jest.Mock;
+        let project: Project;
 
         beforeEach(() => {
             freehandMode = new TerraDrawFreehandMode();
@@ -183,10 +185,11 @@ describe("TerraDrawFreehandMode", () => {
             const mockConfig = getMockModeConfig(freehandMode.mode);
             store = mockConfig.store;
             onChange = mockConfig.onChange;
+            project = mockConfig.project;
             freehandMode.register(mockConfig);
         });
 
-        it("updates the freehand polygon on 10th mouse event", () => {
+        it("updates the freehand polygon when the mouse cursor has moved a minimum amount", () => {
             freehandMode.onClick({
                 lng: 0,
                 lat: 0,
@@ -199,29 +202,34 @@ describe("TerraDrawFreehandMode", () => {
             expect(onChange).toBeCalledTimes(1);
             expect(onChange).toHaveBeenNthCalledWith(
                 1,
-                [expect.any(String)],
+                [expect.any(String), expect.any(String)],
                 "create"
             );
 
             const feature = store.copyAll()[0];
 
-            for (let i = 0; i < 12; i++) {
+            for (let i = 0; i < 5; i++) {
+                (project as jest.Mock).mockReturnValueOnce({
+                    x: (i * 20) - 20,
+                    y: (i * 20) - 20
+                });
+
+                (project as jest.Mock).mockReturnValueOnce({
+                    x: 1000,
+                    y: 1000
+                });
+
                 freehandMode.onMouseMove({
                     lng: i,
                     lat: i,
-                    containerX: i,
-                    containerY: i,
+                    containerX: i * 20,
+                    containerY: i * 20,
                     button: "left",
                     heldKeys: [],
                 });
             }
 
-            expect(onChange).toBeCalledTimes(2);
-            expect(onChange).toHaveBeenNthCalledWith(
-                2,
-                [expect.any(String)],
-                "update"
-            );
+            expect(onChange).toBeCalledTimes(6);
 
             const updatedFeature = store.copyAll()[0];
 
@@ -275,7 +283,7 @@ describe("TerraDrawFreehandMode", () => {
 
             freehandMode.cleanUp();
 
-            expect(onChange).toBeCalledTimes(2);
+            expect(onChange).toBeCalledTimes(3);
             expect(onChange).toHaveBeenNthCalledWith(
                 2,
                 [expect.any(String)],
@@ -318,7 +326,7 @@ describe("TerraDrawFreehandMode", () => {
                 });
 
                 let features = store.copyAll();
-                expect(features.length).toBe(1);
+                expect(features.length).toBe(2);
 
                 freehandMode.onKeyUp({ key: "Escape" });
 
@@ -340,7 +348,7 @@ describe("TerraDrawFreehandMode", () => {
                 });
 
                 let features = store.copyAll();
-                expect(features.length).toBe(1);
+                expect(features.length).toBe(2);
 
                 freehandMode.onKeyUp({
                     key: 'Enter'
@@ -349,8 +357,10 @@ describe("TerraDrawFreehandMode", () => {
                 features = store.copyAll();
                 expect(features.length).toBe(1);
 
-                expect(onChange).toBeCalledTimes(1);
-                expect(onChange).toBeCalledWith([expect.any(String)], "create");
+                expect(onChange).toBeCalledTimes(2);
+                expect(onChange).toHaveBeenNthCalledWith(1, [expect.any(String), expect.any(String)], "create");
+                expect(onChange).toHaveBeenNthCalledWith(2, [expect.any(String)], "delete");
+
             });
         });
 

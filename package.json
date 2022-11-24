@@ -1,8 +1,9 @@
 {
     "name": "terra-draw",
-    "version": "0.0.1-alpha.9",
+    "version": "0.0.1-alpha.10",
     "description": "Frictionless map drawing across mapping provider",
     "scripts": {
+        "release": "standard-version",
         "build": "microbundle",
         "watch": "microbundle --watch --format modern",
         "test": "jest --config jest.config.ts",
@@ -51,6 +52,7 @@
         "mapbox-gl": "^2.9.1",
         "microbundle": "^0.15.0",
         "serve": "^13.0.4",
+        "standard-version": "^9.5.0",
         "ts-jest": "^28.0.5",
         "ts-loader": "^9.3.1",
         "typescript": "^4.7.4"
@@ -84,5 +86,53 @@
     "prettier": {
         "printWidth": 80,
         "semi": true
+    },
+    "standard-version": {
+        "types": [
+            {
+                "type": "feat",
+                "section": "Features"
+            },
+            {
+                "type": "fix",
+                "section": "Bug Fixes"
+            },
+            {
+                "type": "docs",
+                "section": "Documentation"
+            },
+            {
+                "type": "style",
+                "section": "Styling"
+            },
+            {
+                "type": "refactor",
+                "section": "Refactors"
+            },
+            {
+                "type": "perf",
+                "section": "Performance"
+            },
+            {
+                "type": "test",
+                "section": "Tests"
+            },
+            {
+                "type": "build",
+                "section": "Build System"
+            },
+            {
+                "type": "ci",
+                "section": "CI"
+            },
+            {
+                "type": "chore",
+                "section": "Chore"
+            },
+            {
+                "type": "revert",
+                "section": "Reverts"
+            }
+        ]
     }
 }

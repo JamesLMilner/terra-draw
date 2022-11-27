@@ -16,16 +16,20 @@ export class TerraDrawPointMode extends TerraDrawBaseDrawMode<PointModeStyling> 
         super(options);
     }
 
+    /** @internal */
     start() {
         this.setStarted();
         this.setCursor("crosshair");
     }
+
+    /** @internal */
     stop() {
         this.setStopped();
         this.setCursor("unset");
         this.cleanUp();
     }
 
+    /** @internal */
     onClick(event: TerraDrawMouseEvent) {
         if (!this.store) {
             throw new Error("Mode must be registered first");
@@ -41,14 +45,29 @@ export class TerraDrawPointMode extends TerraDrawBaseDrawMode<PointModeStyling> 
             },
         ]);
     }
+
+    /** @internal */
     onMouseMove() { }
+
+    /** @internal */
     onKeyDown() { }
+
+    /** @internal */
     onKeyUp() { }
+
+    /** @internal */
     cleanUp() { }
+
+    /** @internal */
     onDragStart() { }
+
+    /** @internal */
     onDrag() { }
+
+    /** @internal */
     onDragEnd() { }
 
+    /** @internal */
     styleFeature(
         feature: GeoJSONStoreFeatures
     ): TerraDrawAdapterStyling {

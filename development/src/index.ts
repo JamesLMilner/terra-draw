@@ -26,7 +26,7 @@ const addModeChangeHandler = (
                 "click",
                 () => {
                     currentSelected.mode = mode;
-                    draw.changeMode(currentSelected.mode);
+                    draw.setMode(currentSelected.mode);
 
                     if (currentSelected.button) {
                         currentSelected.button.style.color = "565656";

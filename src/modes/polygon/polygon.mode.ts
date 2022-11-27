@@ -105,6 +105,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
         this.closingPoints.delete();
     }
 
+    /** @internal */
     registerBehaviors(config: BehaviorConfig) {
         this.pixelDistance = new PixelDistanceBehavior(config);
         this.snapping = new SnappingBehavior(
@@ -115,16 +116,20 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
         this.closingPoints = new ClosingPointsBehavior(config, this.pixelDistance);
     }
 
+    /** @internal */
     start() {
         this.setStarted();
         this.setCursor("crosshair");
     }
+
+    /** @internal */
     stop() {
         this.setStopped();
         this.setCursor("unset");
         this.cleanUp();
     }
 
+    /** @internal */
     onMouseMove(event: TerraDrawMouseEvent) {
         this.setCursor("crosshair");
 
@@ -211,6 +216,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
         }
     }
 
+    /** @internal */
     onClick(event: TerraDrawMouseEvent) {
         const closestCoord =
             this.currentId && this.snappingEnabled
@@ -366,6 +372,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
         }
     }
 
+    /** @internal */
     onKeyUp(event: TerraDrawKeyboardEvent) {
         if (event.key === this.keyEvents.cancel) {
             this.cleanUp();
@@ -374,19 +381,26 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
         }
     }
 
+    /** @internal */
     onKeyDown() { }
 
+    /** @internal */
     onDragStart() {
         // We want to allow the default drag
         // cursor to exist
         this.setCursor("unset");
     }
+
+    /** @internal */
     onDrag() { }
+
+    /** @internal */
     onDragEnd() {
         // Set it back to crosshair
         this.setCursor("crosshair");
     }
 
+    /** @internal */
     cleanUp() {
         try {
             if (this.currentId) {
@@ -400,6 +414,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
         this.currentCoordinate = 0;
     }
 
+    /** @internal */
     styleFeature(
         feature: GeoJSONStoreFeatures
     ): TerraDrawAdapterStyling {

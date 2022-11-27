@@ -93,6 +93,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
         this.closingPointId = undefined;
     }
 
+    /** @internal */
     registerBehaviors(config: BehaviorConfig) {
         this.snapping = new SnappingBehavior(
             config,
@@ -101,16 +102,21 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
         );
     }
 
+
+    /** @internal */
     start() {
         this.setStarted();
         this.setCursor("crosshair");
     }
+
+    /** @internal */
     stop() {
         this.setStopped();
         this.setCursor("unset");
         this.cleanUp();
     }
 
+    /** @internal */
     onMouseMove(event: TerraDrawMouseEvent) {
         this.setCursor("crosshair");
 
@@ -163,6 +169,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
         ]);
     }
 
+    /** @internal */
     onClick(event: TerraDrawMouseEvent) {
         const snappedCoord =
             this.currentId &&
@@ -278,7 +285,11 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
             }
         }
     }
+
+    /** @internal */
     onKeyDown() { }
+
+    /** @internal */
     onKeyUp(event: TerraDrawKeyboardEvent) {
         if (event.key === this.keyEvents.cancel) {
             this.cleanUp();
@@ -288,9 +299,17 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
             this.close();
         }
     }
+
+    /** @internal */
     onDragStart() { }
+
+    /** @internal */
     onDrag() { }
+
+    /** @internal */
     onDragEnd() { }
+
+    /** @internal */
     cleanUp() {
         try {
             if (this.currentId) {
@@ -306,6 +325,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
         this.currentCoordinate = 0;
     }
 
+    /** @internal */
     styleFeature(
         feature: GeoJSONStoreFeatures
     ): TerraDrawAdapterStyling {

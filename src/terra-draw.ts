@@ -195,7 +195,6 @@ class TerraDraw {
             );
         }
     }
-
     private getModeStyles() {
         const modeStyles: { [key: string]: (feature: GeoJSONStoreFeatures) => TerraDrawAdapterStyling } = {};
         Object.keys(this._modes).forEach((mode) => {
@@ -204,27 +203,72 @@ class TerraDraw {
         return modeStyles;
     }
 
+    /**
+     * Allows the setting of a style for a given mode
+     *
+     * @param mode - The mode you wish to set a style for
+     * @param styles - The styles you wish to set for the mode - this is
+     * the same as the initialisation style schema
+     *
+     * @alpha
+     */
     setModeStyles(mode: string, styles: TerraDrawAdapterStyling) {
         this._modes[mode].styles = styles;
     }
 
+    /**
+     * Allows the user to get a snapshot (copy) of all given features
+     *  
+     * @returns An array of all given Feature Geometries in the instances store
+     * 
+     * @alpha
+     */
     getSnapshot() {
         return this._store.copyAll();
     }
 
+
+    /**
+     * A property used to determine whether the instance is active or not. You 
+     * can use the start method to set this to true, and stop method to set this to false.
+     * This is a read only property.
+     *  
+     * @return true or false depending on if the instance is stopped or started
+     * @readonly
+     * @alpha
+     */
     get enabled(): boolean {
         return this._enabled;
     }
 
+    /**
+     * enabled is a read only property and will throw and error if you try and set it.
+     * 
+     * @alpha
+     */
     set enabled(_) {
         throw new Error("Enabled is read only");
     }
 
-    getCurrentMode(): string {
+    /**
+     * A method for getting the current mode name
+     *  
+     * @return the current mode name
+     * 
+     * @alpha
+     */
+    getMode(): string {
         return this._mode.mode;
     }
 
-    changeMode(mode: string) {
+    /**
+     * A method for setting the current mode by name. Under the hood this will stop
+     * the previous mode and start the new one.
+     * @param mode - The mode name you wish to start
+     * 
+     * @alpha
+     */
+    setMode(mode: string) {
         if (this._modes[mode]) {
             // Before we swap modes we want to
             // clean up any state that has been left behind,
@@ -243,6 +287,11 @@ class TerraDraw {
         }
     }
 
+    /**
+     * A method starting the current mode if it has not been started already
+     * 
+     * @alpha
+     */
     start() {
         this._enabled = true;
         this._adapter.register({
@@ -270,11 +319,24 @@ class TerraDraw {
         });
     }
 
+    /**
+     * A a method for stopping the current mode
+     * 
+     * @alpha
+     */
     stop() {
         this._enabled = false;
         this._adapter.unregister();
     }
 
+    /**
+     * Registers a Terra Draw event
+     *
+     * @param event - The name of the event you wish to listen for
+     * @param callback - The callback with you wish to be called when this event occurs
+     *
+     * @alpha
+     */
     on<T extends TerraDrawEvents>(
         event: T,
         callback: TerraDrawEventListeners[T]
@@ -287,6 +349,14 @@ class TerraDraw {
         }
     }
 
+    /**
+     * Unregisters a Terra Draw event
+     *
+     * @param event - The name of the event you wish to unregister
+     * @param callback - The callback you originally provided to the 'on' method
+     *
+     * @alpha
+     */
     off<T extends TerraDrawEvents>(
         event: TerraDrawEvents,
         callback: TerraDrawEventListeners[T]

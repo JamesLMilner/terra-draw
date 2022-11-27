@@ -14,26 +14,48 @@ export class TerraDrawRenderMode extends TerraDrawBaseDrawMode<RenderModeStyling
         super({ styles: options.styles });
     }
 
-    // TODO: this is probably abusing
-    // registerBehaviors but it works quite well conceptually
+    /** @internal */
     registerBehaviors(behaviorConfig: BehaviorConfig) {
+        // TODO: this is probably abusing
+        // registerBehaviors but it works quite well conceptually
+
+
         // We can set the mode name dynamically
         this.mode = behaviorConfig.mode;
     }
 
+    /** @internal */
     start() {
         this.setStarted();
     }
+
+    /** @internal */
     stop() {
         this.setStopped();
     }
+
+    /** @internal */
     onKeyUp() { }
+
+    /** @internal */
     onKeyDown() { }
+
+    /** @internal */
     onClick() { }
+
+    /** @internal */
     onDragStart() { }
+
+    /** @internal */
     onDrag() { }
+
+    /** @internal */
     onDragEnd() { }
+
+    /** @internal */
     onMouseMove() { }
+
+    /** @internal */
     styleFeature(): TerraDrawAdapterStyling {
         return {
             ...getDefaultStyling(),

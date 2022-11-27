@@ -361,14 +361,18 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode<SelectionStyling>
         }
     }
 
+    /** @internal */
     start() {
         this.setStarted();
     }
+
+    /** @internal */
     stop() {
         this.setStopped();
         this.cleanUp();
     }
 
+    /** @internal */
     onClick(event: TerraDrawMouseEvent) {
         if (event.button === "right") {
             this.onRightClick(event);
@@ -377,7 +381,11 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode<SelectionStyling>
             this.onLeftClick(event);
         }
     }
+
+    /** @internal */
     onKeyDown() { }
+
+    /** @internal */
     onKeyUp(event: TerraDrawKeyboardEvent) {
         if (event.key === this.keyEvents.delete) {
             if (!this.selected.length) {
@@ -400,11 +408,15 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode<SelectionStyling>
             this.cleanUp();
         }
     }
+
+    /** @internal */
     cleanUp() {
         if (this.selected.length) {
             this.deselect();
         }
     }
+
+    /** @internal */
     onDragStart(
         event: TerraDrawMouseEvent,
         setMapDraggability: (enabled: boolean) => void
@@ -437,6 +449,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode<SelectionStyling>
         setMapDraggability(false);
     }
 
+    /** @internal */
     onDrag(event: TerraDrawMouseEvent) {
         const selectedId = this.selected[0];
 
@@ -502,6 +515,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode<SelectionStyling>
         }
     }
 
+    /** @internal */
     onDragEnd(
         _: TerraDrawMouseEvent,
         setMapDraggability: (enabled: boolean) => void
@@ -513,6 +527,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode<SelectionStyling>
         setMapDraggability(true);
     }
 
+    /** @internal */
     onMouseMove(event: TerraDrawMouseEvent) {
         if (!this.selected.length || this.dragFeature.position) {
             return;
@@ -547,6 +562,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode<SelectionStyling>
         }
     }
 
+    /** @internal */
     styleFeature(
         feature: GeoJSONStoreFeatures
     ): TerraDrawAdapterStyling {

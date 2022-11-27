@@ -55,16 +55,21 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
         this.closingPointId = undefined;
     }
 
+    /** @internal */
     start() {
         this.setStarted();
         this.setCursor("crosshair");
     }
+
+    /** @internal */
     stop() {
         this.setStopped();
         this.setCursor("unset");
         this.cleanUp();
     }
 
+
+    /** @internal */
     onMouseMove(event: TerraDrawMouseEvent) {
         if (!this.currentId || this.startingClick === false) {
             return;
@@ -122,6 +127,7 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
         ]);
     }
 
+    /** @internal */
     onClick(event: TerraDrawMouseEvent) {
         if (this.startingClick === false) {
             const [createdId, closingPointId] = this.store.create([
@@ -156,7 +162,11 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 
         this.close();
     }
+
+    /** @internal */
     onKeyDown() { }
+
+    /** @internal */
     onKeyUp(event: TerraDrawKeyboardEvent) {
         if (event.key === this.keyEvents.cancel) {
             this.cleanUp();
@@ -164,10 +174,17 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
             this.close();
         }
     }
+
+    /** @internal */
     onDragStart() { }
+
+    /** @internal */
     onDrag() { }
+
+    /** @internal */
     onDragEnd() { }
 
+    /** @internal */
     cleanUp() {
         try {
             if (this.currentId) {
@@ -182,6 +199,7 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
         this.startingClick = false;
     }
 
+    /** @internal */
     styleFeature(
         feature: GeoJSONStoreFeatures
     ): TerraDrawAdapterStyling {

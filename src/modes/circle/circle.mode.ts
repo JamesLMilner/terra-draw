@@ -47,17 +47,20 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<FreehandPolygonSt
         this.clickCount = 0;
     }
 
+    /** @internal */
     start() {
         this.setStarted();
         this.setCursor("crosshair");
     }
 
+    /** @internal */
     stop() {
         this.setStopped();
         this.setCursor("unset");
         this.cleanUp();
     }
 
+    /** @internal */
     onClick(event: TerraDrawMouseEvent) {
         if (this.clickCount === 0) {
             this.center = [event.lng, event.lat];
@@ -81,6 +84,8 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<FreehandPolygonSt
             this.close();
         }
     }
+
+    /** @internal */
     onMouseMove(event: TerraDrawMouseEvent) {
         if (this.clickCount === 1 && this.center && this.currentCircleId) {
             const distanceKm = haversineDistanceKilometers(this.center, [
@@ -98,7 +103,11 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<FreehandPolygonSt
             ]);
         }
     }
+
+    /** @internal */
     onKeyDown() { }
+
+    /** @internal */
     onKeyUp(event: TerraDrawKeyboardEvent) {
         if (event.key === this.keyEvents.cancel) {
             this.cleanUp();
@@ -106,9 +115,17 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<FreehandPolygonSt
             this.close();
         }
     }
+
+    /** @internal */
     onDragStart() { }
+
+    /** @internal */
     onDrag() { }
+
+    /** @internal */
     onDragEnd() { }
+
+    /** @internal */
     cleanUp() {
         try {
             if (this.currentCircleId) {
@@ -120,6 +137,7 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<FreehandPolygonSt
         this.clickCount = 0;
     }
 
+    /** @internal */
     styleFeature(
         feature: GeoJSONStoreFeatures
     ): TerraDrawAdapterStyling {

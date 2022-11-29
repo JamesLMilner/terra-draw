@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.1-alpha.11](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.10...v0.0.1-alpha.11) (2022-11-29)
+
+
+### Features
+
+* add MapLibre adapter ([464dce4](https://github.com/JamesLMilner/terra-draw/commit/464dce418bd6f18f3043d9072f3636d051ad900a))
+
+
+### Chore
+
+* add automated documentation to the project ([0bbefbb](https://github.com/JamesLMilner/terra-draw/commit/0bbefbb8b69a18d73159b73ccdff5f79c7c0b843))
+
 ### 0.0.1-alpha.10 (2022-11-24)
 
 

@@ -1,4 +1,5 @@
 import mapboxgl from "mapbox-gl";
+import maplibregl from 'maplibre-gl'
 import * as L from "leaflet";
 import { Loader } from "@googlemaps/js-api-loader";
 
@@ -13,6 +14,7 @@ import {
     TerraDrawMapboxGLAdapter,
     TerraDrawLeafletAdapter,
     TerraDrawGoogleMapsAdapter,
+    TerraDrawMapLibreGLAdapter
 } from "../../src/terra-draw";
 import { TerraDrawRenderMode } from "../../src/modes/render/render.mode";
 
@@ -197,6 +199,46 @@ const example = {
         });
         this.initialised.push("mapbox");
     },
+    initMapLibre(id: string, accessToken: string | undefined) {
+        if (this.initialised.includes("maplibre")) {
+            return;
+        }
+
+        if (!accessToken) {
+            return;
+        }
+
+        const { lng, lat, zoom } = this;
+
+        mapboxgl.accessToken = accessToken;
+
+        const map = new maplibregl.Map({
+            container: id, // container ID
+            style: "https://demotiles.maplibre.org/style.json", // style URL
+            center: [lng, lat], // starting position [lng, lat]
+            zoom: zoom, // starting zoom
+        });
+
+        map.on("style.load", () => {
+            const draw = new TerraDraw({
+                adapter: new TerraDrawMapLibreGLAdapter({
+                    map,
+                    coordinatePrecision: 9,
+                }),
+                modes: getModes(),
+                // data: uk.features.map((feature) => {
+                //   feature.properties = feature.properties || {};
+                //   (feature.properties as any).mode = "arbitary";
+                // }) as any,
+            });
+
+            draw.start();
+
+            addModeChangeHandler(draw, currentSelected);
+
+        });
+        this.initialised.push("maplibre");
+    },
     initGoogleMaps(id: string, apiKey: string | undefined) {
         if (this.initialised.includes("google")) {
             return;
@@ -246,6 +288,7 @@ console.log(process.env);
 example.initLeaflet("leaflet-map");
 example.initMapbox("mapbox-map", process.env.MAPBOX_ACCESS_TOKEN);
 example.initGoogleMaps("google-map", process.env.GOOGLE_API_KEY);
+example.initMapLibre("maplibre-map", process.env.MAPBOX_ACCESS_TOKEN)
 document.addEventListener("keyup", (event) => {
     (document.getElementById("keybind") as HTMLButtonElement).innerHTML =
         event.key;

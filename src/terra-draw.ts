@@ -1,6 +1,7 @@
 import { TerraDrawGoogleMapsAdapter } from "./adapters/google-maps.adapter";
 import { TerraDrawLeafletAdapter } from "./adapters/leaflet.adapter";
 import { TerraDrawMapboxGLAdapter } from "./adapters/mapbox-gl.adapter";
+import { TerraDrawMapLibreGLAdapter } from "./adapters/maplibre-gl.adapter";
 import {
     TerraDrawMode,
     TerraDrawAdapter,
@@ -382,4 +383,5 @@ export {
     TerraDrawGoogleMapsAdapter,
     TerraDrawMapboxGLAdapter,
     TerraDrawLeafletAdapter,
+    TerraDrawMapLibreGLAdapter
 };

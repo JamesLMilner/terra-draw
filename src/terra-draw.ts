@@ -12,6 +12,7 @@ import { TerraDrawFreehandMode } from "./modes/freehand/freehand.mode";
 import { TerraDrawLineStringMode } from "./modes/linestring/linestring.mode";
 import { TerraDrawPointMode } from "./modes/point/point.mode";
 import { TerraDrawPolygonMode } from "./modes/polygon/polygon.mode";
+import { TerraDrawRectangleMode } from "./modes/rectangle/rectangle.mode";
 import { TerraDrawRenderMode } from "./modes/render/render.mode";
 import { TerraDrawSelectMode } from "./modes/select/select.mode";
 import { TerraDrawStaticMode } from "./modes/static/static.mode";
@@ -380,8 +381,9 @@ export {
     TerraDrawCircleMode,
     TerraDrawFreehandMode,
     TerraDrawRenderMode,
+    TerraDrawRectangleMode,
     TerraDrawGoogleMapsAdapter,
     TerraDrawMapboxGLAdapter,
     TerraDrawLeafletAdapter,
-    TerraDrawMapLibreGLAdapter
+    TerraDrawMapLibreGLAdapter,
 };

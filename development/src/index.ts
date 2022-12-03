@@ -11,6 +11,7 @@ import {
     TerraDrawPolygonMode,
     TerraDrawSelectMode,
     TerraDrawFreehandMode,
+    TerraDrawRectangleMode,
     TerraDrawMapboxGLAdapter,
     TerraDrawLeafletAdapter,
     TerraDrawGoogleMapsAdapter,
@@ -22,7 +23,7 @@ const addModeChangeHandler = (
     draw: TerraDraw,
     currentSelected: { button: undefined | HTMLButtonElement; mode: string }
 ) => {
-    ["select", "point", "linestring", "polygon", "freehand", "circle"].forEach(
+    ["select", "point", "linestring", "polygon", "freehand", "circle", "rectangle"].forEach(
         (mode) => {
             (document.getElementById(mode) as HTMLButtonElement).addEventListener(
                 "click",
@@ -97,6 +98,7 @@ const getModes = () => {
             snapping: true,
             allowSelfIntersections: false,
         }),
+        rectangle: new TerraDrawRectangleMode,
         circle: new TerraDrawCircleMode(),
         freehand: new TerraDrawFreehandMode(),
         arbitary: new TerraDrawRenderMode({

@@ -166,6 +166,7 @@ class TerraDraw {
                 setCursor: this._adapter.setCursor,
                 project: this._adapter.project,
                 unproject: this._adapter.unproject,
+                setDoubleClickToZoom: this._adapter.setDoubleClickToZoom,
                 onChange: onChange,
                 onSelect: onSelect,
                 onDeselect: onDeselect,

@@ -27,8 +27,10 @@ export class TerraDrawMapLibreGLAdapter implements TerraDrawAdapter {
         this.project = this.mapboxglAdapter.project;
         this.setCursor = this.mapboxglAdapter.setCursor;
         this.getMapContainer = this.mapboxglAdapter.getMapContainer;
+        this.setDoubleClickToZoom = this.mapboxglAdapter.setDoubleClickToZoom;
     }
 
+    setDoubleClickToZoom: TerraDrawModeRegisterConfig["setDoubleClickToZoom"];
     unproject: TerraDrawModeRegisterConfig["unproject"];
     project: TerraDrawModeRegisterConfig["project"];
     setCursor: TerraDrawModeRegisterConfig["setCursor"];

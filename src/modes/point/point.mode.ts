@@ -8,6 +8,7 @@ type PointModeStyling = {
     pointWidth: number,
     pointColor: HexColor,
     pointOutlineColor: HexColor
+    pointOutlineWidth: number;
 }
 export class TerraDrawPointMode extends TerraDrawBaseDrawMode<PointModeStyling> {
     mode = "point";
@@ -80,6 +81,9 @@ export class TerraDrawPointMode extends TerraDrawBaseDrawMode<PointModeStyling> 
             }
             if (this.styles.pointOutlineColor) {
                 styles.pointOutlineColor = this.styles.pointOutlineColor;
+            }
+            if (this.styles.pointOutlineWidth) {
+                styles.pointOutlineWidth = this.styles.pointOutlineWidth;
             }
             if (this.styles.pointWidth) {
                 styles.pointWidth = this.styles.pointWidth;

@@ -41,8 +41,17 @@ export class TerraDrawMapboxGLAdapter implements TerraDrawAdapter {
         this.getMapContainer = () => {
             return this._map.getContainer();
         };
+
+        this.setDoubleClickToZoom = (enabled: boolean) => {
+            if (enabled) {
+                this._map.doubleClickZoom.enable();
+            } else {
+                this._map.doubleClickZoom.disable();
+            }
+        };
     }
 
+    public setDoubleClickToZoom: TerraDrawModeRegisterConfig["setDoubleClickToZoom"];
     public unproject: TerraDrawModeRegisterConfig["unproject"];
     public project: TerraDrawModeRegisterConfig["project"];
     public setCursor: TerraDrawModeRegisterConfig["setCursor"];
@@ -495,13 +504,15 @@ export class TerraDrawMapboxGLAdapter implements TerraDrawAdapter {
             }
         });
 
-        if ((this._map as any).style) {
-            // cancel the scheduled update
-            if ((this._map as any)._frame) {
-                (this._map as any)._frame.cancel();
-                (this._map as any)._frame = null;
-            }
-            (this._map as any)._render();
-        }
+        // TODO: Figure out why this was added?
+        // Probably to do with forcing style changes?
+        // if ((this._map as any).style) {
+        //     // cancel the scheduled update
+        //     if ((this._map as any)._frame) {
+        //         (this._map as any)._frame.cancel();
+        //         (this._map as any)._frame = null;
+        //     }
+        //     (this._map as any)._render();
+        // }
     }
 }

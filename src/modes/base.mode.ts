@@ -1,6 +1,5 @@
 import { BehaviorConfig, TerraDrawModeBehavior } from "./base.behavior";
 import {
-    TerraDrawAdapterStyling,
     TerraDrawModeRegisterConfig,
     TerraDrawModeState,
 } from "../common";
@@ -36,6 +35,7 @@ export abstract class TerraDrawBaseDrawMode<T extends CustomStyling> {
     protected coordinatePrecision: number;
     protected onStyleChange: any;
     protected store!: GeoJSONStore;
+    protected setDoubleClickToZoom!: TerraDrawModeRegisterConfig["setDoubleClickToZoom"];
     protected unproject!: TerraDrawModeRegisterConfig["unproject"];
     protected project!: TerraDrawModeRegisterConfig["project"];
     protected setCursor!: TerraDrawModeRegisterConfig["setCursor"];
@@ -60,6 +60,7 @@ export abstract class TerraDrawBaseDrawMode<T extends CustomStyling> {
     protected setStarted() {
         if (this._state === "stopped" || this._state === "registered") {
             this._state = "started";
+            this.setDoubleClickToZoom(false);
         } else {
             throw new Error("Mode must be unregistered or stopped to start");
         }
@@ -68,6 +69,7 @@ export abstract class TerraDrawBaseDrawMode<T extends CustomStyling> {
     protected setStopped() {
         if (this._state === "started") {
             this._state = "stopped";
+            this.setDoubleClickToZoom(true);
         } else {
             throw new Error("Mode must be started to be stopped");
         }
@@ -78,6 +80,7 @@ export abstract class TerraDrawBaseDrawMode<T extends CustomStyling> {
             this._state = "registered";
             this.store = config.store;
             this.store.registerOnChange(config.onChange);
+            this.setDoubleClickToZoom = config.setDoubleClickToZoom;
             this.project = config.project;
             this.unproject = config.unproject;
             this.onSelect = config.onSelect;

@@ -41,6 +41,7 @@ export type Unproject = (x: number, y: number) => { lat: number; lng: number };
 export interface TerraDrawModeRegisterConfig {
     mode: string;
     store: GeoJSONStore;
+    setDoubleClickToZoom: (enabled: boolean) => void;
     setCursor: SetCursor;
     onChange: StoreChangeHandler;
     onSelect: (selectedId: string) => void;
@@ -109,6 +110,7 @@ export interface TerraDrawAdapter {
     project: Project;
     unproject: Unproject;
     setCursor: SetCursor;
+    setDoubleClickToZoom: (enabled: boolean) => void;
     getMapContainer: () => HTMLElement;
     register(callbacks: TerraDrawCallbacks): void;
     unregister(): void;

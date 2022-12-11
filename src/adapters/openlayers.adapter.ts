@@ -53,7 +53,7 @@ export class TerraDrawOpenLayersAdapter implements TerraDrawAdapter {
         };
 
         this.unproject = (x: number, y: number) => {
-            const [lng, lat] = toLonLat(this._map.getCoordinateFromPixel([x, y]))
+            const [lng, lat] = toLonLat(this._map.getCoordinateFromPixel([x, y]));
             return { lng, lat };
         };
 
@@ -65,16 +65,16 @@ export class TerraDrawOpenLayersAdapter implements TerraDrawAdapter {
             }
         };
 
-        // this.setDoubleClickToZoom = (enabled: boolean) => {
-        //     this._map.getInteractions().forEach(function (interaction) {
-        //         if (interaction.constructor.name === 'DoubleClickZoom') {
-        //             interaction.setActive(enabled);
-        //         }
-        //     });
-        // }
+        this.setDoubleClickToZoom = (enabled: boolean) => {
+            this._map.getInteractions().forEach(function (interaction) {
+                if (interaction.constructor.name === 'DoubleClickZoom') {
+                    interaction.setActive(enabled);
+                }
+            });
+        };
 
         // TODO: Is this the best way to recieve keyboard events
-        this.getMapContainer().setAttribute("tabindex", "0")
+        this.getMapContainer().setAttribute("tabindex", "0");
     }
 
     private _lib: InjectableOL;
@@ -97,14 +97,14 @@ export class TerraDrawOpenLayersAdapter implements TerraDrawAdapter {
         };
     }
 
-    // setDoubleClickToZoom: TerraDrawModeRegisterConfig["setDoubleClickToZoom"]
+    setDoubleClickToZoom: TerraDrawModeRegisterConfig["setDoubleClickToZoom"];
     unproject: TerraDrawModeRegisterConfig["unproject"];
     project: TerraDrawModeRegisterConfig["project"];
     setCursor: TerraDrawModeRegisterConfig["setCursor"];
     getMapContainer: () => HTMLElement;
 
     register(callbacks: TerraDrawCallbacks) {
-        const container = this.getMapContainer()
+        const container = this.getMapContainer();
 
         let dragState:
             | "not-dragging"
@@ -116,7 +116,7 @@ export class TerraDrawOpenLayersAdapter implements TerraDrawAdapter {
             if (dragState === "not-dragging" || dragState === "pre-dragging") {
                 if (event.coordinate) {
 
-                    let lngLat = this._lib.toLonLat(event.coordinate)
+                    const lngLat = this._lib.toLonLat(event.coordinate);
 
                     callbacks.onClick({
                         lng: limitPrecision(lngLat[0], this._coordinatePrecision),
@@ -139,7 +139,7 @@ export class TerraDrawOpenLayersAdapter implements TerraDrawAdapter {
             const point = {
                 x: event.clientX - container.offsetLeft,
                 y: event.clientY - container.offsetTop,
-            }
+            };
 
             const { lng, lat } = this.unproject(point.x, point.y);
 
@@ -169,7 +169,7 @@ export class TerraDrawOpenLayersAdapter implements TerraDrawAdapter {
             const point = {
                 x: event.clientX - container.offsetLeft,
                 y: event.clientY - container.offsetTop,
-            }
+            };
 
             const { lng, lat } = this.unproject(point.x, point.y);
 
@@ -203,7 +203,7 @@ export class TerraDrawOpenLayersAdapter implements TerraDrawAdapter {
                 const point = {
                     x: event.clientX - container.offsetLeft,
                     y: event.clientY - container.offsetTop,
-                }
+                };
 
                 const { lng, lat } = this.unproject(point.x, point.y);
 
@@ -214,7 +214,7 @@ export class TerraDrawOpenLayersAdapter implements TerraDrawAdapter {
                     containerY: event.clientY - container.offsetTop,
                     button: event.button === 0 ? "left" : "right",
                     heldKeys: [...this._heldKeys],
-                }
+                };
 
 
                 callbacks.onDragEnd(
@@ -266,11 +266,11 @@ export class TerraDrawOpenLayersAdapter implements TerraDrawAdapter {
 
     private getStyles(feature: FeatureLike, styling: any) {
 
-        const geometry = feature.getGeometry()
+        const geometry = feature.getGeometry();
         if (!geometry) {
-            return
+            return;
         }
-        const key = geometry.getType() as 'Point' | 'LineString' | 'Polygon'
+        const key = geometry.getType() as 'Point' | 'LineString' | 'Polygon';
 
         return {
             'Point': (feature: FeatureLike) => {
@@ -279,7 +279,7 @@ export class TerraDrawOpenLayersAdapter implements TerraDrawAdapter {
                     type: "Feature",
                     geometry: { type: "Point", coordinates: [] },
                     properties
-                })
+                });
                 return new this._lib.Style({
                     image: new CircleStyle({
                         radius: style.pointWidth,
@@ -291,7 +291,7 @@ export class TerraDrawOpenLayersAdapter implements TerraDrawAdapter {
                             width: style.pointOutlineWidth
                         }),
                     })
-                })
+                });
             },
             'LineString': (feature: FeatureLike) => {
                 const properties = feature.getProperties();
@@ -299,13 +299,13 @@ export class TerraDrawOpenLayersAdapter implements TerraDrawAdapter {
                     type: "Feature",
                     geometry: { type: "LineString", coordinates: [] },
                     properties
-                })
+                });
                 return new this._lib.Style({
                     stroke: new this._lib.Stroke({
                         color: style.lineStringColor,
                         width: style.lineStringWidth,
                     }),
-                })
+                });
             },
             'Polygon': (feature: FeatureLike) => {
                 const properties = feature.getProperties();
@@ -313,8 +313,8 @@ export class TerraDrawOpenLayersAdapter implements TerraDrawAdapter {
                     type: "Feature",
                     geometry: { type: "LineString", coordinates: [] },
                     properties
-                })
-                const { r, g, b } = this.HexToRGB(style.polygonFillColor)
+                });
+                const { r, g, b } = this.HexToRGB(style.polygonFillColor);
 
                 return new Style({
                     stroke: new Stroke({
@@ -324,38 +324,38 @@ export class TerraDrawOpenLayersAdapter implements TerraDrawAdapter {
                     fill: new Fill({
                         color: `rgba(${r},${g},${b},${style.polygonFillOpacity})`
                     }),
-                })
+                });
             }
-        }[key](feature)
+        }[key](feature);
     }
 
-    private geoJSONReader: GeoJSON | undefined
+    private geoJSONReader: GeoJSON | undefined;
 
     private addFeature(feature: GeoJSONStoreFeatures) {
         if (this.vectorSource && this.geoJSONReader) {
             const olFeature = this.geoJSONReader.readFeature(
                 feature,
                 { featureProjection: this.projection }
-            )
-            this.vectorSource.addFeature(olFeature)
+            );
+            this.vectorSource.addFeature(olFeature);
         } else {
-            throw new Error("Vector Source not initalised")
+            throw new Error("Vector Source not initalised");
         }
     }
 
     private removeFeature(id: string) {
         if (this.vectorSource) {
-            const deleted = this.vectorSource.getFeatureById(id)
+            const deleted = this.vectorSource.getFeatureById(id);
             if (!deleted) {
                 return;
             }
-            this.vectorSource.removeFeature(deleted)
+            this.vectorSource.removeFeature(deleted);
         } else {
-            throw new Error("Vector Source not initalised")
+            throw new Error("Vector Source not initalised");
         }
     }
 
-    private projection = 'EPSG:3857'
+    private projection = 'EPSG:3857';
 
     render(
         changes: TerraDrawChanges,
@@ -363,7 +363,7 @@ export class TerraDrawOpenLayersAdapter implements TerraDrawAdapter {
     ) {
 
         if (!this.vectorSource) {
-            this.geoJSONReader = new this._lib.GeoJSON()
+            this.geoJSONReader = new this._lib.GeoJSON();
 
             const vectorSourceFeatures = this.geoJSONReader.readFeatures(
                 {
@@ -380,7 +380,7 @@ export class TerraDrawOpenLayersAdapter implements TerraDrawAdapter {
                 features: vectorSourceFeatures
             });
 
-            this.vectorSource = vectorSource
+            this.vectorSource = vectorSource;
 
             const vectorLayer = new this._lib.VectorLayer({
                 source: vectorSource,
@@ -391,24 +391,24 @@ export class TerraDrawOpenLayersAdapter implements TerraDrawAdapter {
 
         } else {
 
-            const source = this.vectorSource
+            const source = this.vectorSource;
 
             if (!source) {
-                throw new Error("Vector Layer source has disappeared")
+                throw new Error("Vector Layer source has disappeared");
             }
 
             changes.deletedIds.forEach((id) => {
-                this.removeFeature(id)
-            })
+                this.removeFeature(id);
+            });
 
             changes.updated.forEach((feature) => {
-                this.removeFeature(feature.id as string)
-                this.addFeature(feature)
-            })
+                this.removeFeature(feature.id as string);
+                this.addFeature(feature);
+            });
 
             changes.created.forEach((feature) => {
-                this.addFeature(feature)
-            })
+                this.addFeature(feature);
+            });
         }
     }
 }

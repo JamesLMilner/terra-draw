@@ -132,6 +132,14 @@ export class TerraDrawGoogleMapsAdapter implements TerraDrawAdapter {
 
             this._cursor = cursor;
         };
+
+        this.setDoubleClickToZoom = (enabled: boolean) => {
+            if (enabled) {
+                this._map.setOptions({ disableDoubleClickZoom: false });
+            } else {
+                this._map.setOptions({ disableDoubleClickZoom: true });
+            }
+        };
     }
 
     private _heldKeys: Set<string> = new Set();
@@ -165,7 +173,8 @@ export class TerraDrawGoogleMapsAdapter implements TerraDrawAdapter {
 
     public getMapContainer: () => HTMLElement;
 
-    public unproject: (x: number, y: number) => { lng: number; lat: number };
+    public setDoubleClickToZoom: TerraDrawModeRegisterConfig["setDoubleClickToZoom"];
+    public unproject: TerraDrawModeRegisterConfig["unproject"];
     public project: TerraDrawModeRegisterConfig["project"];
     public setCursor: TerraDrawModeRegisterConfig["setCursor"];
 

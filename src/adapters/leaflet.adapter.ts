@@ -47,6 +47,14 @@ export class TerraDrawLeafletAdapter implements TerraDrawAdapter {
                 this.getMapContainer().style.cursor = cursor;
             }
         };
+
+        this.setDoubleClickToZoom = (enabled: boolean) => {
+            if (enabled) {
+                this._map.doubleClickZoom.enable();
+            } else {
+                this._map.doubleClickZoom.disable();
+            }
+        };
     }
 
     private _heldKeys: Set<string> = new Set();
@@ -63,6 +71,8 @@ export class TerraDrawLeafletAdapter implements TerraDrawAdapter {
     private _onDragEndListener: ((event: MouseEvent) => void) | undefined;
     private _layer: L.Layer | undefined;
     private _panes: Record<string, HTMLStyleElement | undefined> = {};
+
+    public setDoubleClickToZoom: TerraDrawModeRegisterConfig["setDoubleClickToZoom"];
     public project: TerraDrawModeRegisterConfig["project"];
     public unproject: TerraDrawModeRegisterConfig["unproject"];
     public setCursor: TerraDrawModeRegisterConfig["setCursor"];

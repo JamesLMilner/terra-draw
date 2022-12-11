@@ -4,7 +4,7 @@
 
 Frictionless map drawing across mapping libraries.
 
-TerraDraw centralises map drawing logic and provides a host of out the box drawing modes that work across map providers (currently Leaflet, Mapbox, Google) via adapters.
+TerraDraw centralises map drawing logic and provides a host of out the box drawing modes that work across different JavaScript mapping libraries. It also also you bring your own modes!
 
 ### Support 
 

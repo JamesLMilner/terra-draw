@@ -1192,4 +1192,63 @@ describe("TerraDrawPolygonMode", () => {
             });
         });
     });
+
+
+    describe('styleFeature', () => {
+        it("returns the correct styles for polygon", () => {
+            const polygonMode = new TerraDrawPolygonMode({
+                styles: {
+                    fillColor: '#ffffff',
+                    outlineColor: '#111111',
+                    outlineWidth: 2,
+                    fillOpacity: 0.5,
+                    closingPointWidth: 2,
+                    closingPointColor: '#dddddd',
+                    closingPointOutlineWidth: 1,
+                    closingPointOutlineColor: '#222222'
+                }
+            });
+
+            expect(
+                polygonMode.styleFeature({
+                    type: "Feature",
+                    geometry: { type: "Polygon", coordinates: [] },
+                    properties: { mode: "polygon" }
+                })
+            ).toMatchObject({
+                polygonFillColor: '#ffffff',
+                polygonOutlineColor: '#111111',
+                polygonOutlineWidth: 2,
+                polygonFillOpacity: 0.5
+            });
+        });
+
+        it("returns the correct styles for poiny", () => {
+            const polygonMode = new TerraDrawPolygonMode({
+                styles: {
+                    fillColor: '#ffffff',
+                    outlineColor: '#111111',
+                    outlineWidth: 2,
+                    fillOpacity: 0.5,
+                    closingPointWidth: 2,
+                    closingPointColor: '#dddddd',
+                    closingPointOutlineWidth: 1,
+                    closingPointOutlineColor: '#222222'
+                }
+            });
+
+            expect(
+                polygonMode.styleFeature({
+                    type: "Feature",
+                    geometry: { type: "Point", coordinates: [] },
+                    properties: { mode: "polygon" }
+                })
+            ).toMatchObject({
+                pointWidth: 2,
+                pointColor: '#dddddd',
+                pointOutlineColor: "#222222",
+                pointOutlineWidth: 1
+            });
+        });
+    });
 });

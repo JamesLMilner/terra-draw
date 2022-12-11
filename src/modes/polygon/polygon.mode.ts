@@ -427,6 +427,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
                 styles.polygonOutlineColor = this.styles.outlineColor || styles.polygonOutlineColor;
                 styles.polygonOutlineWidth = this.styles.outlineWidth || styles.polygonOutlineWidth;
                 styles.polygonFillColor = this.styles.fillColor || styles.polygonFillColor;
+                styles.polygonFillOpacity = this.styles.fillOpacity || styles.polygonFillOpacity;
                 styles.zIndex = 10;
                 return styles;
             }

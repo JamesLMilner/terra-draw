@@ -396,4 +396,54 @@ describe("TerraDrawFreehandMode", () => {
             }).not.toThrowError();
         });
     });
+
+    describe('styleFeature', () => {
+        it("returns the correct styles for polygon", () => {
+            const freehandMode = new TerraDrawFreehandMode({
+                styles: {
+                    fillColor: '#ffffff',
+                    outlineColor: '#ffffff',
+                    outlineWidth: 2,
+                    fillOpacity: 0.5
+                }
+            });
+
+            expect(
+                freehandMode.styleFeature({
+                    type: "Feature",
+                    geometry: { type: "Polygon", coordinates: [] },
+                    properties: { mode: "freehand" }
+                })
+            ).toMatchObject({
+                polygonFillColor: '#ffffff',
+                polygonOutlineColor: '#ffffff',
+                polygonOutlineWidth: 2,
+                polygonFillOpacity: 0.5
+            });
+        });
+
+        it("returns the correct styles for point", () => {
+            const freehandMode = new TerraDrawFreehandMode({
+                styles: {
+                    closingPointColor: '#ffffff',
+                    closingPointOutlineWidth: 2,
+                    closingPointWidth: 1,
+                    closingPointOutlineColor: '#111111'
+                }
+            });
+
+            expect(
+                freehandMode.styleFeature({
+                    type: "Feature",
+                    geometry: { type: "Point", coordinates: [] },
+                    properties: { mode: "freehand" }
+                })
+            ).toMatchObject({
+                pointColor: '#ffffff',
+                pointOutlineWidth: 2,
+                pointWidth: 1,
+                pointOutlineColor: '#111111'
+            });
+        });
+    });
 });

@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.1-alpha.12](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.11...v0.0.1-alpha.12) (2022-12-11)
+
+
+### Features
+
+* add openlayers adapter ([1454086](https://github.com/JamesLMilner/terra-draw/commit/1454086220e0b18eb504e23cca433c5db51075e3))
+* add rectangle mode as a builtin mode ([ca9a12b](https://github.com/JamesLMilner/terra-draw/commit/ca9a12b449dc9ce35a268a92e8d3cdb06ba07aee))
+* disable double click when a drawing mode is enabled ([ba02ac6](https://github.com/JamesLMilner/terra-draw/commit/ba02ac689052726f8a059b0548ad541bd842555f))
+
+
+### Chore
+
+* add keywords to package.json ([1270f26](https://github.com/JamesLMilner/terra-draw/commit/1270f26f0d650c97fc8c264d730231c5aac9fe43))
+* add openlayers to development example ([0d24796](https://github.com/JamesLMilner/terra-draw/commit/0d24796754819bc622a071eae9af4c40d7fd1d16))
+* do not use git add . with husky pre-commit hook ([032d002](https://github.com/JamesLMilner/terra-draw/commit/032d002a9212e767715876f63e4ca5bc90857a3a))
+* update list of supported libraries in README ([2825d6c](https://github.com/JamesLMilner/terra-draw/commit/2825d6cb095f6709cae15887cb56a7ed26b1ef3d))
+
 ### [0.0.1-alpha.11](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.10...v0.0.1-alpha.11) (2022-11-29)
 
 

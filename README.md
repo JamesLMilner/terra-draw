@@ -6,6 +6,16 @@ Frictionless map drawing across mapping libraries.
 
 TerraDraw centralises map drawing logic and provides a host of out the box drawing modes that work across map providers (currently Leaflet, Mapbox, Google) via adapters.
 
+### Support 
+
+Terra Draw uses the concept of 'adapters' to allow it to work with a host of different mapping libraries. Currently supported are:
+
+* [Leaflet](https://leafletjs.com/) v1
+* [OpenLayers](https://openlayers.org/) v7
+* [Mapbox GL JS](https://www.mapbox.com/mapbox-gljs) v2
+* [MapLibre](https://maplibre.org/projects/maplibre-gl-js/) v2
+* [Google Maps JS API](https://developers.google.com/maps/documentation/javascript/overview) v3
+
 ### Install
 
 You can install the Terra Draw into your project like so:

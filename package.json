@@ -32,6 +32,20 @@
     "author": "James Milner",
     "license": "MIT",
     "repository": "JamesLMilner/terra-draw",
+    "keywords": [
+        "map",
+        "drawing",
+        "draw",
+        "map drawing",
+        "geometry",
+        "leaflet",
+        "leafletjs",
+        "mapbox",
+        "mapboxgl",
+        "google maps",
+        "openlayers",
+        "maplibre"
+    ],
     "devDependencies": {
         "@commitlint/cli": "^17.1.2",
         "@commitlint/config-conventional": "^17.1.0",

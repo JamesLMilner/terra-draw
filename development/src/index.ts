@@ -15,9 +15,21 @@ import {
     TerraDrawMapboxGLAdapter,
     TerraDrawLeafletAdapter,
     TerraDrawGoogleMapsAdapter,
-    TerraDrawMapLibreGLAdapter
+    TerraDrawMapLibreGLAdapter,
 } from "../../src/terra-draw";
 import { TerraDrawRenderMode } from "../../src/modes/render/render.mode";
+
+import Circle from 'ol/geom/Circle';
+import Feature from 'ol/Feature';
+import GeoJSON from 'ol/format/GeoJSON';
+import Map from 'ol/Map';
+import Zoom from 'ol/control/Zoom';
+import { TerraDrawOpenLayersAdapter } from "../../src/adapters/openlayers.adapter";
+import View from 'ol/View';
+import { Circle as CircleStyle, Fill, Stroke, Style } from 'ol/style';
+import { OSM, Vector as VectorSource } from 'ol/source';
+import { Tile as TileLayer, Vector as VectorLayer } from 'ol/layer';
+import { fromLonLat, toLonLat } from "ol/proj";
 
 const addModeChangeHandler = (
     draw: TerraDraw,
@@ -241,6 +253,51 @@ const example = {
         });
         this.initialised.push("maplibre");
     },
+    initOpenLayers(id: string) {
+        if (this.initialised.includes("openlayers")) {
+            return;
+        }
+
+        const { lng, lat, zoom } = this;
+
+        console.log(lng, lat, zoom)
+        const center = fromLonLat([lng, lat]);
+
+        const map = new Map({
+            layers: [
+                new TileLayer({
+                    source: new OSM(),
+                }),
+            ],
+            target: id,
+            view: new View({
+                center,
+                zoom
+            }),
+            controls: [new Zoom()]
+        });
+
+        const draw = new TerraDraw({
+            adapter: new TerraDrawOpenLayersAdapter({
+                lib: {
+                    Circle, Feature,
+                    GeoJSON, Style,
+                    VectorLayer, VectorSource,
+                    Stroke, toLonLat,
+                    CircleStyle
+                },
+                map,
+                coordinatePrecision: 9,
+            }),
+            modes: getModes(),
+
+        });
+        draw.start();
+
+        addModeChangeHandler(draw, currentSelected);
+
+        this.initialised.push("openlayers");
+    },
     initGoogleMaps(id: string, apiKey: string | undefined) {
         if (this.initialised.includes("google")) {
             return;
@@ -287,6 +344,7 @@ const example = {
 
 console.log(process.env);
 
+example.initOpenLayers("openlayers-map");
 example.initLeaflet("leaflet-map");
 example.initMapbox("mapbox-map", process.env.MAPBOX_ACCESS_TOKEN);
 example.initGoogleMaps("google-map", process.env.GOOGLE_API_KEY);

@@ -23,7 +23,6 @@ import Circle from 'ol/geom/Circle';
 import Feature from 'ol/Feature';
 import GeoJSON from 'ol/format/GeoJSON';
 import Map from 'ol/Map';
-import Zoom from 'ol/control/Zoom';
 import { TerraDrawOpenLayersAdapter } from "../../src/adapters/openlayers.adapter";
 import View from 'ol/View';
 import { Circle as CircleStyle, Fill, Stroke, Style } from 'ol/style';
@@ -145,6 +144,8 @@ const example = {
             center: [lat, lng],
             zoom: zoom + 1, // starting zoom
         });
+
+        map.removeControl(map.zoomControl)
 
         L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
             attribution:
@@ -274,7 +275,7 @@ const example = {
                 center,
                 zoom
             }),
-            controls: [new Zoom()]
+            controls: []
         });
 
         const draw = new TerraDraw({
@@ -316,6 +317,7 @@ const example = {
             const map = new google.maps.Map(
                 document.getElementById(id) as HTMLElement,
                 {
+                    disableDefaultUI: true,
                     center: { lat: this.lat, lng: this.lng },
                     zoom: this.zoom,
                     clickableIcons: false,

@@ -54,6 +54,7 @@
         "mapbox-gl": "^2.9.1",
         "maplibre-gl": "^2.4.0",
         "microbundle": "^0.15.0",
+        "ol": "^7.1.0",
         "serve": "^13.0.4",
         "standard-version": "^9.5.0",
         "ts-jest": "^28.0.5",

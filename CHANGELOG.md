@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.1-alpha.13](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.12...v0.0.1-alpha.13) (2022-12-20)
+
+
+### Chore
+
+* add initial tests feature styling tests for circle, freehand and polygon ([066967c](https://github.com/JamesLMilner/terra-draw/commit/066967cd56c879186207dad9f912a1e6435904e5))
+* add TerraDrawMapLibreGLAdapter and TerraDrawOpenLayersAdapter to docs ([6b78c01](https://github.com/JamesLMilner/terra-draw/commit/6b78c01df8f9bad83738bf560a9b365c7fa01290))
+* add TerraDrawOpenLayersAdapter to terra-draw exports ([c5f3ade](https://github.com/JamesLMilner/terra-draw/commit/c5f3ade9b9cf51b99aa78d3730581dac6f37f0fd))
+* remove default controls from all maps ([6ffde55](https://github.com/JamesLMilner/terra-draw/commit/6ffde55b4c8cf95b1fb46f76db07d47d37504c96))
+* remove outdated list of adapters in README introduction ([21a6aca](https://github.com/JamesLMilner/terra-draw/commit/21a6aca27f15f0f7d90bc434865f4d362960d8d9))
+
 ### [0.0.1-alpha.12](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.11...v0.0.1-alpha.12) (2022-12-11)
 
 

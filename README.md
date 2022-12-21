@@ -1,12 +1,13 @@
 <img src="https://terradraw.io/imgs/logo.png" alt="Terra Draw Logo" width="400"/>
 
 ![Terra Draw CI Badge](https://github.com/JamesLMilner/terra-draw/actions/workflows/ci.yml/badge.svg)
+[![npm version](https://badge.fury.io/js/terra-draw.svg)](https://badge.fury.io/js/terra-draw)
 
 Frictionless map drawing across mapping libraries.
 
-TerraDraw centralises map drawing logic and provides a host of out the box drawing modes that work across different JavaScript mapping libraries. It also also you bring your own modes!
+Terra Draw centralises map drawing logic and provides a host of out the box drawing modes that work across different JavaScript mapping libraries. It also also you bring your own modes!
 
-### Support 
+### Library Support 
 
 Terra Draw uses the concept of 'adapters' to allow it to work with a host of different mapping libraries. Currently supported are:
 

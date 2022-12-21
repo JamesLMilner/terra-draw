@@ -1,4 +1,4 @@
-name: Terra Draw CI Tasks
+name: CI
 
 on:
   push:

@@ -273,6 +273,10 @@ class TerraDraw {
      * @alpha
      */
     setMode(mode: string) {
+        if (!this._enabled) {
+            throw new Error("Terra Draw is not started");
+        }
+
         if (this._modes[mode]) {
             // Before we swap modes we want to
             // clean up any state that has been left behind,

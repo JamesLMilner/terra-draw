@@ -271,6 +271,44 @@ describe("GeoJSONStore", () => {
         });
     });
 
+    describe("size", () => {
+
+        it("gets zero size on initialisation", () => {
+            const store = new GeoJSONStore();
+            expect(store.size()).toBe(0);
+        });
+
+        it("gets size one after feature added", () => {
+            const store = new GeoJSONStore();
+
+            store.create([
+                { geometry: { type: "Point", coordinates: [0, 0] } },
+            ]);
+
+            expect(store.size()).toBe(1);
+        });
+
+    });
+
+    describe("clear", () => {
+        it("removes all data from store", () => {
+            const store = new GeoJSONStore();
+
+            const ids = store.create([
+                { geometry: { type: "Point", coordinates: [0, 0] } },
+            ]);
+
+            store.clear();
+
+            expect(store.size()).toBe(0);
+
+            expect(() => {
+                store.getGeometryCopy(ids[0]);
+            }).toThrowError();
+        });
+
+    });
+
     describe("getGeometryCopy", () => {
         it("copy existing geometry", () => {
             const store = new GeoJSONStore();

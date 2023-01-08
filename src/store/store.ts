@@ -5,7 +5,7 @@ import { SpatialIndex } from "./spatial-index/spatial-index";
 type JSON = string | number | boolean | null | JSONArray | JSONObject;
 
 export interface JSONObject {
-  [member: string]: JSON;
+    [member: string]: JSON;
 }
 type JSONArray = Array<JSON>;
 
@@ -16,21 +16,21 @@ export type GeoJSONStoreGeometries = Polygon | LineString | Point;
 export type BBoxPolygon = Feature<Polygon, DefinedProperties>;
 
 export type GeoJSONStoreFeatures = Feature<
-  GeoJSONStoreGeometries,
-  DefinedProperties
+    GeoJSONStoreGeometries,
+    DefinedProperties
 >;
 
 export type StoreChangeEvents = "delete" | "create" | "update";
 
 export type StoreChangeHandler = (
-  ids: string[],
-  change: StoreChangeEvents
+    ids: string[],
+    change: StoreChangeEvents
 ) => void;
 
 export type GeoJSONStoreConfig = {
-  data?: GeoJSONStoreFeatures[];
-  tracked?: boolean;
-  validateFeature?: (feature: unknown, tracked?: boolean) => void;
+    data?: GeoJSONStoreFeatures[];
+    tracked?: boolean;
+    validateFeature?: (feature: unknown, tracked?: boolean) => void;
 };
 
 export class GeoJSONStore {
@@ -52,11 +52,11 @@ export class GeoJSONStore {
     private spatialIndex: SpatialIndex;
 
     private store: {
-    [key: string]: GeoJSONStoreFeatures;
-  };
+        [key: string]: GeoJSONStoreFeatures;
+    };
 
     // Default to no-op
-    private _onChange: StoreChangeHandler = () => {};
+    private _onChange: StoreChangeHandler = () => { };
 
     private getId(): string {
         return uuid4();
@@ -209,9 +209,9 @@ export class GeoJSONStore {
 
     create(
         features: {
-      geometry: GeoJSONStoreGeometries;
-      properties?: JSONObject;
-    }[]
+            geometry: GeoJSONStoreGeometries;
+            properties?: JSONObject;
+        }[]
     ): string[] {
         const ids: string[] = [];
         features.forEach(({ geometry, properties }) => {
@@ -223,13 +223,13 @@ export class GeoJSONStore {
 
                 if (properties) {
                     createdProperties.createdAt =
-            typeof properties.createdAt === "number"
-                ? properties.createdAt
-                : createdAt;
+                        typeof properties.createdAt === "number"
+                            ? properties.createdAt
+                            : createdAt;
                     createdProperties.updatedAt =
-            typeof properties.updatedAt === "number"
-                ? properties.updatedAt
-                : createdAt;
+                        typeof properties.updatedAt === "number"
+                            ? properties.updatedAt
+                            : createdAt;
                 } else {
                     createdProperties = { createdAt, updatedAt: createdAt };
                 }
@@ -273,5 +273,14 @@ export class GeoJSONStore {
 
     copyAll(): GeoJSONStoreFeatures[] {
         return this.clone(Object.keys(this.store).map((id) => this.store[id]));
+    }
+
+    clear(): void {
+        this.store = {};
+        this.spatialIndex.clear();
+    }
+
+    size(): number {
+        return Object.keys(this.store).length;
     }
 }

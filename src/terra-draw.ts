@@ -199,6 +199,14 @@ class TerraDraw {
             );
         }
     }
+
+    private checkEnabled() {
+        if (!this._enabled) {
+            throw new Error("Terra Draw is not enabled");
+        }
+    }
+
+
     private getModeStyles() {
         const modeStyles: { [key: string]: (feature: GeoJSONStoreFeatures) => TerraDrawAdapterStyling } = {};
         Object.keys(this._modes).forEach((mode) => {
@@ -217,6 +225,7 @@ class TerraDraw {
      * @alpha
      */
     setModeStyles(mode: string, styles: TerraDrawAdapterStyling) {
+        this.checkEnabled()
         this._modes[mode].styles = styles;
     }
 
@@ -228,9 +237,19 @@ class TerraDraw {
      * @alpha
      */
     getSnapshot() {
+        // This is a read only method so we do not need to check if enabled
         return this._store.copyAll();
     }
 
+    /**
+     * Removes all data from the current store
+     * 
+     * @alpha
+     */
+    clear() {
+        this.checkEnabled()
+        this._store.clear();
+    }
 
     /**
      * A property used to determine whether the instance is active or not. You 
@@ -262,6 +281,7 @@ class TerraDraw {
      * @alpha
      */
     getMode(): string {
+        // This is a read only method so we do not need to check if enabled
         return this._mode.mode;
     }
 
@@ -273,9 +293,7 @@ class TerraDraw {
      * @alpha
      */
     setMode(mode: string) {
-        if (!this._enabled) {
-            throw new Error("Terra Draw is not started");
-        }
+        this.checkEnabled()
 
         if (this._modes[mode]) {
             // Before we swap modes we want to

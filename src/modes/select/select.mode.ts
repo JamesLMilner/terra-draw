@@ -333,12 +333,13 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode<SelectionStyling>
                 clickedFeature.id as string
             );
 
-            let selectedCoords: Position[] | undefined;
-            if (type === "LineString") {
-                selectedCoords = coordinates;
-            } else if (type === "Polygon") {
-                selectedCoords = coordinates[0];
+            if (type !== 'LineString' && type !== 'Polygon') {
+                return;
             }
+
+            // LineString does not have nesting so we can just take 'coordinates'
+            // directly. Polygon is nested so we need to take [0] item in the array
+            const selectedCoords: Position[] = type === "LineString" ? coordinates : coordinates[0];
 
             if (selectedCoords && modeFlags && modeFlags.feature.coordinates) {
                 this.selectionPoints.create(

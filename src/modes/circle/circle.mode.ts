@@ -68,7 +68,6 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<FreehandPolygonSt
                 center: this.center,
                 radiusKilometers: 0.00001,
                 coordinatePrecision: this.coordinatePrecision
-
             });
 
             const [createdId] = this.store.create([

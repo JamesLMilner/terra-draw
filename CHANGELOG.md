@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.1-alpha.14](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.13...v0.0.1-alpha.14) (2023-01-08)
+
+
+### Features
+
+* add clear to the public API ([6a8fa72](https://github.com/JamesLMilner/terra-draw/commit/6a8fa722b52047bdf7bc4cfb42d1432eaf7ff038))
+
+
+### Bug Fixes
+
+* ensure that terra draw is enabled before calling setMode ([deff0fb](https://github.com/JamesLMilner/terra-draw/commit/deff0fb34888fd8a36778254ed8448e7711abdb8))
+* make sure circle mode respects configured coordinate precision ([cba0aa7](https://github.com/JamesLMilner/terra-draw/commit/cba0aa73d2d623f53b66e2d503077519f920dc96))
+
+
+### Chore
+
+* add npm badge to README, shorten CI badge text ([e9d7b66](https://github.com/JamesLMilner/terra-draw/commit/e9d7b6611f7b342d2dc65a381f940babcea4f889))
+* bump dependency packages ([a7a2bcf](https://github.com/JamesLMilner/terra-draw/commit/a7a2bcfdee6c9da773f4cf973c7f342f75822a12))
+* fix the README logo ([b48d6d7](https://github.com/JamesLMilner/terra-draw/commit/b48d6d7d4da0dbc43da86bf43d08bc17c1463073))
+
 ### [0.0.1-alpha.13](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.12...v0.0.1-alpha.13) (2022-12-20)
 
 

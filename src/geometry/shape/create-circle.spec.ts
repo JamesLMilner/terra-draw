@@ -3,7 +3,7 @@ import { circle } from "./create-circle";
 describe("Geometry", () => {
     describe("circle", () => {
         it("creates a circle polygon", () => {
-            const result = circle({ center: [0, 0], radiusKilometers: 1 });
+            const result = circle({ center: [0, 0], radiusKilometers: 1, coordinatePrecision: 9 });
 
             expect(result.geometry.type).toBe("Polygon");
             expect(result.geometry.coordinates[0].length).toBe(64 + 1);
@@ -15,6 +15,7 @@ describe("Geometry", () => {
                 center: [0, 0],
                 radiusKilometers: 1,
                 steps: 20,
+                coordinatePrecision: 9
             });
 
             expect(result.geometry.type).toBe("Polygon");

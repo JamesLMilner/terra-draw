@@ -37,9 +37,9 @@ export class TerraDrawRectangleMode extends TerraDrawBaseDrawMode<FreehandPolygo
         // We want to have some defaults, but also allow key bindings
         // to be explicitly turned off
         if (options?.keyEvents === null) {
-            this.keyEvents = { cancel: null, finish: null }
+            this.keyEvents = { cancel: null, finish: null };
         } else {
-            const defaultKeyEvents = { cancel: "Escape", finish: 'Enter' }
+            const defaultKeyEvents = { cancel: "Escape", finish: 'Enter' };
             this.keyEvents =
                 options && options.keyEvents ? { ...defaultKeyEvents, ...options.keyEvents } : defaultKeyEvents;
         }

@@ -63,9 +63,9 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
         // We want to have some defaults, but also allow key bindings
         // to be explicitly turned off
         if (options?.keyEvents === null) {
-            this.keyEvents = { cancel: null, finish: null }
+            this.keyEvents = { cancel: null, finish: null };
         } else {
-            const defaultKeyEvents = { cancel: "Escape", finish: 'Enter' }
+            const defaultKeyEvents = { cancel: "Escape", finish: 'Enter' };
             this.keyEvents =
                 options && options.keyEvents ? { ...defaultKeyEvents, ...options.keyEvents } : defaultKeyEvents;
         }
@@ -147,7 +147,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
         if (this.closingPointId) {
             const [previousLng, previousLat] =
                 currentLineGeometry.coordinates[
-                currentLineGeometry.coordinates.length - 1
+                    currentLineGeometry.coordinates.length - 1
                 ];
             const { x, y } = this.project(previousLng, previousLat);
             const distance = pixelDistance(
@@ -242,7 +242,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 
             const [previousLng, previousLat] =
                 currentLineGeometry.coordinates[
-                currentLineGeometry.coordinates.length - 2
+                    currentLineGeometry.coordinates.length - 2
                 ];
             const { x, y } = this.project(previousLng, previousLat);
             const distance = pixelDistance(

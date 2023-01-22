@@ -97,11 +97,11 @@ describe("TerraDrawSelectMode", () => {
             [number, number],
             [number, number]
         ] = [
-                [0, 0],
-                [0, 0],
-                [0, 0],
-                [0, 0],
-            ]
+            [0, 0],
+            [0, 0],
+            [0, 0],
+            [0, 0],
+        ]
     ) => {
         unproject
             .mockReturnValueOnce({ lng: bbox[0][0], lat: bbox[0][1] })

@@ -89,7 +89,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode<SelectionStyling>
         // We want to have some defaults, but also allow key bindings
         // to be explicitly turned off
         if (options?.keyEvents === null) {
-            this.keyEvents = { deselect: null, delete: null, rotate: null, scale: null }
+            this.keyEvents = { deselect: null, delete: null, rotate: null, scale: null };
         } else {
             const defaultKeyEvents = { deselect: "Escape", delete: "Delete", rotate: "r", scale: "s" };
             this.keyEvents =

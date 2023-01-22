@@ -347,11 +347,11 @@ describe("TerraDrawPolygonMode", () => {
                 [number, number],
                 [number, number]
             ] = [
-                    [0, 0],
-                    [0, 0],
-                    [0, 0],
-                    [0, 0],
-                ]
+                [0, 0],
+                [0, 0],
+                [0, 0],
+                [0, 0],
+            ]
         ) => {
             unproject
                 .mockReturnValueOnce({ lng: bbox[0][0], lat: bbox[0][1] })
@@ -952,11 +952,11 @@ describe("TerraDrawPolygonMode", () => {
                 [number, number],
                 [number, number]
             ] = [
-                    [0, 0],
-                    [0, 0],
-                    [0, 0],
-                    [0, 0],
-                ]
+                [0, 0],
+                [0, 0],
+                [0, 0],
+                [0, 0],
+            ]
         ) => {
             unproject
                 .mockReturnValueOnce({ lng: bbox[0][0], lat: bbox[0][1] })
@@ -1228,7 +1228,7 @@ describe("TerraDrawPolygonMode", () => {
                 key: 'Enter'
             });
 
-            let features = store.copyAll();
+            const features = store.copyAll();
 
             // 2 Closing points and 1 Polygon
             // has not finished the polygon off and deleted the closing points

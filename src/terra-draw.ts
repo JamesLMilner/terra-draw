@@ -225,7 +225,7 @@ class TerraDraw {
      * @alpha
      */
     setModeStyles(mode: string, styles: TerraDrawAdapterStyling) {
-        this.checkEnabled()
+        this.checkEnabled();
         this._modes[mode].styles = styles;
     }
 
@@ -247,7 +247,7 @@ class TerraDraw {
      * @alpha
      */
     clear() {
-        this.checkEnabled()
+        this.checkEnabled();
         this._store.clear();
     }
 
@@ -293,7 +293,7 @@ class TerraDraw {
      * @alpha
      */
     setMode(mode: string) {
-        this.checkEnabled()
+        this.checkEnabled();
 
         if (this._modes[mode]) {
             // Before we swap modes we want to

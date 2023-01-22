@@ -396,7 +396,7 @@ describe("TerraDrawCircleMode", () => {
                 features = store.copyAll();
                 expect(features.length).toBe(1);
             });
-        })
+        });
 
 
     });

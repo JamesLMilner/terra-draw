@@ -624,9 +624,9 @@ describe("TerraDrawLineStringMode", () => {
                 features = store.copyAll();
                 expect(features.length).toBe(2);
 
-                expect(features[1].geometry.type).toStrictEqual('Point')
+                expect(features[1].geometry.type).toStrictEqual('Point');
                 expect(features[1].geometry.coordinates).toStrictEqual([2, 2]);
-                expect(features[0].geometry.type).toStrictEqual('LineString')
+                expect(features[0].geometry.type).toStrictEqual('LineString');
                 expect(features[0].geometry.coordinates).toStrictEqual([
                     [0, 0],
                     [1, 1],

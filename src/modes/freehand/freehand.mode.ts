@@ -12,8 +12,8 @@ import { GeoJSONStoreFeatures } from "../../store/store";
 import { pixelDistance } from "../../geometry/measure/pixel-distance";
 
 type TerraDrawFreehandModeKeyEvents = {
-    cancel: KeyboardEvent["key"];
-    finish: KeyboardEvent["key"];
+    cancel: KeyboardEvent["key"] | null;
+    finish: KeyboardEvent["key"] | null
 };
 
 type FreehandPolygonStyling = {
@@ -39,13 +39,21 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
     constructor(options?: {
         styles?: Partial<FreehandPolygonStyling>;
         minDistance?: number;
-        keyEvents?: TerraDrawFreehandModeKeyEvents;
+        keyEvents?: TerraDrawFreehandModeKeyEvents | null
     }) {
         super(options);
 
         this.minDistance = (options && options.minDistance) || 20;
-        this.keyEvents =
-            options && options.keyEvents ? options.keyEvents : { cancel: "Escape", finish: 'Enter' };
+
+        // We want to have some defaults, but also allow key bindings
+        // to be explicitly turned off
+        if (options?.keyEvents === null) {
+            this.keyEvents = { cancel: null, finish: null }
+        } else {
+            const defaultKeyEvents = { cancel: "Escape", finish: 'Enter' }
+            this.keyEvents =
+                options && options.keyEvents ? { ...defaultKeyEvents, ...options.keyEvents } : defaultKeyEvents;
+        }
     }
 
     private close() {
@@ -81,7 +89,7 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 
         const [previousLng, previousLat] =
             currentLineGeometry.coordinates[0][
-                currentLineGeometry.coordinates[0].length - 2
+            currentLineGeometry.coordinates[0].length - 2
             ];
         const { x, y } = this.project(previousLng, previousLat);
         const distance = pixelDistance(

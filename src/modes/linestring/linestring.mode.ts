@@ -14,11 +14,10 @@ import { PixelDistanceBehavior } from "../pixel-distance.behavior";
 import { SnappingBehavior } from "../snapping.behavior";
 import { getDefaultStyling } from "../../util/styling";
 import { GeoJSONStoreFeatures } from "../../store/store";
-import { createSourceMapSource } from "typescript";
 
 type TerraDrawLineStringModeKeyEvents = {
-    cancel: KeyboardEvent["key"];
-    finish: KeyboardEvent["key"]
+    cancel: KeyboardEvent["key"] | null
+    finish: KeyboardEvent["key"] | null
 };
 
 type LineStringStyling = {
@@ -49,7 +48,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
         allowSelfIntersections?: boolean;
         pointerDistance?: number;
         styles?: Partial<LineStringStyling>;
-        keyEvents?: TerraDrawLineStringModeKeyEvents;
+        keyEvents?: TerraDrawLineStringModeKeyEvents | null
     }) {
         super(options);
 
@@ -61,8 +60,15 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
                 ? options.allowSelfIntersections
                 : true;
 
-        this.keyEvents =
-            options && options.keyEvents ? options.keyEvents : { cancel: "Escape", finish: "Enter" };
+        // We want to have some defaults, but also allow key bindings
+        // to be explicitly turned off
+        if (options?.keyEvents === null) {
+            this.keyEvents = { cancel: null, finish: null }
+        } else {
+            const defaultKeyEvents = { cancel: "Escape", finish: 'Enter' }
+            this.keyEvents =
+                options && options.keyEvents ? { ...defaultKeyEvents, ...options.keyEvents } : defaultKeyEvents;
+        }
     }
 
     private close() {
@@ -141,7 +147,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
         if (this.closingPointId) {
             const [previousLng, previousLat] =
                 currentLineGeometry.coordinates[
-                    currentLineGeometry.coordinates.length - 1
+                currentLineGeometry.coordinates.length - 1
                 ];
             const { x, y } = this.project(previousLng, previousLat);
             const distance = pixelDistance(
@@ -236,7 +242,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 
             const [previousLng, previousLat] =
                 currentLineGeometry.coordinates[
-                    currentLineGeometry.coordinates.length - 2
+                currentLineGeometry.coordinates.length - 2
                 ];
             const { x, y } = this.project(previousLng, previousLat);
             const distance = pixelDistance(

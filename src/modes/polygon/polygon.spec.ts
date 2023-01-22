@@ -26,6 +26,19 @@ describe("TerraDrawPolygonMode", () => {
             });
             expect(polygonMode.styles).toStrictEqual({ closingPointColor: "#ffffff" });
         });
+
+        it("constructs with null key events", () => {
+            new TerraDrawPolygonMode({
+                styles: { closingPointColor: "#ffffff" },
+                keyEvents: null
+            });
+
+            new TerraDrawPolygonMode({
+                styles: { closingPointColor: "#ffffff" },
+                keyEvents: { cancel: null, finish: null }
+            });
+
+        });
     });
 
     describe("lifecycle", () => {
@@ -334,11 +347,11 @@ describe("TerraDrawPolygonMode", () => {
                 [number, number],
                 [number, number]
             ] = [
-                [0, 0],
-                [0, 0],
-                [0, 0],
-                [0, 0],
-            ]
+                    [0, 0],
+                    [0, 0],
+                    [0, 0],
+                    [0, 0],
+                ]
         ) => {
             unproject
                 .mockReturnValueOnce({ lng: bbox[0][0], lat: bbox[0][1] })
@@ -359,6 +372,8 @@ describe("TerraDrawPolygonMode", () => {
         });
 
         it("can create a polygon", () => {
+            mockClickBoundingBox();
+
             polygonMode.onClick({
                 lng: 0,
                 lat: 0,
@@ -444,7 +459,7 @@ describe("TerraDrawPolygonMode", () => {
             });
 
             let features = store.copyAll();
-            expect(features.length).toBe(2);
+            expect(features.length).toBe(1);
 
             // Create a new polygon
             polygonMode.onClick({
@@ -458,6 +473,7 @@ describe("TerraDrawPolygonMode", () => {
 
             features = store.copyAll();
             expect(features.length).toBe(2);
+
         });
 
         it("can create a polygon with snapping enabled", () => {
@@ -936,11 +952,11 @@ describe("TerraDrawPolygonMode", () => {
                 [number, number],
                 [number, number]
             ] = [
-                [0, 0],
-                [0, 0],
-                [0, 0],
-                [0, 0],
-            ]
+                    [0, 0],
+                    [0, 0],
+                    [0, 0],
+                    [0, 0],
+                ]
         ) => {
             unproject
                 .mockReturnValueOnce({ lng: bbox[0][0], lat: bbox[0][1] })
@@ -983,10 +999,40 @@ describe("TerraDrawPolygonMode", () => {
                 features = store.copyAll();
                 expect(features.length).toBe(0);
             });
+
+
+            it("does not delete the line when cancel is set to null", () => {
+                polygonMode = new TerraDrawPolygonMode({ keyEvents: { cancel: null } });
+                const mockConfig = getMockModeConfig(polygonMode.mode);
+
+                store = mockConfig.store;
+                project = mockConfig.project;
+                unproject = mockConfig.project;
+                polygonMode.register(mockConfig);
+
+                polygonMode.onClick({
+                    lng: 0,
+                    lat: 0,
+                    containerX: 0,
+                    containerY: 0,
+                    button: "left",
+                    heldKeys: [],
+                });
+
+                let features = store.copyAll();
+                expect(features.length).toBe(1);
+
+                polygonMode.onKeyUp({ key: "Escape" });
+
+                features = store.copyAll();
+                expect(features.length).toBe(1);
+            });
         });
 
         describe('finish', () => {
             it("can create a polygon", () => {
+                mockClickBoundingBox();
+
                 polygonMode.onClick({
                     lng: 0,
                     lat: 0,
@@ -1072,44 +1118,41 @@ describe("TerraDrawPolygonMode", () => {
                 });
 
                 let features = store.copyAll();
-                expect(features.length).toBe(2);
+                expect(features.length).toBe(1);
 
-                // Create a new polygon
+                // Finish drawing the polygon
                 polygonMode.onKeyUp({
                     key: 'Enter'
                 });
+
+                // Creates a new polygon
+                polygonMode.onClick({
+                    lng: 4,
+                    lat: 4,
+                    containerX: 0,
+                    containerY: 0,
+                    button: "left",
+                    heldKeys: [],
+                });
+
 
                 features = store.copyAll();
                 expect(features.length).toBe(2);
             });
         });
-    });
 
-    describe("cleanUp", () => {
-        let store: GeoJSONStore;
-        let polygonMode: TerraDrawPolygonMode;
-        let onChange: jest.Mock;
-        let project: jest.Mock;
 
-        beforeEach(() => {
-            jest.resetAllMocks();
-            polygonMode = new TerraDrawPolygonMode();
-
+        it("does not finish drawing polygon when finish is null", () => {
+            polygonMode = new TerraDrawPolygonMode({ keyEvents: { finish: null } });
             const mockConfig = getMockModeConfig(polygonMode.mode);
+
             store = mockConfig.store;
-            onChange = mockConfig.onChange;
             project = mockConfig.project;
-
+            unproject = mockConfig.project;
             polygonMode.register(mockConfig);
-        });
 
-        it("does not throw error if feature has not been created ", () => {
-            expect(() => {
-                polygonMode.cleanUp();
-            }).not.toThrowError();
-        });
+            mockClickBoundingBox();
 
-        it("cleans up correctly if drawing has started", () => {
             polygonMode.onClick({
                 lng: 0,
                 lat: 0,
@@ -1119,136 +1162,244 @@ describe("TerraDrawPolygonMode", () => {
                 heldKeys: [],
             });
 
-            expect(store.copyAll().length).toBe(1);
+            polygonMode.onMouseMove({
+                lng: 1,
+                lat: 1,
+                containerX: 0,
+                containerY: 0,
+                button: "left",
+                heldKeys: [],
+            });
 
+            polygonMode.onClick({
+                lng: 1,
+                lat: 1,
+                containerX: 0,
+                containerY: 0,
+                button: "left",
+                heldKeys: [],
+            });
+
+            polygonMode.onMouseMove({
+                lng: 2,
+                lat: 2,
+                containerX: 0,
+                containerY: 0,
+                button: "left",
+                heldKeys: [],
+            });
+
+            polygonMode.onClick({
+                lng: 2,
+                lat: 2,
+                containerX: 0,
+                containerY: 0,
+                button: "left",
+                heldKeys: [],
+            });
+
+            // closingPoints
+            project.mockReturnValueOnce({ x: 0, y: 0 });
+            project.mockReturnValueOnce({ x: 0, y: 0 });
+
+            polygonMode.onMouseMove({
+                lng: 3,
+                lat: 3,
+                containerX: 0,
+                containerY: 0,
+                button: "left",
+                heldKeys: [],
+            });
+
+            // closingPoints
+            project.mockReturnValueOnce({ x: 0, y: 0 });
+            project.mockReturnValueOnce({ x: 0, y: 0 });
+
+            polygonMode.onClick({
+                lng: 3,
+                lat: 3,
+                containerX: 0,
+                containerY: 0,
+                button: "left",
+                heldKeys: [],
+            });
+
+            polygonMode.onKeyUp({
+                key: 'Enter'
+            });
+
+            let features = store.copyAll();
+
+            // 2 Closing points and 1 Polygon
+            // has not finished the polygon off and deleted the closing points
+            expect(features.length).toBe(3);
+        });
+    });
+});
+
+describe("cleanUp", () => {
+    let store: GeoJSONStore;
+    let polygonMode: TerraDrawPolygonMode;
+    let onChange: jest.Mock;
+    let project: jest.Mock;
+
+    beforeEach(() => {
+        jest.resetAllMocks();
+        polygonMode = new TerraDrawPolygonMode();
+
+        const mockConfig = getMockModeConfig(polygonMode.mode);
+        store = mockConfig.store;
+        onChange = mockConfig.onChange;
+        project = mockConfig.project;
+
+        polygonMode.register(mockConfig);
+    });
+
+    it("does not throw error if feature has not been created ", () => {
+        expect(() => {
             polygonMode.cleanUp();
+        }).not.toThrowError();
+    });
 
-            // Removes the LineString that was being created
-            expect(store.copyAll().length).toBe(0);
+    it("cleans up correctly if drawing has started", () => {
+        polygonMode.onClick({
+            lng: 0,
+            lat: 0,
+            containerX: 0,
+            containerY: 0,
+            button: "left",
+            heldKeys: [],
+        });
+
+        expect(store.copyAll().length).toBe(1);
+
+        polygonMode.cleanUp();
+
+        // Removes the LineString that was being created
+        expect(store.copyAll().length).toBe(0);
+    });
+});
+
+describe("onDrag", () => {
+    it("does nothing", () => {
+        const polygonMode = new TerraDrawPolygonMode();
+        polygonMode.register(getMockModeConfig(polygonMode.mode));
+
+        expect(() => {
+            polygonMode.onDrag();
+        }).not.toThrowError();
+    });
+});
+
+describe("onDragStart", () => {
+    it("does nothing", () => {
+        const polygonMode = new TerraDrawPolygonMode();
+        polygonMode.register(getMockModeConfig(polygonMode.mode));
+
+        expect(() => {
+            polygonMode.onDragStart();
+        }).not.toThrowError();
+    });
+});
+
+describe("onDragEnd", () => {
+    it("does nothing", () => {
+        const polygonMode = new TerraDrawPolygonMode();
+        polygonMode.register(getMockModeConfig(polygonMode.mode));
+
+        expect(() => {
+            polygonMode.onDragEnd();
+        }).not.toThrowError();
+    });
+});
+
+describe("styling", () => {
+    it("gets", () => {
+        const polygonMode = new TerraDrawPolygonMode();
+        polygonMode.register(getMockModeConfig(polygonMode.mode));
+        expect(polygonMode.styles).toStrictEqual({});
+    });
+
+    it("set fails if non valid styling", () => {
+        const polygonMode = new TerraDrawPolygonMode();
+        polygonMode.register(getMockModeConfig(polygonMode.mode));
+
+        expect(() => {
+            (polygonMode.styles as unknown) = "test";
+        }).toThrowError();
+
+        expect(polygonMode.styles).toStrictEqual({});
+    });
+
+    it("sets", () => {
+        const polygonMode = new TerraDrawPolygonMode();
+        polygonMode.register(getMockModeConfig(polygonMode.mode));
+
+        polygonMode.styles = {
+            closingPointColor: "#ffffff",
+        };
+
+        expect(polygonMode.styles).toStrictEqual({
+            closingPointColor: "#ffffff",
+        });
+    });
+});
+
+
+describe('styleFeature', () => {
+    it("returns the correct styles for polygon", () => {
+        const polygonMode = new TerraDrawPolygonMode({
+            styles: {
+                fillColor: '#ffffff',
+                outlineColor: '#111111',
+                outlineWidth: 2,
+                fillOpacity: 0.5,
+                closingPointWidth: 2,
+                closingPointColor: '#dddddd',
+                closingPointOutlineWidth: 1,
+                closingPointOutlineColor: '#222222'
+            }
+        });
+
+        expect(
+            polygonMode.styleFeature({
+                type: "Feature",
+                geometry: { type: "Polygon", coordinates: [] },
+                properties: { mode: "polygon" }
+            })
+        ).toMatchObject({
+            polygonFillColor: '#ffffff',
+            polygonOutlineColor: '#111111',
+            polygonOutlineWidth: 2,
+            polygonFillOpacity: 0.5
         });
     });
 
-    describe("onDrag", () => {
-        it("does nothing", () => {
-            const polygonMode = new TerraDrawPolygonMode();
-            polygonMode.register(getMockModeConfig(polygonMode.mode));
-
-            expect(() => {
-                polygonMode.onDrag();
-            }).not.toThrowError();
-        });
-    });
-
-    describe("onDragStart", () => {
-        it("does nothing", () => {
-            const polygonMode = new TerraDrawPolygonMode();
-            polygonMode.register(getMockModeConfig(polygonMode.mode));
-
-            expect(() => {
-                polygonMode.onDragStart();
-            }).not.toThrowError();
-        });
-    });
-
-    describe("onDragEnd", () => {
-        it("does nothing", () => {
-            const polygonMode = new TerraDrawPolygonMode();
-            polygonMode.register(getMockModeConfig(polygonMode.mode));
-
-            expect(() => {
-                polygonMode.onDragEnd();
-            }).not.toThrowError();
-        });
-    });
-
-    describe("styling", () => {
-        it("gets", () => {
-            const polygonMode = new TerraDrawPolygonMode();
-            polygonMode.register(getMockModeConfig(polygonMode.mode));
-            expect(polygonMode.styles).toStrictEqual({});
+    it("returns the correct styles for poiny", () => {
+        const polygonMode = new TerraDrawPolygonMode({
+            styles: {
+                fillColor: '#ffffff',
+                outlineColor: '#111111',
+                outlineWidth: 2,
+                fillOpacity: 0.5,
+                closingPointWidth: 2,
+                closingPointColor: '#dddddd',
+                closingPointOutlineWidth: 1,
+                closingPointOutlineColor: '#222222'
+            }
         });
 
-        it("set fails if non valid styling", () => {
-            const polygonMode = new TerraDrawPolygonMode();
-            polygonMode.register(getMockModeConfig(polygonMode.mode));
-
-            expect(() => {
-                (polygonMode.styles as unknown) = "test";
-            }).toThrowError();
-
-            expect(polygonMode.styles).toStrictEqual({});
-        });
-
-        it("sets", () => {
-            const polygonMode = new TerraDrawPolygonMode();
-            polygonMode.register(getMockModeConfig(polygonMode.mode));
-
-            polygonMode.styles = {
-                closingPointColor: "#ffffff",
-            };
-
-            expect(polygonMode.styles).toStrictEqual({
-                closingPointColor: "#ffffff",
-            });
-        });
-    });
-
-
-    describe('styleFeature', () => {
-        it("returns the correct styles for polygon", () => {
-            const polygonMode = new TerraDrawPolygonMode({
-                styles: {
-                    fillColor: '#ffffff',
-                    outlineColor: '#111111',
-                    outlineWidth: 2,
-                    fillOpacity: 0.5,
-                    closingPointWidth: 2,
-                    closingPointColor: '#dddddd',
-                    closingPointOutlineWidth: 1,
-                    closingPointOutlineColor: '#222222'
-                }
-            });
-
-            expect(
-                polygonMode.styleFeature({
-                    type: "Feature",
-                    geometry: { type: "Polygon", coordinates: [] },
-                    properties: { mode: "polygon" }
-                })
-            ).toMatchObject({
-                polygonFillColor: '#ffffff',
-                polygonOutlineColor: '#111111',
-                polygonOutlineWidth: 2,
-                polygonFillOpacity: 0.5
-            });
-        });
-
-        it("returns the correct styles for poiny", () => {
-            const polygonMode = new TerraDrawPolygonMode({
-                styles: {
-                    fillColor: '#ffffff',
-                    outlineColor: '#111111',
-                    outlineWidth: 2,
-                    fillOpacity: 0.5,
-                    closingPointWidth: 2,
-                    closingPointColor: '#dddddd',
-                    closingPointOutlineWidth: 1,
-                    closingPointOutlineColor: '#222222'
-                }
-            });
-
-            expect(
-                polygonMode.styleFeature({
-                    type: "Feature",
-                    geometry: { type: "Point", coordinates: [] },
-                    properties: { mode: "polygon" }
-                })
-            ).toMatchObject({
-                pointWidth: 2,
-                pointColor: '#dddddd',
-                pointOutlineColor: "#222222",
-                pointOutlineWidth: 1
-            });
+        expect(
+            polygonMode.styleFeature({
+                type: "Feature",
+                geometry: { type: "Point", coordinates: [] },
+                properties: { mode: "polygon" }
+            })
+        ).toMatchObject({
+            pointWidth: 2,
+            pointColor: '#dddddd',
+            pointOutlineColor: "#222222",
+            pointOutlineWidth: 1
         });
     });
 });

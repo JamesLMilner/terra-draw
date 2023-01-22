@@ -23,6 +23,19 @@ describe("TerraDrawRectangleMode", () => {
                 fillColor: "#ffffff",
             });
         });
+
+        it("constructs with null key events", () => {
+            new TerraDrawRectangleMode({
+                styles: { fillColor: "#ffffff" },
+                keyEvents: null
+            });
+
+            new TerraDrawRectangleMode({
+                styles: { fillColor: "#ffffff" },
+                keyEvents: { cancel: null, finish: null }
+            });
+
+        });
     });
 
     describe("lifecycle", () => {
@@ -174,21 +187,19 @@ describe("TerraDrawRectangleMode", () => {
 
     describe("onKeyUp", () => {
 
+
         let rectangleMode: TerraDrawRectangleMode;
         let store: GeoJSONStore;
         let onChange: jest.Mock;
 
-        beforeEach(() => {
+        it("finishes drawing circle on finish key press", () => {
             rectangleMode = new TerraDrawRectangleMode();
-
             const mockConfig = getMockModeConfig(rectangleMode.mode);
             store = new GeoJSONStore();
             store = mockConfig.store;
             onChange = mockConfig.onChange;
             rectangleMode.register(mockConfig);
-        });
 
-        it("finishes drawing circle on finish key press", () => {
             rectangleMode.onClick({
                 lng: 0,
                 lat: 0,
@@ -205,7 +216,60 @@ describe("TerraDrawRectangleMode", () => {
                 key: 'Enter'
             });
 
+            rectangleMode.onClick({
+                lng: 0,
+                lat: 0,
+                containerX: 0,
+                containerY: 0,
+                button: "left",
+                heldKeys: [],
+            });
+
             features = store.copyAll();
+            // Two as the rectangle has been closed via enter
+            expect(features.length).toBe(2);
+
+            expect(onChange).toBeCalledTimes(2);
+            expect(onChange).toBeCalledWith([expect.any(String)], "create");
+
+        });
+
+        it("does not finish on key press when keyEvents null", () => {
+            rectangleMode = new TerraDrawRectangleMode({ keyEvents: null });
+            const mockConfig = getMockModeConfig(rectangleMode.mode);
+            store = new GeoJSONStore();
+            store = mockConfig.store;
+            onChange = mockConfig.onChange;
+            rectangleMode.register(mockConfig);
+
+            rectangleMode.onClick({
+                lng: 0,
+                lat: 0,
+                containerX: 0,
+                containerY: 0,
+                button: "left",
+                heldKeys: [],
+            });
+
+            let features = store.copyAll();
+            expect(features.length).toBe(1);
+
+            rectangleMode.onKeyUp({
+                key: 'Enter'
+            });
+
+            rectangleMode.onClick({
+                lng: 0,
+                lat: 0,
+                containerX: 0,
+                containerY: 0,
+                button: "left",
+                heldKeys: [],
+            });
+
+            features = store.copyAll();
+
+            // Only one as the click will close the rectangle
             expect(features.length).toBe(1);
 
             expect(onChange).toBeCalledTimes(1);

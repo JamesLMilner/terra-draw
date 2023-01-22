@@ -4,7 +4,6 @@ import { getDefaultStyling } from "../../util/styling";
 import { TerraDrawPointMode } from "./point.mode";
 
 describe("TerraDrawPointMode", () => {
-    const defaultStyles = getDefaultStyling();
 
     describe("constructor", () => {
         it("constructs with no options", () => {

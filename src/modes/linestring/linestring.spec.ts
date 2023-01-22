@@ -1,6 +1,5 @@
 import { GeoJSONStore } from "../../store/store";
 import { getMockModeConfig } from "../../test/mock-config";
-import { getDefaultStyling } from "../../util/styling";
 import { TerraDrawLineStringMode } from "./linestring.mode";
 
 describe("TerraDrawLineStringMode", () => {
@@ -19,6 +18,20 @@ describe("TerraDrawLineStringMode", () => {
             });
             expect(lineStringMode.styles).toStrictEqual({ lineStringColor: "#ffffff" });
         });
+
+        it("constructs with null key events", () => {
+            new TerraDrawLineStringMode({
+                styles: { lineStringColor: "#ffffff" },
+                keyEvents: null
+            });
+
+            new TerraDrawLineStringMode({
+                styles: { lineStringColor: "#ffffff" },
+                keyEvents: { cancel: null, finish: null }
+            });
+
+        });
+
     });
 
     describe("lifecycle", () => {
@@ -526,6 +539,101 @@ describe("TerraDrawLineStringMode", () => {
                     [1, 1],
                     [2, 2],
                 ]);
+            });
+
+            it("does not finish linestring when finish is set to null", () => {
+                lineStringMode = new TerraDrawLineStringMode({ keyEvents: null });
+                const mockConfig = getMockModeConfig(lineStringMode.mode);
+                onChange = mockConfig.onChange;
+                store = mockConfig.store;
+                project = mockConfig.project;
+                lineStringMode.register(mockConfig);
+
+                project.mockReturnValueOnce({ x: 50, y: 50 });
+                project.mockReturnValueOnce({ x: 50, y: 50 });
+                project.mockReturnValueOnce({ x: 100, y: 100 });
+                project.mockReturnValueOnce({ x: 100, y: 100 });
+
+
+                lineStringMode.onClick({
+                    lng: 0,
+                    lat: 0,
+                    containerX: 0,
+                    containerY: 0,
+                    button: "left",
+                    heldKeys: [],
+                });
+
+                lineStringMode.onMouseMove({
+                    lng: 1,
+                    lat: 1,
+                    containerX: 50,
+                    containerY: 50,
+                    button: "left",
+                    heldKeys: [],
+                });
+
+                lineStringMode.onClick({
+                    lng: 1,
+                    lat: 1,
+                    containerX: 50,
+                    containerY: 50,
+                    button: "left",
+                    heldKeys: [],
+                });
+
+                let features = store.copyAll();
+
+                // Drawn LineString and Closing point 
+                expect(features.length).toBe(2);
+
+                expect(features[0].geometry.coordinates).toStrictEqual([
+                    [0, 0],
+                    [1, 1],
+                    [1, 1],
+                ]);
+
+                expect(features[1].geometry.coordinates).toStrictEqual([1, 1]);
+
+                lineStringMode.onMouseMove({
+                    lng: 2,
+                    lat: 2,
+                    containerX: 100,
+                    containerY: 100,
+                    button: "left",
+                    heldKeys: [],
+                });
+
+                lineStringMode.onClick({
+                    lng: 2,
+                    lat: 2,
+                    containerX: 100,
+                    containerY: 100,
+                    button: "left",
+                    heldKeys: [],
+                });
+
+                expect(onChange).not.toBeCalledWith([expect.any(String)], 'delete');
+
+                lineStringMode.onKeyUp({
+                    key: 'Enter'
+                });
+
+                expect(onChange).toBeCalledTimes(6);
+
+                features = store.copyAll();
+                expect(features.length).toBe(2);
+
+                expect(features[1].geometry.type).toStrictEqual('Point')
+                expect(features[1].geometry.coordinates).toStrictEqual([2, 2]);
+                expect(features[0].geometry.type).toStrictEqual('LineString')
+                expect(features[0].geometry.coordinates).toStrictEqual([
+                    [0, 0],
+                    [1, 1],
+                    [2, 2],
+                    [2, 2],
+                ]);
+
             });
         });
 

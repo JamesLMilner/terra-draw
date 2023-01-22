@@ -24,6 +24,19 @@ describe("TerraDrawCircleMode", () => {
                 fillColor: "#ffffff",
             });
         });
+
+        it("constructs with null key events", () => {
+            new TerraDrawCircleMode({
+                styles: { fillColor: "#ffffff" },
+                keyEvents: null
+            });
+
+            new TerraDrawCircleMode({
+                styles: { fillColor: "#ffffff" },
+                keyEvents: { cancel: null, finish: null }
+            });
+
+        });
     });
 
     describe("lifecycle", () => {
@@ -332,28 +345,60 @@ describe("TerraDrawCircleMode", () => {
             circleMode.register(mockConfig);
         });
 
-        it("Escape - does nothing when no circle is present", () => {
-            circleMode.onKeyUp({ key: "Escape" });
-        });
-
-        it("Escape - deletes the circle when currently editing", () => {
-            circleMode.onClick({
-                lng: 0,
-                lat: 0,
-                containerX: 0,
-                containerY: 0,
-                button: "left",
-                heldKeys: [],
+        describe('cancel', () => {
+            it("does nothing when no circle is present", () => {
+                circleMode.onKeyUp({ key: "Escape" });
             });
 
-            let features = store.copyAll();
-            expect(features.length).toBe(1);
+            it("deletes the circle when currently editing", () => {
+                circleMode.onClick({
+                    lng: 0,
+                    lat: 0,
+                    containerX: 0,
+                    containerY: 0,
+                    button: "left",
+                    heldKeys: [],
+                });
 
-            circleMode.onKeyUp({ key: "Escape" });
+                let features = store.copyAll();
+                expect(features.length).toBe(1);
 
-            features = store.copyAll();
-            expect(features.length).toBe(0);
-        });
+                circleMode.onKeyUp({ key: "Escape" });
+
+                features = store.copyAll();
+                expect(features.length).toBe(0);
+            });
+
+            it("does not delete the circle when currently editing if keyEvents is null", () => {
+                jest.resetAllMocks();
+                circleMode = new TerraDrawCircleMode({ keyEvents: null });
+
+                const mockConfig = getMockModeConfig(circleMode.mode);
+                store = mockConfig.store;
+                onChange = mockConfig.onChange;
+                project = mockConfig.project;
+                circleMode.register(mockConfig);
+
+                circleMode.onClick({
+                    lng: 0,
+                    lat: 0,
+                    containerX: 0,
+                    containerY: 0,
+                    button: "left",
+                    heldKeys: [],
+                });
+
+                let features = store.copyAll();
+                expect(features.length).toBe(1);
+
+                circleMode.onKeyUp({ key: "Escape" });
+
+                features = store.copyAll();
+                expect(features.length).toBe(1);
+            });
+        })
+
+
     });
 
     describe("onDrag", () => {

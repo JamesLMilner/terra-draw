@@ -18,8 +18,8 @@ import { getDefaultStyling } from "../../util/styling";
 import { GeoJSONStoreFeatures } from "../../store/store";
 
 type TerraDrawPolygonModeKeyEvents = {
-    cancel: KeyboardEvent["key"];
-    finish: KeyboardEvent["key"]
+    cancel?: KeyboardEvent["key"] | null
+    finish?: KeyboardEvent["key"] | null
 };
 
 type PolygonStyling = {
@@ -53,7 +53,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
         snapping?: boolean;
         pointerDistance?: number;
         styles?: Partial<PolygonStyling>;
-        keyEvents?: TerraDrawPolygonModeKeyEvents;
+        keyEvents?: TerraDrawPolygonModeKeyEvents | null
     }) {
         super(options);
 
@@ -65,8 +65,16 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
                 ? options.allowSelfIntersections
                 : true;
 
-        this.keyEvents =
-            options && options.keyEvents ? options.keyEvents : { cancel: "Escape", finish: 'Enter' };
+        // We want to have some defaults, but also allow key bindings
+        // to be explicitly turned off
+        if (options?.keyEvents === null) {
+            this.keyEvents = { cancel: null, finish: null }
+        } else {
+            const defaultKeyEvents = { cancel: "Escape", finish: 'Enter' }
+            this.keyEvents =
+                options && options.keyEvents ? { ...defaultKeyEvents, ...options.keyEvents } : defaultKeyEvents;
+        }
+
     }
 
     private close() {

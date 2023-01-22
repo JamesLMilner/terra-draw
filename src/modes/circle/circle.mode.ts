@@ -12,8 +12,8 @@ import { getDefaultStyling } from "../../util/styling";
 import { TerraDrawBaseDrawMode } from "../base.mode";
 
 type TerraDrawCircleModeKeyEvents = {
-    cancel: KeyboardEvent["key"];
-    finish: KeyboardEvent["key"];
+    cancel: KeyboardEvent["key"] | null;
+    finish: KeyboardEvent["key"] | null;
 };
 
 type FreehandPolygonStyling = {
@@ -29,16 +29,23 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<FreehandPolygonSt
     private center: Position | undefined;
     private clickCount = 0;
     private currentCircleId: string | undefined;
-    private keyEvents: TerraDrawCircleModeKeyEvents;
+    private keyEvents: TerraDrawCircleModeKeyEvents
 
     constructor(options?: {
         styles?: Partial<FreehandPolygonStyling>;
-        keyEvents?: TerraDrawCircleModeKeyEvents;
+        keyEvents?: TerraDrawCircleModeKeyEvents | null;
     }) {
         super(options);
 
-        this.keyEvents =
-            options && options.keyEvents ? options.keyEvents : { cancel: "Escape", finish: 'Enter' };
+        // We want to have some defaults, but also allow key bindings
+        // to be explicitly turned off
+        if (options?.keyEvents === null) {
+            this.keyEvents = { cancel: null, finish: null }
+        } else {
+            const defaultKeyEvents = { cancel: "Escape", finish: 'Enter' }
+            this.keyEvents =
+                options && options.keyEvents ? { ...defaultKeyEvents, ...options.keyEvents } : defaultKeyEvents;
+        }
     }
 
     private close() {

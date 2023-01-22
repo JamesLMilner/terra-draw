@@ -25,6 +25,18 @@ describe("TerraDrawFreehandMode", () => {
                 outlineColor: "#ffffff",
             });
         });
+
+        it("constructs with null key events", () => {
+            new TerraDrawFreehandMode({
+                styles: { fillColor: "#ffffff" },
+                keyEvents: null
+            });
+
+            new TerraDrawFreehandMode({
+                styles: { fillColor: "#ffffff" },
+                keyEvents: { cancel: null, finish: null }
+            });
+        });
     });
 
     describe("lifecycle", () => {
@@ -333,6 +345,33 @@ describe("TerraDrawFreehandMode", () => {
                 features = store.copyAll();
                 expect(features.length).toBe(0);
             });
+
+            it("does not delete the freehand when currently editing if cancel is null", () => {
+                freehandMode = new TerraDrawFreehandMode({ keyEvents: null });
+
+                const mockConfig = getMockModeConfig(freehandMode.mode);
+                store = mockConfig.store;
+                onChange = mockConfig.onChange;
+                project = mockConfig.project;
+                freehandMode.register(mockConfig);
+
+                freehandMode.onClick({
+                    lng: 0,
+                    lat: 0,
+                    containerX: 0,
+                    containerY: 0,
+                    button: "left",
+                    heldKeys: [],
+                });
+
+                let features = store.copyAll();
+                expect(features.length).toBe(2);
+
+                freehandMode.onKeyUp({ key: "Escape" });
+
+                features = store.copyAll();
+                expect(features.length).toBe(2);
+            });
         });
 
         describe('finish', () => {
@@ -361,6 +400,35 @@ describe("TerraDrawFreehandMode", () => {
                 expect(onChange).toHaveBeenNthCalledWith(1, [expect.any(String), expect.any(String)], "create");
                 expect(onChange).toHaveBeenNthCalledWith(2, [expect.any(String)], "delete");
 
+            });
+
+            it("finishes drawing polygon on finish key press", () => {
+                freehandMode = new TerraDrawFreehandMode({ keyEvents: null });
+
+                const mockConfig = getMockModeConfig(freehandMode.mode);
+                store = mockConfig.store;
+                onChange = mockConfig.onChange;
+                project = mockConfig.project;
+                freehandMode.register(mockConfig);
+
+                freehandMode.onClick({
+                    lng: 0,
+                    lat: 0,
+                    containerX: 0,
+                    containerY: 0,
+                    button: "left",
+                    heldKeys: [],
+                });
+
+                let features = store.copyAll();
+                expect(features.length).toBe(2);
+
+                freehandMode.onKeyUp({
+                    key: 'Enter'
+                });
+
+                features = store.copyAll();
+                expect(features.length).toBe(2);
             });
         });
 

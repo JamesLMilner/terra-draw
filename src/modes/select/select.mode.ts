@@ -21,10 +21,10 @@ import { GeoJSONStoreFeatures } from "../../store/store";
 import { getDefaultStyling } from "../../util/styling";
 
 type TerraDrawSelectModeKeyEvents = {
-    deselect: KeyboardEvent["key"];
-    delete: KeyboardEvent["key"];
-    rotate: KeyboardEvent["key"];
-    scale: KeyboardEvent["key"];
+    deselect: KeyboardEvent["key"] | null
+    delete: KeyboardEvent["key"] | null
+    rotate: KeyboardEvent["key"] | null
+    scale: KeyboardEvent["key"] | null
 };
 
 type ModeFlags = {
@@ -79,17 +79,22 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode<SelectionStyling>
         styles?: Partial<SelectionStyling>
         pointerDistance?: number;
         flags?: { [mode: string]: ModeFlags };
-        keyEvents?: TerraDrawSelectModeKeyEvents;
+        keyEvents?: TerraDrawSelectModeKeyEvents | null
         dragEventThrottle?: number;
     }) {
         super(options);
 
         this.flags = options && options.flags ? options.flags : {};
 
-        this.keyEvents =
-            options && options.keyEvents
-                ? options.keyEvents
-                : { deselect: "Escape", delete: "Delete", rotate: "r", scale: "s" };
+        // We want to have some defaults, but also allow key bindings
+        // to be explicitly turned off
+        if (options?.keyEvents === null) {
+            this.keyEvents = { deselect: null, delete: null, rotate: null, scale: null }
+        } else {
+            const defaultKeyEvents = { deselect: "Escape", delete: "Delete", rotate: "r", scale: "s" };
+            this.keyEvents =
+                options && options.keyEvents ? { ...defaultKeyEvents, ...options.keyEvents } : defaultKeyEvents;
+        }
 
         this.dragEventThrottle =
             (options &&

@@ -97,11 +97,11 @@ describe("TerraDrawSelectMode", () => {
             [number, number],
             [number, number]
         ] = [
-            [0, 0],
-            [0, 0],
-            [0, 0],
-            [0, 0],
-        ]
+                [0, 0],
+                [0, 0],
+                [0, 0],
+                [0, 0],
+            ]
     ) => {
         unproject
             .mockReturnValueOnce({ lng: bbox[0][0], lat: bbox[0][1] })
@@ -125,6 +125,23 @@ describe("TerraDrawSelectMode", () => {
                     delete: "d",
                     rotate: "r",
                     scale: "s",
+                },
+            });
+        });
+
+        it("constructs with null keyEvents", () => {
+            new TerraDrawSelectMode({
+                pointerDistance: 40,
+                keyEvents: null
+            });
+
+            new TerraDrawSelectMode({
+                pointerDistance: 40,
+                keyEvents: {
+                    deselect: null,
+                    delete: null,
+                    rotate: null,
+                    scale: null,
                 },
             });
         });

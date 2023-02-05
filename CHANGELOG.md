@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.1-alpha.15](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.14...v0.0.1-alpha.15) (2023-02-05)
+
+
+### Features
+
+* allow keyEvents to be set to null to prevent keyboard interactions on modes ([6af865c](https://github.com/JamesLMilner/terra-draw/commit/6af865cffa58063e422c69a4201b2ab9f37f019a))
+
+
+### Chore
+
+* better handle event listening in adapters by creating AdapterListener abstraction ([7f0cac6](https://github.com/JamesLMilner/terra-draw/commit/7f0cac6cc28c33387e049ef4cf3bd7f05c4a57a2))
+* readd precommit git add command ([bc57234](https://github.com/JamesLMilner/terra-draw/commit/bc57234cb7ceca1ee8c9aa8592e87ce0c389e70c))
+* update docs ([d0c9454](https://github.com/JamesLMilner/terra-draw/commit/d0c94547eb7cd9fc4379c40ef827b9f15df577a5))
+
 ### [0.0.1-alpha.14](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.13...v0.0.1-alpha.14) (2023-01-08)
 
 

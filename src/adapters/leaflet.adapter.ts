@@ -9,6 +9,7 @@ import {
 import L from "leaflet";
 import { limitPrecision } from "../geometry/limit-decimal-precision";
 import { GeoJSONStoreFeatures } from "../store/store";
+import { AdapterListener } from "./common/adapter-listener";
 
 export class TerraDrawLeafletAdapter implements TerraDrawAdapter {
     constructor(config: {
@@ -55,22 +56,272 @@ export class TerraDrawLeafletAdapter implements TerraDrawAdapter {
                 this._map.doubleClickZoom.disable();
             }
         };
+
+
+        this.listeners = [
+            new AdapterListener({
+                name: 'click',
+                callback: (event: L.LeafletMouseEvent) => {
+                    if (!this.currentModeCallbacks) return
+
+                    if (this.dragState === "not-dragging" || this.dragState === "pre-dragging") {
+                        this.currentModeCallbacks.onClick({
+                            lng: limitPrecision(event.latlng.lng, this._coordinatePrecision),
+                            lat: limitPrecision(event.latlng.lat, this._coordinatePrecision),
+                            containerX:
+                                event.originalEvent.clientX - this.getMapContainer().offsetLeft,
+                            containerY:
+                                event.originalEvent.clientY - this.getMapContainer().offsetTop,
+                            button: event.originalEvent.button === 0 ? "left" : "right",
+                            heldKeys: [...this._heldKeys],
+                        });
+                    }
+                },
+                register: (callback) => {
+                    // We can't use 'click' here because it triggers
+                    // after drag end in Leaflet for some reason
+                    return [
+                        this._map.on("mouseup", callback),
+                        this._map.on("contextmenu", callback)
+                    ]
+
+                },
+                unregister: (listeners: any[]) => {
+                    listeners.forEach((listener) => {
+                        this._map.off("contextmenu", listener);
+                        this._map.off("click", listener);
+                    })
+
+                }
+            }),
+            new AdapterListener({
+                name: 'mousemove',
+                callback: (event: L.LeafletMouseEvent) => {
+                    event.originalEvent.preventDefault();
+
+                    if (!this.currentModeCallbacks) {
+                        return
+                    }
+
+                    this.currentModeCallbacks.onMouseMove({
+                        lng: limitPrecision(event.latlng.lng, this._coordinatePrecision),
+                        lat: limitPrecision(event.latlng.lat, this._coordinatePrecision),
+                        containerX:
+                            event.originalEvent.clientX - this.getMapContainer().offsetLeft,
+                        containerY:
+                            event.originalEvent.clientY - this.getMapContainer().offsetTop,
+                        button: event.originalEvent.button === 0 ? "left" : "right",
+                        heldKeys: [...this._heldKeys],
+                    });
+                },
+                register: (callback) => {
+                    return [this._map.on("mousemove", callback)]
+                },
+                unregister: (listeners: any[]) => {
+                    listeners.forEach((listener) => {
+                        this._map.off("mousemove", listener);
+                    })
+                }
+            }),
+            new AdapterListener({
+                name: 'pointerdown',
+                callback: (event) => {
+                    this.dragState = "pre-dragging";
+                },
+                register: (callback) => {
+                    return [this.getMapContainer().addEventListener("pointerdown", callback)]
+                },
+                unregister: (listeners: any[]) => {
+                    listeners.forEach((listener) => {
+                        this.getMapContainer().removeEventListener("pointerdown", listener);
+                    })
+                }
+            }),
+            new AdapterListener({
+                name: 'pointermove',
+                callback: (event) => {
+
+                    if (!this.currentModeCallbacks) return;
+
+                    const container = this.getMapContainer();
+
+                    const point = {
+                        x: event.clientX - container.offsetLeft,
+                        y: event.clientY - container.offsetTop,
+                    } as L.Point;
+
+                    const { lng, lat } = this._map.containerPointToLatLng(point);
+
+                    const drawEvent: TerraDrawMouseEvent = {
+                        lng: limitPrecision(lng, this._coordinatePrecision),
+                        lat: limitPrecision(lat, this._coordinatePrecision),
+                        containerX: event.clientX - container.offsetLeft,
+                        containerY: event.clientY - container.offsetTop,
+                        button: event.button === 0 ? "left" : "right",
+                        heldKeys: [...this._heldKeys],
+                    };
+
+                    if (this.dragState === "pre-dragging") {
+                        this.dragState = "dragging";
+
+                        this.currentModeCallbacks.onDragStart(drawEvent, (enabled) => {
+                            if (enabled) {
+                                this._map.dragging.enable();
+                            } else {
+                                this._map.dragging.disable();
+                            }
+                        });
+                    } else if (this.dragState === "dragging") {
+                        this.currentModeCallbacks.onDrag(drawEvent);
+                    }
+                },
+                register: (callback) => {
+                    const container = this.getMapContainer();
+
+                    return [container.addEventListener("pointermove", callback)]
+                },
+                unregister: (listeners: any[]) => {
+                    listeners.forEach((listener) => {
+                        const container = this.getMapContainer();
+                        container.removeEventListener("pointermove", listener);
+                    })
+
+                },
+            }),
+            new AdapterListener({
+                name: 'pointerup',
+                callback: (event) => {
+
+                    if (!this.currentModeCallbacks) return;
+
+                    event.preventDefault();
+
+                    const container = this.getMapContainer()
+
+                    if (this.dragState === "dragging") {
+                        const point = {
+                            x: event.clientX - container.offsetLeft,
+                            y: event.clientY - container.offsetTop,
+                        } as L.Point;
+
+                        const { lng, lat } = this._map.containerPointToLatLng(point);
+
+                        this.currentModeCallbacks.onDragEnd(
+                            {
+                                lng: limitPrecision(lng, this._coordinatePrecision),
+                                lat: limitPrecision(lat, this._coordinatePrecision),
+                                containerX: event.clientX - container.offsetLeft,
+                                containerY: event.clientY - container.offsetTop,
+                                button: event.button === 0 ? "left" : "right",
+                                heldKeys: [...this._heldKeys],
+                            },
+                            (enabled) => {
+                                if (enabled) {
+                                    this._map.dragging.enable();
+                                } else {
+                                    this._map.dragging.disable();
+                                }
+                            }
+                        );
+
+                        // We want to avoid triggering an click
+                        // event after dragging
+                        this.dragState = "after-dragging";
+                        this._map.dragging.enable();
+                        return;
+                    }
+
+                    this.dragState = "not-dragging";
+                    this._map.dragging.enable();
+                },
+                register: (callback) => {
+                    const container = this.getMapContainer()
+                    return [container.addEventListener("pointerup", callback)]
+                },
+                unregister: (listeners: any[]) => {
+                    const container = this.getMapContainer()
+
+                    listeners.forEach((listener) => {
+                        container.removeEventListener("pointerup", listener)
+                    })
+                }
+            }),
+            new AdapterListener({
+                name: 'keyup',
+                callback: (event: KeyboardEvent) => {
+                    // map has no keypress event, so we add one to the canvas itself
+
+                    if (!this.currentModeCallbacks) return;
+
+                    event.preventDefault();
+
+                    this._heldKeys.delete(event.key);
+
+                    this.currentModeCallbacks.onKeyUp({
+                        key: event.key,
+                    });
+
+                },
+                register: (callback) => {
+                    const container = this.getMapContainer()
+                    return [container.addEventListener("keyup", callback)]
+                },
+                unregister: (listeners: any[]) => {
+                    const container = this.getMapContainer()
+
+                    listeners.forEach((listener) => {
+                        container.removeEventListener("keyup", listener)
+                    })
+                }
+            }),
+            new AdapterListener({
+                name: 'keydown',
+                callback: (event: KeyboardEvent) => {
+
+                    if (!this.currentModeCallbacks) {
+                        return;
+                    }
+
+                    event.preventDefault();
+
+                    this._heldKeys.add(event.key);
+
+                    this.currentModeCallbacks.onKeyDown({
+                        key: event.key,
+                    });
+
+                },
+                register: (callback) => {
+                    const container = this.getMapContainer()
+
+                    return [container.addEventListener("keydown", callback)];
+
+                },
+                unregister: (listeners: any[]) => {
+                    const container = this.getMapContainer()
+
+                    listeners.forEach((listener) => {
+                        container.removeEventListener("keydown", listener)
+                    })
+                }
+            })
+        ]
     }
+
+    private listeners: AdapterListener[] = []
 
     private _heldKeys: Set<string> = new Set();
     private _lib: typeof L;
     private _coordinatePrecision: number;
     private _map: L.Map;
-    private _onMouseMoveListener: ((ev: any) => void) | undefined;
-    private _onClickListener: ((ev: any) => void) | undefined;
-    private _onKeyUpListener: ((ev: any) => void) | undefined;
-    private _onKeyDownListener: ((ev: any) => void) | undefined;
-
-    private _onDragStartListener: ((event: MouseEvent) => void) | undefined;
-    private _onDragListener: ((event: MouseEvent) => void) | undefined;
-    private _onDragEndListener: ((event: MouseEvent) => void) | undefined;
     private _layer: L.Layer | undefined;
     private _panes: Record<string, HTMLStyleElement | undefined> = {};
+    private dragState:
+        | "not-dragging"
+        | "pre-dragging"
+        | "dragging"
+        | "after-dragging" = "not-dragging";
+    private currentModeCallbacks: TerraDrawCallbacks | undefined;
 
     public setDoubleClickToZoom: TerraDrawModeRegisterConfig["setDoubleClickToZoom"];
     public project: TerraDrawModeRegisterConfig["project"];
@@ -89,166 +340,17 @@ export class TerraDrawLeafletAdapter implements TerraDrawAdapter {
     }
 
     register(callbacks: TerraDrawCallbacks) {
+        this.currentModeCallbacks = callbacks
 
-        const container = this.getMapContainer();
-
-        let dragState:
-            | "not-dragging"
-            | "pre-dragging"
-            | "dragging"
-            | "after-dragging" = "not-dragging";
-
-        this._onClickListener = (event: L.LeafletMouseEvent) => {
-            if (dragState === "not-dragging" || dragState === "pre-dragging") {
-                callbacks.onClick({
-                    lng: limitPrecision(event.latlng.lng, this._coordinatePrecision),
-                    lat: limitPrecision(event.latlng.lat, this._coordinatePrecision),
-                    containerX:
-                        event.originalEvent.clientX - this.getMapContainer().offsetLeft,
-                    containerY:
-                        event.originalEvent.clientY - this.getMapContainer().offsetTop,
-                    button: event.originalEvent.button === 0 ? "left" : "right",
-                    heldKeys: [...this._heldKeys],
-                });
-            }
-        };
-
-        // We can't use 'click' here because it triggers
-        // after drag end in Leaflet for some reason
-        this._map.on("mouseup", this._onClickListener);
-        this._map.on("contextmenu", this._onClickListener);
-
-        this._onMouseMoveListener = (event: L.LeafletMouseEvent) => {
-            event.originalEvent.preventDefault();
-
-            callbacks.onMouseMove({
-                lng: limitPrecision(event.latlng.lng, this._coordinatePrecision),
-                lat: limitPrecision(event.latlng.lat, this._coordinatePrecision),
-                containerX:
-                    event.originalEvent.clientX - this.getMapContainer().offsetLeft,
-                containerY:
-                    event.originalEvent.clientY - this.getMapContainer().offsetTop,
-                button: event.originalEvent.button === 0 ? "left" : "right",
-                heldKeys: [...this._heldKeys],
-            });
-        };
-        this._map.on("mousemove", this._onMouseMoveListener);
-
-        this._onDragStartListener = (event) => {
-            dragState = "pre-dragging";
-        };
-        container.addEventListener("pointerdown", this._onDragStartListener);
-
-        this._onDragListener = (event) => {
-            const point = {
-                x: event.clientX - container.offsetLeft,
-                y: event.clientY - container.offsetTop,
-            } as L.Point;
-
-            const { lng, lat } = this._map.containerPointToLatLng(point);
-
-            const drawEvent: TerraDrawMouseEvent = {
-                lng: limitPrecision(lng, this._coordinatePrecision),
-                lat: limitPrecision(lat, this._coordinatePrecision),
-                containerX: event.clientX - container.offsetLeft,
-                containerY: event.clientY - container.offsetTop,
-                button: event.button === 0 ? "left" : "right",
-                heldKeys: [...this._heldKeys],
-            };
-
-            if (dragState === "pre-dragging") {
-                dragState = "dragging";
-
-                callbacks.onDragStart(drawEvent, (enabled) => {
-                    if (enabled) {
-                        this._map.dragging.enable();
-                    } else {
-                        this._map.dragging.disable();
-                    }
-                });
-            } else if (dragState === "dragging") {
-                callbacks.onDrag(drawEvent);
-            }
-        };
-
-        container.addEventListener("pointermove", this._onDragListener);
-
-        this._onDragEndListener = (event) => {
-            event.preventDefault();
-
-            if (dragState === "dragging") {
-                const point = {
-                    x: event.clientX - container.offsetLeft,
-                    y: event.clientY - container.offsetTop,
-                } as L.Point;
-
-                const { lng, lat } = this._map.containerPointToLatLng(point);
-
-                callbacks.onDragEnd(
-                    {
-                        lng: limitPrecision(lng, this._coordinatePrecision),
-                        lat: limitPrecision(lat, this._coordinatePrecision),
-                        containerX: event.clientX - container.offsetLeft,
-                        containerY: event.clientY - container.offsetTop,
-                        button: event.button === 0 ? "left" : "right",
-                        heldKeys: [...this._heldKeys],
-                    },
-                    (enabled) => {
-                        if (enabled) {
-                            this._map.dragging.enable();
-                        } else {
-                            this._map.dragging.disable();
-                        }
-                    }
-                );
-
-                // We want to avoid triggering an click
-                // event after dragging
-                dragState = "after-dragging";
-                this._map.dragging.enable();
-                return;
-            }
-
-            dragState = "not-dragging";
-            this._map.dragging.enable();
-        };
-
-        container.addEventListener("pointerup", this._onDragEndListener);
-
-        // map has no keypress event, so we add one to the canvas itself
-        this._onKeyUpListener = (event: KeyboardEvent) => {
-            event.preventDefault();
-
-            this._heldKeys.delete(event.key);
-
-            callbacks.onKeyUp({
-                key: event.key,
-            });
-        };
-        container.addEventListener("keyup", this._onKeyUpListener);
-
-        this._onKeyDownListener = (event: KeyboardEvent) => {
-            event.preventDefault();
-
-            this._heldKeys.add(event.key);
-
-            callbacks.onKeyDown({
-                key: event.key,
-            });
-        };
-        container.addEventListener("keydown", this._onKeyDownListener);
+        this.listeners.forEach((listener) => {
+            listener.register()
+        })
     }
 
     unregister() {
-        if (this._onClickListener) {
-            this._map.off("contextmenu", this._onClickListener);
-            this._map.off("click", this._onClickListener);
-            this._onClickListener = undefined;
-        }
-        if (this._onMouseMoveListener) {
-            this._map.off("click", this._onClickListener);
-            this._onClickListener = undefined;
-        }
+        this.listeners.forEach((listener) => {
+            listener.unregister()
+        })
 
         Object.keys(this._panes).forEach((pane) => {
             const selectedPane = this._map.getPane(pane);

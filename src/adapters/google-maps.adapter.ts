@@ -10,6 +10,7 @@ import { GeoJsonObject } from "geojson";
 
 import { limitPrecision } from "../geometry/limit-decimal-precision";
 import { GeoJSONStoreFeatures } from "../store/store";
+import { AdapterListener } from "./common/adapter-listener";
 
 export class TerraDrawGoogleMapsAdapter implements TerraDrawAdapter {
     constructor(config: {
@@ -140,6 +141,204 @@ export class TerraDrawGoogleMapsAdapter implements TerraDrawAdapter {
                 this._map.setOptions({ disableDoubleClickZoom: true });
             }
         };
+
+        this.listeners = [
+            new AdapterListener({
+                name: 'click',
+                callback: (
+                    event: google.maps.MapMouseEvent & {
+                        domEvent: MouseEvent;
+                    }
+                ) => {
+                    if (!this.currentModeCallbacks || !event.latLng) {
+                        return;
+                    }
+                    this.currentModeCallbacks.onClick({
+                        lng: limitPrecision(event.latLng.lng(), this._coordinatePrecision),
+                        lat: limitPrecision(event.latLng.lat(), this._coordinatePrecision),
+                        containerX: event.domEvent.clientX - this.getMapContainer().offsetLeft,
+                        containerY: event.domEvent.clientY - this.getMapContainer().offsetTop,
+                        button: event.domEvent.button === 0 ? "left" : "right",
+                        heldKeys: [...this._heldKeys],
+                    });
+                },
+                register: (callback: any) => {
+                    return [this._map.addListener(
+                        "click",
+                        callback
+                    ), this._map.addListener(
+                        "rightclick",
+                        callback
+                    )]
+                },
+                unregister: (listeners: any[]) => {
+                    listeners.forEach((listener) => {
+                        listener.remove();
+                    })
+                }
+            }),
+            new AdapterListener({
+                name: 'mousemove',
+                callback: (
+                    event: google.maps.MapMouseEvent & {
+                        domEvent: MouseEvent;
+                    }
+                ) => {
+                    if (!this.currentModeCallbacks || !event.latLng) return;
+
+                    this.currentModeCallbacks.onMouseMove({
+                        lng: limitPrecision(event.latLng.lng(), this._coordinatePrecision),
+                        lat: limitPrecision(event.latLng.lat(), this._coordinatePrecision),
+                        containerX: event.domEvent.clientX - this.getMapContainer().offsetLeft,
+                        containerY: event.domEvent.clientY - this.getMapContainer().offsetTop,
+                        button: event.domEvent.button === 0 ? "left" : "right",
+                        heldKeys: [...this._heldKeys],
+                    });
+                },
+                register: (callback: any) => {
+                    return [this._map.addListener(
+                        "mousemove",
+                        callback
+                    )]
+                },
+                unregister: (listener: any) => {
+                    listener.remove();
+                }
+            }),
+            new AdapterListener({
+                name: 'keyup',
+                callback: (event: KeyboardEvent) => {
+                    if (!this.currentModeCallbacks) return;
+
+                    this.currentModeCallbacks.onKeyUp({
+                        key: event.key,
+                    });
+                },
+                register: (callback: any) => {
+                    return [this.getMapContainer().addEventListener("keyup", callback)]
+                },
+                unregister: (listeners: any[]) => {
+                    listeners.forEach((listener) => {
+                        this.getMapContainer().removeEventListener(
+                            "keyup",
+                            listener
+                        );
+                    })
+
+                }
+            }),
+            new AdapterListener({
+                name: 'mousedown',
+                callback: (_: any) => {
+                    this.dragState = "pre-dragging";
+                },
+                register: (callback: any) => {
+                    const container = this.getMapContainer();
+                    return [container.addEventListener("mousedown", callback)]
+                },
+                unregister: (listeners: any[]) => {
+                    listeners.forEach((listener) => {
+                        this.getMapContainer().removeEventListener(
+                            "mousedown",
+                            listener
+                        );
+                    })
+                }
+            }),
+            new AdapterListener({
+                name: 'mousemove',
+                callback: (event: any) => {
+                    if (!this.currentModeCallbacks) return;
+
+                    const container = this.getMapContainer();
+
+                    const point = {
+                        x: event.clientX - container.offsetLeft,
+                        y: event.clientY - container.offsetTop,
+                    } as L.Point;
+
+                    const { lng, lat } = this.unproject(point.x, point.y);
+
+                    const drawEvent: TerraDrawMouseEvent = {
+                        lng: limitPrecision(lng, this._coordinatePrecision),
+                        lat: limitPrecision(lat, this._coordinatePrecision),
+                        containerX: event.clientX - container.offsetLeft,
+                        containerY: event.clientY - container.offsetTop,
+                        button: event.button === 0 ? "left" : "right",
+                        heldKeys: [...this._heldKeys],
+                    };
+
+                    if (this.dragState === "pre-dragging") {
+                        this.dragState = "dragging";
+                        this.currentModeCallbacks.onDragStart(drawEvent, (enabled) => {
+                            this._map.setOptions({ draggable: false });
+                        });
+                    } else if (this.dragState === "dragging") {
+                        this.currentModeCallbacks.onDrag(drawEvent);
+                    }
+
+                },
+                register: (callback: any) => {
+                    const container = this.getMapContainer();
+                    return [container.addEventListener("mousemove", callback)]
+                },
+                unregister: (listeners: any[]) => {
+                    listeners.forEach((listener) => {
+                        this.getMapContainer().removeEventListener(
+                            "mousemove",
+                            listener
+                        );
+                    })
+                }
+            }),
+            new AdapterListener({
+                name: 'mouseup',
+                callback: (event: any) => {
+                    if (!this.currentModeCallbacks) return;
+
+                    const container = this.getMapContainer();
+
+                    if (this.dragState === "dragging") {
+                        const point = {
+                            x: event.clientX - container.offsetLeft,
+                            y: event.clientY - container.offsetTop,
+                        } as L.Point;
+
+                        const { lng, lat } = this.unproject(point.x, point.y);
+
+                        this.currentModeCallbacks.onDragEnd(
+                            {
+                                lng: limitPrecision(lng, this._coordinatePrecision),
+                                lat: limitPrecision(lat, this._coordinatePrecision),
+                                containerX: event.clientX - container.offsetLeft,
+                                containerY: event.clientY - container.offsetTop,
+                                button: event.button === 0 ? "left" : "right",
+                                heldKeys: [...this._heldKeys],
+                            },
+                            (enabled) => {
+                                this._map.setOptions({ draggable: enabled });
+                            }
+                        );
+                    }
+
+                    this.dragState = "not-dragging";
+
+                },
+                register: (callback: any,) => {
+                    const container = this.getMapContainer();
+
+                    return [container.addEventListener("mouseup", callback)]
+                },
+                unregister: (listeners: any[]) => {
+                    listeners.forEach((listener) => {
+                        this.getMapContainer().removeEventListener(
+                            "mouseup",
+                            listener
+                        );
+                    })
+                }
+            })
+        ]
     }
 
     private _heldKeys: Set<string> = new Set();
@@ -148,27 +347,6 @@ export class TerraDrawGoogleMapsAdapter implements TerraDrawAdapter {
     private _coordinatePrecision: number;
     private _lib: typeof google.maps;
     private _map: google.maps.Map;
-    private _onMouseMoveListener: google.maps.MapsEventListener | undefined;
-    private _onMouseMoveCallback:
-        | ((
-            event: google.maps.MapMouseEvent & {
-                domEvent: MouseEvent;
-            }
-        ) => void)
-        | undefined;
-    private _onClickListener: google.maps.MapsEventListener | undefined;
-    private _onRightClickListener: google.maps.MapsEventListener | undefined;
-    private _onClickCallback:
-        | ((
-            event: google.maps.MapMouseEvent & {
-                domEvent: MouseEvent;
-            }
-        ) => void)
-        | undefined;
-    private _onKeyUpListener: any;
-    private _onDragStartListener: ((event: MouseEvent) => void) | undefined;
-    private _onDragListener: ((event: MouseEvent) => void) | undefined;
-    private _onDragEndListener: ((event: MouseEvent) => void) | undefined;
     private _layers = false;
 
     public getMapContainer: () => HTMLElement;
@@ -203,158 +381,22 @@ export class TerraDrawGoogleMapsAdapter implements TerraDrawAdapter {
         );
     }
 
+    private currentModeCallbacks: TerraDrawCallbacks | undefined;
+    private listeners: AdapterListener[] = []
+
+    private dragState: "not-dragging" | "pre-dragging" | "dragging" = "not-dragging";
+
     register(callbacks: TerraDrawCallbacks) {
-        this._onClickCallback = (
-            event: google.maps.MapMouseEvent & {
-                domEvent: MouseEvent;
-            }
-        ) => {
-            if (!event.latLng) {
-                return;
-            }
-            callbacks.onClick({
-                lng: limitPrecision(event.latLng.lng(), this._coordinatePrecision),
-                lat: limitPrecision(event.latLng.lat(), this._coordinatePrecision),
-                containerX: event.domEvent.clientX - this.getMapContainer().offsetLeft,
-                containerY: event.domEvent.clientY - this.getMapContainer().offsetTop,
-                button: event.domEvent.button === 0 ? "left" : "right",
-                heldKeys: [...this._heldKeys],
-            });
-        };
-        this._onClickListener = this._map.addListener(
-            "click",
-            this._onClickCallback
-        );
-
-        this._onRightClickListener = this._map.addListener(
-            "rightclick",
-            this._onClickCallback
-        );
-
-        this._onMouseMoveCallback = (
-            event: google.maps.MapMouseEvent & {
-                domEvent: MouseEvent;
-            }
-        ) => {
-            if (!event.latLng) {
-                return;
-            }
-            callbacks.onMouseMove({
-                lng: limitPrecision(event.latLng.lng(), this._coordinatePrecision),
-                lat: limitPrecision(event.latLng.lat(), this._coordinatePrecision),
-                containerX: event.domEvent.clientX - this.getMapContainer().offsetLeft,
-                containerY: event.domEvent.clientY - this.getMapContainer().offsetTop,
-                button: event.domEvent.button === 0 ? "left" : "right",
-                heldKeys: [...this._heldKeys],
-            });
-        };
-        this._onMouseMoveListener = this._map.addListener(
-            "mousemove",
-            this._onMouseMoveCallback
-        );
-
-        this._onKeyUpListener = (event: KeyboardEvent) => {
-            callbacks.onKeyUp({
-                key: event.key,
-            });
-        };
-
-        this.getMapContainer().addEventListener("keyup", this._onKeyUpListener);
-
-        let dragState: "not-dragging" | "pre-dragging" | "dragging" =
-            "not-dragging";
-
-        this._onDragStartListener = (event) => {
-            dragState = "pre-dragging";
-        };
-
-        const container = this.getMapContainer();
-
-        container.addEventListener("mousedown", this._onDragStartListener);
-
-        this._onDragListener = (event) => {
-            const point = {
-                x: event.clientX - container.offsetLeft,
-                y: event.clientY - container.offsetTop,
-            } as L.Point;
-
-            const { lng, lat } = this.unproject(point.x, point.y);
-
-            const drawEvent: TerraDrawMouseEvent = {
-                lng: limitPrecision(lng, this._coordinatePrecision),
-                lat: limitPrecision(lat, this._coordinatePrecision),
-                containerX: event.clientX - container.offsetLeft,
-                containerY: event.clientY - container.offsetTop,
-                button: event.button === 0 ? "left" : "right",
-                heldKeys: [...this._heldKeys],
-            };
-
-            if (dragState === "pre-dragging") {
-                dragState = "dragging";
-                callbacks.onDragStart(drawEvent, (enabled) => {
-                    this._map.setOptions({ draggable: false });
-                });
-            } else if (dragState === "dragging") {
-                callbacks.onDrag(drawEvent);
-            }
-        };
-
-        container.addEventListener("mousemove", this._onDragListener);
-
-        this._onDragEndListener = (event) => {
-            if (dragState === "dragging") {
-                const point = {
-                    x: event.clientX - container.offsetLeft,
-                    y: event.clientY - container.offsetTop,
-                } as L.Point;
-
-                const { lng, lat } = this.unproject(point.x, point.y);
-
-                callbacks.onDragEnd(
-                    {
-                        lng: limitPrecision(lng, this._coordinatePrecision),
-                        lat: limitPrecision(lat, this._coordinatePrecision),
-                        containerX: event.clientX - container.offsetLeft,
-                        containerY: event.clientY - container.offsetTop,
-                        button: event.button === 0 ? "left" : "right",
-                        heldKeys: [...this._heldKeys],
-                    },
-                    (enabled) => {
-                        this._map.setOptions({ draggable: enabled });
-                    }
-                );
-            }
-
-            dragState = "not-dragging";
-        };
-
-        container.addEventListener("mouseup", this._onDragEndListener);
+        this.currentModeCallbacks = callbacks;
+        this.listeners.forEach((listener) => {
+            listener.register()
+        })
     }
 
     unregister() {
-        if (this._onClickListener) {
-            this._onClickCallback = undefined;
-            this._onClickListener.remove();
-            this._onClickListener = undefined;
-        }
-        if (this._onRightClickListener) {
-            this._onClickCallback = undefined;
-            this._onRightClickListener.remove();
-            this._onRightClickListener = undefined;
-        }
-        if (this._onMouseMoveListener) {
-            this._onMouseMoveCallback = undefined;
-            this._onMouseMoveListener.remove();
-            this._onMouseMoveListener = undefined;
-        }
-
-        if (this._onKeyUpListener) {
-            this.getMapContainer().removeEventListener(
-                "keyup",
-                this._onKeyUpListener
-            );
-            this._onKeyUpListener = undefined;
-        }
+        this.listeners.forEach((listener) => {
+            listener.unregister()
+        })
     }
 
     render(
@@ -394,57 +436,57 @@ export class TerraDrawGoogleMapsAdapter implements TerraDrawAdapter {
                 });
 
                 switch (updatedFeature.geometry.type) {
-                case "Point":
-                    {
-                        const coordinates = updatedFeature.geometry.coordinates;
+                    case "Point":
+                        {
+                            const coordinates = updatedFeature.geometry.coordinates;
 
-                        featureToUpdate.setGeometry(
-                            new google.maps.Data.Point(
-                                new google.maps.LatLng(coordinates[1], coordinates[0])
-                            )
-                        );
-                    }
-                    break;
-                case "LineString":
-                    {
-                        const coordinates = updatedFeature.geometry.coordinates;
-
-                        const path = [];
-                        for (let i = 0; i < coordinates.length; i++) {
-                            const coordinate = coordinates[i];
-                            const latLng = new google.maps.LatLng(
-                                coordinate[1],
-                                coordinate[0]
+                            featureToUpdate.setGeometry(
+                                new google.maps.Data.Point(
+                                    new google.maps.LatLng(coordinates[1], coordinates[0])
+                                )
                             );
-                            path.push(latLng);
                         }
+                        break;
+                    case "LineString":
+                        {
+                            const coordinates = updatedFeature.geometry.coordinates;
 
-                        featureToUpdate.setGeometry(
-                            new google.maps.Data.LineString(path)
-                        );
-                    }
-                    break;
-                case "Polygon":
-                    {
-                        const coordinates = updatedFeature.geometry.coordinates;
-
-                        const paths = [];
-                        for (let i = 0; i < coordinates.length; i++) {
                             const path = [];
-                            for (let j = 0; j < coordinates[i].length; j++) {
+                            for (let i = 0; i < coordinates.length; i++) {
+                                const coordinate = coordinates[i];
                                 const latLng = new google.maps.LatLng(
-                                    coordinates[i][j][1],
-                                    coordinates[i][j][0]
+                                    coordinate[1],
+                                    coordinate[0]
                                 );
                                 path.push(latLng);
                             }
-                            paths.push(path);
+
+                            featureToUpdate.setGeometry(
+                                new google.maps.Data.LineString(path)
+                            );
+                        }
+                        break;
+                    case "Polygon":
+                        {
+                            const coordinates = updatedFeature.geometry.coordinates;
+
+                            const paths = [];
+                            for (let i = 0; i < coordinates.length; i++) {
+                                const path = [];
+                                for (let j = 0; j < coordinates[i].length; j++) {
+                                    const latLng = new google.maps.LatLng(
+                                        coordinates[i][j][1],
+                                        coordinates[i][j][0]
+                                    );
+                                    path.push(latLng);
+                                }
+                                paths.push(path);
+                            }
+
+                            featureToUpdate.setGeometry(new google.maps.Data.Polygon(paths));
                         }
 
-                        featureToUpdate.setGeometry(new google.maps.Data.Polygon(paths));
-                    }
-
-                    break;
+                        break;
                 }
             });
 
@@ -463,7 +505,10 @@ export class TerraDrawGoogleMapsAdapter implements TerraDrawAdapter {
                         domEvent: MouseEvent;
                     }
                 ) => {
-                    this._onClickCallback && this._onClickCallback(event);
+                    const clickListener = this.listeners.find(({ name }) => name === 'click');
+                    if (clickListener) {
+                        clickListener.callback(event);
+                    }
                 }
             );
 
@@ -474,7 +519,10 @@ export class TerraDrawGoogleMapsAdapter implements TerraDrawAdapter {
                         domEvent: MouseEvent;
                     }
                 ) => {
-                    this._onMouseMoveCallback && this._onMouseMoveCallback(event);
+                    const mouseMoveListener = this.listeners.find(({ name }) => name === 'mousemove');
+                    if (mouseMoveListener) {
+                        mouseMoveListener.callback(event);
+                    }
                 }
             );
         }
@@ -510,39 +558,39 @@ export class TerraDrawGoogleMapsAdapter implements TerraDrawAdapter {
 
 
             switch (type) {
-            case "Point":
+                case "Point":
 
-                const path = this.circlePath(
-                    0,
-                    0,
-                    calculatedStyles.pointWidth
-                );
+                    const path = this.circlePath(
+                        0,
+                        0,
+                        calculatedStyles.pointWidth
+                    );
 
-                return {
-                    clickable: false,
-                    icon: {
-                        path,
-                        fillColor: calculatedStyles.pointColor,
-                        fillOpacity: 1,
-                        strokeColor: calculatedStyles.pointOutlineColor,
-                        strokeWeight: calculatedStyles.pointOutlineWidth,
-                        rotation: 0,
-                        scale: 1,
-                    },
-                };
+                    return {
+                        clickable: false,
+                        icon: {
+                            path,
+                            fillColor: calculatedStyles.pointColor,
+                            fillOpacity: 1,
+                            strokeColor: calculatedStyles.pointOutlineColor,
+                            strokeWeight: calculatedStyles.pointOutlineWidth,
+                            rotation: 0,
+                            scale: 1,
+                        },
+                    };
 
-            case "LineString":
-                return {
-                    strokeColor: calculatedStyles.lineStringColor,
-                    strokeWeight: calculatedStyles.lineStringWidth,
-                };
-            case "Polygon":
-                return {
-                    strokeColor: calculatedStyles.polygonOutlineColor,
-                    strokeWeight: calculatedStyles.polygonOutlineWidth,
-                    fillOpacity: calculatedStyles.polygonFillOpacity,
-                    fillColor: calculatedStyles.polygonFillColor,
-                };
+                case "LineString":
+                    return {
+                        strokeColor: calculatedStyles.lineStringColor,
+                        strokeWeight: calculatedStyles.lineStringWidth,
+                    };
+                case "Polygon":
+                    return {
+                        strokeColor: calculatedStyles.polygonOutlineColor,
+                        strokeWeight: calculatedStyles.polygonOutlineWidth,
+                        fillOpacity: calculatedStyles.polygonFillOpacity,
+                        fillColor: calculatedStyles.polygonFillColor,
+                    };
             }
 
             throw Error("Unknown feature type");

@@ -8,11 +8,12 @@ import {
 import { Map } from "maplibre-gl";
 import { GeoJSONStoreFeatures } from "../store/store";
 import { TerraDrawMapboxGLAdapter } from "./mapbox-gl.adapter";
+import { AdapterListener } from "./common/adapter-listener";
 
 export class TerraDrawMapLibreGLAdapter implements TerraDrawAdapter {
     private mapboxglAdapter: TerraDrawMapboxGLAdapter;
 
-    constructor(config: { map: Map; coordinatePrecision: number }) {
+    constructor(config: { map: Map; coordinatePrecision?: number }) {
 
         // At the moment the APIs of MapboxGL and MapLibre are so compatible that 
         // there is not need to bother completely reimplementing the internals of the adapter.

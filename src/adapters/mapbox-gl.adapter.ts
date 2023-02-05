@@ -15,9 +15,10 @@ import mapboxgl, {
     PointLike,
 } from "mapbox-gl";
 import { GeoJSONStoreFeatures, GeoJSONStoreGeometries } from "../store/store";
+import { AdapterListener } from "./common/adapter-listener";
 
 export class TerraDrawMapboxGLAdapter implements TerraDrawAdapter {
-    constructor(config: { map: mapboxgl.Map; coordinatePrecision: number }) {
+    constructor(config: { map: mapboxgl.Map; coordinatePrecision?: number }) {
         this._map = config.map;
         this._coordinatePrecision =
             typeof config.coordinatePrecision === "number"
@@ -49,7 +50,239 @@ export class TerraDrawMapboxGLAdapter implements TerraDrawAdapter {
                 this._map.doubleClickZoom.disable();
             }
         };
+
+        this._listeners = [
+            new AdapterListener({
+                name: 'click',
+                callback: (event) => {
+                    if (!this._currentModeCallbacks) return
+
+                    this._currentModeCallbacks.onClick({
+                        lng: limitPrecision(event.lngLat.lng, this._coordinatePrecision),
+                        lat: limitPrecision(event.lngLat.lat, this._coordinatePrecision),
+                        containerX:
+                            event.originalEvent.clientX - this.getMapContainer().offsetLeft,
+                        containerY:
+                            event.originalEvent.clientY - this.getMapContainer().offsetTop,
+                        button: event.originalEvent.button === 0 ? "left" : "right",
+                        heldKeys: [...this._heldKeys],
+                    });
+
+                },
+                register: (callback) => {
+                    return [
+                        this._map.on("click", callback),
+                        this._map.on("contextmenu", callback)
+                    ]
+                },
+                unregister: (listeners: any[]) => {
+                    listeners.forEach((listener) => {
+                        this._map.off("contextmenu", listener);
+                        this._map.off("click", listener);
+                    })
+                }
+            }),
+            new AdapterListener({
+                name: 'mousemove',
+                callback: (event) => {
+                    if (!this._currentModeCallbacks) return
+
+                    this._currentModeCallbacks.onMouseMove({
+                        lng: limitPrecision(event.lngLat.lng, this._coordinatePrecision),
+                        lat: limitPrecision(event.lngLat.lat, this._coordinatePrecision),
+                        containerX:
+                            event.originalEvent.clientX - this.getMapContainer().offsetLeft,
+                        containerY:
+                            event.originalEvent.clientY - this.getMapContainer().offsetTop,
+                        button: event.originalEvent.button === 0 ? "left" : "right",
+                        heldKeys: [...this._heldKeys],
+                    });
+                },
+                register: (callback) => {
+                    return [
+                        this._map.on("mousemove", callback)
+                    ]
+                },
+                unregister: (listeners: any[]) => {
+                    listeners.forEach((listener) => {
+                        this._map.off("mousemove", listener);
+                    })
+                }
+            }),
+            new AdapterListener({
+                name: 'mousedown',
+                callback: (event) => {
+                    this.dragState = "pre-dragging";
+                },
+                register: (callback) => {
+                    const container = this.getMapContainer();
+
+                    return [
+                        container.addEventListener("mousedown", callback)
+                    ]
+                },
+                unregister: (listeners: any[]) => {
+                    const container = this.getMapContainer();
+
+                    listeners.forEach((listener) => {
+                        container.removeEventListener("mousedown", listener)
+                    })
+                }
+            }),
+            new AdapterListener({
+                name: 'drag',
+                callback: (event) => {
+                    if (!this._currentModeCallbacks) return
+
+                    const container = this.getMapContainer();
+
+                    const { lng, lat } = this._map.unproject({
+                        x: event.clientX - container.offsetLeft,
+                        y: event.clientY - container.offsetTop,
+                    } as any);
+
+                    const drawEvent: TerraDrawMouseEvent = {
+                        lng: limitPrecision(lng, this._coordinatePrecision),
+                        lat: limitPrecision(lat, this._coordinatePrecision),
+                        containerX: event.clientX - container.offsetLeft,
+                        containerY: event.clientY - container.offsetTop,
+                        button: event.button === 0 ? "left" : "right",
+                        heldKeys: [...this._heldKeys],
+                    };
+
+                    if (this.dragState === "pre-dragging") {
+                        this.dragState = "dragging";
+
+                        this._currentModeCallbacks.onDragStart(drawEvent, (enabled) => {
+                            if (enabled) {
+                                this._map.dragPan.enable();
+                            } else {
+                                this._map.dragPan.disable();
+                            }
+                        });
+                    } else if (this.dragState === "dragging") {
+                        this._currentModeCallbacks.onDrag(drawEvent);
+                    }
+                },
+                register: (callback) => {
+                    const container = this.getMapContainer();
+                    return [container.addEventListener("mousemove", callback)]
+                },
+                unregister: (listeners: any[]) => {
+                    const container = this.getMapContainer();
+                    listeners.forEach((listener) => {
+                        container.addEventListener("mousemove", listener);
+                    })
+                }
+            }),
+            new AdapterListener({
+                name: 'mouseup',
+                callback: (event) => {
+
+                    if (!this._currentModeCallbacks) return;
+                    const container = this.getMapContainer();
+
+                    if (this.dragState === "dragging") {
+                        const point = {
+                            x: event.clientX - container.offsetLeft,
+                            y: event.clientY - container.offsetTop,
+                        } as mapboxgl.Point;
+
+                        const { lng, lat } = this._map.unproject(point);
+
+                        this._currentModeCallbacks.onDragEnd(
+                            {
+                                lng: limitPrecision(lng, this._coordinatePrecision),
+                                lat: limitPrecision(lat, this._coordinatePrecision),
+                                containerX: event.clientX - container.offsetLeft,
+                                containerY: event.clientY - container.offsetTop,
+                                button: event.button === 0 ? "left" : "right",
+                                heldKeys: [...this._heldKeys],
+                            },
+                            (enabled) => {
+                                if (enabled) {
+                                    this._map.dragPan.enable();
+                                } else {
+                                    this._map.dragPan.disable();
+                                }
+                            }
+                        );
+                    }
+
+                    this.dragState = "not-dragging";
+                },
+                register: (callback) => {
+                    const container = this.getMapContainer();
+
+                    return [container.addEventListener("mouseup", callback)]
+                },
+                unregister: (listeners: any[]) => {
+                    const container = this.getMapContainer();
+
+                    listeners.forEach((listener) => {
+                        container.addEventListener("mouseup", listener);
+                    })
+
+                }
+            }),
+            new AdapterListener({
+                name: 'keyup',
+                callback: (event) => {
+                    if (!this._currentModeCallbacks) return
+
+                    // map has no keypress event, so we add one to the canvas itself
+                    event.preventDefault();
+
+                    this._heldKeys.delete(event.key);
+
+                    this._currentModeCallbacks.onKeyUp({
+                        key: event.key,
+                    });
+                },
+                register: (callback) => {
+                    const container = this.getMapContainer();
+
+                    return [container.addEventListener("keyup", callback)]
+                },
+                unregister: (listeners: any[]) => {
+                    const container = this.getMapContainer();
+
+                    listeners.forEach((listener) => {
+                        container.removeEventListener("keyup", listener)
+                    })
+                }
+            }),
+            new AdapterListener({
+                name: 'keydown',
+                callback: (event: KeyboardEvent) => {
+                    if (!this._currentModeCallbacks) return;
+
+                    event.preventDefault();
+
+                    this._heldKeys.add(event.key);
+
+                    this._currentModeCallbacks.onKeyDown({
+                        key: event.key,
+                    });
+                },
+                register: (callback) => {
+                    const container = this.getMapContainer();
+
+                    return [container.addEventListener("keydown", callback)]
+                },
+                unregister: (listeners: any[]) => {
+                    const container = this.getMapContainer();
+
+                    listeners.forEach((listener) => {
+                        container.removeEventListener('keydown', listener)
+                    })
+                }
+            })
+        ]
     }
+
+    private dragState: "not-dragging" | "pre-dragging" | "dragging" =
+        "not-dragging";
 
     public setDoubleClickToZoom: TerraDrawModeRegisterConfig["setDoubleClickToZoom"];
     public unproject: TerraDrawModeRegisterConfig["unproject"];
@@ -58,20 +291,11 @@ export class TerraDrawMapboxGLAdapter implements TerraDrawAdapter {
 
     public getMapContainer: () => HTMLElement;
 
+    private _listeners: AdapterListener[] = []
+    private _currentModeCallbacks: TerraDrawCallbacks | undefined;
     private _heldKeys: Set<string> = new Set();
     private _coordinatePrecision: number;
     private _map: mapboxgl.Map;
-    private _onMouseMoveListener:
-        | ((event: mapboxgl.MapMouseEvent & mapboxgl.EventData) => void)
-        | undefined;
-    private _onClickListener:
-        | ((event: mapboxgl.MapMouseEvent & mapboxgl.EventData) => void)
-        | undefined;
-    private _onDragStartListener: ((event: MouseEvent) => void) | undefined;
-    private _onDragListener: ((event: MouseEvent) => void) | undefined;
-    private _onDragEndListener: ((event: MouseEvent) => void) | undefined;
-    private _onKeyDownListener: ((event: KeyboardEvent) => void) | undefined;
-    private _onKeyUpListener: ((event: KeyboardEvent) => any) | undefined;
     private _rendered: Record<string, boolean> = {};
 
     private _addGeoJSONSource(id: string, features: Feature[]) {
@@ -227,171 +451,19 @@ export class TerraDrawMapboxGLAdapter implements TerraDrawAdapter {
         });
         return id;
     }
+
     register(callbacks: TerraDrawCallbacks) {
-        this._onClickListener = (event) => {
-            callbacks.onClick({
-                lng: limitPrecision(event.lngLat.lng, this._coordinatePrecision),
-                lat: limitPrecision(event.lngLat.lat, this._coordinatePrecision),
-                containerX:
-                    event.originalEvent.clientX - this.getMapContainer().offsetLeft,
-                containerY:
-                    event.originalEvent.clientY - this.getMapContainer().offsetTop,
-                button: event.originalEvent.button === 0 ? "left" : "right",
-                heldKeys: [...this._heldKeys],
-            });
-        };
-        this._map.on("click", this._onClickListener);
-        this._map.on("contextmenu", this._onClickListener);
+        this._currentModeCallbacks = callbacks
 
-        this._onMouseMoveListener = (event) => {
-            callbacks.onMouseMove({
-                lng: limitPrecision(event.lngLat.lng, this._coordinatePrecision),
-                lat: limitPrecision(event.lngLat.lat, this._coordinatePrecision),
-                containerX:
-                    event.originalEvent.clientX - this.getMapContainer().offsetLeft,
-                containerY:
-                    event.originalEvent.clientY - this.getMapContainer().offsetTop,
-                button: event.originalEvent.button === 0 ? "left" : "right",
-                heldKeys: [...this._heldKeys],
-            });
-        };
-        this._map.on("mousemove", this._onMouseMoveListener);
-
-        let dragState: "not-dragging" | "pre-dragging" | "dragging" =
-            "not-dragging";
-
-        this._onDragStartListener = (event) => {
-            dragState = "pre-dragging";
-        };
-
-        const container = this.getMapContainer();
-
-        container.addEventListener("mousedown", this._onDragStartListener);
-
-        this._onDragListener = (event) => {
-            const { lng, lat } = this._map.unproject({
-                x: event.clientX - container.offsetLeft,
-                y: event.clientY - container.offsetTop,
-            } as any);
-
-            const drawEvent: TerraDrawMouseEvent = {
-                lng: limitPrecision(lng, this._coordinatePrecision),
-                lat: limitPrecision(lat, this._coordinatePrecision),
-                containerX: event.clientX - container.offsetLeft,
-                containerY: event.clientY - container.offsetTop,
-                button: event.button === 0 ? "left" : "right",
-                heldKeys: [...this._heldKeys],
-            };
-
-            if (dragState === "pre-dragging") {
-                dragState = "dragging";
-
-                callbacks.onDragStart(drawEvent, (enabled) => {
-                    if (enabled) {
-                        this._map.dragPan.enable();
-                    } else {
-                        this._map.dragPan.disable();
-                    }
-                });
-            } else if (dragState === "dragging") {
-                callbacks.onDrag(drawEvent);
-            }
-        };
-
-        container.addEventListener("mousemove", this._onDragListener);
-
-        this._onDragEndListener = (event) => {
-            if (dragState === "dragging") {
-                const point = {
-                    x: event.clientX - container.offsetLeft,
-                    y: event.clientY - container.offsetTop,
-                } as mapboxgl.Point;
-
-                const { lng, lat } = this._map.unproject(point);
-
-                callbacks.onDragEnd(
-                    {
-                        lng: limitPrecision(lng, this._coordinatePrecision),
-                        lat: limitPrecision(lat, this._coordinatePrecision),
-                        containerX: event.clientX - container.offsetLeft,
-                        containerY: event.clientY - container.offsetTop,
-                        button: event.button === 0 ? "left" : "right",
-                        heldKeys: [...this._heldKeys],
-                    },
-                    (enabled) => {
-                        if (enabled) {
-                            this._map.dragPan.enable();
-                        } else {
-                            this._map.dragPan.disable();
-                        }
-                    }
-                );
-            }
-
-            dragState = "not-dragging";
-        };
-
-        container.addEventListener("mouseup", this._onDragEndListener);
-
-        // map has no keypress event, so we add one to the canvas itself
-        this._onKeyUpListener = (event: KeyboardEvent) => {
-            event.preventDefault();
-
-            this._heldKeys.delete(event.key);
-
-            callbacks.onKeyUp({
-                key: event.key,
-            });
-        };
-        container.addEventListener("keyup", this._onKeyUpListener);
-
-        this._onKeyDownListener = (event: KeyboardEvent) => {
-            event.preventDefault();
-
-            this._heldKeys.add(event.key);
-
-            callbacks.onKeyDown({
-                key: event.key,
-            });
-        };
-        container.addEventListener("keydown", this._onKeyDownListener);
+        this._listeners.forEach((listener) => {
+            listener.register()
+        })
     }
 
     unregister() {
-        if (this._onClickListener) {
-            this._map.off("contextmenue", this._onClickListener);
-            this._map.off("click", this._onClickListener);
-            this._onClickListener = undefined;
-        }
-
-        if (this._onMouseMoveListener) {
-            this._map.off("mousemove", this._onMouseMoveListener);
-            this._onMouseMoveListener = undefined;
-        }
-
-        if (this._onKeyUpListener) {
-            this._map
-                .getCanvas()
-                .removeEventListener("keypress", this._onKeyUpListener);
-        }
-
-        if (this._onDragStartListener) {
-            this._map
-                .getCanvas()
-                .removeEventListener("mousedown", this._onDragStartListener);
-        }
-
-        if (this._onDragListener) {
-            this._map
-                .getCanvas()
-                .removeEventListener("mousemove", this._onDragListener);
-        }
-
-        if (this._onDragEndListener) {
-            this._map
-                .getCanvas()
-                .removeEventListener("mouseup", this._onDragEndListener);
-        }
+        this._listeners.forEach((listener) => {
+            listener.unregister()
+        })
     }
 
     render(

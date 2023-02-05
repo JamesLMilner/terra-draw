@@ -7,6 +7,7 @@ if (process.env.NO_CHECK) {
             "^.+\\.(t|j)sx?$": "@swc/jest"
         },
         "setupFilesAfterEnv": ["<rootDir>/src/test/jest.matchers.ts"],
+
     }
 } else {
     options = {
@@ -20,7 +21,8 @@ if (process.env.NO_CHECK) {
             "global": {
                 "lines": 65
             }
-        }
+        },
+
     }
 }
 

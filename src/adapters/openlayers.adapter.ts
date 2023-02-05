@@ -15,9 +15,9 @@ import Feature, { FeatureLike } from 'ol/Feature';
 import GeoJSON from 'ol/format/GeoJSON';
 import Map from 'ol/Map';
 import Circle from 'ol/style/Circle';
-import Fill from 'ol/style/Fill'
-import Stroke from 'ol/style/Stroke'
-import Style from 'ol/style/Style'
+import Fill from 'ol/style/Fill';
+import Stroke from 'ol/style/Stroke';
+import Style from 'ol/style/Style';
 import VectorSource from "ol/source/Vector";
 import VectorLayer from "ol/layer/Vector";
 import { fromLonLat, toLonLat } from "ol/proj";
@@ -84,7 +84,7 @@ export class TerraDrawOpenLayersAdapter implements TerraDrawAdapter {
             new AdapterListener({
                 name: 'click',
                 callback: (event) => {
-                    if (!this._currentModeCallbacks) return
+                    if (!this._currentModeCallbacks) return;
                     if (this._dragState === "not-dragging" || this._dragState === "pre-dragging") {
                         if (event.coordinate) {
 
@@ -106,20 +106,20 @@ export class TerraDrawOpenLayersAdapter implements TerraDrawAdapter {
                 register: (callback) => {
                     return [
                         this._map.on("click", callback)
-                    ]
+                    ];
                 },
                 unregister: (listeners: any[]) => {
                     listeners.forEach((listener) => {
                         this._map.un("click", listener);
-                    })
+                    });
                 }
             }),
             new AdapterListener({
                 name: 'pointermove',
                 callback: (event) => {
-                    if (!this._currentModeCallbacks) return
+                    if (!this._currentModeCallbacks) return;
 
-                    const container = this.getMapContainer()
+                    const container = this.getMapContainer();
 
                     const point = {
                         x: event.clientX - container.offsetLeft,
@@ -140,46 +140,46 @@ export class TerraDrawOpenLayersAdapter implements TerraDrawAdapter {
                     });
                 },
                 register: (callback) => {
-                    const container = this.getMapContainer()
+                    const container = this.getMapContainer();
 
                     return [
                         container.addEventListener("pointermove", callback)
-                    ]
+                    ];
                 },
                 unregister: (listeners: any[]) => {
-                    const container = this.getMapContainer()
+                    const container = this.getMapContainer();
 
                     listeners.forEach((listener) => {
-                        container.removeEventListener("pointermove", listener)
-                    })
+                        container.removeEventListener("pointermove", listener);
+                    });
                 }
             }),
             new AdapterListener({
                 name: 'mousedown',
                 callback: (event) => {
-                    if (!this._currentModeCallbacks) return
+                    if (!this._currentModeCallbacks) return;
                     this._dragState = "pre-dragging";
                 },
                 register: (callback) => {
-                    const container = this.getMapContainer()
+                    const container = this.getMapContainer();
 
                     return [
                         container.addEventListener("mousedown", callback)
-                    ]
+                    ];
                 },
                 unregister: (listeners: any[]) => {
-                    const container = this.getMapContainer()
+                    const container = this.getMapContainer();
 
                     listeners.forEach((listener) => {
-                        container.removeEventListener("mousedown", listener)
-                    })
+                        container.removeEventListener("mousedown", listener);
+                    });
                 }
             }),
             new AdapterListener({
                 name: 'drag',
                 callback: (event) => {
-                    if (!this._currentModeCallbacks) return
-                    const container = this.getMapContainer()
+                    if (!this._currentModeCallbacks) return;
+                    const container = this.getMapContainer();
 
                     const point = {
                         x: event.clientX - container.offsetLeft,
@@ -211,22 +211,22 @@ export class TerraDrawOpenLayersAdapter implements TerraDrawAdapter {
                     }
                 },
                 register: (callback) => {
-                    const container = this.getMapContainer()
-                    return [container.addEventListener("pointermove", callback)]
+                    const container = this.getMapContainer();
+                    return [container.addEventListener("pointermove", callback)];
                 },
                 unregister: (listeners: any[]) => {
-                    const container = this.getMapContainer()
+                    const container = this.getMapContainer();
 
                     listeners.forEach((listener) => {
-                        container.addEventListener("pointermove", listener)
-                    })
+                        container.addEventListener("pointermove", listener);
+                    });
                 }
             }),
             new AdapterListener({
                 name: 'pointerup',
                 callback: (event) => {
-                    if (!this._currentModeCallbacks) return
-                    const container = this.getMapContainer()
+                    if (!this._currentModeCallbacks) return;
+                    const container = this.getMapContainer();
 
                     if (this._dragState === "dragging") {
                         const point = {
@@ -261,25 +261,25 @@ export class TerraDrawOpenLayersAdapter implements TerraDrawAdapter {
                     this._dragState = "not-dragging";
                 },
                 register: (callback) => {
-                    const container = this.getMapContainer()
+                    const container = this.getMapContainer();
                     return [
                         container.addEventListener("mouseup", callback),
                         container.addEventListener("pointerup", callback)
-                    ]
+                    ];
                 },
                 unregister: (listeners: any[]) => {
-                    const container = this.getMapContainer()
+                    const container = this.getMapContainer();
 
                     listeners.forEach((listener) => {
-                        container.addEventListener("mouseup", listener)
-                        container.addEventListener("pointerup", listener)
-                    })
+                        container.addEventListener("mouseup", listener);
+                        container.addEventListener("pointerup", listener);
+                    });
                 }
             }),
             new AdapterListener({
                 name: 'keydown',
                 callback: (event) => {
-                    if (!this._currentModeCallbacks) return
+                    if (!this._currentModeCallbacks) return;
 
                     event.preventDefault();
                     this._heldKeys.add(event.key);
@@ -289,23 +289,23 @@ export class TerraDrawOpenLayersAdapter implements TerraDrawAdapter {
 
                 },
                 register: (callback) => {
-                    const container = this.getMapContainer()
+                    const container = this.getMapContainer();
                     return [
                         container.addEventListener("keydown", callback)
-                    ]
+                    ];
                 },
                 unregister: (listeners: any[]) => {
-                    const container = this.getMapContainer()
+                    const container = this.getMapContainer();
 
                     listeners.forEach((listener) => {
-                        container.addEventListener("keydown", listener)
-                    })
+                        container.addEventListener("keydown", listener);
+                    });
                 }
             }),
             new AdapterListener({
                 name: 'keyup',
                 callback: (event) => {
-                    if (!this._currentModeCallbacks) return
+                    if (!this._currentModeCallbacks) return;
 
                     // map has no keypress event, so we add one to the canvas itself
                     event.preventDefault();
@@ -317,25 +317,25 @@ export class TerraDrawOpenLayersAdapter implements TerraDrawAdapter {
 
                 },
                 register: (callback) => {
-                    const container = this.getMapContainer()
+                    const container = this.getMapContainer();
                     return [
                         container.addEventListener("keyup", callback)
-                    ]
+                    ];
                 },
                 unregister: (listeners: any[]) => {
-                    const container = this.getMapContainer()
+                    const container = this.getMapContainer();
 
                     listeners.forEach((listener) => {
-                        container.addEventListener("keyup", listener)
-                    })
+                        container.addEventListener("keyup", listener);
+                    });
                 }
             }),
-        ]
+        ];
     }
 
     private _dragState: "not-dragging" | "pre-dragging" | "dragging" =
         "not-dragging";
-    private _listeners: AdapterListener[] = []
+    private _listeners: AdapterListener[] = [];
     private _currentModeCallbacks: TerraDrawCallbacks | undefined;
     private _lib: InjectableOL;
     private _map: Map;
@@ -357,17 +357,17 @@ export class TerraDrawOpenLayersAdapter implements TerraDrawAdapter {
     getMapContainer: () => HTMLElement;
 
     register(callbacks: TerraDrawCallbacks) {
-        this._currentModeCallbacks = callbacks
+        this._currentModeCallbacks = callbacks;
 
         this._listeners.forEach((listener) => {
-            listener.register()
-        })
+            listener.register();
+        });
     }
 
     unregister() {
         this._listeners.forEach((listener) => {
-            listener.unregister()
-        })
+            listener.unregister();
+        });
     }
 
     private vectorSource: undefined | VectorSource<Geometry>;

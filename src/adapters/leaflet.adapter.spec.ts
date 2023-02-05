@@ -14,8 +14,8 @@ const createLeafletMap = () => {
         getPane: jest.fn(),
         removeLayer: jest.fn(),
         addLayer: jest.fn()
-    } as Partial<L.Map>
-}
+    } as Partial<L.Map>;
+};
 
 describe("TerraDrawLeafletAdapter", () => {
     describe('constructor', () => {
@@ -26,16 +26,16 @@ describe("TerraDrawLeafletAdapter", () => {
                     geoJSON: jest.fn()
                 } as any,
                 map: createLeafletMap() as L.Map
-            })
+            });
 
-            expect(adapter).toBeDefined()
-            expect(adapter.getMapContainer).toBeDefined()
-            expect(adapter.render).toBeDefined()
-            expect(adapter.register).toBeDefined()
-            expect(adapter.unregister).toBeDefined()
-            expect(adapter.project).toBeDefined()
-            expect(adapter.unproject).toBeDefined()
-            expect(adapter.setCursor).toBeDefined()
+            expect(adapter).toBeDefined();
+            expect(adapter.getMapContainer).toBeDefined();
+            expect(adapter.render).toBeDefined();
+            expect(adapter.register).toBeDefined();
+            expect(adapter.unregister).toBeDefined();
+            expect(adapter.project).toBeDefined();
+            expect(adapter.unproject).toBeDefined();
+            expect(adapter.setCursor).toBeDefined();
         });
     });
-})
+});

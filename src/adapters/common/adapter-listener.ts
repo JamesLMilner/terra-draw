@@ -4,11 +4,11 @@ export class AdapterListener {
 
     public name: string;
     public callback: (...args: any[]) => any;
-    public registered: boolean = false
+    public registered = false;
     public register: any;
     public unregister: any;
 
-    private listeners: any[] = []
+    private listeners: any[] = [];
 
     constructor({ name, callback, unregister, register }: {
         name: string,
@@ -22,16 +22,16 @@ export class AdapterListener {
         this.register = () => {
             if (!this.registered) {
                 this.registered = true;
-                this.listeners = register(callback)
+                this.listeners = register(callback);
             }
-        }
+        };
 
         this.unregister = () => {
             if (this.register) {
                 this.registered = false;
-                unregister(this.listeners)
+                unregister(this.listeners);
             }
-        }
+        };
 
         this.callback = callback;
 

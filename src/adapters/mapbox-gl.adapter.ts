@@ -55,7 +55,7 @@ export class TerraDrawMapboxGLAdapter implements TerraDrawAdapter {
             new AdapterListener({
                 name: 'click',
                 callback: (event) => {
-                    if (!this._currentModeCallbacks) return
+                    if (!this._currentModeCallbacks) return;
 
                     this._currentModeCallbacks.onClick({
                         lng: limitPrecision(event.lngLat.lng, this._coordinatePrecision),
@@ -73,19 +73,19 @@ export class TerraDrawMapboxGLAdapter implements TerraDrawAdapter {
                     return [
                         this._map.on("click", callback),
                         this._map.on("contextmenu", callback)
-                    ]
+                    ];
                 },
                 unregister: (listeners: any[]) => {
                     listeners.forEach((listener) => {
                         this._map.off("contextmenu", listener);
                         this._map.off("click", listener);
-                    })
+                    });
                 }
             }),
             new AdapterListener({
                 name: 'mousemove',
                 callback: (event) => {
-                    if (!this._currentModeCallbacks) return
+                    if (!this._currentModeCallbacks) return;
 
                     this._currentModeCallbacks.onMouseMove({
                         lng: limitPrecision(event.lngLat.lng, this._coordinatePrecision),
@@ -101,12 +101,12 @@ export class TerraDrawMapboxGLAdapter implements TerraDrawAdapter {
                 register: (callback) => {
                     return [
                         this._map.on("mousemove", callback)
-                    ]
+                    ];
                 },
                 unregister: (listeners: any[]) => {
                     listeners.forEach((listener) => {
                         this._map.off("mousemove", listener);
-                    })
+                    });
                 }
             }),
             new AdapterListener({
@@ -119,20 +119,20 @@ export class TerraDrawMapboxGLAdapter implements TerraDrawAdapter {
 
                     return [
                         container.addEventListener("mousedown", callback)
-                    ]
+                    ];
                 },
                 unregister: (listeners: any[]) => {
                     const container = this.getMapContainer();
 
                     listeners.forEach((listener) => {
-                        container.removeEventListener("mousedown", listener)
-                    })
+                        container.removeEventListener("mousedown", listener);
+                    });
                 }
             }),
             new AdapterListener({
                 name: 'drag',
                 callback: (event) => {
-                    if (!this._currentModeCallbacks) return
+                    if (!this._currentModeCallbacks) return;
 
                     const container = this.getMapContainer();
 
@@ -166,13 +166,13 @@ export class TerraDrawMapboxGLAdapter implements TerraDrawAdapter {
                 },
                 register: (callback) => {
                     const container = this.getMapContainer();
-                    return [container.addEventListener("mousemove", callback)]
+                    return [container.addEventListener("mousemove", callback)];
                 },
                 unregister: (listeners: any[]) => {
                     const container = this.getMapContainer();
                     listeners.forEach((listener) => {
                         container.addEventListener("mousemove", listener);
-                    })
+                    });
                 }
             }),
             new AdapterListener({
@@ -214,21 +214,21 @@ export class TerraDrawMapboxGLAdapter implements TerraDrawAdapter {
                 register: (callback) => {
                     const container = this.getMapContainer();
 
-                    return [container.addEventListener("mouseup", callback)]
+                    return [container.addEventListener("mouseup", callback)];
                 },
                 unregister: (listeners: any[]) => {
                     const container = this.getMapContainer();
 
                     listeners.forEach((listener) => {
                         container.addEventListener("mouseup", listener);
-                    })
+                    });
 
                 }
             }),
             new AdapterListener({
                 name: 'keyup',
                 callback: (event) => {
-                    if (!this._currentModeCallbacks) return
+                    if (!this._currentModeCallbacks) return;
 
                     // map has no keypress event, so we add one to the canvas itself
                     event.preventDefault();
@@ -242,14 +242,14 @@ export class TerraDrawMapboxGLAdapter implements TerraDrawAdapter {
                 register: (callback) => {
                     const container = this.getMapContainer();
 
-                    return [container.addEventListener("keyup", callback)]
+                    return [container.addEventListener("keyup", callback)];
                 },
                 unregister: (listeners: any[]) => {
                     const container = this.getMapContainer();
 
                     listeners.forEach((listener) => {
-                        container.removeEventListener("keyup", listener)
-                    })
+                        container.removeEventListener("keyup", listener);
+                    });
                 }
             }),
             new AdapterListener({
@@ -268,17 +268,17 @@ export class TerraDrawMapboxGLAdapter implements TerraDrawAdapter {
                 register: (callback) => {
                     const container = this.getMapContainer();
 
-                    return [container.addEventListener("keydown", callback)]
+                    return [container.addEventListener("keydown", callback)];
                 },
                 unregister: (listeners: any[]) => {
                     const container = this.getMapContainer();
 
                     listeners.forEach((listener) => {
-                        container.removeEventListener('keydown', listener)
-                    })
+                        container.removeEventListener('keydown', listener);
+                    });
                 }
             })
-        ]
+        ];
     }
 
     private dragState: "not-dragging" | "pre-dragging" | "dragging" =
@@ -291,7 +291,7 @@ export class TerraDrawMapboxGLAdapter implements TerraDrawAdapter {
 
     public getMapContainer: () => HTMLElement;
 
-    private _listeners: AdapterListener[] = []
+    private _listeners: AdapterListener[] = [];
     private _currentModeCallbacks: TerraDrawCallbacks | undefined;
     private _heldKeys: Set<string> = new Set();
     private _coordinatePrecision: number;
@@ -453,17 +453,17 @@ export class TerraDrawMapboxGLAdapter implements TerraDrawAdapter {
     }
 
     register(callbacks: TerraDrawCallbacks) {
-        this._currentModeCallbacks = callbacks
+        this._currentModeCallbacks = callbacks;
 
         this._listeners.forEach((listener) => {
-            listener.register()
-        })
+            listener.register();
+        });
     }
 
     unregister() {
         this._listeners.forEach((listener) => {
-            listener.unregister()
-        })
+            listener.unregister();
+        });
     }
 
     render(

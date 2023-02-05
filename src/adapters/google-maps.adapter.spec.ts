@@ -39,8 +39,8 @@ const createMockGoogleMap = () => {
         setStreetView: jest.fn(),
         setTilt: jest.fn(),
         setZoom: jest.fn(),
-    } as google.maps.Map
-}
+    } as google.maps.Map;
+};
 
 describe("TerraDrawGoogleMapsAdapter", () => {
     describe('constructor', () => {
@@ -50,16 +50,16 @@ describe("TerraDrawGoogleMapsAdapter", () => {
                     LatLng: jest.fn()
                 } as any,
                 map: createMockGoogleMap()
-            })
+            });
 
-            expect(adapter).toBeDefined()
-            expect(adapter.getMapContainer).toBeDefined()
-            expect(adapter.render).toBeDefined()
-            expect(adapter.register).toBeDefined()
-            expect(adapter.unregister).toBeDefined()
-            expect(adapter.project).toBeDefined()
-            expect(adapter.unproject).toBeDefined()
-            expect(adapter.setCursor).toBeDefined()
+            expect(adapter).toBeDefined();
+            expect(adapter.getMapContainer).toBeDefined();
+            expect(adapter.render).toBeDefined();
+            expect(adapter.register).toBeDefined();
+            expect(adapter.unregister).toBeDefined();
+            expect(adapter.project).toBeDefined();
+            expect(adapter.unproject).toBeDefined();
+            expect(adapter.setCursor).toBeDefined();
         });
     });
-})
+});

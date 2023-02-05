@@ -4,7 +4,7 @@ describe("AdapterListener", () => {
 
     describe("constructor", () => {
         it("constructs with no options", () => {
-            const callback = jest.fn()
+            const callback = jest.fn();
             const listener = new AdapterListener({
                 name: 'test',
                 callback,
@@ -21,14 +21,14 @@ describe("AdapterListener", () => {
 
     describe("callback", () => {
         it("calls the passed callback when called", () => {
-            const callback = jest.fn()
+            const callback = jest.fn();
             const listener = new AdapterListener({
                 name: 'test',
                 callback,
                 register: jest.fn(),
                 unregister: jest.fn()
             });
-            listener.callback()
+            listener.callback();
 
             expect(callback).toBeCalledTimes(1);
         });
@@ -50,7 +50,7 @@ describe("AdapterListener", () => {
             listener.register();
 
             expect(register).toBeCalledTimes(1);
-            expect(register).toBeCalledWith(callback)
+            expect(register).toBeCalledWith(callback);
         });
 
     });
@@ -69,7 +69,7 @@ describe("AdapterListener", () => {
 
             listener.unregister();
 
-            expect(unregister).toBeCalledWith([])
+            expect(unregister).toBeCalledWith([]);
         });
 
     });

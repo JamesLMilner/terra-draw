@@ -169,12 +169,12 @@ export class TerraDrawGoogleMapsAdapter implements TerraDrawAdapter {
                     ), this._map.addListener(
                         "rightclick",
                         callback
-                    )]
+                    )];
                 },
                 unregister: (listeners: any[]) => {
                     listeners.forEach((listener) => {
                         listener.remove();
-                    })
+                    });
                 }
             }),
             new AdapterListener({
@@ -199,7 +199,7 @@ export class TerraDrawGoogleMapsAdapter implements TerraDrawAdapter {
                     return [this._map.addListener(
                         "mousemove",
                         callback
-                    )]
+                    )];
                 },
                 unregister: (listener: any) => {
                     listener.remove();
@@ -215,7 +215,7 @@ export class TerraDrawGoogleMapsAdapter implements TerraDrawAdapter {
                     });
                 },
                 register: (callback: any) => {
-                    return [this.getMapContainer().addEventListener("keyup", callback)]
+                    return [this.getMapContainer().addEventListener("keyup", callback)];
                 },
                 unregister: (listeners: any[]) => {
                     listeners.forEach((listener) => {
@@ -223,7 +223,7 @@ export class TerraDrawGoogleMapsAdapter implements TerraDrawAdapter {
                             "keyup",
                             listener
                         );
-                    })
+                    });
 
                 }
             }),
@@ -234,7 +234,7 @@ export class TerraDrawGoogleMapsAdapter implements TerraDrawAdapter {
                 },
                 register: (callback: any) => {
                     const container = this.getMapContainer();
-                    return [container.addEventListener("mousedown", callback)]
+                    return [container.addEventListener("mousedown", callback)];
                 },
                 unregister: (listeners: any[]) => {
                     listeners.forEach((listener) => {
@@ -242,7 +242,7 @@ export class TerraDrawGoogleMapsAdapter implements TerraDrawAdapter {
                             "mousedown",
                             listener
                         );
-                    })
+                    });
                 }
             }),
             new AdapterListener({
@@ -280,7 +280,7 @@ export class TerraDrawGoogleMapsAdapter implements TerraDrawAdapter {
                 },
                 register: (callback: any) => {
                     const container = this.getMapContainer();
-                    return [container.addEventListener("mousemove", callback)]
+                    return [container.addEventListener("mousemove", callback)];
                 },
                 unregister: (listeners: any[]) => {
                     listeners.forEach((listener) => {
@@ -288,7 +288,7 @@ export class TerraDrawGoogleMapsAdapter implements TerraDrawAdapter {
                             "mousemove",
                             listener
                         );
-                    })
+                    });
                 }
             }),
             new AdapterListener({
@@ -327,7 +327,7 @@ export class TerraDrawGoogleMapsAdapter implements TerraDrawAdapter {
                 register: (callback: any,) => {
                     const container = this.getMapContainer();
 
-                    return [container.addEventListener("mouseup", callback)]
+                    return [container.addEventListener("mouseup", callback)];
                 },
                 unregister: (listeners: any[]) => {
                     listeners.forEach((listener) => {
@@ -335,10 +335,10 @@ export class TerraDrawGoogleMapsAdapter implements TerraDrawAdapter {
                             "mouseup",
                             listener
                         );
-                    })
+                    });
                 }
             })
-        ]
+        ];
     }
 
     private _heldKeys: Set<string> = new Set();
@@ -382,21 +382,21 @@ export class TerraDrawGoogleMapsAdapter implements TerraDrawAdapter {
     }
 
     private currentModeCallbacks: TerraDrawCallbacks | undefined;
-    private listeners: AdapterListener[] = []
+    private listeners: AdapterListener[] = [];
 
     private dragState: "not-dragging" | "pre-dragging" | "dragging" = "not-dragging";
 
     register(callbacks: TerraDrawCallbacks) {
         this.currentModeCallbacks = callbacks;
         this.listeners.forEach((listener) => {
-            listener.register()
-        })
+            listener.register();
+        });
     }
 
     unregister() {
         this.listeners.forEach((listener) => {
-            listener.unregister()
-        })
+            listener.unregister();
+        });
     }
 
     render(
@@ -436,57 +436,57 @@ export class TerraDrawGoogleMapsAdapter implements TerraDrawAdapter {
                 });
 
                 switch (updatedFeature.geometry.type) {
-                    case "Point":
-                        {
-                            const coordinates = updatedFeature.geometry.coordinates;
+                case "Point":
+                    {
+                        const coordinates = updatedFeature.geometry.coordinates;
 
-                            featureToUpdate.setGeometry(
-                                new google.maps.Data.Point(
-                                    new google.maps.LatLng(coordinates[1], coordinates[0])
-                                )
+                        featureToUpdate.setGeometry(
+                            new google.maps.Data.Point(
+                                new google.maps.LatLng(coordinates[1], coordinates[0])
+                            )
+                        );
+                    }
+                    break;
+                case "LineString":
+                    {
+                        const coordinates = updatedFeature.geometry.coordinates;
+
+                        const path = [];
+                        for (let i = 0; i < coordinates.length; i++) {
+                            const coordinate = coordinates[i];
+                            const latLng = new google.maps.LatLng(
+                                coordinate[1],
+                                coordinate[0]
                             );
+                            path.push(latLng);
                         }
-                        break;
-                    case "LineString":
-                        {
-                            const coordinates = updatedFeature.geometry.coordinates;
 
+                        featureToUpdate.setGeometry(
+                            new google.maps.Data.LineString(path)
+                        );
+                    }
+                    break;
+                case "Polygon":
+                    {
+                        const coordinates = updatedFeature.geometry.coordinates;
+
+                        const paths = [];
+                        for (let i = 0; i < coordinates.length; i++) {
                             const path = [];
-                            for (let i = 0; i < coordinates.length; i++) {
-                                const coordinate = coordinates[i];
+                            for (let j = 0; j < coordinates[i].length; j++) {
                                 const latLng = new google.maps.LatLng(
-                                    coordinate[1],
-                                    coordinate[0]
+                                    coordinates[i][j][1],
+                                    coordinates[i][j][0]
                                 );
                                 path.push(latLng);
                             }
-
-                            featureToUpdate.setGeometry(
-                                new google.maps.Data.LineString(path)
-                            );
-                        }
-                        break;
-                    case "Polygon":
-                        {
-                            const coordinates = updatedFeature.geometry.coordinates;
-
-                            const paths = [];
-                            for (let i = 0; i < coordinates.length; i++) {
-                                const path = [];
-                                for (let j = 0; j < coordinates[i].length; j++) {
-                                    const latLng = new google.maps.LatLng(
-                                        coordinates[i][j][1],
-                                        coordinates[i][j][0]
-                                    );
-                                    path.push(latLng);
-                                }
-                                paths.push(path);
-                            }
-
-                            featureToUpdate.setGeometry(new google.maps.Data.Polygon(paths));
+                            paths.push(path);
                         }
 
-                        break;
+                        featureToUpdate.setGeometry(new google.maps.Data.Polygon(paths));
+                    }
+
+                    break;
                 }
             });
 
@@ -558,39 +558,39 @@ export class TerraDrawGoogleMapsAdapter implements TerraDrawAdapter {
 
 
             switch (type) {
-                case "Point":
+            case "Point":
 
-                    const path = this.circlePath(
-                        0,
-                        0,
-                        calculatedStyles.pointWidth
-                    );
+                const path = this.circlePath(
+                    0,
+                    0,
+                    calculatedStyles.pointWidth
+                );
 
-                    return {
-                        clickable: false,
-                        icon: {
-                            path,
-                            fillColor: calculatedStyles.pointColor,
-                            fillOpacity: 1,
-                            strokeColor: calculatedStyles.pointOutlineColor,
-                            strokeWeight: calculatedStyles.pointOutlineWidth,
-                            rotation: 0,
-                            scale: 1,
-                        },
-                    };
+                return {
+                    clickable: false,
+                    icon: {
+                        path,
+                        fillColor: calculatedStyles.pointColor,
+                        fillOpacity: 1,
+                        strokeColor: calculatedStyles.pointOutlineColor,
+                        strokeWeight: calculatedStyles.pointOutlineWidth,
+                        rotation: 0,
+                        scale: 1,
+                    },
+                };
 
-                case "LineString":
-                    return {
-                        strokeColor: calculatedStyles.lineStringColor,
-                        strokeWeight: calculatedStyles.lineStringWidth,
-                    };
-                case "Polygon":
-                    return {
-                        strokeColor: calculatedStyles.polygonOutlineColor,
-                        strokeWeight: calculatedStyles.polygonOutlineWidth,
-                        fillOpacity: calculatedStyles.polygonFillOpacity,
-                        fillColor: calculatedStyles.polygonFillColor,
-                    };
+            case "LineString":
+                return {
+                    strokeColor: calculatedStyles.lineStringColor,
+                    strokeWeight: calculatedStyles.lineStringWidth,
+                };
+            case "Polygon":
+                return {
+                    strokeColor: calculatedStyles.polygonOutlineColor,
+                    strokeWeight: calculatedStyles.polygonOutlineWidth,
+                    fillOpacity: calculatedStyles.polygonFillOpacity,
+                    fillColor: calculatedStyles.polygonFillColor,
+                };
             }
 
             throw Error("Unknown feature type");

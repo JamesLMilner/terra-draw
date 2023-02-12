@@ -8,3 +8,4 @@ example/node_modules/
 example/.env
 ROADMAP.md
 data/
+.scratch/

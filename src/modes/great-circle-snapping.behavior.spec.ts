@@ -1,4 +1,4 @@
-import { createStorePolygon } from "../test/create-store-features";
+import { createStoreLineString, createStorePolygon } from "../test/create-store-features";
 import { mockBehaviorConfig } from "../test/mock-behavior-config";
 import { mockDrawEvent } from "../test/mock-mouse-event";
 import { mockProject } from "../test/mock-project";
@@ -33,7 +33,7 @@ describe("GreatCircleSnappingBehavior", () => {
             );
         });
 
-        describe("getSnappablePolygonCoord", () => {
+        describe("getSnappableCoordinate", () => {
             it("returns undefined if not snappable", () => {
                 // Mock the unproject to return a valid set
                 // of bbox coordinates
@@ -50,7 +50,7 @@ describe("GreatCircleSnappingBehavior", () => {
             it("returns a snappable coordinate if one exists", () => {
                 // Ensure there is something to snap too by
                 // creating an existing polygon
-                createStorePolygon(config);
+                createStoreLineString(config);
 
                 // Mock the unproject to return a valid set
                 // of bbox coordinates
@@ -65,7 +65,7 @@ describe("GreatCircleSnappingBehavior", () => {
                     "currentId"
                 );
 
-                expect(snappedCoord).toStrictEqual([0, 0]);
+                expect(snappedCoord).toStrictEqual([0, 1]);
             });
         });
     });

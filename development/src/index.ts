@@ -16,6 +16,7 @@ import {
     TerraDrawLeafletAdapter,
     TerraDrawGoogleMapsAdapter,
     TerraDrawMapLibreGLAdapter,
+    TerraDrawGreatCircleMode,
 } from "../../src/terra-draw";
 import { TerraDrawRenderMode } from "../../src/modes/render/render.mode";
 
@@ -34,7 +35,7 @@ const addModeChangeHandler = (
     draw: TerraDraw,
     currentSelected: { button: undefined | HTMLButtonElement; mode: string }
 ) => {
-    ["select", "point", "linestring", "polygon", "freehand", "circle", "rectangle"].forEach(
+    ["select", "point", "linestring", "greatcircle", "polygon", "freehand", "circle", "rectangle"].forEach(
         (mode) => {
             (document.getElementById(mode) as HTMLButtonElement).addEventListener(
                 "click",
@@ -105,6 +106,7 @@ const getModes = () => {
             snapping: true,
             allowSelfIntersections: false,
         }),
+        greatcircle: new TerraDrawGreatCircleMode({ snapping: true }),
         polygon: new TerraDrawPolygonMode({
             snapping: true,
             allowSelfIntersections: false,

@@ -236,7 +236,6 @@ describe("TerraDrawLineStringMode", () => {
             project.mockReturnValueOnce({ x: 100, y: 100 });
             project.mockReturnValueOnce({ x: 100, y: 100 });
 
-
             lineStringMode.onClick({
                 lng: 0,
                 lat: 0,

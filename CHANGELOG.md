@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.1-alpha.16](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.15...v0.0.1-alpha.16) (2023-02-19)
+
+
+### Features
+
+* add great circle line mode ([72136a0](https://github.com/JamesLMilner/terra-draw/commit/72136a044ed3a7c9192e92fbb383e64243ce8bd6))
+
+
+### Chore
+
+* add local scratch folder to allow for experimentation ([828e1dd](https://github.com/JamesLMilner/terra-draw/commit/828e1ddfa575a8a9703c63c3bf8d1f11535e3fef))
+* fix scratch pad folder location for local development ([107db58](https://github.com/JamesLMilner/terra-draw/commit/107db581a94852925f7b647f77b67b67f0a7598d))
+
 ### [0.0.1-alpha.15](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.14...v0.0.1-alpha.15) (2023-02-05)
 
 

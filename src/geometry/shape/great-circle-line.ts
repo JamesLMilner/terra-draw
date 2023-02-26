@@ -8,26 +8,12 @@ import { limitPrecision } from "../limit-decimal-precision";
 const D2R = Math.PI / 180;
 const R2D = 180 / Math.PI;
 
-class Coord {
-    constructor({ lng, lat }: { lng: number, lat: number }) {
-        this.lon = lng;
-        this.lat = lat;
-        this.x = D2R * lng;
-        this.y = D2R * lat;
-    }
-
-    public lon: number;
-    public lat: number;
-    public x: number;
-    public y: number;
-
-    antipode() {
-        const antLat = -1 * this.lat;
-        const antiLng = this.lon < 0 ? 180 + this.lon : (180 - this.lon) * -1;
-        return new Coord({ lng: antiLng, lat: antLat });
-    };
+interface Coord {
+    readonly lng: number;
+    readonly lat: number;
+    readonly x: number;
+    readonly y: number;
 }
-
 
 class ArcLineString {
     constructor(coordinatePrecision: number) {
@@ -95,8 +81,18 @@ class GreatCircleLine<Properties extends JSONObject> {
                 "GreatCircle constructor expects two args: start and end objects with x and y properties"
             );
         }
-        this.start = new Coord({ lng: start[0], lat: start[1] });
-        this.end = new Coord({ lng: end[0], lat: end[1] });
+        this.start = {
+            lng: start[0],
+            lat: start[1],
+            x: D2R * start[0],
+            y: D2R * start[1]
+        };
+
+        this.end = {
+            lng: end[0], lat: end[1], x: D2R * end[0],
+            y: D2R * end[1]
+        };
+
         this.properties = properties || {} as Properties;
 
         const w = this.start.x - this.end.x;
@@ -144,8 +140,8 @@ class GreatCircleLine<Properties extends JSONObject> {
     arc(npoints: number, options: { offset: number, coordinatePrecision: number }) {
         const firstPass = [];
         if (!npoints || npoints <= 2) {
-            firstPass.push([this.start.lon, this.start.lat]);
-            firstPass.push([this.end.lon, this.end.lat]);
+            firstPass.push([this.start.lng, this.start.lat]);
+            firstPass.push([this.end.lng, this.end.lat]);
         } else {
             const delta = 1.0 / (npoints - 1);
             for (let i = 0; i < npoints; ++i) {

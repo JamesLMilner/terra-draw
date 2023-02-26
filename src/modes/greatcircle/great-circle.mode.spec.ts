@@ -103,6 +103,89 @@ describe("TerraDrawGreatCircleMode", () => {
         });
     });
 
+    describe("onMouseMove", () => {
+        let greatCircleMode: TerraDrawGreatCircleMode;
+        let onChange: jest.Mock;
+        let store: GeoJSONStore;
+        let project: jest.Mock;
+
+        beforeEach(() => {
+            greatCircleMode = new TerraDrawGreatCircleMode();
+            const mockConfig = getMockModeConfig(greatCircleMode.mode);
+            onChange = mockConfig.onChange;
+            store = mockConfig.store;
+            project = mockConfig.project;
+            greatCircleMode.register(mockConfig);
+        });
+
+        it('does nothing if no click has been performed', () => {
+            greatCircleMode.onMouseMove({
+                lng: 0,
+                lat: 0,
+                containerX: 0,
+                containerY: 0,
+                button: "left",
+                heldKeys: [],
+            });
+
+            expect(onChange).toBeCalledTimes(0);
+        });
+
+        it('moves the ending point of great circle on move', () => {
+            project.mockReturnValueOnce({ x: 0, y: 0 });
+            project.mockReturnValueOnce({ x: 0, y: 0 });
+            project.mockReturnValueOnce({ x: 50, y: 50 });
+            project.mockReturnValueOnce({ x: 50, y: 50 });
+
+            greatCircleMode.onClick({
+                lng: 1,
+                lat: 1,
+                containerX: 0,
+                containerY: 0,
+                button: "left",
+                heldKeys: [],
+            });
+
+            let features = store.copyAll();
+            expect(features.length).toBe(2);
+
+            greatCircleMode.onMouseMove({
+                lng: 20,
+                lat: 20,
+                containerX: 100,
+                containerY: 100,
+                button: "left",
+                heldKeys: [],
+            });
+
+            features = store.copyAll();
+            expect(features.length).toBe(2);
+
+            const before = JSON.stringify(features[0].geometry.coordinates);
+
+            expect(features[0].geometry.coordinates.length).toBe(100);
+
+            greatCircleMode.onMouseMove({
+                lng: 50,
+                lat: 50,
+                containerX: 200,
+                containerY: 200,
+                button: "left",
+                heldKeys: [],
+            });
+
+            features = store.copyAll();
+            expect(features.length).toBe(2);
+
+            const after = JSON.stringify(features[0].geometry.coordinates);
+
+            expect(features[0].geometry.coordinates.length).toBe(100);
+
+            expect(before).not.toBe(after);
+
+        });
+    });
+
     describe("onClick", () => {
         let greatCircleMode: TerraDrawGreatCircleMode;
         let onChange: jest.Mock;
@@ -214,6 +297,7 @@ describe("TerraDrawGreatCircleMode", () => {
         describe('cancel', () => {
             it("does nothing when no line is present", () => {
                 greatCircleMode.onKeyUp({ key: "Escape" });
+                expect(onChange).toBeCalledTimes(0);
             });
 
             it("deletes the line when currently editing", () => {
@@ -236,6 +320,104 @@ describe("TerraDrawGreatCircleMode", () => {
             });
         });
 
+
+        describe('finish', () => {
+
+            it("does nothing if no drawing is happening", () => {
+                greatCircleMode.onKeyUp({ key: "Enter" });
+
+                expect(onChange).toBeCalledTimes(0);
+            });
+
+            it("finishes the great circle on finish key press", () => {
+                project.mockReturnValueOnce({ x: 0, y: 0 });
+                project.mockReturnValueOnce({ x: 0, y: 0 });
+                project.mockReturnValueOnce({ x: 50, y: 50 });
+                project.mockReturnValueOnce({ x: 50, y: 50 });
+
+                greatCircleMode.onClick({
+                    lng: 1,
+                    lat: 1,
+                    containerX: 0,
+                    containerY: 0,
+                    button: "left",
+                    heldKeys: [],
+                });
+
+                let features = store.copyAll();
+                expect(features.length).toBe(2);
+
+                greatCircleMode.onMouseMove({
+                    lng: 20,
+                    lat: 20,
+                    containerX: 100,
+                    containerY: 100,
+                    button: "left",
+                    heldKeys: [],
+                });
+
+                features = store.copyAll();
+                expect(features.length).toBe(2);
+
+                expect(features[0].geometry.coordinates.length).toBe(100);
+
+                greatCircleMode.onKeyUp({ key: "Enter" });
+
+                expect(onChange).toBeCalledTimes(5);
+                features = store.copyAll();
+
+                expect(features.length).toBe(1);
+                expect(features[0].geometry.coordinates.length).toBe(100);
+                features[0].geometry.coordinates.forEach((coordinate) => {
+                    expect(typeof (coordinate as Position)[0]).toBe('number');
+                    expect(typeof (coordinate as Position)[1]).toBe('number');
+                });
+            });
+
+            it("does not finish great circle when finish is set to null", () => {
+                greatCircleMode = new TerraDrawGreatCircleMode({ keyEvents: null });
+                const mockConfig = getMockModeConfig(greatCircleMode.mode);
+                onChange = mockConfig.onChange;
+                store = mockConfig.store;
+                project = mockConfig.project;
+                greatCircleMode.register(mockConfig);
+
+                project.mockReturnValueOnce({ x: 0, y: 0 });
+                project.mockReturnValueOnce({ x: 0, y: 0 });
+                project.mockReturnValueOnce({ x: 50, y: 50 });
+                project.mockReturnValueOnce({ x: 50, y: 50 });
+
+                greatCircleMode.onClick({
+                    lng: 1,
+                    lat: 1,
+                    containerX: 0,
+                    containerY: 0,
+                    button: "left",
+                    heldKeys: [],
+                });
+
+                let features = store.copyAll();
+                expect(features.length).toBe(2);
+
+                greatCircleMode.onMouseMove({
+                    lng: 20,
+                    lat: 20,
+                    containerX: 100,
+                    containerY: 100,
+                    button: "left",
+                    heldKeys: [],
+                });
+
+                features = store.copyAll();
+                expect(features.length).toBe(2);
+
+                expect(features[0].geometry.coordinates.length).toBe(100);
+
+                greatCircleMode.onKeyUp({ key: "Enter" });
+
+                expect(onChange).toBeCalledTimes(4);
+            });
+        });
     });
 
     describe("cleanUp", () => {
@@ -302,6 +484,76 @@ describe("TerraDrawGreatCircleMode", () => {
 
             expect(greatCircleMode.styles).toStrictEqual({
                 lineStringColor: "#ffffff",
+            });
+        });
+    });
+
+
+    describe('styleFeature', () => {
+        it("can default styles", () => {
+            const greatCircleMode = new TerraDrawGreatCircleMode({
+                styles: {
+                    lineStringWidth: 2,
+                    lineStringColor: '#ffffff',
+                }
+            });
+
+            expect(
+                greatCircleMode.styleFeature({
+                    type: "Feature",
+                    geometry: { type: "Polygon", coordinates: [] },
+                    properties: { mode: "greatcircle" }
+                })
+            ).toMatchObject({
+                lineStringColor: "#3f97e0",
+                lineStringWidth: 4,
+            });
+        });
+
+        it("returns the correct styles for polygon", () => {
+            const greatCircleMode = new TerraDrawGreatCircleMode({
+                styles: {
+                    lineStringWidth: 2,
+                    lineStringColor: '#ffffff',
+
+                }
+            });
+
+            expect(
+                greatCircleMode.styleFeature({
+                    type: "Feature",
+                    geometry: { type: "LineString", coordinates: [] },
+                    properties: { mode: "greatcircle" }
+                })
+            ).toMatchObject({
+                lineStringColor: "#ffffff",
+                lineStringWidth: 2,
+
+            });
+        });
+
+        it("returns the correct styles for point", () => {
+            const greatCircleMode = new TerraDrawGreatCircleMode({
+                styles: {
+                    closingPointColor: '#1111111',
+                    closingPointWidth: 3,
+                    closingPointOutlineColor: '#333333',
+                    closingPointOutlineWidth: 2
+                }
+            });
+
+            expect(
+                greatCircleMode.styleFeature({
+                    type: "Feature",
+                    geometry: { type: "Point", coordinates: [] },
+                    properties: { mode: "greatcircle" }
+                })
+            ).toMatchObject({
+                pointColor: "#1111111",
+                pointOutlineColor: "#333333",
+                pointOutlineWidth: 2,
+                pointWidth: 3,
+                zIndex: 0,
             });
         });
     });

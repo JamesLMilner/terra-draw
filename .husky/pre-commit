@@ -2,4 +2,4 @@
 . "$(dirname "$0")/_/husky.sh"
 
 npm run lint:fix:quiet
-git add .
+git update-index --again

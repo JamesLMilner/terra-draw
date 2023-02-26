@@ -1,5 +1,4 @@
 import { getMockModeConfig } from "../../test/mock-config";
-import { getDefaultStyling } from "../../util/styling";
 import { TerraDrawStaticMode } from "./static.mode";
 
 describe("TerraDrawStaticMode", () => {

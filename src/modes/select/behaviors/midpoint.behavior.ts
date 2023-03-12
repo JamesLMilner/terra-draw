@@ -9,8 +9,8 @@ import { SELECT_PROPERTIES } from "../../../common";
 
 export class MidPointBehavior extends TerraDrawModeBehavior {
     constructor(
-    readonly config: BehaviorConfig,
-    private readonly selectionPointBehavior: SelectionPointBehavior
+        readonly config: BehaviorConfig,
+        private readonly selectionPointBehavior: SelectionPointBehavior
     ) {
         super(config);
     }
@@ -21,32 +21,32 @@ export class MidPointBehavior extends TerraDrawModeBehavior {
         return this._midPoints.concat();
     }
 
-    set ids(_: string[]) {}
+    set ids(_: string[]) { }
 
     public insert(midPointId: string, coordinatePrecision: number) {
         const midPoint = this.store.getGeometryCopy(midPointId);
         const { midPointFeatureId, midPointSegment } =
-      this.store.getPropertiesCopy(midPointId);
+            this.store.getPropertiesCopy(midPointId);
         const geometry = this.store.getGeometryCopy<Polygon | LineString>(
-      midPointFeatureId as string
+            midPointFeatureId as string
         );
 
         // Update the coordinates to include inserted midpoint
         const updatedCoordinates =
-      geometry.type === "Polygon"
-          ? geometry.coordinates[0]
-          : geometry.coordinates;
+            geometry.type === "Polygon"
+                ? geometry.coordinates[0]
+                : geometry.coordinates;
 
         updatedCoordinates.splice(
             (midPointSegment as number) + 1,
             0,
-      midPoint.coordinates as Position
+            midPoint.coordinates as Position
         );
 
         // Update geometry coordinates depending
         // on if a polygon or linestring
         geometry.coordinates =
-      geometry.type === "Polygon" ? [updatedCoordinates] : updatedCoordinates;
+            geometry.type === "Polygon" ? [updatedCoordinates] : updatedCoordinates;
 
         // Update the selected features geometry to insert
         // the new midpoint
@@ -62,13 +62,13 @@ export class MidPointBehavior extends TerraDrawModeBehavior {
         // because selection points are prerequiste for midpoints
         this.create(
             updatedCoordinates,
-      midPointFeatureId as string,
-      coordinatePrecision
+            midPointFeatureId as string,
+            coordinatePrecision
         );
         this.selectionPointBehavior.create(
             updatedCoordinates,
             geometry.type,
-      midPointFeatureId as string
+            midPointFeatureId as string
         );
     }
 
@@ -90,7 +90,9 @@ export class MidPointBehavior extends TerraDrawModeBehavior {
                     midPointSegment: i,
                     midPointFeatureId: featureId,
                 }),
-                coordinatePrecision
+                coordinatePrecision,
+                this.config.project,
+                this.config.unproject
             )
         );
     }
@@ -109,7 +111,9 @@ export class MidPointBehavior extends TerraDrawModeBehavior {
 
         return getMidPointCoordinates(
             updatedCoordinates,
-            this.coordinatePrecision
+            this.coordinatePrecision,
+            this.config.project,
+            this.config.unproject
         ).map((updatedMidPointCoord, i) => ({
             id: this._midPoints[i] as string,
             geometry: {

@@ -1,18 +1,38 @@
 import { Position } from "geojson";
+import { Project, Unproject } from "../../../common";
 import {
     createStoreLineString,
     createStorePolygon,
 } from "../../../test/create-store-features";
 import { mockBehaviorConfig } from "../../../test/mock-behavior-config";
+import { BehaviorConfig } from "../../base.behavior";
 import { MidPointBehavior } from "./midpoint.behavior";
 import { SelectionPointBehavior } from "./selection-point.behavior";
 
 describe("MidPointBehavior", () => {
     const coordinatePrecision = 9;
+    let config: BehaviorConfig;
+
+    beforeEach(() => {
+        jest.resetAllMocks();
+        config = mockBehaviorConfig("test");
+
+        (config.project as jest.Mock)
+            .mockImplementation((lng: number, lat: number) => ({
+                x: lng * 100,
+                y: lat * 100,
+            }));
+
+        (config.unproject as jest.Mock)
+            .mockImplementation((x: number, y: number) => ({
+                lng: x / 100,
+                lat: y / 100,
+            }));
+    });
 
     describe("constructor", () => {
         it("constructs", () => {
-            const config = mockBehaviorConfig("test");
+
             new MidPointBehavior(config, new SelectionPointBehavior(config));
         });
     });
@@ -20,7 +40,7 @@ describe("MidPointBehavior", () => {
     describe("api", () => {
         describe("api", () => {
             it("get ids", () => {
-                const config = mockBehaviorConfig("test");
+
                 const midPointBehavior = new MidPointBehavior(
                     config,
                     new SelectionPointBehavior(config)
@@ -30,7 +50,6 @@ describe("MidPointBehavior", () => {
             });
 
             it("set ids fails", () => {
-                const config = mockBehaviorConfig("test");
                 const midPointBehavior = new MidPointBehavior(
                     config,
                     new SelectionPointBehavior(config)
@@ -42,7 +61,6 @@ describe("MidPointBehavior", () => {
             });
 
             it("create fails when the feature does not exist", () => {
-                const config = mockBehaviorConfig("test");
                 const midPointBehavior = new MidPointBehavior(
                     config,
                     new SelectionPointBehavior(config)
@@ -63,7 +81,6 @@ describe("MidPointBehavior", () => {
             });
 
             it("create", () => {
-                const config = mockBehaviorConfig("test");
                 const midPointBehavior = new MidPointBehavior(
                     config,
                     new SelectionPointBehavior(config)
@@ -88,7 +105,7 @@ describe("MidPointBehavior", () => {
             });
 
             it("delete", () => {
-                const config = mockBehaviorConfig("test");
+
                 const midPointBehavior = new MidPointBehavior(
                     config,
                     new SelectionPointBehavior(config)
@@ -112,7 +129,6 @@ describe("MidPointBehavior", () => {
 
             describe("getUpdated", () => {
                 it("should return empty array if trying to get updated coordinates when non exist", () => {
-                    const config = mockBehaviorConfig("test");
                     const midPointBehavior = new MidPointBehavior(
                         config,
                         new SelectionPointBehavior(config)
@@ -128,7 +144,6 @@ describe("MidPointBehavior", () => {
                 });
 
                 it("should get updated coordinates if lengths match", () => {
-                    const config = mockBehaviorConfig("test");
                     const midPointBehavior = new MidPointBehavior(
                         config,
                         new SelectionPointBehavior(config)
@@ -172,7 +187,6 @@ describe("MidPointBehavior", () => {
 
             describe("insert", () => {
                 it("insert midpoint into the linestring", () => {
-                    const config = mockBehaviorConfig("test");
                     const midPointBehavior = new MidPointBehavior(
                         config,
                         new SelectionPointBehavior(config)
@@ -231,7 +245,6 @@ describe("MidPointBehavior", () => {
                 });
 
                 it("insert midpoint into the polygon", () => {
-                    const config = mockBehaviorConfig("test");
                     const midPointBehavior = new MidPointBehavior(
                         config,
                         new SelectionPointBehavior(config)

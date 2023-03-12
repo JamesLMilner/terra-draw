@@ -569,6 +569,19 @@ describe("TerraDrawSelectMode", () => {
                         },
                     });
 
+                    project
+                        .mockImplementation((lng: number, lat: number) => ({
+                            x: lng * 100,
+                            y: lat * 100,
+                        }));
+
+                    unproject
+                        .mockImplementation((x: number, y: number) => ({
+                            lng: x / 100,
+                            lat: y / 100,
+                        }));
+
+
                     addPolygonToStore([
                         [0, 0],
                         [0, 1],
@@ -867,6 +880,19 @@ describe("TerraDrawSelectMode", () => {
                                 },
                             },
                         });
+
+                        project
+                            .mockImplementation((lng: number, lat: number) => ({
+                                x: lng * 100,
+                                y: lat * 100,
+                            }));
+
+                        unproject
+                            .mockImplementation((x: number, y: number) => ({
+                                lng: x / 100,
+                                lat: y / 100,
+                            }));
+
 
                         addPolygonToStore([
                             [0, 0],

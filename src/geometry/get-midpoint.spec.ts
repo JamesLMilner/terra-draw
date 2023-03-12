@@ -10,13 +10,20 @@ describe("getMidPointCoordinates", () => {
                 [0, 1],
                 [0, 0],
             ],
-            9
+            9,
+            (lng: number, lat: number) => {
+                return { x: lng * 100, y: lat * 100 };
+            },
+            (x: number, y: number) => {
+                return { lng: x / 100, lat: y / 100 };
+            }
         );
+
         expect(result).toStrictEqual([
-            [0, 0.499999309],
-            [0.499999309, 1.000038071],
-            [0.500000691, 1.000038071],
-            [0, 0.500000691],
+            [0, 0.5],
+            [0.5, 1],
+            [0.5, 1],
+            [0, 0.5],
         ]);
     });
 });

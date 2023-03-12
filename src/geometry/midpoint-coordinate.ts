@@ -1,37 +1,25 @@
 import { Position } from "geojson";
-import { destination } from "./shape/create-circle";
-import { degreesToRadians, radiansToDegrees } from "./helpers";
 import { limitPrecision } from "./limit-decimal-precision";
-import { haversineDistanceKilometers } from "./measure/haversine-distance";
-
-// Based on turf-bearing: https://github.com/Turfjs/turf/tree/master/packages/turf-bearing
-
-function bearing(coordinates1: Position, coordinates2: Position) {
-    const lon1 = degreesToRadians(coordinates1[0]);
-    const lon2 = degreesToRadians(coordinates2[0]);
-    const lat1 = degreesToRadians(coordinates1[1]);
-    const lat2 = degreesToRadians(coordinates2[1]);
-    const a = Math.sin(lon2 - lon1) * Math.cos(lat2);
-    const b =
-        Math.cos(lat1) * Math.sin(lat2) -
-        Math.sin(lat1) * Math.cos(lat2) * Math.cos(lon2 - lon1);
-
-    return radiansToDegrees(Math.atan2(a, b));
-}
-
-// Based on turf-midpoint: https://github.com/Turfjs/turf/tree/master/packages/turf-midpoint
+import { Project, Unproject } from "../common";
 
 export function midpointCoordinate(
     coordinates1: Position,
     coordinates2: Position,
-    precision: number
+    precision: number,
+    project: Project,
+    unproject: Unproject
 ) {
-    const dist = haversineDistanceKilometers(coordinates1, coordinates2);
-    const heading = bearing(coordinates1, coordinates2);
-    const midpoint = destination(coordinates1, dist / 2, heading);
+
+    const projectedCoordinateOne = project(coordinates1[0], coordinates1[1]);
+    const projectedCoordinateTwo = project(coordinates2[0], coordinates2[1]);
+
+    const { lng, lat } = unproject(
+        (projectedCoordinateOne.x + projectedCoordinateTwo.x) / 2,
+        (projectedCoordinateOne.y + projectedCoordinateTwo.y) / 2
+    );
 
     return [
-        limitPrecision(midpoint[0], precision),
-        limitPrecision(midpoint[1], precision),
+        limitPrecision(lng, precision),
+        limitPrecision(lat, precision),
     ];
 }

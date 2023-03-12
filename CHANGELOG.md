@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.1-alpha.17](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.16...v0.0.1-alpha.17) (2023-03-12)
+
+
+### Bug Fixes
+
+* fix unit test for great-circle-snapping.behavior ([c90cd86](https://github.com/JamesLMilner/terra-draw/commit/c90cd86125339d43768bf6f0936f85bc09bd6833))
+* use project/unproject to get midpoints that are visually centered ([3581da2](https://github.com/JamesLMilner/terra-draw/commit/3581da2cd89ace7c555c747cdae8115c90ec851d))
+
+
+### Chore
+
+* add better test coverage for great circle mode ([4073553](https://github.com/JamesLMilner/terra-draw/commit/4073553563cdfece1f48c3b00a86a6a19457a820))
+* husk precommit only readd linted files ([2eb6138](https://github.com/JamesLMilner/terra-draw/commit/2eb6138a47fc5f48334bcf7b657fa4ac8783dc76))
+* make sure all mode tests are labelled correctly ([a5dfe4b](https://github.com/JamesLMilner/terra-draw/commit/a5dfe4bd79cfb33daaf47195e05b72e0fba4087c))
+* make sure test files are no covered in jest coverage when type checking disabled ([0b271b6](https://github.com/JamesLMilner/terra-draw/commit/0b271b6bf9f764c03bea1f3f4a9bc949ffa830e6))
+* remove unused import from static.mode.spec.ts ([e2bf578](https://github.com/JamesLMilner/terra-draw/commit/e2bf5785f00bf92c72f6054441212a1e98d07abe))
+
 ### [0.0.1-alpha.16](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.15...v0.0.1-alpha.16) (2023-02-19)
 
 

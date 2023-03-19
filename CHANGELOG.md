@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.1-alpha.18](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.17...v0.0.1-alpha.18) (2023-03-19)
+
+
+### Bug Fixes
+
+* better parity between mouse and pointer experiences ([00c219d](https://github.com/JamesLMilner/terra-draw/commit/00c219de114383d7e3f7ad58d91fc6de9c2bb7c9))
+* ensure that closing points for polygons are update on click ([25c0886](https://github.com/JamesLMilner/terra-draw/commit/25c0886237c56881073e44da839b07527362662c))
+
+
+### Chore
+
+* fix issues with prettier conflicting with eslint ([9849bce](https://github.com/JamesLMilner/terra-draw/commit/9849bce825f2073d1b72b0dc9a29718a0cb994d9))
+
 ### [0.0.1-alpha.17](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.16...v0.0.1-alpha.17) (2023-03-12)
 
 

@@ -47,6 +47,8 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 	private pixelDistance!: PixelDistanceBehavior;
 	private closingPoints!: ClosingPointsBehavior;
 
+	private mouseMove = false;
+
 	constructor(options?: {
 		allowSelfIntersections?: boolean;
 		snapping?: boolean;
@@ -139,6 +141,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 
 	/** @internal */
 	onMouseMove(event: TerraDrawMouseEvent) {
+		this.mouseMove = true;
 		this.setCursor("crosshair");
 
 		if (!this.currentId || this.currentCoordinate === 0) {
@@ -216,6 +219,15 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 
 	/** @internal */
 	onClick(event: TerraDrawMouseEvent) {
+		// We want pointer devices (mobile/tablet) to have
+		// similar behaviour to mouse based devices so we
+		// trigger a mousemove event before every click
+		// if one has not been trigged to emulate this
+		if (this.currentCoordinate > 0 && !this.mouseMove) {
+			this.onMouseMove(event);
+		}
+		this.mouseMove = false;
+
 		const closestCoord =
 			this.currentId && this.snappingEnabled
 				? this.snapping.getSnappableCoordinate(event, this.currentId)

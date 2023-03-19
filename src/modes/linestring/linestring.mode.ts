@@ -39,6 +39,8 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 	private keyEvents: TerraDrawLineStringModeKeyEvents;
 	private snappingEnabled: boolean;
 
+	private mouseMove = false;
+
 	// Behaviors
 	private snapping!: SnappingBehavior;
 
@@ -124,6 +126,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 
 	/** @internal */
 	onMouseMove(event: TerraDrawMouseEvent) {
+		this.mouseMove = true;
 		this.setCursor("crosshair");
 
 		if (!this.currentId || this.currentCoordinate === 0) {
@@ -175,6 +178,15 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 
 	/** @internal */
 	onClick(event: TerraDrawMouseEvent) {
+		// We want pointer devices (mobile/tablet) to have
+		// similar behaviour to mouse based devices so we
+		// trigger a mousemove event before every click
+		// if one has not been trigged to emulate this
+		if (this.currentCoordinate > 0 && !this.mouseMove) {
+			this.onMouseMove(event);
+		}
+		this.mouseMove = false;
+
 		const snappedCoord =
 			this.currentId &&
 			this.snappingEnabled &&

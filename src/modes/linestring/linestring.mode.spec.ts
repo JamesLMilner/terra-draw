@@ -206,6 +206,15 @@ describe("TerraDrawLineStringMode", () => {
 				heldKeys: [],
 			});
 
+			lineStringMode.onMouseMove({
+				lng: 1,
+				lat: 1,
+				containerX: 1,
+				containerY: 1,
+				button: "left",
+				heldKeys: [],
+			});
+
 			lineStringMode.onClick({
 				lng: 1,
 				lat: 1,
@@ -215,7 +224,7 @@ describe("TerraDrawLineStringMode", () => {
 				heldKeys: [],
 			});
 
-			expect(onChange).toBeCalledTimes(3);
+			expect(onChange).toBeCalledTimes(4);
 
 			const features = store.copyAll();
 
@@ -304,10 +313,10 @@ describe("TerraDrawLineStringMode", () => {
 				heldKeys: [],
 			});
 
-			expect(onChange).toBeCalledTimes(8);
+			expect(onChange).toBeCalledTimes(9);
 
 			expect(onChange).toHaveBeenNthCalledWith(
-				8,
+				9,
 				[expect.any(String)],
 				"delete"
 			);

@@ -721,6 +721,11 @@ describe("TerraDrawPolygonMode", () => {
 				],
 			]);
 
+			// Fake onMouseMove
+			project.mockReturnValueOnce({ x: 0, y: 0 });
+			project.mockReturnValueOnce({ x: 50, y: 50 });
+
+			// Actual click
 			project.mockReturnValueOnce({ x: 0, y: 0 });
 			project.mockReturnValueOnce({ x: 50, y: 50 });
 

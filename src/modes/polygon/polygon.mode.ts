@@ -41,7 +41,6 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 	private allowSelfIntersections: boolean;
 	private keyEvents: TerraDrawPolygonModeKeyEvents;
 	private snappingEnabled: boolean;
-	private isClosed = false;
 
 	// Behaviors
 	private snapping!: SnappingBehavior;
@@ -191,15 +190,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 					currentPolygonCoordinates[0],
 					currentPolygonCoordinates[0],
 				];
-
-				if (!this.isClosed) {
-					this.isClosed = true;
-				}
 			} else {
-				if (this.isClosed) {
-					this.isClosed = false;
-				}
-
 				updatedCoordinates = [
 					...currentPolygonCoordinates.slice(0, -2),
 					[event.lng, event.lat],
@@ -384,6 +375,11 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 					{ id: this.currentId, geometry: updatedPolygon.geometry },
 				]);
 				this.currentCoordinate++;
+
+				// Update closing points straight away
+				if (this.closingPoints.ids.length) {
+					this.closingPoints.update(updatedPolygon.geometry.coordinates[0]);
+				}
 			}
 		}
 	}

@@ -9,64 +9,64 @@ import { PixelDistanceBehavior } from "./pixel-distance.behavior";
 import { SnappingBehavior } from "./snapping.behavior";
 
 describe("SnappingBehavior", () => {
-    describe("constructor", () => {
-        it("constructs", () => {
-            const config = mockBehaviorConfig("test");
-            new SnappingBehavior(
-                config,
-                new PixelDistanceBehavior(config),
-                new ClickBoundingBoxBehavior(config)
-            );
-        });
-    });
+	describe("constructor", () => {
+		it("constructs", () => {
+			const config = mockBehaviorConfig("test");
+			new SnappingBehavior(
+				config,
+				new PixelDistanceBehavior(config),
+				new ClickBoundingBoxBehavior(config)
+			);
+		});
+	});
 
-    describe("api", () => {
-        let config: BehaviorConfig;
-        let snappingBehavior: SnappingBehavior;
+	describe("api", () => {
+		let config: BehaviorConfig;
+		let snappingBehavior: SnappingBehavior;
 
-        beforeEach(() => {
-            config = mockBehaviorConfig("test");
-            snappingBehavior = new SnappingBehavior(
-                config,
-                new PixelDistanceBehavior(config),
-                new ClickBoundingBoxBehavior(config)
-            );
-        });
+		beforeEach(() => {
+			config = mockBehaviorConfig("test");
+			snappingBehavior = new SnappingBehavior(
+				config,
+				new PixelDistanceBehavior(config),
+				new ClickBoundingBoxBehavior(config)
+			);
+		});
 
-        describe("getSnappablePolygonCoord", () => {
-            it("returns undefined if not snappable", () => {
-                // Mock the unproject to return a valid set
-                // of bbox coordinates
-                mockBoundingBoxUnproject(config.unproject as jest.Mock);
+		describe("getSnappablePolygonCoord", () => {
+			it("returns undefined if not snappable", () => {
+				// Mock the unproject to return a valid set
+				// of bbox coordinates
+				mockBoundingBoxUnproject(config.unproject as jest.Mock);
 
-                const snappedCoord = snappingBehavior.getSnappableCoordinate(
-                    mockDrawEvent(),
-                    "mockId"
-                );
+				const snappedCoord = snappingBehavior.getSnappableCoordinate(
+					mockDrawEvent(),
+					"mockId"
+				);
 
-                expect(snappedCoord).toBe(undefined);
-            });
+				expect(snappedCoord).toBe(undefined);
+			});
 
-            it("returns a snappable coordinate if one exists", () => {
-                // Ensure there is something to snap too by
-                // creating an existing polygon
-                createStorePolygon(config);
+			it("returns a snappable coordinate if one exists", () => {
+				// Ensure there is something to snap too by
+				// creating an existing polygon
+				createStorePolygon(config);
 
-                // Mock the unproject to return a valid set
-                // of bbox coordinates
-                mockBoundingBoxUnproject(config.unproject as jest.Mock);
+				// Mock the unproject to return a valid set
+				// of bbox coordinates
+				mockBoundingBoxUnproject(config.unproject as jest.Mock);
 
-                // Pixel distance will project each point to check the distance
-                // for snapping
-                mockProject(config.project as jest.Mock);
+				// Pixel distance will project each point to check the distance
+				// for snapping
+				mockProject(config.project as jest.Mock);
 
-                const snappedCoord = snappingBehavior.getSnappableCoordinate(
-                    mockDrawEvent(),
-                    "currentId"
-                );
+				const snappedCoord = snappingBehavior.getSnappableCoordinate(
+					mockDrawEvent(),
+					"currentId"
+				);
 
-                expect(snappedCoord).toStrictEqual([0, 0]);
-            });
-        });
-    });
+				expect(snappedCoord).toStrictEqual([0, 0]);
+			});
+		});
+	});
 });

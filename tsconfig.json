@@ -1,29 +1,23 @@
 {
-    "compilerOptions": {
-        "outDir": "./dist/",
-        "strict": true,
-        "noImplicitAny": true,
-        "module": "es6",
-        "target": "es6",
-        "jsx": "react",
-        "sourceMap": true,
-        "allowJs": true,
-        "moduleResolution": "node",
-        "allowSyntheticDefaultImports": true
-    },
-    "typedocOptions": {
-        "entryPoints": [
-            "src/terra-draw.ts"
-        ],
-        "exclude": [
-            "src/geometry/**/*.ts",
-            "src/test/**/*.ts",
-            "src/util/**/*.ts"
-        ],
-        "out": "docs",
-        "skipErrorChecking": true
-        // "compilerOptions": {
-        //     "skipLibCheck": true
-        // }
-    }
+	"compilerOptions": {
+		"outDir": "./dist/",
+		"strict": true,
+		"noImplicitAny": true,
+		"module": "es6",
+		"target": "es6",
+		"jsx": "react",
+		"sourceMap": true,
+		"allowJs": true,
+		"moduleResolution": "node",
+		"allowSyntheticDefaultImports": true
+	},
+	"typedocOptions": {
+		"entryPoints": ["src/terra-draw.ts"],
+		"exclude": ["src/geometry/**/*.ts", "src/test/**/*.ts", "src/util/**/*.ts"],
+		"out": "docs",
+		"skipErrorChecking": true
+		// "compilerOptions": {
+		//     "skipLibCheck": true
+		// }
+	}
 }

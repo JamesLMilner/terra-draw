@@ -3,108 +3,108 @@ import { GeoJSONStoreFeatures } from "../store";
 import { RBush, Node } from "./rbush";
 
 export class SpatialIndex {
-    private tree: RBush;
-    private idToNode: Map<string, Node>;
-    private nodeToId: Map<Node, string>;
+	private tree: RBush;
+	private idToNode: Map<string, Node>;
+	private nodeToId: Map<Node, string>;
 
-    constructor(options?: { maxEntries: number }) {
-        this.tree = new RBush(
-            options && options.maxEntries ? options.maxEntries : 9
-        );
-        this.idToNode = new Map();
-        this.nodeToId = new Map();
-    }
+	constructor(options?: { maxEntries: number }) {
+		this.tree = new RBush(
+			options && options.maxEntries ? options.maxEntries : 9
+		);
+		this.idToNode = new Map();
+		this.nodeToId = new Map();
+	}
 
-    private setMaps(feature: GeoJSONStoreFeatures, bbox: Node) {
-        this.idToNode.set(String(feature.id), bbox);
-        this.nodeToId.set(bbox, String(feature.id));
-    }
+	private setMaps(feature: GeoJSONStoreFeatures, bbox: Node) {
+		this.idToNode.set(String(feature.id), bbox);
+		this.nodeToId.set(bbox, String(feature.id));
+	}
 
-    private toBBox(feature: GeoJSONStoreFeatures) {
-        const longitudes: number[] = [];
-        const latitudes: number[] = [];
+	private toBBox(feature: GeoJSONStoreFeatures) {
+		const longitudes: number[] = [];
+		const latitudes: number[] = [];
 
-        let coordinates: Position[];
-        if (feature.geometry.type === "Polygon") {
-            coordinates = feature.geometry.coordinates[0];
-        } else if (feature.geometry.type === "LineString") {
-            coordinates = feature.geometry.coordinates;
-        } else if (feature.geometry.type === "Point") {
-            coordinates = [feature.geometry.coordinates];
-        } else {
-            throw new Error("Not a valid feature to turn into a bounding box");
-        }
+		let coordinates: Position[];
+		if (feature.geometry.type === "Polygon") {
+			coordinates = feature.geometry.coordinates[0];
+		} else if (feature.geometry.type === "LineString") {
+			coordinates = feature.geometry.coordinates;
+		} else if (feature.geometry.type === "Point") {
+			coordinates = [feature.geometry.coordinates];
+		} else {
+			throw new Error("Not a valid feature to turn into a bounding box");
+		}
 
-        for (let i = 0; i < coordinates.length; i++) {
-            latitudes.push(coordinates[i][1]);
-            longitudes.push(coordinates[i][0]);
-        }
+		for (let i = 0; i < coordinates.length; i++) {
+			latitudes.push(coordinates[i][1]);
+			longitudes.push(coordinates[i][0]);
+		}
 
-        const minLat = Math.min(...latitudes);
-        const maxLat = Math.max(...latitudes);
-        const minLng = Math.min(...longitudes);
-        const maxLng = Math.max(...longitudes);
+		const minLat = Math.min(...latitudes);
+		const maxLat = Math.max(...latitudes);
+		const minLng = Math.min(...longitudes);
+		const maxLng = Math.max(...longitudes);
 
-        return {
-            minX: minLng,
-            minY: minLat,
-            maxX: maxLng,
-            maxY: maxLat,
-        } as Node;
-    }
+		return {
+			minX: minLng,
+			minY: minLat,
+			maxX: maxLng,
+			maxY: maxLat,
+		} as Node;
+	}
 
-    insert(feature: GeoJSONStoreFeatures): void {
-        if (this.idToNode.get(String(feature.id))) {
-            throw new Error("Feature already exists");
-        }
-        const bbox = this.toBBox(feature);
-        this.setMaps(feature, bbox);
-        this.tree.insert(bbox);
-    }
+	insert(feature: GeoJSONStoreFeatures): void {
+		if (this.idToNode.get(String(feature.id))) {
+			throw new Error("Feature already exists");
+		}
+		const bbox = this.toBBox(feature);
+		this.setMaps(feature, bbox);
+		this.tree.insert(bbox);
+	}
 
-    load(features: GeoJSONStoreFeatures[]): void {
-        const load: Node[] = [];
-        const seenIds: Set<string> = new Set();
-        features.forEach((feature) => {
-            const bbox = this.toBBox(feature);
-            this.setMaps(feature, bbox);
-            if (seenIds.has(String(feature.id))) {
-                throw new Error(`Duplicate feature ID found ${feature.id}`);
-            }
-            seenIds.add(String(feature.id));
-            load.push(bbox);
-        });
-        this.tree.load(load);
-    }
+	load(features: GeoJSONStoreFeatures[]): void {
+		const load: Node[] = [];
+		const seenIds: Set<string> = new Set();
+		features.forEach((feature) => {
+			const bbox = this.toBBox(feature);
+			this.setMaps(feature, bbox);
+			if (seenIds.has(String(feature.id))) {
+				throw new Error(`Duplicate feature ID found ${feature.id}`);
+			}
+			seenIds.add(String(feature.id));
+			load.push(bbox);
+		});
+		this.tree.load(load);
+	}
 
-    update(feature: GeoJSONStoreFeatures): void {
-        this.remove(feature.id as string);
-        const bbox = this.toBBox(feature);
-        this.setMaps(feature, bbox);
-        this.tree.insert(bbox);
-    }
+	update(feature: GeoJSONStoreFeatures): void {
+		this.remove(feature.id as string);
+		const bbox = this.toBBox(feature);
+		this.setMaps(feature, bbox);
+		this.tree.insert(bbox);
+	}
 
-    remove(featureId: string): void {
-        const node = this.idToNode.get(featureId);
-        if (!node) {
-            throw new Error(`${featureId} not inserted into the spatial index`);
-        }
+	remove(featureId: string): void {
+		const node = this.idToNode.get(featureId);
+		if (!node) {
+			throw new Error(`${featureId} not inserted into the spatial index`);
+		}
 
-        this.tree.remove(node);
-    }
+		this.tree.remove(node);
+	}
 
-    clear(): void {
-        this.tree.clear();
-    }
+	clear(): void {
+		this.tree.clear();
+	}
 
-    search(feature: GeoJSONStoreFeatures): string[] {
-        const found = this.tree.search(this.toBBox(feature));
-        return found.map((node) => {
-            return this.nodeToId.get(node) as string;
-        });
-    }
+	search(feature: GeoJSONStoreFeatures): string[] {
+		const found = this.tree.search(this.toBBox(feature));
+		return found.map((node) => {
+			return this.nodeToId.get(node) as string;
+		});
+	}
 
-    collides(feature: GeoJSONStoreFeatures): boolean {
-        return this.tree.collides(this.toBBox(feature));
-    }
+	collides(feature: GeoJSONStoreFeatures): boolean {
+		return this.tree.collides(this.toBBox(feature));
+	}
 }

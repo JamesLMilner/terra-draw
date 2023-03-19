@@ -9,75 +9,75 @@ import { rhumbBearing } from "../../../geometry/measure/rhumb-bearing";
 import { limitPrecision } from "../../../geometry/limit-decimal-precision";
 
 export class RotateFeatureBehavior extends TerraDrawModeBehavior {
-    constructor(
-    readonly config: BehaviorConfig,
-    private readonly selectionPoints: SelectionPointBehavior,
-    private readonly midPoints: MidPointBehavior
-    ) {
-        super(config);
-    }
+	constructor(
+		readonly config: BehaviorConfig,
+		private readonly selectionPoints: SelectionPointBehavior,
+		private readonly midPoints: MidPointBehavior
+	) {
+		super(config);
+	}
 
-    private lastBearing: number | undefined;
+	private lastBearing: number | undefined;
 
-    reset() {
-        this.lastBearing = undefined;
-    }
+	reset() {
+		this.lastBearing = undefined;
+	}
 
-    rotate(event: TerraDrawMouseEvent, selectedId: string) {
-        const geometry = this.store.getGeometryCopy<LineString | Polygon>(
-            selectedId
-        );
+	rotate(event: TerraDrawMouseEvent, selectedId: string) {
+		const geometry = this.store.getGeometryCopy<LineString | Polygon>(
+			selectedId
+		);
 
-        // Update the geometry of the dragged feature
-        if (geometry.type !== "Polygon" && geometry.type !== "LineString") {
-            return;
-        }
+		// Update the geometry of the dragged feature
+		if (geometry.type !== "Polygon" && geometry.type !== "LineString") {
+			return;
+		}
 
-        const mouseCoord = [event.lng, event.lat];
+		const mouseCoord = [event.lng, event.lat];
 
-        const bearing = rhumbBearing(
-            centroid({ type: "Feature", geometry, properties: {} }),
-            mouseCoord
-        );
+		const bearing = rhumbBearing(
+			centroid({ type: "Feature", geometry, properties: {} }),
+			mouseCoord
+		);
 
-        // We need an original bearing to compare against
-        if (!this.lastBearing) {
-            this.lastBearing = bearing + 180;
-            return;
-        }
+		// We need an original bearing to compare against
+		if (!this.lastBearing) {
+			this.lastBearing = bearing + 180;
+			return;
+		}
 
-        const angle = this.lastBearing - (bearing + 180);
+		const angle = this.lastBearing - (bearing + 180);
 
-        transformRotate({ type: "Feature", geometry, properties: {} }, -angle);
+		transformRotate({ type: "Feature", geometry, properties: {} }, -angle);
 
-        let updatedCoords: Position[] | undefined;
+		let updatedCoords: Position[] | undefined;
 
-        if (geometry.type === "Polygon") {
-            updatedCoords = geometry.coordinates[0];
-        } else if (geometry.type === "LineString") {
-            updatedCoords = geometry.coordinates;
-        } else {
-            return;
-        }
+		if (geometry.type === "Polygon") {
+			updatedCoords = geometry.coordinates[0];
+		} else if (geometry.type === "LineString") {
+			updatedCoords = geometry.coordinates;
+		} else {
+			return;
+		}
 
-        // Ensure that coordinate precision is maintained
-        updatedCoords.forEach((coordinate) => {
-            coordinate[0] = limitPrecision(coordinate[0], this.coordinatePrecision);
-            coordinate[1] = limitPrecision(coordinate[1], this.coordinatePrecision);
-        });
+		// Ensure that coordinate precision is maintained
+		updatedCoords.forEach((coordinate) => {
+			coordinate[0] = limitPrecision(coordinate[0], this.coordinatePrecision);
+			coordinate[1] = limitPrecision(coordinate[1], this.coordinatePrecision);
+		});
 
-        const updatedMidPoints = this.midPoints.getUpdated(updatedCoords) || [];
+		const updatedMidPoints = this.midPoints.getUpdated(updatedCoords) || [];
 
-        const updatedSelectionPoints =
-      this.selectionPoints.getUpdated(updatedCoords) || [];
+		const updatedSelectionPoints =
+			this.selectionPoints.getUpdated(updatedCoords) || [];
 
-        // Issue the update to the selected feature
-        this.store.updateGeometry([
-            { id: selectedId, geometry },
-            ...updatedSelectionPoints,
-            ...updatedMidPoints,
-        ]);
+		// Issue the update to the selected feature
+		this.store.updateGeometry([
+			{ id: selectedId, geometry },
+			...updatedSelectionPoints,
+			...updatedMidPoints,
+		]);
 
-        this.lastBearing = bearing + 180;
-    }
+		this.lastBearing = bearing + 180;
+	}
 }

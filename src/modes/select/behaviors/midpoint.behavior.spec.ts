@@ -1,8 +1,8 @@
 import { Position } from "geojson";
 import { Project, Unproject } from "../../../common";
 import {
-    createStoreLineString,
-    createStorePolygon,
+	createStoreLineString,
+	createStorePolygon,
 } from "../../../test/create-store-features";
 import { mockBehaviorConfig } from "../../../test/mock-behavior-config";
 import { BehaviorConfig } from "../../base.behavior";
@@ -10,301 +10,300 @@ import { MidPointBehavior } from "./midpoint.behavior";
 import { SelectionPointBehavior } from "./selection-point.behavior";
 
 describe("MidPointBehavior", () => {
-    const coordinatePrecision = 9;
-    let config: BehaviorConfig;
+	const coordinatePrecision = 9;
+	let config: BehaviorConfig;
 
-    beforeEach(() => {
-        jest.resetAllMocks();
-        config = mockBehaviorConfig("test");
+	beforeEach(() => {
+		jest.resetAllMocks();
+		config = mockBehaviorConfig("test");
 
-        (config.project as jest.Mock)
-            .mockImplementation((lng: number, lat: number) => ({
-                x: lng * 100,
-                y: lat * 100,
-            }));
+		(config.project as jest.Mock).mockImplementation(
+			(lng: number, lat: number) => ({
+				x: lng * 100,
+				y: lat * 100,
+			})
+		);
 
-        (config.unproject as jest.Mock)
-            .mockImplementation((x: number, y: number) => ({
-                lng: x / 100,
-                lat: y / 100,
-            }));
-    });
+		(config.unproject as jest.Mock).mockImplementation(
+			(x: number, y: number) => ({
+				lng: x / 100,
+				lat: y / 100,
+			})
+		);
+	});
 
-    describe("constructor", () => {
-        it("constructs", () => {
+	describe("constructor", () => {
+		it("constructs", () => {
+			new MidPointBehavior(config, new SelectionPointBehavior(config));
+		});
+	});
 
-            new MidPointBehavior(config, new SelectionPointBehavior(config));
-        });
-    });
+	describe("api", () => {
+		describe("api", () => {
+			it("get ids", () => {
+				const midPointBehavior = new MidPointBehavior(
+					config,
+					new SelectionPointBehavior(config)
+				);
 
-    describe("api", () => {
-        describe("api", () => {
-            it("get ids", () => {
+				expect(midPointBehavior.ids).toStrictEqual([]);
+			});
 
-                const midPointBehavior = new MidPointBehavior(
-                    config,
-                    new SelectionPointBehavior(config)
-                );
+			it("set ids fails", () => {
+				const midPointBehavior = new MidPointBehavior(
+					config,
+					new SelectionPointBehavior(config)
+				);
 
-                expect(midPointBehavior.ids).toStrictEqual([]);
-            });
+				midPointBehavior.ids = ["test"];
 
-            it("set ids fails", () => {
-                const midPointBehavior = new MidPointBehavior(
-                    config,
-                    new SelectionPointBehavior(config)
-                );
+				expect(midPointBehavior.ids).toStrictEqual([]);
+			});
 
-                midPointBehavior.ids = ["test"];
+			it("create fails when the feature does not exist", () => {
+				const midPointBehavior = new MidPointBehavior(
+					config,
+					new SelectionPointBehavior(config)
+				);
 
-                expect(midPointBehavior.ids).toStrictEqual([]);
-            });
+				jest.spyOn(config.store, "create");
 
-            it("create fails when the feature does not exist", () => {
-                const midPointBehavior = new MidPointBehavior(
-                    config,
-                    new SelectionPointBehavior(config)
-                );
+				expect(() => {
+					midPointBehavior.create(
+						[
+							[0, 0],
+							[0, 1],
+						],
+						"e3ccd3b9-afb1-4f0b-91d8-22a768d5f284",
+						coordinatePrecision
+					);
+				}).toThrowError();
+			});
 
-                jest.spyOn(config.store, "create");
+			it("create", () => {
+				const midPointBehavior = new MidPointBehavior(
+					config,
+					new SelectionPointBehavior(config)
+				);
 
-                expect(() => {
-                    midPointBehavior.create(
-                        [
-                            [0, 0],
-                            [0, 1],
-                        ],
-                        "e3ccd3b9-afb1-4f0b-91d8-22a768d5f284",
-                        coordinatePrecision
-                    );
-                }).toThrowError();
-            });
+				jest.spyOn(config.store, "create");
+				const createdId = createStoreLineString(config);
+				expect(config.store.create).toBeCalledTimes(1);
 
-            it("create", () => {
-                const midPointBehavior = new MidPointBehavior(
-                    config,
-                    new SelectionPointBehavior(config)
-                );
+				midPointBehavior.create(
+					[
+						[0, 0],
+						[0, 1],
+					],
+					createdId,
+					coordinatePrecision
+				);
 
-                jest.spyOn(config.store, "create");
-                const createdId = createStoreLineString(config);
-                expect(config.store.create).toBeCalledTimes(1);
+				expect(config.store.create).toBeCalledTimes(2);
+				expect(midPointBehavior.ids.length).toBe(1);
+				expect(midPointBehavior.ids[0]).toBeUUID4();
+			});
 
-                midPointBehavior.create(
-                    [
-                        [0, 0],
-                        [0, 1],
-                    ],
-                    createdId,
-                    coordinatePrecision
-                );
+			it("delete", () => {
+				const midPointBehavior = new MidPointBehavior(
+					config,
+					new SelectionPointBehavior(config)
+				);
 
-                expect(config.store.create).toBeCalledTimes(2);
-                expect(midPointBehavior.ids.length).toBe(1);
-                expect(midPointBehavior.ids[0]).toBeUUID4();
-            });
+				const createdId = createStoreLineString(config);
 
-            it("delete", () => {
+				midPointBehavior.create(
+					[
+						[0, 0],
+						[0, 1],
+					],
+					createdId,
+					coordinatePrecision
+				);
 
-                const midPointBehavior = new MidPointBehavior(
-                    config,
-                    new SelectionPointBehavior(config)
-                );
+				expect(midPointBehavior.ids.length).toBe(1);
+				midPointBehavior.delete();
+				expect(midPointBehavior.ids.length).toBe(0);
+			});
 
-                const createdId = createStoreLineString(config);
+			describe("getUpdated", () => {
+				it("should return empty array if trying to get updated coordinates when non exist", () => {
+					const midPointBehavior = new MidPointBehavior(
+						config,
+						new SelectionPointBehavior(config)
+					);
+					const result = midPointBehavior.getUpdated([
+						[0, 0],
+						[0, 1],
+						[1, 1],
+						[1, 0],
+					]);
 
-                midPointBehavior.create(
-                    [
-                        [0, 0],
-                        [0, 1],
-                    ],
-                    createdId,
-                    coordinatePrecision
-                );
+					expect(result).toBe(undefined);
+				});
 
-                expect(midPointBehavior.ids.length).toBe(1);
-                midPointBehavior.delete();
-                expect(midPointBehavior.ids.length).toBe(0);
-            });
+				it("should get updated coordinates if lengths match", () => {
+					const midPointBehavior = new MidPointBehavior(
+						config,
+						new SelectionPointBehavior(config)
+					);
 
-            describe("getUpdated", () => {
-                it("should return empty array if trying to get updated coordinates when non exist", () => {
-                    const midPointBehavior = new MidPointBehavior(
-                        config,
-                        new SelectionPointBehavior(config)
-                    );
-                    const result = midPointBehavior.getUpdated([
-                        [0, 0],
-                        [0, 1],
-                        [1, 1],
-                        [1, 0],
-                    ]);
+					const createdId = createStoreLineString(config);
 
-                    expect(result).toBe(undefined);
-                });
+					midPointBehavior.create(
+						[
+							[0, 0],
+							[0, 1],
+							[1, 1],
+							[1, 0],
+							[0, 0],
+						],
+						createdId,
+						coordinatePrecision
+					);
 
-                it("should get updated coordinates if lengths match", () => {
-                    const midPointBehavior = new MidPointBehavior(
-                        config,
-                        new SelectionPointBehavior(config)
-                    );
+					const result = midPointBehavior.getUpdated([
+						[2, 2],
+						[2, 3],
+						[2, 2],
+						[2, 3],
+					]);
 
-                    const createdId = createStoreLineString(config);
+					expect(Array.isArray(result)).toBe(true);
 
-                    midPointBehavior.create(
-                        [
-                            [0, 0],
-                            [0, 1],
-                            [1, 1],
-                            [1, 0],
-                            [0, 0],
-                        ],
-                        createdId,
-                        coordinatePrecision
-                    );
+					expect((result as any).length).toBe(3);
 
-                    const result = midPointBehavior.getUpdated([
-                        [2, 2],
-                        [2, 3],
-                        [2, 2],
-                        [2, 3],
-                    ]);
+					(result as any[]).forEach((point) => {
+						expect(point.id).toBeUUID4();
+						expect(point.geometry.type).toBe("Point");
+						expect(point.geometry.coordinates).toStrictEqual([
+							expect.any(Number),
+							expect.any(Number),
+						]);
+					});
+				});
+			});
 
-                    expect(Array.isArray(result)).toBe(true);
+			describe("insert", () => {
+				it("insert midpoint into the linestring", () => {
+					const midPointBehavior = new MidPointBehavior(
+						config,
+						new SelectionPointBehavior(config)
+					);
 
-                    expect((result as any).length).toBe(3);
+					jest.spyOn(config.store, "create");
+					const createdId = createStoreLineString(config);
+					expect(config.store.create).toBeCalledTimes(1);
 
-                    (result as any[]).forEach((point) => {
-                        expect(point.id).toBeUUID4();
-                        expect(point.geometry.type).toBe("Point");
-                        expect(point.geometry.coordinates).toStrictEqual([
-                            expect.any(Number),
-                            expect.any(Number),
-                        ]);
-                    });
-                });
-            });
+					midPointBehavior.create(
+						[
+							[0, 0],
+							[0, 1],
+						],
+						createdId,
+						coordinatePrecision
+					);
 
-            describe("insert", () => {
-                it("insert midpoint into the linestring", () => {
-                    const midPointBehavior = new MidPointBehavior(
-                        config,
-                        new SelectionPointBehavior(config)
-                    );
+					const createCalls = (config.store.create as jest.Mock).mock.calls;
 
-                    jest.spyOn(config.store, "create");
-                    const createdId = createStoreLineString(config);
-                    expect(config.store.create).toBeCalledTimes(1);
+					// Initial Create
+					expect(createCalls[1][0][0].properties).toStrictEqual({
+						midPoint: true,
+						midPointFeatureId: expect.any(String),
+						midPointSegment: 0,
+						mode: "test",
+					});
 
-                    midPointBehavior.create(
-                        [
-                            [0, 0],
-                            [0, 1],
-                        ],
-                        createdId,
-                        coordinatePrecision
-                    );
+					const midPointId = midPointBehavior.ids[0];
 
-                    const createCalls = (config.store.create as jest.Mock).mock.calls;
+					expect(midPointId).toBeUUID4();
 
-                    // Initial Create
-                    expect(createCalls[1][0][0].properties).toStrictEqual({
-                        midPoint: true,
-                        midPointFeatureId: expect.any(String),
-                        midPointSegment: 0,
-                        mode: "test",
-                    });
+					midPointBehavior.insert(midPointId, coordinatePrecision);
 
-                    const midPointId = midPointBehavior.ids[0];
+					expect(config.store.create).toBeCalledTimes(4);
 
-                    expect(midPointId).toBeUUID4();
+					// New Midpoints
+					createCalls[2][0].forEach((call: any, i: number) => {
+						expect(call.properties).toStrictEqual({
+							midPoint: true,
+							midPointFeatureId: expect.any(String),
+							midPointSegment: i,
+							mode: "test",
+						});
+					});
 
-                    midPointBehavior.insert(midPointId, coordinatePrecision);
+					// New Selection points
+					createCalls[3][0].forEach((call: any, i: number) => {
+						expect(call.properties).toStrictEqual({
+							index: i,
+							mode: "test",
+							selectionPoint: true,
+							selectionPointFeatureId: expect.any(String),
+						});
+					});
+				});
 
-                    expect(config.store.create).toBeCalledTimes(4);
+				it("insert midpoint into the polygon", () => {
+					const midPointBehavior = new MidPointBehavior(
+						config,
+						new SelectionPointBehavior(config)
+					);
 
-                    // New Midpoints
-                    createCalls[2][0].forEach((call: any, i: number) => {
-                        expect(call.properties).toStrictEqual({
-                            midPoint: true,
-                            midPointFeatureId: expect.any(String),
-                            midPointSegment: i,
-                            mode: "test",
-                        });
-                    });
+					jest.spyOn(config.store, "create");
+					const createdId = createStorePolygon(config);
+					expect(config.store.create).toBeCalledTimes(1);
 
-                    // New Selection points
-                    createCalls[3][0].forEach((call: any, i: number) => {
-                        expect(call.properties).toStrictEqual({
-                            index: i,
-                            mode: "test",
-                            selectionPoint: true,
-                            selectionPointFeatureId: expect.any(String),
-                        });
-                    });
-                });
+					midPointBehavior.create(
+						[
+							[0, 0],
+							[0, 1],
+							[1, 1],
+							[1, 0],
+							[0, 0],
+						],
+						createdId,
+						coordinatePrecision
+					);
 
-                it("insert midpoint into the polygon", () => {
-                    const midPointBehavior = new MidPointBehavior(
-                        config,
-                        new SelectionPointBehavior(config)
-                    );
+					const createCalls = (config.store.create as jest.Mock).mock.calls;
 
-                    jest.spyOn(config.store, "create");
-                    const createdId = createStorePolygon(config);
-                    expect(config.store.create).toBeCalledTimes(1);
+					// Initial Create
+					expect(createCalls[1][0][0].properties).toStrictEqual({
+						midPoint: true,
+						midPointFeatureId: expect.any(String),
+						midPointSegment: 0,
+						mode: "test",
+					});
 
-                    midPointBehavior.create(
-                        [
-                            [0, 0],
-                            [0, 1],
-                            [1, 1],
-                            [1, 0],
-                            [0, 0],
-                        ],
-                        createdId,
-                        coordinatePrecision
-                    );
+					const midPointId = midPointBehavior.ids[0];
 
-                    const createCalls = (config.store.create as jest.Mock).mock.calls;
+					expect(midPointId).toBeUUID4();
 
-                    // Initial Create
-                    expect(createCalls[1][0][0].properties).toStrictEqual({
-                        midPoint: true,
-                        midPointFeatureId: expect.any(String),
-                        midPointSegment: 0,
-                        mode: "test",
-                    });
+					midPointBehavior.insert(midPointId, coordinatePrecision);
 
-                    const midPointId = midPointBehavior.ids[0];
+					expect(config.store.create).toBeCalledTimes(4);
 
-                    expect(midPointId).toBeUUID4();
+					// New Midpoints
+					createCalls[2][0].forEach((call: any, i: number) => {
+						expect(call.properties).toStrictEqual({
+							midPoint: true,
+							midPointFeatureId: expect.any(String),
+							midPointSegment: i,
+							mode: "test",
+						});
+					});
 
-                    midPointBehavior.insert(midPointId, coordinatePrecision);
-
-                    expect(config.store.create).toBeCalledTimes(4);
-
-                    // New Midpoints
-                    createCalls[2][0].forEach((call: any, i: number) => {
-                        expect(call.properties).toStrictEqual({
-                            midPoint: true,
-                            midPointFeatureId: expect.any(String),
-                            midPointSegment: i,
-                            mode: "test",
-                        });
-                    });
-
-                    // New Selection points
-                    createCalls[3][0].forEach((call: any, i: number) => {
-                        expect(call.properties).toStrictEqual({
-                            index: i,
-                            mode: "test",
-                            selectionPoint: true,
-                            selectionPointFeatureId: expect.any(String),
-                        });
-                    });
-                });
-            });
-        });
-    });
+					// New Selection points
+					createCalls[3][0].forEach((call: any, i: number) => {
+						expect(call.properties).toStrictEqual({
+							index: i,
+							mode: "test",
+							selectionPoint: true,
+							selectionPointFeatureId: expect.any(String),
+						});
+					});
+				});
+			});
+		});
+	});
 });

@@ -1,8 +1,8 @@
 import {
-    TerraDrawMouseEvent,
-    TerraDrawAdapterStyling,
-    TerraDrawKeyboardEvent,
-    HexColor,
+	TerraDrawMouseEvent,
+	TerraDrawAdapterStyling,
+	TerraDrawKeyboardEvent,
+	HexColor,
 } from "../../common";
 import { LineString } from "geojson";
 import { TerraDrawBaseDrawMode } from "../base.mode";
@@ -15,260 +15,261 @@ import { PixelDistanceBehavior } from "../pixel-distance.behavior";
 import { ClickBoundingBoxBehavior } from "../click-bounding-box.behavior";
 
 type TerraDrawGreateCircleModeKeyEvents = {
-    cancel: KeyboardEvent["key"] | null
-    finish: KeyboardEvent["key"] | null
+	cancel: KeyboardEvent["key"] | null;
+	finish: KeyboardEvent["key"] | null;
 };
 
 type GreateCircleStyling = {
-    lineStringWidth: number,
-    lineStringColor: HexColor,
-    closingPointColor: HexColor,
-    closingPointWidth: number,
-    closingPointOutlineColor: HexColor,
-    closingPointOutlineWidth: number
-}
-
+	lineStringWidth: number;
+	lineStringColor: HexColor;
+	closingPointColor: HexColor;
+	closingPointWidth: number;
+	closingPointOutlineColor: HexColor;
+	closingPointOutlineWidth: number;
+};
 
 export class TerraDrawGreatCircleMode extends TerraDrawBaseDrawMode<GreateCircleStyling> {
-    mode = "greatcircle";
+	mode = "greatcircle";
 
-    private currentCoordinate = 0;
-    private currentId: string | undefined;
-    private closingPointId: string | undefined;
-    private keyEvents: TerraDrawGreateCircleModeKeyEvents;
-    private snappingEnabled: boolean;
+	private currentCoordinate = 0;
+	private currentId: string | undefined;
+	private closingPointId: string | undefined;
+	private keyEvents: TerraDrawGreateCircleModeKeyEvents;
+	private snappingEnabled: boolean;
 
-    // Behaviors
-    private snapping!: GreatCircleSnappingBehavior;
+	// Behaviors
+	private snapping!: GreatCircleSnappingBehavior;
 
-    constructor(options?: {
-        snapping?: boolean;
-        pointerDistance?: number;
-        styles?: Partial<GreateCircleStyling>;
-        keyEvents?: TerraDrawGreateCircleModeKeyEvents | null
-    }) {
-        super(options);
+	constructor(options?: {
+		snapping?: boolean;
+		pointerDistance?: number;
+		styles?: Partial<GreateCircleStyling>;
+		keyEvents?: TerraDrawGreateCircleModeKeyEvents | null;
+	}) {
+		super(options);
 
-        this.snappingEnabled =
-            options && options.snapping !== undefined ? options.snapping : false;
+		this.snappingEnabled =
+			options && options.snapping !== undefined ? options.snapping : false;
 
-        // We want to have some defaults, but also allow key bindings
-        // to be explicitly turned off
-        if (options?.keyEvents === null) {
-            this.keyEvents = { cancel: null, finish: null };
-        } else {
-            const defaultKeyEvents = { cancel: "Escape", finish: 'Enter' };
-            this.keyEvents =
-                options && options.keyEvents ? { ...defaultKeyEvents, ...options.keyEvents } : defaultKeyEvents;
-        }
-    }
+		// We want to have some defaults, but also allow key bindings
+		// to be explicitly turned off
+		if (options?.keyEvents === null) {
+			this.keyEvents = { cancel: null, finish: null };
+		} else {
+			const defaultKeyEvents = { cancel: "Escape", finish: "Enter" };
+			this.keyEvents =
+				options && options.keyEvents
+					? { ...defaultKeyEvents, ...options.keyEvents }
+					: defaultKeyEvents;
+		}
+	}
 
-    private close() {
-        if (!this.currentId) {
-            return;
-        }
+	private close() {
+		if (!this.currentId) {
+			return;
+		}
 
-        // Reset the state back to starting state
-        this.closingPointId && this.store.delete([this.closingPointId]);
-        this.currentCoordinate = 0;
-        this.currentId = undefined;
-        this.closingPointId = undefined;
-    }
+		// Reset the state back to starting state
+		this.closingPointId && this.store.delete([this.closingPointId]);
+		this.currentCoordinate = 0;
+		this.currentId = undefined;
+		this.closingPointId = undefined;
+	}
 
-    /** @internal */
-    registerBehaviors(config: BehaviorConfig) {
-        this.snapping = new GreatCircleSnappingBehavior(
-            config,
-            new PixelDistanceBehavior(config),
-            new ClickBoundingBoxBehavior(config)
-        );
-    }
+	/** @internal */
+	registerBehaviors(config: BehaviorConfig) {
+		this.snapping = new GreatCircleSnappingBehavior(
+			config,
+			new PixelDistanceBehavior(config),
+			new ClickBoundingBoxBehavior(config)
+		);
+	}
 
-    /** @internal */
-    start() {
-        this.setStarted();
-        this.setCursor("crosshair");
-    }
+	/** @internal */
+	start() {
+		this.setStarted();
+		this.setCursor("crosshair");
+	}
 
-    /** @internal */
-    stop() {
-        this.setStopped();
-        this.setCursor("unset");
-        this.cleanUp();
-    }
+	/** @internal */
+	stop() {
+		this.setStopped();
+		this.setCursor("unset");
+		this.cleanUp();
+	}
 
-    /** @internal */
-    onMouseMove(event: TerraDrawMouseEvent) {
-        this.setCursor("crosshair");
+	/** @internal */
+	onMouseMove(event: TerraDrawMouseEvent) {
+		this.setCursor("crosshair");
 
-        if (!this.currentId && this.currentCoordinate === 0) {
-            return;
-        } else if (this.currentId && this.currentCoordinate === 1 && this.closingPointId) {
+		if (!this.currentId && this.currentCoordinate === 0) {
+			return;
+		} else if (
+			this.currentId &&
+			this.currentCoordinate === 1 &&
+			this.closingPointId
+		) {
+			const snappedCoord =
+				this.currentId &&
+				this.snappingEnabled &&
+				this.snapping.getSnappableCoordinate(event, this.currentId);
 
-            const snappedCoord =
-                this.currentId &&
-                this.snappingEnabled &&
-                this.snapping.getSnappableCoordinate(event, this.currentId);
+			const updatedCoord = snappedCoord ? snappedCoord : [event.lng, event.lat];
 
-            const updatedCoord = snappedCoord ? snappedCoord : [event.lng, event.lat];
+			this.store.updateGeometry([
+				{
+					id: this.closingPointId,
+					geometry: { type: "Point", coordinates: updatedCoord },
+				},
+			]);
 
-            this.store.updateGeometry([{
-                id: this.closingPointId,
-                geometry: { type: "Point", coordinates: updatedCoord }
-            }]);
+			const currentLineGeometry = this.store.getGeometryCopy<LineString>(
+				this.currentId
+			);
 
-            const currentLineGeometry = this.store.getGeometryCopy<LineString>(
-                this.currentId
-            );
+			// Remove the 'live' point that changes on mouse move
+			currentLineGeometry.coordinates.pop();
 
-            // Remove the 'live' point that changes on mouse move
-            currentLineGeometry.coordinates.pop();
+			// Update the 'live' point
+			const greatCircle = greatCircleLine({
+				start: currentLineGeometry.coordinates[0],
+				end: updatedCoord,
+				options: { coordinatePrecision: this.coordinatePrecision },
+			});
 
-            // Update the 'live' point
-            const greatCircle = greatCircleLine({
-                start: currentLineGeometry.coordinates[0],
-                end: updatedCoord,
-                options: { coordinatePrecision: this.coordinatePrecision }
-            });
+			if (greatCircle) {
+				this.store.updateGeometry([
+					{
+						id: this.currentId,
+						geometry: greatCircle.geometry,
+					},
+				]);
+			}
+		}
+	}
 
-            if (greatCircle) {
-                this.store.updateGeometry([
-                    {
-                        id: this.currentId,
-                        geometry: greatCircle.geometry
-                    },
-                ]);
-            }
-        }
-    }
+	/** @internal */
+	onClick(event: TerraDrawMouseEvent) {
+		if (this.currentCoordinate === 0) {
+			const snappedCoord =
+				this.snappingEnabled && this.snapping.getSnappableCoordinate(event);
 
-    /** @internal */
-    onClick(event: TerraDrawMouseEvent) {
+			const updatedCoord = snappedCoord ? snappedCoord : [event.lng, event.lat];
 
-        if (this.currentCoordinate === 0) {
+			const [createdId] = this.store.create([
+				{
+					geometry: {
+						type: "LineString",
+						coordinates: [
+							updatedCoord,
+							updatedCoord, // This is the 'live' point that changes on mouse move
+						],
+					},
+					properties: { mode: this.mode },
+				},
+			]);
+			this.currentId = createdId;
 
-            const snappedCoord =
-                this.snappingEnabled &&
-                this.snapping.getSnappableCoordinate(event);
+			const [pointId] = this.store.create([
+				{
+					geometry: {
+						type: "Point",
+						coordinates: updatedCoord,
+					},
+					properties: { mode: this.mode },
+				},
+			]);
+			this.closingPointId = pointId;
 
-            const updatedCoord = snappedCoord ? snappedCoord : [event.lng, event.lat];
+			this.currentCoordinate++;
+		} else if (this.currentCoordinate === 1 && this.currentId) {
+			// We are creating the point so we immediately want
+			// to set the point cursor to show it can be closed
+			this.setCursor("pointer");
+			this.close();
+		}
+	}
 
-            const [createdId] = this.store.create([
-                {
-                    geometry: {
-                        type: "LineString",
-                        coordinates: [
-                            updatedCoord,
-                            updatedCoord, // This is the 'live' point that changes on mouse move
-                        ],
-                    },
-                    properties: { mode: this.mode },
-                },
-            ]);
-            this.currentId = createdId;
+	/** @internal */
+	onKeyDown() {}
 
-            const [pointId] = this.store.create([
-                {
-                    geometry: {
-                        type: "Point",
-                        coordinates: updatedCoord,
-                    },
-                    properties: { mode: this.mode },
-                },
-            ]);
-            this.closingPointId = pointId;
+	/** @internal */
+	onKeyUp(event: TerraDrawKeyboardEvent) {
+		if (event.key === this.keyEvents.cancel) {
+			this.cleanUp();
+		}
 
-            this.currentCoordinate++;
-        } else if (this.currentCoordinate === 1 && this.currentId) {
+		if (event.key === this.keyEvents.finish) {
+			this.close();
+		}
+	}
 
-            // We are creating the point so we immediately want
-            // to set the point cursor to show it can be closed
-            this.setCursor('pointer');
-            this.close();
-        }
+	/** @internal */
+	onDragStart() {}
 
-    }
+	/** @internal */
+	onDrag() {}
 
-    /** @internal */
-    onKeyDown() { }
+	/** @internal */
+	onDragEnd() {}
 
-    /** @internal */
-    onKeyUp(event: TerraDrawKeyboardEvent) {
-        if (event.key === this.keyEvents.cancel) {
-            this.cleanUp();
-        }
+	/** @internal */
+	cleanUp() {
+		try {
+			if (this.currentId) {
+				this.store.delete([this.currentId]);
+			}
+			if (this.closingPointId) {
+				this.store.delete([this.closingPointId]);
+			}
+		} catch (error) {}
 
-        if (event.key === this.keyEvents.finish) {
-            this.close();
-        }
-    }
+		this.closingPointId = undefined;
+		this.currentId = undefined;
+		this.currentCoordinate = 0;
+	}
 
-    /** @internal */
-    onDragStart() { }
+	/** @internal */
+	styleFeature(feature: GeoJSONStoreFeatures): TerraDrawAdapterStyling {
+		const styles = { ...getDefaultStyling() };
 
-    /** @internal */
-    onDrag() { }
+		if (
+			feature.type === "Feature" &&
+			feature.geometry.type === "LineString" &&
+			feature.properties.mode === this.mode
+		) {
+			if (this.styles.lineStringColor) {
+				styles.lineStringColor = this.styles.lineStringColor;
+			}
+			if (this.styles.lineStringWidth) {
+				styles.lineStringWidth = this.styles.lineStringWidth;
+			}
 
-    /** @internal */
-    onDragEnd() { }
+			return styles;
+		} else if (
+			feature.type === "Feature" &&
+			feature.geometry.type === "Point" &&
+			feature.properties.mode === this.mode
+		) {
+			if (this.styles.closingPointColor) {
+				styles.pointColor = this.styles.closingPointColor;
+			}
+			if (this.styles.closingPointWidth) {
+				styles.pointWidth = this.styles.closingPointWidth;
+			}
 
-    /** @internal */
-    cleanUp() {
-        try {
-            if (this.currentId) {
-                this.store.delete([this.currentId]);
-            }
-            if (this.closingPointId) {
-                this.store.delete([this.closingPointId]);
-            }
-        } catch (error) { }
+			styles.pointOutlineColor =
+				this.styles.closingPointOutlineColor !== undefined
+					? this.styles.closingPointOutlineColor
+					: "#ffffff";
+			styles.pointOutlineWidth =
+				this.styles.closingPointOutlineWidth !== undefined
+					? this.styles.closingPointOutlineWidth
+					: 2;
 
-        this.closingPointId = undefined;
-        this.currentId = undefined;
-        this.currentCoordinate = 0;
-    }
+			return styles;
+		}
 
-    /** @internal */
-    styleFeature(
-        feature: GeoJSONStoreFeatures
-    ): TerraDrawAdapterStyling {
-        const styles = { ...getDefaultStyling() };
-
-        if (
-            feature.type === 'Feature' &&
-            feature.geometry.type === 'LineString' &&
-            feature.properties.mode === this.mode
-        ) {
-
-            if (this.styles.lineStringColor) {
-                styles.lineStringColor = this.styles.lineStringColor;
-            }
-            if (this.styles.lineStringWidth) {
-                styles.lineStringWidth = this.styles.lineStringWidth;
-            }
-
-            return styles;
-        } else if (
-            feature.type === 'Feature' &&
-            feature.geometry.type === 'Point' &&
-            feature.properties.mode === this.mode
-        ) {
-
-            if (this.styles.closingPointColor) {
-                styles.pointColor = this.styles.closingPointColor;
-            }
-            if (this.styles.closingPointWidth) {
-                styles.pointWidth = this.styles.closingPointWidth;
-            }
-
-            styles.pointOutlineColor = this.styles.closingPointOutlineColor !== undefined ?
-                this.styles.closingPointOutlineColor : '#ffffff';
-            styles.pointOutlineWidth = this.styles.closingPointOutlineWidth !== undefined ?
-                this.styles.closingPointOutlineWidth : 2;
-
-            return styles;
-        }
-
-        return styles;
-    }
+		return styles;
+	}
 }

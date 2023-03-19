@@ -1,157 +1,152 @@
 {
-    "name": "terra-draw",
-    "version": "0.0.1-alpha.17",
-    "description": "Frictionless map drawing across mapping provider",
-    "scripts": {
-        "docs": "typedoc",
-        "docs:serve": "serve ./docs",
-        "release": "standard-version",
-        "build": "microbundle",
-        "watch": "microbundle --watch --format modern",
-        "test": "jest --config jest.config.ts",
-        "test:coverage": "jest --config jest.config.ts --coverage",
-        "test:nocheck": "NO_CHECK=true jest --config jest.config.ts",
-        "test:nocheck:coverage": "NO_CHECK=true jest --config jest.config.ts --coverage",
-        "lint": "eslint --ext .ts src/",
-        "lint:quiet": "eslint --ext .ts --quiet src/",
-        "lint:fix": "eslint --fix --ext .ts src/",
-        "lint:fix:quiet": "eslint --fix --quiet --ext .ts src/",
-        "prepare": "husky install"
-    },
-    "type": "module",
-    "source": "src/terra-draw.ts",
-    "exports": {
-        "types": "./dist/terra-draw.d.ts",
-        "require": "./dist/terra-draw.cjs",
-        "default": "./dist/terra-draw.modern.js"
-    },
-    "types": "./dist/terra-draw.d.ts",
-    "main": "./dist/terra-draw.cjs",
-    "module": "./dist/terra-draw.module.js",
-    "unpkg": "./dist/terra-draw.umd.js",
-    "author": "James Milner",
-    "license": "MIT",
-    "repository": "JamesLMilner/terra-draw",
-    "keywords": [
-        "map",
-        "drawing",
-        "draw",
-        "map drawing",
-        "geometry",
-        "leaflet",
-        "leafletjs",
-        "mapbox",
-        "mapboxgl",
-        "google maps",
-        "openlayers",
-        "maplibre"
-    ],
-    "devDependencies": {
-        "@commitlint/cli": "^17.1.2",
-        "@commitlint/config-conventional": "^17.1.0",
-        "@googlemaps/js-api-loader": "^1.14.3",
-        "@swc/jest": "^0.2.24",
-        "@types/geojson": "^7946.0.8",
-        "@types/google.maps": "^3.49.2",
-        "@types/jest": "^28.1.5",
-        "@types/leaflet": "^1.7.11",
-        "@types/mapbox-gl": "^2.7.3",
-        "@types/rbush": "^3.0.0",
-        "@typescript-eslint/eslint-plugin": "^5.48.0",
-        "@typescript-eslint/parser": "^5.48.0",
-        "eslint": "^8.24.0",
-        "eslint-config-prettier": "^8.5.0",
-        "eslint-plugin-prettier": "^4.2.1",
-        "husky": "^7.0.0",
-        "jest": "^29.3.1",
-        "leaflet": "^1.8.0",
-        "mapbox-gl": "^2.9.1",
-        "maplibre-gl": "^2.4.0",
-        "microbundle": "^0.15.0",
-        "ol": "^7.1.0",
-        "serve": "^14.1.2",
-        "standard-version": "^9.5.0",
-        "ts-jest": "^29.0.3",
-        "ts-loader": "^9.4.2",
-        "typedoc": "^0.23.21",
-        "typescript": "^4.9.4"
-    },
-    "commitlint": {
-        "extends": [
-            "@commitlint/config-conventional"
-        ]
-    },
-    "eslintConfig": {
-        "parser": "@typescript-eslint/parser",
-        "plugins": [
-            "@typescript-eslint"
-        ],
-        "rules": {
-            "indent": [
-                "error",
-                4
-            ],
-            "semi": [
-                "error",
-                "always"
-            ],
-            "@typescript-eslint/no-empty-function": "warn"
-        },
-        "extends": [
-            "plugin:@typescript-eslint/recommended",
-            "prettier"
-        ]
-    },
-    "prettier": {
-        "printWidth": 80,
-        "semi": true
-    },
-    "standard-version": {
-        "types": [
-            {
-                "type": "feat",
-                "section": "Features"
-            },
-            {
-                "type": "fix",
-                "section": "Bug Fixes"
-            },
-            {
-                "type": "docs",
-                "section": "Documentation"
-            },
-            {
-                "type": "style",
-                "section": "Styling"
-            },
-            {
-                "type": "refactor",
-                "section": "Refactors"
-            },
-            {
-                "type": "perf",
-                "section": "Performance"
-            },
-            {
-                "type": "test",
-                "section": "Tests"
-            },
-            {
-                "type": "build",
-                "section": "Build System"
-            },
-            {
-                "type": "ci",
-                "section": "CI"
-            },
-            {
-                "type": "chore",
-                "section": "Chore"
-            },
-            {
-                "type": "revert",
-                "section": "Reverts"
-            }
-        ]
-    }
+	"name": "terra-draw",
+	"version": "0.0.1-alpha.17",
+	"description": "Frictionless map drawing across mapping provider",
+	"scripts": {
+		"docs": "typedoc",
+		"docs:serve": "serve ./docs",
+		"release": "standard-version",
+		"build": "microbundle",
+		"watch": "microbundle --watch --format modern",
+		"test": "jest --config jest.config.ts",
+		"test:coverage": "jest --config jest.config.ts --coverage",
+		"test:nocheck": "NO_CHECK=true jest --config jest.config.ts",
+		"test:nocheck:coverage": "NO_CHECK=true jest --config jest.config.ts --coverage",
+		"lint": "eslint --ext .ts src/",
+		"lint:quiet": "eslint --ext .ts --quiet src/",
+		"lint:fix": "eslint --fix --ext .ts src/",
+		"lint:fix:quiet": "eslint --fix --quiet --ext .ts src/",
+		"format": "prettier --ignore-path .gitignore --write \"**/*.+(js|ts|json)\"",
+		"format:quiet": "prettier --ignore-path .gitignore --write \"**/*.+(js|ts|json)\" --loglevel=silent",
+		"prepare": "husky install"
+	},
+	"type": "module",
+	"source": "src/terra-draw.ts",
+	"exports": {
+		"types": "./dist/terra-draw.d.ts",
+		"require": "./dist/terra-draw.cjs",
+		"default": "./dist/terra-draw.modern.js"
+	},
+	"types": "./dist/terra-draw.d.ts",
+	"main": "./dist/terra-draw.cjs",
+	"module": "./dist/terra-draw.module.js",
+	"unpkg": "./dist/terra-draw.umd.js",
+	"author": "James Milner",
+	"license": "MIT",
+	"repository": "JamesLMilner/terra-draw",
+	"keywords": [
+		"map",
+		"drawing",
+		"draw",
+		"map drawing",
+		"geometry",
+		"leaflet",
+		"leafletjs",
+		"mapbox",
+		"mapboxgl",
+		"google maps",
+		"openlayers",
+		"maplibre"
+	],
+	"devDependencies": {
+		"@commitlint/cli": "^17.1.2",
+		"@commitlint/config-conventional": "^17.1.0",
+		"@googlemaps/js-api-loader": "^1.14.3",
+		"@swc/jest": "^0.2.24",
+		"@types/geojson": "^7946.0.8",
+		"@types/google.maps": "^3.49.2",
+		"@types/jest": "^28.1.5",
+		"@types/leaflet": "^1.7.11",
+		"@types/mapbox-gl": "^2.7.3",
+		"@types/rbush": "^3.0.0",
+		"@typescript-eslint/eslint-plugin": "^5.48.0",
+		"@typescript-eslint/parser": "^5.48.0",
+		"eslint": "^8.24.0",
+		"eslint-config-prettier": "^8.5.0",
+		"eslint-plugin-prettier": "^4.2.1",
+		"husky": "^7.0.0",
+		"jest": "^29.3.1",
+		"leaflet": "^1.8.0",
+		"mapbox-gl": "^2.9.1",
+		"maplibre-gl": "^2.4.0",
+		"microbundle": "^0.15.0",
+		"ol": "^7.1.0",
+		"serve": "^14.1.2",
+		"standard-version": "^9.5.0",
+		"ts-jest": "^29.0.3",
+		"ts-loader": "^9.4.2",
+		"typedoc": "^0.23.21",
+		"typescript": "^4.9.4"
+	},
+	"commitlint": {
+		"extends": [
+			"@commitlint/config-conventional"
+		]
+	},
+	"eslintConfig": {
+		"parser": "@typescript-eslint/parser",
+		"plugins": [
+			"@typescript-eslint"
+		],
+		"rules": {
+			"@typescript-eslint/no-empty-function": "warn"
+		},
+		"extends": [
+			"plugin:@typescript-eslint/recommended",
+			"prettier"
+		]
+	},
+	"prettier": {
+		"printWidth": 80,
+		"semi": true,
+		"useTabs": true
+	},
+	"standard-version": {
+		"types": [
+			{
+				"type": "feat",
+				"section": "Features"
+			},
+			{
+				"type": "fix",
+				"section": "Bug Fixes"
+			},
+			{
+				"type": "docs",
+				"section": "Documentation"
+			},
+			{
+				"type": "style",
+				"section": "Styling"
+			},
+			{
+				"type": "refactor",
+				"section": "Refactors"
+			},
+			{
+				"type": "perf",
+				"section": "Performance"
+			},
+			{
+				"type": "test",
+				"section": "Tests"
+			},
+			{
+				"type": "build",
+				"section": "Build System"
+			},
+			{
+				"type": "ci",
+				"section": "CI"
+			},
+			{
+				"type": "chore",
+				"section": "Chore"
+			},
+			{
+				"type": "revert",
+				"section": "Reverts"
+			}
+		]
+	}
 }

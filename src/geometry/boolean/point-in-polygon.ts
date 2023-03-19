@@ -5,21 +5,21 @@ import { Position } from "geojson";
 // ISC License - Copyright (c) 2017, Mapbox
 
 export function pointInPolygon(point: Position, rings: Position[][]) {
-    let inside = false;
-    for (let i = 0, len = rings.length; i < len; i++) {
-        const ring = rings[i];
-        for (let j = 0, len2 = ring.length, k = len2 - 1; j < len2; k = j++) {
-            if (rayIntersect(point, ring[j], ring[k])) {
-                inside = !inside;
-            }
-        }
-    }
-    return inside;
+	let inside = false;
+	for (let i = 0, len = rings.length; i < len; i++) {
+		const ring = rings[i];
+		for (let j = 0, len2 = ring.length, k = len2 - 1; j < len2; k = j++) {
+			if (rayIntersect(point, ring[j], ring[k])) {
+				inside = !inside;
+			}
+		}
+	}
+	return inside;
 }
 
 function rayIntersect(p: Position, p1: Position, p2: Position) {
-    return (
-        p1[1] > p[1] !== p2[1] > p[1] &&
-        p[0] < ((p2[0] - p1[0]) * (p[1] - p1[1])) / (p2[1] - p1[1]) + p1[0]
-    );
+	return (
+		p1[1] > p[1] !== p2[1] > p[1] &&
+		p[0] < ((p2[0] - p1[0]) * (p[1] - p1[1])) / (p2[1] - p1[1]) + p1[0]
+	);
 }

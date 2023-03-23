@@ -95,35 +95,6 @@ export class TerraDrawLeafletAdapter implements TerraDrawAdapter {
 				},
 			}),
 			new AdapterListener({
-				name: "mousemove",
-				callback: (event: L.LeafletMouseEvent) => {
-					event.originalEvent.preventDefault();
-
-					if (!this.currentModeCallbacks) {
-						return;
-					}
-
-					this.currentModeCallbacks.onMouseMove({
-						lng: limitPrecision(event.latlng.lng, this._coordinatePrecision),
-						lat: limitPrecision(event.latlng.lat, this._coordinatePrecision),
-						containerX:
-							event.originalEvent.clientX - this.getMapContainer().offsetLeft,
-						containerY:
-							event.originalEvent.clientY - this.getMapContainer().offsetTop,
-						button: event.originalEvent.button === 0 ? "left" : "right",
-						heldKeys: [...this._heldKeys],
-					});
-				},
-				register: (callback) => {
-					return [this._map.on("mousemove", callback)];
-				},
-				unregister: (listeners: any[]) => {
-					listeners.forEach((listener) => {
-						this._map.off("mousemove", listener);
-					});
-				},
-			}),
-			new AdapterListener({
 				name: "pointerdown",
 				callback: (event) => {
 					this.dragState = "pre-dragging";
@@ -161,6 +132,18 @@ export class TerraDrawLeafletAdapter implements TerraDrawAdapter {
 						button: event.button === 0 ? "left" : "right",
 						heldKeys: [...this._heldKeys],
 					};
+
+					// Always trigger onMouseMove
+					this.currentModeCallbacks.onMouseMove({
+						lng: limitPrecision(event.latlng.lng, this._coordinatePrecision),
+						lat: limitPrecision(event.latlng.lat, this._coordinatePrecision),
+						containerX:
+							event.originalEvent.clientX - this.getMapContainer().offsetLeft,
+						containerY:
+							event.originalEvent.clientY - this.getMapContainer().offsetTop,
+						button: event.originalEvent.button === 0 ? "left" : "right",
+						heldKeys: [...this._heldKeys],
+					});
 
 					if (this.dragState === "pre-dragging") {
 						this.dragState = "dragging";

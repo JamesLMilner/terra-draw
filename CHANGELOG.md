@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.1-alpha.19](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.18...v0.0.1-alpha.19) (2023-03-23)
+
+
+### Bug Fixes
+
+* remove mousemove event listener from leaflet adapter and replace with pointermove ([b7baa4c](https://github.com/JamesLMilner/terra-draw/commit/b7baa4c828cce1a8a1e8cd94b8f44f0a30ea6762))
+
+
+### Chore
+
+* update docs folder ([62b80dc](https://github.com/JamesLMilner/terra-draw/commit/62b80dce039ebfb4f0729fa41c07392dc5eedf0d))
+
 ### [0.0.1-alpha.18](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.17...v0.0.1-alpha.18) (2023-03-19)
 
 

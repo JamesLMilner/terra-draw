@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.1-alpha.20](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.19...v0.0.1-alpha.20) (2023-03-24)
+
+
+### Bug Fixes
+
+* reuse draw even in leaflet adapter to prevent runtime error ([d7f6f34](https://github.com/JamesLMilner/terra-draw/commit/d7f6f34667ccb39715c6f22a1941d2e0c37d002f))
+
 ### [0.0.1-alpha.19](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.18...v0.0.1-alpha.19) (2023-03-23)
 
 

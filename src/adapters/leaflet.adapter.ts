@@ -134,17 +134,9 @@ export class TerraDrawLeafletAdapter implements TerraDrawAdapter {
 					};
 
 					// Always trigger onMouseMove
-					this.currentModeCallbacks.onMouseMove({
-						lng: limitPrecision(event.latlng.lng, this._coordinatePrecision),
-						lat: limitPrecision(event.latlng.lat, this._coordinatePrecision),
-						containerX:
-							event.originalEvent.clientX - this.getMapContainer().offsetLeft,
-						containerY:
-							event.originalEvent.clientY - this.getMapContainer().offsetTop,
-						button: event.originalEvent.button === 0 ? "left" : "right",
-						heldKeys: [...this._heldKeys],
-					});
+					this.currentModeCallbacks.onMouseMove(drawEvent);
 
+					// Handle dragging
 					if (this.dragState === "pre-dragging") {
 						this.dragState = "dragging";
 

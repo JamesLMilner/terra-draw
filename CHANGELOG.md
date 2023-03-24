@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.1-alpha.21](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.20...v0.0.1-alpha.21) (2023-03-24)
+
+
+### Bug Fixes
+
+* remove scratch folder ([6c671d6](https://github.com/JamesLMilner/terra-draw/commit/6c671d67ac9fec88e00774095beeb0d17738b563))
+
 ### [0.0.1-alpha.20](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.19...v0.0.1-alpha.20) (2023-03-24)
 
 

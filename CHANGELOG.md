@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.1-alpha.22](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.21...v0.0.1-alpha.22) (2023-03-26)
+
+
+### Features
+
+* add custom event pointer event handling system, use in leaflet adapter ([68c551b](https://github.com/JamesLMilner/terra-draw/commit/68c551bf99f0ca37053456a3815cee8fad0c1108))
+
+
+### Chore
+
+* update docs ([a8a91c3](https://github.com/JamesLMilner/terra-draw/commit/a8a91c39a899b5715d74875da63735360b9129f8))
+
 ### [0.0.1-alpha.21](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.20...v0.0.1-alpha.21) (2023-03-24)
 
 

@@ -20,12 +20,17 @@ export interface TerraDrawAdapterStyling {
 	zIndex: number;
 }
 
+// Neither buttons nor touch/pen contact changed since last event	-1
+// Mouse move with no buttons pressed, Pen moved while hovering with no buttons pressed	—
+// Left Mouse, Touch Contact, Pen contact	0
+// Middle Mouse	1
+// Right Mouse, Pen barrel button	2
 export interface TerraDrawMouseEvent {
 	lng: number;
 	lat: number;
 	containerX: number;
 	containerY: number;
-	button: "left" | "right" | "pointer";
+	button: "neither" | "left" | "middle" | "right";
 	heldKeys: string[];
 }
 
@@ -33,7 +38,7 @@ export interface TerraDrawKeyboardEvent {
 	key: string;
 }
 
-type SetCursor = (
+export type SetCursor = (
 	cursor: "unset" | "grab" | "grabbing" | "crosshair" | "pointer"
 ) => void;
 
@@ -56,6 +61,8 @@ export type TerraDrawModeState =
 	| "unregistered"
 	| "registered"
 	| "started"
+	| "drawing"
+	| "selected"
 	| "stopped";
 
 export interface TerraDrawMode {
@@ -84,6 +91,7 @@ export interface TerraDrawMode {
 }
 
 export interface TerraDrawCallbacks {
+	getState: () => TerraDrawModeState;
 	onKeyUp: (event: TerraDrawKeyboardEvent) => void;
 	onKeyDown: (event: TerraDrawKeyboardEvent) => void;
 	onClick: (event: TerraDrawMouseEvent) => void;
@@ -106,7 +114,7 @@ export interface TerraDrawChanges {
 	deletedIds: string[];
 }
 
-type TerraDrawStylingFunction = {
+export type TerraDrawStylingFunction = {
 	[mode: string]: (feature: GeoJSONStoreFeatures) => TerraDrawAdapterStyling;
 };
 

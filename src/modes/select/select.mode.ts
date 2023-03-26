@@ -388,8 +388,8 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode<SelectionStyling>
 
 	/** @internal */
 	stop() {
-		this.setStopped();
 		this.cleanUp();
+		this.setStopped();
 	}
 
 	/** @internal */

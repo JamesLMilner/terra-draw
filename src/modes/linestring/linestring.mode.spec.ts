@@ -114,6 +114,7 @@ describe("TerraDrawLineStringMode", () => {
 			store = mockConfig.store;
 
 			lineStringMode.register(mockConfig);
+			lineStringMode.start();
 		});
 
 		it("does nothing if no clicks have occurred ", () => {
@@ -173,6 +174,7 @@ describe("TerraDrawLineStringMode", () => {
 			store = mockConfig.store;
 			project = mockConfig.project;
 			lineStringMode.register(mockConfig);
+			lineStringMode.start();
 		});
 
 		it("creates two identical coordinates on click", () => {
@@ -343,6 +345,7 @@ describe("TerraDrawLineStringMode", () => {
 			store = mockConfig.store;
 			project = mockConfig.project;
 			lineStringMode.register(mockConfig);
+			lineStringMode.start();
 
 			// We don't want there to be a closing click, so we
 			// make the distances between points huge (much large than 40 pixels)
@@ -436,6 +439,7 @@ describe("TerraDrawLineStringMode", () => {
 			store = mockConfig.store;
 			project = mockConfig.project;
 			lineStringMode.register(mockConfig);
+			lineStringMode.start();
 		});
 
 		describe("cancel", () => {
@@ -559,6 +563,7 @@ describe("TerraDrawLineStringMode", () => {
 				store = mockConfig.store;
 				project = mockConfig.project;
 				lineStringMode.register(mockConfig);
+				lineStringMode.start();
 
 				project.mockReturnValueOnce({ x: 50, y: 50 });
 				project.mockReturnValueOnce({ x: 50, y: 50 });
@@ -656,6 +661,7 @@ describe("TerraDrawLineStringMode", () => {
 			const mockConfig = getMockModeConfig(lineStringMode.mode);
 			store = mockConfig.store;
 			lineStringMode.register(mockConfig);
+			lineStringMode.start();
 		});
 
 		it("does not throw error if feature has not been created ", () => {

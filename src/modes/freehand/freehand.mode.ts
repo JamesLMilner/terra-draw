@@ -63,6 +63,10 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 		this.startingClick = false;
 		this.currentId = undefined;
 		this.closingPointId = undefined;
+		// Go back to started state
+		if (this.state === "drawing") {
+			this.setStarted();
+		}
 	}
 
 	/** @internal */
@@ -73,9 +77,9 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 
 	/** @internal */
 	stop() {
+		this.cleanUp();
 		this.setStopped();
 		this.setCursor("unset");
-		this.cleanUp();
 	}
 
 	/** @internal */
@@ -166,6 +170,8 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 			this.currentId = createdId;
 			this.closingPointId = closingPointId;
 			this.startingClick = true;
+			this.setDrawing();
+
 			return;
 		}
 
@@ -206,6 +212,9 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 		this.closingPointId = undefined;
 		this.currentId = undefined;
 		this.startingClick = false;
+		if (this.state === "drawing") {
+			this.setStarted();
+		}
 	}
 
 	/** @internal */

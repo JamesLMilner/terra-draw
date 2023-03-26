@@ -100,6 +100,11 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 		this.currentCoordinate = 0;
 		this.currentId = undefined;
 		this.closingPointId = undefined;
+
+		// Go back to started state
+		if (this.state === "drawing") {
+			this.setStarted();
+		}
 	}
 
 	/** @internal */
@@ -119,9 +124,9 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 
 	/** @internal */
 	stop() {
+		this.cleanUp();
 		this.setStopped();
 		this.setCursor("unset");
-		this.cleanUp();
 	}
 
 	/** @internal */
@@ -208,6 +213,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 			]);
 			this.currentId = createdId;
 			this.currentCoordinate++;
+			this.setDrawing();
 		} else if (this.currentCoordinate === 1 && this.currentId) {
 			const currentLineGeometry = this.store.getGeometryCopy<LineString>(
 				this.currentId
@@ -340,6 +346,9 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 		this.closingPointId = undefined;
 		this.currentId = undefined;
 		this.currentCoordinate = 0;
+		if (this.state === "drawing") {
+			this.setStarted();
+		}
 	}
 
 	/** @internal */

@@ -50,6 +50,10 @@ export class TerraDrawRectangleMode extends TerraDrawBaseDrawMode<FreehandPolygo
 		this.center = undefined;
 		this.currentRectangleId = undefined;
 		this.clickCount = 0;
+		// Go back to started state
+		if (this.state === "drawing") {
+			this.setStarted();
+		}
 	}
 
 	/** @internal */
@@ -60,9 +64,9 @@ export class TerraDrawRectangleMode extends TerraDrawBaseDrawMode<FreehandPolygo
 
 	/** @internal */
 	stop() {
+		this.cleanUp();
 		this.setStopped();
 		this.setCursor("unset");
-		this.cleanUp();
 	}
 
 	/** @internal */
@@ -89,6 +93,7 @@ export class TerraDrawRectangleMode extends TerraDrawBaseDrawMode<FreehandPolygo
 			]);
 			this.currentRectangleId = createdId;
 			this.clickCount++;
+			this.setDrawing();
 		} else {
 			// Finish drawing
 			this.close();
@@ -153,6 +158,9 @@ export class TerraDrawRectangleMode extends TerraDrawBaseDrawMode<FreehandPolygo
 		this.center = undefined;
 		this.currentRectangleId = undefined;
 		this.clickCount = 0;
+		if (this.state === "drawing") {
+			this.setStarted();
+		}
 	}
 
 	/** @internal */

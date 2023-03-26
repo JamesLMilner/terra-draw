@@ -74,6 +74,10 @@ export class TerraDrawGreatCircleMode extends TerraDrawBaseDrawMode<GreateCircle
 		this.currentCoordinate = 0;
 		this.currentId = undefined;
 		this.closingPointId = undefined;
+		// Go back to started state
+		if (this.state === "drawing") {
+			this.setStarted();
+		}
 	}
 
 	/** @internal */
@@ -93,9 +97,9 @@ export class TerraDrawGreatCircleMode extends TerraDrawBaseDrawMode<GreateCircle
 
 	/** @internal */
 	stop() {
+		this.cleanUp();
 		this.setStopped();
 		this.setCursor("unset");
-		this.cleanUp();
 	}
 
 	/** @internal */
@@ -182,6 +186,7 @@ export class TerraDrawGreatCircleMode extends TerraDrawBaseDrawMode<GreateCircle
 			this.closingPointId = pointId;
 
 			this.currentCoordinate++;
+			this.setDrawing();
 		} else if (this.currentCoordinate === 1 && this.currentId) {
 			// We are creating the point so we immediately want
 			// to set the point cursor to show it can be closed
@@ -227,6 +232,9 @@ export class TerraDrawGreatCircleMode extends TerraDrawBaseDrawMode<GreateCircle
 		this.closingPointId = undefined;
 		this.currentId = undefined;
 		this.currentCoordinate = 0;
+		if (this.state === "drawing") {
+			this.setStarted();
+		}
 	}
 
 	/** @internal */

@@ -116,6 +116,7 @@ describe("TerraDrawGreatCircleMode", () => {
 			store = mockConfig.store;
 			project = mockConfig.project;
 			greatCircleMode.register(mockConfig);
+			greatCircleMode.start();
 		});
 
 		it("does nothing if no click has been performed", () => {
@@ -198,6 +199,7 @@ describe("TerraDrawGreatCircleMode", () => {
 			store = mockConfig.store;
 			project = mockConfig.project;
 			greatCircleMode.register(mockConfig);
+			greatCircleMode.start();
 		});
 
 		it("creates two identical coordinates on click, and also creates the ending point", () => {
@@ -289,6 +291,7 @@ describe("TerraDrawGreatCircleMode", () => {
 			store = mockConfig.store;
 			project = mockConfig.project;
 			greatCircleMode.register(mockConfig);
+			greatCircleMode.start();
 		});
 
 		describe("cancel", () => {
@@ -376,6 +379,7 @@ describe("TerraDrawGreatCircleMode", () => {
 				store = mockConfig.store;
 				project = mockConfig.project;
 				greatCircleMode.register(mockConfig);
+				greatCircleMode.start();
 
 				project.mockReturnValueOnce({ x: 0, y: 0 });
 				project.mockReturnValueOnce({ x: 0, y: 0 });
@@ -424,6 +428,7 @@ describe("TerraDrawGreatCircleMode", () => {
 			const mockConfig = getMockModeConfig(greatCircleMode.mode);
 			store = mockConfig.store;
 			greatCircleMode.register(mockConfig);
+			greatCircleMode.start();
 		});
 
 		it("does not throw error if feature has not been created ", () => {

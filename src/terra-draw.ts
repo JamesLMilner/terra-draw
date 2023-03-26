@@ -165,10 +165,12 @@ class TerraDraw {
 			this._modes[modeId].register({
 				mode: modeId,
 				store: this._store,
-				setCursor: this._adapter.setCursor,
-				project: this._adapter.project,
-				unproject: this._adapter.unproject,
-				setDoubleClickToZoom: this._adapter.setDoubleClickToZoom,
+				setCursor: this._adapter.setCursor.bind(this._adapter),
+				project: this._adapter.project.bind(this._adapter),
+				unproject: this._adapter.unproject.bind(this._adapter),
+				setDoubleClickToZoom: this._adapter.setDoubleClickToZoom.bind(
+					this._adapter
+				),
 				onChange: onChange,
 				onSelect: onSelect,
 				onDeselect: onDeselect,
@@ -323,6 +325,9 @@ class TerraDraw {
 	start() {
 		this._enabled = true;
 		this._adapter.register({
+			getState: () => {
+				return this._mode.state;
+			},
 			onClick: (event) => {
 				this._mode.onClick(event);
 			},

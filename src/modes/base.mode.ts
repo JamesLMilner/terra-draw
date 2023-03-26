@@ -52,8 +52,20 @@ export abstract class TerraDrawBaseDrawMode<T extends CustomStyling> {
 		this.coordinatePrecision = (options && options.coordinatePrecision) || 9;
 	}
 
+	protected setDrawing() {
+		if (this._state === "started") {
+			this._state = "drawing";
+		} else {
+			throw new Error("Mode must be unregistered or stopped to start");
+		}
+	}
+
 	protected setStarted() {
-		if (this._state === "stopped" || this._state === "registered") {
+		if (
+			this._state === "stopped" ||
+			this._state === "registered" ||
+			this._state === "drawing"
+		) {
 			this._state = "started";
 			this.setDoubleClickToZoom(false);
 		} else {

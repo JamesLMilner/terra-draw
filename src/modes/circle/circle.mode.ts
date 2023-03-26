@@ -53,6 +53,10 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<FreehandPolygonSt
 		this.center = undefined;
 		this.currentCircleId = undefined;
 		this.clickCount = 0;
+		// Go back to started state
+		if (this.state === "drawing") {
+			this.setStarted();
+		}
 	}
 
 	/** @internal */
@@ -63,9 +67,9 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<FreehandPolygonSt
 
 	/** @internal */
 	stop() {
+		this.cleanUp();
 		this.setStopped();
 		this.setCursor("unset");
-		this.cleanUp();
 	}
 
 	/** @internal */
@@ -88,6 +92,7 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<FreehandPolygonSt
 			]);
 			this.currentCircleId = createdId;
 			this.clickCount++;
+			this.setDrawing();
 		} else {
 			// Finish drawing
 			this.close();
@@ -145,6 +150,9 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<FreehandPolygonSt
 		this.center = undefined;
 		this.currentCircleId = undefined;
 		this.clickCount = 0;
+		if (this.state === "drawing") {
+			this.setStarted();
+		}
 	}
 
 	/** @internal */

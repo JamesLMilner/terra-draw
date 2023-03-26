@@ -4,7 +4,7 @@ import {
 	TerraDrawKeyboardEvent,
 	HexColor,
 } from "../../common";
-import { Feature, Point, Polygon } from "geojson";
+import { Polygon } from "geojson";
 import { selfIntersects } from "../../geometry/boolean/self-intersects";
 import { TerraDrawBaseDrawMode } from "../base.mode";
 import { PixelDistanceBehavior } from "../pixel-distance.behavior";
@@ -113,6 +113,11 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 		this.currentCoordinate = 0;
 		this.currentId = undefined;
 		this.closingPoints.delete();
+
+		// Go back to started state
+		if (this.state === "drawing") {
+			this.setStarted();
+		}
 	}
 
 	/** @internal */
@@ -134,9 +139,9 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 
 	/** @internal */
 	stop() {
+		this.cleanUp();
 		this.setStopped();
 		this.setCursor("unset");
-		this.cleanUp();
 	}
 
 	/** @internal */
@@ -257,6 +262,9 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 			]);
 			this.currentId = newId;
 			this.currentCoordinate++;
+
+			// Ensure the state is updated to reflect drawing has started
+			this.setDrawing();
 		} else if (this.currentCoordinate === 1 && this.currentId) {
 			if (closestCoord) {
 				event.lng = closestCoord[0];
@@ -436,6 +444,9 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 		} catch (error) {}
 		this.currentId = undefined;
 		this.currentCoordinate = 0;
+		if (this.state === "drawing") {
+			this.setStarted();
+		}
 	}
 
 	/** @internal */

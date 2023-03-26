@@ -136,6 +136,7 @@ describe("TerraDrawFreehandMode", () => {
 				onChange = mockConfig.onChange;
 				store = mockConfig.store;
 				freehandMode.register(mockConfig);
+				freehandMode.start();
 			});
 
 			it("adds a polygon and closing point to store if registered", () => {
@@ -204,6 +205,7 @@ describe("TerraDrawFreehandMode", () => {
 			onChange = mockConfig.onChange;
 			project = mockConfig.project;
 			freehandMode.register(mockConfig);
+			freehandMode.start();
 		});
 
 		it("updates the freehand polygon when the mouse cursor has moved a minimum amount", () => {
@@ -281,6 +283,7 @@ describe("TerraDrawFreehandMode", () => {
 			store = mockConfig.store;
 			onChange = mockConfig.onChange;
 			freehandMode.register(mockConfig);
+			freehandMode.start();
 		});
 
 		it("does not delete if no freehand has been created", () => {
@@ -325,6 +328,7 @@ describe("TerraDrawFreehandMode", () => {
 			onChange = mockConfig.onChange;
 			project = mockConfig.project;
 			freehandMode.register(mockConfig);
+			freehandMode.start();
 		});
 
 		describe("cancel", () => {
@@ -359,6 +363,7 @@ describe("TerraDrawFreehandMode", () => {
 				onChange = mockConfig.onChange;
 				project = mockConfig.project;
 				freehandMode.register(mockConfig);
+				freehandMode.start();
 
 				freehandMode.onClick({
 					lng: 0,
@@ -421,6 +426,7 @@ describe("TerraDrawFreehandMode", () => {
 				onChange = mockConfig.onChange;
 				project = mockConfig.project;
 				freehandMode.register(mockConfig);
+				freehandMode.start();
 
 				freehandMode.onClick({
 					lng: 0,

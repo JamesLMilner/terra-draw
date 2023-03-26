@@ -138,6 +138,7 @@ describe("TerraDrawCircleMode", () => {
 				onChange = mockConfig.onChange;
 
 				circleMode.register(mockConfig);
+				circleMode.start();
 			});
 			it("adds a circle to store if registered", () => {
 				circleMode.onClick({
@@ -197,6 +198,7 @@ describe("TerraDrawCircleMode", () => {
 			store = mockConfig.store;
 			onChange = mockConfig.onChange;
 			circleMode.register(mockConfig);
+			circleMode.start();
 		});
 
 		it("finishes drawing circle on finish key press", () => {
@@ -238,6 +240,7 @@ describe("TerraDrawCircleMode", () => {
 			onChange = mockConfig.onChange;
 
 			circleMode.register(mockConfig);
+			circleMode.start();
 		});
 
 		it("updates the circle size", () => {
@@ -297,6 +300,7 @@ describe("TerraDrawCircleMode", () => {
 			onChange = mockConfig.onChange;
 
 			circleMode.register(mockConfig);
+			circleMode.start();
 		});
 
 		it("does not delete if no circle has been created", () => {
@@ -340,6 +344,7 @@ describe("TerraDrawCircleMode", () => {
 			onChange = mockConfig.onChange;
 			project = mockConfig.project;
 			circleMode.register(mockConfig);
+			circleMode.start();
 		});
 
 		describe("cancel", () => {
@@ -375,6 +380,7 @@ describe("TerraDrawCircleMode", () => {
 				onChange = mockConfig.onChange;
 				project = mockConfig.project;
 				circleMode.register(mockConfig);
+				circleMode.start();
 
 				circleMode.onClick({
 					lng: 0,

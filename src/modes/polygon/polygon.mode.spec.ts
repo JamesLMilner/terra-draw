@@ -127,6 +127,7 @@ describe("TerraDrawPolygonMode", () => {
 			project = mockConfig.project;
 
 			polygonMode.register(mockConfig);
+			polygonMode.start();
 		});
 
 		it("does nothing if no clicks have occurred ", () => {
@@ -368,6 +369,7 @@ describe("TerraDrawPolygonMode", () => {
 			project = mockConfig.project;
 			unproject = mockConfig.project;
 			polygonMode.register(mockConfig);
+			polygonMode.start();
 		});
 
 		it("can create a polygon", () => {
@@ -481,6 +483,7 @@ describe("TerraDrawPolygonMode", () => {
 			project = mockConfig.project;
 			unproject = mockConfig.unproject;
 			polygonMode.register(mockConfig);
+			polygonMode.start();
 
 			mockClickBoundingBox();
 			polygonMode.onClick({
@@ -764,6 +767,8 @@ describe("TerraDrawPolygonMode", () => {
 			project = mockConfig.project;
 
 			polygonMode.register(mockConfig);
+			polygonMode.start();
+
 			jest.spyOn(store, "updateGeometry");
 			jest.spyOn(store, "create");
 
@@ -844,6 +849,7 @@ describe("TerraDrawPolygonMode", () => {
 			project = mockConfig.project;
 
 			polygonMode.register(mockConfig);
+			polygonMode.start();
 
 			const coordOneEvent = {
 				lng: 11.162109375,
@@ -972,6 +978,7 @@ describe("TerraDrawPolygonMode", () => {
 			project = mockConfig.project;
 			unproject = mockConfig.project;
 			polygonMode.register(mockConfig);
+			polygonMode.start();
 		});
 
 		describe("cancel", () => {
@@ -1006,6 +1013,7 @@ describe("TerraDrawPolygonMode", () => {
 				project = mockConfig.project;
 				unproject = mockConfig.project;
 				polygonMode.register(mockConfig);
+				polygonMode.start();
 
 				polygonMode.onClick({
 					lng: 0,
@@ -1145,6 +1153,7 @@ describe("TerraDrawPolygonMode", () => {
 			project = mockConfig.project;
 			unproject = mockConfig.project;
 			polygonMode.register(mockConfig);
+			polygonMode.start();
 
 			mockClickBoundingBox();
 
@@ -1248,6 +1257,7 @@ describe("cleanUp", () => {
 		project = mockConfig.project;
 
 		polygonMode.register(mockConfig);
+		polygonMode.start();
 	});
 
 	it("does not throw error if feature has not been created ", () => {

@@ -137,6 +137,7 @@ describe("TerraDrawRectangleMode", () => {
 				onChange = mockConfig.onChange;
 
 				rectangleMode.register(mockConfig);
+				rectangleMode.start();
 			});
 			it("adds a circle to store if registered", () => {
 				rectangleMode.onClick({
@@ -195,6 +196,7 @@ describe("TerraDrawRectangleMode", () => {
 			store = mockConfig.store;
 			onChange = mockConfig.onChange;
 			rectangleMode.register(mockConfig);
+			rectangleMode.start();
 
 			rectangleMode.onClick({
 				lng: 0,
@@ -236,6 +238,7 @@ describe("TerraDrawRectangleMode", () => {
 			store = mockConfig.store;
 			onChange = mockConfig.onChange;
 			rectangleMode.register(mockConfig);
+			rectangleMode.start();
 
 			rectangleMode.onClick({
 				lng: 0,
@@ -286,6 +289,7 @@ describe("TerraDrawRectangleMode", () => {
 			onChange = mockConfig.onChange;
 
 			rectangleMode.register(mockConfig);
+			rectangleMode.start();
 		});
 
 		it("updates the circle size", () => {
@@ -345,6 +349,7 @@ describe("TerraDrawRectangleMode", () => {
 			onChange = mockConfig.onChange;
 
 			rectangleMode.register(mockConfig);
+			rectangleMode.start();
 		});
 
 		it("does not delete if no circle has been created", () => {
@@ -388,6 +393,7 @@ describe("TerraDrawRectangleMode", () => {
 			onChange = mockConfig.onChange;
 			project = mockConfig.project;
 			rectangleMode.register(mockConfig);
+			rectangleMode.start();
 		});
 
 		describe("cancel", () => {

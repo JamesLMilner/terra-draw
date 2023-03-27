@@ -1,5 +1,4 @@
 import {
-	TerraDrawCallbacks,
 	TerraDrawAdapterStyling,
 	TerraDrawChanges,
 	SetCursor,
@@ -21,6 +20,20 @@ export class TerraDrawLeafletAdapter extends TerraDrawAdapterBase {
 		this._map = config.map;
 	}
 
+	private _lib: typeof L;
+	private _map: L.Map;
+	private _layer: L.Layer | undefined;
+	private _panes: Record<string, HTMLStyleElement | undefined> = {};
+
+	private createPaneStyleSheet(pane: string, zIndex: number) {
+		const style = document.createElement("style");
+		style.type = "text/css";
+		style.innerHTML = `.leaflet-${pane} {z-index: ${zIndex};}`;
+		document.getElementsByTagName("head")[0].appendChild(style);
+		this._map.createPane(pane);
+		return style;
+	}
+
 	public getLngLatFromPointerEvent(event: PointerEvent) {
 		const container = this.getMapContainer();
 
@@ -29,7 +42,17 @@ export class TerraDrawLeafletAdapter extends TerraDrawAdapterBase {
 			y: event.clientY - container.offsetTop,
 		} as L.Point;
 
-		return this._map.containerPointToLatLng(point);
+		// If is not valid point we don't want to convert
+		if (isNaN(point.x) || isNaN(point.y)) {
+			return null;
+		}
+
+		const latLng = this._map.containerPointToLatLng(point);
+		if (isNaN(latLng.lng) || isNaN(latLng.lat)) {
+			return null;
+		}
+
+		return { lng: latLng.lng, lat: latLng.lat };
 	}
 
 	public getMapContainer() {
@@ -42,6 +65,11 @@ export class TerraDrawLeafletAdapter extends TerraDrawAdapterBase {
 		} else {
 			this._map.dragging.disable();
 		}
+	}
+
+	public project(lng: number, lat: number) {
+		const { x, y } = this._map.latLngToContainerPoint({ lng, lat });
+		return { x, y };
 	}
 
 	public unproject(x: number, y: number) {
@@ -68,47 +96,7 @@ export class TerraDrawLeafletAdapter extends TerraDrawAdapterBase {
 		}
 	}
 
-	public project(lng: number, lat: number) {
-		const { x, y } = this._map.latLngToContainerPoint({ lng, lat });
-		return { x, y };
-	}
-
-	private _lib: typeof L;
-	private _map: L.Map;
-	private _layer: L.Layer | undefined;
-	private _panes: Record<string, HTMLStyleElement | undefined> = {};
-
-	private createPaneStyleSheet(pane: string, zIndex: number) {
-		const style = document.createElement("style");
-		style.type = "text/css";
-		style.innerHTML = `.leaflet-${pane} {z-index: ${zIndex};}`;
-		document.getElementsByTagName("head")[0].appendChild(style);
-		this._map.createPane(pane);
-		return style;
-	}
-
-	register(callbacks: TerraDrawCallbacks) {
-		this.currentModeCallbacks = callbacks;
-
-		this.listeners.forEach((listener) => {
-			listener.register();
-		});
-	}
-
-	unregister() {
-		this.listeners.forEach((listener) => {
-			listener.unregister();
-		});
-
-		Object.keys(this._panes).forEach((pane) => {
-			const selectedPane = this._map.getPane(pane);
-			if (selectedPane) {
-				selectedPane.remove();
-			}
-		});
-	}
-
-	render(
+	public render(
 		changes: TerraDrawChanges,
 		styling: {
 			[mode: string]: (

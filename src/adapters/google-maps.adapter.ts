@@ -1,23 +1,20 @@
 import {
-	TerraDrawCallbacks,
-	TerraDrawAdapter,
-	TerraDrawModeRegisterConfig,
 	TerraDrawAdapterStyling,
 	TerraDrawChanges,
-	TerraDrawMouseEvent,
+	SetCursor,
 } from "../common";
 import { GeoJsonObject } from "geojson";
 
-import { limitPrecision } from "../geometry/limit-decimal-precision";
 import { GeoJSONStoreFeatures } from "../store/store";
-import { AdapterListener } from "./common/adapter-listener";
+import { TerraDrawAdapterBase } from "./common/base-adapter";
 
-export class TerraDrawGoogleMapsAdapter implements TerraDrawAdapter {
+export class TerraDrawGoogleMapsAdapter extends TerraDrawAdapterBase {
 	constructor(config: {
 		lib: typeof google.maps;
 		map: google.maps.Map;
 		coordinatePrecision?: number;
 	}) {
+		super(config);
 		this._lib = config.lib;
 		this._map = config.map;
 		this._coordinatePrecision =
@@ -25,319 +22,17 @@ export class TerraDrawGoogleMapsAdapter implements TerraDrawAdapter {
 				? config.coordinatePrecision
 				: 9;
 
-		this.getMapContainer = () => {
-			return this._map.getDiv();
-		};
-
-		this.project = (lng, lat) => {
-			const bounds = this._map.getBounds();
-
-			if (bounds === undefined) {
-				throw new Error("cannot get bounds");
-			}
-
-			const northWest = new this._lib.LatLng(
-				bounds.getNorthEast().lat(),
-				bounds.getSouthWest().lng()
-			);
-
-			const projection = this._map.getProjection();
-			if (projection === undefined) {
-				throw new Error("cannot get projection");
-			}
-
-			const projectedNorthWest = projection.fromLatLngToPoint(northWest);
-			if (projectedNorthWest === null) {
-				throw new Error("cannot get projectedNorthWest");
-			}
-
-			const projected = projection.fromLatLngToPoint({ lng, lat });
-			if (projected === null) {
-				throw new Error("cannot get projected lng lat");
-			}
-
-			const zoom = this._map.getZoom();
-			if (zoom === undefined) {
-				throw new Error("cannot get zoom");
-			}
-
-			const scale = Math.pow(2, zoom);
-			return {
-				x: Math.floor((projected.x - projectedNorthWest.x) * scale),
-				y: Math.floor((projected.y - projectedNorthWest.y) * scale),
-			};
-		};
-
-		this.unproject = (x, y) => {
-			const projection = this._map.getProjection();
-			if (projection === undefined) {
-				throw new Error("cannot get projection");
-			}
-
-			const bounds = this._map.getBounds();
-			if (bounds === undefined) {
-				throw new Error("cannot get bounds");
-			}
-
-			const topRight = projection.fromLatLngToPoint(bounds.getNorthEast());
-			if (topRight === null) {
-				throw new Error("cannot get topRight");
-			}
-
-			const bottomLeft = projection.fromLatLngToPoint(bounds.getSouthWest());
-			if (bottomLeft === null) {
-				throw new Error("cannot get bottomLeft");
-			}
-
-			const zoom = this._map.getZoom();
-			if (zoom === undefined) {
-				throw new Error("zoom get bounds");
-			}
-
-			const scale = Math.pow(2, zoom);
-
-			const worldPoint = new google.maps.Point(
-				x / scale + bottomLeft.x,
-				y / scale + topRight.y
-			);
-			const lngLat = projection.fromPointToLatLng(worldPoint);
-
-			if (lngLat === null) {
-				throw new Error("zoom get bounds");
-			}
-
-			return { lng: lngLat.lng(), lat: lngLat.lat() };
-		};
-
-		this.setCursor = (cursor) => {
-			if (cursor === this._cursor) {
-				return;
-			}
-
-			if (this._cursorStyleSheet) {
-				this._cursorStyleSheet.remove();
-				this._cursorStyleSheet = undefined;
-			}
-
-			if (cursor !== "unset") {
-				// TODO: We could cache these individually per cursor
-
-				const div = this.getMapContainer();
-				const style = document.createElement("style");
-				style.type = "text/css";
-				const selector = `#${div.id} [aria-label="Map"]`;
-				style.innerHTML = `${selector} { cursor: ${cursor} !important; }`;
-				document.getElementsByTagName("head")[0].appendChild(style);
-				this._cursorStyleSheet = style;
-			}
-
-			this._cursor = cursor;
-		};
-
-		this.setDoubleClickToZoom = (enabled: boolean) => {
-			if (enabled) {
-				this._map.setOptions({ disableDoubleClickZoom: false });
-			} else {
-				this._map.setOptions({ disableDoubleClickZoom: true });
-			}
-		};
-
-		this.listeners = [
-			new AdapterListener({
-				name: "click",
-				callback: (
-					event: google.maps.MapMouseEvent & {
-						domEvent: MouseEvent;
-					}
-				) => {
-					if (!this.currentModeCallbacks || !event.latLng) {
-						return;
-					}
-					this.currentModeCallbacks.onClick({
-						lng: limitPrecision(event.latLng.lng(), this._coordinatePrecision),
-						lat: limitPrecision(event.latLng.lat(), this._coordinatePrecision),
-						containerX:
-							event.domEvent.clientX - this.getMapContainer().offsetLeft,
-						containerY:
-							event.domEvent.clientY - this.getMapContainer().offsetTop,
-						button: event.domEvent.button === 0 ? "left" : "right",
-						heldKeys: [...this._heldKeys],
-					});
-				},
-				register: (callback: any) => {
-					return [
-						this._map.addListener("click", callback),
-						this._map.addListener("rightclick", callback),
-					];
-				},
-				unregister: (listeners: any[]) => {
-					listeners.forEach((listener) => {
-						listener.remove();
-					});
-				},
-			}),
-			new AdapterListener({
-				name: "mousemove",
-				callback: (
-					event: google.maps.MapMouseEvent & {
-						domEvent: MouseEvent;
-					}
-				) => {
-					if (!this.currentModeCallbacks || !event.latLng) return;
-
-					this.currentModeCallbacks.onMouseMove({
-						lng: limitPrecision(event.latLng.lng(), this._coordinatePrecision),
-						lat: limitPrecision(event.latLng.lat(), this._coordinatePrecision),
-						containerX:
-							event.domEvent.clientX - this.getMapContainer().offsetLeft,
-						containerY:
-							event.domEvent.clientY - this.getMapContainer().offsetTop,
-						button: event.domEvent.button === 0 ? "left" : "right",
-						heldKeys: [...this._heldKeys],
-					});
-				},
-				register: (callback: any) => {
-					return [this._map.addListener("mousemove", callback)];
-				},
-				unregister: (listener: any) => {
-					listener.remove();
-				},
-			}),
-			new AdapterListener({
-				name: "keyup",
-				callback: (event: KeyboardEvent) => {
-					if (!this.currentModeCallbacks) return;
-
-					this.currentModeCallbacks.onKeyUp({
-						key: event.key,
-					});
-				},
-				register: (callback: any) => {
-					return [this.getMapContainer().addEventListener("keyup", callback)];
-				},
-				unregister: (listeners: any[]) => {
-					listeners.forEach((listener) => {
-						this.getMapContainer().removeEventListener("keyup", listener);
-					});
-				},
-			}),
-			new AdapterListener({
-				name: "mousedown",
-				callback: (_: any) => {
-					this.dragState = "pre-dragging";
-				},
-				register: (callback: any) => {
-					const container = this.getMapContainer();
-					return [container.addEventListener("mousedown", callback)];
-				},
-				unregister: (listeners: any[]) => {
-					listeners.forEach((listener) => {
-						this.getMapContainer().removeEventListener("mousedown", listener);
-					});
-				},
-			}),
-			new AdapterListener({
-				name: "mousemove",
-				callback: (event: any) => {
-					if (!this.currentModeCallbacks) return;
-
-					const container = this.getMapContainer();
-
-					const point = {
-						x: event.clientX - container.offsetLeft,
-						y: event.clientY - container.offsetTop,
-					} as L.Point;
-
-					const { lng, lat } = this.unproject(point.x, point.y);
-
-					const drawEvent: TerraDrawMouseEvent = {
-						lng: limitPrecision(lng, this._coordinatePrecision),
-						lat: limitPrecision(lat, this._coordinatePrecision),
-						containerX: event.clientX - container.offsetLeft,
-						containerY: event.clientY - container.offsetTop,
-						button: event.button === 0 ? "left" : "right",
-						heldKeys: [...this._heldKeys],
-					};
-
-					if (this.dragState === "pre-dragging") {
-						this.dragState = "dragging";
-						this.currentModeCallbacks.onDragStart(drawEvent, (enabled) => {
-							this._map.setOptions({ draggable: false });
-						});
-					} else if (this.dragState === "dragging") {
-						this.currentModeCallbacks.onDrag(drawEvent);
-					}
-				},
-				register: (callback: any) => {
-					const container = this.getMapContainer();
-					return [container.addEventListener("mousemove", callback)];
-				},
-				unregister: (listeners: any[]) => {
-					listeners.forEach((listener) => {
-						this.getMapContainer().removeEventListener("mousemove", listener);
-					});
-				},
-			}),
-			new AdapterListener({
-				name: "mouseup",
-				callback: (event: any) => {
-					if (!this.currentModeCallbacks) return;
-
-					const container = this.getMapContainer();
-
-					if (this.dragState === "dragging") {
-						const point = {
-							x: event.clientX - container.offsetLeft,
-							y: event.clientY - container.offsetTop,
-						} as L.Point;
-
-						const { lng, lat } = this.unproject(point.x, point.y);
-
-						this.currentModeCallbacks.onDragEnd(
-							{
-								lng: limitPrecision(lng, this._coordinatePrecision),
-								lat: limitPrecision(lat, this._coordinatePrecision),
-								containerX: event.clientX - container.offsetLeft,
-								containerY: event.clientY - container.offsetTop,
-								button: event.button === 0 ? "left" : "right",
-								heldKeys: [...this._heldKeys],
-							},
-							(enabled) => {
-								this._map.setOptions({ draggable: enabled });
-							}
-						);
-					}
-
-					this.dragState = "not-dragging";
-				},
-				register: (callback: any) => {
-					const container = this.getMapContainer();
-
-					return [container.addEventListener("mouseup", callback)];
-				},
-				unregister: (listeners: any[]) => {
-					listeners.forEach((listener) => {
-						this.getMapContainer().removeEventListener("mouseup", listener);
-					});
-				},
-			}),
-		];
+		this.overlay = new this._lib.OverlayView();
+		this.overlay.draw = function () {};
+		this.overlay.setMap(this._map);
 	}
 
-	private _heldKeys: Set<string> = new Set();
 	private _cursor: string | undefined;
 	private _cursorStyleSheet: HTMLStyleElement | undefined;
-	private _coordinatePrecision: number;
 	private _lib: typeof google.maps;
 	private _map: google.maps.Map;
 	private _layers = false;
-
-	public getMapContainer: () => HTMLElement;
-
-	public setDoubleClickToZoom: TerraDrawModeRegisterConfig["setDoubleClickToZoom"];
-	public unproject: TerraDrawModeRegisterConfig["unproject"];
-	public project: TerraDrawModeRegisterConfig["project"];
-	public setCursor: TerraDrawModeRegisterConfig["setCursor"];
+	private overlay: google.maps.OverlayView;
 
 	// https://stackoverflow.com/a/27905268/1363484
 	private circlePath(cx: number, cy: number, r: number) {
@@ -364,23 +59,152 @@ export class TerraDrawGoogleMapsAdapter implements TerraDrawAdapter {
 		);
 	}
 
-	private currentModeCallbacks: TerraDrawCallbacks | undefined;
-	private listeners: AdapterListener[] = [];
+	getLngLatFromPointerEvent(event: PointerEvent) {
+		const bounds = this._map.getBounds();
 
-	private dragState: "not-dragging" | "pre-dragging" | "dragging" =
-		"not-dragging";
+		if (!bounds) {
+			return null;
+		}
 
-	register(callbacks: TerraDrawCallbacks) {
-		this.currentModeCallbacks = callbacks;
-		this.listeners.forEach((listener) => {
-			listener.register();
-		});
+		const ne = bounds.getNorthEast();
+		const sw = bounds.getSouthWest();
+		const latLngBounds = new google.maps.LatLngBounds(sw, ne);
+
+		const mapCanvas = this._map.getDiv();
+		const offsetX = event.clientX - mapCanvas.getBoundingClientRect().left;
+		const offsetY = event.clientY - mapCanvas.getBoundingClientRect().top;
+		const screenCoord = new google.maps.Point(offsetX, offsetY);
+
+		const latLng = this.overlay
+			.getProjection()
+			.fromContainerPixelToLatLng(screenCoord);
+
+		if (latLng && latLngBounds.contains(latLng)) {
+			return { lng: latLng.lng(), lat: latLng.lat() };
+		} else {
+			return null;
+		}
 	}
 
-	unregister() {
-		this.listeners.forEach((listener) => {
-			listener.unregister();
-		});
+	getMapContainer() {
+		return this._map.getDiv();
+	}
+
+	project(lng: number, lat: number) {
+		const bounds = this._map.getBounds();
+
+		if (bounds === undefined) {
+			throw new Error("cannot get bounds");
+		}
+
+		const northWest = new this._lib.LatLng(
+			bounds.getNorthEast().lat(),
+			bounds.getSouthWest().lng()
+		);
+
+		const projection = this._map.getProjection();
+		if (projection === undefined) {
+			throw new Error("cannot get projection");
+		}
+
+		const projectedNorthWest = projection.fromLatLngToPoint(northWest);
+		if (projectedNorthWest === null) {
+			throw new Error("cannot get projectedNorthWest");
+		}
+
+		const projected = projection.fromLatLngToPoint({ lng, lat });
+		if (projected === null) {
+			throw new Error("cannot get projected lng lat");
+		}
+
+		const zoom = this._map.getZoom();
+		if (zoom === undefined) {
+			throw new Error("cannot get zoom");
+		}
+
+		const scale = Math.pow(2, zoom);
+		return {
+			x: Math.floor((projected.x - projectedNorthWest.x) * scale),
+			y: Math.floor((projected.y - projectedNorthWest.y) * scale),
+		};
+	}
+
+	unproject(x: number, y: number) {
+		const projection = this._map.getProjection();
+		if (projection === undefined) {
+			throw new Error("cannot get projection");
+		}
+
+		const bounds = this._map.getBounds();
+		if (bounds === undefined) {
+			throw new Error("cannot get bounds");
+		}
+
+		const topRight = projection.fromLatLngToPoint(bounds.getNorthEast());
+		if (topRight === null) {
+			throw new Error("cannot get topRight");
+		}
+
+		const bottomLeft = projection.fromLatLngToPoint(bounds.getSouthWest());
+		if (bottomLeft === null) {
+			throw new Error("cannot get bottomLeft");
+		}
+
+		const zoom = this._map.getZoom();
+		if (zoom === undefined) {
+			throw new Error("zoom get bounds");
+		}
+
+		const scale = Math.pow(2, zoom);
+
+		const worldPoint = new google.maps.Point(
+			x / scale + bottomLeft.x,
+			y / scale + topRight.y
+		);
+		const lngLat = projection.fromPointToLatLng(worldPoint);
+
+		if (lngLat === null) {
+			throw new Error("zoom get bounds");
+		}
+
+		return { lng: lngLat.lng(), lat: lngLat.lat() };
+	}
+
+	setCursor(cursor: Parameters<SetCursor>[0]) {
+		if (cursor === this._cursor) {
+			return;
+		}
+
+		if (this._cursorStyleSheet) {
+			this._cursorStyleSheet.remove();
+			this._cursorStyleSheet = undefined;
+		}
+
+		if (cursor !== "unset") {
+			// TODO: We could cache these individually per cursor
+
+			const div = this.getMapContainer();
+			const style = document.createElement("style");
+			style.type = "text/css";
+			const selector = `#${div.id} [aria-label="Map"]`;
+			style.innerHTML = `${selector} { cursor: ${cursor} !important; }`;
+			document.getElementsByTagName("head")[0].appendChild(style);
+			this._cursorStyleSheet = style;
+		}
+
+		this._cursor = cursor;
+	}
+
+	setDoubleClickToZoom(enabled: boolean) {
+		if (enabled) {
+			this._map.setOptions({ disableDoubleClickZoom: false });
+		} else {
+			this._map.setOptions({ disableDoubleClickZoom: true });
+		}
+	}
+
+	setDraggability(enabled: boolean) {
+		this._map.setOptions({ draggable: enabled });
 	}
 
 	render(

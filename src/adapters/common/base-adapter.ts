@@ -35,12 +35,17 @@ export abstract class TerraDrawAdapterBase {
 						return;
 					}
 
+					const drawEvent = this.getDrawEventFromPointerEvent(event);
+					if (!drawEvent) {
+						return;
+					}
+
 					this.dragState = "pre-dragging";
 
 					// On pointer devices pointer mouse move events won't be
 					// triggered so this._lastDrawEvent will not get set in
 					// pointermove listener, so we must set it here.
-					this._lastDrawEvent = this.getDrawEventFromPointerEvent(event);
+					this._lastDrawEvent = drawEvent;
 				},
 				register: (callback) => {
 					return [
@@ -66,6 +71,9 @@ export abstract class TerraDrawAdapterBase {
 					event.preventDefault();
 
 					const drawEvent = this.getDrawEventFromPointerEvent(event);
+					if (!drawEvent) {
+						return;
+					}
 
 					if (this.dragState === "not-dragging") {
 						this.dragConter = 0;
@@ -141,6 +149,9 @@ export abstract class TerraDrawAdapterBase {
 						this.dragState === "pre-dragging"
 					) {
 						const drawEvent = this.getDrawEventFromPointerEvent(event);
+						if (!drawEvent) {
+							return;
+						}
 
 						// On mobile devices there is no real 'right click'
 						// so we want to make sure the event is genuine in this case
@@ -172,6 +183,9 @@ export abstract class TerraDrawAdapterBase {
 					}
 
 					const drawEvent = this.getDrawEventFromPointerEvent(event);
+					if (!drawEvent) {
+						return;
+					}
 
 					if (this.dragState === "dragging") {
 						this.currentModeCallbacks.onDragEnd(drawEvent, (enabled) => {
@@ -288,8 +302,14 @@ export abstract class TerraDrawAdapterBase {
 
 	protected getDrawEventFromPointerEvent(
 		event: PointerEvent
-	): TerraDrawMouseEvent {
-		const { lng, lat } = this.getLngLatFromPointerEvent(event);
+	): TerraDrawMouseEvent | null {
+		const latLng = this.getLngLatFromPointerEvent(event);
+
+		if (!latLng) {
+			return null;
+		}
+
+		const { lng, lat } = latLng;
 		const button = this.getButton(event);
 		const container = this.getMapContainer();
 		return {
@@ -302,6 +322,19 @@ export abstract class TerraDrawAdapterBase {
 		};
 	}
 
+	public register(callbacks: TerraDrawCallbacks) {
+		this.currentModeCallbacks = callbacks;
+		this.listeners.forEach((listener) => {
+			listener.register();
+		});
+	}
+
+	public unregister() {
+		this.listeners.forEach((listener) => {
+			listener.unregister();
+		});
+	}
+
 	public abstract project(...args: Parameters<Project>): ReturnType<Project>;
 	public abstract unproject(
 		...args: Parameters<Unproject>
@@ -312,12 +345,10 @@ export abstract class TerraDrawAdapterBase {
 	public abstract getLngLatFromPointerEvent(event: PointerEvent): {
 		lng: number;
 		lat: number;
-	};
+	} | null;
 	public abstract setDraggability(enabled: boolean): void;
 	public abstract setDoubleClickToZoom(enabled: boolean): void;
 	public abstract getMapContainer(): HTMLElement;
-	public abstract register(callbacks: TerraDrawCallbacks): void;
-	public abstract unregister(): void;
 	public abstract render(
 		changes: TerraDrawChanges,
 		styling: TerraDrawStylingFunction

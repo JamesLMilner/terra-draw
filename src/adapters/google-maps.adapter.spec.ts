@@ -47,6 +47,9 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 			const adapter = new TerraDrawGoogleMapsAdapter({
 				lib: {
 					LatLng: jest.fn(),
+					OverlayView: jest.fn().mockImplementation(() => ({
+						setMap: jest.fn(),
+					})),
 				} as any,
 				map: createMockGoogleMap(),
 			});

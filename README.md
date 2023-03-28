@@ -7,33 +7,27 @@ Frictionless map drawing across mapping libraries.
 
 Terra Draw centralises map drawing logic and provides a host of out the box drawing modes that work across different JavaScript mapping libraries. It also also you bring your own modes!
 
-### Library Support 
+### Library Support
 
 Terra Draw uses the concept of 'adapters' to allow it to work with a host of different mapping libraries. Currently supported are:
 
-* [Leaflet](https://leafletjs.com/) v1
-* [OpenLayers](https://openlayers.org/) v7
-* [Mapbox GL JS](https://www.mapbox.com/mapbox-gljs) v2
-* [MapLibre](https://maplibre.org/projects/maplibre-gl-js/) v2
-* [Google Maps JS API](https://developers.google.com/maps/documentation/javascript/overview) v3
+- [Leaflet](https://leafletjs.com/) v1
+- [OpenLayers](https://openlayers.org/) v7
+- [Mapbox GL JS](https://www.mapbox.com/mapbox-gljs) v2
+- [MapLibre](https://maplibre.org/projects/maplibre-gl-js/) v2
+- [Google Maps JS API](https://developers.google.com/maps/documentation/javascript/overview) v3
 
-### Install
+### Getting Started
 
-You can install the Terra Draw into your project like so:
-
-```shell
-npm install terra-draw
-```
-
-Be aware Terra Draw is currently in alpha, the initial API is still being finalised  
+Please see the [the development documentation](./guides/GETTING_STARTED.md)
 
 ### Development
 
-Please see the [the development documentation](./DEVELOPMENT.md)
+Please see the [the development documentation](./guides/DEVELOPMENT.md)
 
 ### Contributing
 
-Please see the [the contributing documentation](./CONTRIBUTING.md)
+Please see the [the contributing documentation](./guides/CONTRIBUTING.md)
 
 ### Project Website
 

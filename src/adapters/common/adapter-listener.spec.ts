@@ -59,9 +59,9 @@ describe("AdapterListener", () => {
 				unregister,
 			});
 
-			listener.unregister();
+			listener.unregister(callback);
 
-			expect(unregister).toBeCalledWith([]);
+			expect(unregister).toBeCalledWith(callback);
 		});
 	});
 });

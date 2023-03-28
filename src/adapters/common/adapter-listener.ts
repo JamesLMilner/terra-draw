@@ -1,11 +1,9 @@
-export class AdapterListener {
+export class AdapterListener<Callback extends (...args: any[]) => any> {
 	public name: string;
 	public callback: (...args: any[]) => any;
 	public registered = false;
 	public register: any;
 	public unregister: any;
-
-	private _listeners: any[] = [];
 
 	/**
 	 * Creates a new AdapterListener instance with the provided configuration.
@@ -23,9 +21,9 @@ export class AdapterListener {
 		register,
 	}: {
 		name: string;
-		callback: (...args: any[]) => any;
-		unregister: (...callbacks: any[]) => void;
-		register: (callback: (...args: any[]) => any) => any[];
+		callback: Callback;
+		unregister: (callbacks: Callback) => void;
+		register: (callback: Callback) => void;
 	}) {
 		this.name = name;
 
@@ -33,7 +31,7 @@ export class AdapterListener {
 		this.register = () => {
 			if (!this.registered) {
 				this.registered = true;
-				this._listeners = register(callback);
+				register(callback);
 			}
 		};
 
@@ -41,7 +39,7 @@ export class AdapterListener {
 		this.unregister = () => {
 			if (this.register) {
 				this.registered = false;
-				unregister(this._listeners);
+				unregister(callback);
 			}
 		};
 

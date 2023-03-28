@@ -11,6 +11,10 @@ import { limitPrecision } from "../../geometry/limit-decimal-precision";
 import { pixelDistance } from "../../geometry/measure/pixel-distance";
 import { AdapterListener } from "./adapter-listener";
 
+type BasePointerListener = (event: PointerEvent) => void;
+type BaseKeyboardListener = (event: KeyboardEvent) => void;
+type BaseMouseListener = (event: MouseEvent) => void;
+
 export abstract class TerraDrawAdapterBase {
 	constructor(config: {
 		coordinatePrecision?: number;
@@ -26,8 +30,8 @@ export abstract class TerraDrawAdapterBase {
 				? config.coordinatePrecision
 				: 9;
 
-		this.listeners = [
-			new AdapterListener({
+		this._listeners = [
+			new AdapterListener<BasePointerListener>({
 				name: "pointerdown",
 				callback: (event) => {
 					// We don't support multitouch as this point in time
@@ -35,12 +39,12 @@ export abstract class TerraDrawAdapterBase {
 						return;
 					}
 
-					const drawEvent = this.getDrawEventFromPointerEvent(event);
+					const drawEvent = this.getDrawEventFromEvent(event);
 					if (!drawEvent) {
 						return;
 					}
 
-					this.dragState = "pre-dragging";
+					this._dragState = "pre-dragging";
 
 					// On pointer devices pointer mouse move events won't be
 					// triggered so this._lastDrawEvent will not get set in
@@ -48,20 +52,16 @@ export abstract class TerraDrawAdapterBase {
 					this._lastDrawEvent = drawEvent;
 				},
 				register: (callback) => {
-					return [
-						this.getMapContainer().addEventListener("pointerdown", callback),
-					];
+					this.getMapContainer().addEventListener("pointerdown", callback);
 				},
-				unregister: (listeners: any[]) => {
-					listeners.forEach((listener) => {
-						this.getMapContainer().removeEventListener("pointerdown", listener);
-					});
+				unregister: (callback) => {
+					this.getMapContainer().removeEventListener("pointerdown", callback);
 				},
 			}),
-			new AdapterListener({
+			new AdapterListener<BasePointerListener>({
 				name: "pointermove",
 				callback: (event) => {
-					if (!this.currentModeCallbacks) return;
+					if (!this._currentModeCallbacks) return;
 
 					// We don't support multitouch as this point in time
 					if (!event.isPrimary) {
@@ -70,17 +70,16 @@ export abstract class TerraDrawAdapterBase {
 
 					event.preventDefault();
 
-					const drawEvent = this.getDrawEventFromPointerEvent(event);
+					const drawEvent = this.getDrawEventFromEvent(event);
 					if (!drawEvent) {
 						return;
 					}
 
-					if (this.dragState === "not-dragging") {
-						this.dragConter = 0;
+					if (this._dragState === "not-dragging") {
 						// If we're not dragging we can trigger the onMouseMove event
-						this.currentModeCallbacks.onMouseMove(drawEvent);
+						this._currentModeCallbacks.onMouseMove(drawEvent);
 						this._lastDrawEvent = drawEvent;
-					} else if (this.dragState === "pre-dragging") {
+					} else if (this._dragState === "pre-dragging") {
 						// This should always be set because of pointerdown event
 						if (!this._lastDrawEvent) {
 							return;
@@ -98,7 +97,7 @@ export abstract class TerraDrawAdapterBase {
 						// We only want to prevent micro drags when we are
 						// drawing as doing in on selection can cause janky
 						// behaviours
-						const modeState = this.currentModeCallbacks.getState();
+						const modeState = this._currentModeCallbacks.getState();
 						if (modeState === "drawing") {
 							// We want to ignore very small pointer movements when holding
 							// the map down as these are normally done by accident when
@@ -112,43 +111,39 @@ export abstract class TerraDrawAdapterBase {
 							}
 						}
 
-						this.dragState = "dragging";
-						this.currentModeCallbacks.onDragStart(
+						this._dragState = "dragging";
+						this._currentModeCallbacks.onDragStart(
 							drawEvent,
 							(enabled: boolean) => {
 								this.setDraggability.bind(this)(enabled);
 							}
 						);
-					} else if (this.dragState === "dragging") {
-						this.dragConter = 0;
-						this.currentModeCallbacks.onDrag(drawEvent);
+					} else if (this._dragState === "dragging") {
+						this._currentModeCallbacks.onDrag(drawEvent);
 					}
 				},
 				register: (callback) => {
 					const container = this.getMapContainer();
-
-					return [container.addEventListener("pointermove", callback)];
+					container.addEventListener("pointermove", callback);
 				},
-				unregister: (listeners: any[]) => {
-					listeners.forEach((listener) => {
-						const container = this.getMapContainer();
-						container.removeEventListener("pointermove", listener);
-					});
+				unregister: (callback) => {
+					const container = this.getMapContainer();
+					container.removeEventListener("pointermove", callback);
 				},
 			}),
-			new AdapterListener({
+			new AdapterListener<BaseMouseListener>({
 				name: "contextmenu",
-				callback: (event: PointerEvent) => {
-					if (!this.currentModeCallbacks) return;
+				callback: (event) => {
+					if (!this._currentModeCallbacks) return;
 
 					// We do not want the context menu to open
 					event.preventDefault();
 
 					if (
-						this.dragState === "not-dragging" ||
-						this.dragState === "pre-dragging"
+						this._dragState === "not-dragging" ||
+						this._dragState === "pre-dragging"
 					) {
-						const drawEvent = this.getDrawEventFromPointerEvent(event);
+						const drawEvent = this.getDrawEventFromEvent(event);
 						if (!drawEvent) {
 							return;
 						}
@@ -156,66 +151,59 @@ export abstract class TerraDrawAdapterBase {
 						// On mobile devices there is no real 'right click'
 						// so we want to make sure the event is genuine in this case
 						if (drawEvent.button !== "neither") {
-							this.currentModeCallbacks.onClick(drawEvent);
+							this._currentModeCallbacks.onClick(drawEvent);
 						}
 					}
 				},
 				register: (callback) => {
 					const container = this.getMapContainer();
-					return [container.addEventListener("contextmenu", callback)];
+					container.addEventListener("contextmenu", callback);
 				},
-				unregister: (listeners: any[]) => {
+				unregister: (callback) => {
 					const container = this.getMapContainer();
-
-					listeners.forEach((listener) => {
-						container.removeEventListener("contextmenu", listener);
-					});
+					container.removeEventListener("contextmenu", callback);
 				},
 			}),
-			new AdapterListener({
+			new AdapterListener<BasePointerListener>({
 				name: "pointerup",
 				callback: (event) => {
-					if (!this.currentModeCallbacks) return;
+					if (!this._currentModeCallbacks) return;
 
 					// We don't support multitouch as this point in time
 					if (!event.isPrimary) {
 						return;
 					}
 
-					const drawEvent = this.getDrawEventFromPointerEvent(event);
+					const drawEvent = this.getDrawEventFromEvent(event);
 					if (!drawEvent) {
 						return;
 					}
 
-					if (this.dragState === "dragging") {
-						this.currentModeCallbacks.onDragEnd(drawEvent, (enabled) => {
+					if (this._dragState === "dragging") {
+						this._currentModeCallbacks.onDragEnd(drawEvent, (enabled) => {
 							this.setDraggability.bind(this)(enabled);
 						});
 					} else if (
-						this.dragState === "not-dragging" ||
-						this.dragState === "pre-dragging"
+						this._dragState === "not-dragging" ||
+						this._dragState === "pre-dragging"
 					) {
 						// If we're not dragging or about to drag we
 						// can trigger the onClick event
-						this.currentModeCallbacks.onClick(drawEvent);
+						this._currentModeCallbacks.onClick(drawEvent);
 					}
 
 					// Ensure we go back to the regular behaviour
 					// not dragging and re-enable draggin on the actual map
-					this.dragState = "not-dragging";
+					this._dragState = "not-dragging";
 					this.setDraggability(true);
 				},
 				register: (callback) => {
 					const container = this.getMapContainer();
 					container.addEventListener("pointerup", callback);
-					return [callback];
 				},
-				unregister: (listeners: any[]) => {
+				unregister: (callback) => {
 					const container = this.getMapContainer();
-
-					listeners.forEach((listener) => {
-						container.removeEventListener("pointerup", listener);
-					});
+					container.removeEventListener("pointerup", callback);
 				},
 			}),
 			new AdapterListener({
@@ -223,32 +211,29 @@ export abstract class TerraDrawAdapterBase {
 				callback: (event: KeyboardEvent) => {
 					// map has no keypress event, so we add one to the canvas itself
 
-					if (!this.currentModeCallbacks) return;
+					if (!this._currentModeCallbacks) return;
 
 					event.preventDefault();
 
 					this._heldKeys.delete(event.key);
 
-					this.currentModeCallbacks.onKeyUp({
+					this._currentModeCallbacks.onKeyUp({
 						key: event.key,
 					});
 				},
 				register: (callback) => {
 					const container = this.getMapContainer();
-					return [container.addEventListener("keyup", callback)];
+					container.addEventListener("keyup", callback);
 				},
-				unregister: (listeners: any[]) => {
+				unregister: (callback) => {
 					const container = this.getMapContainer();
-
-					listeners.forEach((listener) => {
-						container.removeEventListener("keyup", listener);
-					});
+					container.removeEventListener("keyup", callback);
 				},
 			}),
 			new AdapterListener({
 				name: "keydown",
 				callback: (event: KeyboardEvent) => {
-					if (!this.currentModeCallbacks) {
+					if (!this._currentModeCallbacks) {
 						return;
 					}
 
@@ -256,36 +241,34 @@ export abstract class TerraDrawAdapterBase {
 
 					this._heldKeys.add(event.key);
 
-					this.currentModeCallbacks.onKeyDown({
+					this._currentModeCallbacks.onKeyDown({
 						key: event.key,
 					});
 				},
 				register: (callback) => {
 					const container = this.getMapContainer();
-
-					return [container.addEventListener("keydown", callback)];
+					container.addEventListener("keydown", callback);
 				},
-				unregister: (listeners: any[]) => {
+				unregister: (callback) => {
 					const container = this.getMapContainer();
-
-					listeners.forEach((listener) => {
-						container.removeEventListener("keydown", listener);
-					});
+					container.removeEventListener("keydown", callback);
 				},
 			}),
 		];
 	}
 
-	protected dragConter = 0;
 	protected _minPixelDragDistance: number;
 	protected _lastDrawEvent: TerraDrawMouseEvent | undefined;
 	protected _coordinatePrecision: number;
 	protected _heldKeys: Set<string> = new Set();
-	protected listeners: AdapterListener[] = [];
-	protected dragState: "not-dragging" | "pre-dragging" | "dragging" =
+	protected _listeners: AdapterListener<
+		BasePointerListener | BaseKeyboardListener | BaseMouseListener
+	>[] = [];
+	protected _dragState: "not-dragging" | "pre-dragging" | "dragging" =
 		"not-dragging";
-	protected currentModeCallbacks: TerraDrawCallbacks | undefined;
-	protected getButton(event: PointerEvent) {
+	protected _currentModeCallbacks: TerraDrawCallbacks | undefined;
+
+	protected getButton(event: PointerEvent | MouseEvent) {
 		if (event.button === -1) {
 			return "neither";
 		} else if (event.button === 0) {
@@ -300,10 +283,10 @@ export abstract class TerraDrawAdapterBase {
 		return "neither";
 	}
 
-	protected getDrawEventFromPointerEvent(
-		event: PointerEvent
+	protected getDrawEventFromEvent(
+		event: PointerEvent | MouseEvent
 	): TerraDrawMouseEvent | null {
-		const latLng = this.getLngLatFromPointerEvent(event);
+		const latLng = this.getLngLatFromEvent(event);
 
 		if (!latLng) {
 			return null;
@@ -322,33 +305,51 @@ export abstract class TerraDrawAdapterBase {
 		};
 	}
 
+	/**
+	 * Registers the provided callbacks for the current drawing mode and attaches
+	 * the necessary event listeners.
+	 * @param {TerraDrawCallbacks} callbacks - An object containing callback functions
+	 * for handling various drawing events in the current mode.
+	 */
 	public register(callbacks: TerraDrawCallbacks) {
-		this.currentModeCallbacks = callbacks;
-		this.listeners.forEach((listener) => {
+		this._currentModeCallbacks = callbacks;
+		this._listeners.forEach((listener) => {
 			listener.register();
 		});
 	}
 
+	/**
+	 * Unregisters the event listeners for the current drawing mode.
+	 * This is typically called when switching between drawing modes or
+	 * stopping the drawing process.
+	 */
 	public unregister() {
-		this.listeners.forEach((listener) => {
+		this._listeners.forEach((listener) => {
 			listener.unregister();
 		});
 	}
 
 	public abstract project(...args: Parameters<Project>): ReturnType<Project>;
+
 	public abstract unproject(
 		...args: Parameters<Unproject>
 	): ReturnType<Unproject>;
+
 	public abstract setCursor(
 		...args: Parameters<SetCursor>
 	): ReturnType<SetCursor>;
-	public abstract getLngLatFromPointerEvent(event: PointerEvent): {
+
+	public abstract getLngLatFromEvent(event: PointerEvent | MouseEvent): {
 		lng: number;
 		lat: number;
 	} | null;
+
 	public abstract setDraggability(enabled: boolean): void;
+
 	public abstract setDoubleClickToZoom(enabled: boolean): void;
+
 	public abstract getMapContainer(): HTMLElement;
+
 	public abstract render(
 		changes: TerraDrawChanges,
 		styling: TerraDrawStylingFunction

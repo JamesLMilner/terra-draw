@@ -22,9 +22,9 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawAdapterBase {
 				? config.coordinatePrecision
 				: 9;
 
-		this.overlay = new this._lib.OverlayView();
-		this.overlay.draw = function () {};
-		this.overlay.setMap(this._map);
+		this._overlay = new this._lib.OverlayView();
+		this._overlay.draw = function () {};
+		this._overlay.setMap(this._map);
 	}
 
 	private _cursor: string | undefined;
@@ -32,34 +32,27 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawAdapterBase {
 	private _lib: typeof google.maps;
 	private _map: google.maps.Map;
 	private _layers = false;
-	private overlay: google.maps.OverlayView;
+	private _overlay: google.maps.OverlayView;
 
-	// https://stackoverflow.com/a/27905268/1363484
+	/**
+	 * Generates an SVG path string for a circle with the given center coordinates and radius.
+	 * Based off this StackOverflow answer: https://stackoverflow.com/a/27905268/1363484
+	 * @param cx The x-coordinate of the circle's center.
+	 * @param cy The y-coordinate of the circle's center.
+	 * @param r The radius of the circle.
+	 * @returns The SVG path string representing the circle.
+	 */
 	private circlePath(cx: number, cy: number, r: number) {
-		return (
-			"M " +
-			cx +
-			" " +
-			cy +
-			" m -" +
-			r +
-			", 0 a " +
-			r +
-			"," +
-			r +
-			" 0 1,0 " +
-			r * 2 +
-			",0 a " +
-			r +
-			"," +
-			r +
-			" 0 1,0 -" +
-			r * 2 +
-			",0"
-		);
+		const d = r * 2;
+		return `M ${cx} ${cy} m -${r}, 0 a ${r},${r} 0 1,0 ${d},0 a ${r},${r} 0 1,0 -${d},0`;
 	}
 
-	getLngLatFromPointerEvent(event: PointerEvent) {
+	/**
+	 * Returns the longitude and latitude coordinates from a given PointerEvent on the map.
+	 * @param event The PointerEvent or MouseEvent containing the screen coordinates of the pointer.
+	 * @returns An object with 'lng' and 'lat' properties representing the longitude and latitude, or null if the conversion is not possible.
+	 */
+	getLngLatFromEvent(event: PointerEvent | MouseEvent) {
 		const bounds = this._map.getBounds();
 
 		if (!bounds) {
@@ -75,7 +68,7 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawAdapterBase {
 		const offsetY = event.clientY - mapCanvas.getBoundingClientRect().top;
 		const screenCoord = new google.maps.Point(offsetX, offsetY);
 
-		const latLng = this.overlay
+		const latLng = this._overlay
 			.getProjection()
 			.fromContainerPixelToLatLng(screenCoord);
 
@@ -86,10 +79,20 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawAdapterBase {
 		}
 	}
 
+	/**
+	 * Retrieves the HTML container element of the Leaflet map.
+	 * @returns The HTMLElement representing the map container.
+	 */
 	getMapContainer() {
 		return this._map.getDiv();
 	}
 
+	/**
+	 * Converts longitude and latitude coordinates to pixel coordinates in the map container.
+	 * @param lng The longitude coordinate to project.
+	 * @param lat The latitude coordinate to project.
+	 * @returns An object with 'x' and 'y' properties representing the pixel coordinates within the map container.
+	 */
 	project(lng: number, lat: number) {
 		const bounds = this._map.getBounds();
 
@@ -129,6 +132,12 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawAdapterBase {
 		};
 	}
 
+	/**
+	 * Converts pixel coordinates in the map container to longitude and latitude coordinates.
+	 * @param x The x-coordinate in the map container to unproject.
+	 * @param y The y-coordinate in the map container to unproject.
+	 * @returns An object with 'lng' and 'lat' properties representing the longitude and latitude coordinates.
+	 */
 	unproject(x: number, y: number) {
 		const projection = this._map.getProjection();
 		if (projection === undefined) {
@@ -170,6 +179,10 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawAdapterBase {
 		return { lng: lngLat.lng(), lat: lngLat.lat() };
 	}
 
+	/**
+	 * Sets the cursor style for the map container.
+	 * @param cursor The CSS cursor style to apply, or 'unset' to remove any previously applied cursor style.
+	 */
 	setCursor(cursor: Parameters<SetCursor>[0]) {
 		if (cursor === this._cursor) {
 			return;
@@ -195,6 +208,10 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawAdapterBase {
 		this._cursor = cursor;
 	}
 
+	/**
+	 * Enables or disables the double-click to zoom functionality on the map.
+	 * @param enabled Set to true to enable double-click to zoom, or false to disable it.
+	 */
 	setDoubleClickToZoom(enabled: boolean) {
 		if (enabled) {
 			this._map.setOptions({ disableDoubleClickZoom: false });
@@ -203,10 +220,19 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawAdapterBase {
 		}
 	}
 
+	/**
+	 * Enables or disables the draggable functionality of the map.
+	 * @param enabled Set to true to enable map dragging, or false to disable it.
+	 */
 	setDraggability(enabled: boolean) {
 		this._map.setOptions({ draggable: enabled });
 	}
 
+	/**
+	 * Renders GeoJSON features on the map using the provided styling configuration.
+	 * @param changes An object containing arrays of created, updated, and unchanged features to render.
+	 * @param styling An object mapping draw modes to feature styling functions
+	 */
 	render(
 		changes: TerraDrawChanges,
 		styling: {
@@ -317,7 +343,7 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawAdapterBase {
 						domEvent: MouseEvent;
 					}
 				) => {
-					const clickListener = this.listeners.find(
+					const clickListener = this._listeners.find(
 						({ name }) => name === "click"
 					);
 					if (clickListener) {
@@ -333,7 +359,7 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawAdapterBase {
 						domEvent: MouseEvent;
 					}
 				) => {
-					const mouseMoveListener = this.listeners.find(
+					const mouseMoveListener = this._listeners.find(
 						({ name }) => name === "mousemove"
 					);
 					if (mouseMoveListener) {

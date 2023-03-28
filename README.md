@@ -19,7 +19,7 @@ Terra Draw uses the concept of 'adapters' to allow it to work with a host of dif
 
 ### Getting Started
 
-Please see the [the development documentation](./guides/GETTING_STARTED.md)
+Please see the [the getting started guide](./guides/GETTING_STARTED.md)
 
 ### Development
 

@@ -1,7 +1,7 @@
 import {
-	TerraDrawAdapterStyling,
 	TerraDrawChanges,
 	SetCursor,
+	TerraDrawStylingFunction,
 } from "../common";
 import L from "leaflet";
 import { GeoJSONStoreFeatures } from "../store/store";
@@ -140,14 +140,7 @@ export class TerraDrawLeafletAdapter extends TerraDrawAdapterBase {
 	 * @param changes An object containing arrays of created, updated, and unchanged features to render.
 	 * @param styling An object mapping draw modes to feature styling functions
 	 */
-	public render(
-		changes: TerraDrawChanges,
-		styling: {
-			[mode: string]: (
-				feature: GeoJSONStoreFeatures
-			) => TerraDrawAdapterStyling;
-		}
-	) {
+	public render(changes: TerraDrawChanges, styling: TerraDrawStylingFunction) {
 		const features = [
 			...changes.created,
 			...changes.updated,

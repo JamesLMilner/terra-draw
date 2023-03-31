@@ -1,7 +1,7 @@
 import {
-	TerraDrawAdapterStyling,
 	TerraDrawChanges,
 	SetCursor,
+	TerraDrawStylingFunction,
 } from "../common";
 import { GeoJSONStoreFeatures } from "../store/store";
 import CircleGeom from "ol/geom/Circle";
@@ -41,22 +41,22 @@ export class TerraDrawOpenLayersAdapter extends TerraDrawAdapterBase {
 		this._map = config.map;
 		this._lib = config.lib;
 
-		this._coordinatePrecision =
-			typeof config.coordinatePrecision === "number"
-				? config.coordinatePrecision
-				: 9;
-
 		// TODO: Is this the best way to recieve keyboard events
 		this.getMapContainer().setAttribute("tabindex", "0");
 	}
 
 	private _lib: InjectableOL;
 	private _map: Map;
-	private _projection = "EPSG:3857";
+	private _projection = "EPSG:3857" as const;
 	private _vectorSource: undefined | VectorSource<Geometry>;
 	private _geoJSONReader: undefined | GeoJSON;
 
-	private HexToRGB(hex: string): { r: number; g: number; b: number } {
+	/**
+	 * Converts a hexideciaml color to RGB
+	 * @param hex a string of the hexidecimal string
+	 * @returns an object to red green and blue (RGB) color
+	 */
+	private hexToRGB(hex: string): { r: number; g: number; b: number } {
 		return {
 			r: parseInt(hex.slice(1, 3), 16),
 			g: parseInt(hex.slice(3, 5), 16),
@@ -64,7 +64,13 @@ export class TerraDrawOpenLayersAdapter extends TerraDrawAdapterBase {
 		};
 	}
 
-	private getStyles(feature: FeatureLike, styling: any) {
+	/**
+	 * Converts a hexideciaml color to RGB
+	 * @param feature
+	 * @param styling
+	 * @returns an object to red green and blue (RGB) color
+	 */
+	private getStyles(feature: FeatureLike, styling: TerraDrawStylingFunction) {
 		const geometry = feature.getGeometry();
 		if (!geometry) {
 			return;
@@ -113,7 +119,7 @@ export class TerraDrawOpenLayersAdapter extends TerraDrawAdapterBase {
 					geometry: { type: "LineString", coordinates: [] },
 					properties,
 				});
-				const { r, g, b } = this.HexToRGB(style.polygonFillColor);
+				const { r, g, b } = this.hexToRGB(style.polygonFillColor);
 
 				return new Style({
 					stroke: new Stroke({
@@ -151,6 +157,11 @@ export class TerraDrawOpenLayersAdapter extends TerraDrawAdapterBase {
 		}
 	}
 
+	/**
+	 * Returns the longitude and latitude coordinates from a given PointerEvent on the map.
+	 * @param event The PointerEvent or MouseEvent  containing the screen coordinates of the pointer.
+	 * @returns An object with 'lng' and 'lat' properties representing the longitude and latitude, or null if the conversion is not possible.
+	 */
 	public getLngLatFromEvent(event: PointerEvent | MouseEvent) {
 		const container = this.getMapContainer();
 		const x = event.clientX - container.offsetLeft;
@@ -159,6 +170,18 @@ export class TerraDrawOpenLayersAdapter extends TerraDrawAdapterBase {
 		return this.unproject(x, y);
 	}
 
+	/**
+	 * Retrieves the HTML container element of the Leaflet map.
+	 * @returns The HTMLElement representing the map container.
+	 */
+	public getMapContainer() {
+		return this._map.getViewport();
+	}
+
+	/**
+	 * Enables or disables the draggable functionality of the map.
+	 * @param enabled Set to true to enable map dragging, or false to disable it.
+	 */
 	public setDraggability(enabled: boolean) {
 		this._map.getInteractions().forEach((interaction) => {
 			if (interaction.constructor.name === "DragPan") {
@@ -167,20 +190,32 @@ export class TerraDrawOpenLayersAdapter extends TerraDrawAdapterBase {
 		});
 	}
 
-	public getMapContainer() {
-		return this._map.getViewport();
-	}
-
+	/**
+	 * Converts longitude and latitude coordinates to pixel coordinates in the map container.
+	 * @param lng The longitude coordinate to project.
+	 * @param lat The latitude coordinate to project.
+	 * @returns An object with 'x' and 'y' properties representing the pixel coordinates within the map container.
+	 */
 	public project(lng: number, lat: number) {
 		const [x, y] = this._map.getPixelFromCoordinate(fromLonLat([lng, lat]));
 		return { x, y };
 	}
 
+	/**
+	 * Converts pixel coordinates in the map container to longitude and latitude coordinates.
+	 * @param x The x-coordinate in the map container to unproject.
+	 * @param y The y-coordinate in the map container to unproject.
+	 * @returns An object with 'lng' and 'lat' properties representing the longitude and latitude coordinates.
+	 */
 	public unproject(x: number, y: number) {
 		const [lng, lat] = toLonLat(this._map.getCoordinateFromPixel([x, y]));
 		return { lng, lat };
 	}
 
+	/**
+	 * Sets the cursor style for the map container.
+	 * @param cursor The CSS cursor style to apply, or 'unset' to remove any previously applied cursor style.
+	 */
 	public setCursor(cursor: Parameters<SetCursor>[0]) {
 		if (cursor === "unset") {
 			this.getMapContainer().style.removeProperty("cursor");
@@ -189,6 +224,10 @@ export class TerraDrawOpenLayersAdapter extends TerraDrawAdapterBase {
 		}
 	}
 
+	/**
+	 * Enables or disables the double-click to zoom functionality on the map.
+	 * @param enabled Set to true to enable double-click to zoom, or false to disable it.
+	 */
 	public setDoubleClickToZoom(enabled: boolean) {
 		this._map.getInteractions().forEach(function (interaction) {
 			if (interaction.constructor.name === "DoubleClickZoom") {
@@ -197,14 +236,12 @@ export class TerraDrawOpenLayersAdapter extends TerraDrawAdapterBase {
 		});
 	}
 
-	public render(
-		changes: TerraDrawChanges,
-		styling: {
-			[mode: string]: (
-				feature: GeoJSONStoreFeatures
-			) => TerraDrawAdapterStyling;
-		}
-	) {
+	/**
+	 * Renders GeoJSON features on the map using the provided styling configuration.
+	 * @param changes An object containing arrays of created, updated, and unchanged features to render.
+	 * @param styling An object mapping draw modes to feature styling functions
+	 */
+	public render(changes: TerraDrawChanges, styling: TerraDrawStylingFunction) {
 		if (!this._vectorSource) {
 			this._geoJSONReader = new this._lib.GeoJSON();
 

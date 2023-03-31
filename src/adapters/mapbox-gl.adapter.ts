@@ -1,7 +1,7 @@
 import {
-	TerraDrawAdapterStyling,
 	TerraDrawChanges,
 	SetCursor,
+	TerraDrawStylingFunction,
 } from "../common";
 import { Feature, LineString, Point, Polygon } from "geojson";
 import mapboxgl, {
@@ -18,10 +18,6 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawAdapterBase {
 		super(config);
 
 		this._map = config.map;
-		this._coordinatePrecision =
-			typeof config.coordinatePrecision === "number"
-				? config.coordinatePrecision
-				: 9;
 	}
 
 	private _map: mapboxgl.Map;
@@ -246,14 +242,7 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawAdapterBase {
 	 * @param changes An object containing arrays of created, updated, and unchanged features to render.
 	 * @param styling An object mapping draw modes to feature styling functions
 	 */
-	public render(
-		changes: TerraDrawChanges,
-		styling: {
-			[mode: string]: (
-				feature: GeoJSONStoreFeatures
-			) => TerraDrawAdapterStyling;
-		}
-	) {
+	public render(changes: TerraDrawChanges, styling: TerraDrawStylingFunction) {
 		const features = [
 			...changes.created,
 			...changes.updated,

@@ -2,6 +2,7 @@ import {
 	TerraDrawAdapterStyling,
 	TerraDrawChanges,
 	SetCursor,
+	TerraDrawStylingFunction,
 } from "../common";
 import { GeoJsonObject } from "geojson";
 
@@ -233,14 +234,7 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawAdapterBase {
 	 * @param changes An object containing arrays of created, updated, and unchanged features to render.
 	 * @param styling An object mapping draw modes to feature styling functions
 	 */
-	render(
-		changes: TerraDrawChanges,
-		styling: {
-			[mode: string]: (
-				feature: GeoJSONStoreFeatures
-			) => TerraDrawAdapterStyling;
-		}
-	) {
+	render(changes: TerraDrawChanges, styling: TerraDrawStylingFunction) {
 		if (this._layers) {
 			changes.deletedIds.forEach((deletedId) => {
 				const featureToDelete = this._map.data.getFeatureById(deletedId);

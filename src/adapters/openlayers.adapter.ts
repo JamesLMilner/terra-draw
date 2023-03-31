@@ -1,15 +1,9 @@
 import {
-	TerraDrawCallbacks,
-	TerraDrawAdapter,
-	TerraDrawModeRegisterConfig,
 	TerraDrawAdapterStyling,
 	TerraDrawChanges,
-	TerraDrawMouseEvent,
+	SetCursor,
 } from "../common";
-
 import { GeoJSONStoreFeatures } from "../store/store";
-import { limitPrecision } from "../geometry/limit-decimal-precision";
-
 import CircleGeom from "ol/geom/Circle";
 import Feature, { FeatureLike } from "ol/Feature";
 import GeoJSON from "ol/format/GeoJSON";
@@ -22,7 +16,7 @@ import VectorSource from "ol/source/Vector";
 import VectorLayer from "ol/layer/Vector";
 import { fromLonLat, toLonLat } from "ol/proj";
 import Geometry from "ol/geom/Geometry";
-import { AdapterListener } from "./common/adapter-listener";
+import { TerraDrawAdapterBase } from "./common/base-adapter";
 
 type InjectableOL = {
 	Circle: typeof CircleGeom;
@@ -36,12 +30,14 @@ type InjectableOL = {
 	toLonLat: typeof toLonLat;
 };
 
-export class TerraDrawOpenLayersAdapter implements TerraDrawAdapter {
+export class TerraDrawOpenLayersAdapter extends TerraDrawAdapterBase {
 	constructor(config: {
 		map: Map;
 		lib: InjectableOL;
 		coordinatePrecision?: number;
 	}) {
+		super(config);
+
 		this._map = config.map;
 		this._lib = config.lib;
 
@@ -50,265 +46,15 @@ export class TerraDrawOpenLayersAdapter implements TerraDrawAdapter {
 				? config.coordinatePrecision
 				: 9;
 
-		this.getMapContainer = () => {
-			return this._map.getViewport();
-		};
-
-		this.project = (lng: number, lat: number) => {
-			const [x, y] = this._map.getPixelFromCoordinate(fromLonLat([lng, lat]));
-			return { x, y };
-		};
-
-		this.unproject = (x: number, y: number) => {
-			const [lng, lat] = toLonLat(this._map.getCoordinateFromPixel([x, y]));
-			return { lng, lat };
-		};
-
-		this.setCursor = (cursor) => {
-			if (cursor === "unset") {
-				this.getMapContainer().style.removeProperty("cursor");
-			} else {
-				this.getMapContainer().style.cursor = cursor;
-			}
-		};
-
-		this.setDoubleClickToZoom = (enabled: boolean) => {
-			this._map.getInteractions().forEach(function (interaction) {
-				if (interaction.constructor.name === "DoubleClickZoom") {
-					interaction.setActive(enabled);
-				}
-			});
-		};
-
 		// TODO: Is this the best way to recieve keyboard events
 		this.getMapContainer().setAttribute("tabindex", "0");
-
-		this._listeners = [
-			new AdapterListener({
-				name: "click",
-				callback: (event: any) => {
-					if (!this._currentModeCallbacks) return;
-					if (
-						this._dragState === "not-dragging" ||
-						this._dragState === "pre-dragging"
-					) {
-						if (event.coordinate) {
-							const lngLat = this._lib.toLonLat(event.coordinate);
-
-							this._currentModeCallbacks.onClick({
-								lng: limitPrecision(lngLat[0], this._coordinatePrecision),
-								lat: limitPrecision(lngLat[1], this._coordinatePrecision),
-								containerX:
-									event.originalEvent.clientX -
-									this.getMapContainer().offsetLeft,
-								containerY:
-									event.originalEvent.clientY -
-									this.getMapContainer().offsetTop,
-								button: event.originalEvent.button === 0 ? "left" : "right",
-								heldKeys: [...this._heldKeys],
-							});
-						}
-					}
-				},
-				register: (callback) => {
-					return this._map.on("click", callback);
-				},
-				unregister: (callback) => {
-					this._map.un("click", callback);
-				},
-			}),
-			new AdapterListener({
-				name: "pointermove",
-				callback: (event: any) => {
-					if (!this._currentModeCallbacks) return;
-
-					const container = this.getMapContainer();
-
-					const point = {
-						x: event.clientX - container.offsetLeft,
-						y: event.clientY - container.offsetTop,
-					};
-
-					const { lng, lat } = this.unproject(point.x, point.y);
-
-					this._currentModeCallbacks.onMouseMove({
-						lng: limitPrecision(lng, this._coordinatePrecision),
-						lat: limitPrecision(lat, this._coordinatePrecision),
-						containerX: event.clientX - this.getMapContainer().offsetLeft,
-						containerY: event.clientY - this.getMapContainer().offsetTop,
-						button: event.button === 0 ? "left" : "right",
-						heldKeys: [...this._heldKeys],
-					});
-				},
-				register: (callback) => {
-					const container = this.getMapContainer();
-					container.addEventListener("pointermove", callback);
-				},
-				unregister: (callback) => {
-					const container = this.getMapContainer();
-
-					container.removeEventListener("pointermove", callback);
-				},
-			}),
-			new AdapterListener({
-				name: "mousedown",
-				callback: (event: any) => {
-					if (!this._currentModeCallbacks) return;
-					this._dragState = "pre-dragging";
-				},
-				register: (callback) => {
-					const container = this.getMapContainer();
-					container.addEventListener("mousedown", callback);
-				},
-				unregister: (callback) => {
-					const container = this.getMapContainer();
-					container.removeEventListener("mousedown", callback);
-				},
-			}),
-			new AdapterListener({
-				name: "drag",
-				callback: (event: any) => {
-					if (!this._currentModeCallbacks) return;
-					const container = this.getMapContainer();
-
-					const point = {
-						x: event.clientX - container.offsetLeft,
-						y: event.clientY - container.offsetTop,
-					};
-
-					const { lng, lat } = this.unproject(point.x, point.y);
-
-					const drawEvent: TerraDrawMouseEvent = {
-						lng: limitPrecision(lng, this._coordinatePrecision),
-						lat: limitPrecision(lat, this._coordinatePrecision),
-						containerX: event.clientX - container.offsetLeft,
-						containerY: event.clientY - container.offsetTop,
-						button: event.button === 0 ? "left" : "right",
-						heldKeys: [...this._heldKeys],
-					};
-
-					if (this._dragState === "pre-dragging") {
-						this._dragState = "dragging";
-						this._currentModeCallbacks.onDragStart(drawEvent, (enabled) => {
-							this._map.getInteractions().forEach(function (interaction) {
-								if (interaction.constructor.name === "DragPan") {
-									interaction.setActive(enabled);
-								}
-							});
-						});
-					} else if (this._dragState === "dragging") {
-						this._currentModeCallbacks.onDrag(drawEvent);
-					}
-				},
-				register: (callback) => {
-					const container = this.getMapContainer();
-					container.addEventListener("pointermove", callback);
-				},
-				unregister: (callback) => {
-					const container = this.getMapContainer();
-					container.addEventListener("pointermove", callback);
-				},
-			}),
-			new AdapterListener({
-				name: "pointerup",
-				callback: (event: any) => {
-					if (!this._currentModeCallbacks) return;
-					const container = this.getMapContainer();
-
-					if (this._dragState === "dragging") {
-						const point = {
-							x: event.clientX - container.offsetLeft,
-							y: event.clientY - container.offsetTop,
-						};
-
-						const { lng, lat } = this.unproject(point.x, point.y);
-
-						const drawEvent: TerraDrawMouseEvent = {
-							lng: limitPrecision(lng, this._coordinatePrecision),
-							lat: limitPrecision(lat, this._coordinatePrecision),
-							containerX: event.clientX - container.offsetLeft,
-							containerY: event.clientY - container.offsetTop,
-							button: event.button === 0 ? "left" : "right",
-							heldKeys: [...this._heldKeys],
-						};
-
-						this._currentModeCallbacks.onDragEnd(drawEvent, (enabled) => {
-							this._map.getInteractions().forEach(function (interaction) {
-								if (interaction.constructor.name === "DragPan") {
-									interaction.setActive(enabled);
-								}
-							});
-						});
-					}
-
-					this._dragState = "not-dragging";
-				},
-				register: (callback) => {
-					const container = this.getMapContainer();
-
-					container.addEventListener("mouseup", callback);
-					container.addEventListener("pointerup", callback);
-				},
-				unregister: (callback) => {
-					const container = this.getMapContainer();
-
-					container.addEventListener("mouseup", callback);
-					container.addEventListener("pointerup", callback);
-				},
-			}),
-			new AdapterListener({
-				name: "keydown",
-				callback: (event: any) => {
-					if (!this._currentModeCallbacks) return;
-
-					event.preventDefault();
-					this._heldKeys.add(event.key);
-					this._currentModeCallbacks.onKeyDown({
-						key: event.key,
-					});
-				},
-				register: (callback) => {
-					const container = this.getMapContainer();
-					container.addEventListener("keydown", callback);
-				},
-				unregister: (callback) => {
-					const container = this.getMapContainer();
-					container.addEventListener("keydown", callback);
-				},
-			}),
-			new AdapterListener({
-				name: "keyup",
-				callback: (event: any) => {
-					if (!this._currentModeCallbacks) return;
-
-					// map has no keypress event, so we add one to the canvas itself
-					event.preventDefault();
-					this._heldKeys.delete(event.key);
-
-					this._currentModeCallbacks.onKeyUp({
-						key: event.key,
-					});
-				},
-				register: (callback) => {
-					const container = this.getMapContainer();
-					container.addEventListener("keyup", callback);
-				},
-				unregister: (callback) => {
-					const container = this.getMapContainer();
-					container.addEventListener("keyup", callback);
-				},
-			}),
-		];
 	}
 
-	private _dragState: "not-dragging" | "pre-dragging" | "dragging" =
-		"not-dragging";
-	private _listeners: AdapterListener<any>[] = [];
-	private _currentModeCallbacks: TerraDrawCallbacks | undefined;
 	private _lib: InjectableOL;
 	private _map: Map;
-	private _heldKeys: Set<string> = new Set();
-	private _coordinatePrecision: number;
+	private _projection = "EPSG:3857";
+	private _vectorSource: undefined | VectorSource<Geometry>;
+	private _geoJSONReader: undefined | GeoJSON;
 
 	private HexToRGB(hex: string): { r: number; g: number; b: number } {
 		return {
@@ -317,28 +63,6 @@ export class TerraDrawOpenLayersAdapter implements TerraDrawAdapter {
 			b: parseInt(hex.slice(5, 7), 16),
 		};
 	}
-
-	setDoubleClickToZoom: TerraDrawModeRegisterConfig["setDoubleClickToZoom"];
-	unproject: TerraDrawModeRegisterConfig["unproject"];
-	project: TerraDrawModeRegisterConfig["project"];
-	setCursor: TerraDrawModeRegisterConfig["setCursor"];
-	getMapContainer: () => HTMLElement;
-
-	register(callbacks: TerraDrawCallbacks) {
-		this._currentModeCallbacks = callbacks;
-
-		this._listeners.forEach((listener) => {
-			listener.register();
-		});
-	}
-
-	unregister() {
-		this._listeners.forEach((listener) => {
-			listener.unregister();
-		});
-	}
-
-	private vectorSource: undefined | VectorSource<Geometry>;
 
 	private getStyles(feature: FeatureLike, styling: any) {
 		const geometry = feature.getGeometry();
@@ -404,34 +128,76 @@ export class TerraDrawOpenLayersAdapter implements TerraDrawAdapter {
 		}[key](feature);
 	}
 
-	private geoJSONReader: GeoJSON | undefined;
-
 	private addFeature(feature: GeoJSONStoreFeatures) {
-		if (this.vectorSource && this.geoJSONReader) {
-			const olFeature = this.geoJSONReader.readFeature(feature, {
-				featureProjection: this.projection,
+		if (this._vectorSource && this._geoJSONReader) {
+			const olFeature = this._geoJSONReader.readFeature(feature, {
+				featureProjection: this._projection,
 			});
-			this.vectorSource.addFeature(olFeature);
+			this._vectorSource.addFeature(olFeature);
 		} else {
 			throw new Error("Vector Source not initalised");
 		}
 	}
 
 	private removeFeature(id: string) {
-		if (this.vectorSource) {
-			const deleted = this.vectorSource.getFeatureById(id);
+		if (this._vectorSource) {
+			const deleted = this._vectorSource.getFeatureById(id);
 			if (!deleted) {
 				return;
 			}
-			this.vectorSource.removeFeature(deleted);
+			this._vectorSource.removeFeature(deleted);
 		} else {
 			throw new Error("Vector Source not initalised");
 		}
 	}
 
-	private projection = "EPSG:3857";
+	public getLngLatFromEvent(event: PointerEvent | MouseEvent) {
+		const container = this.getMapContainer();
+		const x = event.clientX - container.offsetLeft;
+		const y = event.clientY - container.offsetTop;
 
-	render(
+		return this.unproject(x, y);
+	}
+
+	public setDraggability(enabled: boolean) {
+		this._map.getInteractions().forEach((interaction) => {
+			if (interaction.constructor.name === "DragPan") {
+				interaction.setActive(enabled);
+			}
+		});
+	}
+
+	public getMapContainer() {
+		return this._map.getViewport();
+	}
+
+	public project(lng: number, lat: number) {
+		const [x, y] = this._map.getPixelFromCoordinate(fromLonLat([lng, lat]));
+		return { x, y };
+	}
+
+	public unproject(x: number, y: number) {
+		const [lng, lat] = toLonLat(this._map.getCoordinateFromPixel([x, y]));
+		return { lng, lat };
+	}
+
+	public setCursor(cursor: Parameters<SetCursor>[0]) {
+		if (cursor === "unset") {
+			this.getMapContainer().style.removeProperty("cursor");
+		} else {
+			this.getMapContainer().style.cursor = cursor;
+		}
+	}
+
+	public setDoubleClickToZoom(enabled: boolean) {
+		this._map.getInteractions().forEach(function (interaction) {
+			if (interaction.constructor.name === "DoubleClickZoom") {
+				interaction.setActive(enabled);
+			}
+		});
+	}
+
+	public render(
 		changes: TerraDrawChanges,
 		styling: {
 			[mode: string]: (
@@ -439,10 +205,10 @@ export class TerraDrawOpenLayersAdapter implements TerraDrawAdapter {
 			) => TerraDrawAdapterStyling;
 		}
 	) {
-		if (!this.vectorSource) {
-			this.geoJSONReader = new this._lib.GeoJSON();
+		if (!this._vectorSource) {
+			this._geoJSONReader = new this._lib.GeoJSON();
 
-			const vectorSourceFeatures = this.geoJSONReader.readFeatures(
+			const vectorSourceFeatures = this._geoJSONReader.readFeatures(
 				{
 					type: "FeatureCollection",
 					features: [
@@ -451,13 +217,13 @@ export class TerraDrawOpenLayersAdapter implements TerraDrawAdapter {
 						...changes.unchanged,
 					],
 				},
-				{ featureProjection: this.projection }
+				{ featureProjection: this._projection }
 			);
 			const vectorSource = new this._lib.VectorSource({
 				features: vectorSourceFeatures,
 			});
 
-			this.vectorSource = vectorSource;
+			this._vectorSource = vectorSource;
 
 			const vectorLayer = new this._lib.VectorLayer({
 				source: vectorSource,
@@ -466,7 +232,7 @@ export class TerraDrawOpenLayersAdapter implements TerraDrawAdapter {
 
 			this._map.addLayer(vectorLayer);
 		} else {
-			const source = this.vectorSource;
+			const source = this._vectorSource;
 
 			if (!source) {
 				throw new Error("Vector Layer source has disappeared");

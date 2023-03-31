@@ -1,13 +1,9 @@
 import {
-	TerraDrawCallbacks,
-	TerraDrawAdapter,
-	TerraDrawModeRegisterConfig,
 	TerraDrawAdapterStyling,
 	TerraDrawChanges,
-	TerraDrawMouseEvent,
+	SetCursor,
 } from "../common";
 import { Feature, LineString, Point, Polygon } from "geojson";
-import { limitPrecision } from "../geometry/limit-decimal-precision";
 import mapboxgl, {
 	CircleLayer,
 	FillLayer,
@@ -15,256 +11,19 @@ import mapboxgl, {
 	PointLike,
 } from "mapbox-gl";
 import { GeoJSONStoreFeatures, GeoJSONStoreGeometries } from "../store/store";
-import { AdapterListener } from "./common/adapter-listener";
+import { TerraDrawAdapterBase } from "./common/base-adapter";
 
-export class TerraDrawMapboxGLAdapter implements TerraDrawAdapter {
+export class TerraDrawMapboxGLAdapter extends TerraDrawAdapterBase {
 	constructor(config: { map: mapboxgl.Map; coordinatePrecision?: number }) {
+		super(config);
+
 		this._map = config.map;
 		this._coordinatePrecision =
 			typeof config.coordinatePrecision === "number"
 				? config.coordinatePrecision
 				: 9;
-
-		this.project = (lng: number, lat: number) => {
-			const { x, y } = this._map.project({ lng, lat });
-			return { x, y };
-		};
-
-		this.unproject = (x: number, y: number) => {
-			const { lng, lat } = this._map.unproject({ x, y } as PointLike);
-			return { lng, lat };
-		};
-
-		this.setCursor = (style) => {
-			this._map.getCanvas().style.cursor = style;
-		};
-
-		this.getMapContainer = () => {
-			return this._map.getContainer();
-		};
-
-		this.setDoubleClickToZoom = (enabled: boolean) => {
-			if (enabled) {
-				this._map.doubleClickZoom.enable();
-			} else {
-				this._map.doubleClickZoom.disable();
-			}
-		};
-
-		this._listeners = [
-			new AdapterListener({
-				name: "click",
-				callback: (event: any) => {
-					if (!this._currentModeCallbacks) return;
-
-					this._currentModeCallbacks.onClick({
-						lng: limitPrecision(event.lngLat.lng, this._coordinatePrecision),
-						lat: limitPrecision(event.lngLat.lat, this._coordinatePrecision),
-						containerX:
-							event.originalEvent.clientX - this.getMapContainer().offsetLeft,
-						containerY:
-							event.originalEvent.clientY - this.getMapContainer().offsetTop,
-						button: event.originalEvent.button === 0 ? "left" : "right",
-						heldKeys: [...this._heldKeys],
-					});
-				},
-				register: (callback) => {
-					this._map.on("click", callback);
-					this._map.on("contextmenu", callback);
-				},
-				unregister: (callback) => {
-					this._map.off("contextmenu", callback);
-					this._map.off("click", callback);
-				},
-			}),
-			new AdapterListener({
-				name: "mousemove",
-				callback: (event: any) => {
-					if (!this._currentModeCallbacks) return;
-
-					this._currentModeCallbacks.onMouseMove({
-						lng: limitPrecision(event.lngLat.lng, this._coordinatePrecision),
-						lat: limitPrecision(event.lngLat.lat, this._coordinatePrecision),
-						containerX:
-							event.originalEvent.clientX - this.getMapContainer().offsetLeft,
-						containerY:
-							event.originalEvent.clientY - this.getMapContainer().offsetTop,
-						button: event.originalEvent.button === 0 ? "left" : "right",
-						heldKeys: [...this._heldKeys],
-					});
-				},
-				register: (callback) => {
-					this._map.on("mousemove", callback);
-				},
-				unregister: (callback) => {
-					this._map.off("mousemove", callback);
-				},
-			}),
-			new AdapterListener({
-				name: "mousedown",
-				callback: (event: any) => {
-					this.dragState = "pre-dragging";
-				},
-				register: (callback) => {
-					const container = this.getMapContainer();
-					container.addEventListener("mousedown", callback);
-				},
-				unregister: (callback) => {
-					const container = this.getMapContainer();
-					container.removeEventListener("mousedown", callback);
-				},
-			}),
-			new AdapterListener({
-				name: "drag",
-				callback: (event: any) => {
-					if (!this._currentModeCallbacks) return;
-
-					const container = this.getMapContainer();
-
-					const { lng, lat } = this._map.unproject({
-						x: event.clientX - container.offsetLeft,
-						y: event.clientY - container.offsetTop,
-					} as any);
-
-					const drawEvent: TerraDrawMouseEvent = {
-						lng: limitPrecision(lng, this._coordinatePrecision),
-						lat: limitPrecision(lat, this._coordinatePrecision),
-						containerX: event.clientX - container.offsetLeft,
-						containerY: event.clientY - container.offsetTop,
-						button: event.button === 0 ? "left" : "right",
-						heldKeys: [...this._heldKeys],
-					};
-
-					if (this.dragState === "pre-dragging") {
-						this.dragState = "dragging";
-
-						this._currentModeCallbacks.onDragStart(drawEvent, (enabled) => {
-							if (enabled) {
-								this._map.dragPan.enable();
-							} else {
-								this._map.dragPan.disable();
-							}
-						});
-					} else if (this.dragState === "dragging") {
-						this._currentModeCallbacks.onDrag(drawEvent);
-					}
-				},
-				register: (callback) => {
-					const container = this.getMapContainer();
-					container.addEventListener("mousemove", callback);
-				},
-				unregister: (callback) => {
-					const container = this.getMapContainer();
-					container.addEventListener("mousemove", callback);
-				},
-			}),
-			new AdapterListener({
-				name: "mouseup",
-				callback: (event: any) => {
-					if (!this._currentModeCallbacks) return;
-					const container = this.getMapContainer();
-
-					if (this.dragState === "dragging") {
-						const point = {
-							x: event.clientX - container.offsetLeft,
-							y: event.clientY - container.offsetTop,
-						} as mapboxgl.Point;
-
-						const { lng, lat } = this._map.unproject(point);
-
-						this._currentModeCallbacks.onDragEnd(
-							{
-								lng: limitPrecision(lng, this._coordinatePrecision),
-								lat: limitPrecision(lat, this._coordinatePrecision),
-								containerX: event.clientX - container.offsetLeft,
-								containerY: event.clientY - container.offsetTop,
-								button: event.button === 0 ? "left" : "right",
-								heldKeys: [...this._heldKeys],
-							},
-							(enabled) => {
-								if (enabled) {
-									this._map.dragPan.enable();
-								} else {
-									this._map.dragPan.disable();
-								}
-							}
-						);
-					}
-
-					this.dragState = "not-dragging";
-				},
-				register: (callback) => {
-					const container = this.getMapContainer();
-
-					container.addEventListener("mouseup", callback);
-				},
-				unregister: (callback) => {
-					const container = this.getMapContainer();
-					container.addEventListener("mouseup", callback);
-				},
-			}),
-			new AdapterListener({
-				name: "keyup",
-				callback: (event: any) => {
-					if (!this._currentModeCallbacks) return;
-
-					// map has no keypress event, so we add one to the canvas itself
-					event.preventDefault();
-
-					this._heldKeys.delete(event.key);
-
-					this._currentModeCallbacks.onKeyUp({
-						key: event.key,
-					});
-				},
-				register: (callback) => {
-					const container = this.getMapContainer();
-					container.addEventListener("keyup", callback);
-				},
-				unregister: (callback) => {
-					const container = this.getMapContainer();
-					container.removeEventListener("keyup", callback);
-				},
-			}),
-			new AdapterListener({
-				name: "keydown",
-				callback: (event: KeyboardEvent) => {
-					if (!this._currentModeCallbacks) return;
-
-					event.preventDefault();
-
-					this._heldKeys.add(event.key);
-
-					this._currentModeCallbacks.onKeyDown({
-						key: event.key,
-					});
-				},
-				register: (callback) => {
-					const container = this.getMapContainer();
-					container.addEventListener("keydown", callback);
-				},
-				unregister: (callback) => {
-					const container = this.getMapContainer();
-					container.removeEventListener("keydown", callback);
-				},
-			}),
-		];
 	}
 
-	private dragState: "not-dragging" | "pre-dragging" | "dragging" =
-		"not-dragging";
-
-	public setDoubleClickToZoom: TerraDrawModeRegisterConfig["setDoubleClickToZoom"];
-	public unproject: TerraDrawModeRegisterConfig["unproject"];
-	public project: TerraDrawModeRegisterConfig["project"];
-	public setCursor: TerraDrawModeRegisterConfig["setCursor"];
-
-	public getMapContainer: () => HTMLElement;
-
-	private _listeners: AdapterListener<any>[] = [];
-	private _currentModeCallbacks: TerraDrawCallbacks | undefined;
-	private _heldKeys: Set<string> = new Set();
-	private _coordinatePrecision: number;
 	private _map: mapboxgl.Map;
 	private _rendered: Record<string, boolean> = {};
 
@@ -407,21 +166,89 @@ export class TerraDrawMapboxGLAdapter implements TerraDrawAdapter {
 		return id;
 	}
 
-	register(callbacks: TerraDrawCallbacks) {
-		this._currentModeCallbacks = callbacks;
+	/**
+	 * Returns the longitude and latitude coordinates from a given PointerEvent on the map.
+	 * @param event The PointerEvent or MouseEvent  containing the screen coordinates of the pointer.
+	 * @returns An object with 'lng' and 'lat' properties representing the longitude and latitude, or null if the conversion is not possible.
+	 */
+	public getLngLatFromEvent(event: PointerEvent | MouseEvent) {
+		const { left, top } = this.getMapContainer().getBoundingClientRect();
+		const x = event.clientX - left;
+		const y = event.clientY - top;
 
-		this._listeners.forEach((listener) => {
-			listener.register();
-		});
+		return this.unproject(x, y);
 	}
 
-	unregister() {
-		this._listeners.forEach((listener) => {
-			listener.unregister();
-		});
+	/**
+	 * Retrieves the HTML container element of the Leaflet map.
+	 * @returns The HTMLElement representing the map container.
+	 */
+	public getMapContainer() {
+		return this._map.getContainer();
 	}
 
-	render(
+	/**
+	 * Enables or disables the draggable functionality of the map.
+	 * @param enabled Set to true to enable map dragging, or false to disable it.
+	 */
+	public setDraggability(enabled: boolean) {
+		if (enabled) {
+			this._map.dragPan.enable();
+		} else {
+			this._map.dragPan.disable();
+		}
+	}
+
+	/**
+	 * Converts longitude and latitude coordinates to pixel coordinates in the map container.
+	 * @param lng The longitude coordinate to project.
+	 * @param lat The latitude coordinate to project.
+	 * @returns An object with 'x' and 'y' properties representing the pixel coordinates within the map container.
+	 */
+	public project(lng: number, lat: number) {
+		const { x, y } = this._map.project({ lng, lat });
+		return { x, y };
+	}
+
+	/**
+	 * Converts pixel coordinates in the map container to longitude and latitude coordinates.
+	 * @param x The x-coordinate in the map container to unproject.
+	 * @param y The y-coordinate in the map container to unproject.
+	 * @returns An object with 'lng' and 'lat' properties representing the longitude and latitude coordinates.
+	 */
+	public unproject(x: number, y: number) {
+		const { lng, lat } = this._map.unproject({ x, y } as PointLike);
+		return { lng, lat };
+	}
+
+	/**
+	 * Sets the cursor style for the map container.
+	 * @param cursor The CSS cursor style to apply, or 'unset' to remove any previously applied cursor style.
+	 */
+	public setCursor(style: Parameters<SetCursor>[0]) {
+		this._map.getCanvas().style.cursor = style;
+	}
+
+	/**
+	 * Enables or disables the double-click to zoom functionality on the map.
+	 * @param enabled Set to true to enable double-click to zoom, or false to disable it.
+	 */
+	public setDoubleClickToZoom(enabled: boolean) {
+		console.log(this._map);
+
+		if (enabled) {
+			this._map.doubleClickZoom.enable();
+		} else {
+			this._map.doubleClickZoom.disable();
+		}
+	}
+
+	/**
+	 * Renders GeoJSON features on the map using the provided styling configuration.
+	 * @param changes An object containing arrays of created, updated, and unchanged features to render.
+	 * @param styling An object mapping draw modes to feature styling functions
+	 */
+	public render(
 		changes: TerraDrawChanges,
 		styling: {
 			[mode: string]: (

@@ -67,6 +67,7 @@ export abstract class TerraDrawBaseDrawMode<T extends CustomStyling> {
 			this._state === "drawing"
 		) {
 			this._state = "started";
+			console.log(this);
 			this.setDoubleClickToZoom(false);
 		} else {
 			throw new Error("Mode must be unregistered or stopped to start");
@@ -87,6 +88,7 @@ export abstract class TerraDrawBaseDrawMode<T extends CustomStyling> {
 			this._state = "registered";
 			this.store = config.store;
 			this.store.registerOnChange(config.onChange);
+			console.log(config.setDoubleClickToZoom);
 			this.setDoubleClickToZoom = config.setDoubleClickToZoom;
 			this.project = config.project;
 			this.unproject = config.unproject;

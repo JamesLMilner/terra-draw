@@ -234,8 +234,6 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawAdapterBase {
 	 * @param enabled Set to true to enable double-click to zoom, or false to disable it.
 	 */
 	public setDoubleClickToZoom(enabled: boolean) {
-		console.log(this._map);
-
 		if (enabled) {
 			this._map.doubleClickZoom.enable();
 		} else {

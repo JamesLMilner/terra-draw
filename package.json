@@ -59,8 +59,8 @@
 		"@types/leaflet": "^1.7.11",
 		"@types/mapbox-gl": "^2.7.3",
 		"@types/rbush": "^3.0.0",
-		"@typescript-eslint/eslint-plugin": "^5.48.0",
-		"@typescript-eslint/parser": "^5.48.0",
+		"@typescript-eslint/eslint-plugin": "^5.57.0",
+		"@typescript-eslint/parser": "^5.57.0",
 		"eslint": "^8.24.0",
 		"eslint-config-prettier": "^8.5.0",
 		"eslint-plugin-prettier": "^4.2.1",
@@ -76,7 +76,7 @@
 		"ts-jest": "^29.0.3",
 		"ts-loader": "^9.4.2",
 		"typedoc": "^0.23.21",
-		"typescript": "^4.9.4"
+		"typescript": "^5.0.3"
 	},
 	"commitlint": {
 		"extends": [

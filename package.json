@@ -75,7 +75,7 @@
 		"standard-version": "^9.5.0",
 		"ts-jest": "^29.0.3",
 		"ts-loader": "^9.4.2",
-		"typedoc": "^0.23.21",
+		"typedoc": "^0.23.28",
 		"typescript": "^5.0.3"
 	},
 	"commitlint": {

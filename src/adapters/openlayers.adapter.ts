@@ -41,12 +41,15 @@ export class TerraDrawOpenLayersAdapter extends TerraDrawAdapterBase {
 		this._map = config.map;
 		this._lib = config.lib;
 
+		this._container = this._map.getViewport();
+
 		// TODO: Is this the best way to recieve keyboard events
-		this.getMapContainer().setAttribute("tabindex", "0");
+		this._container.setAttribute("tabindex", "0");
 	}
 
 	private _lib: InjectableOL;
 	private _map: Map;
+	private _container: HTMLElement;
 	private _projection = "EPSG:3857" as const;
 	private _vectorSource: undefined | VectorSource<Geometry>;
 	private _geoJSONReader: undefined | GeoJSON;
@@ -175,7 +178,7 @@ export class TerraDrawOpenLayersAdapter extends TerraDrawAdapterBase {
 	 * @returns The HTMLElement representing the map container.
 	 */
 	public getMapContainer() {
-		return this._map.getViewport();
+		return this._container;
 	}
 
 	/**

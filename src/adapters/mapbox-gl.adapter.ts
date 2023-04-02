@@ -18,9 +18,11 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawAdapterBase {
 		super(config);
 
 		this._map = config.map;
+		this._container = this._map.getContainer();
 	}
 
 	private _map: mapboxgl.Map;
+	private _container: HTMLElement;
 	private _rendered: Record<string, boolean> = {};
 
 	private _addGeoJSONSource(id: string, features: Feature[]) {
@@ -180,7 +182,7 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawAdapterBase {
 	 * @returns The HTMLElement representing the map container.
 	 */
 	public getMapContainer() {
-		return this._map.getContainer();
+		return this._container;
 	}
 
 	/**
@@ -330,6 +332,7 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawAdapterBase {
 					"LineString",
 					linestrings as Feature<LineString>[]
 				);
+
 				this._setGeoJSONLayerData<Polygon>(
 					mode,
 					"Polygon",

@@ -177,7 +177,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 			updatedCoordinates = [
 				currentPolygonCoordinates[0],
 				[event.lng, event.lat],
-				[event.lng, event.lat + offset],
+				[event.lng, event.lat - offset],
 				currentPolygonCoordinates[0],
 			];
 		} else if (this.currentCoordinate === 2) {

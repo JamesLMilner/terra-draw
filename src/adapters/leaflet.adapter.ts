@@ -18,12 +18,14 @@ export class TerraDrawLeafletAdapter extends TerraDrawAdapterBase {
 
 		this._lib = config.lib;
 		this._map = config.map;
+		this._container = this._map.getContainer();
 	}
 
 	private _lib: typeof L;
 	private _map: L.Map;
 	private _layer: L.Layer | undefined;
 	private _panes: Record<string, HTMLStyleElement | undefined> = {};
+	private _container: HTMLElement;
 
 	/**
 	 * Creates a pane and its associated style sheet
@@ -71,7 +73,7 @@ export class TerraDrawLeafletAdapter extends TerraDrawAdapterBase {
 	 * @returns The HTMLElement representing the map container.
 	 */
 	public getMapContainer() {
-		return this._map.getContainer();
+		return this._container;
 	}
 
 	/**

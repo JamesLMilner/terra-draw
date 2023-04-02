@@ -32,6 +32,7 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawAdapterBase {
 				type: "FeatureCollection",
 				features: features,
 			},
+			tolerance: 0,
 		});
 	}
 

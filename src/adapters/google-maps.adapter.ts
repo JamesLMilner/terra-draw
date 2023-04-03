@@ -7,7 +7,7 @@ import {
 import { GeoJsonObject } from "geojson";
 
 import { GeoJSONStoreFeatures } from "../store/store";
-import { TerraDrawAdapterBase } from "./common/base-adapter";
+import { TerraDrawAdapterBase } from "./common/base.adapter";
 
 export class TerraDrawGoogleMapsAdapter extends TerraDrawAdapterBase {
 	constructor(config: {

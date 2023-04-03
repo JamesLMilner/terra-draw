@@ -11,7 +11,7 @@ import mapboxgl, {
 	PointLike,
 } from "mapbox-gl";
 import { GeoJSONStoreFeatures, GeoJSONStoreGeometries } from "../store/store";
-import { TerraDrawAdapterBase } from "./common/base-adapter";
+import { TerraDrawAdapterBase } from "./common/base.adapter";
 
 export class TerraDrawMapboxGLAdapter extends TerraDrawAdapterBase {
 	constructor(config: { map: mapboxgl.Map; coordinatePrecision?: number }) {

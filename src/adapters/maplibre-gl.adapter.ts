@@ -5,7 +5,7 @@ import {
 } from "../common";
 import { Map } from "maplibre-gl";
 import { TerraDrawMapboxGLAdapter } from "./mapbox-gl.adapter";
-import { TerraDrawAdapterBase } from "./common/base-adapter";
+import { TerraDrawAdapterBase } from "./common/base.adapter";
 
 export class TerraDrawMapLibreGLAdapter extends TerraDrawAdapterBase {
 	private mapboxglAdapter: TerraDrawMapboxGLAdapter;

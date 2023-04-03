@@ -16,7 +16,7 @@ import VectorSource from "ol/source/Vector";
 import VectorLayer from "ol/layer/Vector";
 import { fromLonLat, toLonLat } from "ol/proj";
 import Geometry from "ol/geom/Geometry";
-import { TerraDrawAdapterBase } from "./common/base-adapter";
+import { TerraDrawAdapterBase } from "./common/base.adapter";
 
 type InjectableOL = {
 	Circle: typeof CircleGeom;

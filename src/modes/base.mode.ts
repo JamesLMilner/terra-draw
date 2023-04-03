@@ -1,6 +1,10 @@
 import { BehaviorConfig, TerraDrawModeBehavior } from "./base.behavior";
 import { TerraDrawModeRegisterConfig, TerraDrawModeState } from "../common";
-import { GeoJSONStore, GeoJSONStoreFeatures } from "../store/store";
+import {
+	GeoJSONStore,
+	GeoJSONStoreFeatures,
+	StoreChangeHandler,
+} from "../store/store";
 
 type CustomStyling = Record<string, string | number>;
 
@@ -30,7 +34,7 @@ export abstract class TerraDrawBaseDrawMode<T extends CustomStyling> {
 	protected behaviors: TerraDrawModeBehavior[] = [];
 	protected pointerDistance: number;
 	protected coordinatePrecision: number;
-	protected onStyleChange: any;
+	protected onStyleChange!: StoreChangeHandler;
 	protected store!: GeoJSONStore;
 	protected setDoubleClickToZoom!: TerraDrawModeRegisterConfig["setDoubleClickToZoom"];
 	protected unproject!: TerraDrawModeRegisterConfig["unproject"];

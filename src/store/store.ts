@@ -20,7 +20,7 @@ export type GeoJSONStoreFeatures = Feature<
 	DefinedProperties
 >;
 
-export type StoreChangeEvents = "delete" | "create" | "update";
+export type StoreChangeEvents = "delete" | "create" | "update" | "styling";
 
 export type StoreChangeHandler = (
 	ids: string[],

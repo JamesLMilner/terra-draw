@@ -56,6 +56,9 @@ export abstract class TerraDrawBaseDrawMode<T extends CustomStyling> {
 		this.coordinatePrecision = (options && options.coordinatePrecision) || 9;
 	}
 
+	protected abstract start(): void;
+	protected abstract stop(): void;
+
 	protected setDrawing() {
 		if (this._state === "started") {
 			this._state = "drawing";

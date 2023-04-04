@@ -20,14 +20,6 @@ export class TerraDrawPointMode extends TerraDrawBaseDrawMode<PointModeStyling> 
 	constructor(options?: { styles?: Partial<PointModeStyling> }) {
 		super(options);
 	}
-	protected setStarted() {
-		if (this._state === "stopped" || this._state === "registered") {
-			this._state = "started";
-			this.setDoubleClickToZoom(false);
-		} else {
-			throw new Error("Mode must be unregistered or stopped to start");
-		}
-	}
 
 	/** @internal */
 	start() {

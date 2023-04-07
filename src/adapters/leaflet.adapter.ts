@@ -211,12 +211,22 @@ export class TerraDrawLeafletAdapter extends TerraDrawBaseAdapter {
 				const mode = feature.properties.mode as string;
 				const modeStyle = styling[mode];
 				const featureStyles = modeStyle(feature);
+				const paneId = String(featureStyles.zIndex);
+				const pane = this._panes[paneId];
+
+				if (!pane) {
+					this._panes[paneId] = this.createPaneStyleSheet(
+						paneId,
+						featureStyles.zIndex
+					);
+				}
 
 				if (feature.geometry.type === "LineString") {
 					return {
 						interactive: false, // Removes mouse hover cursor styles
 						color: featureStyles.lineStringColor,
 						weight: featureStyles.lineStringWidth,
+						pane: paneId,
 					};
 				} else if (feature.geometry.type === "Polygon") {
 					return {
@@ -226,6 +236,7 @@ export class TerraDrawLeafletAdapter extends TerraDrawBaseAdapter {
 						weight: featureStyles.polygonOutlineWidth,
 						stroke: true,
 						color: featureStyles.polygonFillColor,
+						pane: paneId,
 					};
 				}
 

@@ -7,6 +7,8 @@ Frictionless map drawing across mapping libraries.
 
 Terra Draw centralises map drawing logic and provides a host of out the box drawing modes that work across different JavaScript mapping libraries. It also also you bring your own modes!
 
+![An example of drawing geodesic lines using Terra Draw with Leaflet](./readme.gif)
+
 ### Library Support
 
 Terra Draw uses the concept of 'adapters' to allow it to work with a host of different mapping libraries. Currently supported are:

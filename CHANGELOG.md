@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.1-alpha.24](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.23...v0.0.1-alpha.24) (2023-04-07)
+
+
+### Features
+
+* export base adapter and mode so that 3rd party developers can extend ([1662960](https://github.com/JamesLMilner/terra-draw/commit/16629602d8cb7f9b7d163c581ebe23abfd734c5d))
+
+
+### Chore
+
+* add example drawing gif image to readme ([edde444](https://github.com/JamesLMilner/terra-draw/commit/edde4442bc3aa6b6854d708edb477bb068331f8e))
+* crop gif to make it a bit cleaner ([6fc4adf](https://github.com/JamesLMilner/terra-draw/commit/6fc4adfb12236428101b8a579649b9ff8ee3e946))
+* update docs ([75c0848](https://github.com/JamesLMilner/terra-draw/commit/75c0848e582db24e287ff81d628de0486ad1e4e7))
+
 ### [0.0.1-alpha.23](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.22...v0.0.1-alpha.23) (2023-04-04)
 
 

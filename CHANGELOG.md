@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.1-alpha.25](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.24...v0.0.1-alpha.25) (2023-04-07)
+
+
+### Features
+
+* allow zIndexing of linestrings and polygons for TerraDrawLeafletAdapter ([17a4441](https://github.com/JamesLMilner/terra-draw/commit/17a44416244490b5710560ef1fb20dc728a4730d))
+
 ### [0.0.1-alpha.24](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.23...v0.0.1-alpha.24) (2023-04-07)
 
 

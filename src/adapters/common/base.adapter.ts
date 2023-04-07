@@ -15,7 +15,7 @@ type BasePointerListener = (event: PointerEvent) => void;
 type BaseKeyboardListener = (event: KeyboardEvent) => void;
 type BaseMouseListener = (event: MouseEvent) => void;
 
-export abstract class TerraDrawAdapterBase {
+export abstract class TerraDrawBaseAdapter {
 	constructor(config: {
 		coordinatePrecision?: number;
 		minPixelDragDistance?: number;

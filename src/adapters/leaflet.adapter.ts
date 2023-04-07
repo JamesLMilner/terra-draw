@@ -5,9 +5,9 @@ import {
 } from "../common";
 import L from "leaflet";
 import { GeoJSONStoreFeatures } from "../store/store";
-import { TerraDrawAdapterBase } from "./common/base.adapter";
+import { TerraDrawBaseAdapter } from "./common/base.adapter";
 
-export class TerraDrawLeafletAdapter extends TerraDrawAdapterBase {
+export class TerraDrawLeafletAdapter extends TerraDrawBaseAdapter {
 	constructor(config: {
 		lib: typeof L;
 		map: L.Map;

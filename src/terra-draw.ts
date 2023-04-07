@@ -8,6 +8,8 @@ import {
 	TerraDrawAdapter,
 	TerraDrawAdapterStyling,
 } from "./common";
+import { TerraDrawBaseAdapter } from "./adapters/common/base.adapter";
+import { TerraDrawBaseDrawMode } from "./modes/base.mode";
 import { TerraDrawCircleMode } from "./modes/circle/circle.mode";
 import { TerraDrawFreehandMode } from "./modes/freehand/freehand.mode";
 import { TerraDrawGreatCircleMode } from "./modes/greatcircle/great-circle.mode";
@@ -403,6 +405,14 @@ class TerraDraw {
 	}
 }
 
+// This object allows 3rd party developers to
+// extend these abstract classes and create there
+// own modes and adapters
+const TerraDrawExtend = {
+	TerraDrawBaseDrawMode,
+	TerraDrawBaseAdapter,
+};
+
 export {
 	TerraDraw,
 	TerraDrawSelectMode,
@@ -419,4 +429,5 @@ export {
 	TerraDrawLeafletAdapter,
 	TerraDrawMapLibreGLAdapter,
 	TerraDrawOpenLayersAdapter,
+	TerraDrawExtend,
 };

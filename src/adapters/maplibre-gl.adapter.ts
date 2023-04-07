@@ -5,9 +5,9 @@ import {
 } from "../common";
 import { Map } from "maplibre-gl";
 import { TerraDrawMapboxGLAdapter } from "./mapbox-gl.adapter";
-import { TerraDrawAdapterBase } from "./common/base.adapter";
+import { TerraDrawBaseAdapter } from "./common/base.adapter";
 
-export class TerraDrawMapLibreGLAdapter extends TerraDrawAdapterBase {
+export class TerraDrawMapLibreGLAdapter extends TerraDrawBaseAdapter {
 	private mapboxglAdapter: TerraDrawMapboxGLAdapter;
 
 	constructor(config: { map: Map; coordinatePrecision?: number }) {

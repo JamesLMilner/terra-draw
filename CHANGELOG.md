@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.1-alpha.26](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.25...v0.0.1-alpha.26) (2023-04-10)
+
+
+### Features
+
+* avoid mass creation and deletion of geometries in leaflet adapter render ([773208a](https://github.com/JamesLMilner/terra-draw/commit/773208a9350069849fab45e814a4ba8ad20187dd))
+
 ### [0.0.1-alpha.25](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.24...v0.0.1-alpha.25) (2023-04-07)
 
 

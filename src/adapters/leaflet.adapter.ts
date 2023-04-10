@@ -23,9 +23,9 @@ export class TerraDrawLeafletAdapter extends TerraDrawBaseAdapter {
 
 	private _lib: typeof L;
 	private _map: L.Map;
-	private _layer: L.Layer | undefined;
 	private _panes: Record<string, HTMLStyleElement | undefined> = {};
 	private _container: HTMLElement;
+	private _layers: Record<string, L.GeoJSON<any>> = {};
 
 	/**
 	 * Creates a pane and its associated style sheet
@@ -40,6 +40,96 @@ export class TerraDrawLeafletAdapter extends TerraDrawBaseAdapter {
 		document.getElementsByTagName("head")[0].appendChild(style);
 		this._map.createPane(pane);
 		return style;
+	}
+
+	private styleGeoJSONLayer(
+		styling: TerraDrawStylingFunction
+	): L.GeoJSONOptions {
+		return {
+			// Style points - convert markers to circle markers
+			pointToLayer: (
+				feature: GeoJSONStoreFeatures,
+				latlng: L.LatLngExpression
+			) => {
+				if (!feature.properties) {
+					throw new Error("Feature has no properties");
+				}
+				if (typeof feature.properties.mode !== "string") {
+					throw new Error("Feature mode is not a string");
+				}
+
+				const mode = feature.properties.mode;
+				const modeStyle = styling[mode];
+				const featureStyles = modeStyle(feature);
+				const paneId = String(featureStyles.zIndex);
+				const pane = this._panes[paneId];
+
+				if (!pane) {
+					this._panes[paneId] = this.createPaneStyleSheet(
+						paneId,
+						featureStyles.zIndex
+					);
+				}
+
+				const styles = {
+					radius: featureStyles.pointWidth,
+					stroke: featureStyles.pointOutlineWidth || false,
+					color: featureStyles.pointOutlineColor,
+					weight: featureStyles.pointOutlineWidth,
+					fillOpacity: 0.8,
+					fillColor: featureStyles.pointColor,
+					pane: paneId,
+					interactive: false, // Removes mouse hover cursor styles
+				} as L.CircleMarkerOptions;
+
+				const marker = this._lib.circleMarker(latlng, styles);
+
+				return marker;
+			},
+
+			// Style LineStrings and Polygons
+			style: (_feature) => {
+				if (!_feature || !_feature.properties) {
+					return {};
+				}
+
+				const feature = _feature as GeoJSONStoreFeatures;
+
+				const mode = feature.properties.mode as string;
+				const modeStyle = styling[mode];
+				const featureStyles = modeStyle(feature);
+				const paneId = String(featureStyles.zIndex);
+				const pane = this._panes[paneId];
+
+				if (!pane) {
+					this._panes[paneId] = this.createPaneStyleSheet(
+						paneId,
+						featureStyles.zIndex
+					);
+				}
+
+				if (feature.geometry.type === "LineString") {
+					return {
+						interactive: false, // Removes mouse hover cursor styles
+						color: featureStyles.lineStringColor,
+						weight: featureStyles.lineStringWidth,
+						pane: paneId,
+					};
+				} else if (feature.geometry.type === "Polygon") {
+					return {
+						interactive: false, // Removes mouse hover cursor styles
+						fillOpacity: featureStyles.polygonFillOpacity,
+						fillColor: featureStyles.polygonFillColor,
+						weight: featureStyles.polygonOutlineWidth,
+						stroke: true,
+						color: featureStyles.polygonFillColor,
+						pane: paneId,
+					};
+				}
+
+				return {};
+			},
+		};
 	}
 
 	/**
@@ -143,109 +233,25 @@ export class TerraDrawLeafletAdapter extends TerraDrawBaseAdapter {
 	 * @param styling An object mapping draw modes to feature styling functions
 	 */
 	public render(changes: TerraDrawChanges, styling: TerraDrawStylingFunction) {
-		const features = [
-			...changes.created,
-			...changes.updated,
-			...changes.unchanged,
-		];
-
-		if (this._layer) {
-			this._map.removeLayer(this._layer);
-		}
-
-		const featureCollection = {
-			type: "FeatureCollection",
-			features,
-		} as { type: "FeatureCollection"; features: GeoJSONStoreFeatures[] };
-
-		const layer = this._lib.geoJSON(featureCollection, {
-			// Style points - convert markers to circle markers
-			pointToLayer: (
-				feature: GeoJSONStoreFeatures,
-				latlng: L.LatLngExpression
-			) => {
-				if (!feature.properties) {
-					throw new Error("Feature has no properties");
-				}
-				if (typeof feature.properties.mode !== "string") {
-					throw new Error("Feature mode is not a string");
-				}
-
-				const mode = feature.properties.mode;
-				const modeStyle = styling[mode];
-				const featureStyles = modeStyle(feature);
-				const paneId = String(featureStyles.zIndex);
-				const pane = this._panes[paneId];
-
-				if (!pane) {
-					this._panes[paneId] = this.createPaneStyleSheet(
-						paneId,
-						featureStyles.zIndex
-					);
-				}
-
-				const styles = {
-					radius: featureStyles.pointWidth,
-					stroke: featureStyles.pointOutlineWidth || false,
-					color: featureStyles.pointOutlineColor,
-					weight: featureStyles.pointOutlineWidth,
-					fillOpacity: 0.8,
-					fillColor: featureStyles.pointColor,
-					pane: paneId,
-					interactive: false, // Removes mouse hover cursor styles
-				} as L.CircleMarkerOptions;
-
-				const marker = this._lib.circleMarker(latlng, styles);
-
-				return marker;
-			},
-
-			// Style LineStrings and Polygons
-			style: (_feature) => {
-				if (!_feature || !_feature.properties) {
-					return {};
-				}
-
-				const feature = _feature as GeoJSONStoreFeatures;
-
-				const mode = feature.properties.mode as string;
-				const modeStyle = styling[mode];
-				const featureStyles = modeStyle(feature);
-				const paneId = String(featureStyles.zIndex);
-				const pane = this._panes[paneId];
-
-				if (!pane) {
-					this._panes[paneId] = this.createPaneStyleSheet(
-						paneId,
-						featureStyles.zIndex
-					);
-				}
-
-				if (feature.geometry.type === "LineString") {
-					return {
-						interactive: false, // Removes mouse hover cursor styles
-						color: featureStyles.lineStringColor,
-						weight: featureStyles.lineStringWidth,
-						pane: paneId,
-					};
-				} else if (feature.geometry.type === "Polygon") {
-					return {
-						interactive: false, // Removes mouse hover cursor styles
-						fillOpacity: featureStyles.polygonFillOpacity,
-						fillColor: featureStyles.polygonFillColor,
-						weight: featureStyles.polygonOutlineWidth,
-						stroke: true,
-						color: featureStyles.polygonFillColor,
-						pane: paneId,
-					};
-				}
-
-				return {};
-			},
+		changes.created.forEach((created) => {
+			this._layers[created.id as string] = this._lib.geoJSON(
+				created,
+				this.styleGeoJSONLayer(styling)
+			);
+			this._map.addLayer(this._layers[created.id as string]);
 		});
 
-		this._map.addLayer(layer);
+		changes.deletedIds.forEach((deleted) => {
+			this._map.removeLayer(this._layers[deleted]);
+		});
 
-		this._layer = layer;
+		changes.updated.forEach((updated) => {
+			this._map.removeLayer(this._layers[updated.id as string]);
+			this._layers[updated.id as string] = this._lib.geoJSON(
+				updated,
+				this.styleGeoJSONLayer(styling)
+			);
+			this._map.addLayer(this._layers[updated.id as string]);
+		});
 	}
 }

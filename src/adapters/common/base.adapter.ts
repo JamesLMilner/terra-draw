@@ -294,15 +294,16 @@ export abstract class TerraDrawBaseAdapter {
 
 		const { lng, lat } = latLng;
 		const button = this.getButton(event);
-		const container = this.getMapContainer();
+		const container = this.getMapContainer().getBoundingClientRect();
 		return {
 			lng: limitPrecision(lng, this._coordinatePrecision),
 			lat: limitPrecision(lat, this._coordinatePrecision),
-			containerX: event.clientX - container.offsetLeft,
-			containerY: event.clientY - container.offsetTop,
+			containerX: event.clientX - container.left,
+			containerY: event.clientY - container.top,
 			button,
-			heldKeys: [...this._heldKeys],
+			heldKeys: [...Array.from(this._heldKeys)],
 		};
+		// Copyright © [2023,] , Oracle and/or its affiliates.
 	}
 
 	/**

@@ -6,8 +6,7 @@ const createLeafletMap = () => {
 		getContainer: jest.fn(
 			() =>
 				({
-					offsetLeft: 0,
-					offsetTop: 0,
+					getBoundingClientRect: jest.fn(() => ({ top: 0, left: 0 })),
 					style: { removeProperty: jest.fn(), cursor: "initial" },
 				} as any)
 		),
@@ -86,49 +85,34 @@ describe("TerraDrawLeafletAdapter", () => {
 				map,
 			});
 		});
+
 		it("returns the container", () => {
 			const container = adapter.getMapContainer();
-			expect(container.offsetLeft).toEqual(0);
+			expect(container.getBoundingClientRect).toBeDefined();
 		});
 	});
 
 	describe("setDraggability", () => {
-		let adapter: TerraDrawLeafletAdapter;
-		const map = createLeafletMap() as L.Map;
-		beforeEach(() => {
-			adapter = new TerraDrawLeafletAdapter({
-				lib: {
-					circleMarker: jest.fn(),
-					geoJSON: jest.fn(),
-				} as any,
+		it("setDraggability enables and disables map dragging", () => {
+			const map = createLeafletMap() as L.Map;
+
+			// Create the adapter instance with the mocked map
+			const adapter = new TerraDrawLeafletAdapter({
+				lib: {} as any,
 				map,
+				coordinatePrecision: 9,
 			});
+
+			// Test enabling dragging
+			adapter.setDraggability(true);
+			expect(map.dragging.enable).toHaveBeenCalledTimes(1);
+			expect(map.dragging.disable).toHaveBeenCalledTimes(0);
+
+			// Test disabling dragging
+			adapter.setDraggability(false);
+			expect(map.dragging.enable).toHaveBeenCalledTimes(1);
+			expect(map.dragging.disable).toHaveBeenCalledTimes(1);
 		});
-		it("returns the container", () => {
-			const container = adapter.getMapContainer();
-			expect(container.offsetLeft).toEqual(0);
-		});
-	});
-
-	it("setDraggability enables and disables map dragging", () => {
-		const map = createLeafletMap() as L.Map;
-
-		// Create the adapter instance with the mocked map
-		const adapter = new TerraDrawLeafletAdapter({
-			lib: {} as any,
-			map,
-			coordinatePrecision: 9,
-		});
-
-		// Test enabling dragging
-		adapter.setDraggability(true);
-		expect(map.dragging.enable).toHaveBeenCalledTimes(1);
-		expect(map.dragging.disable).toHaveBeenCalledTimes(0);
-
-		// Test disabling dragging
-		adapter.setDraggability(false);
-		expect(map.dragging.enable).toHaveBeenCalledTimes(1);
-		expect(map.dragging.disable).toHaveBeenCalledTimes(1);
 	});
 
 	it("project", () => {

@@ -138,12 +138,9 @@ export class TerraDrawLeafletAdapter extends TerraDrawBaseAdapter {
 	 * @returns An object with 'lng' and 'lat' properties representing the longitude and latitude, or null if the conversion is not possible.
 	 */
 	public getLngLatFromEvent(event: PointerEvent | MouseEvent) {
-		const container = this.getMapContainer();
+		const { containerX: x, containerY: y } = this.getContainerXYPosition(event);
 
-		const point = {
-			x: event.clientX - container.offsetLeft,
-			y: event.clientY - container.offsetTop,
-		} as L.Point;
+		const point = { x, y } as L.Point;
 
 		// If is not valid point we don't want to convert
 		if (isNaN(point.x) || isNaN(point.y)) {

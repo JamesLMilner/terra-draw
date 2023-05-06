@@ -283,6 +283,16 @@ export abstract class TerraDrawBaseAdapter {
 		return "neither";
 	}
 
+	protected getContainerXYPosition(event: PointerEvent | MouseEvent) {
+		const container = this.getMapContainer();
+		const { left, top } = container.getBoundingClientRect();
+
+		return {
+			containerX: event.clientX - left,
+			containerY: event.clientY - top,
+		};
+	}
+
 	protected getDrawEventFromEvent(
 		event: PointerEvent | MouseEvent
 	): TerraDrawMouseEvent | null {
@@ -294,12 +304,14 @@ export abstract class TerraDrawBaseAdapter {
 
 		const { lng, lat } = latLng;
 		const button = this.getButton(event);
-		const container = this.getMapContainer();
+
+		const { containerX, containerY } = this.getContainerXYPosition(event);
+
 		return {
 			lng: limitPrecision(lng, this._coordinatePrecision),
 			lat: limitPrecision(lat, this._coordinatePrecision),
-			containerX: event.clientX - container.offsetLeft,
-			containerY: event.clientY - container.offsetTop,
+			containerX,
+			containerY,
 			button,
 			heldKeys: [...this._heldKeys],
 		};

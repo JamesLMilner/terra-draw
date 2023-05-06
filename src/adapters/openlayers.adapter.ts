@@ -166,10 +166,7 @@ export class TerraDrawOpenLayersAdapter extends TerraDrawBaseAdapter {
 	 * @returns An object with 'lng' and 'lat' properties representing the longitude and latitude, or null if the conversion is not possible.
 	 */
 	public getLngLatFromEvent(event: PointerEvent | MouseEvent) {
-		const container = this.getMapContainer();
-		const x = event.clientX - container.offsetLeft;
-		const y = event.clientY - container.offsetTop;
-
+		const { containerX: x, containerY: y } = this.getContainerXYPosition(event);
 		return this.unproject(x, y);
 	}
 

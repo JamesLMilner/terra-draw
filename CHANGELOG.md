@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.1-alpha.27](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.26...v0.0.1-alpha.27) (2023-05-06)
+
+
+### Bug Fixes
+
+* address potential issue with spreading Sets for the held keys ([7fdf0b0](https://github.com/JamesLMilner/terra-draw/commit/7fdf0b0e9acfb108dd45e3a23f0e1d2160ca9b53))
+* ensure that container coordinates are correct when they are nested ([13aef09](https://github.com/JamesLMilner/terra-draw/commit/13aef09abfbab22815790a4968b365a2e3c06176))
+
+
+### Chore
+
+* add leaflet adapter unit tests ([8f4e6f3](https://github.com/JamesLMilner/terra-draw/commit/8f4e6f35771cd82d89823c66878a4e64732397b0))
+* update docs ([1a8b15b](https://github.com/JamesLMilner/terra-draw/commit/1a8b15b82ba5b14eba9bcdfb225941611dc5d4bd))
+
 ### [0.0.1-alpha.26](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.25...v0.0.1-alpha.26) (2023-04-10)
 
 

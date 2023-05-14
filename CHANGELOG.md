@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.1-alpha.28](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.27...v0.0.1-alpha.28) (2023-05-14)
+
+
+### Chore
+
+* export necessary types for proper 3rd party extension ([843fe2f](https://github.com/JamesLMilner/terra-draw/commit/843fe2fb5a992055908347028d50db9433399385))
+
 ### [0.0.1-alpha.27](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.26...v0.0.1-alpha.27) (2023-05-06)
 
 

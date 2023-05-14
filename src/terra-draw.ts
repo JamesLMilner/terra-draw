@@ -25,6 +25,7 @@ import {
 	GeoJSONStoreFeatures,
 	StoreChangeHandler,
 } from "./store/store";
+import * as TerraDrawExtendTypes from "./extend-types";
 
 type ChangeListener = (ids: string[], type: string) => void;
 type SelectListener = (id: string) => void;
@@ -430,4 +431,5 @@ export {
 	TerraDrawMapLibreGLAdapter,
 	TerraDrawOpenLayersAdapter,
 	TerraDrawExtend,
+	TerraDrawExtendTypes,
 };

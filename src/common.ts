@@ -44,6 +44,10 @@ export type SetCursor = (
 
 export type Project = (lng: number, lat: number) => { x: number; y: number };
 export type Unproject = (x: number, y: number) => { lat: number; lng: number };
+export type GetLngLatFromEvent = (event: PointerEvent | MouseEvent) => {
+	lng: number;
+	lat: number;
+} | null;
 
 export interface TerraDrawModeRegisterConfig {
 	mode: string;

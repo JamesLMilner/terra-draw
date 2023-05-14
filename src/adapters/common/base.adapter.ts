@@ -6,6 +6,7 @@ import {
 	TerraDrawMouseEvent,
 	SetCursor,
 	TerraDrawStylingFunction,
+	GetLngLatFromEvent,
 } from "../../common";
 import { limitPrecision } from "../../geometry/limit-decimal-precision";
 import { pixelDistance } from "../../geometry/measure/pixel-distance";
@@ -351,10 +352,9 @@ export abstract class TerraDrawBaseAdapter {
 		...args: Parameters<SetCursor>
 	): ReturnType<SetCursor>;
 
-	public abstract getLngLatFromEvent(event: PointerEvent | MouseEvent): {
-		lng: number;
-		lat: number;
-	} | null;
+	public abstract getLngLatFromEvent(
+		...event: Parameters<GetLngLatFromEvent>
+	): ReturnType<GetLngLatFromEvent>;
 
 	public abstract setDraggability(enabled: boolean): void;
 

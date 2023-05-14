@@ -69,31 +69,6 @@ export type TerraDrawModeState =
 	| "selected"
 	| "stopped";
 
-export interface TerraDrawMode {
-	mode: string;
-	styleFeature: (feature: GeoJSONStoreFeatures) => TerraDrawAdapterStyling;
-	styles: any;
-	state: TerraDrawModeState;
-	start: () => void;
-	stop: () => void;
-	register: (config: TerraDrawModeRegisterConfig) => void;
-
-	// cleanUp: () => void;
-	onKeyDown: (event: TerraDrawKeyboardEvent) => void;
-	onKeyUp: (event: TerraDrawKeyboardEvent) => void;
-	onMouseMove: (event: TerraDrawMouseEvent) => void;
-	onClick: (event: TerraDrawMouseEvent) => void;
-	onDragStart: (
-		event: TerraDrawMouseEvent,
-		setMapDraggability: (enabled: boolean) => void
-	) => void;
-	onDrag: (event: TerraDrawMouseEvent) => void;
-	onDragEnd: (
-		event: TerraDrawMouseEvent,
-		setMapDraggability: (enabled: boolean) => void
-	) => void;
-}
-
 export interface TerraDrawCallbacks {
 	getState: () => TerraDrawModeState;
 	onKeyUp: (event: TerraDrawKeyboardEvent) => void;

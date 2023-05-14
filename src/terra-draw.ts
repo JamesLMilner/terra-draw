@@ -4,9 +4,17 @@ import { TerraDrawMapboxGLAdapter } from "./adapters/mapbox-gl.adapter";
 import { TerraDrawMapLibreGLAdapter } from "./adapters/maplibre-gl.adapter";
 import { TerraDrawOpenLayersAdapter } from "./adapters/openlayers.adapter";
 import {
-	TerraDrawMode,
 	TerraDrawAdapter,
 	TerraDrawAdapterStyling,
+	GetLngLatFromEvent,
+	Project,
+	SetCursor,
+	TerraDrawChanges,
+	TerraDrawStylingFunction,
+	Unproject,
+	HexColor,
+	TerraDrawKeyboardEvent,
+	TerraDrawMouseEvent,
 } from "./common";
 import { TerraDrawBaseAdapter } from "./adapters/common/base.adapter";
 import { TerraDrawBaseDrawMode } from "./modes/base.mode";
@@ -25,7 +33,7 @@ import {
 	GeoJSONStoreFeatures,
 	StoreChangeHandler,
 } from "./store/store";
-import * as TerraDrawExtendTypes from "./extend-types";
+import { BehaviorConfig } from "./modes/base.behavior";
 
 type ChangeListener = (ids: string[], type: string) => void;
 type SelectListener = (id: string) => void;
@@ -40,8 +48,8 @@ interface TerraDrawEventListeners {
 type TerraDrawEvents = keyof TerraDrawEventListeners;
 
 class TerraDraw {
-	private _modes: { [mode: string]: TerraDrawMode };
-	private _mode: TerraDrawMode;
+	private _modes: { [mode: string]: TerraDrawBaseDrawMode<any> };
+	private _mode: TerraDrawBaseDrawMode<any>;
 	private _adapter: TerraDrawAdapter;
 	private _enabled = false;
 	private _store: GeoJSONStore;
@@ -53,7 +61,7 @@ class TerraDraw {
 
 	constructor(options: {
 		adapter: TerraDrawAdapter;
-		modes: { [mode: string]: TerraDrawMode };
+		modes: { [mode: string]: TerraDrawBaseDrawMode<any> };
 		data?: GeoJSONStoreFeatures[];
 	}) {
 		this._adapter = options.adapter;
@@ -431,5 +439,22 @@ export {
 	TerraDrawMapLibreGLAdapter,
 	TerraDrawOpenLayersAdapter,
 	TerraDrawExtend,
-	TerraDrawExtendTypes,
+
+	// Types that are required for 3rd party developers to extend
+
+	// TerraDrawBaseMode
+	BehaviorConfig,
+	GeoJSONStoreFeatures,
+	HexColor,
+	TerraDrawMouseEvent,
+	TerraDrawAdapterStyling,
+	TerraDrawKeyboardEvent,
+
+	// TerraDrawBaseAdapter
+	TerraDrawChanges,
+	TerraDrawStylingFunction,
+	Project,
+	Unproject,
+	SetCursor,
+	GetLngLatFromEvent,
 };

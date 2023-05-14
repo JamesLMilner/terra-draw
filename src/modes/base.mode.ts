@@ -1,5 +1,11 @@
 import { BehaviorConfig, TerraDrawModeBehavior } from "./base.behavior";
-import { TerraDrawModeRegisterConfig, TerraDrawModeState } from "../common";
+import {
+	TerraDrawAdapterStyling,
+	TerraDrawKeyboardEvent,
+	TerraDrawModeRegisterConfig,
+	TerraDrawModeState,
+	TerraDrawMouseEvent,
+} from "../common";
 import {
 	GeoJSONStore,
 	GeoJSONStoreFeatures,
@@ -56,8 +62,7 @@ export abstract class TerraDrawBaseDrawMode<T extends CustomStyling> {
 		this.coordinatePrecision = (options && options.coordinatePrecision) || 9;
 	}
 
-	protected abstract start(): void;
-	protected abstract stop(): void;
+	mode = "base";
 
 	protected setDrawing() {
 		if (this._state === "started") {
@@ -115,7 +120,23 @@ export abstract class TerraDrawBaseDrawMode<T extends CustomStyling> {
 		}
 	}
 
+	abstract start(): void;
+	abstract stop(): void;
+	abstract styleFeature(feature: GeoJSONStoreFeatures): TerraDrawAdapterStyling;
+
 	onDeselect(deselectedId: string) {}
 	onSelect(selectedId: string) {}
-	styleFeature(feature: GeoJSONStoreFeatures) {}
+	onKeyDown(event: TerraDrawKeyboardEvent) {}
+	onKeyUp(event: TerraDrawKeyboardEvent) {}
+	onMouseMove(event: TerraDrawMouseEvent) {}
+	onClick(event: TerraDrawMouseEvent) {}
+	onDragStart(
+		event: TerraDrawMouseEvent,
+		setMapDraggability: (enabled: boolean) => void
+	) {}
+	onDrag(event: TerraDrawMouseEvent) {}
+	onDragEnd(
+		event: TerraDrawMouseEvent,
+		setMapDraggability: (enabled: boolean) => void
+	) {}
 }

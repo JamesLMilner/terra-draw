@@ -39,7 +39,7 @@ export interface TerraDrawKeyboardEvent {
 }
 
 export type SetCursor = (
-	cursor: "unset" | "grab" | "grabbing" | "crosshair" | "pointer"
+	cursor: "unset" | "grab" | "grabbing" | "crosshair" | "pointer" | "wait"
 ) => void;
 
 export type Project = (lng: number, lat: number) => { x: number; y: number };

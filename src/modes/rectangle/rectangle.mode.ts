@@ -14,14 +14,14 @@ type TerraDrawRectangleModeKeyEvents = {
 	finish: KeyboardEvent["key"] | null;
 };
 
-type FreehandPolygonStyling = {
+type RectanglePolygonStyling = {
 	fillColor: HexColor;
 	outlineColor: HexColor;
 	outlineWidth: number;
 	fillOpacity: number;
 };
 
-export class TerraDrawRectangleMode extends TerraDrawBaseDrawMode<FreehandPolygonStyling> {
+export class TerraDrawRectangleMode extends TerraDrawBaseDrawMode<RectanglePolygonStyling> {
 	mode = "rectangle";
 	private center: Position | undefined;
 	private clickCount = 0;
@@ -29,7 +29,7 @@ export class TerraDrawRectangleMode extends TerraDrawBaseDrawMode<FreehandPolygo
 	private keyEvents: TerraDrawRectangleModeKeyEvents;
 
 	constructor(options?: {
-		styles?: Partial<FreehandPolygonStyling>;
+		styles?: Partial<RectanglePolygonStyling>;
 		keyEvents?: TerraDrawRectangleModeKeyEvents | null;
 	}) {
 		super(options);

@@ -55,6 +55,9 @@ export class TerraDrawRenderMode extends TerraDrawBaseDrawMode<RenderModeStyling
 	onMouseMove() {}
 
 	/** @internal */
+	cleanUp() {}
+
+	/** @internal */
 	styleFeature(): TerraDrawAdapterStyling {
 		return {
 			...getDefaultStyling(),

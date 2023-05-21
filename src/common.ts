@@ -84,6 +84,7 @@ export interface TerraDrawCallbacks {
 		event: TerraDrawMouseEvent,
 		setMapDraggability: (enabled: boolean) => void
 	) => void;
+	onClear: () => void;
 }
 
 export interface TerraDrawChanges {
@@ -106,6 +107,7 @@ export interface TerraDrawAdapter {
 	register(callbacks: TerraDrawCallbacks): void;
 	unregister(): void;
 	render(changes: TerraDrawChanges, styling: TerraDrawStylingFunction): void;
+	clear(): void;
 }
 
 export const SELECT_PROPERTIES = {

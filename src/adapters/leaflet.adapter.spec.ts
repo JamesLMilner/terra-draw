@@ -1,5 +1,19 @@
 import { TerraDrawLeafletAdapter } from "./leaflet.adapter";
 import { getMockPointerEvent } from "../test/mock-pointer-event";
+import { TerraDrawCallbacks } from "../common";
+
+const callbacks = () =>
+	({
+		getState: jest.fn(() => "started"),
+		onKeyUp: jest.fn(),
+		onKeyDown: jest.fn(),
+		onClick: jest.fn(),
+		onMouseMove: jest.fn(),
+		onDragStart: jest.fn(),
+		onDrag: jest.fn(),
+		onDragEnd: jest.fn(),
+		onClear: jest.fn(),
+	} as TerraDrawCallbacks);
 
 const createLeafletMap = () => {
 	return {
@@ -8,6 +22,8 @@ const createLeafletMap = () => {
 				({
 					getBoundingClientRect: jest.fn(() => ({ top: 0, left: 0 })),
 					style: { removeProperty: jest.fn(), cursor: "initial" },
+					addEventListener: jest.fn(),
+					removeEventListener: jest.fn(),
 				} as any)
 		),
 		latLngToContainerPoint: jest.fn(() => ({ x: 0, y: 0 } as any)),
@@ -279,5 +295,51 @@ describe("TerraDrawLeafletAdapter", () => {
 			expect(map.addLayer).toBeCalledTimes(2); // 1 for created 1 for updated
 			expect(map.removeLayer).toBeCalledTimes(2); // 1 for update 1 for delete
 		});
+	});
+
+	it("clear", () => {
+		const map = createLeafletMap() as L.Map;
+
+		// Create the adapter instance with the mocked map
+		const lib = {
+			geoJSON: jest.fn(),
+		} as any;
+
+		// Create the adapter instance with the mocked map
+		const adapter = new TerraDrawLeafletAdapter({
+			lib,
+			map,
+			coordinatePrecision: 9,
+		});
+
+		adapter.render(
+			{
+				unchanged: [],
+				created: [
+					{
+						id: "1",
+						type: "Feature",
+						geometry: {
+							type: "Point",
+							coordinates: [1, 1],
+						},
+						properties: {
+							mode: "test",
+						},
+					},
+				],
+				deletedIds: [],
+				updated: [],
+			},
+			{
+				test: () => ({} as any),
+			}
+		);
+
+		adapter.register(callbacks());
+
+		adapter.clear();
+
+		expect(map.removeLayer).toBeCalledTimes(1);
 	});
 });

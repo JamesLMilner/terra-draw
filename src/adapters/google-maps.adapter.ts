@@ -229,6 +229,8 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawBaseAdapter {
 		this._map.setOptions({ draggable: enabled });
 	}
 
+	private renderedFeatures: Set<string> = new Set();
+
 	/**
 	 * Renders GeoJSON features on the map using the provided styling configuration.
 	 * @param changes An object containing arrays of created, updated, and unchanged features to render.
@@ -238,7 +240,10 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawBaseAdapter {
 		if (this._layers) {
 			changes.deletedIds.forEach((deletedId) => {
 				const featureToDelete = this._map.data.getFeatureById(deletedId);
-				featureToDelete && this._map.data.remove(featureToDelete);
+				if (featureToDelete) {
+					this._map.data.remove(featureToDelete);
+					this.renderedFeatures.delete(deletedId);
+				}
 			});
 
 			changes.updated.forEach((updatedFeature) => {
@@ -324,6 +329,7 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawBaseAdapter {
 
 			// Create new features
 			changes.created.forEach((createdFeature) => {
+				this.renderedFeatures.add(createdFeature.id as string);
 				this._map.data.addGeoJson(createdFeature);
 			});
 		} else {
@@ -362,6 +368,10 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawBaseAdapter {
 				}
 			);
 		}
+
+		changes.created.forEach((feature) => {
+			this.renderedFeatures.add(feature.id as string);
+		});
 
 		const featureCollection = {
 			type: "FeatureCollection",
@@ -427,5 +437,33 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawBaseAdapter {
 		});
 
 		this._layers = true;
+	}
+
+	private clearLayers() {
+		if (this._layers) {
+			this._map.data.forEach((feature) => {
+				const id = feature.getId() as string;
+				const hasFeature = this.renderedFeatures.has(id);
+				if (hasFeature) {
+					this._map.data.remove(feature);
+				}
+			});
+			this.renderedFeatures = new Set();
+			this._layers = false;
+		}
+	}
+
+	/**
+	 * Clears the map and store of all rendered data layers
+	 * @returns void
+	 * */
+	public clear() {
+		if (this._currentModeCallbacks) {
+			// Clean up state first
+			this._currentModeCallbacks.onClear();
+
+			// Then clean up rendering
+			this.clearLayers();
+		}
 	}
 }

@@ -137,6 +137,16 @@ export class TerraDrawOpenLayersAdapter extends TerraDrawBaseAdapter {
 		}[key](feature);
 	}
 
+	/**
+	 * Clears the layers created by the adapter
+	 * @returns void
+	 * */
+	private clearLayers() {
+		if (this._vectorSource) {
+			this._vectorSource.clear();
+		}
+	}
+
 	private addFeature(feature: GeoJSONStoreFeatures) {
 		if (this._vectorSource && this._geoJSONReader) {
 			const olFeature = this._geoJSONReader.readFeature(feature, {
@@ -287,6 +297,20 @@ export class TerraDrawOpenLayersAdapter extends TerraDrawBaseAdapter {
 			changes.created.forEach((feature) => {
 				this.addFeature(feature);
 			});
+		}
+	}
+
+	/**
+	 * Clears the map and store of all rendered data layers
+	 * @returns void
+	 * */
+	clear() {
+		if (this._currentModeCallbacks) {
+			// Clean up state first
+			this._currentModeCallbacks.onClear();
+
+			// Then clean up rendering
+			this.clearLayers();
 		}
 	}
 }

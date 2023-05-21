@@ -154,13 +154,15 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode<SelectionStyling>
 	}
 
 	private deselect() {
-		this.store.updateProperty(
-			this.selected.map((id) => ({
+		const updateSelectedFeatures = this.selected
+			.filter((id) => this.store.has(id))
+			.map((id) => ({
 				id,
 				property: SELECT_PROPERTIES.SELECTED,
 				value: false,
-			}))
-		);
+			}));
+
+		this.store.updateProperty(updateSelectedFeatures);
 
 		this.onDeselect(this.selected[0]);
 		this.selected = [];

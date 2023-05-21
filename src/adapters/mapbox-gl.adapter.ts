@@ -23,7 +23,39 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawBaseAdapter {
 
 	private _map: mapboxgl.Map;
 	private _container: HTMLElement;
-	private _rendered: Record<string, boolean> = {};
+	private _rendered: Record<
+		string,
+		{
+			pointId: string;
+			lineStringId: string;
+			polygonId: string;
+		}
+	> = {};
+
+	/**
+	 * Clears the map of rendered layers and sources
+	 * @returns void
+	 * */
+	private clearLayers() {
+		Object.keys(this._rendered).forEach((key) => {
+			Object.keys(this._rendered[key]).forEach((geometryKey) => {
+				const id =
+					this._rendered[key][
+						geometryKey as "pointId" | "lineStringId" | "polygonId"
+					];
+				this._map.removeLayer(id);
+
+				// Special case for polygons as it has another id for the outline
+				// that we need to make sure we remove
+				if (geometryKey === "polygonId") {
+					this._map.removeLayer(id + "-outline");
+				}
+				this._map.removeSource(id);
+			});
+		});
+
+		this._rendered = {};
+	}
 
 	private _addGeoJSONSource(id: string, features: Feature[]) {
 		this._map.addSource(id, {
@@ -55,7 +87,7 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawBaseAdapter {
 
 	private _addFillOutlineLayer(id: string, mode: string, beneath?: string) {
 		const layer = this._map.addLayer({
-			id: id + "outline",
+			id: id + "-outline",
 			source: id,
 			type: "line",
 			filter: [
@@ -310,18 +342,26 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawBaseAdapter {
 			const { points, linestrings, polygons } = modeFeatures[mode];
 
 			if (!this._rendered[mode]) {
-				this._addGeoJSONLayer<Point>(mode, "Point", points as Feature<Point>[]);
-				this._addGeoJSONLayer<LineString>(
+				const pointId = this._addGeoJSONLayer<Point>(
+					mode,
+					"Point",
+					points as Feature<Point>[]
+				);
+				const lineStringId = this._addGeoJSONLayer<LineString>(
 					mode,
 					"LineString",
 					linestrings as Feature<LineString>[]
 				);
-				this._addGeoJSONLayer<Polygon>(
+				const polygonId = this._addGeoJSONLayer<Polygon>(
 					mode,
 					"Polygon",
 					polygons as Feature<Polygon>[]
 				);
-				this._rendered[mode] = true;
+				this._rendered[mode] = {
+					pointId,
+					lineStringId,
+					polygonId,
+				};
 			} else {
 				const pointId = this._setGeoJSONLayerData<Point>(
 					mode,
@@ -358,5 +398,19 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawBaseAdapter {
 		//     }
 		//     (this._map as any)._render();
 		// }
+	}
+
+	/**
+	 * Clears the map and store of all rendered data layers
+	 * @returns void
+	 * */
+	public clear() {
+		if (this._currentModeCallbacks) {
+			// Clear up state first
+			this._currentModeCallbacks.onClear();
+
+			// Then clean up rendering
+			this.clearLayers();
+		}
 	}
 }

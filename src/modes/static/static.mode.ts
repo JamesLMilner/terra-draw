@@ -17,6 +17,7 @@ export class TerraDrawStaticMode extends TerraDrawBaseDrawMode<StaticModeStyling
 	onDrag() {}
 	onDragEnd() {}
 	onMouseMove() {}
+	cleanUp() {}
 	styleFeature() {
 		return { ...getDefaultStyling() };
 	}

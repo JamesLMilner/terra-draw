@@ -2,6 +2,7 @@ import {
 	TerraDrawChanges,
 	SetCursor,
 	TerraDrawStylingFunction,
+	TerraDrawCallbacks,
 } from "../common";
 import { Map } from "maplibre-gl";
 import { TerraDrawMapboxGLAdapter } from "./mapbox-gl.adapter";
@@ -24,6 +25,14 @@ export class TerraDrawMapLibreGLAdapter extends TerraDrawBaseAdapter {
 				coordinatePrecision: number;
 			}
 		);
+	}
+
+	public register(callbacks: TerraDrawCallbacks): void {
+		this.mapboxglAdapter.register(callbacks);
+	}
+
+	public unregister(): void {
+		this.mapboxglAdapter.unregister();
 	}
 
 	/**
@@ -94,5 +103,13 @@ export class TerraDrawMapLibreGLAdapter extends TerraDrawBaseAdapter {
 	 */
 	public render(changes: TerraDrawChanges, styling: TerraDrawStylingFunction) {
 		this.mapboxglAdapter.render(changes, styling);
+	}
+
+	/**
+	 * Clears the map and store of all rendered data layers
+	 * @returns void
+	 * */
+	public clear() {
+		this.mapboxglAdapter.clear();
 	}
 }

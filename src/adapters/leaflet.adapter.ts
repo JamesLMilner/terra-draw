@@ -42,6 +42,34 @@ export class TerraDrawLeafletAdapter extends TerraDrawBaseAdapter {
 		return style;
 	}
 
+	/**
+	 * Clears the panes created by the adapter
+	 * @returns void
+	 * */
+	private clearPanes() {
+		Object.values(this._panes).forEach((pane) => {
+			if (pane) {
+				pane.remove();
+			}
+		});
+		this._panes = {};
+	}
+
+	/**
+	 * Clears the leaflet layers created by the adapter
+	 * @returns void
+	 * */
+	private clearLayers() {
+		Object.values(this._layers).forEach((layer) => {
+			this._map.removeLayer(layer);
+		});
+		this._layers = {};
+	}
+
+	/**
+	 * Styles a GeoJSON layer based on the styling function
+	 * @param styling - The styling function
+	 * */
 	private styleGeoJSONLayer(
 		styling: TerraDrawStylingFunction
 	): L.GeoJSONOptions {
@@ -250,5 +278,20 @@ export class TerraDrawLeafletAdapter extends TerraDrawBaseAdapter {
 			);
 			this._map.addLayer(this._layers[updated.id as string]);
 		});
+	}
+
+	/**
+	 * Clears the map and store of all rendered data layers
+	 * @returns void
+	 * */
+	public clear() {
+		if (this._currentModeCallbacks) {
+			// Clear up state first
+			this._currentModeCallbacks.onClear();
+
+			// Then clean up rendering
+			this.clearLayers();
+			this.clearPanes();
+		}
 	}
 }

@@ -257,13 +257,14 @@ class TerraDraw {
 	}
 
 	/**
-	 * Removes all data from the current store
+	 * Removes all data from the current store and removes any rendered layers
+	 * via the registering the adapter.
 	 *
 	 * @alpha
 	 */
 	clear() {
 		this.checkEnabled();
-		this._store.clear();
+		this._adapter.clear();
 	}
 
 	/**
@@ -329,7 +330,8 @@ class TerraDraw {
 	}
 
 	/**
-	 * A method starting the current mode if it has not been started already
+	 * A method starting Terra Draw. It put the instance into a started state, and
+	 * in registers the passed adapter giving it all the callbacks required to operate.
 	 *
 	 * @alpha
 	 */
@@ -360,11 +362,20 @@ class TerraDraw {
 			onDragEnd: (event, setMapDraggability) => {
 				this._mode.onDragEnd(event, setMapDraggability);
 			},
+			onClear: () => {
+				// Ensure that the mode resets its state
+				// as it may be storing feature ids internally in it's instance
+				this._mode.cleanUp();
+
+				// Remove all features from the store
+				this._store.clear();
+			},
 		});
 	}
 
 	/**
-	 * A a method for stopping the current mode
+	 * A method for stopping Terra Draw. Will clear the store, deregister the adapter and
+	 * remove any rendered layers in the process.
 	 *
 	 * @alpha
 	 */

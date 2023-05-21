@@ -122,6 +122,7 @@ export abstract class TerraDrawBaseDrawMode<T extends CustomStyling> {
 
 	abstract start(): void;
 	abstract stop(): void;
+	abstract cleanUp(): void;
 	abstract styleFeature(feature: GeoJSONStoreFeatures): TerraDrawAdapterStyling;
 
 	onDeselect(deselectedId: string) {}

@@ -340,7 +340,10 @@ export abstract class TerraDrawBaseAdapter {
 		this._listeners.forEach((listener) => {
 			listener.unregister();
 		});
+		this.clear();
 	}
+
+	public abstract clear(): void;
 
 	public abstract project(...args: Parameters<Project>): ReturnType<Project>;
 

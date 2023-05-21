@@ -61,6 +61,13 @@ const addModeChangeHandler = (
 			}
 		);
 	});
+
+	(document.getElementById("clear") as HTMLButtonElement).addEventListener(
+		"click",
+		() => {
+			draw.clear();
+		}
+	);
 };
 
 const getModes = () => {

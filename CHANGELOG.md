@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.1-alpha.30](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.29...v0.0.1-alpha.30) (2023-05-21)
+
+
+### Bug Fixes
+
+* allow wait as a setCursor parameter ([839bb90](https://github.com/JamesLMilner/terra-draw/commit/839bb906999420931f3b2833be781688a2ec39be))
+* clear now removes all rendered layers ([fd7a208](https://github.com/JamesLMilner/terra-draw/commit/fd7a2081338b4d6ebfc3e93a6580a38b9649343a))
+* correctly name styling typings for rectangle mode ([a460a3a](https://github.com/JamesLMilner/terra-draw/commit/a460a3aa7411f275d72930f5d41bd76de107c1d9))
+
+
+### Chore
+
+* update docs ([ea4f52c](https://github.com/JamesLMilner/terra-draw/commit/ea4f52ca091772c8bed2c1b6c103db7b4734eb6e))
+
 ### [0.0.1-alpha.29](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.28...v0.0.1-alpha.29) (2023-05-14)
 
 

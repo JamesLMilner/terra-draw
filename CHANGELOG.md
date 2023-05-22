@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.1-alpha.31](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.30...v0.0.1-alpha.31) (2023-05-22)
+
+
+### Features
+
+* add onFinish event to terra draw ([fb36988](https://github.com/JamesLMilner/terra-draw/commit/fb36988ce3e291f4198e38a455d385eb40db326b))
+
+
+### Chore
+
+* update docs ([ed78e25](https://github.com/JamesLMilner/terra-draw/commit/ed78e2575b789429f08a4c0b96041bdf4deed5b9))
+
 ### [0.0.1-alpha.30](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.29...v0.0.1-alpha.30) (2023-05-21)
 
 

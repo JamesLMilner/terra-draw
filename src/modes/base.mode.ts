@@ -106,6 +106,7 @@ export abstract class TerraDrawBaseDrawMode<T extends CustomStyling> {
 			this.onDeselect = config.onDeselect;
 			this.setCursor = config.setCursor;
 			this.onStyleChange = config.onChange;
+			this.onFinish = config.onFinish;
 
 			this.registerBehaviors({
 				mode: config.mode,
@@ -125,6 +126,7 @@ export abstract class TerraDrawBaseDrawMode<T extends CustomStyling> {
 	abstract cleanUp(): void;
 	abstract styleFeature(feature: GeoJSONStoreFeatures): TerraDrawAdapterStyling;
 
+	onFinish(finishedId: string) {}
 	onDeselect(deselectedId: string) {}
 	onSelect(selectedId: string) {}
 	onKeyDown(event: TerraDrawKeyboardEvent) {}

@@ -110,6 +110,8 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 			},
 		]);
 
+		const finishedId = this.currentId;
+
 		this.currentCoordinate = 0;
 		this.currentId = undefined;
 		this.closingPoints.delete();
@@ -118,6 +120,8 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 		if (this.state === "drawing") {
 			this.setStarted();
 		}
+
+		this.onFinish(finishedId);
 	}
 
 	/** @internal */

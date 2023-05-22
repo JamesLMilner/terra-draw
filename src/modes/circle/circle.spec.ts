@@ -1,6 +1,5 @@
 import { GeoJSONStore } from "../../store/store";
 import { getMockModeConfig } from "../../test/mock-config";
-import { getDefaultStyling } from "../../util/styling";
 import { TerraDrawCircleMode } from "./circle.mode";
 
 describe("TerraDrawCircleMode", () => {
@@ -110,6 +109,7 @@ describe("TerraDrawCircleMode", () => {
 		let circleMode: TerraDrawCircleMode;
 		let store: GeoJSONStore;
 		let onChange: jest.Mock;
+		let onFinish: jest.Mock;
 
 		beforeEach(() => {
 			circleMode = new TerraDrawCircleMode();
@@ -136,6 +136,7 @@ describe("TerraDrawCircleMode", () => {
 
 				store = mockConfig.store;
 				onChange = mockConfig.onChange;
+				onFinish = mockConfig.onFinish;
 
 				circleMode.register(mockConfig);
 				circleMode.start();
@@ -181,6 +182,8 @@ describe("TerraDrawCircleMode", () => {
 
 				expect(onChange).toBeCalledTimes(1);
 				expect(onChange).toBeCalledWith([expect.any(String)], "create");
+
+				expect(onFinish).toBeCalledTimes(1);
 			});
 		});
 	});
@@ -189,6 +192,7 @@ describe("TerraDrawCircleMode", () => {
 		let circleMode: TerraDrawCircleMode;
 		let store: GeoJSONStore;
 		let onChange: jest.Mock;
+		let onFinish: jest.Mock;
 
 		beforeEach(() => {
 			circleMode = new TerraDrawCircleMode();
@@ -197,6 +201,8 @@ describe("TerraDrawCircleMode", () => {
 			store = new GeoJSONStore();
 			store = mockConfig.store;
 			onChange = mockConfig.onChange;
+			onFinish = mockConfig.onFinish;
+
 			circleMode.register(mockConfig);
 			circleMode.start();
 		});
@@ -223,6 +229,7 @@ describe("TerraDrawCircleMode", () => {
 
 			expect(onChange).toBeCalledTimes(1);
 			expect(onChange).toBeCalledWith([expect.any(String)], "create");
+			expect(onFinish).toBeCalledTimes(1);
 		});
 	});
 

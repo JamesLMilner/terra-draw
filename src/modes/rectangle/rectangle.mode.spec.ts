@@ -109,6 +109,7 @@ describe("TerraDrawRectangleMode", () => {
 		let rectangleMode: TerraDrawRectangleMode;
 		let store: GeoJSONStore;
 		let onChange: jest.Mock;
+		let onFinish: jest.Mock;
 
 		beforeEach(() => {
 			rectangleMode = new TerraDrawRectangleMode();
@@ -135,11 +136,12 @@ describe("TerraDrawRectangleMode", () => {
 
 				store = mockConfig.store;
 				onChange = mockConfig.onChange;
+				onFinish = mockConfig.onFinish;
 
 				rectangleMode.register(mockConfig);
 				rectangleMode.start();
 			});
-			it("adds a circle to store if registered", () => {
+			it("adds a rectangle to store if registered", () => {
 				rectangleMode.onClick({
 					lng: 0,
 					lat: 0,
@@ -153,7 +155,7 @@ describe("TerraDrawRectangleMode", () => {
 				expect(onChange).toBeCalledWith([expect.any(String)], "create");
 			});
 
-			it("finishes drawing circle on second click", () => {
+			it("finishes drawing rectangle on second click", () => {
 				rectangleMode.onClick({
 					lng: 0,
 					lat: 0,
@@ -178,8 +180,9 @@ describe("TerraDrawRectangleMode", () => {
 				features = store.copyAll();
 				expect(features.length).toBe(1);
 
-				expect(onChange).toBeCalledTimes(1);
+				expect(onChange).toBeCalledTimes(2);
 				expect(onChange).toBeCalledWith([expect.any(String)], "create");
+				expect(onFinish).toBeCalledTimes(1);
 			});
 		});
 	});
@@ -188,13 +191,16 @@ describe("TerraDrawRectangleMode", () => {
 		let rectangleMode: TerraDrawRectangleMode;
 		let store: GeoJSONStore;
 		let onChange: jest.Mock;
+		let onFinish: jest.Mock;
 
-		it("finishes drawing circle on finish key press", () => {
+		it("finishes drawing rectangle on finish key press", () => {
 			rectangleMode = new TerraDrawRectangleMode();
 			const mockConfig = getMockModeConfig(rectangleMode.mode);
 			store = new GeoJSONStore();
 			store = mockConfig.store;
 			onChange = mockConfig.onChange;
+			onFinish = mockConfig.onFinish;
+
 			rectangleMode.register(mockConfig);
 			rectangleMode.start();
 
@@ -229,6 +235,7 @@ describe("TerraDrawRectangleMode", () => {
 
 			expect(onChange).toBeCalledTimes(2);
 			expect(onChange).toBeCalledWith([expect.any(String)], "create");
+			expect(onFinish).toBeCalledTimes(1);
 		});
 
 		it("does not finish on key press when keyEvents null", () => {
@@ -237,6 +244,7 @@ describe("TerraDrawRectangleMode", () => {
 			store = new GeoJSONStore();
 			store = mockConfig.store;
 			onChange = mockConfig.onChange;
+			onFinish = mockConfig.onFinish;
 			rectangleMode.register(mockConfig);
 			rectangleMode.start();
 
@@ -256,15 +264,6 @@ describe("TerraDrawRectangleMode", () => {
 				key: "Enter",
 			});
 
-			rectangleMode.onClick({
-				lng: 0,
-				lat: 0,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
-
 			features = store.copyAll();
 
 			// Only one as the click will close the rectangle
@@ -272,6 +271,7 @@ describe("TerraDrawRectangleMode", () => {
 
 			expect(onChange).toBeCalledTimes(1);
 			expect(onChange).toBeCalledWith([expect.any(String)], "create");
+			expect(onFinish).toBeCalledTimes(0);
 		});
 	});
 
@@ -292,7 +292,7 @@ describe("TerraDrawRectangleMode", () => {
 			rectangleMode.start();
 		});
 
-		it("updates the circle size", () => {
+		it("updates the rectangle size", () => {
 			rectangleMode.onClick({
 				lng: 0,
 				lat: 0,
@@ -352,12 +352,12 @@ describe("TerraDrawRectangleMode", () => {
 			rectangleMode.start();
 		});
 
-		it("does not delete if no circle has been created", () => {
+		it("does not delete if no rectangle has been created", () => {
 			rectangleMode.cleanUp();
 			expect(onChange).toBeCalledTimes(0);
 		});
 
-		it("does delete if a circle has been created", () => {
+		it("does delete if a rectangle has been created", () => {
 			rectangleMode.onClick({
 				lng: 0,
 				lat: 0,
@@ -397,11 +397,11 @@ describe("TerraDrawRectangleMode", () => {
 		});
 
 		describe("cancel", () => {
-			it("does nothing when no circle is present", () => {
+			it("does nothing when no rectangle is present", () => {
 				rectangleMode.onKeyUp({ key: "Escape" });
 			});
 
-			it("deletes the circle when currently editing", () => {
+			it("deletes the rectangle when currently editing", () => {
 				rectangleMode.onClick({
 					lng: 0,
 					lat: 0,

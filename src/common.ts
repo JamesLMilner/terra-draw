@@ -57,6 +57,7 @@ export interface TerraDrawModeRegisterConfig {
 	onChange: StoreChangeHandler;
 	onSelect: (selectedId: string) => void;
 	onDeselect: (deselectedId: string) => void;
+	onFinish: (finishedId: string) => void;
 	project: Project;
 	unproject: Unproject;
 }

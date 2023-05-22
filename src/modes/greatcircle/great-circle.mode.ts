@@ -69,6 +69,8 @@ export class TerraDrawGreatCircleMode extends TerraDrawBaseDrawMode<GreateCircle
 			return;
 		}
 
+		const finishedId = this.currentId;
+
 		// Reset the state back to starting state
 		this.closingPointId && this.store.delete([this.closingPointId]);
 		this.currentCoordinate = 0;
@@ -78,6 +80,9 @@ export class TerraDrawGreatCircleMode extends TerraDrawBaseDrawMode<GreateCircle
 		if (this.state === "drawing") {
 			this.setStarted();
 		}
+
+		// Ensure that any listerers are triggered with the main created geometry
+		this.onFinish(finishedId);
 	}
 
 	/** @internal */

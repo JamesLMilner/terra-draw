@@ -35,11 +35,13 @@ import {
 } from "./store/store";
 import { BehaviorConfig } from "./modes/base.behavior";
 
+type FinishListener = (ids: string) => void;
 type ChangeListener = (ids: string[], type: string) => void;
 type SelectListener = (id: string) => void;
 type DeselectListener = () => void;
 
 interface TerraDrawEventListeners {
+	finish: FinishListener;
 	change: ChangeListener;
 	select: SelectListener;
 	deselect: DeselectListener;
@@ -55,6 +57,7 @@ class TerraDraw {
 	private _store: GeoJSONStore;
 	private _eventListeners: {
 		change: ChangeListener[];
+		finish: FinishListener[];
 		select: SelectListener[];
 		deselect: DeselectListener[];
 	};
@@ -67,7 +70,7 @@ class TerraDraw {
 		this._adapter = options.adapter;
 		this._mode = new TerraDrawStaticMode();
 		this._modes = { ...options.modes, static: this._mode };
-		this._eventListeners = { change: [], select: [], deselect: [] };
+		this._eventListeners = { change: [], select: [], deselect: [], finish: [] };
 
 		if (options.data) {
 			this._store = new GeoJSONStore({ data: options.data });
@@ -93,6 +96,12 @@ class TerraDraw {
 			});
 
 			return { changed, unchanged };
+		};
+
+		const onFinish = (finishedId: string) => {
+			this._eventListeners.finish.forEach((listener) => {
+				listener(finishedId);
+			});
 		};
 
 		const onChange: StoreChangeHandler = (ids, event) => {
@@ -185,6 +194,7 @@ class TerraDraw {
 				onChange: onChange,
 				onSelect: onSelect,
 				onDeselect: onDeselect,
+				onFinish: onFinish,
 			});
 		});
 

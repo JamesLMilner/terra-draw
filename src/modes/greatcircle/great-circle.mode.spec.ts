@@ -281,6 +281,7 @@ describe("TerraDrawGreatCircleMode", () => {
 	describe("onKeyUp", () => {
 		let greatCircleMode: TerraDrawGreatCircleMode;
 		let onChange: jest.Mock;
+		let onFinish: jest.Mock;
 		let store: GeoJSONStore;
 		let project: jest.Mock;
 
@@ -288,6 +289,7 @@ describe("TerraDrawGreatCircleMode", () => {
 			greatCircleMode = new TerraDrawGreatCircleMode();
 			const mockConfig = getMockModeConfig(greatCircleMode.mode);
 			onChange = mockConfig.onChange;
+			onFinish = mockConfig.onFinish;
 			store = mockConfig.store;
 			project = mockConfig.project;
 			greatCircleMode.register(mockConfig);
@@ -370,6 +372,8 @@ describe("TerraDrawGreatCircleMode", () => {
 					expect(typeof (coordinate as Position)[0]).toBe("number");
 					expect(typeof (coordinate as Position)[1]).toBe("number");
 				});
+
+				expect(onFinish).toBeCalledTimes(1);
 			});
 
 			it("does not finish great circle when finish is set to null", () => {

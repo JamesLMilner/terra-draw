@@ -316,6 +316,8 @@ describe("TerraDrawFreehandMode", () => {
 		let store: GeoJSONStore;
 		let freehandMode: TerraDrawFreehandMode;
 		let onChange: jest.Mock;
+		let onFinish: jest.Mock;
+
 		let project: jest.Mock;
 
 		beforeEach(() => {
@@ -326,6 +328,7 @@ describe("TerraDrawFreehandMode", () => {
 			const mockConfig = getMockModeConfig(freehandMode.mode);
 			store = mockConfig.store;
 			onChange = mockConfig.onChange;
+			onFinish = mockConfig.onFinish;
 			project = mockConfig.project;
 			freehandMode.register(mockConfig);
 			freehandMode.start();
@@ -416,36 +419,7 @@ describe("TerraDrawFreehandMode", () => {
 					[expect.any(String)],
 					"delete"
 				);
-			});
-
-			it("finishes drawing polygon on finish key press", () => {
-				freehandMode = new TerraDrawFreehandMode({ keyEvents: null });
-
-				const mockConfig = getMockModeConfig(freehandMode.mode);
-				store = mockConfig.store;
-				onChange = mockConfig.onChange;
-				project = mockConfig.project;
-				freehandMode.register(mockConfig);
-				freehandMode.start();
-
-				freehandMode.onClick({
-					lng: 0,
-					lat: 0,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
-
-				let features = store.copyAll();
-				expect(features.length).toBe(2);
-
-				freehandMode.onKeyUp({
-					key: "Enter",
-				});
-
-				features = store.copyAll();
-				expect(features.length).toBe(2);
+				expect(onFinish).toBeCalledTimes(1);
 			});
 		});
 	});

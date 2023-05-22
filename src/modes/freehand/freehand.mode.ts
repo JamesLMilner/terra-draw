@@ -59,6 +59,12 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 	}
 
 	private close() {
+		if (!this.currentId) {
+			return;
+		}
+
+		const finishedId = this.currentId;
+
 		this.closingPointId && this.store.delete([this.closingPointId]);
 		this.startingClick = false;
 		this.currentId = undefined;
@@ -67,6 +73,9 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 		if (this.state === "drawing") {
 			this.setStarted();
 		}
+
+		// Ensure that any listerers are triggered with the main created geometry
+		this.onFinish(finishedId);
 	}
 
 	/** @internal */

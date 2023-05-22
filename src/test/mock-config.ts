@@ -11,5 +11,6 @@ export function getMockModeConfig(mode: string) {
 		project: jest.fn(),
 		unproject: jest.fn(),
 		setDoubleClickToZoom: jest.fn(),
+		onFinish: jest.fn(),
 	};
 }

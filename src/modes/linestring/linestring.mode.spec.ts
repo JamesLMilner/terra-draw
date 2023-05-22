@@ -429,6 +429,7 @@ describe("TerraDrawLineStringMode", () => {
 	describe("onKeyUp", () => {
 		let lineStringMode: TerraDrawLineStringMode;
 		let onChange: jest.Mock;
+		let onFinish: jest.Mock;
 		let store: GeoJSONStore;
 		let project: jest.Mock;
 
@@ -436,6 +437,7 @@ describe("TerraDrawLineStringMode", () => {
 			lineStringMode = new TerraDrawLineStringMode();
 			const mockConfig = getMockModeConfig(lineStringMode.mode);
 			onChange = mockConfig.onChange;
+			onFinish = mockConfig.onFinish;
 			store = mockConfig.store;
 			project = mockConfig.project;
 			lineStringMode.register(mockConfig);
@@ -554,6 +556,8 @@ describe("TerraDrawLineStringMode", () => {
 					[1, 1],
 					[2, 2],
 				]);
+
+				expect(onFinish).toBeCalledTimes(1);
 			});
 
 			it("does not finish linestring when finish is set to null", () => {

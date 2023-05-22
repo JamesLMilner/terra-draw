@@ -40,7 +40,7 @@ export class TerraDrawPointMode extends TerraDrawBaseDrawMode<PointModeStyling> 
 			throw new Error("Mode must be registered first");
 		}
 
-		this.store.create([
+		const [pointId] = this.store.create([
 			{
 				geometry: {
 					type: "Point",
@@ -49,6 +49,9 @@ export class TerraDrawPointMode extends TerraDrawBaseDrawMode<PointModeStyling> 
 				properties: { mode: this.mode },
 			},
 		]);
+
+		// Ensure that any listerers are triggered with the main created geometry
+		this.onFinish(pointId);
 	}
 
 	/** @internal */

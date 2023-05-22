@@ -46,7 +46,34 @@ export class TerraDrawRectangleMode extends TerraDrawBaseDrawMode<RectanglePolyg
 		}
 	}
 
+	private updateRectangle(event: TerraDrawMouseEvent) {
+		if (this.clickCount === 1 && this.center && this.currentRectangleId) {
+			const geometry = this.store.getGeometryCopy(this.currentRectangleId);
+
+			const firstCoord = (geometry.coordinates as Position[][])[0][0];
+
+			this.store.updateGeometry([
+				{
+					id: this.currentRectangleId,
+					geometry: {
+						type: "Polygon",
+						coordinates: [
+							[
+								firstCoord,
+								[event.lng, firstCoord[1]],
+								[event.lng, event.lat],
+								[firstCoord[0], event.lat],
+								firstCoord,
+							],
+						],
+					},
+				},
+			]);
+		}
+	}
+
 	private close() {
+		const finishedId = this.currentRectangleId;
 		this.center = undefined;
 		this.currentRectangleId = undefined;
 		this.clickCount = 0;
@@ -54,6 +81,8 @@ export class TerraDrawRectangleMode extends TerraDrawBaseDrawMode<RectanglePolyg
 		if (this.state === "drawing") {
 			this.setStarted();
 		}
+
+		finishedId && this.onFinish(finishedId);
 	}
 
 	/** @internal */
@@ -95,6 +124,7 @@ export class TerraDrawRectangleMode extends TerraDrawBaseDrawMode<RectanglePolyg
 			this.clickCount++;
 			this.setDrawing();
 		} else {
+			this.updateRectangle(event);
 			// Finish drawing
 			this.close();
 		}
@@ -102,29 +132,7 @@ export class TerraDrawRectangleMode extends TerraDrawBaseDrawMode<RectanglePolyg
 
 	/** @internal */
 	onMouseMove(event: TerraDrawMouseEvent) {
-		if (this.clickCount === 1 && this.center && this.currentRectangleId) {
-			const geometry = this.store.getGeometryCopy(this.currentRectangleId);
-
-			const firstCoord = (geometry.coordinates as Position[][])[0][0];
-
-			this.store.updateGeometry([
-				{
-					id: this.currentRectangleId,
-					geometry: {
-						type: "Polygon",
-						coordinates: [
-							[
-								firstCoord,
-								[event.lng, firstCoord[1]],
-								[event.lng, event.lat],
-								[firstCoord[0], event.lat],
-								firstCoord,
-							],
-						],
-					},
-				},
-			]);
-		}
+		this.updateRectangle(event);
 	}
 
 	/** @internal */
@@ -150,11 +158,10 @@ export class TerraDrawRectangleMode extends TerraDrawBaseDrawMode<RectanglePolyg
 
 	/** @internal */
 	cleanUp() {
-		try {
-			if (this.currentRectangleId) {
-				this.store.delete([this.currentRectangleId]);
-			}
-		} catch (error) {}
+		if (this.currentRectangleId) {
+			this.store.delete([this.currentRectangleId]);
+		}
+
 		this.center = undefined;
 		this.currentRectangleId = undefined;
 		this.clickCount = 0;

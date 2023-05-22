@@ -50,6 +50,12 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<FreehandPolygonSt
 	}
 
 	private close() {
+		if (!this.currentCircleId) {
+			return;
+		}
+
+		const finishedId = this.currentCircleId;
+
 		this.center = undefined;
 		this.currentCircleId = undefined;
 		this.clickCount = 0;
@@ -57,6 +63,9 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<FreehandPolygonSt
 		if (this.state === "drawing") {
 			this.setStarted();
 		}
+
+		// Ensure that any listerers are triggered with the main created geometry
+		this.onFinish(finishedId);
 	}
 
 	/** @internal */

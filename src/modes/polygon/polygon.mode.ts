@@ -221,9 +221,9 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 			},
 		]);
 
-		if (this.closingPoints.ids.length) {
-			this.closingPoints.update(updatedCoordinates);
-		}
+		// if (this.closingPoints.ids.length) {
+		// 	this.closingPoints.update(updatedCoordinates);
+		// }
 	}
 
 	/** @internal */

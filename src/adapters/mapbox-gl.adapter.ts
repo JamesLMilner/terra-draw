@@ -14,13 +14,22 @@ import { GeoJSONStoreFeatures, GeoJSONStoreGeometries } from "../store/store";
 import { TerraDrawBaseAdapter } from "./common/base.adapter";
 
 export class TerraDrawMapboxGLAdapter extends TerraDrawBaseAdapter {
-	constructor(config: { map: mapboxgl.Map; coordinatePrecision?: number }) {
+	constructor(config: {
+		map: mapboxgl.Map;
+		coordinatePrecision?: number;
+		drawOutline?: boolean;
+		drawFill?: boolean;
+	}) {
 		super(config);
 
+		this._drawOutline = config.drawOutline ?? true;
+		this._drawFill = config.drawFill ?? true;
 		this._map = config.map;
 		this._container = this._map.getContainer();
 	}
 
+	private _drawOutline: boolean;
+	private _drawFill: boolean;
 	private _map: mapboxgl.Map;
 	private _container: HTMLElement;
 	private _rendered: Record<
@@ -43,11 +52,15 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawBaseAdapter {
 					this._rendered[key][
 						geometryKey as "pointId" | "lineStringId" | "polygonId"
 					];
-				this._map.removeLayer(id);
+
+				// Only remove polygon layer if _drawFill is true
+				if (geometryKey !== "polygonId" || this._drawFill) {
+					this._map.removeLayer(id);
+				}
 
 				// Special case for polygons as it has another id for the outline
-				// that we need to make sure we remove
-				if (geometryKey === "polygonId") {
+				// that we need to make sure we remove if _drawOutline is true
+				if (geometryKey === "polygonId" && this._drawOutline) {
 					this._map.removeLayer(id + "-outline");
 				}
 				this._map.removeSource(id);
@@ -76,6 +89,7 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawBaseAdapter {
 			paint: {
 				"fill-color": ["get", "polygonFillColor"],
 				"fill-opacity": ["get", "polygonFillOpacity"],
+				"fill-outline-color": ["get", "polygonFillColor"],
 			},
 		} as FillLayer);
 	}
@@ -147,8 +161,12 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawBaseAdapter {
 			this._addLineLayer(id, mode, beneath);
 		}
 		if (featureType === "Polygon") {
-			this._addFillLayer(id, mode);
-			this._addFillOutlineLayer(id, mode, beneath);
+			if (this._drawFill) {
+				this._addFillLayer(id, mode);
+			}
+			if (this._drawOutline) {
+				this._addFillOutlineLayer(id, mode, beneath);
+			}
 		}
 	}
 
@@ -332,22 +350,30 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawBaseAdapter {
 				polygonId,
 			};
 		} else {
-			const areDeleted = changes.deletedIds.length;
-			if (points.length || areDeleted) {
+			const numDeletedIds = changes.deletedIds.length;
+			// If unchanged is the only one with features means is updating the style
+			const isStylingUpdate =
+				numDeletedIds === 0 &&
+				changes.created.length === 0 &&
+				changes.updated.length === 0 &&
+				changes.unchanged.length > 0;
+			// Forcing an updtae if deleting something or if changing style
+			const forceUpdate = numDeletedIds > 0 || isStylingUpdate;
+			if (points.length || forceUpdate) {
 				this._setGeoJSONLayerData<Point>(
 					"terra-draw",
 					"Point",
 					points.concat(unchanged.points) as Feature<Point>[]
 				);
 			}
-			if (linestrings.length || areDeleted) {
+			if (linestrings.length || forceUpdate) {
 				this._setGeoJSONLayerData<LineString>(
 					"terra-draw",
 					"LineString",
 					linestrings.concat(unchanged.linestrings) as Feature<LineString>[]
 				);
 			}
-			if (polygons.length || areDeleted) {
+			if (polygons.length || forceUpdate) {
 				this._setGeoJSONLayerData<Polygon>(
 					"terra-draw",
 					"Polygon",

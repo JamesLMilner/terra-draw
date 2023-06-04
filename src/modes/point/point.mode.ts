@@ -7,6 +7,7 @@ import {
 import { GeoJSONStoreFeatures } from "../../store/store";
 import { getDefaultStyling } from "../../util/styling";
 import { TerraDrawBaseDrawMode } from "../base.mode";
+import { isValidPoint } from "../../geometry/boolean/is-valid-point";
 
 type PointModeStyling = {
 	pointWidth: number;
@@ -101,5 +102,16 @@ export class TerraDrawPointMode extends TerraDrawBaseDrawMode<PointModeStyling> 
 		}
 
 		return styles;
+	}
+
+	validateFeature(feature: unknown): feature is GeoJSONStoreFeatures {
+		if (super.validateFeature(feature)) {
+			return (
+				feature.properties.mode === this.mode &&
+				isValidPoint(feature, this.coordinatePrecision)
+			);
+		} else {
+			return false;
+		}
 	}
 }

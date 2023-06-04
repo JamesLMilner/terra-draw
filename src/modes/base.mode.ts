@@ -11,6 +11,7 @@ import {
 	GeoJSONStoreFeatures,
 	StoreChangeHandler,
 } from "../store/store";
+import { isValidStoreFeature } from "../store/store-feature-validation";
 
 type CustomStyling = Record<string, string | number>;
 
@@ -119,6 +120,10 @@ export abstract class TerraDrawBaseDrawMode<T extends CustomStyling> {
 		} else {
 			throw new Error("Can not register unless mode is unregistered");
 		}
+	}
+
+	validateFeature(feature: unknown): feature is GeoJSONStoreFeatures {
+		return isValidStoreFeature(feature);
 	}
 
 	abstract start(): void;

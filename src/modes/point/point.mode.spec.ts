@@ -218,4 +218,54 @@ describe("TerraDrawPointMode", () => {
 			});
 		});
 	});
+
+	describe("validateFeature", () => {
+		it("returns false for invalid point feature", () => {
+			const pointMode = new TerraDrawPointMode({
+				styles: {
+					pointColor: "#ffffff",
+				},
+			});
+
+			expect(
+				pointMode.validateFeature({
+					id: "ed030248-d7ee-45a2-b8e8-37ad2f622509",
+					type: "Feature",
+					geometry: {
+						type: "LineString",
+						coordinates: [],
+					},
+					properties: {
+						mode: "linestring",
+						createdAt: 1685654949450,
+						updatedAt: 1685654950609,
+					},
+				})
+			).toBe(false);
+		});
+
+		it("returns true for valid point feature", () => {
+			const pointMode = new TerraDrawPointMode({
+				styles: {
+					pointColor: "#ffffff",
+				},
+			});
+
+			expect(
+				pointMode.validateFeature({
+					id: "ed030248-d7ee-45a2-b8e8-37ad2f622509",
+					type: "Feature",
+					geometry: {
+						type: "Point",
+						coordinates: [-2.329101563, 51.392350875],
+					},
+					properties: {
+						mode: "point",
+						createdAt: 1685654949450,
+						updatedAt: 1685654950609,
+					},
+				})
+			).toBe(true);
+		});
+	});
 });

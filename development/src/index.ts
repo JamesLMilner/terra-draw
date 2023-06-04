@@ -166,11 +166,6 @@ const example = {
 				'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
 		}).addTo(map);
 
-		// const dataString = localStorage.getItem("snapshot");
-
-		// console.log(dataString, Boolean(dataString));
-		// const data = Boolean(dataString) ? JSON.parse(dataString) : undefined;
-
 		const draw = new TerraDraw({
 			adapter: new TerraDrawLeafletAdapter({
 				lib: L,
@@ -178,7 +173,6 @@ const example = {
 				coordinatePrecision: 9,
 			}),
 			modes: getModes(),
-			// data,
 		});
 
 		draw.start();
@@ -214,10 +208,6 @@ const example = {
 					coordinatePrecision: 9,
 				}),
 				modes: getModes(),
-				// data: uk.features.map((feature) => {
-				//   feature.properties = feature.properties || {};
-				//   (feature.properties as any).mode = "arbitary";
-				// }) as any,
 			});
 
 			draw.start();
@@ -253,10 +243,6 @@ const example = {
 					coordinatePrecision: 9,
 				}),
 				modes: getModes(),
-				// data: uk.features.map((feature) => {
-				//   feature.properties = feature.properties || {};
-				//   (feature.properties as any).mode = "arbitary";
-				// }) as any,
 			});
 
 			draw.start();

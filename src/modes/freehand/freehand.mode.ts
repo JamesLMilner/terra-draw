@@ -10,6 +10,7 @@ import { TerraDrawBaseDrawMode } from "../base.mode";
 import { getDefaultStyling } from "../../util/styling";
 import { GeoJSONStoreFeatures } from "../../store/store";
 import { pixelDistance } from "../../geometry/measure/pixel-distance";
+import { isValidPolygonFeature } from "../../geometry/boolean/is-valid-polygon-feature";
 
 type TerraDrawFreehandModeKeyEvents = {
 	cancel: KeyboardEvent["key"] | null;
@@ -274,5 +275,16 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 		}
 
 		return styles;
+	}
+
+	validateFeature(feature: unknown): feature is GeoJSONStoreFeatures {
+		if (super.validateFeature(feature)) {
+			return (
+				feature.properties.mode === this.mode &&
+				isValidPolygonFeature(feature, this.coordinatePrecision)
+			);
+		} else {
+			return false;
+		}
 	}
 }

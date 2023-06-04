@@ -198,6 +198,47 @@ Coming soon - please see development folder for example for now.
 
 Coming soon - please see development folder for example for now.
 
+## Common Patterns
+
+### Loading in External Data
+
+It is common pattern to want to load in data from an external source (GeoJSON file, API call, etc). This can be achieved with the `addFeatures` method on the Terra Draw instance. The method call works out which mode to add the feature based on looking at its `mode` property in the Features `properties` property. All modes have a method called `validateFeature` that ensures that a given feature is valid for the mode. For example if you wanted to add a series of points to the TerraDrawPointMode you could do this by ensuring that the points you feed in have the `mode` property set to `point`.
+
+```javascript
+points.forEach((point) => {
+	point.properties.mode = "point";
+});
+
+draw.addFeatures(points);
+```
+
+### Render Only Modes with TerraDrawRenderMode
+
+If you just want to render some data onto the map without it being editable, you can use `TerraDrawRenderMode` in combination with `addFeatures` like so:
+
+```javascript
+const draw = new TerraDraw({
+	adapter: new TerraDrawLeafletAdapter({
+		lib: L,
+		map,
+		coordinatePrecision: 9,
+	}),
+	modes: {
+		arbitary: new TerraDrawRenderMode(),
+	},
+});
+
+draw.start();
+
+points.forEach((point) => {
+	point.properties.mode = "arbitary";
+});
+
+draw.addFeatures(points);
+
+// This will add the points to hte TerraDrawRenderMode 'arbitary' rendering them to the screen
+```
+
 ## Other Examples
 
 There are a few other working examples that you can use as points of reference for creating a new app using Terra Draw.

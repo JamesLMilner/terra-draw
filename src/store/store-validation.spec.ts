@@ -1,48 +1,49 @@
 import {
 	StoreValidationErrors,
-	validateStoreFeature,
+	isValidStoreFeature,
+	isValidTimestamp,
 } from "./store-feature-validation";
 
-describe("validateStoreFeature", () => {
+describe("isValidStoreFeature", () => {
 	it("throws on data with non object feature", () => {
-		expect(() => validateStoreFeature(undefined)).toThrowError(
+		expect(() => isValidStoreFeature(undefined)).toThrowError(
 			StoreValidationErrors.FeatureIsNotObject
 		);
-		expect(() => validateStoreFeature(null)).toThrowError(
+		expect(() => isValidStoreFeature(null)).toThrowError(
 			StoreValidationErrors.FeatureIsNotObject
 		);
 	});
 
 	it("throws on data with no id", () => {
-		expect(() => validateStoreFeature({ id: undefined })).toThrowError(
+		expect(() => isValidStoreFeature({ id: undefined })).toThrowError(
 			StoreValidationErrors.FeatureHasNoId
 		);
-		expect(() => validateStoreFeature({ id: null })).toThrowError(
+		expect(() => isValidStoreFeature({ id: null })).toThrowError(
 			StoreValidationErrors.FeatureHasNoId
 		);
 	});
 
 	it("throws on data with non string id", () => {
-		expect(() => validateStoreFeature({ id: 1 })).toThrowError(
+		expect(() => isValidStoreFeature({ id: 1 })).toThrowError(
 			StoreValidationErrors.FeatureIdIsNotUUID4
 		);
 	});
 
 	it("throws on data with non uuid4 id", () => {
-		expect(() => validateStoreFeature({ id: "1" })).toThrowError(
+		expect(() => isValidStoreFeature({ id: "1" })).toThrowError(
 			StoreValidationErrors.FeatureIdIsNotUUID4
 		);
 	});
 
 	it("throws on data with no geometry", () => {
 		expect(() =>
-			validateStoreFeature({ id: "e3ccd3b9-afb1-4f0b-91d8-22a768d5f284" })
+			isValidStoreFeature({ id: "e3ccd3b9-afb1-4f0b-91d8-22a768d5f284" })
 		).toThrowError(StoreValidationErrors.FeatureHasNoGeometry);
 	});
 
 	it("throws on data with no properties", () => {
 		expect(() => {
-			validateStoreFeature({
+			isValidStoreFeature({
 				id: "e3ccd3b9-afb1-4f0b-91d8-22a768d5f284",
 				geometry: {},
 			} as any);
@@ -51,7 +52,7 @@ describe("validateStoreFeature", () => {
 
 	it("throws on data with non Point, LineString, Polygon geometry type", () => {
 		expect(() => {
-			validateStoreFeature({
+			isValidStoreFeature({
 				id: "e3ccd3b9-afb1-4f0b-91d8-22a768d5f284",
 				geometry: {
 					type: "MultiLineString",
@@ -63,7 +64,7 @@ describe("validateStoreFeature", () => {
 
 	it("throws on data with supported geometry with non array coordinate property", () => {
 		expect(() => {
-			validateStoreFeature({
+			isValidStoreFeature({
 				id: "e3ccd3b9-afb1-4f0b-91d8-22a768d5f284",
 				geometry: {
 					type: "Point",
@@ -76,7 +77,7 @@ describe("validateStoreFeature", () => {
 
 	it("throws if mode is not provided as a string", () => {
 		expect(() =>
-			validateStoreFeature({
+			isValidStoreFeature({
 				id: "e3ccd3b9-afb1-4f0b-91d8-22a768d5f284",
 				type: "Feature",
 				geometry: { type: "Point", coordinates: [0, 0] },
@@ -89,7 +90,7 @@ describe("validateStoreFeature", () => {
 
 	it("does not throw if mode is provide as a string", () => {
 		expect(() =>
-			validateStoreFeature({
+			isValidStoreFeature({
 				id: "e3ccd3b9-afb1-4f0b-91d8-22a768d5f284",
 				type: "Feature",
 				geometry: { type: "Point", coordinates: [0, 0] },
@@ -101,49 +102,12 @@ describe("validateStoreFeature", () => {
 	});
 
 	it("throws if tracked is explicitly true and tracked properties are not provided", () => {
-		expect(() =>
-			validateStoreFeature(
-				{
-					id: "e3ccd3b9-afb1-4f0b-91d8-22a768d5f284",
-					type: "Feature",
-					geometry: { type: "Point", coordinates: [0, 0] },
-					properties: {
-						mode: "test",
-					},
-				},
-				true
-			)
-		).toThrowError(StoreValidationErrors.InvalidTrackedProperties);
-	});
-
-	it("does not throw if tracked is false and tracked properties are not provided", () => {
-		expect(() =>
-			validateStoreFeature({
-				id: "e3ccd3b9-afb1-4f0b-91d8-22a768d5f284",
-				type: "Feature",
-				geometry: { type: "Point", coordinates: [0, 0] },
-				properties: {
-					mode: "test",
-				},
-			})
-		).not.toThrowError();
+		expect(() => isValidTimestamp(undefined)).toThrowError(
+			StoreValidationErrors.InvalidTrackedProperties
+		);
 	});
 
 	it("does not throw if tracked is true and tracked properties are provided", () => {
-		expect(() =>
-			validateStoreFeature(
-				{
-					id: "e3ccd3b9-afb1-4f0b-91d8-22a768d5f284",
-					type: "Feature",
-					geometry: { type: "Point", coordinates: [0, 0] },
-					properties: {
-						mode: "test",
-						updatedAt: +new Date(),
-						createdAt: +new Date(),
-					},
-				},
-				true
-			)
-		).not.toThrowError();
+		expect(() => isValidTimestamp(+new Date())).not.toThrowError();
 	});
 });

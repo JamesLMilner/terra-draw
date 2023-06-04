@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.1-alpha.33](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.32...v0.0.1-alpha.33) (2023-06-04)
+
+
+### Bug Fixes
+
+* improve performance of mapbox gl/maplibre gl adapter ([67082af](https://github.com/JamesLMilner/terra-draw/commit/67082af096cf1b1d5a0426f7db651122fb897b49))
+
 ### [0.0.1-alpha.32](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.31...v0.0.1-alpha.32) (2023-06-04)
 
 

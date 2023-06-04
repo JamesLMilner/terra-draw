@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.1-alpha.32](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.31...v0.0.1-alpha.32) (2023-06-04)
+
+
+### Features
+
+* add the addFeatures method to allow adding of external data ([b6e0043](https://github.com/JamesLMilner/terra-draw/commit/b6e004377f1baff78e01f9324413469677f2df5b))
+
+
+### Chore
+
+* update docs ([36997cc](https://github.com/JamesLMilner/terra-draw/commit/36997cc7c7071af1af1a27ad457cab0361f3e5e9))
+
 ### [0.0.1-alpha.31](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.30...v0.0.1-alpha.31) (2023-05-22)
 
 

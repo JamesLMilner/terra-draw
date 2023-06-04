@@ -24,25 +24,22 @@ function isObject(
 	);
 }
 
-function hasTracked(feature: GeoJSONStoreFeatures): boolean {
-	if (
-		isNaN(new Date(feature.properties.createdAt as number).valueOf()) ||
-		isNaN(new Date(feature.properties.updatedAt as number).valueOf())
-	) {
+function dateIsValid(timestamp: unknown): boolean {
+	return (
+		typeof timestamp === "number" &&
+		!isNaN(new Date(timestamp as number).valueOf())
+	);
+}
+
+export function isValidTimestamp(timestamp: unknown): boolean {
+	if (!dateIsValid(timestamp)) {
 		throw new Error(StoreValidationErrors.InvalidTrackedProperties);
 	}
 
 	return true;
 }
 
-function hasMode(feature: GeoJSONStoreFeatures): boolean {
-	if (!feature.properties.mode || typeof feature.properties.mode !== "string") {
-		throw new Error(StoreValidationErrors.InvalidModeProperty);
-	}
-	return true;
-}
-
-function isValidStoreFeature(
+export function isValidStoreFeature(
 	feature: unknown
 ): feature is GeoJSONStoreFeatures {
 	let error;
@@ -63,6 +60,11 @@ function isValidStoreFeature(
 		error = StoreValidationErrors.FeatureGeometryNotSupported;
 	} else if (!Array.isArray(feature.geometry.coordinates)) {
 		error = StoreValidationErrors.FeatureCoordinatesNotAnArray;
+	} else if (
+		!feature.properties.mode ||
+		typeof feature.properties.mode !== "string"
+	) {
+		throw new Error(StoreValidationErrors.InvalidModeProperty);
 	}
 
 	if (error) {
@@ -70,13 +72,4 @@ function isValidStoreFeature(
 	}
 
 	return true;
-}
-
-export function validateStoreFeature(feature: unknown, tracked?: boolean) {
-	if (isValidStoreFeature(feature)) {
-		if (tracked) {
-			hasTracked(feature);
-		}
-		hasMode(feature);
-	}
 }

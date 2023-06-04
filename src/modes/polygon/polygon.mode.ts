@@ -16,6 +16,7 @@ import { coordinatesIdentical } from "../../geometry/coordinates-identical";
 import { ClosingPointsBehavior } from "./behaviors/closing-points.behavior";
 import { getDefaultStyling } from "../../util/styling";
 import { GeoJSONStoreFeatures } from "../../store/store";
+import { isValidPolygonFeature } from "../../geometry/boolean/is-valid-polygon-feature";
 
 type TerraDrawPolygonModeKeyEvents = {
 	cancel?: KeyboardEvent["key"] | null;
@@ -483,5 +484,16 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 		}
 
 		return styles;
+	}
+
+	validateFeature(feature: unknown): feature is GeoJSONStoreFeatures {
+		if (super.validateFeature(feature)) {
+			return (
+				feature.properties.mode === this.mode &&
+				isValidPolygonFeature(feature, this.coordinatePrecision)
+			);
+		} else {
+			return false;
+		}
 	}
 }

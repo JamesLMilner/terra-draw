@@ -399,4 +399,16 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 
 		return styles;
 	}
+
+	validateFeature(feature: unknown): feature is GeoJSONStoreFeatures {
+		if (super.validateFeature(feature)) {
+			return (
+				feature.geometry.type === "LineString" &&
+				feature.properties.mode === this.mode &&
+				feature.geometry.coordinates.length >= 2
+			);
+		} else {
+			return false;
+		}
+	}
 }

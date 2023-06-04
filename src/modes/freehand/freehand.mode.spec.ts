@@ -503,4 +503,75 @@ describe("TerraDrawFreehandMode", () => {
 			});
 		});
 	});
+
+	describe("validateFeature", () => {
+		it("returns false for invalid freehand feature", () => {
+			const freehandMode = new TerraDrawFreehandMode({
+				styles: {
+					closingPointColor: "#ffffff",
+					closingPointOutlineWidth: 2,
+					closingPointWidth: 1,
+					closingPointOutlineColor: "#111111",
+				},
+			});
+
+			expect(
+				freehandMode.validateFeature({
+					id: "29da86c2-92e2-4095-a1b3-22103535ebfa",
+					type: "Feature",
+					geometry: {
+						type: "Polygon",
+						coordinates: [[]],
+					},
+					properties: {
+						mode: "circle",
+						createdAt: 1685568434891,
+						updatedAt: 1685568435434,
+					},
+				})
+			).toBe(false);
+		});
+
+		it("returns true for valid freehand feature", () => {
+			const freehandMode = new TerraDrawFreehandMode({
+				styles: {
+					closingPointColor: "#ffffff",
+					closingPointOutlineWidth: 2,
+					closingPointWidth: 1,
+					closingPointOutlineColor: "#111111",
+				},
+			});
+
+			expect(
+				freehandMode.validateFeature({
+					id: "ddfa9367-3151-48b1-a7b2-c8ed3c0222db",
+					type: "Feature",
+					geometry: {
+						type: "Polygon",
+						coordinates: [
+							[
+								[-0.120849609, 52.348763182],
+								[-0.120849609, 52.348763182],
+								[-0.120849609, 52.348763182],
+								[-0.197753906, 52.207606673],
+								[-0.197753906, 52.072753654],
+								[-0.043945312, 51.951036645],
+								[0.186767578, 51.957807389],
+								[0.362548828, 52.066000283],
+								[0.373535156, 52.214338608],
+								[0.208740234, 52.308478624],
+								[-0.021972656, 52.315195264],
+								[-0.120849609, 52.348763182],
+							],
+						],
+					},
+					properties: {
+						mode: "freehand",
+						createdAt: 1685569592712,
+						updatedAt: 1685569593386,
+					},
+				})
+			).toBe(true);
+		});
+	});
 });

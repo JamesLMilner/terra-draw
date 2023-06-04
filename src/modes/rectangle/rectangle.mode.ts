@@ -1,4 +1,4 @@
-import { Position } from "geojson";
+import { Feature, Polygon, Position } from "geojson";
 import {
 	TerraDrawMouseEvent,
 	TerraDrawAdapterStyling,
@@ -8,6 +8,7 @@ import {
 import { GeoJSONStoreFeatures } from "../../store/store";
 import { getDefaultStyling } from "../../util/styling";
 import { TerraDrawBaseDrawMode } from "../base.mode";
+import { isValidNonIntersectingPolygonFeature } from "../../geometry/boolean/is-valid-polygon-feature";
 
 type TerraDrawRectangleModeKeyEvents = {
 	cancel: KeyboardEvent["key"] | null;
@@ -196,5 +197,16 @@ export class TerraDrawRectangleMode extends TerraDrawBaseDrawMode<RectanglePolyg
 		}
 
 		return styles;
+	}
+
+	validateFeature(feature: unknown): feature is GeoJSONStoreFeatures {
+		if (super.validateFeature(feature)) {
+			return (
+				feature.properties.mode === this.mode &&
+				isValidNonIntersectingPolygonFeature(feature, this.coordinatePrecision)
+			);
+		} else {
+			return false;
+		}
 	}
 }

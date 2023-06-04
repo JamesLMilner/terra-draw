@@ -65,18 +65,12 @@ class TerraDraw {
 	constructor(options: {
 		adapter: TerraDrawAdapter;
 		modes: { [mode: string]: TerraDrawBaseDrawMode<any> };
-		data?: GeoJSONStoreFeatures[];
 	}) {
 		this._adapter = options.adapter;
 		this._mode = new TerraDrawStaticMode();
 		this._modes = { ...options.modes, static: this._mode };
 		this._eventListeners = { change: [], select: [], deselect: [], finish: [] };
-
-		if (options.data) {
-			this._store = new GeoJSONStore({ data: options.data });
-		} else {
-			this._store = new GeoJSONStore();
-		}
+		this._store = new GeoJSONStore();
 
 		const getChanged = (
 			ids: string[]
@@ -197,31 +191,6 @@ class TerraDraw {
 				onFinish: onFinish,
 			});
 		});
-
-		// If we pass in data, we want to render it on startup
-		if (options.data) {
-			// Remove all non mode features
-			const initialRender = this._store.copyAll().filter((feature) => {
-				if (
-					feature.properties &&
-					!Object.keys(this._modes).includes(feature.properties.mode as string)
-				) {
-					this._store.delete([feature.id as string]);
-					return false;
-				}
-				return true;
-			});
-
-			this._adapter.render(
-				{
-					created: initialRender,
-					deletedIds: [],
-					unchanged: [],
-					updated: [],
-				},
-				this.getModeStyles()
-			);
-		}
 	}
 
 	private checkEnabled() {
@@ -337,6 +306,53 @@ class TerraDraw {
 			// If the mode doesn't exist, we throw an error
 			throw new Error("No mode with this name present");
 		}
+	}
+
+	/**
+	 * A method for adding features to the store. This method will validate the features.
+	 * Features must match one of the modes enabled in the instance.
+	 * @param mode
+	 * @param features
+	 * @returns
+	 *
+	 * @alpha
+	 */
+	addFeatures(features: GeoJSONStoreFeatures[]) {
+		this.checkEnabled();
+
+		if (features.length === 0) {
+			return;
+		}
+
+		this._store.load(features, (feature) => {
+			const hasModeProperty = Boolean(
+				feature &&
+					typeof feature === "object" &&
+					"properties" in feature &&
+					typeof feature.properties === "object" &&
+					feature.properties !== null &&
+					"mode" in feature.properties
+			);
+
+			if (hasModeProperty) {
+				const modeToAddTo =
+					this._modes[
+						(feature as { properties: { mode: string } }).properties.mode
+					];
+
+				// if the mode does not exist, we return false
+				if (!modeToAddTo) {
+					return false;
+				}
+
+				// use the inbuilt validation of the mode
+				const validation = modeToAddTo.validateFeature.bind(modeToAddTo);
+				return validation(feature);
+			}
+
+			// If the feature does not have a mode property, we return false
+			return false;
+		});
 	}
 
 	/**

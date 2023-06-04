@@ -451,4 +451,67 @@ describe("TerraDrawRectangleMode", () => {
 			}).not.toThrowError();
 		});
 	});
+
+	describe("validateFeature", () => {
+		it("returns false for invalid rectangle feature", () => {
+			const polygonMode = new TerraDrawRectangleMode({
+				styles: {
+					fillColor: "#ffffff",
+					outlineColor: "#ffffff",
+					outlineWidth: 2,
+					fillOpacity: 0.5,
+				},
+			});
+
+			expect(
+				polygonMode.validateFeature({
+					id: "29da86c2-92e2-4095-a1b3-22103535ebfa",
+					type: "Feature",
+					geometry: {
+						type: "Polygon",
+						coordinates: [[]],
+					},
+					properties: {
+						mode: "circle",
+						createdAt: 1685568434891,
+						updatedAt: 1685568435434,
+					},
+				})
+			).toBe(false);
+		});
+
+		it("returns false for self intersecting polygon feature", () => {
+			const polygonMode = new TerraDrawRectangleMode({
+				styles: {
+					fillColor: "#ffffff",
+					outlineColor: "#ffffff",
+					outlineWidth: 2,
+					fillOpacity: 0.5,
+				},
+			});
+
+			expect(
+				polygonMode.validateFeature({
+					id: "66608334-7cf1-4f9e-a7f9-75e5ac135e68",
+					type: "Feature",
+					geometry: {
+						type: "Polygon",
+						coordinates: [
+							[32.444491568083606, 14.505420356577304],
+							[30.307948144285064, 14.505420356577304],
+							[34.06410625175073, 12.956749504791858],
+							[30.307948144285064, 11.633717129582067],
+							[32.444491568083606, 11.633717129582067],
+							[32.444491568083606, 14.505420356577304],
+						],
+					},
+					properties: {
+						mode: "rectangle",
+						createdAt: 1685655516297,
+						updatedAt: 1685655518118,
+					},
+				})
+			).toBe(false);
+		});
+	});
 });

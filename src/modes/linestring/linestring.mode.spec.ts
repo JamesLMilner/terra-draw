@@ -754,4 +754,57 @@ describe("TerraDrawLineStringMode", () => {
 			});
 		});
 	});
+
+	describe("validateFeature", () => {
+		it("returns false for invalid linestring feature", () => {
+			const lineStringMode = new TerraDrawLineStringMode({
+				styles: {
+					lineStringColor: "#ffffff",
+				},
+			});
+
+			expect(
+				lineStringMode.validateFeature({
+					id: "ed030248-d7ee-45a2-b8e8-37ad2f622509",
+					type: "Feature",
+					geometry: {
+						type: "LineString",
+						coordinates: [],
+					},
+					properties: {
+						mode: "linestring",
+						createdAt: 1685654949450,
+						updatedAt: 1685654950609,
+					},
+				})
+			).toBe(false);
+		});
+
+		it("returns true for valid linestring feature", () => {
+			const lineStringMode = new TerraDrawLineStringMode({
+				styles: {
+					lineStringColor: "#ffffff",
+				},
+			});
+
+			expect(
+				lineStringMode.validateFeature({
+					id: "ed030248-d7ee-45a2-b8e8-37ad2f622509",
+					type: "Feature",
+					geometry: {
+						type: "LineString",
+						coordinates: [
+							[-2.329101563, 51.392350875],
+							[-0.439453125, 52.52290594],
+						],
+					},
+					properties: {
+						mode: "linestring",
+						createdAt: 1685654949450,
+						updatedAt: 1685654950609,
+					},
+				})
+			).toBe(true);
+		});
+	});
 });

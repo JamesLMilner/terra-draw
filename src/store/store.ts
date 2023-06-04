@@ -1,6 +1,7 @@
 import { Feature, Point, Polygon, LineString } from "geojson";
 import { uuid4 } from "../util/id";
 import { SpatialIndex } from "./spatial-index/spatial-index";
+import { isValidTimestamp } from "./store-feature-validation";
 
 type JSON = string | number | boolean | null | JSONArray | JSONObject;
 
@@ -28,9 +29,7 @@ export type StoreChangeHandler = (
 ) => void;
 
 export type GeoJSONStoreConfig = {
-	data?: GeoJSONStoreFeatures[];
 	tracked?: boolean;
-	validateFeature?: (feature: unknown, tracked?: boolean) => void;
 };
 
 export class GeoJSONStore {
@@ -41,10 +40,6 @@ export class GeoJSONStore {
 		// Setting tracked has to happen first
 		// because we use it in featureValidation
 		this.tracked = config && config.tracked === false ? false : true;
-
-		if (config && config.data) {
-			this.load(config.data, config.validateFeature);
-		}
 	}
 
 	private tracked: boolean;
@@ -72,7 +67,7 @@ export class GeoJSONStore {
 
 	load(
 		data: GeoJSONStoreFeatures[],
-		featureValidation?: (feature: unknown, tracked?: boolean) => void
+		featureValidation?: (feature: unknown, tracked?: boolean) => boolean
 	) {
 		if (data.length === 0) {
 			return;
@@ -91,10 +86,14 @@ export class GeoJSONStore {
 			if (this.tracked) {
 				if (!feature.properties.createdAt) {
 					feature.properties.createdAt = +new Date();
+				} else {
+					isValidTimestamp(feature.properties.createdAt);
 				}
 
 				if (!feature.properties.updatedAt) {
 					feature.properties.updatedAt = +new Date();
+				} else {
+					isValidTimestamp(feature.properties.updatedAt);
 				}
 			}
 		});
@@ -102,7 +101,15 @@ export class GeoJSONStore {
 		const changes: string[] = [];
 		clonedData.forEach((feature) => {
 			if (featureValidation) {
-				featureValidation(feature);
+				const isValid = featureValidation(feature);
+
+				// Generic error handling if the featureValidation function
+				// does not throw something more specific itself
+				if (!isValid) {
+					throw new Error(
+						`Feature is not ${feature.id} valid: ${JSON.stringify(feature)}`
+					);
+				}
 			}
 			this.store[feature.id as string] = feature;
 			changes.push(feature.id as string);

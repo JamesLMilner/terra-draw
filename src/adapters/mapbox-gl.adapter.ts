@@ -169,6 +169,46 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawBaseAdapter {
 		return id;
 	}
 
+	private getEmptyGeometries(): {
+		points: GeoJSONStoreFeatures[];
+		linestrings: GeoJSONStoreFeatures[];
+		polygons: GeoJSONStoreFeatures[];
+	} {
+		return {
+			points: [],
+			linestrings: [],
+			polygons: [],
+		};
+	}
+
+	private changedIds: {
+		deletion: boolean;
+		points: boolean;
+		linestrings: boolean;
+		polygons: boolean;
+	} = {
+		deletion: false,
+		points: false,
+		linestrings: false,
+		polygons: false,
+	};
+
+	private updateChangedIds(changes: TerraDrawChanges) {
+		[...changes.updated, ...changes.created].forEach((feature) => {
+			if (feature.geometry.type === "Point") {
+				this.changedIds.points = true;
+			} else if (feature.geometry.type === "LineString") {
+				this.changedIds.linestrings = true;
+			} else if (feature.geometry.type === "Polygon") {
+				this.changedIds.polygons = true;
+			}
+		});
+
+		if (changes.deletedIds.length > 0) {
+			this.changedIds.deletion = true;
+		}
+	}
+
 	/**
 	 * Returns the longitude and latitude coordinates from a given PointerEvent on the map.
 	 * @param event The PointerEvent or MouseEvent  containing the screen coordinates of the pointer.
@@ -250,6 +290,8 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawBaseAdapter {
 	 * @param styling An object mapping draw modes to feature styling functions
 	 */
 	public render(changes: TerraDrawChanges, styling: TerraDrawStylingFunction) {
+		this.updateChangedIds(changes);
+
 		if (this._nextRender) {
 			cancelAnimationFrame(this._nextRender);
 		}
@@ -261,24 +303,6 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawBaseAdapter {
 		this._nextRender = requestAnimationFrame(() => {
 			// Get a map of the changed feature IDs by geometry type
 			// We use this to determine which MB layers need to be updated
-			const changedIds: {
-				points: string[];
-				linestrings: string[];
-				polygons: string[];
-			} = {
-				points: [],
-				linestrings: [],
-				polygons: [],
-			};
-			[...changes.updated, ...changes.created].forEach((feature) => {
-				if (feature.geometry.type === "Point") {
-					changedIds.points.push(feature.id as string);
-				} else if (feature.geometry.type === "LineString") {
-					changedIds.linestrings.push(feature.id as string);
-				} else if (feature.geometry.type === "Polygon") {
-					changedIds.polygons.push(feature.id as string);
-				}
-			});
 
 			const features = [
 				...changes.created,
@@ -286,15 +310,7 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawBaseAdapter {
 				...changes.unchanged,
 			];
 
-			const geometryFeatures: {
-				points: GeoJSONStoreFeatures[];
-				linestrings: GeoJSONStoreFeatures[];
-				polygons: GeoJSONStoreFeatures[];
-			} = {
-				points: [],
-				linestrings: [],
-				polygons: [],
-			};
+			const geometryFeatures = this.getEmptyGeometries();
 
 			for (let i = 0; i < features.length; i++) {
 				const feature = features[i];
@@ -347,13 +363,13 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawBaseAdapter {
 			} else {
 				// If deletion occured we always have to update all layers
 				// as we don't know the type (TODO: perhaps we could pass that back?)
-				const deletionOccured = changes.deletedIds.length > 0;
+				const deletionOccured = this.changedIds.deletion;
 
 				// Determine if we need to update each layer by geometry type
-				const updatePoints = deletionOccured || changedIds.points.length;
+				const updatePoints = deletionOccured || this.changedIds.points;
 				const updateLineStrings =
-					deletionOccured || changedIds.linestrings.length;
-				const updatedPolygon = deletionOccured || changedIds.polygons.length;
+					deletionOccured || this.changedIds.linestrings;
+				const updatedPolygon = deletionOccured || this.changedIds.polygons;
 
 				let pointId;
 				if (updatePoints) {
@@ -383,19 +399,14 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawBaseAdapter {
 				// Ensure selection/mid points are rendered on top
 				pointId && this._map.moveLayer(pointId);
 			}
-			// });
 
-			// TODO: Figure out why this was added?
-			// Probably to do with forcing style changes?
-			// if ((this._map as any).style) {
-			//     // cancel the scheduled update
-			//     if ((this._map as any)._frame) {
-			//         (this._map as any)._frame.cancel();
-			//         (this._map as any)._frame = null;
-			//     }
-			//     (this._map as any)._render();
-			// }
-			// this._nextRender = undefined;
+			// Reset changed ids
+			this.changedIds = {
+				points: false,
+				linestrings: false,
+				polygons: false,
+				deletion: false,
+			};
 		});
 	}
 

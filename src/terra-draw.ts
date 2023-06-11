@@ -309,6 +309,18 @@ class TerraDraw {
 	}
 
 	/**
+	 * A method for removing features to the store
+	 * @param ids
+	 * @returns
+	 *
+	 * @alpha
+	 */
+	removeFeatures(ids: string[]) {
+		this.checkEnabled();
+		this._store.delete(ids);
+	}
+
+	/**
 	 * A method for adding features to the store. This method will validate the features.
 	 * Features must match one of the modes enabled in the instance.
 	 * @param mode

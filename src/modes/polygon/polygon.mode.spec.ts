@@ -288,9 +288,7 @@ describe("TerraDrawPolygonMode", () => {
 				heldKeys: [],
 			});
 
-			// 6 times for the polygon and
-			// 2 times for the closing points
-			expect(onChange).toBeCalledTimes(8);
+			expect(onChange).toBeCalledTimes(7);
 
 			// 1 times for the polygon
 			// 2 times for the closing points
@@ -829,14 +827,14 @@ describe("TerraDrawPolygonMode", () => {
 			project.mockReturnValueOnce({ x: 0, y: 0 });
 
 			polygonMode.onMouseMove(thirdPoint);
-			expect(store.updateGeometry).toBeCalledTimes(8);
+			expect(store.updateGeometry).toBeCalledTimes(7);
 
 			// We have to mock project in the final block
 			project.mockReturnValueOnce({ x: 100, y: 100 });
 			project.mockReturnValueOnce({ x: 100, y: 100 });
 
 			polygonMode.onClick(thirdPoint);
-			expect(store.updateGeometry).toBeCalledTimes(8);
+			expect(store.updateGeometry).toBeCalledTimes(7);
 		});
 
 		it("does not create a polygon line if it has intersections and allowSelfIntersections is false", () => {

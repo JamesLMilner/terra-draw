@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.1-alpha.34](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.33...v0.0.1-alpha.34) (2023-06-11)
+
+
+### Features
+
+* add removeFeatures method to terra draw API ([b0999d2](https://github.com/JamesLMilner/terra-draw/commit/b0999d25ce0970852aa230181b9a949589e7b6d2))
+
+
+### Bug Fixes
+
+* don't update closing points on mouse move ([c2b7ce8](https://github.com/JamesLMilner/terra-draw/commit/c2b7ce8fdc0260fc09e84b3372cb4101c6f6564e))
+* fix issue with mapboxgl adapter where geometry renders were lost ([bc1a937](https://github.com/JamesLMilner/terra-draw/commit/bc1a9371d92871c8b5b4fe29fb07b53c0e78c99f))
+* for mapbox/maplibre adapter, only update data for layers that have changes ([a3f5c8a](https://github.com/JamesLMilner/terra-draw/commit/a3f5c8a742e76f23634a79346d2797f44927fb95))
+
+
+### Chore
+
+* update docs ([701a66a](https://github.com/JamesLMilner/terra-draw/commit/701a66a0243ecdccf448b59cfbe90ed9474253db))
+
 ### [0.0.1-alpha.33](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.32...v0.0.1-alpha.33) (2023-06-04)
 
 

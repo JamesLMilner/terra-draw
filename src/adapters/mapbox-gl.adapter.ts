@@ -259,6 +259,27 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawBaseAdapter {
 		// frame bucket (16ms)
 
 		this._nextRender = requestAnimationFrame(() => {
+			// Get a map of the changed feature IDs by geometry type
+			// We use this to determine which MB layers need to be updated
+			const changedIds: {
+				points: string[];
+				linestrings: string[];
+				polygons: string[];
+			} = {
+				points: [],
+				linestrings: [],
+				polygons: [],
+			};
+			[...changes.updated, ...changes.created].forEach((feature) => {
+				if (feature.geometry.type === "Point") {
+					changedIds.points.push(feature.id as string);
+				} else if (feature.geometry.type === "LineString") {
+					changedIds.linestrings.push(feature.id as string);
+				} else if (feature.geometry.type === "Polygon") {
+					changedIds.polygons.push(feature.id as string);
+				}
+			});
+
 			const features = [
 				...changes.created,
 				...changes.updated,
@@ -277,6 +298,9 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawBaseAdapter {
 
 			for (let i = 0; i < features.length; i++) {
 				const feature = features[i];
+
+				if (feature.geometry.type === "Point") {
+				}
 
 				Object.keys(styling).forEach((mode) => {
 					const { properties } = feature;
@@ -321,25 +345,32 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawBaseAdapter {
 				);
 				this._rendered = true;
 			} else {
+				// If deletion occured we always have to update all layers
+				// as we don't know the type (TODO: perhaps we could pass that back?)
 				const deletionOccured = changes.deletedIds.length > 0;
 
-				let pointId;
+				// Determine if we need to update each layer by geometry type
+				const updatePoints = deletionOccured || changedIds.points.length;
+				const updateLineStrings =
+					deletionOccured || changedIds.linestrings.length;
+				const updatedPolygon = deletionOccured || changedIds.polygons.length;
 
-				if (deletionOccured || points.length) {
+				let pointId;
+				if (updatePoints) {
 					pointId = this._setGeoJSONLayerData<Point>(
 						"Point",
 						points as Feature<Point>[]
 					);
 				}
 
-				if (deletionOccured || linestrings.length) {
+				if (updateLineStrings) {
 					this._setGeoJSONLayerData<LineString>(
 						"LineString",
 						linestrings as Feature<LineString>[]
 					);
 				}
 
-				if (deletionOccured || polygons.length) {
+				if (updatedPolygon) {
 					this._setGeoJSONLayerData<Polygon>(
 						"Polygon",
 						polygons as Feature<Polygon>[]

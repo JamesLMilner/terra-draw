@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.1-alpha.35](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.34...v0.0.1-alpha.35) (2023-06-13)
+
+
+### Bug Fixes
+
+* fix clearLayers not working correctly for mapbox/maplibre adapters ([f80db0e](https://github.com/JamesLMilner/terra-draw/commit/f80db0e4162826c6d9d4ef817de76b25fdaf80f1))
+* fix failing polygon mode unit test ([65ba076](https://github.com/JamesLMilner/terra-draw/commit/65ba076741e610a1b9c9eaa6baa5d71d4a1a85b8))
+* fix styling issues for polygon and select modes ([d8e852c](https://github.com/JamesLMilner/terra-draw/commit/d8e852cbac3f76dfbc3dabc09d1aa4d0cc541ca3))
+
 ### [0.0.1-alpha.34](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.33...v0.0.1-alpha.34) (2023-06-11)
 
 

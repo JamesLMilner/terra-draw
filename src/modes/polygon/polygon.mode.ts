@@ -469,11 +469,17 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 				styles.zIndex = 10;
 				return styles;
 			} else if (feature.geometry.type === "Point") {
-				styles.pointWidth = this.styles.closingPointWidth || styles.pointWidth;
+				styles.pointWidth =
+					this.styles.closingPointWidth !== undefined
+						? this.styles.closingPointWidth
+						: styles.pointWidth;
 				styles.pointColor = this.styles.closingPointColor || styles.pointColor;
 				styles.pointOutlineColor =
 					this.styles.closingPointOutlineColor || "#ffffff";
-				styles.pointOutlineWidth = this.styles.closingPointOutlineWidth || 2;
+				styles.pointOutlineWidth =
+					this.styles.closingPointOutlineWidth !== undefined
+						? this.styles.closingPointOutlineWidth
+						: 2;
 				styles.zIndex = 30;
 				return styles;
 			}

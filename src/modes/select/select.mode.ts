@@ -607,8 +607,13 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode<SelectionStyling>
 					styles.pointOutlineColor =
 						this.styles.selectionPointOutlineColor || styles.pointOutlineColor;
 					styles.pointWidth =
-						this.styles.selectionPointWidth || styles.pointWidth;
-					styles.pointOutlineWidth = this.styles.midPointOutlineWidth || 2;
+						this.styles.selectionPointWidth !== undefined
+							? this.styles.selectionPointWidth
+							: styles.pointWidth;
+					styles.pointOutlineWidth =
+						this.styles.selectPointOutlineWidth !== undefined
+							? this.styles.selectPointOutlineWidth
+							: 2;
 					styles.zIndex = 30;
 
 					return styles;
@@ -618,8 +623,14 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode<SelectionStyling>
 					styles.pointColor = this.styles.midPointColor || styles.pointColor;
 					styles.pointOutlineColor =
 						this.styles.midPointOutlineColor || styles.pointOutlineColor;
-					styles.pointWidth = this.styles.midPointWidth || 4;
-					styles.pointOutlineWidth = this.styles.midPointOutlineWidth || 2;
+					styles.pointWidth =
+						this.styles.midPointWidth !== undefined
+							? this.styles.midPointWidth
+							: 4;
+					styles.pointOutlineWidth =
+						this.styles.midPointOutlineWidth !== undefined
+							? this.styles.midPointOutlineWidth
+							: 2;
 					styles.zIndex = 40;
 
 					return styles;

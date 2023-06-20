@@ -336,7 +336,11 @@ describe("TerraDrawFreehandMode", () => {
 
 		describe("cancel", () => {
 			it("does nothing when no freehand is present", () => {
-				freehandMode.onKeyUp({ key: "Escape" });
+				freehandMode.onKeyUp({
+					key: "Escape",
+					heldKeys: [],
+					preventDefault: jest.fn(),
+				});
 			});
 
 			it("deletes the freehand when currently editing", () => {
@@ -352,7 +356,11 @@ describe("TerraDrawFreehandMode", () => {
 				let features = store.copyAll();
 				expect(features.length).toBe(2);
 
-				freehandMode.onKeyUp({ key: "Escape" });
+				freehandMode.onKeyUp({
+					key: "Escape",
+					heldKeys: [],
+					preventDefault: jest.fn(),
+				});
 
 				features = store.copyAll();
 				expect(features.length).toBe(0);
@@ -380,7 +388,11 @@ describe("TerraDrawFreehandMode", () => {
 				let features = store.copyAll();
 				expect(features.length).toBe(2);
 
-				freehandMode.onKeyUp({ key: "Escape" });
+				freehandMode.onKeyUp({
+					key: "Escape",
+					heldKeys: [],
+					preventDefault: jest.fn(),
+				});
 
 				features = store.copyAll();
 				expect(features.length).toBe(2);
@@ -403,6 +415,8 @@ describe("TerraDrawFreehandMode", () => {
 
 				freehandMode.onKeyUp({
 					key: "Enter",
+					heldKeys: [],
+					preventDefault: jest.fn(),
 				});
 
 				features = store.copyAll();

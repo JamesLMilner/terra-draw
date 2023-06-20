@@ -23,8 +23,8 @@ import { getDefaultStyling } from "../../util/styling";
 type TerraDrawSelectModeKeyEvents = {
 	deselect: KeyboardEvent["key"] | null;
 	delete: KeyboardEvent["key"] | null;
-	rotate: KeyboardEvent["key"] | null;
-	scale: KeyboardEvent["key"] | null;
+	rotate: KeyboardEvent["key"][] | null;
+	scale: KeyboardEvent["key"][] | null;
 };
 
 type ModeFlags = {
@@ -99,8 +99,8 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode<SelectionStyling>
 			const defaultKeyEvents = {
 				deselect: "Escape",
 				delete: "Delete",
-				rotate: "r",
-				scale: "s",
+				rotate: ["Control", "r"],
+				scale: ["Control", "s"],
 			};
 			this.keyEvents =
 				options && options.keyEvents
@@ -404,12 +404,40 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode<SelectionStyling>
 		}
 	}
 
+	private canScale(event: TerraDrawKeyboardEvent | TerraDrawMouseEvent) {
+		return (
+			this.keyEvents.scale &&
+			this.keyEvents.scale.every((key) => event.heldKeys.includes(key))
+		);
+	}
+
+	private canRotate(event: TerraDrawKeyboardEvent | TerraDrawMouseEvent) {
+		return (
+			this.keyEvents.rotate &&
+			this.keyEvents.rotate.every((key) => event.heldKeys.includes(key))
+		);
+	}
+
+	private preventDefaultKeyEvent(event: TerraDrawKeyboardEvent) {
+		const isRotationKeys = this.canRotate(event);
+		const isScaleKeys = this.canScale(event);
+
+		// If we are deliberately rotating or scaling then prevent default
+		if (isRotationKeys || isScaleKeys) {
+			event.preventDefault();
+		}
+	}
+
 	/** @internal */
-	onKeyDown() {}
+	onKeyDown(event: TerraDrawKeyboardEvent) {
+		this.preventDefaultKeyEvent(event);
+	}
 
 	/** @internal */
 	onKeyUp(event: TerraDrawKeyboardEvent) {
-		if (event.key === this.keyEvents.delete) {
+		this.preventDefaultKeyEvent(event);
+
+		if (this.keyEvents.delete && event.key === this.keyEvents.delete) {
 			if (!this.selected.length) {
 				return;
 			}
@@ -426,7 +454,10 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode<SelectionStyling>
 			// Remove all selection points
 			this.selectionPoints.delete();
 			this.midPoints.delete();
-		} else if (event.key === this.keyEvents.deselect) {
+		} else if (
+			this.keyEvents.deselect &&
+			event.key === this.keyEvents.deselect
+		) {
 			this.cleanUp();
 		}
 	}
@@ -498,7 +529,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode<SelectionStyling>
 			modeFlags &&
 			modeFlags.feature &&
 			modeFlags.feature.rotateable &&
-			event.heldKeys.includes("r")
+			this.canRotate(event)
 		) {
 			this.rotateFeature.rotate(event, selectedId);
 			return;
@@ -509,7 +540,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode<SelectionStyling>
 			modeFlags &&
 			modeFlags.feature &&
 			modeFlags.feature.scaleable &&
-			event.heldKeys.includes("s")
+			this.canScale(event)
 		) {
 			this.scaleFeature.scale(event, selectedId);
 			return;

@@ -446,7 +446,11 @@ describe("TerraDrawLineStringMode", () => {
 
 		describe("cancel", () => {
 			it("does nothing when no line is present", () => {
-				lineStringMode.onKeyUp({ key: "Escape" });
+				lineStringMode.onKeyUp({
+					key: "Escape",
+					preventDefault: jest.fn(),
+					heldKeys: [],
+				});
 			});
 
 			it("deletes the line when currently editing", () => {
@@ -462,7 +466,11 @@ describe("TerraDrawLineStringMode", () => {
 				let features = store.copyAll();
 				expect(features.length).toBe(1);
 
-				lineStringMode.onKeyUp({ key: "Escape" });
+				lineStringMode.onKeyUp({
+					key: "Escape",
+					preventDefault: jest.fn(),
+					heldKeys: [],
+				});
 
 				features = store.copyAll();
 				expect(features.length).toBe(0);
@@ -538,6 +546,8 @@ describe("TerraDrawLineStringMode", () => {
 
 				lineStringMode.onKeyUp({
 					key: "Enter",
+					preventDefault: jest.fn(),
+					heldKeys: [],
 				});
 
 				expect(onChange).toBeCalledTimes(8);
@@ -636,6 +646,8 @@ describe("TerraDrawLineStringMode", () => {
 
 				lineStringMode.onKeyUp({
 					key: "Enter",
+					preventDefault: jest.fn(),
+					heldKeys: [],
 				});
 
 				expect(onChange).toBeCalledTimes(6);

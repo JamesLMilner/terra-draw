@@ -36,6 +36,8 @@ export interface TerraDrawMouseEvent {
 
 export interface TerraDrawKeyboardEvent {
 	key: string;
+	heldKeys: string[];
+	preventDefault: () => void;
 }
 
 export type SetCursor = (

@@ -222,6 +222,8 @@ describe("TerraDrawCircleMode", () => {
 
 			circleMode.onKeyUp({
 				key: "Enter",
+				heldKeys: [],
+				preventDefault: jest.fn(),
 			});
 
 			features = store.copyAll();
@@ -356,7 +358,11 @@ describe("TerraDrawCircleMode", () => {
 
 		describe("cancel", () => {
 			it("does nothing when no circle is present", () => {
-				circleMode.onKeyUp({ key: "Escape" });
+				circleMode.onKeyUp({
+					key: "Escape",
+					heldKeys: [],
+					preventDefault: jest.fn(),
+				});
 			});
 
 			it("deletes the circle when currently editing", () => {
@@ -372,7 +378,11 @@ describe("TerraDrawCircleMode", () => {
 				let features = store.copyAll();
 				expect(features.length).toBe(1);
 
-				circleMode.onKeyUp({ key: "Escape" });
+				circleMode.onKeyUp({
+					key: "Escape",
+					heldKeys: [],
+					preventDefault: jest.fn(),
+				});
 
 				features = store.copyAll();
 				expect(features.length).toBe(0);
@@ -401,7 +411,11 @@ describe("TerraDrawCircleMode", () => {
 				let features = store.copyAll();
 				expect(features.length).toBe(1);
 
-				circleMode.onKeyUp({ key: "Escape" });
+				circleMode.onKeyUp({
+					key: "Escape",
+					heldKeys: [],
+					preventDefault: jest.fn(),
+				});
 
 				features = store.copyAll();
 				expect(features.length).toBe(1);

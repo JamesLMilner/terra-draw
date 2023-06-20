@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.1-alpha.36](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.35...v0.0.1-alpha.36) (2023-06-20)
+
+
+### Bug Fixes
+
+* ensure that preventDefault is only called when necessary for keyboard inputs ([108e20d](https://github.com/JamesLMilner/terra-draw/commit/108e20d8e6048cf7d1145c53e3bc4c7c227c8a19))
+
 ### [0.0.1-alpha.35](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.34...v0.0.1-alpha.35) (2023-06-13)
 
 

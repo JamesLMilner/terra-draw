@@ -218,6 +218,8 @@ describe("TerraDrawRectangleMode", () => {
 
 			rectangleMode.onKeyUp({
 				key: "Enter",
+				preventDefault: jest.fn(),
+				heldKeys: [],
 			});
 
 			rectangleMode.onClick({
@@ -262,6 +264,8 @@ describe("TerraDrawRectangleMode", () => {
 
 			rectangleMode.onKeyUp({
 				key: "Enter",
+				preventDefault: jest.fn(),
+				heldKeys: [],
 			});
 
 			features = store.copyAll();
@@ -398,7 +402,11 @@ describe("TerraDrawRectangleMode", () => {
 
 		describe("cancel", () => {
 			it("does nothing when no rectangle is present", () => {
-				rectangleMode.onKeyUp({ key: "Escape" });
+				rectangleMode.onKeyUp({
+					key: "Escape",
+					preventDefault: jest.fn(),
+					heldKeys: [],
+				});
 			});
 
 			it("deletes the rectangle when currently editing", () => {
@@ -414,7 +422,11 @@ describe("TerraDrawRectangleMode", () => {
 				let features = store.copyAll();
 				expect(features.length).toBe(1);
 
-				rectangleMode.onKeyUp({ key: "Escape" });
+				rectangleMode.onKeyUp({
+					key: "Escape",
+					preventDefault: jest.fn(),
+					heldKeys: [],
+				});
 
 				features = store.copyAll();
 				expect(features.length).toBe(0);

@@ -981,7 +981,11 @@ describe("TerraDrawPolygonMode", () => {
 
 		describe("cancel", () => {
 			it("does nothing when no line is present", () => {
-				polygonMode.onKeyUp({ key: "Escape" });
+				polygonMode.onKeyUp({
+					key: "Escape",
+					preventDefault: jest.fn(),
+					heldKeys: [],
+				});
 			});
 
 			it("deletes the line when currently editing", () => {
@@ -997,7 +1001,11 @@ describe("TerraDrawPolygonMode", () => {
 				let features = store.copyAll();
 				expect(features.length).toBe(1);
 
-				polygonMode.onKeyUp({ key: "Escape" });
+				polygonMode.onKeyUp({
+					key: "Escape",
+					preventDefault: jest.fn(),
+					heldKeys: [],
+				});
 
 				features = store.copyAll();
 				expect(features.length).toBe(0);
@@ -1025,7 +1033,11 @@ describe("TerraDrawPolygonMode", () => {
 				let features = store.copyAll();
 				expect(features.length).toBe(1);
 
-				polygonMode.onKeyUp({ key: "Escape" });
+				polygonMode.onKeyUp({
+					key: "Escape",
+					preventDefault: jest.fn(),
+					heldKeys: [],
+				});
 
 				features = store.copyAll();
 				expect(features.length).toBe(1);
@@ -1126,6 +1138,8 @@ describe("TerraDrawPolygonMode", () => {
 				// Finish drawing the polygon
 				polygonMode.onKeyUp({
 					key: "Enter",
+					preventDefault: jest.fn(),
+					heldKeys: [],
 				});
 
 				// Creates a new polygon
@@ -1228,6 +1242,8 @@ describe("TerraDrawPolygonMode", () => {
 
 			polygonMode.onKeyUp({
 				key: "Enter",
+				preventDefault: jest.fn(),
+				heldKeys: [],
 			});
 
 			const features = store.copyAll();

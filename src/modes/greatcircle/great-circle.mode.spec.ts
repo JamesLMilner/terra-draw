@@ -298,7 +298,11 @@ describe("TerraDrawGreatCircleMode", () => {
 
 		describe("cancel", () => {
 			it("does nothing when no line is present", () => {
-				greatCircleMode.onKeyUp({ key: "Escape" });
+				greatCircleMode.onKeyUp({
+					key: "Escape",
+					heldKeys: [],
+					preventDefault: jest.fn(),
+				});
 				expect(onChange).toBeCalledTimes(0);
 			});
 
@@ -315,7 +319,11 @@ describe("TerraDrawGreatCircleMode", () => {
 				let features = store.copyAll();
 				expect(features.length).toBe(2);
 
-				greatCircleMode.onKeyUp({ key: "Escape" });
+				greatCircleMode.onKeyUp({
+					key: "Escape",
+					heldKeys: [],
+					preventDefault: jest.fn(),
+				});
 
 				features = store.copyAll();
 				expect(features.length).toBe(0);
@@ -324,7 +332,11 @@ describe("TerraDrawGreatCircleMode", () => {
 
 		describe("finish", () => {
 			it("does nothing if no drawing is happening", () => {
-				greatCircleMode.onKeyUp({ key: "Enter" });
+				greatCircleMode.onKeyUp({
+					key: "Enter",
+					heldKeys: [],
+					preventDefault: jest.fn(),
+				});
 
 				expect(onChange).toBeCalledTimes(0);
 			});
@@ -361,7 +373,11 @@ describe("TerraDrawGreatCircleMode", () => {
 
 				expect(features[0].geometry.coordinates.length).toBe(100);
 
-				greatCircleMode.onKeyUp({ key: "Enter" });
+				greatCircleMode.onKeyUp({
+					key: "Enter",
+					heldKeys: [],
+					preventDefault: jest.fn(),
+				});
 
 				expect(onChange).toBeCalledTimes(5);
 				features = store.copyAll();
@@ -416,7 +432,11 @@ describe("TerraDrawGreatCircleMode", () => {
 
 				expect(features[0].geometry.coordinates.length).toBe(100);
 
-				greatCircleMode.onKeyUp({ key: "Enter" });
+				greatCircleMode.onKeyUp({
+					key: "Enter",
+					heldKeys: [],
+					preventDefault: jest.fn(),
+				});
 
 				expect(onChange).toBeCalledTimes(4);
 			});

@@ -123,8 +123,8 @@ describe("TerraDrawSelectMode", () => {
 				keyEvents: {
 					deselect: "Backspace",
 					delete: "d",
-					rotate: "r",
-					scale: "s",
+					rotate: ["r"],
+					scale: ["s"],
 				},
 			});
 		});
@@ -1463,7 +1463,11 @@ describe("TerraDrawSelectMode", () => {
 	describe("onKeyUp", () => {
 		describe("Delete", () => {
 			it("does nothing with no features selected", () => {
-				selectMode.onKeyUp({ key: "Delete" });
+				selectMode.onKeyUp({
+					key: "Delete",
+					preventDefault: jest.fn(),
+					heldKeys: ["Delete"],
+				});
 
 				expect(onChange).not.toBeCalled();
 				expect(onDeselect).not.toBeCalled();
@@ -1498,7 +1502,11 @@ describe("TerraDrawSelectMode", () => {
 
 				expect(onSelect).toBeCalledTimes(1);
 
-				selectMode.onKeyUp({ key: "Delete" });
+				selectMode.onKeyUp({
+					key: "Delete",
+					preventDefault: jest.fn(),
+					heldKeys: [],
+				});
 
 				expect(onDeselect).toBeCalledTimes(1);
 
@@ -1513,7 +1521,11 @@ describe("TerraDrawSelectMode", () => {
 
 		describe("Escape", () => {
 			it("does nothing with no features selected", () => {
-				selectMode.onKeyUp({ key: "Escape" });
+				selectMode.onKeyUp({
+					key: "Escape",
+					preventDefault: jest.fn(),
+					heldKeys: [],
+				});
 
 				expect(onChange).not.toBeCalled();
 				expect(onDeselect).not.toBeCalled();
@@ -1540,7 +1552,11 @@ describe("TerraDrawSelectMode", () => {
 
 				expect(onSelect).toBeCalledTimes(1);
 
-				selectMode.onKeyUp({ key: "Escape" });
+				selectMode.onKeyUp({
+					key: "Escape",
+					preventDefault: jest.fn(),
+					heldKeys: [],
+				});
 
 				expect(onChange).toBeCalledTimes(3);
 				expect(onDeselect).toBeCalledTimes(1);

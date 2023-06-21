@@ -237,8 +237,12 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawBaseAdapter {
 	 */
 	public setDraggability(enabled: boolean) {
 		if (enabled) {
+			// Mapbox GL has both drag rotation and drag panning interactions
+			// hence having to enable/disable both
+			this._map.dragRotate.enable();
 			this._map.dragPan.enable();
 		} else {
+			this._map.dragRotate.disable();
 			this._map.dragPan.disable();
 		}
 	}

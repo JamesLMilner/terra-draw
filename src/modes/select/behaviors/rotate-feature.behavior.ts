@@ -50,15 +50,11 @@ export class RotateFeatureBehavior extends TerraDrawModeBehavior {
 
 		transformRotate({ type: "Feature", geometry, properties: {} }, -angle);
 
-		let updatedCoords: Position[] | undefined;
-
-		if (geometry.type === "Polygon") {
-			updatedCoords = geometry.coordinates[0];
-		} else if (geometry.type === "LineString") {
-			updatedCoords = geometry.coordinates;
-		} else {
-			return;
-		}
+		// Coordinates are either polygon or linestring at this point
+		const updatedCoords: Position[] =
+			geometry.type === "Polygon"
+				? geometry.coordinates[0]
+				: geometry.coordinates;
 
 		// Ensure that coordinate precision is maintained
 		updatedCoords.forEach((coordinate) => {

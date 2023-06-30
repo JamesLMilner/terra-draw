@@ -402,7 +402,7 @@ describe("GeoJSONStore", () => {
 			}).toThrowError();
 		});
 
-		it("errors if feature createdAt and updatedAt are not valid numeric timestamps", () => {
+		it("errors if feature createdAt is not valid numeric timestamps", () => {
 			const store = new GeoJSONStore({ tracked: true });
 
 			expect(() => {
@@ -412,6 +412,24 @@ describe("GeoJSONStore", () => {
 						properties: {
 							mode: "point",
 							createdAt: new Date().toISOString(),
+						},
+						geometry: { type: "Point", coordinates: [0, 0] },
+					},
+				]);
+			}).toThrowError(StoreValidationErrors.InvalidTrackedProperties);
+		});
+
+		it("errors if feature createdAt is not valid numeric timestamps", () => {
+			const store = new GeoJSONStore({ tracked: true });
+
+			expect(() => {
+				store.load([
+					{
+						type: "Feature",
+						properties: {
+							mode: "point",
+							createdAt: +new Date(),
+							updatedAt: new Date().toISOString(),
 						},
 						geometry: { type: "Point", coordinates: [0, 0] },
 					},

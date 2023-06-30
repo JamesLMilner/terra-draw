@@ -9,7 +9,7 @@ import { limitPrecision } from "../limit-decimal-precision";
 // Based on Turf.js Circle module
 // https://github.com/Turfjs/turf/blob/master/packages/turf-circle/index.ts
 
-export function destination(
+function destination(
 	origin: Position,
 	distance: number,
 	bearing: number

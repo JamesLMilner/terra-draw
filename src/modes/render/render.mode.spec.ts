@@ -1,11 +1,17 @@
+import { HexColor } from "../../common";
 import { mockBehaviorConfig } from "../../test/mock-behavior-config";
 import { getMockModeConfig } from "../../test/mock-config";
+import {
+	createMockLineString,
+	createMockPoint,
+	createMockPolygonSquare,
+} from "../../test/mock-features";
 import { getDefaultStyling } from "../../util/styling";
 import { TerraDrawRenderMode } from "./render.mode";
 
 describe("TerraDrawRenderMode", () => {
 	const stylingOptions = {
-		styles: { ...getDefaultStyling(), selectedColor: "#ffffff" },
+		styles: { ...getDefaultStyling(), pointColor: "#12121" as HexColor },
 	};
 
 	describe("constructor", () => {
@@ -159,6 +165,34 @@ describe("TerraDrawRenderMode", () => {
 			expect(() => {
 				renderMode.onDragEnd();
 			}).not.toThrowError();
+		});
+	});
+
+	describe("styling", () => {
+		it("gets styling correctly", () => {
+			const renderMode = new TerraDrawRenderMode(stylingOptions);
+
+			expect(renderMode.styleFeature().pointColor).toEqual("#12121");
+		});
+	});
+
+	describe("validateFeature", () => {
+		it("validates points", () => {
+			const renderMode = new TerraDrawRenderMode(stylingOptions);
+
+			expect(renderMode.validateFeature(createMockPoint())).toBe(true);
+		});
+
+		it("validates linestrings", () => {
+			const renderMode = new TerraDrawRenderMode(stylingOptions);
+
+			expect(renderMode.validateFeature(createMockLineString())).toBe(true);
+		});
+
+		it("validates polygons", () => {
+			const renderMode = new TerraDrawRenderMode(stylingOptions);
+
+			expect(renderMode.validateFeature(createMockPolygonSquare())).toBe(true);
 		});
 	});
 });

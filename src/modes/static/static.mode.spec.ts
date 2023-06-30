@@ -108,4 +108,23 @@ describe("TerraDrawStaticMode", () => {
 			}).not.toThrowError();
 		});
 	});
+
+	describe("styleFeature", () => {
+		it("does nothing", () => {
+			const staticMode = new TerraDrawStaticMode();
+
+			const styling = staticMode.styleFeature();
+			expect(styling).toBeDefined();
+		});
+	});
+
+	describe("cleanUp", () => {
+		it("does nothing", () => {
+			const staticMode = new TerraDrawStaticMode();
+
+			expect(() => {
+				staticMode.cleanUp();
+			}).not.toThrowError();
+		});
+	});
 });

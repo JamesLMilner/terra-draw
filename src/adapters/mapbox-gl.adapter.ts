@@ -273,8 +273,13 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawBaseAdapter {
 	 * Sets the cursor style for the map container.
 	 * @param cursor The CSS cursor style to apply, or 'unset' to remove any previously applied cursor style.
 	 */
-	public setCursor(style: Parameters<SetCursor>[0]) {
-		this._map.getCanvas().style.cursor = style;
+	public setCursor(cursor: Parameters<SetCursor>[0]) {
+		const canvas = this._map.getCanvas();
+		if (cursor === "unset") {
+			canvas.style.removeProperty("cursor");
+		} else {
+			canvas.style.cursor = cursor;
+		}
 	}
 
 	/**

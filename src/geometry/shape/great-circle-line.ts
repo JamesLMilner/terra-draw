@@ -143,16 +143,16 @@ class GreatCircleLine<Properties extends JSONObject> {
 	 * Generate points along the great circle
 	 */
 	arc(
-		npoints: number,
+		numberOfPoints: number,
 		options: { offset: number; coordinatePrecision: number }
 	) {
 		const firstPass = [];
-		if (!npoints || npoints <= 2) {
+		if (!numberOfPoints || numberOfPoints <= 2) {
 			firstPass.push([this.start.lng, this.start.lat]);
 			firstPass.push([this.end.lng, this.end.lat]);
 		} else {
-			const delta = 1.0 / (npoints - 1);
-			for (let i = 0; i < npoints; ++i) {
+			const delta = 1.0 / (numberOfPoints - 1);
+			for (let i = 0; i < numberOfPoints; ++i) {
 				const step = delta * i;
 				const pair = this.interpolate(step);
 				firstPass.push(pair);

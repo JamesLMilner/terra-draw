@@ -1,13 +1,17 @@
 import { Feature, LineString, Point, Polygon } from "geojson";
 
+const mockUUID = "29da86c2-92e2-4095-a1b3-22103535ebfa";
+
 function createMockFeature<T extends Polygon | LineString | Point>(
 	id: string,
 	geometry: T
 ): Feature<T> {
 	return {
-		id: id ? id : "1",
+		id: id ? id : mockUUID,
 		type: "Feature",
-		properties: {},
+		properties: {
+			mode: geometry.type.toLowerCase(),
+		},
 		geometry: geometry,
 	};
 }
@@ -20,7 +24,7 @@ export function createMockPolygonSquare(
 	squareStart = squareStart !== undefined ? squareStart : 0;
 	squareEnd = squareEnd !== undefined ? squareEnd : 1;
 
-	return createMockFeature(id || "1", {
+	return createMockFeature(id || mockUUID, {
 		type: "Polygon",
 		coordinates: [
 			[
@@ -45,14 +49,14 @@ export function createMockPoint(
 	lng?: number,
 	lat?: number
 ): Feature<Point> {
-	return createMockFeature(id || "1", {
+	return createMockFeature(id || mockUUID, {
 		type: "Point",
 		coordinates: [lng ? lng : 0, lat ? lat : 0],
 	});
 }
 
 export function createMockLineString(id?: string): Feature<LineString> {
-	return createMockFeature(id || "1", {
+	return createMockFeature(id || mockUUID, {
 		type: "LineString",
 		coordinates: [
 			[0, 0],

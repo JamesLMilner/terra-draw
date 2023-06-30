@@ -177,7 +177,11 @@ export class TerraDrawOpenLayersAdapter extends TerraDrawBaseAdapter {
 	 */
 	public getLngLatFromEvent(event: PointerEvent | MouseEvent) {
 		const { containerX: x, containerY: y } = this.getContainerXYPosition(event);
-		return this.unproject(x, y);
+		try {
+			return this.unproject(x, y);
+		} catch (_) {
+			return null;
+		}
 	}
 
 	/**

@@ -68,23 +68,19 @@ describe("DragCoordinateBehavior", () => {
 			);
 		});
 
-		describe("drag", () => {
-			it("throws if geometry does not exist", () => {
-				expect(() => {
-					dragCoordinateBehavior.drag(mockDrawEvent(), "nonExistentId");
-				}).toThrowError();
-			});
-
-			it("returns early if geometry is a point", () => {
+		describe("getDraggableIndex", () => {
+			it("returns -1 if geometry is a point", () => {
 				const id = createStorePoint(config);
 				jest.spyOn(config.store, "updateGeometry");
 
-				dragCoordinateBehavior.drag(mockDrawEvent(), id);
-
-				expect(config.store.updateGeometry).toBeCalledTimes(0);
+				const index = dragCoordinateBehavior.getDraggableIndex(
+					mockDrawEvent(),
+					id
+				);
+				expect(index).toBe(-1);
 			});
 
-			it("returns early if nothing within pointer distance", () => {
+			it("returns -1 if nothing within pointer distance", () => {
 				const id = createStorePolygon(config);
 				jest.spyOn(config.store, "updateGeometry");
 
@@ -95,12 +91,14 @@ describe("DragCoordinateBehavior", () => {
 					.mockReturnValueOnce({ x: 300, y: 200 })
 					.mockReturnValueOnce({ x: 200, y: 200 });
 
-				dragCoordinateBehavior.drag(mockDrawEvent(), id);
-
-				expect(config.store.updateGeometry).toBeCalledTimes(0);
+				const index = dragCoordinateBehavior.getDraggableIndex(
+					mockDrawEvent(),
+					id
+				);
+				expect(index).toBe(-1);
 			});
 
-			it("updates the Polygon coordinate if within pointer distance", () => {
+			it("can get index for Polygon coordinate if within pointer distance", () => {
 				const id = createStorePolygon(config);
 				jest.spyOn(config.store, "updateGeometry");
 
@@ -111,7 +109,62 @@ describe("DragCoordinateBehavior", () => {
 					.mockReturnValueOnce({ x: 1, y: 0 })
 					.mockReturnValueOnce({ x: 0, y: 0 });
 
-				dragCoordinateBehavior.drag(mockDrawEvent(), id);
+				const index = dragCoordinateBehavior.getDraggableIndex(
+					mockDrawEvent(),
+					id
+				);
+				expect(index).toBe(0);
+			});
+
+			it("can drag LineString coordinate if within pointer distance", () => {
+				const id = createLineString(config);
+				jest.spyOn(config.store, "updateGeometry");
+
+				(config.project as jest.Mock)
+					.mockReturnValueOnce({ x: 0, y: 0 })
+					.mockReturnValueOnce({ x: 0, y: 1 });
+
+				const index = dragCoordinateBehavior.getDraggableIndex(
+					mockDrawEvent(),
+					id
+				);
+				expect(index).toBe(0);
+			});
+		});
+
+		describe("drag", () => {
+			it("returns early if nothing is being dragged", () => {
+				jest.spyOn(config.store, "updateGeometry");
+
+				dragCoordinateBehavior.drag(mockDrawEvent());
+
+				expect(config.store.updateGeometry).toBeCalledTimes(0);
+			});
+
+			it("returns early if geometry is a point", () => {
+				const id = createStorePoint(config);
+				jest.spyOn(config.store, "updateGeometry");
+
+				dragCoordinateBehavior.drag(mockDrawEvent());
+
+				expect(config.store.updateGeometry).toBeCalledTimes(0);
+			});
+
+			it("updates the Polygon coordinate if within pointer distance", () => {
+				const id = createStorePolygon(config);
+
+				dragCoordinateBehavior.startDragging(id, 0);
+
+				jest.spyOn(config.store, "updateGeometry");
+
+				(config.project as jest.Mock)
+					.mockReturnValueOnce({ x: 0, y: 0 })
+					.mockReturnValueOnce({ x: 0, y: 1 })
+					.mockReturnValueOnce({ x: 1, y: 1 })
+					.mockReturnValueOnce({ x: 1, y: 0 })
+					.mockReturnValueOnce({ x: 0, y: 0 });
+
+				dragCoordinateBehavior.drag(mockDrawEvent());
 
 				expect(config.store.updateGeometry).toBeCalledTimes(1);
 			});
@@ -120,11 +173,13 @@ describe("DragCoordinateBehavior", () => {
 				const id = createLineString(config);
 				jest.spyOn(config.store, "updateGeometry");
 
+				dragCoordinateBehavior.startDragging(id, 0);
+
 				(config.project as jest.Mock)
 					.mockReturnValueOnce({ x: 0, y: 0 })
 					.mockReturnValueOnce({ x: 0, y: 1 });
 
-				dragCoordinateBehavior.drag(mockDrawEvent(), id);
+				dragCoordinateBehavior.drag(mockDrawEvent());
 
 				expect(config.store.updateGeometry).toBeCalledTimes(1);
 			});

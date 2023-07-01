@@ -15,60 +15,86 @@ export class DragFeatureBehavior extends TerraDrawModeBehavior {
 		super(config);
 	}
 
+	private draggedFeatureId: string | null = null;
+
 	private dragPosition: Position | undefined;
 
-	get position() {
-		return this.dragPosition ? this.dragPosition.concat() : undefined;
+	// get position() {
+	// 	return this.dragPosition ? this.dragPosition.concat() : undefined;
+	// }
+
+	// set position(newPosition: undefined | Position) {
+	// 	if (newPosition === undefined) {
+	// 		this.dragPosition = undefined;
+	// 		return;
+	// 	}
+
+	// 	if (
+	// 		!Array.isArray(newPosition) ||
+	// 		newPosition.length !== 2 ||
+	// 		typeof newPosition[0] !== "number" ||
+	// 		typeof newPosition[1] !== "number"
+	// 	) {
+	// 		throw new Error("Position must be [number, number] array");
+	// 	}
+
+	// 	this.dragPosition = newPosition.concat();
+	// }
+
+	startDragging(event: TerraDrawMouseEvent, id: string) {
+		this.draggedFeatureId = id;
+		this.dragPosition = [event.lng, event.lat];
 	}
 
-	set position(newPosition: undefined | Position) {
-		if (newPosition === undefined) {
-			this.dragPosition = undefined;
-			return;
-		}
-
-		if (
-			!Array.isArray(newPosition) ||
-			newPosition.length !== 2 ||
-			typeof newPosition[0] !== "number" ||
-			typeof newPosition[1] !== "number"
-		) {
-			throw new Error("Position must be [number, number] array");
-		}
-
-		this.dragPosition = newPosition.concat();
+	stopDragging() {
+		this.draggedFeatureId = null;
+		this.dragPosition = undefined;
 	}
 
-	drag(event: TerraDrawMouseEvent, selectedId: string) {
-		const hasSelection = true;
-		const { clickedFeature } = this.featuresAtMouseEvent.find(
-			event,
-			hasSelection
-		);
+	isDragging() {
+		return this.draggedFeatureId !== null;
+	}
+
+	canDrag(event: TerraDrawMouseEvent, selectedId: string) {
+		const { clickedFeature } = this.featuresAtMouseEvent.find(event, true);
 
 		// If the cursor is not over the selected
 		// feature then we don't want to drag
 		if (!clickedFeature || clickedFeature.id !== selectedId) {
+			return false;
+		}
+
+		return true;
+	}
+
+	drag(event: TerraDrawMouseEvent) {
+		if (!this.draggedFeatureId) {
 			return;
 		}
 
-		const geometry = this.store.getGeometryCopy(selectedId);
+		const geometry = this.store.getGeometryCopy(this.draggedFeatureId);
 		const mouseCoord = [event.lng, event.lat];
 
 		// Update the geometry of the dragged feature
 		if (geometry.type === "Polygon" || geometry.type === "LineString") {
-			let updatedCoords: Position[] | undefined;
-			let upToCoord: number | undefined;
+			let updatedCoords: Position[];
+			let upToCoord: number;
 
 			if (geometry.type === "Polygon") {
 				updatedCoords = geometry.coordinates[0];
 				upToCoord = updatedCoords.length - 1;
-			} else if (geometry.type === "LineString") {
+			} else {
+				// Must be LineString here
 				updatedCoords = geometry.coordinates;
 				upToCoord = updatedCoords.length;
 			}
 
-			if (upToCoord === undefined || !updatedCoords || !this.dragPosition) {
+			if (!this.dragPosition) {
+				console.log({
+					upToCoord,
+					updatedCoords,
+					dragPosition: this.dragPosition,
+				});
 				return false;
 			}
 
@@ -97,10 +123,12 @@ export class DragFeatureBehavior extends TerraDrawModeBehavior {
 
 			// Issue the update to the selected feature
 			this.store.updateGeometry([
-				{ id: selectedId, geometry },
+				{ id: this.draggedFeatureId, geometry },
 				...updatedSelectionPoints,
 				...updatedMidPoints,
 			]);
+
+			this.dragPosition = [event.lng, event.lat];
 
 			// Update mid point positions
 		} else if (geometry.type === "Point") {
@@ -108,13 +136,15 @@ export class DragFeatureBehavior extends TerraDrawModeBehavior {
 			// to the dragged position
 			this.store.updateGeometry([
 				{
-					id: selectedId,
+					id: this.draggedFeatureId,
 					geometry: {
 						type: "Point",
 						coordinates: mouseCoord,
 					},
 				},
 			]);
+
+			this.dragPosition = [event.lng, event.lat];
 		}
 	}
 }

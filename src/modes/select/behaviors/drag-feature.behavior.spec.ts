@@ -59,50 +59,8 @@ describe("DragFeatureBehavior", () => {
 			);
 		});
 
-		describe("position", () => {
-			it("is undefined at initialisation", () => {
-				expect(dragFeatureBehavior.position).toBe(undefined);
-			});
-
-			it("throws if setting position to non [number, number] array", () => {
-				expect(() => {
-					(dragFeatureBehavior.position as any) = 1;
-				}).toThrowError();
-			});
-
-			it("does not throw if setting position to a [number, number] array", () => {
-				expect(() => {
-					dragFeatureBehavior.position = [0, 0];
-				}).not.toThrowError();
-			});
-
-			it("allows resetting by setting to undefined", () => {
-				dragFeatureBehavior.position = [0, 0];
-				dragFeatureBehavior.position = undefined;
-				expect(dragFeatureBehavior.position);
-			});
-		});
-
-		describe("drag", () => {
-			it("returns early if no feature under mouse", () => {
-				jest.spyOn(config.store, "getGeometryCopy");
-
-				// Mock the unproject to return a valid set
-				// of bbox coordinates
-				(config.unproject as jest.Mock)
-					.mockImplementationOnce(() => ({ lng: 0, lat: 1 }))
-					.mockImplementationOnce(() => ({ lng: 1, lat: 1 }))
-					.mockImplementationOnce(() => ({ lng: 1, lat: 0 }))
-					.mockImplementationOnce(() => ({ lng: 0, lat: 0 }))
-					.mockImplementationOnce(() => ({ lng: 0, lat: 1 }));
-
-				dragFeatureBehavior.drag(mockDrawEvent(), "nonExistentId");
-
-				// Returns before getting to copying a geometry
-				expect(config.store.getGeometryCopy).toBeCalledTimes(0);
-			});
-
-			it("returns early if no position is set", () => {
+		describe("canDrag", () => {
+			it("returns true when it is possible to drag a feature", () => {
 				const id = createStorePolygon(config);
 
 				jest.spyOn(config.store, "updateGeometry");
@@ -118,16 +76,13 @@ describe("DragFeatureBehavior", () => {
 					.mockImplementationOnce(() => ({ lng: 0, lat: 1 }));
 
 				const event = mockDrawEvent(mockDrawEvent({ lat: 0.5, lng: 0.5 }));
-				dragFeatureBehavior.drag(event, id);
+				const canDrag = dragFeatureBehavior.canDrag(event, id);
 
-				expect(config.store.getGeometryCopy).toBeCalledTimes(1);
-				expect(config.store.updateGeometry).toBeCalledTimes(0);
+				expect(canDrag).toBe(true);
 			});
 
-			it("updates the polygon to the dragged position", () => {
+			it("returns false when it is not possible to drag a feature", () => {
 				const id = createStorePolygon(config);
-
-				dragFeatureBehavior.position = [0, 0];
 
 				jest.spyOn(config.store, "updateGeometry");
 				jest.spyOn(config.store, "getGeometryCopy");
@@ -141,7 +96,45 @@ describe("DragFeatureBehavior", () => {
 					.mockImplementationOnce(() => ({ lng: 0, lat: 0 }))
 					.mockImplementationOnce(() => ({ lng: 0, lat: 1 }));
 
-				dragFeatureBehavior.drag(mockDrawEvent(), id);
+				const event = mockDrawEvent(mockDrawEvent({ lat: 89, lng: 89 }));
+				const canDrag = dragFeatureBehavior.canDrag(event, id);
+
+				expect(canDrag).toBe(false);
+			});
+		});
+
+		describe("drag", () => {
+			it("returns early if no position is set", () => {
+				const event = mockDrawEvent({ lat: 0.5, lng: 0.5 });
+
+				jest.spyOn(config.store, "updateGeometry");
+				jest.spyOn(config.store, "getGeometryCopy");
+
+				dragFeatureBehavior.drag(event);
+
+				expect(config.store.getGeometryCopy).toBeCalledTimes(0);
+				expect(config.store.updateGeometry).toBeCalledTimes(0);
+			});
+
+			it("updates the polygon to the dragged position", () => {
+				const id = createStorePolygon(config);
+				const event = mockDrawEvent({ lat: 0.5, lng: 0.5 });
+
+				dragFeatureBehavior.startDragging(event, id);
+
+				jest.spyOn(config.store, "updateGeometry");
+				jest.spyOn(config.store, "getGeometryCopy");
+
+				// Mock the unproject to return a valid set
+				// of bbox coordinates
+				(config.unproject as jest.Mock)
+					.mockImplementationOnce(() => ({ lng: 0, lat: 1 }))
+					.mockImplementationOnce(() => ({ lng: 1, lat: 1 }))
+					.mockImplementationOnce(() => ({ lng: 1, lat: 0 }))
+					.mockImplementationOnce(() => ({ lng: 0, lat: 0 }))
+					.mockImplementationOnce(() => ({ lng: 0, lat: 1 }));
+
+				dragFeatureBehavior.drag(mockDrawEvent());
 
 				expect(config.store.getGeometryCopy).toBeCalledTimes(1);
 				expect(config.store.updateGeometry).toBeCalledTimes(1);

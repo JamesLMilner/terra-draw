@@ -497,18 +497,46 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode<SelectionStyling>
 
 		this.dragEventCount = 0;
 		this.setCursor("grabbing");
-		this.dragFeature.position = [event.lng, event.lat];
 
-		setMapDraggability(false);
+		const selectedId = this.selected[0];
+		const draggableCoordinateIndex = this.dragCoordinate.getDraggableIndex(
+			event,
+			selectedId
+		);
+
+		if (
+			modeFlags &&
+			modeFlags.feature &&
+			modeFlags.feature.coordinates &&
+			modeFlags.feature.coordinates.draggable &&
+			draggableCoordinateIndex !== -1
+		) {
+			this.dragCoordinate.startDragging(selectedId, draggableCoordinateIndex);
+			setMapDraggability(false);
+			return;
+		}
+
+		if (
+			modeFlags &&
+			modeFlags.feature &&
+			modeFlags.feature.draggable &&
+			this.dragFeature.canDrag(event, selectedId)
+		) {
+			this.dragFeature.startDragging(event, selectedId);
+			setMapDraggability(false);
+			return;
+		}
 	}
 
 	/** @internal */
-	onDrag(event: TerraDrawMouseEvent) {
+	onDrag(
+		event: TerraDrawMouseEvent,
+		setMapDraggability: (enabled: boolean) => void
+	) {
 		const selectedId = this.selected[0];
 
-		// If nothing selected or the drag position hasn't been set
-		// do nothing
-		if (!selectedId || !this.dragFeature.position) {
+		// If nothing selected we can return early
+		if (!selectedId) {
 			return;
 		}
 
@@ -531,6 +559,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode<SelectionStyling>
 			modeFlags.feature.rotateable &&
 			this.canRotate(event)
 		) {
+			setMapDraggability(false);
 			this.rotateFeature.rotate(event, selectedId);
 			return;
 		}
@@ -542,30 +571,24 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode<SelectionStyling>
 			modeFlags.feature.scaleable &&
 			this.canScale(event)
 		) {
+			setMapDraggability(false);
 			this.scaleFeature.scale(event, selectedId);
 			return;
 		}
 
 		// Check if coordinate is draggable and is dragged
-		if (
-			modeFlags &&
-			modeFlags.feature &&
-			modeFlags.feature.coordinates &&
-			modeFlags.feature.coordinates.draggable
-		) {
-			const coordinateWasDragged = this.dragCoordinate.drag(event, selectedId);
-
-			if (coordinateWasDragged) {
-				return;
-			}
+		if (this.dragCoordinate.isDragging()) {
+			this.dragCoordinate.drag(event);
+			return;
 		}
 
 		// Check if feature is draggable and is dragged
-		if (modeFlags && modeFlags.feature && modeFlags.feature.draggable) {
-			this.dragFeature.drag(event, selectedId);
-
-			this.dragFeature.position = [event.lng, event.lat];
+		if (this.dragFeature.isDragging()) {
+			this.dragFeature.drag(event);
+			return;
 		}
+
+		setMapDraggability(true);
 	}
 
 	/** @internal */
@@ -574,7 +597,8 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode<SelectionStyling>
 		setMapDraggability: (enabled: boolean) => void
 	) {
 		this.setCursor("grab");
-		this.dragFeature.position = undefined;
+		this.dragCoordinate.stopDragging();
+		this.dragFeature.stopDragging();
 		this.rotateFeature.reset();
 		this.scaleFeature.reset();
 		setMapDraggability(true);
@@ -582,7 +606,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode<SelectionStyling>
 
 	/** @internal */
 	onMouseMove(event: TerraDrawMouseEvent) {
-		if (!this.selected.length || this.dragFeature.position) {
+		if (!this.selected.length || this.dragFeature.isDragging()) {
 			return;
 		}
 

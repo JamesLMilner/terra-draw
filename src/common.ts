@@ -82,7 +82,10 @@ export interface TerraDrawCallbacks {
 		event: TerraDrawMouseEvent,
 		setMapDraggability: (enabled: boolean) => void
 	) => void;
-	onDrag: (event: TerraDrawMouseEvent) => void;
+	onDrag: (
+		event: TerraDrawMouseEvent,
+		setMapDraggability: (enabled: boolean) => void
+	) => void;
 	onDragEnd: (
 		event: TerraDrawMouseEvent,
 		setMapDraggability: (enabled: boolean) => void

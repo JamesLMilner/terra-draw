@@ -120,7 +120,9 @@ export abstract class TerraDrawBaseAdapter {
 							}
 						);
 					} else if (this._dragState === "dragging") {
-						this._currentModeCallbacks.onDrag(drawEvent);
+						this._currentModeCallbacks.onDrag(drawEvent, (enabled: boolean) => {
+							this.setDraggability.bind(this)(enabled);
+						});
 					}
 				},
 				register: (callback) => {

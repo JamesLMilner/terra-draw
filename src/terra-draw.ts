@@ -394,8 +394,8 @@ class TerraDraw {
 			onDragStart: (event, setMapDraggability) => {
 				this._mode.onDragStart(event, setMapDraggability);
 			},
-			onDrag: (event) => {
-				this._mode.onDrag(event);
+			onDrag: (event, setMapDraggability) => {
+				this._mode.onDrag(event, setMapDraggability);
 			},
 			onDragEnd: (event, setMapDraggability) => {
 				this._mode.onDragEnd(event, setMapDraggability);

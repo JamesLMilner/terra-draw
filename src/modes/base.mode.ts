@@ -142,7 +142,10 @@ export abstract class TerraDrawBaseDrawMode<T extends CustomStyling> {
 		event: TerraDrawMouseEvent,
 		setMapDraggability: (enabled: boolean) => void
 	) {}
-	onDrag(event: TerraDrawMouseEvent) {}
+	onDrag(
+		event: TerraDrawMouseEvent,
+		setMapDraggability: (enabled: boolean) => void
+	) {}
 	onDragEnd(
 		event: TerraDrawMouseEvent,
 		setMapDraggability: (enabled: boolean) => void

@@ -1,7 +1,7 @@
 import { TerraDrawMouseEvent } from "../../../common";
 import { BehaviorConfig, TerraDrawModeBehavior } from "../../base.behavior";
 
-import { Position } from "geojson";
+import { LineString, Polygon, Position, Point } from "geojson";
 import { PixelDistanceBehavior } from "../../pixel-distance.behavior";
 import { MidPointBehavior } from "./midpoint.behavior";
 import { SelectionPointBehavior } from "./selection-point.behavior";
@@ -16,8 +16,20 @@ export class DragCoordinateBehavior extends TerraDrawModeBehavior {
 		super(config);
 	}
 
-	public drag(event: TerraDrawMouseEvent, selectedId: string): boolean {
-		const geometry = this.store.getGeometryCopy(selectedId);
+	private draggedCoordinate: { id: null | string; index: number } = {
+		id: null,
+		index: -1,
+	};
+
+	private getClosestCoordinate(
+		event: TerraDrawMouseEvent,
+		geometry: Polygon | LineString | Point
+	) {
+		const closestCoordinate = {
+			dist: Infinity,
+			index: -1,
+			isFirstOrLastPolygonCoord: false,
+		};
 
 		let geomCoordinates: Position[] | undefined;
 
@@ -28,14 +40,8 @@ export class DragCoordinateBehavior extends TerraDrawModeBehavior {
 		} else {
 			// We don't want to handle dragging
 			// points here
-			return false;
+			return closestCoordinate;
 		}
-
-		const closestCoordinate = {
-			dist: Infinity,
-			index: -1,
-			isFirstOrLastPolygonCoord: false,
-		};
 
 		// Look through the selected features coordinates
 		// and try to find a coordinate that is draggable
@@ -60,26 +66,55 @@ export class DragCoordinateBehavior extends TerraDrawModeBehavior {
 			}
 		}
 
+		return closestCoordinate;
+	}
+
+	public getDraggableIndex(
+		event: TerraDrawMouseEvent,
+		selectedId: string
+	): number {
+		const geometry = this.store.getGeometryCopy(selectedId);
+		const closestCoordinate = this.getClosestCoordinate(event, geometry);
+
 		// No coordinate was within the pointer distance
 		if (closestCoordinate.index === -1) {
+			return -1;
+		}
+		return closestCoordinate.index;
+	}
+
+	public drag(event: TerraDrawMouseEvent): boolean {
+		if (!this.draggedCoordinate.id) {
 			return false;
 		}
+		const index = this.draggedCoordinate.index;
+		const geometry = this.store.getGeometryCopy(this.draggedCoordinate.id);
+
+		const geomCoordinates = (
+			geometry.type === "LineString"
+				? geometry.coordinates
+				: geometry.coordinates[0]
+		) as Position[];
+
+		const isFirstOrLastPolygonCoord =
+			geometry.type === "Polygon" &&
+			(index === geomCoordinates.length - 1 || index === 0);
 
 		// Store the updated coord
 		const updatedCoordinate = [event.lng, event.lat];
 
 		// We want to update the actual Polygon/LineString itself -
 		// for Polygons we want the first and last coordinates to match
-		if (closestCoordinate.isFirstOrLastPolygonCoord) {
+		if (isFirstOrLastPolygonCoord) {
 			const lastCoordIndex = geomCoordinates.length - 1;
 			geomCoordinates[0] = updatedCoordinate;
 			geomCoordinates[lastCoordIndex] = updatedCoordinate;
 		} else {
-			geomCoordinates[closestCoordinate.index] = updatedCoordinate;
+			geomCoordinates[index] = updatedCoordinate;
 		}
 
 		const updatedSelectionPoint = this.selectionPoints.getOneUpdated(
-			closestCoordinate.index,
+			index,
 			updatedCoordinate
 		);
 
@@ -93,7 +128,7 @@ export class DragCoordinateBehavior extends TerraDrawModeBehavior {
 		this.store.updateGeometry([
 			// Update feature
 			{
-				id: selectedId,
+				id: this.draggedCoordinate.id,
 				geometry: geometry,
 			},
 			// Update selection and mid points
@@ -102,5 +137,23 @@ export class DragCoordinateBehavior extends TerraDrawModeBehavior {
 		]);
 
 		return true;
+	}
+
+	isDragging() {
+		return this.draggedCoordinate.id !== null;
+	}
+
+	startDragging(id: string, index: number) {
+		this.draggedCoordinate = {
+			id,
+			index,
+		};
+	}
+
+	stopDragging() {
+		this.draggedCoordinate = {
+			id: null,
+			index: -1,
+		};
 	}
 }

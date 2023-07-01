@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.1-alpha.37](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.36...v0.0.1-alpha.37) (2023-07-01)
+
+
+### Bug Fixes
+
+* enable/disable drag rotations in MapboxGL/MapLibre adapters when calling setDraggability ([8c62512](https://github.com/JamesLMilner/terra-draw/commit/8c6251227215aa9cb966aca040d6e8a2d46c28da))
+* handle errors in unproject in openlayers adapter ([bc117fa](https://github.com/JamesLMilner/terra-draw/commit/bc117fa95b87452578e2edaf6f0b6bb79ff428af))
+* resolve several issues with selection ([820f7a6](https://github.com/JamesLMilner/terra-draw/commit/820f7a60d909d64945b3c2b7e8649ef0fc95c920))
+
+
+### Chore
+
+* increase test coverage ([514be2f](https://github.com/JamesLMilner/terra-draw/commit/514be2f0bc71a12e919c37d25e8d308940366b73))
+
 ### [0.0.1-alpha.36](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.35...v0.0.1-alpha.36) (2023-06-20)
 
 

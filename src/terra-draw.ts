@@ -218,8 +218,15 @@ class TerraDraw {
 	 *
 	 * @alpha
 	 */
-	setModeStyles(mode: string, styles: TerraDrawAdapterStyling) {
+	setModeStyles<Styling extends Record<string, number | HexColor>>(
+		mode: string,
+		styles: Styling
+	) {
 		this.checkEnabled();
+		if (!this._modes[mode]) {
+			throw new Error("No mode with this name present");
+		}
+
 		this._modes[mode].styles = styles;
 	}
 

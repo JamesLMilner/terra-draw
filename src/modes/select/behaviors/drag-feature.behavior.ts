@@ -99,7 +99,21 @@ export class DragFeatureBehavior extends TerraDrawModeBehavior {
 					this.dragPosition[0] - mouseCoord[0],
 					this.dragPosition[1] - mouseCoord[1],
 				];
-				updatedCoords[i] = [coordinate[0] - delta[0], coordinate[1] - delta[1]];
+
+				const updatedLng = coordinate[0] - delta[0];
+				const updatedLat = coordinate[1] - delta[1];
+
+				// Ensure that coordinates are valid
+				if (
+					updatedLng > 180 ||
+					updatedLng < -180 ||
+					updatedLat > 90 ||
+					updatedLat < -90
+				) {
+					return false;
+				}
+
+				updatedCoords[i] = [updatedLng, coordinate[1] - delta[1]];
 			}
 
 			// Set final coordinate identical to first

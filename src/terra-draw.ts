@@ -93,12 +93,20 @@ class TerraDraw {
 		};
 
 		const onFinish = (finishedId: string) => {
+			if (!this._enabled) {
+				return;
+			}
+
 			this._eventListeners.finish.forEach((listener) => {
 				listener(finishedId);
 			});
 		};
 
 		const onChange: StoreChangeHandler = (ids, event) => {
+			if (!this._enabled) {
+				return;
+			}
+
 			this._eventListeners.change.forEach((listener) => {
 				listener(ids, event);
 			});
@@ -139,6 +147,10 @@ class TerraDraw {
 		};
 
 		const onSelect = (selectedId: string) => {
+			if (!this._enabled) {
+				return;
+			}
+
 			this._eventListeners.select.forEach((listener) => {
 				listener(selectedId);
 			});
@@ -152,6 +164,10 @@ class TerraDraw {
 		};
 
 		const onDeselect = (deselectedId: string) => {
+			if (!this._enabled) {
+				return;
+			}
+
 			this._eventListeners.deselect.forEach((listener) => {
 				listener();
 			});

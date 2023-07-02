@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.1-alpha.38](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.37...v0.0.1-alpha.38) (2023-07-02)
+
+
+### Bug Fixes
+
+* ensure styling is updated for MapboxGL/MapLibreGL style only updates ([baa63da](https://github.com/JamesLMilner/terra-draw/commit/baa63dad92f5dd02c694a34b359502fb889f325d))
+* ensure terra draw instance is enabled on event callback ([bdc22f8](https://github.com/JamesLMilner/terra-draw/commit/bdc22f8162a803e7e39f5475a189465d668a7f77))
+* handle select mode dragging features out of lat/lng bounds ([52bd009](https://github.com/JamesLMilner/terra-draw/commit/52bd009e5b5a8c8386b9ee1f6da959c111f4b443))
+
+
+### Chore
+
+* update docs ([6229136](https://github.com/JamesLMilner/terra-draw/commit/62291369e9e1f6610be2fcc10dd3f70f261d2a52))
+
 ### [0.0.1-alpha.37](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.36...v0.0.1-alpha.37) (2023-07-01)
 
 

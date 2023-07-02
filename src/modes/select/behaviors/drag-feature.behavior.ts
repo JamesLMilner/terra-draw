@@ -90,11 +90,6 @@ export class DragFeatureBehavior extends TerraDrawModeBehavior {
 			}
 
 			if (!this.dragPosition) {
-				console.log({
-					upToCoord,
-					updatedCoords,
-					dragPosition: this.dragPosition,
-				});
 				return false;
 			}
 

@@ -187,11 +187,13 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawBaseAdapter {
 		points: boolean;
 		linestrings: boolean;
 		polygons: boolean;
+		styling: boolean;
 	} = {
 		deletion: false,
 		points: false,
 		linestrings: false,
 		polygons: false,
+		styling: false,
 	};
 
 	private updateChangedIds(changes: TerraDrawChanges) {
@@ -207,6 +209,14 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawBaseAdapter {
 
 		if (changes.deletedIds.length > 0) {
 			this.changedIds.deletion = true;
+		}
+
+		if (
+			changes.created.length === 0 &&
+			changes.updated.length === 0 &&
+			changes.deletedIds.length === 0
+		) {
+			this.changedIds.styling = true;
 		}
 	}
 
@@ -325,9 +335,6 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawBaseAdapter {
 			for (let i = 0; i < features.length; i++) {
 				const feature = features[i];
 
-				if (feature.geometry.type === "Point") {
-				}
-
 				Object.keys(styling).forEach((mode) => {
 					const { properties } = feature;
 
@@ -374,12 +381,13 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawBaseAdapter {
 				// If deletion occured we always have to update all layers
 				// as we don't know the type (TODO: perhaps we could pass that back?)
 				const deletionOccured = this.changedIds.deletion;
+				const styleUpdatedOccured = this.changedIds.styling;
+				const forceUpdate = deletionOccured || styleUpdatedOccured;
 
 				// Determine if we need to update each layer by geometry type
-				const updatePoints = deletionOccured || this.changedIds.points;
-				const updateLineStrings =
-					deletionOccured || this.changedIds.linestrings;
-				const updatedPolygon = deletionOccured || this.changedIds.polygons;
+				const updatePoints = forceUpdate || this.changedIds.points;
+				const updateLineStrings = forceUpdate || this.changedIds.linestrings;
+				const updatedPolygon = forceUpdate || this.changedIds.polygons;
 
 				let pointId;
 				if (updatePoints) {
@@ -416,6 +424,7 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawBaseAdapter {
 				linestrings: false,
 				polygons: false,
 				deletion: false,
+				styling: false,
 			};
 		});
 	}

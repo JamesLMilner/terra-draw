@@ -49,6 +49,7 @@
 		"maplibre"
 	],
 	"devDependencies": {
+		"@arcgis/core": "^4.27.6",
 		"@commitlint/cli": "^17.1.2",
 		"@commitlint/config-conventional": "^17.1.0",
 		"@googlemaps/js-api-loader": "^1.14.3",

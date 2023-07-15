@@ -198,6 +198,18 @@ Coming soon - please see development folder for example for now.
 
 Coming soon - please see development folder for example for now.
 
+## Other Examples
+
+There are a few other working examples that you can use as points of reference for creating a new app using Terra Draw.
+
+### Development Example
+
+The [development folder features an example](https://github.com/JamesLMilner/terra-draw/tree/main/development) of using Terra Draw with all the adapters. It is meant for local development but can also be used as a guide of how to use Terra Draw with each adapter without any frame work.
+
+### Full Example
+
+The [Terra Draw official website](https://github.com/JamesLMilner/terra-draw-website) is open source acts as a full working implementation of how to use Terra Draw. In this case it is used with popular framework Preact (has very similar API to React).
+
 ## Common Patterns
 
 ### Loading in External Data
@@ -239,14 +251,42 @@ draw.addFeatures(points);
 // This will add the points to hte TerraDrawRenderMode 'arbitary' rendering them to the screen
 ```
 
-## Other Examples
+### Styling Selected Data
 
-There are a few other working examples that you can use as points of reference for creating a new app using Terra Draw.
+To style selected data you will want to past styles to the select mode you are using (probably TerraDrawSelectMode).
 
-### Development Example
+```typescript
+const draw = new TerraDraw({
+	adapter: new TerraDrawMapboxGLAdapter({
+		map,
+		coordinatePrecision: 9,
+	}),
+	modes: {
+		polygon: new TerraDrawPolygonMode(),
+		select: new TerraDrawSelectMode({
+			flags: {
+				polygon: {
+					feature: {
+						draggable: true,
+						coordinates: {
+							midpoints: true,
+							draggable: true,
+							deletable: true,
+						},
+					},
+				},
+			},
+			styles: {
+				selectedPolygonColor: "#222222", // Any hex color you like
+				selectedPolygonFillOpacity: 0.7, // 0 - 1
+				selectedPolygonOutlineColor: "#333333", // Any hex color you like
+				selectedPolygonOutlineWidth: 2, // Integer
+			},
+		}),
+	},
+});
 
-The [development folder features an example](https://github.com/JamesLMilner/terra-draw/tree/main/development) of using Terra Draw with all the adapters. It is meant for local development but can also be used as a guide of how to use Terra Draw with each adapter without any frame work.
+draw.start();
+```
 
-### Full Example
-
-The [Terra Draw official website](https://github.com/JamesLMilner/terra-draw-website) is open source acts as a full working implementation of how to use Terra Draw. In this case it is used with popular framework Preact (has very similar API to React).
+Please note at the moment it is not possible to style against specific modes but only universally against geometry type (Point, LineString, Polygon)

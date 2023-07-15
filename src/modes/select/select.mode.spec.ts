@@ -2424,4 +2424,74 @@ describe("TerraDrawSelectMode", () => {
 			selectMode.onDeselect("id");
 		});
 	});
+
+	describe("styling", () => {
+		it("gets", () => {
+			const selectMode = new TerraDrawSelectMode();
+			selectMode.register(getMockModeConfig(selectMode.mode));
+			expect(selectMode.styles).toStrictEqual({});
+		});
+
+		it("set fails if non valid styling", () => {
+			const selectMode = new TerraDrawSelectMode();
+			selectMode.register(getMockModeConfig(selectMode.mode));
+
+			expect(() => {
+				(selectMode.styles as unknown) = "test";
+			}).toThrowError();
+
+			expect(selectMode.styles).toStrictEqual({});
+		});
+
+		it("sets", () => {
+			const selectMode = new TerraDrawSelectMode();
+			selectMode.register(getMockModeConfig(selectMode.mode));
+
+			selectMode.styles = {
+				selectedLineStringColor: "#ffffff",
+			};
+
+			expect(selectMode.styles).toStrictEqual({
+				selectedLineStringColor: "#ffffff",
+			});
+		});
+	});
+
+	describe("styleFeature", () => {
+		it("returns the correct styles for polygon from polygon mode", () => {
+			const polygonMode = new TerraDrawSelectMode({
+				styles: {
+					selectedPolygonOutlineWidth: 4,
+					selectedPolygonColor: "#222222",
+					selectedPolygonOutlineColor: "#111111",
+					selectedPolygonFillOpacity: 1,
+				},
+			});
+
+			expect(
+				polygonMode.styleFeature({
+					type: "Feature",
+					geometry: { type: "Polygon", coordinates: [] },
+					properties: { mode: "polygon", selected: true },
+				})
+			).toMatchObject({
+				polygonFillColor: "#222222",
+				polygonOutlineColor: "#111111",
+				polygonOutlineWidth: 4,
+				polygonFillOpacity: 1,
+			});
+
+			expect(
+				polygonMode.styleFeature({
+					type: "Feature",
+					geometry: { type: "Polygon", coordinates: [] },
+					properties: { mode: "polygon" },
+				})
+			).toMatchObject({
+				polygonFillColor: "#3f97e0",
+				polygonFillOpacity: 0.3,
+				polygonOutlineColor: "#3f97e0",
+			});
+		});
+	});
 });

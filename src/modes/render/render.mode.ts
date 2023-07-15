@@ -1,5 +1,5 @@
 import { TerraDrawAdapterStyling } from "../../common";
-import { TerraDrawBaseDrawMode } from "../base.mode";
+import { ModeTypes, TerraDrawBaseDrawMode } from "../base.mode";
 import { BehaviorConfig } from "../base.behavior";
 import { getDefaultStyling } from "../../util/styling";
 import { GeoJSONStoreFeatures } from "../../terra-draw";
@@ -12,6 +12,7 @@ type RenderModeStylingExt<T extends TerraDrawAdapterStyling> = {};
 type RenderModeStyling = RenderModeStylingExt<TerraDrawAdapterStyling>;
 
 export class TerraDrawRenderMode extends TerraDrawBaseDrawMode<RenderModeStyling> {
+	public type = ModeTypes.Render; // The type of the mode
 	public mode = "render"; // This gets changed dynamically
 
 	constructor(options: { styles: Partial<TerraDrawAdapterStyling> }) {

@@ -15,6 +15,12 @@ import { isValidStoreFeature } from "../store/store-feature-validation";
 
 type CustomStyling = Record<string, string | number>;
 
+export enum ModeTypes {
+	Drawing = "drawing",
+	Select = "select",
+	Static = "static",
+	Render = "render",
+}
 export abstract class TerraDrawBaseDrawMode<T extends CustomStyling> {
 	protected _state: TerraDrawModeState;
 	get state() {
@@ -62,6 +68,7 @@ export abstract class TerraDrawBaseDrawMode<T extends CustomStyling> {
 		this.coordinatePrecision = (options && options.coordinatePrecision) || 9;
 	}
 
+	type = ModeTypes.Drawing;
 	mode = "base";
 
 	protected setDrawing() {

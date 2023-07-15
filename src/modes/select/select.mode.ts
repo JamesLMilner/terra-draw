@@ -6,7 +6,7 @@ import {
 	TerraDrawAdapterStyling,
 } from "../../common";
 import { Point, Position } from "geojson";
-import { TerraDrawBaseDrawMode } from "../base.mode";
+import { ModeTypes, TerraDrawBaseDrawMode } from "../base.mode";
 import { MidPointBehavior } from "./behaviors/midpoint.behavior";
 import { SelectionPointBehavior } from "./behaviors/selection-point.behavior";
 import { FeaturesAtMouseEventBehavior } from "./behaviors/features-at-mouse-event.behavior";
@@ -41,13 +41,29 @@ type ModeFlags = {
 };
 
 type SelectionStyling = {
-	selectedColor: HexColor;
+	// Point
+	selectedPointColor: HexColor;
+	selectedPointWidth: number;
 	selectedPointOutlineColor: HexColor;
-	selectPointOutlineWidth: number;
+	selectedPointOutlineWidth: number;
+
+	// LineString
+	selectedLineStringColor: HexColor;
+	selectedLineStringWidth: number;
+
+	// Polygon
+	selectedPolygonColor: HexColor;
+	selectedPolygonFillOpacity: number;
+	selectedPolygonOutlineColor: HexColor;
+	selectedPolygonOutlineWidth: number;
+
+	// Selection Points (points at vertices of a polygon/linestring feature)
 	selectionPointWidth: number;
 	selectionPointColor: HexColor;
 	selectionPointOutlineColor: HexColor;
 	selectionPointOutlineWidth: number;
+
+	// Mid points (points at mid point of a polygon/linestring feature)
 	midPointColor: HexColor;
 	midPointOutlineColor: HexColor;
 	midPointWidth: number;
@@ -55,7 +71,8 @@ type SelectionStyling = {
 };
 
 export class TerraDrawSelectMode extends TerraDrawBaseDrawMode<SelectionStyling> {
-	mode = "select";
+	public type = ModeTypes.Select;
+	public mode = "select";
 
 	private dragEventThrottle = 5;
 	private dragEventCount = 0;
@@ -643,53 +660,87 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode<SelectionStyling>
 	styleFeature(feature: GeoJSONStoreFeatures): TerraDrawAdapterStyling {
 		const styles = { ...getDefaultStyling() };
 
-		if (feature.properties.mode === this.mode) {
-			if (feature.geometry.type === "Polygon") {
-				if (this.styles.selectedColor) {
-					styles.polygonFillColor = this.styles.selectedColor;
-				}
-				if (this.styles.selectedColor) {
-					styles.polygonOutlineColor = this.styles.selectedColor;
-				}
-				styles.zIndex = 10;
+		if (
+			feature.properties.mode === this.mode &&
+			feature.geometry.type === "Point"
+		) {
+			if (feature.properties.selectionPoint) {
+				styles.pointColor =
+					this.styles.selectionPointColor || styles.pointColor;
+				styles.pointOutlineColor =
+					this.styles.selectionPointOutlineColor || styles.pointOutlineColor;
+				styles.pointWidth =
+					this.styles.selectionPointWidth !== undefined
+						? this.styles.selectionPointWidth
+						: styles.pointWidth;
+				styles.pointOutlineWidth =
+					this.styles.selectionPointOutlineWidth !== undefined
+						? this.styles.selectionPointOutlineWidth
+						: 2;
+				styles.zIndex = 30;
+
 				return styles;
 			}
 
-			if (feature.geometry.type === "Point") {
-				if (feature.properties.selectionPoint) {
-					styles.pointColor =
-						this.styles.selectionPointColor || styles.pointColor;
-					styles.pointOutlineColor =
-						this.styles.selectionPointOutlineColor || styles.pointOutlineColor;
-					styles.pointWidth =
-						this.styles.selectionPointWidth !== undefined
-							? this.styles.selectionPointWidth
-							: styles.pointWidth;
-					styles.pointOutlineWidth =
-						this.styles.selectPointOutlineWidth !== undefined
-							? this.styles.selectPointOutlineWidth
-							: 2;
-					styles.zIndex = 30;
+			if (feature.properties.midPoint) {
+				styles.pointColor = this.styles.midPointColor || styles.pointColor;
+				styles.pointOutlineColor =
+					this.styles.midPointOutlineColor || styles.pointOutlineColor;
+				styles.pointWidth =
+					this.styles.midPointWidth !== undefined
+						? this.styles.midPointWidth
+						: 4;
+				styles.pointOutlineWidth =
+					this.styles.midPointOutlineWidth !== undefined
+						? this.styles.midPointOutlineWidth
+						: 2;
+				styles.zIndex = 40;
 
-					return styles;
+				return styles;
+			}
+		} else if (feature.properties[SELECT_PROPERTIES.SELECTED]) {
+			// Select mode shortcuts the styling of a feature if it is selected
+			// A selected feature from another mode will end up in this block
+
+			if (feature.geometry.type === "Polygon") {
+				if (this.styles.selectedPolygonColor) {
+					styles.polygonFillColor = this.styles.selectedPolygonColor;
+				}
+				if (this.styles.selectedPolygonOutlineWidth) {
+					styles.polygonOutlineWidth = this.styles.selectedPolygonOutlineWidth;
+				}
+				if (this.styles.selectedPolygonOutlineColor) {
+					styles.polygonOutlineColor = this.styles.selectedPolygonOutlineColor;
+				}
+				if (this.styles.selectedPolygonFillOpacity) {
+					styles.polygonFillOpacity = this.styles.selectedPolygonFillOpacity;
+				}
+				styles.zIndex = 10;
+				return styles;
+			} else if (feature.geometry.type === "LineString") {
+				if (this.styles.selectedLineStringColor) {
+					styles.lineStringColor = this.styles.selectedLineStringColor;
+				}
+				if (this.styles.selectedLineStringWidth) {
+					styles.lineStringWidth = this.styles.selectedLineStringWidth;
+				}
+				styles.zIndex = 10;
+				return styles;
+			} else if (feature.geometry.type === "Point") {
+				if (this.styles.selectedPointWidth) {
+					styles.pointWidth = this.styles.selectedPointWidth;
+				}
+				if (this.styles.selectedPointColor) {
+					styles.pointColor = this.styles.selectedPointColor;
+				}
+				if (this.styles.selectedPointOutlineColor) {
+					styles.pointOutlineColor = this.styles.selectedPointOutlineColor;
 				}
 
-				if (feature.properties.midPoint) {
-					styles.pointColor = this.styles.midPointColor || styles.pointColor;
-					styles.pointOutlineColor =
-						this.styles.midPointOutlineColor || styles.pointOutlineColor;
-					styles.pointWidth =
-						this.styles.midPointWidth !== undefined
-							? this.styles.midPointWidth
-							: 4;
-					styles.pointOutlineWidth =
-						this.styles.midPointOutlineWidth !== undefined
-							? this.styles.midPointOutlineWidth
-							: 2;
-					styles.zIndex = 40;
+				styles.pointOutlineWidth = this.styles.selectedPointOutlineWidth || 2;
 
-					return styles;
-				}
+				styles.zIndex = 10;
+				return styles;
 			}
 		}
 

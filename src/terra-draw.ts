@@ -15,9 +15,10 @@ import {
 	HexColor,
 	TerraDrawKeyboardEvent,
 	TerraDrawMouseEvent,
+	SELECT_PROPERTIES,
 } from "./common";
 import { TerraDrawBaseAdapter } from "./adapters/common/base.adapter";
-import { TerraDrawBaseDrawMode } from "./modes/base.mode";
+import { ModeTypes, TerraDrawBaseDrawMode } from "./modes/base.mode";
 import { TerraDrawCircleMode } from "./modes/circle/circle.mode";
 import { TerraDrawFreehandMode } from "./modes/freehand/freehand.mode";
 import { TerraDrawGreatCircleMode } from "./modes/greatcircle/great-circle.mode";
@@ -61,6 +62,9 @@ class TerraDraw {
 		select: SelectListener[];
 		deselect: DeselectListener[];
 	};
+	// This is the select mode that is assigned in the instance.
+	// There can only be 1 select mode active per instance
+	private _instanceSelectMode: undefined | string;
 
 	constructor(options: {
 		adapter: TerraDrawAdapter;
@@ -68,6 +72,26 @@ class TerraDraw {
 	}) {
 		this._adapter = options.adapter;
 		this._mode = new TerraDrawStaticMode();
+
+		const modeKeys = Object.keys(options.modes);
+
+		// Ensure at least one draw mode is provided
+		if (modeKeys.length === 0) {
+			throw new Error("No modes provided");
+		}
+
+		// Ensure only one select mode can be present
+		modeKeys.forEach((mode) => {
+			if (options.modes[mode].type !== ModeTypes.Select) {
+				return;
+			}
+			if (this._instanceSelectMode) {
+				throw new Error("only one type of select mode can be provided");
+			} else {
+				this._instanceSelectMode = mode;
+			}
+		});
+
 		this._modes = { ...options.modes, static: this._mode };
 		this._eventListeners = { change: [], select: [], deselect: [], finish: [] };
 		this._store = new GeoJSONStore();
@@ -219,8 +243,22 @@ class TerraDraw {
 		const modeStyles: {
 			[key: string]: (feature: GeoJSONStoreFeatures) => TerraDrawAdapterStyling;
 		} = {};
+
 		Object.keys(this._modes).forEach((mode) => {
-			modeStyles[mode] = this._modes[mode].styleFeature.bind(this._modes[mode]);
+			modeStyles[mode] = (feature: GeoJSONStoreFeatures) => {
+				// If the feature is selected, we want to use the select mode styling
+				if (
+					this._instanceSelectMode &&
+					feature.properties[SELECT_PROPERTIES.SELECTED]
+				) {
+					return this._modes[this._instanceSelectMode].styleFeature.bind(
+						this._modes[this._instanceSelectMode]
+					)(feature);
+				}
+
+				// Otherwise use regular styling
+				return this._modes[mode].styleFeature.bind(this._modes[mode])(feature);
+			};
 		});
 		return modeStyles;
 	}

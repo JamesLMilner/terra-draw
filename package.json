@@ -68,7 +68,7 @@
 		"jest": "^29.3.1",
 		"leaflet": "^1.8.0",
 		"mapbox-gl": "^2.13.0",
-		"maplibre-gl": "^2.4.0",
+		"maplibre-gl": "3.2.0",
 		"microbundle": "^0.15.0",
 		"ol": "^7.1.0",
 		"serve": "^14.1.2",

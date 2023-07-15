@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.1-alpha.39](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.38...v0.0.1-alpha.39) (2023-07-15)
+
+
+### Bug Fixes
+
+* ensure projection is available in google maps adapter to prevent errors ([3d0a60d](https://github.com/JamesLMilner/terra-draw/commit/3d0a60d825d9218fcbe990a9e31bb392f8bd3605))
+* make sure points in point mode that are selected are visibly different ([8016a2e](https://github.com/JamesLMilner/terra-draw/commit/8016a2ea4656337e81524cdf066d800b9d1496fe))
+
 ### [0.0.1-alpha.38](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.37...v0.0.1-alpha.38) (2023-07-02)
 
 

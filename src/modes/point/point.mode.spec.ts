@@ -217,6 +217,25 @@ describe("TerraDrawPointMode", () => {
 				pointColor: "#ffffff",
 			});
 		});
+
+		it("sets for selected points", () => {
+			const pointMode = new TerraDrawPointMode();
+			pointMode.register(getMockModeConfig(pointMode.mode));
+
+			pointMode.styles = {
+				selectedPointColor: "#ffffff",
+				selectedPointOutlineWidth: 2,
+				selectedPointWidth: 8,
+				selectedPointOutlineColor: "#000000",
+			};
+
+			expect(pointMode.styles).toStrictEqual({
+				selectedPointColor: "#ffffff",
+				selectedPointOutlineWidth: 2,
+				selectedPointWidth: 8,
+				selectedPointOutlineColor: "#000000",
+			});
+		});
 	});
 
 	describe("validateFeature", () => {

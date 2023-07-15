@@ -1,8 +1,8 @@
-import { Feature, Point } from "geojson";
 import {
 	TerraDrawMouseEvent,
 	TerraDrawAdapterStyling,
 	HexColor,
+	SELECT_PROPERTIES,
 } from "../../common";
 import { GeoJSONStoreFeatures } from "../../store/store";
 import { getDefaultStyling } from "../../util/styling";
@@ -14,6 +14,10 @@ type PointModeStyling = {
 	pointColor: HexColor;
 	pointOutlineColor: HexColor;
 	pointOutlineWidth: number;
+	selectedPointWidth: number;
+	selectedPointColor: HexColor;
+	selectedPointOutlineColor: HexColor;
+	selectedPointOutlineWidth: number;
 };
 export class TerraDrawPointMode extends TerraDrawBaseDrawMode<PointModeStyling> {
 	mode = "point";
@@ -85,17 +89,38 @@ export class TerraDrawPointMode extends TerraDrawBaseDrawMode<PointModeStyling> 
 			feature.geometry.type === "Point" &&
 			feature.properties.mode === this.mode
 		) {
-			if (this.styles.pointColor) {
-				styles.pointColor = this.styles.pointColor;
-			}
-			if (this.styles.pointOutlineColor) {
-				styles.pointOutlineColor = this.styles.pointOutlineColor;
-			}
-			if (this.styles.pointOutlineWidth) {
-				styles.pointOutlineWidth = this.styles.pointOutlineWidth;
-			}
-			if (this.styles.pointWidth) {
-				styles.pointWidth = this.styles.pointWidth;
+			if (feature.properties[SELECT_PROPERTIES.SELECTED]) {
+				styles.pointColor = this.styles.selectedPointColor
+					? this.styles.selectedPointColor
+					: styles.pointColor;
+
+				styles.pointOutlineColor = this.styles.selectedPointOutlineColor
+					? this.styles.selectedPointOutlineColor
+					: styles.pointOutlineColor;
+
+				styles.pointOutlineWidth = this.styles.selectedPointOutlineWidth
+					? this.styles.selectedPointOutlineWidth
+					: 2;
+
+				styles.pointWidth = this.styles.selectedPointWidth
+					? this.styles.selectedPointWidth
+					: styles.pointWidth;
+			} else {
+				styles.pointColor = this.styles.pointColor
+					? this.styles.pointColor
+					: styles.pointColor;
+
+				styles.pointOutlineColor = this.styles.pointOutlineColor
+					? this.styles.pointOutlineColor
+					: styles.pointOutlineColor;
+
+				styles.pointOutlineWidth = this.styles.pointOutlineWidth
+					? this.styles.pointOutlineWidth
+					: styles.pointOutlineWidth;
+
+				styles.pointWidth = this.styles.pointWidth
+					? this.styles.pointWidth
+					: styles.pointWidth;
 			}
 
 			return styles;

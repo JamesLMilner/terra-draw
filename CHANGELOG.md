@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.1-alpha.40](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.39...v0.0.1-alpha.40) (2023-07-15)
+
+
+### Features
+
+* more robust handling of select mode styling ([b5350cc](https://github.com/JamesLMilner/terra-draw/commit/b5350cc50671b890067efdd54aba8a806328a3ae))
+
+
+### Chore
+
+* add instructions on how to style selected data to getting started guide ([c012773](https://github.com/JamesLMilner/terra-draw/commit/c01277300098be207601b44ea2a04ebf01ffd73d))
+
 ### [0.0.1-alpha.39](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.38...v0.0.1-alpha.39) (2023-07-15)
 
 

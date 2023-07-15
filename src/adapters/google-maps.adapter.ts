@@ -69,9 +69,13 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawBaseAdapter {
 		const offsetY = event.clientY - mapCanvas.getBoundingClientRect().top;
 		const screenCoord = new google.maps.Point(offsetX, offsetY);
 
-		const latLng = this._overlay
-			.getProjection()
-			.fromContainerPixelToLatLng(screenCoord);
+		const projection = this._overlay.getProjection();
+
+		if (!projection) {
+			return null;
+		}
+
+		const latLng = projection.fromContainerPixelToLatLng(screenCoord);
 
 		if (latLng && latLngBounds.contains(latLng)) {
 			return { lng: latLng.lng(), lat: latLng.lat() };

@@ -194,10 +194,10 @@ export class TerraDrawArcGISMapsSDKAdapter extends TerraDrawBaseAdapter {
 				});
 				symbol = new this._lib.SimpleMarkerSymbol({
 					color: this.getColorFromHex(style.pointColor),
-					size: style.pointWidth,
+					size: style.pointWidth * 2 + "px",
 					outline: {
 						color: this.getColorFromHex(style.pointOutlineColor),
-						width: style.pointOutlineWidth,
+						width: style.pointOutlineWidth + "px",
 					},
 				});
 				break;
@@ -205,7 +205,7 @@ export class TerraDrawArcGISMapsSDKAdapter extends TerraDrawBaseAdapter {
 				geometry = new this._lib.Polyline({ paths: [coordinates] });
 				symbol = new this._lib.SimpleLineSymbol({
 					color: this.getColorFromHex(style.lineStringColor),
-					width: style.lineStringWidth,
+					width: style.lineStringWidth + "px",
 				});
 				break;
 			case "Polygon":
@@ -217,7 +217,7 @@ export class TerraDrawArcGISMapsSDKAdapter extends TerraDrawBaseAdapter {
 					),
 					outline: {
 						color: this.getColorFromHex(style.polygonOutlineColor),
-						width: style.polygonOutlineWidth,
+						width: style.polygonOutlineWidth + "px",
 					},
 				});
 				break;

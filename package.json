@@ -6,6 +6,7 @@
 		"docs": "typedoc",
 		"docs:serve": "serve ./docs",
 		"release": "standard-version",
+		"release:alpha:next": "ts-node --esm ./scripts/next-alpha-version.ts",
 		"build": "microbundle",
 		"watch": "microbundle --watch --format modern",
 		"test": "jest --config jest.config.ts",
@@ -148,5 +149,8 @@
 				"section": "Reverts"
 			}
 		]
+	},
+	"dependencies": {
+		"ts-node": "^10.9.1"
 	}
 }

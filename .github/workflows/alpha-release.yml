@@ -1,0 +1,51 @@
+name: Alpha Release
+
+permissions:
+  contents: write
+
+on: workflow_dispatch
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: "18.x"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Install
+        run: npm ci
+
+      - name: Update Docs
+        run: npm run docs
+
+      - name: Run build
+        run: npm run build
+
+      - name: Get next version
+        run: echo "NEXT=0.0.1-alpha.$(echo $(npm run release:alpha:next | tail -n 1))" >> $GITHUB_ENV
+
+      - name: Print next version
+        run: echo ${{ env.NEXT }}
+
+      - name: Set git credentials
+        run: |
+          git config --global user.email "terradraw@githubactions.com"
+          git config --global user.name "James Milner"
+
+      - name: Release
+        run: npm run release -- --prerelease --release-as $(echo ${{ env.NEXT }})
+
+      - name: Echo upstream remote
+        run: git remote -v
+
+      - name: Push upstream
+        run: git push origin main --tags
+
+      - run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

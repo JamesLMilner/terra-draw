@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### 0.0.1-alpha.41 (2023-07-16)
+
+
+### Chore
+
+* alpha release script ([7b743ab](https://github.com/JamesLMilner/terra-draw/commit/7b743ab48ec8db0a294373d9a3c2c066945a2fe4))
+
 ### [0.0.1-alpha.40](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.39...v0.0.1-alpha.40) (2023-07-15)
 
 

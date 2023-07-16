@@ -40,9 +40,6 @@ jobs:
       - name: Release
         run: npm run release -- --prerelease --release-as $(echo ${{ env.NEXT }})
 
-      - name: Echo upstream remote
-        run: git remote -v
-
       - name: Push upstream
         run: git push origin main --tags
 

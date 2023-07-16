@@ -92,7 +92,7 @@ export class TerraDrawArcGISMapsSDKAdapter extends TerraDrawBaseAdapter {
 	 * @returns An object with 'x' and 'y' properties representing the pixel coordinates within the map container.
 	 */
 	public project(lng: number, lat: number) {
-		const point = new Point({ longitude: lng, latitude: lat });
+		const point = new this._lib.Point({ longitude: lng, latitude: lat });
 		const { x, y } = this._mapView.toScreen(point);
 		return { x, y };
 	}

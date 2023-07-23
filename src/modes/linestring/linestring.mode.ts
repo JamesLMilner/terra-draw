@@ -3,6 +3,8 @@ import {
 	TerraDrawAdapterStyling,
 	TerraDrawKeyboardEvent,
 	HexColor,
+	HexColorStyling,
+	NumericStyling,
 } from "../../common";
 import { LineString } from "geojson";
 import { selfIntersects } from "../../geometry/boolean/self-intersects";
@@ -21,12 +23,12 @@ type TerraDrawLineStringModeKeyEvents = {
 };
 
 type LineStringStyling = {
-	lineStringWidth: number;
-	lineStringColor: HexColor;
-	closingPointColor: HexColor;
-	closingPointWidth: number;
-	closingPointOutlineColor: HexColor;
-	closingPointOutlineWidth: number;
+	lineStringWidth: NumericStyling;
+	lineStringColor: HexColorStyling;
+	closingPointColor: HexColorStyling;
+	closingPointWidth: NumericStyling;
+	closingPointOutlineColor: HexColorStyling;
+	closingPointOutlineWidth: NumericStyling;
 };
 
 export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringStyling> {
@@ -365,12 +367,17 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 			feature.geometry.type === "LineString" &&
 			feature.properties.mode === this.mode
 		) {
-			if (this.styles.lineStringColor) {
-				styles.lineStringColor = this.styles.lineStringColor;
-			}
-			if (this.styles.lineStringWidth) {
-				styles.lineStringWidth = this.styles.lineStringWidth;
-			}
+			styles.lineStringColor = this.getHexColorStylingValue(
+				this.styles.lineStringColor,
+				styles.lineStringColor,
+				feature
+			);
+
+			styles.lineStringWidth = this.getNumericStylingValue(
+				this.styles.lineStringWidth,
+				styles.lineStringWidth,
+				feature
+			);
 
 			return styles;
 		} else if (
@@ -378,21 +385,29 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 			feature.geometry.type === "Point" &&
 			feature.properties.mode === this.mode
 		) {
-			if (this.styles.closingPointColor) {
-				styles.pointColor = this.styles.closingPointColor;
-			}
-			if (this.styles.closingPointWidth) {
-				styles.pointWidth = this.styles.closingPointWidth;
-			}
+			styles.pointColor = this.getHexColorStylingValue(
+				this.styles.closingPointColor,
+				styles.pointColor,
+				feature
+			);
 
-			styles.pointOutlineColor =
-				this.styles.closingPointOutlineColor !== undefined
-					? this.styles.closingPointOutlineColor
-					: "#ffffff";
-			styles.pointOutlineWidth =
-				this.styles.closingPointOutlineWidth !== undefined
-					? this.styles.closingPointOutlineWidth
-					: 2;
+			styles.pointWidth = this.getNumericStylingValue(
+				this.styles.closingPointWidth,
+				styles.pointWidth,
+				feature
+			);
+
+			styles.pointOutlineColor = this.getHexColorStylingValue(
+				this.styles.closingPointOutlineColor,
+				"#ffffff",
+				feature
+			);
+
+			styles.pointOutlineWidth = this.getNumericStylingValue(
+				this.styles.closingPointOutlineWidth,
+				2,
+				feature
+			);
 
 			return styles;
 		}

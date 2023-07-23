@@ -6,6 +6,14 @@ import {
 
 export type HexColor = `#${string}`;
 
+export type HexColorStyling =
+	| HexColor
+	| ((feature: GeoJSONStoreFeatures) => HexColor);
+
+export type NumericStyling =
+	| number
+	| ((feature: GeoJSONStoreFeatures) => number);
+
 export interface TerraDrawAdapterStyling {
 	pointColor: HexColor;
 	pointWidth: number;

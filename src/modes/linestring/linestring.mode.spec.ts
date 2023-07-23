@@ -767,6 +767,108 @@ describe("TerraDrawLineStringMode", () => {
 		});
 	});
 
+	describe("styleFeature", () => {
+		it("returns the correct styles for point", () => {
+			const lineStringMode = new TerraDrawLineStringMode({
+				styles: {
+					lineStringColor: "#ffffff",
+					lineStringWidth: 4,
+					closingPointColor: "#111111",
+					closingPointWidth: 3,
+					closingPointOutlineColor: "#222222",
+					closingPointOutlineWidth: 2,
+				},
+			});
+
+			expect(
+				lineStringMode.styleFeature({
+					type: "Feature",
+					geometry: { type: "Point", coordinates: [] },
+					properties: { mode: "linestring" },
+				})
+			).toMatchObject({
+				pointColor: "#111111",
+				pointWidth: 3,
+				pointOutlineColor: "#222222",
+				pointOutlineWidth: 2,
+			});
+		});
+
+		it("returns the correct styles for point using functions", () => {
+			const lineStringMode = new TerraDrawLineStringMode({
+				styles: {
+					lineStringColor: () => "#ffffff",
+					lineStringWidth: () => 4,
+					closingPointColor: () => "#111111",
+					closingPointWidth: () => 3,
+					closingPointOutlineColor: () => "#222222",
+					closingPointOutlineWidth: () => 2,
+				},
+			});
+
+			expect(
+				lineStringMode.styleFeature({
+					type: "Feature",
+					geometry: { type: "Point", coordinates: [] },
+					properties: { mode: "linestring" },
+				})
+			).toMatchObject({
+				pointColor: "#111111",
+				pointWidth: 3,
+				pointOutlineColor: "#222222",
+				pointOutlineWidth: 2,
+			});
+		});
+
+		it("returns the correct styles for linestring", () => {
+			const lineStringMode = new TerraDrawLineStringMode({
+				styles: {
+					lineStringColor: "#ffffff",
+					lineStringWidth: 4,
+					closingPointColor: "#111111",
+					closingPointWidth: 3,
+					closingPointOutlineColor: "#222222",
+					closingPointOutlineWidth: 2,
+				},
+			});
+
+			expect(
+				lineStringMode.styleFeature({
+					type: "Feature",
+					geometry: { type: "LineString", coordinates: [] },
+					properties: { mode: "linestring" },
+				})
+			).toMatchObject({
+				lineStringColor: "#ffffff",
+				lineStringWidth: 4,
+			});
+		});
+
+		it("returns the correct styles for linestring using functions", () => {
+			const lineStringMode = new TerraDrawLineStringMode({
+				styles: {
+					lineStringColor: () => "#ffffff",
+					lineStringWidth: () => 4,
+					closingPointColor: () => "#111111",
+					closingPointWidth: () => 3,
+					closingPointOutlineColor: () => "#222222",
+					closingPointOutlineWidth: () => 2,
+				},
+			});
+
+			expect(
+				lineStringMode.styleFeature({
+					type: "Feature",
+					geometry: { type: "LineString", coordinates: [] },
+					properties: { mode: "linestring" },
+				})
+			).toMatchObject({
+				lineStringColor: "#ffffff",
+				lineStringWidth: 4,
+			});
+		});
+	});
+
 	describe("validateFeature", () => {
 		it("returns false for invalid linestring feature", () => {
 			const lineStringMode = new TerraDrawLineStringMode({

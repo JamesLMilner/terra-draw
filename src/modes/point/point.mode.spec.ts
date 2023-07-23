@@ -219,6 +219,56 @@ describe("TerraDrawPointMode", () => {
 		});
 	});
 
+	describe("styleFeature", () => {
+		it("returns the correct styles for point", () => {
+			const pointMode = new TerraDrawPointMode({
+				styles: {
+					pointColor: "#ffffff",
+					pointWidth: 4,
+					pointOutlineColor: "#111111",
+					pointOutlineWidth: 2,
+				},
+			});
+
+			expect(
+				pointMode.styleFeature({
+					type: "Feature",
+					geometry: { type: "Point", coordinates: [] },
+					properties: { mode: "point" },
+				})
+			).toMatchObject({
+				pointColor: "#ffffff",
+				pointWidth: 4,
+				pointOutlineColor: "#111111",
+				pointOutlineWidth: 2,
+			});
+		});
+
+		it("returns the correct styles for point using functions", () => {
+			const pointMode = new TerraDrawPointMode({
+				styles: {
+					pointColor: () => "#ffffff",
+					pointWidth: () => 4,
+					pointOutlineColor: () => "#111111",
+					pointOutlineWidth: () => 2,
+				},
+			});
+
+			expect(
+				pointMode.styleFeature({
+					type: "Feature",
+					geometry: { type: "Point", coordinates: [] },
+					properties: { mode: "point" },
+				})
+			).toMatchObject({
+				pointColor: "#ffffff",
+				pointWidth: 4,
+				pointOutlineColor: "#111111",
+				pointOutlineWidth: 2,
+			});
+		});
+	});
+
 	describe("validateFeature", () => {
 		it("returns false for invalid point feature", () => {
 			const pointMode = new TerraDrawPointMode({

@@ -172,7 +172,63 @@ describe("TerraDrawRenderMode", () => {
 		it("gets styling correctly", () => {
 			const renderMode = new TerraDrawRenderMode(stylingOptions);
 
-			expect(renderMode.styleFeature().pointColor).toEqual("#12121");
+			expect(
+				renderMode.styleFeature({
+					type: "Feature",
+					geometry: { type: "Polygon", coordinates: [] },
+					properties: { mode: "polygon" },
+				}).pointColor
+			).toEqual("#12121");
+		});
+	});
+
+	describe("styleFeature", () => {
+		it("returns the correct styles for polygon", () => {
+			const renderMode = new TerraDrawRenderMode({
+				styles: {
+					polygonFillColor: "#ffffff",
+					polygonFillOpacity: 0.2,
+					polygonOutlineColor: "#111111",
+					polygonOutlineWidth: 3,
+				},
+			});
+
+			expect(
+				renderMode.styleFeature({
+					type: "Feature",
+					geometry: { type: "Polygon", coordinates: [] },
+					properties: { mode: "render" },
+				})
+			).toMatchObject({
+				polygonFillColor: "#ffffff",
+				polygonOutlineColor: "#111111",
+				polygonOutlineWidth: 3,
+				polygonFillOpacity: 0.2,
+			});
+		});
+
+		it("returns the correct styles for polygon using function", () => {
+			const renderMode = new TerraDrawRenderMode({
+				styles: {
+					polygonFillColor: () => "#ffffff",
+					polygonFillOpacity: () => 0.2,
+					polygonOutlineColor: () => "#111111",
+					polygonOutlineWidth: () => 3,
+				},
+			});
+
+			expect(
+				renderMode.styleFeature({
+					type: "Feature",
+					geometry: { type: "Polygon", coordinates: [] },
+					properties: { mode: "render" },
+				})
+			).toMatchObject({
+				polygonFillColor: "#ffffff",
+				polygonOutlineColor: "#111111",
+				polygonOutlineWidth: 3,
+				polygonFillOpacity: 0.2,
+			});
 		});
 	});
 

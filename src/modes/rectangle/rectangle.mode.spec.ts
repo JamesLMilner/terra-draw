@@ -464,9 +464,59 @@ describe("TerraDrawRectangleMode", () => {
 		});
 	});
 
+	describe("styleFeature", () => {
+		it("returns the correct styles for polygon", () => {
+			const rectangleMode = new TerraDrawRectangleMode({
+				styles: {
+					fillColor: "#ffffff",
+					outlineColor: "#111111",
+					outlineWidth: 2,
+					fillOpacity: 0.5,
+				},
+			});
+
+			expect(
+				rectangleMode.styleFeature({
+					type: "Feature",
+					geometry: { type: "Polygon", coordinates: [] },
+					properties: { mode: "rectangle" },
+				})
+			).toMatchObject({
+				polygonFillColor: "#ffffff",
+				polygonOutlineColor: "#111111",
+				polygonOutlineWidth: 2,
+				polygonFillOpacity: 0.5,
+			});
+		});
+
+		it("returns the correct styles for polygon using function", () => {
+			const rectangleMode = new TerraDrawRectangleMode({
+				styles: {
+					fillColor: (_) => "#ffffff",
+					outlineColor: () => "#111111",
+					outlineWidth: () => 2,
+					fillOpacity: () => 0.5,
+				},
+			});
+
+			expect(
+				rectangleMode.styleFeature({
+					type: "Feature",
+					geometry: { type: "Polygon", coordinates: [] },
+					properties: { mode: "rectangle" },
+				})
+			).toMatchObject({
+				polygonFillColor: "#ffffff",
+				polygonOutlineColor: "#111111",
+				polygonOutlineWidth: 2,
+				polygonFillOpacity: 0.5,
+			});
+		});
+	});
+
 	describe("validateFeature", () => {
 		it("returns false for invalid rectangle feature", () => {
-			const polygonMode = new TerraDrawRectangleMode({
+			const rectangleMode = new TerraDrawRectangleMode({
 				styles: {
 					fillColor: "#ffffff",
 					outlineColor: "#ffffff",
@@ -476,7 +526,7 @@ describe("TerraDrawRectangleMode", () => {
 			});
 
 			expect(
-				polygonMode.validateFeature({
+				rectangleMode.validateFeature({
 					id: "29da86c2-92e2-4095-a1b3-22103535ebfa",
 					type: "Feature",
 					geometry: {
@@ -493,7 +543,7 @@ describe("TerraDrawRectangleMode", () => {
 		});
 
 		it("returns false for self intersecting polygon feature", () => {
-			const polygonMode = new TerraDrawRectangleMode({
+			const rectangleMode = new TerraDrawRectangleMode({
 				styles: {
 					fillColor: "#ffffff",
 					outlineColor: "#ffffff",
@@ -503,7 +553,7 @@ describe("TerraDrawRectangleMode", () => {
 			});
 
 			expect(
-				polygonMode.validateFeature({
+				rectangleMode.validateFeature({
 					id: "66608334-7cf1-4f9e-a7f9-75e5ac135e68",
 					type: "Feature",
 					geometry: {

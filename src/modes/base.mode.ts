@@ -1,5 +1,6 @@
 import { BehaviorConfig, TerraDrawModeBehavior } from "./base.behavior";
 import {
+	HexColor,
 	TerraDrawAdapterStyling,
 	TerraDrawKeyboardEvent,
 	TerraDrawModeRegisterConfig,
@@ -13,7 +14,13 @@ import {
 } from "../store/store";
 import { isValidStoreFeature } from "../store/store-feature-validation";
 
-type CustomStyling = Record<string, string | number>;
+type CustomStyling = Record<
+	string,
+	| string
+	| number
+	| ((feature: GeoJSONStoreFeatures) => HexColor)
+	| ((feature: GeoJSONStoreFeatures) => number)
+>;
 
 export enum ModeTypes {
 	Drawing = "drawing",
@@ -156,4 +163,34 @@ export abstract class TerraDrawBaseDrawMode<T extends CustomStyling> {
 		event: TerraDrawMouseEvent,
 		setMapDraggability: (enabled: boolean) => void
 	) {}
+
+	protected getHexColorStylingValue(
+		value: HexColor | ((feature: GeoJSONStoreFeatures) => HexColor) | undefined,
+		defaultValue: HexColor,
+		feature: GeoJSONStoreFeatures
+	): HexColor {
+		return this.getStylingValue(value, defaultValue, feature);
+	}
+
+	protected getNumericStylingValue(
+		value: number | ((feature: GeoJSONStoreFeatures) => number) | undefined,
+		defaultValue: number,
+		feature: GeoJSONStoreFeatures
+	): number {
+		return this.getStylingValue(value, defaultValue, feature);
+	}
+
+	private getStylingValue<T extends string | number>(
+		value: T | ((feature: GeoJSONStoreFeatures) => T) | undefined,
+		defaultValue: T,
+		feature: GeoJSONStoreFeatures
+	) {
+		if (value === undefined) {
+			return defaultValue;
+		} else if (typeof value === "function") {
+			return value(feature);
+		} else {
+			return value;
+		}
+	}
 }

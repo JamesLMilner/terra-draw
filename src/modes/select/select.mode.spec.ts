@@ -2493,5 +2493,41 @@ describe("TerraDrawSelectMode", () => {
 				polygonOutlineColor: "#3f97e0",
 			});
 		});
+
+		it("returns the correct styles for polygon from polygon mode when using a function", () => {
+			const polygonMode = new TerraDrawSelectMode({
+				styles: {
+					selectedPolygonOutlineWidth: () => 4,
+					selectedPolygonColor: () => "#222222",
+					selectedPolygonOutlineColor: () => "#111111",
+					selectedPolygonFillOpacity: () => 1,
+				},
+			});
+
+			expect(
+				polygonMode.styleFeature({
+					type: "Feature",
+					geometry: { type: "Polygon", coordinates: [] },
+					properties: { mode: "polygon", selected: true },
+				})
+			).toMatchObject({
+				polygonFillColor: "#222222",
+				polygonOutlineColor: "#111111",
+				polygonOutlineWidth: 4,
+				polygonFillOpacity: 1,
+			});
+
+			expect(
+				polygonMode.styleFeature({
+					type: "Feature",
+					geometry: { type: "Polygon", coordinates: [] },
+					properties: { mode: "polygon" },
+				})
+			).toMatchObject({
+				polygonFillColor: "#3f97e0",
+				polygonFillOpacity: 0.3,
+				polygonOutlineColor: "#3f97e0",
+			});
+		});
 	});
 });

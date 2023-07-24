@@ -477,6 +477,30 @@ describe("TerraDrawCircleMode", () => {
 				polygonFillOpacity: 0.5,
 			});
 		});
+
+		it("returns the correct styles for polygon", () => {
+			const circleMode = new TerraDrawCircleMode({
+				styles: {
+					fillColor: () => "#ffffff",
+					outlineColor: () => "#ffffff",
+					outlineWidth: () => 2,
+					fillOpacity: () => 0.5,
+				},
+			});
+
+			expect(
+				circleMode.styleFeature({
+					type: "Feature",
+					geometry: { type: "Polygon", coordinates: [] },
+					properties: { mode: "circle" },
+				})
+			).toMatchObject({
+				polygonFillColor: "#ffffff",
+				polygonOutlineColor: "#ffffff",
+				polygonOutlineWidth: 2,
+				polygonFillOpacity: 0.5,
+			});
+		});
 	});
 
 	describe("validateFeature", () => {

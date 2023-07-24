@@ -553,6 +553,26 @@ describe("TerraDrawGreatCircleMode", () => {
 			});
 		});
 
+		it("returns the correct styles for polygon using function", () => {
+			const greatCircleMode = new TerraDrawGreatCircleMode({
+				styles: {
+					lineStringWidth: () => 2,
+					lineStringColor: () => "#ffffff",
+				},
+			});
+
+			expect(
+				greatCircleMode.styleFeature({
+					type: "Feature",
+					geometry: { type: "LineString", coordinates: [] },
+					properties: { mode: "greatcircle" },
+				})
+			).toMatchObject({
+				lineStringColor: "#ffffff",
+				lineStringWidth: 2,
+			});
+		});
+
 		it("returns the correct styles for point", () => {
 			const greatCircleMode = new TerraDrawGreatCircleMode({
 				styles: {
@@ -560,6 +580,31 @@ describe("TerraDrawGreatCircleMode", () => {
 					closingPointWidth: 3,
 					closingPointOutlineColor: "#333333",
 					closingPointOutlineWidth: 2,
+				},
+			});
+
+			expect(
+				greatCircleMode.styleFeature({
+					type: "Feature",
+					geometry: { type: "Point", coordinates: [] },
+					properties: { mode: "greatcircle" },
+				})
+			).toMatchObject({
+				pointColor: "#1111111",
+				pointOutlineColor: "#333333",
+				pointOutlineWidth: 2,
+				pointWidth: 3,
+				zIndex: 0,
+			});
+		});
+
+		it("returns the correct styles for point using function", () => {
+			const greatCircleMode = new TerraDrawGreatCircleMode({
+				styles: {
+					closingPointColor: () => "#1111111",
+					closingPointWidth: () => 3,
+					closingPointOutlineColor: () => "#333333",
+					closingPointOutlineWidth: () => 2,
 				},
 			});
 

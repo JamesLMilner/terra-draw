@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.1-alpha.43](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.42...v0.0.1-alpha.43) (2023-07-24)
+
+
+### Chore
+
+* add unit tests for function styling for circle, freehand and great circle ([78252d7](https://github.com/JamesLMilner/terra-draw/commit/78252d77196d0f2f152ac5ffed832bad7442ff37))
+* manually update CHANGELOG (sigh) ([8ce3dd8](https://github.com/JamesLMilner/terra-draw/commit/8ce3dd8eddc12655b77fdfc89cf27584262815a1))
+
 ### [0.0.1-alpha.42](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.41...v0.0.1-alpha.42) (2023-07-24)
 
 ### Features

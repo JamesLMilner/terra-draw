@@ -2,7 +2,8 @@ import {
 	TerraDrawMouseEvent,
 	TerraDrawAdapterStyling,
 	TerraDrawKeyboardEvent,
-	HexColor,
+	HexColorStyling,
+	NumericStyling,
 } from "../../common";
 import { Polygon } from "geojson";
 import { selfIntersects } from "../../geometry/boolean/self-intersects";
@@ -24,14 +25,14 @@ type TerraDrawPolygonModeKeyEvents = {
 };
 
 type PolygonStyling = {
-	fillColor: HexColor;
-	outlineColor: HexColor;
-	outlineWidth: number;
-	fillOpacity: number;
-	closingPointWidth: number;
-	closingPointColor: HexColor;
-	closingPointOutlineWidth: number;
-	closingPointOutlineColor: HexColor;
+	fillColor: HexColorStyling;
+	outlineColor: HexColorStyling;
+	outlineWidth: NumericStyling;
+	fillOpacity: NumericStyling;
+	closingPointWidth: NumericStyling;
+	closingPointColor: HexColorStyling;
+	closingPointOutlineWidth: NumericStyling;
+	closingPointOutlineColor: HexColorStyling;
 };
 
 export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> {
@@ -456,30 +457,56 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 
 		if (feature.properties.mode === this.mode) {
 			if (feature.geometry.type === "Polygon") {
-				styles.polygonFillColor =
-					this.styles.fillColor || styles.polygonFillColor;
-				styles.polygonOutlineColor =
-					this.styles.outlineColor || styles.polygonOutlineColor;
-				styles.polygonOutlineWidth =
-					this.styles.outlineWidth || styles.polygonOutlineWidth;
-				styles.polygonFillColor =
-					this.styles.fillColor || styles.polygonFillColor;
-				styles.polygonFillOpacity =
-					this.styles.fillOpacity || styles.polygonFillOpacity;
+				styles.polygonFillColor = this.getHexColorStylingValue(
+					this.styles.fillColor,
+					styles.polygonFillColor,
+					feature
+				);
+
+				styles.polygonOutlineColor = this.getHexColorStylingValue(
+					this.styles.outlineColor,
+					styles.polygonOutlineColor,
+					feature
+				);
+
+				styles.polygonOutlineWidth = this.getNumericStylingValue(
+					this.styles.outlineWidth,
+					styles.polygonOutlineWidth,
+					feature
+				);
+
+				styles.polygonFillOpacity = this.getNumericStylingValue(
+					this.styles.fillOpacity,
+					styles.polygonFillOpacity,
+					feature
+				);
+
 				styles.zIndex = 10;
 				return styles;
 			} else if (feature.geometry.type === "Point") {
-				styles.pointWidth =
-					this.styles.closingPointWidth !== undefined
-						? this.styles.closingPointWidth
-						: styles.pointWidth;
-				styles.pointColor = this.styles.closingPointColor || styles.pointColor;
-				styles.pointOutlineColor =
-					this.styles.closingPointOutlineColor || "#ffffff";
-				styles.pointOutlineWidth =
-					this.styles.closingPointOutlineWidth !== undefined
-						? this.styles.closingPointOutlineWidth
-						: 2;
+				styles.pointWidth = this.getNumericStylingValue(
+					this.styles.closingPointWidth,
+					styles.pointWidth,
+					feature
+				);
+
+				styles.pointColor = this.getHexColorStylingValue(
+					this.styles.closingPointColor,
+					styles.pointColor,
+					feature
+				);
+
+				styles.pointOutlineColor = this.getHexColorStylingValue(
+					this.styles.closingPointOutlineColor,
+					styles.pointOutlineColor,
+					feature
+				);
+
+				styles.pointOutlineWidth = this.getNumericStylingValue(
+					this.styles.closingPointOutlineWidth,
+					2,
+					feature
+				);
 				styles.zIndex = 30;
 				return styles;
 			}

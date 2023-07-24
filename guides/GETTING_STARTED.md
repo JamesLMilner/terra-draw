@@ -290,3 +290,43 @@ draw.start();
 ```
 
 Please note at the moment it is not possible to style against specific modes but only universally against geometry type (Point, LineString, Polygon)
+
+## Styling Specific Features
+
+Terra Draw supports styling overrides of individual features if required. This can be achieved by providing a styling function rather than a string or a number to a feature. As an example here we can style each polygon feature as a random color:
+
+```typescript
+// Function to generate a random hex color - can adjust as needed
+function getRandomColor() {
+	const letters = "0123456789ABCDEF";
+	let color = "#";
+	for (let i = 0; i < 6; i++) {
+		color += letters[Math.floor(Math.random() * 16)];
+	}
+	return color;
+}
+
+// Cache for each feature id mapped to a hex color string
+const colorCache: Record<string, HexColor> = {};
+
+const draw = new TerraDraw({
+	adapter: new TerraDrawMapboxGLAdapter({
+		map, // Assume this is defined further up
+		coordinatePrecision: 9,
+	}),
+	modes: {
+		polygon: new TerraDrawPolygonMode({
+			styles: {
+				fillColor: ({ id }) => {
+					// Get the color from the cache or generate a new one
+					colorCache[id] = colorCache[id] || getRandomColor();
+					return colorCache[id];
+				},
+			},
+		}),
+	},
+});
+
+// Ensure the color cache is clead up on deletion of features
+draw.on("delete", (ids) => ids.forEach((id) => delete cache[id]));
+```

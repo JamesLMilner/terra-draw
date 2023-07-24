@@ -1393,7 +1393,35 @@ describe("styleFeature", () => {
 		});
 	});
 
-	it("returns the correct styles for poiny", () => {
+	it("returns the correct styles for polygon using function", () => {
+		const polygonMode = new TerraDrawPolygonMode({
+			styles: {
+				fillColor: (_) => "#ffffff",
+				outlineColor: () => "#111111",
+				outlineWidth: () => 2,
+				fillOpacity: () => 0.5,
+				closingPointWidth: () => 2,
+				closingPointColor: () => "#dddddd",
+				closingPointOutlineWidth: () => 1,
+				closingPointOutlineColor: () => "#222222",
+			},
+		});
+
+		expect(
+			polygonMode.styleFeature({
+				type: "Feature",
+				geometry: { type: "Polygon", coordinates: [] },
+				properties: { mode: "polygon" },
+			})
+		).toMatchObject({
+			polygonFillColor: "#ffffff",
+			polygonOutlineColor: "#111111",
+			polygonOutlineWidth: 2,
+			polygonFillOpacity: 0.5,
+		});
+	});
+
+	it("returns the correct styles for point", () => {
 		const polygonMode = new TerraDrawPolygonMode({
 			styles: {
 				fillColor: "#ffffff",
@@ -1420,68 +1448,68 @@ describe("styleFeature", () => {
 			pointOutlineWidth: 1,
 		});
 	});
+});
 
-	describe("validateFeature", () => {
-		it("returns false for invalid polygon feature", () => {
-			const polygonMode = new TerraDrawPolygonMode({
-				styles: {
-					fillColor: "#ffffff",
-					outlineColor: "#ffffff",
-					outlineWidth: 2,
-					fillOpacity: 0.5,
-				},
-			});
-
-			expect(
-				polygonMode.validateFeature({
-					id: "29da86c2-92e2-4095-a1b3-22103535ebfa",
-					type: "Feature",
-					geometry: {
-						type: "Polygon",
-						coordinates: [[]],
-					},
-					properties: {
-						mode: "circle",
-						createdAt: 1685568434891,
-						updatedAt: 1685568435434,
-					},
-				})
-			).toBe(false);
+describe("validateFeature", () => {
+	it("returns false for invalid polygon feature", () => {
+		const polygonMode = new TerraDrawPolygonMode({
+			styles: {
+				fillColor: "#ffffff",
+				outlineColor: "#ffffff",
+				outlineWidth: 2,
+				fillOpacity: 0.5,
+			},
 		});
 
-		it("returns true for valid polygon feature", () => {
-			const polygonMode = new TerraDrawPolygonMode({
-				styles: {
-					fillColor: "#ffffff",
-					outlineColor: "#ffffff",
-					outlineWidth: 2,
-					fillOpacity: 0.5,
+		expect(
+			polygonMode.validateFeature({
+				id: "29da86c2-92e2-4095-a1b3-22103535ebfa",
+				type: "Feature",
+				geometry: {
+					type: "Polygon",
+					coordinates: [[]],
 				},
-			});
+				properties: {
+					mode: "circle",
+					createdAt: 1685568434891,
+					updatedAt: 1685568435434,
+				},
+			})
+		).toBe(false);
+	});
 
-			expect(
-				polygonMode.validateFeature({
-					id: "66608334-7cf1-4f9e-a7f9-75e5ac135e68",
-					type: "Feature",
-					geometry: {
-						type: "Polygon",
-						coordinates: [
-							[
-								[-1.812744141, 52.429222278],
-								[-1.889648438, 51.652110862],
-								[0.505371094, 52.052490476],
-								[-0.417480469, 52.476089041],
-								[-1.812744141, 52.429222278],
-							],
+	it("returns true for valid polygon feature", () => {
+		const polygonMode = new TerraDrawPolygonMode({
+			styles: {
+				fillColor: "#ffffff",
+				outlineColor: "#ffffff",
+				outlineWidth: 2,
+				fillOpacity: 0.5,
+			},
+		});
+
+		expect(
+			polygonMode.validateFeature({
+				id: "66608334-7cf1-4f9e-a7f9-75e5ac135e68",
+				type: "Feature",
+				geometry: {
+					type: "Polygon",
+					coordinates: [
+						[
+							[-1.812744141, 52.429222278],
+							[-1.889648438, 51.652110862],
+							[0.505371094, 52.052490476],
+							[-0.417480469, 52.476089041],
+							[-1.812744141, 52.429222278],
 						],
-					},
-					properties: {
-						mode: "polygon",
-						createdAt: 1685655516297,
-						updatedAt: 1685655518118,
-					},
-				})
-			).toBe(true);
-		});
+					],
+				},
+				properties: {
+					mode: "polygon",
+					createdAt: 1685655516297,
+					updatedAt: 1685655518118,
+				},
+			})
+		).toBe(true);
 	});
 });

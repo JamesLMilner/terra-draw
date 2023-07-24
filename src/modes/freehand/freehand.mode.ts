@@ -3,6 +3,8 @@ import {
 	TerraDrawAdapterStyling,
 	TerraDrawKeyboardEvent,
 	HexColor,
+	HexColorStyling,
+	NumericStyling,
 } from "../../common";
 import { Polygon } from "geojson";
 
@@ -18,14 +20,14 @@ type TerraDrawFreehandModeKeyEvents = {
 };
 
 type FreehandPolygonStyling = {
-	fillColor: HexColor;
-	outlineColor: HexColor;
-	outlineWidth: number;
-	fillOpacity: number;
-	closingPointColor: HexColor;
-	closingPointWidth: number;
-	closingPointOutlineColor: HexColor;
-	closingPointOutlineWidth: number;
+	fillColor: HexColorStyling;
+	outlineColor: HexColorStyling;
+	outlineWidth: NumericStyling;
+	fillOpacity: NumericStyling;
+	closingPointColor: HexColorStyling;
+	closingPointWidth: NumericStyling;
+	closingPointOutlineColor: HexColorStyling;
+	closingPointOutlineWidth: NumericStyling;
 };
 
 export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygonStyling> {
@@ -236,18 +238,29 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 			feature.geometry.type === "Polygon" &&
 			feature.properties.mode === this.mode
 		) {
-			if (this.styles.fillColor) {
-				styles.polygonFillColor = this.styles.fillColor;
-			}
-			if (this.styles.outlineColor) {
-				styles.polygonOutlineColor = this.styles.outlineColor;
-			}
-			if (this.styles.outlineWidth) {
-				styles.polygonOutlineWidth = this.styles.outlineWidth;
-			}
-			if (this.styles.fillOpacity) {
-				styles.polygonFillOpacity = this.styles.fillOpacity;
-			}
+			styles.polygonFillColor = this.getHexColorStylingValue(
+				this.styles.fillColor,
+				styles.polygonFillColor,
+				feature
+			);
+
+			styles.polygonOutlineColor = this.getHexColorStylingValue(
+				this.styles.outlineColor,
+				styles.polygonOutlineColor,
+				feature
+			);
+
+			styles.polygonOutlineWidth = this.getNumericStylingValue(
+				this.styles.outlineWidth,
+				styles.polygonOutlineWidth,
+				feature
+			);
+
+			styles.polygonFillOpacity = this.getNumericStylingValue(
+				this.styles.fillOpacity,
+				styles.polygonFillOpacity,
+				feature
+			);
 
 			return styles;
 		} else if (
@@ -255,21 +268,29 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 			feature.geometry.type === "Point" &&
 			feature.properties.mode === this.mode
 		) {
-			if (this.styles.closingPointColor) {
-				styles.pointColor = this.styles.closingPointColor;
-			}
-			if (this.styles.closingPointWidth) {
-				styles.pointWidth = this.styles.closingPointWidth;
-			}
+			styles.pointWidth = this.getNumericStylingValue(
+				this.styles.closingPointWidth,
+				styles.pointWidth,
+				feature
+			);
 
-			styles.pointOutlineColor =
-				this.styles.closingPointOutlineColor !== undefined
-					? this.styles.closingPointOutlineColor
-					: "#ffffff";
-			styles.pointOutlineWidth =
-				this.styles.closingPointOutlineWidth !== undefined
-					? this.styles.closingPointOutlineWidth
-					: 2;
+			styles.pointColor = this.getHexColorStylingValue(
+				this.styles.closingPointColor,
+				styles.pointColor,
+				feature
+			);
+
+			styles.pointOutlineColor = this.getHexColorStylingValue(
+				this.styles.closingPointOutlineColor,
+				styles.pointOutlineColor,
+				feature
+			);
+
+			styles.pointOutlineWidth = this.getNumericStylingValue(
+				this.styles.closingPointOutlineWidth,
+				2,
+				feature
+			);
 
 			return styles;
 		}

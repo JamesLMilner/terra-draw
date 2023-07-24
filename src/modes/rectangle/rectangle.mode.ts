@@ -4,6 +4,8 @@ import {
 	TerraDrawAdapterStyling,
 	TerraDrawKeyboardEvent,
 	HexColor,
+	HexColorStyling,
+	NumericStyling,
 } from "../../common";
 import { GeoJSONStoreFeatures } from "../../store/store";
 import { getDefaultStyling } from "../../util/styling";
@@ -16,10 +18,10 @@ type TerraDrawRectangleModeKeyEvents = {
 };
 
 type RectanglePolygonStyling = {
-	fillColor: HexColor;
-	outlineColor: HexColor;
-	outlineWidth: number;
-	fillOpacity: number;
+	fillColor: HexColorStyling;
+	outlineColor: HexColorStyling;
+	outlineWidth: NumericStyling;
+	fillOpacity: NumericStyling;
 };
 
 export class TerraDrawRectangleMode extends TerraDrawBaseDrawMode<RectanglePolygonStyling> {
@@ -180,18 +182,29 @@ export class TerraDrawRectangleMode extends TerraDrawBaseDrawMode<RectanglePolyg
 			feature.geometry.type === "Polygon" &&
 			feature.properties.mode === this.mode
 		) {
-			if (this.styles.fillColor) {
-				styles.polygonFillColor = this.styles.fillColor;
-			}
-			if (this.styles.outlineColor) {
-				styles.polygonOutlineColor = this.styles.outlineColor;
-			}
-			if (this.styles.outlineWidth) {
-				styles.polygonOutlineWidth = this.styles.outlineWidth;
-			}
-			if (this.styles.fillOpacity) {
-				styles.polygonFillOpacity = this.styles.fillOpacity;
-			}
+			styles.polygonFillColor = this.getHexColorStylingValue(
+				this.styles.fillColor,
+				styles.polygonFillColor,
+				feature
+			);
+
+			styles.polygonOutlineColor = this.getHexColorStylingValue(
+				this.styles.outlineColor,
+				styles.polygonOutlineColor,
+				feature
+			);
+
+			styles.polygonOutlineWidth = this.getNumericStylingValue(
+				this.styles.outlineWidth,
+				styles.polygonOutlineWidth,
+				feature
+			);
+
+			styles.polygonFillOpacity = this.getNumericStylingValue(
+				this.styles.fillOpacity,
+				styles.polygonFillOpacity,
+				feature
+			);
 
 			return styles;
 		}

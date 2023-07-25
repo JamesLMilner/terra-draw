@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.1-alpha.44](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.43...v0.0.1-alpha.44) (2023-07-25)
+
+
+### Bug Fixes
+
+* ensure that coordinate precision is limited when dragging a feature ([b7da22a](https://github.com/JamesLMilner/terra-draw/commit/b7da22a7ab4db2f5daec4db916997a02dc2c0193))
+
+
+### Chore
+
+* naive handling of antimeridian crossing for dragging coordinates ([8cdb7ab](https://github.com/JamesLMilner/terra-draw/commit/8cdb7ab5dc124d8240dee6378c5d3f194d2716bc))
+
 ### [0.0.1-alpha.43](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.42...v0.0.1-alpha.43) (2023-07-24)
 
 

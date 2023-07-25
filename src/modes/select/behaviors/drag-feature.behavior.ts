@@ -112,7 +112,9 @@ export class DragFeatureBehavior extends TerraDrawModeBehavior {
 					this.config.coordinatePrecision
 				);
 
-				// Ensure that coordinates are valid
+				// Ensure that coordinates do not exceed
+				// lng lat limits. Long term we may want to figure out
+				// proper handling of anti meridian crossings
 				if (
 					updatedLng > 180 ||
 					updatedLng < -180 ||

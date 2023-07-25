@@ -103,6 +103,18 @@ export class DragCoordinateBehavior extends TerraDrawModeBehavior {
 		// Store the updated coord
 		const updatedCoordinate = [event.lng, event.lat];
 
+		// Ensure that coordinates do not exceed
+		// lng lat limits. Long term we may want to figure out
+		// proper handling of anti meridian crossings
+		if (
+			event.lng > 180 ||
+			event.lng < -180 ||
+			event.lat > 90 ||
+			event.lat < -90
+		) {
+			return false;
+		}
+
 		// We want to update the actual Polygon/LineString itself -
 		// for Polygons we want the first and last coordinates to match
 		if (isFirstOrLastPolygonCoord) {

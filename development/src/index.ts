@@ -30,6 +30,18 @@ import { Circle as CircleStyle, Fill, Stroke, Style } from "ol/style";
 import { OSM, Vector as VectorSource } from "ol/source";
 import { Tile as TileLayer, Vector as VectorLayer } from "ol/layer";
 import { fromLonLat, toLonLat } from "ol/proj";
+import EsriMap from "@arcgis/core/Map";
+import MapView from "@arcgis/core/views/MapView.js";
+import { TerraDrawArcGISMapsSDKAdapter } from "../../src/adapters/arcgis-maps-sdk.adapter";
+import GraphicsLayer from "@arcgis/core/layers/GraphicsLayer";
+import Point from "@arcgis/core/geometry/Point";
+import Polyline from "@arcgis/core/geometry/Polyline";
+import Polygon from "@arcgis/core/geometry/Polygon";
+import Graphic from "@arcgis/core/Graphic";
+import SimpleFillSymbol from "@arcgis/core/symbols/SimpleFillSymbol";
+import SimpleLineSymbol from "@arcgis/core/symbols/SimpleLineSymbol";
+import Color from "@arcgis/core/Color";
+import SimpleMarkerSymbol from "@arcgis/core/symbols/SimpleMarkerSymbol";
 
 const addModeChangeHandler = (
 	draw: TerraDraw,
@@ -341,6 +353,46 @@ const example = {
 			});
 		});
 	},
+	initArcGISMapsSDK(id: string) {
+		if (this.initialised.includes("arcGISMapsSDK")) {
+			return;
+		}
+
+		const { lng, lat, zoom } = this;
+		const map = new EsriMap({
+			basemap: "osm", // Basemap layer service
+		});
+
+		const view = new MapView({
+			map: map,
+			center: [lng, lat], // Longitude, latitude
+			zoom: zoom + 1, // Zoom level
+			container: id, // Div element
+		});
+
+		const draw = new TerraDraw({
+			adapter: new TerraDrawArcGISMapsSDKAdapter({
+				lib: {
+					GraphicsLayer,
+					Point,
+					Polyline,
+					Polygon,
+					Graphic,
+					SimpleLineSymbol,
+					SimpleFillSymbol,
+					SimpleMarkerSymbol,
+					Color,
+				},
+				map: view,
+			}),
+			modes: getModes(),
+		});
+
+		draw.start();
+		addModeChangeHandler(draw, currentSelected);
+
+		this.initialised.push("arcGISMapsSDK");
+	},
 };
 
 console.log(process.env);
@@ -350,6 +402,7 @@ example.initLeaflet("leaflet-map");
 example.initMapbox("mapbox-map", process.env.MAPBOX_ACCESS_TOKEN);
 example.initGoogleMaps("google-map", process.env.GOOGLE_API_KEY);
 example.initMapLibre("maplibre-map", process.env.MAPBOX_ACCESS_TOKEN);
+example.initArcGISMapsSDK("arcgis-maps-sdk");
 document.addEventListener("keyup", (event) => {
 	(document.getElementById("keybind") as HTMLButtonElement).innerHTML =
 		event.key;

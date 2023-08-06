@@ -83,8 +83,8 @@ const addModeChangeHandler = (
 };
 
 const getModes = () => {
-	return {
-		select: new TerraDrawSelectMode({
+	return [
+		new TerraDrawSelectMode({
 			flags: {
 				arbitary: {
 					feature: {},
@@ -126,27 +126,28 @@ const getModes = () => {
 				},
 			},
 		}),
-		point: new TerraDrawPointMode(),
-		linestring: new TerraDrawLineStringMode({
+		new TerraDrawPointMode(),
+		new TerraDrawLineStringMode({
 			snapping: true,
 			allowSelfIntersections: false,
 		}),
-		greatcircle: new TerraDrawGreatCircleMode({ snapping: true }),
-		polygon: new TerraDrawPolygonMode({
+		new TerraDrawGreatCircleMode({ snapping: true }),
+		new TerraDrawPolygonMode({
 			snapping: true,
 			allowSelfIntersections: false,
 		}),
-		rectangle: new TerraDrawRectangleMode(),
-		circle: new TerraDrawCircleMode(),
-		freehand: new TerraDrawFreehandMode(),
-		arbitary: new TerraDrawRenderMode({
+		new TerraDrawRectangleMode(),
+		new TerraDrawCircleMode(),
+		new TerraDrawFreehandMode(),
+		new TerraDrawRenderMode({
+			modeName: "arbitary",
 			styles: {
 				polygonFillColor: "#4357AD",
 				polygonOutlineColor: "#48A9A6",
 				polygonOutlineWidth: 2,
 			},
 		}),
-	};
+	];
 };
 
 let currentSelected: { button: undefined | HTMLButtonElement; mode: string } = {

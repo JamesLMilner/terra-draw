@@ -18,6 +18,7 @@ Terra Draw uses the concept of 'adapters' to allow it to work with a host of dif
 - [Mapbox GL JS](https://www.mapbox.com/mapbox-gljs) v2
 - [MapLibre](https://maplibre.org/projects/maplibre-gl-js/) v2/v3
 - [Google Maps JS API](https://developers.google.com/maps/documentation/javascript/overview) v3
+- [ArcGIS JavaScript SDK](https://developers.arcgis.com/javascript/latest/) v4 (MapView)
 
 ### Getting Started
 

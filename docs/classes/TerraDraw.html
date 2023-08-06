@@ -20,7 +20,7 @@
 <ul class="tsd-hierarchy">
 <li><span class="target">TerraDraw</span></li></ul></section><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/JamesLMilner/terra-draw/blob/bef6b4e/src/terra-draw.ts#L52">terra-draw.ts:52</a></li></ul></aside>
+<li>Defined in <a href="https://github.com/JamesLMilner/terra-draw/blob/f640815/src/terra-draw.ts#L53">terra-draw.ts:53</a></li></ul></aside>
 <section class="tsd-panel-group tsd-index-group">
 <section class="tsd-panel tsd-index-panel">
 <details class="tsd-index-content tsd-index-accordion" open><summary class="tsd-accordion-summary tsd-index-summary">
@@ -35,6 +35,7 @@
 <div class="tsd-index-list"><a href="TerraDraw.html#_adapter" class="tsd-index-link tsd-kind-property tsd-parent-kind-class tsd-is-private"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><rect fill="var(--color-icon-background)" stroke="#FF984D" stroke-width="1.5" x="1" y="1" width="22" height="22" rx="12" id="icon-1024-path"></rect><path d="M9.354 16V7.24H12.174C12.99 7.24 13.638 7.476 14.118 7.948C14.606 8.412 14.85 9.036 14.85 9.82C14.85 10.604 14.606 11.232 14.118 11.704C13.638 12.168 12.99 12.4 12.174 12.4H10.434V16H9.354ZM10.434 11.428H12.174C12.646 11.428 13.022 11.284 13.302 10.996C13.59 10.7 13.734 10.308 13.734 9.82C13.734 9.324 13.59 8.932 13.302 8.644C13.022 8.356 12.646 8.212 12.174 8.212H10.434V11.428Z" fill="var(--color-text)" id="icon-1024-text"></path></svg><span>_adapter</span></a>
 <a href="TerraDraw.html#_enabled" class="tsd-index-link tsd-kind-property tsd-parent-kind-class tsd-is-private"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-1024-path"></use><use href="#icon-1024-text"></use></svg><span>_enabled</span></a>
 <a href="TerraDraw.html#_eventListeners" class="tsd-index-link tsd-kind-property tsd-parent-kind-class tsd-is-private"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-1024-path"></use><use href="#icon-1024-text"></use></svg><span>_event<wbr/>Listeners</span></a>
+<a href="TerraDraw.html#_instanceSelectMode" class="tsd-index-link tsd-kind-property tsd-parent-kind-class tsd-is-private"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-1024-path"></use><use href="#icon-1024-text"></use></svg><span>_instance<wbr/>Select<wbr/>Mode</span></a>
 <a href="TerraDraw.html#_mode" class="tsd-index-link tsd-kind-property tsd-parent-kind-class tsd-is-private"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-1024-path"></use><use href="#icon-1024-text"></use></svg><span>_mode</span></a>
 <a href="TerraDraw.html#_modes" class="tsd-index-link tsd-kind-property tsd-parent-kind-class tsd-is-private"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-1024-path"></use><use href="#icon-1024-text"></use></svg><span>_modes</span></a>
 <a href="TerraDraw.html#_store" class="tsd-index-link tsd-kind-property tsd-parent-kind-class tsd-is-private"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-1024-path"></use><use href="#icon-1024-text"></use></svg><span>_store</span></a>
@@ -64,36 +65,33 @@
 <section class="tsd-panel tsd-member tsd-kind-constructor tsd-parent-kind-class"><a id="constructor" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>constructor</span><a href="#constructor" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" id="icon-anchor-a"></path><path d="M10 14a3.5 3.5 0 0 0 5 0l4 -4a3.5 3.5 0 0 0 -5 -5l-.5 .5" id="icon-anchor-b"></path><path d="M14 10a3.5 3.5 0 0 0 -5 0l-4 4a3.5 3.5 0 0 0 5 5l.5 -.5" id="icon-anchor-c"></path></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-constructor tsd-parent-kind-class">
-<li class="tsd-signature tsd-anchor-link" id="constructor.new_TerraDraw">new <wbr/>Terra<wbr/>Draw<span class="tsd-signature-symbol">(</span>options<span class="tsd-signature-symbol">: </span><span class="tsd-signature-symbol">{ </span><br/><span>    </span>adapter<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">TerraDrawAdapter</span><span class="tsd-signature-symbol">; </span><br/><span>    </span>modes<span class="tsd-signature-symbol">: </span><span class="tsd-signature-symbol">{ </span><br/><span>        </span>[mode: <span class="tsd-signature-type">string</span>]<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">TerraDrawBaseDrawMode</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">; </span><br/><span>    </span><span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">; </span><br/><span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="TerraDraw.html" class="tsd-signature-type" data-tsd-kind="Class">TerraDraw</a><a href="#constructor.new_TerraDraw" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></li>
+<li class="tsd-signature tsd-anchor-link" id="constructor.new_TerraDraw">new <wbr/>Terra<wbr/>Draw<span class="tsd-signature-symbol">(</span>options<span class="tsd-signature-symbol">: </span><span class="tsd-signature-symbol">{ </span><br/><span>    </span>adapter<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">TerraDrawAdapter</span><span class="tsd-signature-symbol">; </span><br/><span>    </span>modes<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">TerraDrawBaseDrawMode</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">; </span><br/><span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="TerraDraw.html" class="tsd-signature-type" data-tsd-kind="Class">TerraDraw</a><a href="#constructor.new_TerraDraw" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></li>
 <li class="tsd-description">
 <div class="tsd-parameters">
 <h4 class="tsd-parameters-title">Parameters</h4>
 <ul class="tsd-parameter-list">
 <li>
-<h5>options: <span class="tsd-signature-symbol">{ </span><br/><span>    </span>adapter<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">TerraDrawAdapter</span><span class="tsd-signature-symbol">; </span><br/><span>    </span>modes<span class="tsd-signature-symbol">: </span><span class="tsd-signature-symbol">{ </span><br/><span>        </span>[mode: <span class="tsd-signature-type">string</span>]<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">TerraDrawBaseDrawMode</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">; </span><br/><span>    </span><span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">; </span><br/><span class="tsd-signature-symbol">}</span></h5>
+<h5>options: <span class="tsd-signature-symbol">{ </span><br/><span>    </span>adapter<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">TerraDrawAdapter</span><span class="tsd-signature-symbol">; </span><br/><span>    </span>modes<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">TerraDrawBaseDrawMode</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">; </span><br/><span class="tsd-signature-symbol">}</span></h5>
 <ul class="tsd-parameters">
 <li class="tsd-parameter">
 <h5>adapter<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">TerraDrawAdapter</span></h5></li>
 <li class="tsd-parameter">
-<h5>modes<span class="tsd-signature-symbol">: </span><span class="tsd-signature-symbol">{ </span><br/><span>    </span>[mode: <span class="tsd-signature-type">string</span>]<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">TerraDrawBaseDrawMode</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">; </span><br/><span class="tsd-signature-symbol">}</span></h5>
-<ul class="tsd-parameters">
-<li class="tsd-parameter-index-signature">
-<h5><span class="tsd-signature-symbol">[</span>mode: <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">]: </span><span class="tsd-signature-type">TerraDrawBaseDrawMode</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></h5></li></ul></li></ul></li></ul></div>
+<h5>modes<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">TerraDrawBaseDrawMode</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">[]</span></h5></li></ul></li></ul></div>
 <h4 class="tsd-returns-title">Returns <a href="TerraDraw.html" class="tsd-signature-type" data-tsd-kind="Class">TerraDraw</a></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/JamesLMilner/terra-draw/blob/bef6b4e/src/terra-draw.ts#L65">terra-draw.ts:65</a></li></ul></aside></li></ul></section></section>
+<li>Defined in <a href="https://github.com/JamesLMilner/terra-draw/blob/f640815/src/terra-draw.ts#L69">terra-draw.ts:69</a></li></ul></aside></li></ul></section></section>
 <section class="tsd-panel-group tsd-member-group">
 <h2>Properties</h2>
 <section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-private"><a id="_adapter" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>_adapter</span><a href="#_adapter" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <div class="tsd-signature">_adapter<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">TerraDrawAdapter</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/JamesLMilner/terra-draw/blob/bef6b4e/src/terra-draw.ts#L55">terra-draw.ts:55</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/JamesLMilner/terra-draw/blob/f640815/src/terra-draw.ts#L56">terra-draw.ts:56</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-private"><a id="_enabled" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>_enabled</span><a href="#_enabled" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <div class="tsd-signature">_enabled<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol"> = false</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/JamesLMilner/terra-draw/blob/bef6b4e/src/terra-draw.ts#L56">terra-draw.ts:56</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/JamesLMilner/terra-draw/blob/f640815/src/terra-draw.ts#L57">terra-draw.ts:57</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-private"><a id="_eventListeners" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>_event<wbr/>Listeners</span><a href="#_eventListeners" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <div class="tsd-signature">_event<wbr/>Listeners<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{ </span><br/><span>    </span>change<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">ChangeListener</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">; </span><br/><span>    </span>deselect<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">DeselectListener</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">; </span><br/><span>    </span>finish<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">FinishListener</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">; </span><br/><span>    </span>select<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">SelectListener</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">; </span><br/><span class="tsd-signature-symbol">}</span></div>
@@ -109,12 +107,17 @@
 <li class="tsd-parameter">
 <h5>select<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">SelectListener</span><span class="tsd-signature-symbol">[]</span></h5></li></ul></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/JamesLMilner/terra-draw/blob/bef6b4e/src/terra-draw.ts#L58">terra-draw.ts:58</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/JamesLMilner/terra-draw/blob/f640815/src/terra-draw.ts#L59">terra-draw.ts:59</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-private"><a id="_instanceSelectMode" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>_instance<wbr/>Select<wbr/>Mode</span><a href="#_instanceSelectMode" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
+<div class="tsd-signature">_instance<wbr/>Select<wbr/>Mode<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span></div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/JamesLMilner/terra-draw/blob/f640815/src/terra-draw.ts#L67">terra-draw.ts:67</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-private"><a id="_mode" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>_mode</span><a href="#_mode" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <div class="tsd-signature">_mode<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">TerraDrawBaseDrawMode</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/JamesLMilner/terra-draw/blob/bef6b4e/src/terra-draw.ts#L54">terra-draw.ts:54</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/JamesLMilner/terra-draw/blob/f640815/src/terra-draw.ts#L55">terra-draw.ts:55</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-private"><a id="_modes" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>_modes</span><a href="#_modes" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <div class="tsd-signature">_modes<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{ </span><br/><span>    </span>[mode: <span class="tsd-signature-type">string</span>]<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">TerraDrawBaseDrawMode</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">; </span><br/><span class="tsd-signature-symbol">}</span></div>
@@ -124,12 +127,12 @@
 <li class="tsd-parameter-index-signature">
 <h5><span class="tsd-signature-symbol">[</span>mode: <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">]: </span><span class="tsd-signature-type">TerraDrawBaseDrawMode</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></h5></li></ul></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/JamesLMilner/terra-draw/blob/bef6b4e/src/terra-draw.ts#L53">terra-draw.ts:53</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/JamesLMilner/terra-draw/blob/f640815/src/terra-draw.ts#L54">terra-draw.ts:54</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-private"><a id="_store" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>_store</span><a href="#_store" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <div class="tsd-signature">_store<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">GeoJSONStore</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/JamesLMilner/terra-draw/blob/bef6b4e/src/terra-draw.ts#L57">terra-draw.ts:57</a></li></ul></aside></section></section>
+<li>Defined in <a href="https://github.com/JamesLMilner/terra-draw/blob/f640815/src/terra-draw.ts#L58">terra-draw.ts:58</a></li></ul></aside></section></section>
 <section class="tsd-panel-group tsd-member-group">
 <h2>Accessors</h2>
 <section class="tsd-panel tsd-member tsd-kind-accessor tsd-parent-kind-class"><a id="enabled" class="tsd-anchor"></a>
@@ -145,7 +148,7 @@ This is a read only property.</p>
 </div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/JamesLMilner/terra-draw/blob/bef6b4e/src/terra-draw.ts#L281">terra-draw.ts:281</a></li></ul></aside></li></ul></section></section>
+<li>Defined in <a href="https://github.com/JamesLMilner/terra-draw/blob/f640815/src/terra-draw.ts#L333">terra-draw.ts:333</a></li></ul></aside></li></ul></section></section>
 <section class="tsd-panel-group tsd-member-group">
 <h2>Methods</h2>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class"><a id="addFeatures" class="tsd-anchor"></a>
@@ -164,7 +167,7 @@ Features must match one of the modes enabled in the instance.</p>
 <h5>features: <a href="../types/GeoJSONStoreFeatures.html" class="tsd-signature-type" data-tsd-kind="Type alias">GeoJSONStoreFeatures</a><span class="tsd-signature-symbol">[]</span></h5></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/JamesLMilner/terra-draw/blob/bef6b4e/src/terra-draw.ts#L355">terra-draw.ts:355</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/JamesLMilner/terra-draw/blob/f640815/src/terra-draw.ts#L407">terra-draw.ts:407</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-private"><a id="checkEnabled" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>check<wbr/>Enabled</span><a href="#checkEnabled" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-private">
@@ -172,7 +175,7 @@ Features must match one of the modes enabled in the instance.</p>
 <li class="tsd-description">
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/JamesLMilner/terra-draw/blob/bef6b4e/src/terra-draw.ts#L212">terra-draw.ts:212</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/JamesLMilner/terra-draw/blob/f640815/src/terra-draw.ts#L250">terra-draw.ts:250</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class"><a id="clear" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>clear</span><a href="#clear" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
@@ -183,7 +186,7 @@ via the registering the adapter.</p>
 </div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/JamesLMilner/terra-draw/blob/bef6b4e/src/terra-draw.ts#L267">terra-draw.ts:267</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/JamesLMilner/terra-draw/blob/f640815/src/terra-draw.ts#L319">terra-draw.ts:319</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class"><a id="getMode" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>get<wbr/>Mode</span><a href="#getMode" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
@@ -195,7 +198,7 @@ via the registering the adapter.</p>
 </div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/JamesLMilner/terra-draw/blob/bef6b4e/src/terra-draw.ts#L301">terra-draw.ts:301</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/JamesLMilner/terra-draw/blob/f640815/src/terra-draw.ts#L353">terra-draw.ts:353</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-private"><a id="getModeStyles" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>get<wbr/>Mode<wbr/>Styles</span><a href="#getModeStyles" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-private">
@@ -217,7 +220,7 @@ via the registering the adapter.</p>
 <h5>feature: <a href="../types/GeoJSONStoreFeatures.html" class="tsd-signature-type" data-tsd-kind="Type alias">GeoJSONStoreFeatures</a></h5></li></ul></div>
 <h4 class="tsd-returns-title">Returns <a href="../interfaces/TerraDrawAdapterStyling.html" class="tsd-signature-type" data-tsd-kind="Interface">TerraDrawAdapterStyling</a></h4></li></ul></li></ul></li></ul><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/JamesLMilner/terra-draw/blob/bef6b4e/src/terra-draw.ts#L218">terra-draw.ts:218</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/JamesLMilner/terra-draw/blob/f640815/src/terra-draw.ts#L256">terra-draw.ts:256</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class"><a id="getSnapshot" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>get<wbr/>Snapshot</span><a href="#getSnapshot" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
@@ -229,7 +232,7 @@ via the registering the adapter.</p>
 </div>
 <h4 class="tsd-returns-title">Returns <a href="../types/GeoJSONStoreFeatures.html" class="tsd-signature-type" data-tsd-kind="Type alias">GeoJSONStoreFeatures</a><span class="tsd-signature-symbol">[]</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/JamesLMilner/terra-draw/blob/bef6b4e/src/terra-draw.ts#L256">terra-draw.ts:256</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/JamesLMilner/terra-draw/blob/f640815/src/terra-draw.ts#L308">terra-draw.ts:308</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class"><a id="off" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>off</span><a href="#off" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
@@ -255,7 +258,7 @@ via the registering the adapter.</p>
 </div></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/JamesLMilner/terra-draw/blob/bef6b4e/src/terra-draw.ts#L476">terra-draw.ts:476</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/JamesLMilner/terra-draw/blob/f640815/src/terra-draw.ts#L528">terra-draw.ts:528</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class"><a id="on" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>on</span><a href="#on" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
@@ -281,7 +284,7 @@ via the registering the adapter.</p>
 </div></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/JamesLMilner/terra-draw/blob/bef6b4e/src/terra-draw.ts#L456">terra-draw.ts:456</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/JamesLMilner/terra-draw/blob/f640815/src/terra-draw.ts#L508">terra-draw.ts:508</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class"><a id="removeFeatures" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>remove<wbr/>Features</span><a href="#removeFeatures" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
@@ -297,7 +300,7 @@ via the registering the adapter.</p>
 <h5>ids: <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">[]</span></h5></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/JamesLMilner/terra-draw/blob/bef6b4e/src/terra-draw.ts#L341">terra-draw.ts:341</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/JamesLMilner/terra-draw/blob/f640815/src/terra-draw.ts#L393">terra-draw.ts:393</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class"><a id="setMode" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>set<wbr/>Mode</span><a href="#setMode" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
@@ -315,7 +318,7 @@ the previous mode and start the new one.</p>
 </div></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/JamesLMilner/terra-draw/blob/bef6b4e/src/terra-draw.ts#L313">terra-draw.ts:313</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/JamesLMilner/terra-draw/blob/f640815/src/terra-draw.ts#L365">terra-draw.ts:365</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class"><a id="setModeStyles" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>set<wbr/>Mode<wbr/>Styles</span><a href="#setModeStyles" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
@@ -342,7 +345,7 @@ the same as the initialisation style schema</p>
 </div></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/JamesLMilner/terra-draw/blob/bef6b4e/src/terra-draw.ts#L237">terra-draw.ts:237</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/JamesLMilner/terra-draw/blob/f640815/src/terra-draw.ts#L289">terra-draw.ts:289</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class"><a id="start" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>start</span><a href="#start" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
@@ -353,7 +356,7 @@ in registers the passed adapter giving it all the callbacks required to operate.
 </div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/JamesLMilner/terra-draw/blob/bef6b4e/src/terra-draw.ts#L399">terra-draw.ts:399</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/JamesLMilner/terra-draw/blob/f640815/src/terra-draw.ts#L451">terra-draw.ts:451</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class"><a id="stop" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>stop</span><a href="#stop" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
@@ -364,7 +367,7 @@ remove any rendered layers in the process.</p>
 </div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/JamesLMilner/terra-draw/blob/bef6b4e/src/terra-draw.ts#L443">terra-draw.ts:443</a></li></ul></aside></li></ul></section></section></div>
+<li>Defined in <a href="https://github.com/JamesLMilner/terra-draw/blob/f640815/src/terra-draw.ts#L495">terra-draw.ts:495</a></li></ul></aside></li></ul></section></section></div>
 <div class="col-4 col-menu menu-sticky-wrap menu-highlight">
 <div class="tsd-navigation settings">
 <details class="tsd-index-accordion"><summary class="tsd-accordion-summary">
@@ -394,6 +397,7 @@ remove any rendered layers in the process.</p>
 <li class="tsd-kind-property tsd-parent-kind-class tsd-is-private"><a href="TerraDraw.html#_adapter" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-1024-path"></use><use href="#icon-1024-text"></use></svg>_adapter</a></li>
 <li class="tsd-kind-property tsd-parent-kind-class tsd-is-private"><a href="TerraDraw.html#_enabled" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-1024-path"></use><use href="#icon-1024-text"></use></svg>_enabled</a></li>
 <li class="tsd-kind-property tsd-parent-kind-class tsd-is-private"><a href="TerraDraw.html#_eventListeners" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-1024-path"></use><use href="#icon-1024-text"></use></svg>_event<wbr/>Listeners</a></li>
+<li class="tsd-kind-property tsd-parent-kind-class tsd-is-private"><a href="TerraDraw.html#_instanceSelectMode" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-1024-path"></use><use href="#icon-1024-text"></use></svg>_instance<wbr/>Select<wbr/>Mode</a></li>
 <li class="tsd-kind-property tsd-parent-kind-class tsd-is-private"><a href="TerraDraw.html#_mode" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-1024-path"></use><use href="#icon-1024-text"></use></svg>_mode</a></li>
 <li class="tsd-kind-property tsd-parent-kind-class tsd-is-private"><a href="TerraDraw.html#_modes" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-1024-path"></use><use href="#icon-1024-text"></use></svg>_modes</a></li>
 <li class="tsd-kind-property tsd-parent-kind-class tsd-is-private"><a href="TerraDraw.html#_store" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-1024-path"></use><use href="#icon-1024-text"></use></svg>_store</a></li>

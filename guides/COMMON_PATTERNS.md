@@ -1,5 +1,44 @@
 # Common Patterns
 
+### Changing Mode
+
+To change mode we need to set the current mode to match the name of the mode we want. You can see the name of the mode in each modes 'mode' property in the modes source file. For convenience here are the built in mode names listed out:
+
+* TerraDrawStaticMode - 'static' 
+* TerraDrawPolygonMode - 'polygon'
+* TerraDrawPointMode - 'point'
+* TerraDrawCircleMode - 'circle'
+* TerraDrawLineStringMode - 'linestring'
+* TerraDrawSelectMode - 'select'
+* TerraDrawLineStringMode - 'freehand'
+* TerraDraqwGreatCircleMode - 'greatcircle'
+
+We can then create these modes and change to them like so:
+
+```typescript
+const draw = new TerraDraw({
+	adapter: new TerraDrawLeafletAdapter({
+		lib: L,
+		map,
+		coordinatePrecision: 9,
+	}),
+	modes: [
+		new TerraDrawPolygonMode(), // Polygon mode has a builtin name 'polygon'
+		new TerraDrawRenderMode({ modeName: 'arbitary' }) // Render modes are given custom names
+	],
+});
+
+draw.start();
+
+// Change to our TerraDrawPolygonMode instance
+draw.setMode('polygon')
+
+// We can use our custom render mode name to change to it.
+draw.setMode('arbitary') 
+
+```
+
+
 ### Loading in External Data
 
 It is common pattern to want to load in data from an external source (GeoJSON file, API call, etc). This can be achieved with the `addFeatures` method on the Terra Draw instance. The method call works out which mode to add the feature based on looking at its `mode` property in the Features `properties` property. All modes have a method called `validateFeature` that ensures that a given feature is valid for the mode. For example if you wanted to add a series of points to the TerraDrawPointMode you could do this by ensuring that the points you feed in have the `mode` property set to `point`.
@@ -23,9 +62,7 @@ const draw = new TerraDraw({
 		map,
 		coordinatePrecision: 9,
 	}),
-	modes: {
-		arbitary: new TerraDrawRenderMode(),
-	},
+	modes: [new TerraDrawRenderMode({ modeName: 'arbitary' })],
 });
 
 draw.start();
@@ -49,9 +86,9 @@ const draw = new TerraDraw({
 		map,
 		coordinatePrecision: 9,
 	}),
-	modes: {
-		polygon: new TerraDrawPolygonMode(),
-		select: new TerraDrawSelectMode({
+	modes: [
+		new TerraDrawPolygonMode(),
+		new TerraDrawSelectMode({
 			flags: {
 				polygon: {
 					feature: {
@@ -71,7 +108,7 @@ const draw = new TerraDraw({
 				selectedPolygonOutlineWidth: 2, // Integer
 			},
 		}),
-	},
+	]
 });
 
 draw.start();
@@ -102,8 +139,8 @@ const draw = new TerraDraw({
 		map, // Assume this is defined further up
 		coordinatePrecision: 9,
 	}),
-	modes: {
-		polygon: new TerraDrawPolygonMode({
+	modes: [
+		new TerraDrawPolygonMode({
 			styles: {
 				fillColor: ({ id }) => {
 					// Get the color from the cache or generate a new one
@@ -112,7 +149,7 @@ const draw = new TerraDraw({
 				},
 			},
 		}),
-	},
+	]
 });
 
 // Ensure the color cache is clead up on deletion of features

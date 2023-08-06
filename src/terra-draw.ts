@@ -68,12 +68,26 @@ class TerraDraw {
 
 	constructor(options: {
 		adapter: TerraDrawAdapter;
-		modes: { [mode: string]: TerraDrawBaseDrawMode<any> };
+		modes: TerraDrawBaseDrawMode<any>[];
 	}) {
 		this._adapter = options.adapter;
 		this._mode = new TerraDrawStaticMode();
 
-		const modeKeys = Object.keys(options.modes);
+		// Keep track of if there are duplicate modes
+		const duplicateModeTracker = new Set();
+
+		// Construct a map of the mode name to the mode
+		const modesMap = options.modes.reduce((modeMap, currentMode) => {
+			if (duplicateModeTracker.has(currentMode.mode)) {
+				throw new Error(`There is already a ${currentMode.mode} mode provided`);
+			}
+			duplicateModeTracker.add(currentMode.mode);
+			modeMap[currentMode.mode] = currentMode;
+			return modeMap;
+		}, {} as { [mode: string]: TerraDrawBaseDrawMode<any> });
+
+		// Construct an array of the mode keys (names)
+		const modeKeys = Object.keys(modesMap);
 
 		// Ensure at least one draw mode is provided
 		if (modeKeys.length === 0) {
@@ -82,7 +96,7 @@ class TerraDraw {
 
 		// Ensure only one select mode can be present
 		modeKeys.forEach((mode) => {
-			if (options.modes[mode].type !== ModeTypes.Select) {
+			if (modesMap[mode].type !== ModeTypes.Select) {
 				return;
 			}
 			if (this._instanceSelectMode) {
@@ -92,7 +106,7 @@ class TerraDraw {
 			}
 		});
 
-		this._modes = { ...options.modes, static: this._mode };
+		this._modes = { ...modesMap, static: this._mode };
 		this._eventListeners = { change: [], select: [], deselect: [], finish: [] };
 		this._store = new GeoJSONStore();
 

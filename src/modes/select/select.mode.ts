@@ -6,6 +6,7 @@ import {
 	TerraDrawAdapterStyling,
 	HexColorStyling,
 	NumericStyling,
+	Cursor,
 } from "../../common";
 import { Point, Position } from "geojson";
 import { ModeTypes, TerraDrawBaseDrawMode } from "../base.mode";
@@ -21,6 +22,7 @@ import { RotateFeatureBehavior } from "./behaviors/rotate-feature.behavior";
 import { ScaleFeatureBehavior } from "./behaviors/scale-feature.behavior";
 import { GeoJSONStoreFeatures } from "../../store/store";
 import { getDefaultStyling } from "../../util/styling";
+import { SetCursor } from "../../terra-draw";
 
 type TerraDrawSelectModeKeyEvents = {
 	deselect: KeyboardEvent["key"] | null;
@@ -72,6 +74,13 @@ type SelectionStyling = {
 	midPointOutlineWidth: NumericStyling;
 };
 
+interface Cursors {
+	pointerOver?: Cursor;
+	dragStart?: Cursor;
+	dragEnd?: Cursor;
+	insertMidpoint?: Cursor;
+}
+
 export class TerraDrawSelectMode extends TerraDrawBaseDrawMode<SelectionStyling> {
 	public type = ModeTypes.Select;
 	public mode = "select";
@@ -93,6 +102,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode<SelectionStyling>
 	private dragCoordinate!: DragCoordinateBehavior;
 	private rotateFeature!: RotateFeatureBehavior;
 	private scaleFeature!: ScaleFeatureBehavior;
+	private cursors: Required<Cursors>;
 
 	constructor(options?: {
 		styles?: Partial<SelectionStyling>;
@@ -100,10 +110,24 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode<SelectionStyling>
 		flags?: { [mode: string]: ModeFlags };
 		keyEvents?: TerraDrawSelectModeKeyEvents | null;
 		dragEventThrottle?: number;
+		cursors?: Cursors;
 	}) {
 		super(options);
 
 		this.flags = options && options.flags ? options.flags : {};
+
+		const defaultCursors = {
+			pointerOver: "move",
+			dragStart: "move",
+			dragEnd: "move",
+			insertMidpoint: "crosshair",
+		} as Required<Cursors>;
+
+		if (options && options.cursors) {
+			this.cursors = { ...defaultCursors, ...options.cursors };
+		} else {
+			this.cursors = defaultCursors;
+		}
 
 		// We want to have some defaults, but also allow key bindings
 		// to be explicitly turned off
@@ -338,6 +362,14 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode<SelectionStyling>
 				clickedFeature.id as string
 			);
 
+			// This will be undefined for points
+			const modeFlags = this.flags[mode as string];
+
+			// If feature is not selectable then return
+			if (!modeFlags || !modeFlags.feature) {
+				return;
+			}
+
 			const previouslySelectedId = this.selected[0];
 
 			// If we have something currently selected
@@ -352,13 +384,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode<SelectionStyling>
 				}
 			}
 
-			// This will be undefined for points
-			const modeFlags = this.flags[mode as string];
-
-			// If feature is not selectable then return
-			if (!modeFlags || !modeFlags.feature) {
-				return;
-			}
+			this.setCursor(this.cursors.pointerOver);
 
 			// Select feature
 			this.selected = [clickedFeature.id as string];
@@ -515,7 +541,6 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode<SelectionStyling>
 		}
 
 		this.dragEventCount = 0;
-		this.setCursor("grabbing");
 
 		const selectedId = this.selected[0];
 		const draggableCoordinateIndex = this.dragCoordinate.getDraggableIndex(
@@ -530,6 +555,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode<SelectionStyling>
 			modeFlags.feature.coordinates.draggable &&
 			draggableCoordinateIndex !== -1
 		) {
+			this.setCursor(this.cursors.dragStart);
 			this.dragCoordinate.startDragging(selectedId, draggableCoordinateIndex);
 			setMapDraggability(false);
 			return;
@@ -541,6 +567,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode<SelectionStyling>
 			modeFlags.feature.draggable &&
 			this.dragFeature.canDrag(event, selectedId)
 		) {
+			this.setCursor(this.cursors.dragStart);
 			this.dragFeature.startDragging(event, selectedId);
 			setMapDraggability(false);
 			return;
@@ -615,7 +642,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode<SelectionStyling>
 		_: TerraDrawMouseEvent,
 		setMapDraggability: (enabled: boolean) => void
 	) {
-		this.setCursor("grab");
+		this.setCursor(this.cursors.dragEnd);
 		this.dragCoordinate.stopDragging();
 		this.dragFeature.stopDragging();
 		this.rotateFeature.reset();
@@ -625,35 +652,57 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode<SelectionStyling>
 
 	/** @internal */
 	onMouseMove(event: TerraDrawMouseEvent) {
-		if (!this.selected.length || this.dragFeature.isDragging()) {
+		if (!this.selected.length) {
+			this.setCursor("unset");
 			return;
 		}
 
-		let nearbySelectionPoint = false;
+		if (this.dragFeature.isDragging()) {
+			return;
+		}
+
+		let nearbyMidPoint = false;
 		this.midPoints.ids.forEach((id: string) => {
-			if (nearbySelectionPoint) {
+			if (nearbyMidPoint) {
 				return;
 			}
 			const geometry = this.store.getGeometryCopy<Point>(id);
 			const distance = this.pixelDistance.measure(event, geometry.coordinates);
 
 			if (distance < this.pointerDistance) {
-				nearbySelectionPoint = true;
+				nearbyMidPoint = true;
 			}
 		});
 
+		let nearbySelectionPoint = false;
 		// TODO: Is there a cleaner way to handle prioritising
 		// dragging selection points?
 		this.selectionPoints.ids.forEach((id: string) => {
 			const geometry = this.store.getGeometryCopy<Point>(id);
 			const distance = this.pixelDistance.measure(event, geometry.coordinates);
 			if (distance < this.pointerDistance) {
-				nearbySelectionPoint = false;
+				nearbyMidPoint = false;
+				nearbySelectionPoint = true;
 			}
 		});
-		if (nearbySelectionPoint) {
-			this.setCursor("crosshair");
+
+		if (nearbyMidPoint) {
+			this.setCursor(this.cursors.insertMidpoint);
+			return;
+		}
+
+		// If we have a feature under the pointer then show the pointer over cursor
+		const { clickedFeature: featureUnderPointer } =
+			this.featuresAtMouseEvent.find(event, true);
+
+		if (
+			this.selected.length > 0 &&
+			((featureUnderPointer && featureUnderPointer.id === this.selected[0]) ||
+				nearbySelectionPoint)
+		) {
+			this.setCursor(this.cursors.pointerOver);
 		} else {
+			// Set it back to whatever the default cursor is
 			this.setCursor("unset");
 		}
 	}

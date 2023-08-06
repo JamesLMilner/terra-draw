@@ -5,6 +5,7 @@ import {
 	HexColor,
 	HexColorStyling,
 	NumericStyling,
+	Cursor,
 } from "../../common";
 import { Polygon } from "geojson";
 
@@ -30,6 +31,11 @@ type FreehandPolygonStyling = {
 	closingPointOutlineWidth: NumericStyling;
 };
 
+interface Cursors {
+	start?: Cursor;
+	close?: Cursor;
+}
+
 export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygonStyling> {
 	mode = "freehand";
 
@@ -38,13 +44,26 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 	private closingPointId: string | undefined;
 	private minDistance: number;
 	private keyEvents: TerraDrawFreehandModeKeyEvents;
+	private cursors: Required<Cursors>;
 
 	constructor(options?: {
 		styles?: Partial<FreehandPolygonStyling>;
 		minDistance?: number;
 		keyEvents?: TerraDrawFreehandModeKeyEvents | null;
+		cursors?: Cursors;
 	}) {
 		super(options);
+
+		const defaultCursors = {
+			start: "crosshair",
+			close: "pointer",
+		} as Required<Cursors>;
+
+		if (options && options.cursors) {
+			this.cursors = { ...defaultCursors, ...options.cursors };
+		} else {
+			this.cursors = defaultCursors;
+		}
 
 		this.minDistance = (options && options.minDistance) || 20;
 
@@ -84,7 +103,7 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 	/** @internal */
 	start() {
 		this.setStarted();
-		this.setCursor("crosshair");
+		this.setCursor(this.cursors.start);
 	}
 
 	/** @internal */
@@ -122,9 +141,9 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 		);
 
 		if (closingDistance < this.pointerDistance) {
-			this.setCursor("pointer");
+			this.setCursor(this.cursors.close);
 		} else {
-			this.setCursor("crosshair");
+			this.setCursor(this.cursors.start);
 		}
 
 		// The cusor must have moved a minimum distance

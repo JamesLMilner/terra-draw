@@ -3,6 +3,7 @@ import {
 	TerraDrawAdapterStyling,
 	NumericStyling,
 	HexColorStyling,
+	Cursor,
 } from "../../common";
 import { GeoJSONStoreFeatures } from "../../store/store";
 import { getDefaultStyling } from "../../util/styling";
@@ -15,17 +16,36 @@ type PointModeStyling = {
 	pointOutlineColor: HexColorStyling;
 	pointOutlineWidth: NumericStyling;
 };
+
+interface Cursors {
+	create?: Cursor;
+}
+
 export class TerraDrawPointMode extends TerraDrawBaseDrawMode<PointModeStyling> {
 	mode = "point";
 
-	constructor(options?: { styles?: Partial<PointModeStyling> }) {
+	private cursors: Required<Cursors>;
+
+	constructor(options?: {
+		styles?: Partial<PointModeStyling>;
+		cursors?: Cursors;
+	}) {
 		super(options);
+		const defaultCursors = {
+			create: "crosshair",
+		} as Required<Cursors>;
+
+		if (options && options.cursors) {
+			this.cursors = { ...defaultCursors, ...options.cursors };
+		} else {
+			this.cursors = defaultCursors;
+		}
 	}
 
 	/** @internal */
 	start() {
 		this.setStarted();
-		this.setCursor("crosshair");
+		this.setCursor(this.cursors.create);
 	}
 
 	/** @internal */

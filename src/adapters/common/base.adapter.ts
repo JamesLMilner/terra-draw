@@ -19,11 +19,17 @@ type BaseMouseListener = (event: MouseEvent) => void;
 export abstract class TerraDrawBaseAdapter {
 	constructor(config: {
 		coordinatePrecision?: number;
+		minPixelDragDistanceDrawing?: number;
 		minPixelDragDistance?: number;
 	}) {
 		this._minPixelDragDistance =
 			typeof config.minPixelDragDistance === "number"
 				? config.minPixelDragDistance
+				: 1;
+
+		this._minPixelDragDistanceDrawing =
+			typeof config.minPixelDragDistanceDrawing === "number"
+				? config.minPixelDragDistanceDrawing
 				: 8;
 
 		this._coordinatePrecision =
@@ -99,14 +105,25 @@ export abstract class TerraDrawBaseAdapter {
 						// drawing as doing in on selection can cause janky
 						// behaviours
 						const modeState = this._currentModeCallbacks.getState();
+
+						const pixelDistanceToCheck = pixelDistance(
+							lastEventXY,
+							currentEventXY
+						);
+
 						if (modeState === "drawing") {
 							// We want to ignore very small pointer movements when holding
 							// the map down as these are normally done by accident when
 							// drawing and is not an intended drag
 							const isMicroDrag =
-								pixelDistance(lastEventXY, currentEventXY) <
-								this._minPixelDragDistance;
-
+								pixelDistanceToCheck < this._minPixelDragDistanceDrawing;
+							if (isMicroDrag) {
+								return;
+							}
+						} else {
+							// Same as above, but when not drawing we generally want a much lower tolerance
+							const isMicroDrag =
+								pixelDistanceToCheck < this._minPixelDragDistance;
 							if (isMicroDrag) {
 								return;
 							}
@@ -261,6 +278,7 @@ export abstract class TerraDrawBaseAdapter {
 	}
 
 	protected _minPixelDragDistance: number;
+	protected _minPixelDragDistanceDrawing: number;
 	protected _lastDrawEvent: TerraDrawMouseEvent | undefined;
 	protected _coordinatePrecision: number;
 	protected _heldKeys: Set<string> = new Set();

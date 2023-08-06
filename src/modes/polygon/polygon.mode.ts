@@ -4,6 +4,7 @@ import {
 	TerraDrawKeyboardEvent,
 	HexColorStyling,
 	NumericStyling,
+	Cursor,
 } from "../../common";
 import { Polygon } from "geojson";
 import { selfIntersects } from "../../geometry/boolean/self-intersects";
@@ -35,6 +36,11 @@ type PolygonStyling = {
 	closingPointOutlineColor: HexColorStyling;
 };
 
+interface Cursors {
+	start?: Cursor;
+	close?: Cursor;
+}
+
 export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> {
 	mode = "polygon";
 
@@ -48,7 +54,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 	private snapping!: SnappingBehavior;
 	private pixelDistance!: PixelDistanceBehavior;
 	private closingPoints!: ClosingPointsBehavior;
-
+	private cursors: Required<Cursors>;
 	private mouseMove = false;
 
 	constructor(options?: {
@@ -57,8 +63,20 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 		pointerDistance?: number;
 		styles?: Partial<PolygonStyling>;
 		keyEvents?: TerraDrawPolygonModeKeyEvents | null;
+		cursors?: Cursors;
 	}) {
 		super(options);
+
+		const defaultCursors = {
+			start: "crosshair",
+			close: "pointer",
+		} as Required<Cursors>;
+
+		if (options && options.cursors) {
+			this.cursors = { ...defaultCursors, ...options.cursors };
+		} else {
+			this.cursors = defaultCursors;
+		}
 
 		this.snappingEnabled =
 			options && options.snapping !== undefined ? options.snapping : false;
@@ -140,7 +158,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 	/** @internal */
 	start() {
 		this.setStarted();
-		this.setCursor("crosshair");
+		this.setCursor(this.cursors.start);
 	}
 
 	/** @internal */
@@ -153,7 +171,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 	/** @internal */
 	onMouseMove(event: TerraDrawMouseEvent) {
 		this.mouseMove = true;
-		this.setCursor("crosshair");
+		this.setCursor(this.cursors.start);
 
 		if (!this.currentId || this.currentCoordinate === 0) {
 			return;
@@ -198,7 +216,8 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 				this.closingPoints.isClosingPoint(event);
 
 			if (isPreviousClosing || isClosing) {
-				this.setCursor("pointer");
+				this.setCursor(this.cursors.close);
+
 				updatedCoordinates = [
 					...currentPolygonCoordinates.slice(0, -2),
 					currentPolygonCoordinates[0],
@@ -431,7 +450,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 	/** @internal */
 	onDragEnd() {
 		// Set it back to crosshair
-		this.setCursor("crosshair");
+		this.setCursor(this.cursors.start);
 	}
 
 	/** @internal */

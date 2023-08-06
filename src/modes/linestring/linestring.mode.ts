@@ -5,6 +5,7 @@ import {
 	HexColor,
 	HexColorStyling,
 	NumericStyling,
+	Cursor,
 } from "../../common";
 import { LineString } from "geojson";
 import { selfIntersects } from "../../geometry/boolean/self-intersects";
@@ -31,6 +32,11 @@ type LineStringStyling = {
 	closingPointOutlineWidth: NumericStyling;
 };
 
+interface Cursors {
+	start?: Cursor;
+	close?: Cursor;
+}
+
 export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringStyling> {
 	mode = "linestring";
 
@@ -40,7 +46,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 	private allowSelfIntersections;
 	private keyEvents: TerraDrawLineStringModeKeyEvents;
 	private snappingEnabled: boolean;
-
+	private cursors: Required<Cursors>;
 	private mouseMove = false;
 
 	// Behaviors
@@ -52,8 +58,20 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 		pointerDistance?: number;
 		styles?: Partial<LineStringStyling>;
 		keyEvents?: TerraDrawLineStringModeKeyEvents | null;
+		cursors?: Cursors;
 	}) {
 		super(options);
+
+		const defaultCursors = {
+			start: "crosshair",
+			close: "pointer",
+		} as Required<Cursors>;
+
+		if (options && options.cursors) {
+			this.cursors = { ...defaultCursors, ...options.cursors };
+		} else {
+			this.cursors = defaultCursors;
+		}
 
 		this.snappingEnabled =
 			options && options.snapping !== undefined ? options.snapping : false;
@@ -126,7 +144,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 	/** @internal */
 	start() {
 		this.setStarted();
-		this.setCursor("crosshair");
+		this.setCursor(this.cursors.start);
 	}
 
 	/** @internal */
@@ -139,7 +157,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 	/** @internal */
 	onMouseMove(event: TerraDrawMouseEvent) {
 		this.mouseMove = true;
-		this.setCursor("crosshair");
+		this.setCursor(this.cursors.start);
 
 		if (!this.currentId || this.currentCoordinate === 0) {
 			return;
@@ -172,7 +190,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 			const isClosingClick = distance < this.pointerDistance;
 
 			if (isClosingClick) {
-				this.setCursor("pointer");
+				this.setCursor(this.cursors.close);
 			}
 		}
 
@@ -239,7 +257,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 
 			// We are creating the point so we immediately want
 			// to set the point cursor to show it can be closed
-			this.setCursor("pointer");
+			this.setCursor(this.cursors.close);
 
 			this.store.updateGeometry([
 				{
@@ -295,7 +313,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 				}
 
 				if (this.closingPointId) {
-					this.setCursor("pointer");
+					this.setCursor(this.cursors.close);
 
 					this.store.updateGeometry([
 						{ id: this.currentId, geometry: newLineString },

@@ -1603,6 +1603,10 @@ describe("TerraDrawSelectMode", () => {
 				heldKeys: [],
 			});
 
+			// Pointer set to move when teh cursor is
+			expect(setCursor).toHaveBeenCalledTimes(1);
+			expect(setCursor).toBeCalledWith("move");
+
 			expect(onSelect).toBeCalledTimes(1);
 
 			const setMapDraggability = jest.fn();
@@ -1617,7 +1621,7 @@ describe("TerraDrawSelectMode", () => {
 				},
 				setMapDraggability
 			);
-			expect(setCursor).not.toBeCalled();
+
 			expect(setMapDraggability).not.toBeCalled();
 		});
 
@@ -2359,7 +2363,7 @@ describe("TerraDrawSelectMode", () => {
 			expect(setMapDraggability).toBeCalledTimes(1);
 			expect(setMapDraggability).toBeCalledWith(true);
 			expect(setCursor).toBeCalledTimes(1);
-			expect(setCursor).toBeCalledWith("grab");
+			expect(setCursor).toBeCalledWith("move");
 		});
 	});
 

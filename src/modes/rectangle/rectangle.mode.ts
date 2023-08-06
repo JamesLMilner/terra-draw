@@ -6,6 +6,7 @@ import {
 	HexColor,
 	HexColorStyling,
 	NumericStyling,
+	Cursor,
 } from "../../common";
 import { GeoJSONStoreFeatures } from "../../store/store";
 import { getDefaultStyling } from "../../util/styling";
@@ -24,18 +25,35 @@ type RectanglePolygonStyling = {
 	fillOpacity: NumericStyling;
 };
 
+interface Cursors {
+	start?: Cursor;
+}
+
 export class TerraDrawRectangleMode extends TerraDrawBaseDrawMode<RectanglePolygonStyling> {
 	mode = "rectangle";
 	private center: Position | undefined;
 	private clickCount = 0;
 	private currentRectangleId: string | undefined;
 	private keyEvents: TerraDrawRectangleModeKeyEvents;
+	private cursors: Required<Cursors>;
 
 	constructor(options?: {
 		styles?: Partial<RectanglePolygonStyling>;
 		keyEvents?: TerraDrawRectangleModeKeyEvents | null;
+		cursors?: Cursors;
 	}) {
 		super(options);
+
+		const defaultCursors = {
+			start: "crosshair",
+		} as Required<Cursors>;
+
+		if (options && options.cursors) {
+			this.cursors = { ...defaultCursors, ...options.cursors };
+		} else {
+			this.cursors = defaultCursors;
+		}
+
 		// We want to have some defaults, but also allow key bindings
 		// to be explicitly turned off
 		if (options?.keyEvents === null) {
@@ -91,7 +109,7 @@ export class TerraDrawRectangleMode extends TerraDrawBaseDrawMode<RectanglePolyg
 	/** @internal */
 	start() {
 		this.setStarted();
-		this.setCursor("crosshair");
+		this.setCursor(this.cursors.start);
 	}
 
 	/** @internal */

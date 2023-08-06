@@ -22,7 +22,7 @@ Terra Draw uses the concept of 'adapters' to allow it to work with a host of dif
 
 ### Getting Started
 
-Please see the [the getting started guide](./guides/GETTING_STARTED.md)
+Please see the [the getting started guide](./guides/GETTING_STARTED.md) - this provides a host of information on how get up and running with Terra Draw. You may also find some useful pointers for things you may be finding yourself wanting to do in the [common patterns guide](./guides/COMMON_PATTERNS.md).
 
 ### Development
 

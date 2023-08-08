@@ -254,12 +254,11 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 		}
 		this.mouseMove = false;
 
-		const closestCoord =
-			this.currentId && this.snappingEnabled
-				? this.snapping.getSnappableCoordinate(event, this.currentId)
+		if (this.currentCoordinate === 0) {
+			const closestCoord = this.snappingEnabled
+				? this.snapping.getSnappableCoordinateFirstClick(event)
 				: undefined;
 
-		if (this.currentCoordinate === 0) {
 			if (closestCoord) {
 				event.lng = closestCoord[0];
 				event.lat = closestCoord[1];
@@ -287,6 +286,10 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 			// Ensure the state is updated to reflect drawing has started
 			this.setDrawing();
 		} else if (this.currentCoordinate === 1 && this.currentId) {
+			const closestCoord = this.snappingEnabled
+				? this.snapping.getSnappableCoordinate(event, this.currentId)
+				: undefined;
+
 			if (closestCoord) {
 				event.lng = closestCoord[0];
 				event.lat = closestCoord[1];
@@ -325,6 +328,10 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 
 			this.currentCoordinate++;
 		} else if (this.currentCoordinate === 2 && this.currentId) {
+			const closestCoord = this.snappingEnabled
+				? this.snapping.getSnappableCoordinate(event, this.currentId)
+				: undefined;
+
 			if (closestCoord) {
 				event.lng = closestCoord[0];
 				event.lat = closestCoord[1];
@@ -368,6 +375,10 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 
 			this.currentCoordinate++;
 		} else if (this.currentId) {
+			const closestCoord = this.snappingEnabled
+				? this.snapping.getSnappableCoordinate(event, this.currentId)
+				: undefined;
+
 			const currentPolygonCoordinates = this.store.getGeometryCopy<Polygon>(
 				this.currentId
 			).coordinates[0];

@@ -14,6 +14,15 @@ export class SnappingBehavior extends TerraDrawModeBehavior {
 		super(config);
 	}
 
+	/** Returns the nearest snappable coordinate - on first click there is no currentId so no need to provide */
+	public getSnappableCoordinateFirstClick = (event: TerraDrawMouseEvent) => {
+		return this.getSnappable(event, (feature) => {
+			return Boolean(
+				feature.properties && feature.properties.mode === this.mode
+			);
+		});
+	};
+
 	public getSnappableCoordinate = (
 		event: TerraDrawMouseEvent,
 		currentFeatureId: string

@@ -34,6 +34,7 @@ type ModeFlags = {
 		draggable?: boolean;
 		rotateable?: boolean;
 		scaleable?: boolean;
+		self_intersectable?: boolean;
 		coordinates?: {
 			midpoints?: boolean;
 			draggable?: boolean;
@@ -561,6 +562,10 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode<SelectionStyling>
 
 		const properties = this.store.getPropertiesCopy(selectedId);
 		const modeFlags = this.flags[properties.mode as string];
+		const canSelfIntersect: boolean =
+			(modeFlags &&
+				modeFlags.feature &&
+				modeFlags.feature.self_intersectable) === true;
 
 		// Ensure drag count is incremented
 		this.dragEventCount++;
@@ -597,7 +602,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode<SelectionStyling>
 
 		// Check if coordinate is draggable and is dragged
 		if (this.dragCoordinate.isDragging()) {
-			this.dragCoordinate.drag(event);
+			this.dragCoordinate.drag(event, canSelfIntersect);
 			return;
 		}
 

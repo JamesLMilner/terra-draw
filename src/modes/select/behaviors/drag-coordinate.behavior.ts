@@ -1,10 +1,11 @@
 import { TerraDrawMouseEvent } from "../../../common";
 import { BehaviorConfig, TerraDrawModeBehavior } from "../../base.behavior";
 
-import { LineString, Polygon, Position, Point } from "geojson";
+import { LineString, Polygon, Position, Point, Feature } from "geojson";
 import { PixelDistanceBehavior } from "../../pixel-distance.behavior";
 import { MidPointBehavior } from "./midpoint.behavior";
 import { SelectionPointBehavior } from "./selection-point.behavior";
+import { selfIntersects } from "../../../geometry/boolean/self-intersects";
 
 export class DragCoordinateBehavior extends TerraDrawModeBehavior {
 	constructor(
@@ -83,7 +84,10 @@ export class DragCoordinateBehavior extends TerraDrawModeBehavior {
 		return closestCoordinate.index;
 	}
 
-	public drag(event: TerraDrawMouseEvent): boolean {
+	public drag(
+		event: TerraDrawMouseEvent,
+		allowSelfIntersection: boolean
+	): boolean {
 		if (!this.draggedCoordinate.id) {
 			return false;
 		}
@@ -135,6 +139,18 @@ export class DragCoordinateBehavior extends TerraDrawModeBehavior {
 			: [];
 
 		const updatedMidPoints = this.midPoints.getUpdated(geomCoordinates) || [];
+
+		if (
+			geometry.type !== "Point" &&
+			!allowSelfIntersection &&
+			selfIntersects({
+				type: "Feature",
+				geometry: geometry,
+				properties: {},
+			} as Feature<Polygon>)
+		) {
+			return false;
+		}
 
 		// Apply all the updates
 		this.store.updateGeometry([

@@ -47,7 +47,8 @@
 		"mapboxgl",
 		"google maps",
 		"openlayers",
-		"maplibre"
+		"maplibre",
+		"maptalks"
 	],
 	"devDependencies": {
 		"@arcgis/core": "^4.27.6",
@@ -63,6 +64,7 @@
 		"@types/rbush": "^3.0.0",
 		"@typescript-eslint/eslint-plugin": "^5.57.0",
 		"@typescript-eslint/parser": "^5.57.0",
+		"@maptalks/gl-layers": "^0.25.1",
 		"eslint": "^8.24.0",
 		"eslint-config-prettier": "^8.5.0",
 		"eslint-plugin-prettier": "^4.2.1",
@@ -71,6 +73,7 @@
 		"leaflet": "^1.8.0",
 		"mapbox-gl": "^2.13.0",
 		"maplibre-gl": "3.2.0",
+		"maptalks": "^1.0.0-rc.24",
 		"microbundle": "^0.15.0",
 		"ol": "^7.1.0",
 		"serve": "^14.1.2",

@@ -3,8 +3,11 @@ const Dotenv = require("dotenv-webpack");
 
 module.exports = {
 	mode: "development",
-	entry: "./src/index.ts",
-	devtool: "inline-source-map",
+	entry: {
+		mtk: "./src/maptalks.ts",
+		index: "./src/index.ts",
+	},
+	devtool: "source-map",
 	plugins: [new Dotenv()],
 	module: {
 		rules: [
@@ -19,7 +22,7 @@ module.exports = {
 		extensions: [".tsx", ".ts", ".js"],
 	},
 	output: {
-		filename: "bundle.js",
+		filename: "[name].js",
 		path: path.resolve(__dirname, "dist"),
 	},
 	devServer: {

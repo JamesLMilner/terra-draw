@@ -3,6 +3,7 @@ import { TerraDrawLeafletAdapter } from "./adapters/leaflet.adapter";
 import { TerraDrawMapboxGLAdapter } from "./adapters/mapbox-gl.adapter";
 import { TerraDrawMapLibreGLAdapter } from "./adapters/maplibre-gl.adapter";
 import { TerraDrawOpenLayersAdapter } from "./adapters/openlayers.adapter";
+import { TerraDrawMaptalksAdapter } from "./adapters/maptalks.adapter";
 import {
 	TerraDrawAdapter,
 	TerraDrawAdapterStyling,
@@ -562,6 +563,7 @@ export {
 	TerraDrawLeafletAdapter,
 	TerraDrawMapLibreGLAdapter,
 	TerraDrawOpenLayersAdapter,
+	TerraDrawMaptalksAdapter,
 	TerraDrawExtend,
 
 	// Types that are required for 3rd party developers to extend

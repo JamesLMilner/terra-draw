@@ -5,6 +5,7 @@ if (process.env.NO_CHECK) {
 		transform: {
 			"^.+\\.(t|j)sx?$": "@swc/jest",
 		},
+		setupFiles: ["./jest/image.ts"],
 		coveragePathIgnorePatterns: ["<rootDir>/src/test/"],
 		setupFilesAfterEnv: ["<rootDir>/src/test/jest.matchers.ts"],
 	};
@@ -12,6 +13,7 @@ if (process.env.NO_CHECK) {
 	options = {
 		preset: "ts-jest",
 		testEnvironment: "node",
+		setupFiles: ["./jest/image.ts"],
 		coveragePathIgnorePatterns: ["<rootDir>/src/test/"],
 		setupFilesAfterEnv: ["<rootDir>/src/test/jest.matchers.ts"],
 		collectCoverage: true,

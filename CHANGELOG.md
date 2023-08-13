@@ -2,6 +2,30 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.1-alpha.45](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.44...v0.0.1-alpha.45) (2023-08-08)
+
+
+### Features
+
+* add basic tests for arcgis maps sdk adapter ([7fe12a3](https://github.com/JamesLMilner/terra-draw/commit/7fe12a3eb583b39bca409671f2c55e144cb17be9))
+* add Esri ArcGIS Maps SDK adapter ([0fece22](https://github.com/JamesLMilner/terra-draw/commit/0fece229c6ccd3fb573b634f6c5314c3192da76d))
+* add tests for render method ([14a3733](https://github.com/JamesLMilner/terra-draw/commit/14a3733c373a222bea569735eff4eb2f4c793587))
+* adjust styling to equal other map adapters ([2d07973](https://github.com/JamesLMilner/terra-draw/commit/2d07973fa24d96943064c444d18beb227615dd87))
+* allow cursors to be configured for built in modes ([57a5db2](https://github.com/JamesLMilner/terra-draw/commit/57a5db299b6424f7375a852c231fde0d6e0a4131))
+
+
+### Bug Fixes
+
+* better registration of selections by ignoring microdrags even when not drawing ([cd7a8ea](https://github.com/JamesLMilner/terra-draw/commit/cd7a8eaac209ba95784a961d823f7693038dd2ff))
+* pass modes as array rather than object ([80885cc](https://github.com/JamesLMilner/terra-draw/commit/80885cc62a15ec9ef32cf739771628cb2fe6edb2))
+
+
+### Chore
+
+* add ArcGIS JavaScript SDK to the README ([1801e50](https://github.com/JamesLMilner/terra-draw/commit/1801e5003a2d3b079c641d323d1ac70ccca58b36))
+* split out common patterns guide to its own file ([ef721cf](https://github.com/JamesLMilner/terra-draw/commit/ef721cf0385d9d3754a5a951fc930c1792405401))
+* update docs ([f1d1832](https://github.com/JamesLMilner/terra-draw/commit/f1d1832a5a95003a422d7e129c56e4c295a25e44))
+
 ### [0.0.1-alpha.44](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.43...v0.0.1-alpha.44) (2023-07-25)
 
 

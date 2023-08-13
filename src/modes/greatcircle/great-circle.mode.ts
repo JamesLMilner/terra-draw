@@ -5,6 +5,7 @@ import {
 	HexColor,
 	HexColorStyling,
 	NumericStyling,
+	Cursor,
 } from "../../common";
 import { LineString } from "geojson";
 import { TerraDrawBaseDrawMode } from "../base.mode";
@@ -30,6 +31,11 @@ type GreateCircleStyling = {
 	closingPointOutlineWidth: NumericStyling;
 };
 
+interface Cursors {
+	start?: Cursor;
+	close?: Cursor;
+}
+
 export class TerraDrawGreatCircleMode extends TerraDrawBaseDrawMode<GreateCircleStyling> {
 	mode = "greatcircle";
 
@@ -38,6 +44,7 @@ export class TerraDrawGreatCircleMode extends TerraDrawBaseDrawMode<GreateCircle
 	private closingPointId: string | undefined;
 	private keyEvents: TerraDrawGreateCircleModeKeyEvents;
 	private snappingEnabled: boolean;
+	private cursors: Required<Cursors>;
 
 	// Behaviors
 	private snapping!: GreatCircleSnappingBehavior;
@@ -47,8 +54,20 @@ export class TerraDrawGreatCircleMode extends TerraDrawBaseDrawMode<GreateCircle
 		pointerDistance?: number;
 		styles?: Partial<GreateCircleStyling>;
 		keyEvents?: TerraDrawGreateCircleModeKeyEvents | null;
+		cursors?: Cursors;
 	}) {
 		super(options);
+
+		const defaultCursors = {
+			start: "crosshair",
+			close: "pointer",
+		} as Required<Cursors>;
+
+		if (options && options.cursors) {
+			this.cursors = { ...defaultCursors, ...options.cursors };
+		} else {
+			this.cursors = defaultCursors;
+		}
 
 		this.snappingEnabled =
 			options && options.snapping !== undefined ? options.snapping : false;
@@ -99,7 +118,7 @@ export class TerraDrawGreatCircleMode extends TerraDrawBaseDrawMode<GreateCircle
 	/** @internal */
 	start() {
 		this.setStarted();
-		this.setCursor("crosshair");
+		this.setCursor(this.cursors.start);
 	}
 
 	/** @internal */
@@ -111,7 +130,7 @@ export class TerraDrawGreatCircleMode extends TerraDrawBaseDrawMode<GreateCircle
 
 	/** @internal */
 	onMouseMove(event: TerraDrawMouseEvent) {
-		this.setCursor("crosshair");
+		this.setCursor(this.cursors.start);
 
 		if (!this.currentId && this.currentCoordinate === 0) {
 			return;

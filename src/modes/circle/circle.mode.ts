@@ -6,6 +6,8 @@ import {
 	HexColor,
 	HexColorStyling,
 	NumericStyling,
+	SetCursor,
+	Cursor,
 } from "../../common";
 import { haversineDistanceKilometers } from "../../geometry/measure/haversine-distance";
 import { circle } from "../../geometry/shape/create-circle";
@@ -19,25 +21,41 @@ type TerraDrawCircleModeKeyEvents = {
 	finish: KeyboardEvent["key"] | null;
 };
 
-type FreehandPolygonStyling = {
+type CirclePolygonStyling = {
 	fillColor: HexColorStyling;
 	outlineColor: HexColorStyling;
 	outlineWidth: NumericStyling;
 	fillOpacity: NumericStyling;
 };
 
-export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<FreehandPolygonStyling> {
+interface Cursors {
+	start?: Cursor;
+}
+
+export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyling> {
 	mode = "circle";
 	private center: Position | undefined;
 	private clickCount = 0;
 	private currentCircleId: string | undefined;
 	private keyEvents: TerraDrawCircleModeKeyEvents;
+	private cursors: Required<Cursors>;
 
 	constructor(options?: {
-		styles?: Partial<FreehandPolygonStyling>;
+		styles?: Partial<CirclePolygonStyling>;
 		keyEvents?: TerraDrawCircleModeKeyEvents | null;
+		cursors?: Cursors;
 	}) {
 		super(options);
+
+		const defaultCursors = {
+			start: "crosshair",
+		} as Required<Cursors>;
+
+		if (options && options.cursors) {
+			this.cursors = { ...defaultCursors, ...options.cursors };
+		} else {
+			this.cursors = defaultCursors;
+		}
 
 		// We want to have some defaults, but also allow key bindings
 		// to be explicitly turned off
@@ -74,7 +92,7 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<FreehandPolygonSt
 	/** @internal */
 	start() {
 		this.setStarted();
-		this.setCursor("crosshair");
+		this.setCursor(this.cursors.start);
 	}
 
 	/** @internal */

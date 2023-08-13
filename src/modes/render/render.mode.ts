@@ -29,8 +29,12 @@ export class TerraDrawRenderMode extends TerraDrawBaseDrawMode<RenderModeStyling
 	public type = ModeTypes.Render; // The type of the mode
 	public mode = "render"; // This gets changed dynamically
 
-	constructor(options: { styles: Partial<RenderModeStyling> }) {
+	constructor(options: {
+		modeName: string;
+		styles: Partial<RenderModeStyling>;
+	}) {
 		super({ styles: options.styles });
+		this.mode = options.modeName;
 	}
 
 	/** @internal */

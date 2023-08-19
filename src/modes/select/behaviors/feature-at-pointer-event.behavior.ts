@@ -8,7 +8,7 @@ import { pointInPolygon } from "../../../geometry/boolean/point-in-polygon";
 import { PixelDistanceBehavior } from "../../pixel-distance.behavior";
 import { pixelDistanceToLine } from "../../../geometry/measure/pixel-distance-to-line";
 
-export class FeaturesAtMouseEventBehavior extends TerraDrawModeBehavior {
+export class FeatureAtPointerEventBehavior extends TerraDrawModeBehavior {
 	constructor(
 		readonly config: BehaviorConfig,
 		private readonly createClickBoundingBox: ClickBoundingBoxBehavior,
@@ -43,7 +43,6 @@ export class FeaturesAtMouseEventBehavior extends TerraDrawModeBehavior {
 
 				const distance = this.pixelDistance.measure(
 					event,
-
 					geometry.coordinates
 				);
 

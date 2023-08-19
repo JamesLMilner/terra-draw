@@ -6,7 +6,7 @@ import { BehaviorConfig } from "../../base.behavior";
 import { ClickBoundingBoxBehavior } from "../../click-bounding-box.behavior";
 import { PixelDistanceBehavior } from "../../pixel-distance.behavior";
 import { DragFeatureBehavior } from "./drag-feature.behavior";
-import { FeaturesAtMouseEventBehavior } from "./features-at-mouse-event.behavior";
+import { FeatureAtPointerEventBehavior } from "./feature-at-pointer-event.behavior";
 import { MidPointBehavior } from "./midpoint.behavior";
 import { SelectionPointBehavior } from "./selection-point.behavior";
 
@@ -15,7 +15,7 @@ describe("DragFeatureBehavior", () => {
 		it("constructs", () => {
 			const config = mockBehaviorConfig("test");
 			const selectionPointBehavior = new SelectionPointBehavior(config);
-			const featuresAtMouseEventBehavior = new FeaturesAtMouseEventBehavior(
+			const featureAtPointerEventBehavior = new FeatureAtPointerEventBehavior(
 				config,
 				new ClickBoundingBoxBehavior(config),
 				new PixelDistanceBehavior(config)
@@ -27,7 +27,7 @@ describe("DragFeatureBehavior", () => {
 
 			new DragFeatureBehavior(
 				config,
-				featuresAtMouseEventBehavior,
+				featureAtPointerEventBehavior,
 				selectionPointBehavior,
 				midpointBehavior
 			);
@@ -41,7 +41,7 @@ describe("DragFeatureBehavior", () => {
 		beforeEach(() => {
 			config = mockBehaviorConfig("test");
 			const selectionPointBehavior = new SelectionPointBehavior(config);
-			const featuresAtMouseEventBehavior = new FeaturesAtMouseEventBehavior(
+			const featureAtPointerEventBehavior = new FeatureAtPointerEventBehavior(
 				config,
 				new ClickBoundingBoxBehavior(config),
 				new PixelDistanceBehavior(config)
@@ -53,7 +53,7 @@ describe("DragFeatureBehavior", () => {
 
 			dragFeatureBehavior = new DragFeatureBehavior(
 				config,
-				featuresAtMouseEventBehavior,
+				featureAtPointerEventBehavior,
 				selectionPointBehavior,
 				midpointBehavior
 			);

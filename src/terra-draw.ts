@@ -30,11 +30,17 @@ import { TerraDrawRenderMode } from "./modes/render/render.mode";
 import { TerraDrawSelectMode } from "./modes/select/select.mode";
 import { TerraDrawStaticMode } from "./modes/static/static.mode";
 import {
+	BBoxPolygon,
 	GeoJSONStore,
 	GeoJSONStoreFeatures,
 	StoreChangeHandler,
 } from "./store/store";
 import { BehaviorConfig } from "./modes/base.behavior";
+import { pixelDistance } from "./geometry/measure/pixel-distance";
+import { pixelDistanceToLine } from "./geometry/measure/pixel-distance-to-line";
+import { Position } from "geojson";
+import { pointInPolygon } from "./geometry/boolean/point-in-polygon";
+import { createBBoxFromPoint } from "./geometry/shape/create-bbox";
 
 type FinishListener = (ids: string) => void;
 type ChangeListener = (ids: string[], type: string) => void;
@@ -277,6 +283,85 @@ class TerraDraw {
 		return modeStyles;
 	}
 
+	private featuresAtLocation(
+		{
+			lng,
+			lat,
+		}: {
+			lng: number;
+			lat: number;
+		},
+		options?: { pointerDistance: number; ignoreSelectFeatures: boolean }
+	) {
+		const pointerDistance =
+			options && options.pointerDistance !== undefined
+				? options.pointerDistance
+				: 30; // default is 30px
+
+		const ignoreSelectFeatures =
+			options && options.ignoreSelectFeatures !== undefined
+				? options.ignoreSelectFeatures
+				: true;
+
+		const unproject = this._adapter.unproject.bind(this._adapter);
+		const project = this._adapter.project.bind(this._adapter);
+
+		const inputPoint = project(lng, lat);
+
+		const bbox = createBBoxFromPoint({
+			unproject,
+			point: inputPoint,
+			pointerDistance,
+		});
+
+		const features = this._store.search(bbox as BBoxPolygon);
+
+		// TODO: This is designed to work in a similar way as FeatureAtPointerEvent
+		// perhaps at some point we could figure out how to unify them
+		return features.filter((feature) => {
+			if (
+				ignoreSelectFeatures &&
+				(feature.properties[SELECT_PROPERTIES.MID_POINT] ||
+					feature.properties[SELECT_PROPERTIES.SELECTION_POINT])
+			) {
+				return false;
+			}
+
+			if (feature.geometry.type === "Point") {
+				const pointCoordinates = feature.geometry.coordinates;
+				const pointXY = project(pointCoordinates[0], pointCoordinates[1]);
+				const distance = pixelDistance(inputPoint, pointXY);
+				return distance < pointerDistance;
+			} else if (feature.geometry.type === "LineString") {
+				const coordinates: Position[] = feature.geometry.coordinates;
+
+				for (let i = 0; i < coordinates.length - 1; i++) {
+					const coord = coordinates[i];
+					const nextCoord = coordinates[i + 1];
+					const distanceToLine = pixelDistanceToLine(
+						inputPoint,
+						project(coord[0], coord[1]),
+						project(nextCoord[0], nextCoord[1])
+					);
+
+					if (distanceToLine < pointerDistance) {
+						return true;
+					}
+				}
+				return false;
+			} else {
+				const lngLatInsidePolygon = pointInPolygon(
+					[lng, lat],
+					feature.geometry.coordinates
+				);
+
+				if (lngLatInsidePolygon) {
+					return true;
+				}
+			}
+		});
+	}
+
 	/**
 	 * Allows the setting of a style for a given mode
 	 *
@@ -484,6 +569,54 @@ class TerraDraw {
 				this._store.clear();
 			},
 		});
+	}
+
+	/**
+	 * Gets the features at a given longitude and latitude.
+	 * Will return point and linestrings that are a given pixel distance
+	 * away from the lng/lat and any polygons which contain it.
+	 *
+	 * @alpha
+	 */
+	getFeaturesAtLngLat(
+		lngLat: { lng: number; lat: number },
+		options?: { pointerDistance: number; ignoreSelectFeatures: boolean }
+	) {
+		const { lng, lat } = lngLat;
+
+		return this.featuresAtLocation(
+			{
+				lng,
+				lat,
+			},
+			options
+		);
+	}
+
+	/**
+	 * Takes a given pointer event and
+	 * Will return point and linestrings that are a given pixel distance
+	 * away from the lng/lat and any polygons which contain it.
+	 *
+	 * @alpha
+	 */
+	getFeaturesAtPointerEvent(
+		event: PointerEvent | MouseEvent,
+		options?: { pointerDistance: number; ignoreSelectFeatures: boolean }
+	) {
+		const getLngLatFromEvent = this._adapter.getLngLatFromEvent.bind(
+			this._adapter
+		);
+
+		const lngLat = getLngLatFromEvent(event);
+
+		// If the pointer event is outside the container or the underlying library is
+		// not ready we can get null as a returned value
+		if (lngLat === null) {
+			return [];
+		}
+
+		return this.featuresAtLocation(lngLat, options);
 	}
 
 	/**

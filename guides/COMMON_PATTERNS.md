@@ -4,14 +4,14 @@
 
 To change mode we need to set the current mode to match the name of the mode we want. You can see the name of the mode in each modes 'mode' property in the modes source file. For convenience here are the built in mode names listed out:
 
-* TerraDrawStaticMode - 'static' 
-* TerraDrawPolygonMode - 'polygon'
-* TerraDrawPointMode - 'point'
-* TerraDrawCircleMode - 'circle'
-* TerraDrawLineStringMode - 'linestring'
-* TerraDrawSelectMode - 'select'
-* TerraDrawLineStringMode - 'freehand'
-* TerraDraqwGreatCircleMode - 'greatcircle'
+- TerraDrawStaticMode - 'static'
+- TerraDrawPolygonMode - 'polygon'
+- TerraDrawPointMode - 'point'
+- TerraDrawCircleMode - 'circle'
+- TerraDrawLineStringMode - 'linestring'
+- TerraDrawSelectMode - 'select'
+- TerraDrawLineStringMode - 'freehand'
+- TerraDraqwGreatCircleMode - 'greatcircle'
 
 We can then create these modes and change to them like so:
 
@@ -24,20 +24,18 @@ const draw = new TerraDraw({
 	}),
 	modes: [
 		new TerraDrawPolygonMode(), // Polygon mode has a builtin name 'polygon'
-		new TerraDrawRenderMode({ modeName: 'arbitary' }) // Render modes are given custom names
+		new TerraDrawRenderMode({ modeName: "arbitary" }), // Render modes are given custom names
 	],
 });
 
 draw.start();
 
 // Change to our TerraDrawPolygonMode instance
-draw.setMode('polygon')
+draw.setMode("polygon");
 
 // We can use our custom render mode name to change to it.
-draw.setMode('arbitary') 
-
+draw.setMode("arbitary");
 ```
-
 
 ### Loading in External Data
 
@@ -62,7 +60,7 @@ const draw = new TerraDraw({
 		map,
 		coordinatePrecision: 9,
 	}),
-	modes: [new TerraDrawRenderMode({ modeName: 'arbitary' })],
+	modes: [new TerraDrawRenderMode({ modeName: "arbitary" })],
 });
 
 draw.start();
@@ -108,7 +106,7 @@ const draw = new TerraDraw({
 				selectedPolygonOutlineWidth: 2, // Integer
 			},
 		}),
-	]
+	],
 });
 
 draw.start();
@@ -149,9 +147,45 @@ const draw = new TerraDraw({
 				},
 			},
 		}),
-	]
+	],
 });
 
 // Ensure the color cache is clead up on deletion of features
 draw.on("delete", (ids) => ids.forEach((id) => delete cache[id]));
 ```
+
+### Getting Features from a Mouse/Pointer Event
+
+Getting features at a given mouse event can be done like so:
+
+```typescript
+document.addEventListener("mousemove", (event) => {
+	const featuresAtMouseEvent = draw.getFeaturesAtPointerEvent(event, {
+		pointerDistance: 40, // the number pixels to search around input point
+		ignoreSelectFeatures: true,
+	});
+	console.log({ featuresAtMouseEvent });
+});
+```
+
+The second argument is optional, with defaults set to ignoreSelectFeatures: false and pointerDistance: 30
+
+### Getting Features at a given Longitude/Latitude
+
+Getting features at a given longitude and latitude can be done like so:
+
+```typescript
+map.on("mousemove", (event) => {
+	const { lng, lat } = event.lngLat;
+	const featuresAtLngLat = draw.getFeaturesAtLngLat(
+		{ lng, lat },
+		{
+			pointerDistance: 40, // the number pixels to search around input point
+			ignoreSelectFeatures: true,
+		}
+	);
+	console.log({ featuresAtLngLat });
+});
+```
+
+The second argument is optional, with defaults set to ignoreSelectFeatures: false and pointerDistance: 30

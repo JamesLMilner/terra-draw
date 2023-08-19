@@ -12,7 +12,7 @@ import { Point, Position } from "geojson";
 import { ModeTypes, TerraDrawBaseDrawMode } from "../base.mode";
 import { MidPointBehavior } from "./behaviors/midpoint.behavior";
 import { SelectionPointBehavior } from "./behaviors/selection-point.behavior";
-import { FeaturesAtMouseEventBehavior } from "./behaviors/features-at-mouse-event.behavior";
+import { FeatureAtPointerEventBehavior } from "./behaviors/feature-at-pointer-event.behavior";
 import { PixelDistanceBehavior } from "../pixel-distance.behavior";
 import { ClickBoundingBoxBehavior } from "../click-bounding-box.behavior";
 import { DragFeatureBehavior } from "./behaviors/drag-feature.behavior";
@@ -22,7 +22,6 @@ import { RotateFeatureBehavior } from "./behaviors/rotate-feature.behavior";
 import { ScaleFeatureBehavior } from "./behaviors/scale-feature.behavior";
 import { GeoJSONStoreFeatures } from "../../store/store";
 import { getDefaultStyling } from "../../util/styling";
-import { SetCursor } from "../../terra-draw";
 
 type TerraDrawSelectModeKeyEvents = {
 	deselect: KeyboardEvent["key"] | null;
@@ -96,7 +95,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode<SelectionStyling>
 	// Behaviors
 	private selectionPoints!: SelectionPointBehavior;
 	private midPoints!: MidPointBehavior;
-	private featuresAtMouseEvent!: FeaturesAtMouseEventBehavior;
+	private featuresAtMouseEvent!: FeatureAtPointerEventBehavior;
 	private pixelDistance!: PixelDistanceBehavior;
 	private clickBoundingBox!: ClickBoundingBoxBehavior;
 	private dragFeature!: DragFeatureBehavior;
@@ -162,7 +161,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode<SelectionStyling>
 	registerBehaviors(config: BehaviorConfig) {
 		this.pixelDistance = new PixelDistanceBehavior(config);
 		this.clickBoundingBox = new ClickBoundingBoxBehavior(config);
-		this.featuresAtMouseEvent = new FeaturesAtMouseEventBehavior(
+		this.featuresAtMouseEvent = new FeatureAtPointerEventBehavior(
 			config,
 			this.clickBoundingBox,
 			this.pixelDistance

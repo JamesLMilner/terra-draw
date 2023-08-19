@@ -129,6 +129,7 @@ export interface TerraDrawAdapter {
 	project: Project;
 	unproject: Unproject;
 	setCursor: SetCursor;
+	getLngLatFromEvent: GetLngLatFromEvent;
 	setDoubleClickToZoom: (enabled: boolean) => void;
 	getMapContainer: () => HTMLElement;
 	register(callbacks: TerraDrawCallbacks): void;

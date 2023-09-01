@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.1-alpha.47](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.45...v0.0.1-alpha.47) (2023-09-01)
+
+
+### Features
+
+* add getFeaturesAtLngLat and getFeaturesAtPointerEvent methods to terra draw API ([f5f824f](https://github.com/JamesLMilner/terra-draw/commit/f5f824f619907a8c618fa5dc4649bd0259d2a45a))
+* add self intersection prevention as a configuration option for select mode ([a975295](https://github.com/JamesLMilner/terra-draw/commit/a97529541ab25912e28d2ae067d463aa507b200e))
+* allow custom limits of microdrags whilst selecting ([c02a067](https://github.com/JamesLMilner/terra-draw/commit/c02a0678ea0953e061de11f1477a4121668b37eb))
+
+
+### Bug Fixes
+
+* resolve issue for polygon snapping where first click does not snap ([e13c4e6](https://github.com/JamesLMilner/terra-draw/commit/e13c4e6327885d2b5181bad73cf883e1c9a97c74))
+
+
+### Chore
+
+* **release:** 0.0.1-alpha.46 ([abd0f42](https://github.com/JamesLMilner/terra-draw/commit/abd0f4210b70bff53028e1c0ef3001e7e5f2dd44))
+* update npmignore file ([d827213](https://github.com/JamesLMilner/terra-draw/commit/d827213d136d5bc1e10c1fd822f64633cc45b76f))
+
 ### [0.0.1-alpha.46](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.45...v0.0.1-alpha.46) (2023-09-01)
 
 

@@ -18,8 +18,6 @@ describe("Geometry", () => {
 				pointerDistance: 30,
 			});
 
-			console.log(JSON.stringify(result));
-
 			expect(result.geometry.type).toBe("Polygon");
 			expect(result.geometry.coordinates).toEqual([
 				[

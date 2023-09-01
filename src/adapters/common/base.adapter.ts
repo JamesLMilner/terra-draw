@@ -21,11 +21,17 @@ export abstract class TerraDrawBaseAdapter {
 		coordinatePrecision?: number;
 		minPixelDragDistanceDrawing?: number;
 		minPixelDragDistance?: number;
+		minPixelDragDistanceSelecting?: number;
 	}) {
 		this._minPixelDragDistance =
 			typeof config.minPixelDragDistance === "number"
 				? config.minPixelDragDistance
 				: 1;
+
+		this._minPixelDragDistanceSelecting =
+			typeof config.minPixelDragDistanceSelecting === "number"
+				? config.minPixelDragDistanceSelecting
+				: 8;
 
 		this._minPixelDragDistanceDrawing =
 			typeof config.minPixelDragDistanceDrawing === "number"
@@ -111,22 +117,29 @@ export abstract class TerraDrawBaseAdapter {
 							currentEventXY
 						);
 
+						// We start off assuming it is not a microdrag
+						let isMicroDrag = false;
+
 						if (modeState === "drawing") {
 							// We want to ignore very small pointer movements when holding
 							// the map down as these are normally done by accident when
 							// drawing and is not an intended drag
-							const isMicroDrag =
+							isMicroDrag =
 								pixelDistanceToCheck < this._minPixelDragDistanceDrawing;
-							if (isMicroDrag) {
-								return;
-							}
+						} else if (modeState === "selecting") {
+							// Simiarly when selecting, we want to ignore very small pointer
+							// movements when holding the map down as these are normally done
+							// by accident when drawing and is not an intended drag
+							isMicroDrag =
+								pixelDistanceToCheck < this._minPixelDragDistanceSelecting;
 						} else {
 							// Same as above, but when not drawing we generally want a much lower tolerance
-							const isMicroDrag =
-								pixelDistanceToCheck < this._minPixelDragDistance;
-							if (isMicroDrag) {
-								return;
-							}
+							isMicroDrag = pixelDistanceToCheck < this._minPixelDragDistance;
+						}
+
+						// If it is a microdrag we do not register it by returning early
+						if (isMicroDrag) {
+							return;
 						}
 
 						this._dragState = "dragging";
@@ -280,6 +293,7 @@ export abstract class TerraDrawBaseAdapter {
 
 	protected _minPixelDragDistance: number;
 	protected _minPixelDragDistanceDrawing: number;
+	protected _minPixelDragDistanceSelecting: number;
 	protected _lastDrawEvent: TerraDrawMouseEvent | undefined;
 	protected _coordinatePrecision: number;
 	protected _heldKeys: Set<string> = new Set();

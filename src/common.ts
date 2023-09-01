@@ -90,7 +90,7 @@ export type TerraDrawModeState =
 	| "registered"
 	| "started"
 	| "drawing"
-	| "selected"
+	| "selecting"
 	| "stopped";
 
 export interface TerraDrawCallbacks {

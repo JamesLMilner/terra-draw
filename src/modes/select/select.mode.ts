@@ -158,6 +158,14 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode<SelectionStyling>
 			5;
 	}
 
+	setSelecting() {
+		if (this._state === "started") {
+			this._state = "selecting";
+		} else {
+			throw new Error("Mode must be started to move to selecting state");
+		}
+	}
+
 	registerBehaviors(config: BehaviorConfig) {
 		this.pixelDistance = new PixelDistanceBehavior(config);
 		this.clickBoundingBox = new ClickBoundingBoxBehavior(config);
@@ -431,11 +439,13 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode<SelectionStyling>
 	/** @internal */
 	start() {
 		this.setStarted();
+		this.setSelecting();
 	}
 
 	/** @internal */
 	stop() {
 		this.cleanUp();
+		this.setStarted();
 		this.setStopped();
 	}
 

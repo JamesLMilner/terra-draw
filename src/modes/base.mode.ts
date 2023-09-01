@@ -90,7 +90,8 @@ export abstract class TerraDrawBaseDrawMode<T extends CustomStyling> {
 		if (
 			this._state === "stopped" ||
 			this._state === "registered" ||
-			this._state === "drawing"
+			this._state === "drawing" ||
+			this._state === "selecting"
 		) {
 			this._state = "started";
 			this.setDoubleClickToZoom(false);

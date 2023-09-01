@@ -202,7 +202,7 @@ describe("TerraDrawSelectMode", () => {
 			selectMode.register(getMockModeConfig(selectMode.mode));
 			selectMode.start();
 
-			expect(selectMode.state).toBe("started");
+			expect(selectMode.state).toBe("selecting");
 		});
 
 		it("can stop correctly", () => {

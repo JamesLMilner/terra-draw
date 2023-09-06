@@ -105,36 +105,20 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawBaseAdapter {
 			throw new Error("cannot get bounds");
 		}
 
-		const northWest = new this._lib.LatLng(
-			bounds.getNorthEast().lat(),
-			bounds.getSouthWest().lng()
-		);
-
-		const projection = this._map.getProjection();
+		const projection = this._overlay.getProjection();
 		if (projection === undefined) {
 			throw new Error("cannot get projection");
 		}
 
-		const projectedNorthWest = projection.fromLatLngToPoint(northWest);
-		if (projectedNorthWest === null) {
-			throw new Error("cannot get projectedNorthWest");
+		const point = projection.fromLatLngToContainerPixel(
+			new google.maps.LatLng(lat, lng)
+		);
+
+		if (point === null) {
+			throw new Error("cannot project coordinates");
 		}
 
-		const projected = projection.fromLatLngToPoint({ lng, lat });
-		if (projected === null) {
-			throw new Error("cannot get projected lng lat");
-		}
-
-		const zoom = this._map.getZoom();
-		if (zoom === undefined) {
-			throw new Error("cannot get zoom");
-		}
-
-		const scale = Math.pow(2, zoom);
-		return {
-			x: Math.floor((projected.x - projectedNorthWest.x) * scale),
-			y: Math.floor((projected.y - projectedNorthWest.y) * scale),
-		};
+		return { x: point.x, y: point.y };
 	}
 
 	/**
@@ -144,44 +128,20 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawBaseAdapter {
 	 * @returns An object with 'lng' and 'lat' properties representing the longitude and latitude coordinates.
 	 */
 	unproject(x: number, y: number) {
-		const projection = this._map.getProjection();
+		const projection = this._overlay.getProjection();
 		if (projection === undefined) {
 			throw new Error("cannot get projection");
 		}
 
-		const bounds = this._map.getBounds();
-		if (bounds === undefined) {
-			throw new Error("cannot get bounds");
-		}
-
-		const topRight = projection.fromLatLngToPoint(bounds.getNorthEast());
-		if (topRight === null) {
-			throw new Error("cannot get topRight");
-		}
-
-		const bottomLeft = projection.fromLatLngToPoint(bounds.getSouthWest());
-		if (bottomLeft === null) {
-			throw new Error("cannot get bottomLeft");
-		}
-
-		const zoom = this._map.getZoom();
-		if (zoom === undefined) {
-			throw new Error("zoom get bounds");
-		}
-
-		const scale = Math.pow(2, zoom);
-
-		const worldPoint = new google.maps.Point(
-			x / scale + bottomLeft.x,
-			y / scale + topRight.y
+		const latLng = projection.fromContainerPixelToLatLng(
+			new google.maps.Point(x, y)
 		);
-		const lngLat = projection.fromPointToLatLng(worldPoint);
 
-		if (lngLat === null) {
-			throw new Error("zoom get bounds");
+		if (latLng === null) {
+			throw new Error("cannot unproject coordinates");
 		}
 
-		return { lng: lngLat.lng(), lat: lngLat.lat() };
+		return { lng: latLng.lng(), lat: latLng.lat() };
 	}
 
 	/**

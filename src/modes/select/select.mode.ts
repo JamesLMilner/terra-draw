@@ -657,6 +657,15 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode<SelectionStyling>
 		setMapDraggability: (enabled: boolean) => void
 	) {
 		this.setCursor(this.cursors.dragEnd);
+
+		// If we have finished dragging a coordinate or a feature
+		// lets fire an onFinish event which can be listened to
+		if (this.dragCoordinate.isDragging()) {
+			this.onFinish(this.selected[0]);
+		} else if (this.dragFeature.isDragging()) {
+			this.onFinish(this.selected[0]);
+		}
+
 		this.dragCoordinate.stopDragging();
 		this.dragFeature.stopDragging();
 		this.rotateFeature.reset();

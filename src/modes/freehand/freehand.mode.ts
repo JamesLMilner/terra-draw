@@ -45,10 +45,12 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 	private minDistance: number;
 	private keyEvents: TerraDrawFreehandModeKeyEvents;
 	private cursors: Required<Cursors>;
+	private preventPointsNearClose: boolean;
 
 	constructor(options?: {
 		styles?: Partial<FreehandPolygonStyling>;
 		minDistance?: number;
+		preventPointsNearClose?: boolean;
 		keyEvents?: TerraDrawFreehandModeKeyEvents | null;
 		cursors?: Cursors;
 	}) {
@@ -64,6 +66,9 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 		} else {
 			this.cursors = defaultCursors;
 		}
+
+		this.preventPointsNearClose =
+			(options && options.preventPointsNearClose) || true;
 
 		this.minDistance = (options && options.minDistance) || 20;
 
@@ -142,6 +147,12 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 
 		if (closingDistance < this.pointerDistance) {
 			this.setCursor(this.cursors.close);
+
+			// We want to prohibit drawing new points at or around the closing
+			// point as it can be non user friendly
+			if (this.preventPointsNearClose) {
+				return;
+			}
 		} else {
 			this.setCursor(this.cursors.start);
 		}

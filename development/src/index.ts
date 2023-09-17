@@ -334,6 +334,7 @@ const example = {
 					center: { lat: this.lat, lng: this.lng },
 					zoom: this.zoom,
 					clickableIcons: false,
+					mapId: process.env.GOOGLE_MAP_ID,
 				}
 			);
 

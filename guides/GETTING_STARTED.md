@@ -13,10 +13,29 @@ npm install terra-draw
 Be aware Terra Draw is currently in alpha, the initial API is still being finalised. It is strongly advised to pin your installation to a specific version i.e. not using carat, asterix or tilde for versions but giving a version explicitly in your `package.json`
 
 ```
-  "terra-draw": "0.0.1-alpha.22"
+  "terra-draw": "0.0.1-alpha.47"
 ```
 
 Once terra-draw is out of alpha this suggestion will be removed as we will aim to move to semantic versioning.
+
+## Script Tag
+
+Some people may want to experiment with using Terra Draw without a build step. To do this you can use the UMD bundle that is put onto npm via a CDN like unpkg. For example if we were using Terra Draw with MapLibre we might do something like this in our `<head>` tag:
+
+```html
+    <script src="https://unpkg.com/maplibre-gl@3.3.1/dist/maplibre-gl.js"></script>
+    <script src="https://unpkg.com/terra-draw@0.0.1-alpha.47/dist/terra-draw.umd.js"></script>
+    <link href="https://unpkg.com/maplibre-gl@3.3.1/dist/maplibre-gl.css" rel="stylesheet" />
+```
+
+Later on in our JavaScript code we can access the global `terraDraw` like so:
+
+```javascript
+    const td = new terraDraw.TerraDraw({
+		adapter: new terraDraw.TerraDrawMapLibreGLAdapter({ map }),
+		modes: [new terraDraw.TerraDrawRectangleMode()]
+	});
+```
 
 ## API Docs
 

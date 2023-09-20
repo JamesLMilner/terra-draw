@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.1-alpha.48](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.47...v0.0.1-alpha.48) (2023-09-20)
+
+
+### Features
+
+* prevent creating points around closing point ([d28b076](https://github.com/JamesLMilner/terra-draw/commit/d28b076748bee8d97a562ca93dfcdae04c565e7d))
+
+
+### Bug Fixes
+
+* corrected project/unproject when tilting/rotating a google vector map ([25fe7a2](https://github.com/JamesLMilner/terra-draw/commit/25fe7a2ed4d5fa9eaf4ae8025ea9e225c7763ef9))
+* fire an onFinish event when finished dragging a coordinate or feature ([5336035](https://github.com/JamesLMilner/terra-draw/commit/53360356774f33aabee6572507ba5dd291d5d3c2))
+
+
+### Chore
+
+* document how to use terra draw with a script tag ([1e069b4](https://github.com/JamesLMilner/terra-draw/commit/1e069b42d58f33518e628f54621be95c91a48b31))
+* remove env file ([e3f4422](https://github.com/JamesLMilner/terra-draw/commit/e3f44225388059a5c3153da7e01c3daf2bb3f7ba))
+* remove ts-node from dependencies list ([531d0d1](https://github.com/JamesLMilner/terra-draw/commit/531d0d16328f1cf940775b5ed5658f22cf4aca30))
+
 ### [0.0.1-alpha.47](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.45...v0.0.1-alpha.47) (2023-09-01)
 
 

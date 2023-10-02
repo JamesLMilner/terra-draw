@@ -59,12 +59,12 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawBaseAdapter {
 
 		const ne = bounds.getNorthEast();
 		const sw = bounds.getSouthWest();
-		const latLngBounds = new google.maps.LatLngBounds(sw, ne);
+		const latLngBounds = new this._lib.LatLngBounds(sw, ne);
 
 		const mapCanvas = this._map.getDiv();
 		const offsetX = event.clientX - mapCanvas.getBoundingClientRect().left;
 		const offsetY = event.clientY - mapCanvas.getBoundingClientRect().top;
-		const screenCoord = new google.maps.Point(offsetX, offsetY);
+		const screenCoord = new this._lib.Point(offsetX, offsetY);
 
 		const projection = this._overlay.getProjection();
 
@@ -108,7 +108,7 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawBaseAdapter {
 		}
 
 		const point = projection.fromLatLngToContainerPixel(
-			new google.maps.LatLng(lat, lng),
+			new this._lib.LatLng(lat, lng),
 		);
 
 		if (point === null) {
@@ -131,7 +131,7 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawBaseAdapter {
 		}
 
 		const latLng = projection.fromContainerPixelToLatLng(
-			new google.maps.Point(x, y),
+			new this._lib.Point(x, y),
 		);
 
 		if (latLng === null) {
@@ -239,8 +239,8 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawBaseAdapter {
 							const coordinates = updatedFeature.geometry.coordinates;
 
 							featureToUpdate.setGeometry(
-								new google.maps.Data.Point(
-									new google.maps.LatLng(coordinates[1], coordinates[0]),
+								new this._lib.Data.Point(
+									new this._lib.LatLng(coordinates[1], coordinates[0]),
 								),
 							);
 						}
@@ -252,16 +252,14 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawBaseAdapter {
 							const path = [];
 							for (let i = 0; i < coordinates.length; i++) {
 								const coordinate = coordinates[i];
-								const latLng = new google.maps.LatLng(
+								const latLng = new this._lib.LatLng(
 									coordinate[1],
 									coordinate[0],
 								);
 								path.push(latLng);
 							}
 
-							featureToUpdate.setGeometry(
-								new google.maps.Data.LineString(path),
-							);
+							featureToUpdate.setGeometry(new this._lib.Data.LineString(path));
 						}
 						break;
 					case "Polygon":
@@ -272,7 +270,7 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawBaseAdapter {
 							for (let i = 0; i < coordinates.length; i++) {
 								const path = [];
 								for (let j = 0; j < coordinates[i].length; j++) {
-									const latLng = new google.maps.LatLng(
+									const latLng = new this._lib.LatLng(
 										coordinates[i][j][1],
 										coordinates[i][j][0],
 									);
@@ -281,7 +279,7 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawBaseAdapter {
 								paths.push(path);
 							}
 
-							featureToUpdate.setGeometry(new google.maps.Data.Polygon(paths));
+							featureToUpdate.setGeometry(new this._lib.Data.Polygon(paths));
 						}
 
 						break;

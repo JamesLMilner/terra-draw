@@ -7,8 +7,8 @@ This file acts as a way to document how to develop the Terra Draw project locall
 A few things you will need to have installed in order to develop on this project:
 
 - git
-- Node LTS - currently v16
-- npm 8
+- Node LTS - currently v18
+- npm 9
 
 ### Folder Structure
 

@@ -388,8 +388,6 @@ describe("TerraDrawCircleMode", () => {
 
 				const mockConfig = getMockModeConfig(circleMode.mode);
 				store = mockConfig.store;
-				onChange = mockConfig.onChange;
-				project = mockConfig.project;
 				circleMode.register(mockConfig);
 				circleMode.start();
 

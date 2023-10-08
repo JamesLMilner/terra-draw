@@ -2,7 +2,6 @@ import {
 	TerraDrawMouseEvent,
 	TerraDrawAdapterStyling,
 	TerraDrawKeyboardEvent,
-	HexColor,
 	HexColorStyling,
 	NumericStyling,
 	Cursor,
@@ -100,7 +99,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 		}
 
 		const currentLineGeometry = this.store.getGeometryCopy<LineString>(
-			this.currentId
+			this.currentId,
 		);
 
 		// Finish off the drawing
@@ -137,7 +136,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 		this.snapping = new SnappingBehavior(
 			config,
 			new PixelDistanceBehavior(config),
-			new ClickBoundingBoxBehavior(config)
+			new ClickBoundingBoxBehavior(config),
 		);
 	}
 
@@ -163,7 +162,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 			return;
 		}
 		const currentLineGeometry = this.store.getGeometryCopy<LineString>(
-			this.currentId
+			this.currentId,
 		);
 
 		// Remove the 'live' point that changes on mouse move
@@ -184,7 +183,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 			const { x, y } = this.project(previousLng, previousLat);
 			const distance = pixelDistance(
 				{ x, y },
-				{ x: event.containerX, y: event.containerY }
+				{ x: event.containerX, y: event.containerY },
 			);
 
 			const isClosingClick = distance < this.pointerDistance;
@@ -241,7 +240,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 			this.setDrawing();
 		} else if (this.currentCoordinate === 1 && this.currentId) {
 			const currentLineGeometry = this.store.getGeometryCopy<LineString>(
-				this.currentId
+				this.currentId,
 			);
 
 			const [pointId] = this.store.create([
@@ -276,7 +275,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 			this.currentCoordinate++;
 		} else if (this.currentId) {
 			const currentLineGeometry = this.store.getGeometryCopy<LineString>(
-				this.currentId
+				this.currentId,
 			);
 
 			const [previousLng, previousLat] =
@@ -286,7 +285,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 			const { x, y } = this.project(previousLng, previousLat);
 			const distance = pixelDistance(
 				{ x, y },
-				{ x: event.containerX, y: event.containerY }
+				{ x: event.containerX, y: event.containerY },
 			);
 
 			const isClosingClick = distance < this.pointerDistance;
@@ -388,13 +387,13 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 			styles.lineStringColor = this.getHexColorStylingValue(
 				this.styles.lineStringColor,
 				styles.lineStringColor,
-				feature
+				feature,
 			);
 
 			styles.lineStringWidth = this.getNumericStylingValue(
 				this.styles.lineStringWidth,
 				styles.lineStringWidth,
-				feature
+				feature,
 			);
 
 			return styles;
@@ -406,25 +405,25 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 			styles.pointColor = this.getHexColorStylingValue(
 				this.styles.closingPointColor,
 				styles.pointColor,
-				feature
+				feature,
 			);
 
 			styles.pointWidth = this.getNumericStylingValue(
 				this.styles.closingPointWidth,
 				styles.pointWidth,
-				feature
+				feature,
 			);
 
 			styles.pointOutlineColor = this.getHexColorStylingValue(
 				this.styles.closingPointOutlineColor,
 				"#ffffff",
-				feature
+				feature,
 			);
 
 			styles.pointOutlineWidth = this.getNumericStylingValue(
 				this.styles.closingPointOutlineWidth,
 				2,
-				feature
+				feature,
 			);
 
 			return styles;

@@ -268,7 +268,7 @@ export class TerraDrawOpenLayersAdapter extends TerraDrawBaseAdapter {
 						...changes.unchanged,
 					],
 				},
-				{ featureProjection: this._projection }
+				{ featureProjection: this._projection },
 			);
 			const vectorSource = new this._lib.VectorSource({
 				features: vectorSourceFeatures,

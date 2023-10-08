@@ -320,7 +320,7 @@ describe("TerraDrawLineStringMode", () => {
 			expect(onChange).toHaveBeenNthCalledWith(
 				9,
 				[expect.any(String)],
-				"delete"
+				"delete",
 			);
 
 			features = store.copyAll();
@@ -555,7 +555,7 @@ describe("TerraDrawLineStringMode", () => {
 				expect(onChange).toHaveBeenNthCalledWith(
 					8,
 					[expect.any(String)],
-					"delete"
+					"delete",
 				);
 
 				features = store.copyAll();
@@ -785,7 +785,7 @@ describe("TerraDrawLineStringMode", () => {
 					type: "Feature",
 					geometry: { type: "Point", coordinates: [] },
 					properties: { mode: "linestring" },
-				})
+				}),
 			).toMatchObject({
 				pointColor: "#111111",
 				pointWidth: 3,
@@ -811,7 +811,7 @@ describe("TerraDrawLineStringMode", () => {
 					type: "Feature",
 					geometry: { type: "Point", coordinates: [] },
 					properties: { mode: "linestring" },
-				})
+				}),
 			).toMatchObject({
 				pointColor: "#111111",
 				pointWidth: 3,
@@ -837,7 +837,7 @@ describe("TerraDrawLineStringMode", () => {
 					type: "Feature",
 					geometry: { type: "LineString", coordinates: [] },
 					properties: { mode: "linestring" },
-				})
+				}),
 			).toMatchObject({
 				lineStringColor: "#ffffff",
 				lineStringWidth: 4,
@@ -861,7 +861,7 @@ describe("TerraDrawLineStringMode", () => {
 					type: "Feature",
 					geometry: { type: "LineString", coordinates: [] },
 					properties: { mode: "linestring" },
-				})
+				}),
 			).toMatchObject({
 				lineStringColor: "#ffffff",
 				lineStringWidth: 4,
@@ -890,7 +890,7 @@ describe("TerraDrawLineStringMode", () => {
 						createdAt: 1685654949450,
 						updatedAt: 1685654950609,
 					},
-				})
+				}),
 			).toBe(false);
 		});
 
@@ -917,7 +917,7 @@ describe("TerraDrawLineStringMode", () => {
 						createdAt: 1685654949450,
 						updatedAt: 1685654950609,
 					},
-				})
+				}),
 			).toBe(true);
 		});
 	});

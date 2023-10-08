@@ -8,7 +8,7 @@ export function validLongitude(lng: number) {
 
 export function coordinateIsValid(
 	coordinate: unknown[],
-	coordinatePrecision: number
+	coordinatePrecision: number,
 ) {
 	return (
 		coordinate.length === 2 &&

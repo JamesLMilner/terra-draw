@@ -1,6 +1,5 @@
 import { TerraDrawMouseEvent } from "../../common";
 import { getMockModeConfig } from "../../test/mock-config";
-import { getDefaultStyling } from "../../util/styling";
 import { TerraDrawPointMode } from "./point.mode";
 
 describe("TerraDrawPointMode", () => {
@@ -122,7 +121,7 @@ describe("TerraDrawPointMode", () => {
 			expect(mockConfig.onChange).toBeCalledTimes(1);
 			expect(mockConfig.onChange).toBeCalledWith(
 				[expect.any(String)],
-				"create"
+				"create",
 			);
 		});
 	});
@@ -235,7 +234,7 @@ describe("TerraDrawPointMode", () => {
 					type: "Feature",
 					geometry: { type: "Point", coordinates: [] },
 					properties: { mode: "point" },
-				})
+				}),
 			).toMatchObject({
 				pointColor: "#ffffff",
 				pointWidth: 4,
@@ -259,7 +258,7 @@ describe("TerraDrawPointMode", () => {
 					type: "Feature",
 					geometry: { type: "Point", coordinates: [] },
 					properties: { mode: "point" },
-				})
+				}),
 			).toMatchObject({
 				pointColor: "#ffffff",
 				pointWidth: 4,
@@ -290,7 +289,7 @@ describe("TerraDrawPointMode", () => {
 						createdAt: 1685654949450,
 						updatedAt: 1685654950609,
 					},
-				})
+				}),
 			).toBe(false);
 		});
 
@@ -314,7 +313,7 @@ describe("TerraDrawPointMode", () => {
 						createdAt: 1685654949450,
 						updatedAt: 1685654950609,
 					},
-				})
+				}),
 			).toBe(true);
 		});
 	});

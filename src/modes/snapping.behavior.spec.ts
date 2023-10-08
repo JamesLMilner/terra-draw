@@ -15,7 +15,7 @@ describe("SnappingBehavior", () => {
 			new SnappingBehavior(
 				config,
 				new PixelDistanceBehavior(config),
-				new ClickBoundingBoxBehavior(config)
+				new ClickBoundingBoxBehavior(config),
 			);
 		});
 	});
@@ -29,7 +29,7 @@ describe("SnappingBehavior", () => {
 			snappingBehavior = new SnappingBehavior(
 				config,
 				new PixelDistanceBehavior(config),
-				new ClickBoundingBoxBehavior(config)
+				new ClickBoundingBoxBehavior(config),
 			);
 		});
 
@@ -41,7 +41,7 @@ describe("SnappingBehavior", () => {
 
 				const snappedCoord = snappingBehavior.getSnappableCoordinate(
 					mockDrawEvent(),
-					"mockId"
+					"mockId",
 				);
 
 				expect(snappedCoord).toBe(undefined);
@@ -62,7 +62,7 @@ describe("SnappingBehavior", () => {
 
 				const snappedCoord = snappingBehavior.getSnappableCoordinate(
 					mockDrawEvent(),
-					"currentId"
+					"currentId",
 				);
 
 				expect(snappedCoord).toStrictEqual([0, 0]);

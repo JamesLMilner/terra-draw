@@ -9,7 +9,7 @@ export class SpatialIndex {
 
 	constructor(options?: { maxEntries: number }) {
 		this.tree = new RBush(
-			options && options.maxEntries ? options.maxEntries : 9
+			options && options.maxEntries ? options.maxEntries : 9,
 		);
 		this.idToNode = new Map();
 		this.nodeToId = new Map();

@@ -12,7 +12,7 @@ export class DragCoordinateBehavior extends TerraDrawModeBehavior {
 		readonly config: BehaviorConfig,
 		private readonly pixelDistance: PixelDistanceBehavior,
 		private readonly selectionPoints: SelectionPointBehavior,
-		private readonly midPoints: MidPointBehavior
+		private readonly midPoints: MidPointBehavior,
 	) {
 		super(config);
 	}
@@ -24,7 +24,7 @@ export class DragCoordinateBehavior extends TerraDrawModeBehavior {
 
 	private getClosestCoordinate(
 		event: TerraDrawMouseEvent,
-		geometry: Polygon | LineString | Point
+		geometry: Polygon | LineString | Point,
 	) {
 		const closestCoordinate = {
 			dist: Infinity,
@@ -72,7 +72,7 @@ export class DragCoordinateBehavior extends TerraDrawModeBehavior {
 
 	public getDraggableIndex(
 		event: TerraDrawMouseEvent,
-		selectedId: string
+		selectedId: string,
 	): number {
 		const geometry = this.store.getGeometryCopy(selectedId);
 		const closestCoordinate = this.getClosestCoordinate(event, geometry);
@@ -86,7 +86,7 @@ export class DragCoordinateBehavior extends TerraDrawModeBehavior {
 
 	public drag(
 		event: TerraDrawMouseEvent,
-		allowSelfIntersection: boolean
+		allowSelfIntersection: boolean,
 	): boolean {
 		if (!this.draggedCoordinate.id) {
 			return false;
@@ -131,7 +131,7 @@ export class DragCoordinateBehavior extends TerraDrawModeBehavior {
 
 		const updatedSelectionPoint = this.selectionPoints.getOneUpdated(
 			index,
-			updatedCoordinate
+			updatedCoordinate,
 		);
 
 		const updatedSelectionPoints = updatedSelectionPoint

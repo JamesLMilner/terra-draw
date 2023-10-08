@@ -8,7 +8,7 @@ export function quickselect<T>(
 	k: number,
 	left: number,
 	right: number,
-	compare: CompareFunction<T>
+	compare: CompareFunction<T>,
 ) {
 	while (right > left) {
 		if (right - left > 600) {

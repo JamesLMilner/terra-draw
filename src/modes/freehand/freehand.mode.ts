@@ -2,7 +2,6 @@ import {
 	TerraDrawMouseEvent,
 	TerraDrawAdapterStyling,
 	TerraDrawKeyboardEvent,
-	HexColor,
 	HexColorStyling,
 	NumericStyling,
 	Cursor,
@@ -125,7 +124,7 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 		}
 
 		const currentLineGeometry = this.store.getGeometryCopy<Polygon>(
-			this.currentId
+			this.currentId,
 		);
 
 		const [previousLng, previousLat] =
@@ -135,14 +134,14 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 		const { x, y } = this.project(previousLng, previousLat);
 		const distance = pixelDistance(
 			{ x, y },
-			{ x: event.containerX, y: event.containerY }
+			{ x: event.containerX, y: event.containerY },
 		);
 
 		const [closingLng, closingLat] = currentLineGeometry.coordinates[0][0];
 		const { x: closingX, y: closingY } = this.project(closingLng, closingLat);
 		const closingDistance = pixelDistance(
 			{ x: closingX, y: closingY },
-			{ x: event.containerX, y: event.containerY }
+			{ x: event.containerX, y: event.containerY },
 		);
 
 		if (closingDistance < this.pointerDistance) {
@@ -271,25 +270,25 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 			styles.polygonFillColor = this.getHexColorStylingValue(
 				this.styles.fillColor,
 				styles.polygonFillColor,
-				feature
+				feature,
 			);
 
 			styles.polygonOutlineColor = this.getHexColorStylingValue(
 				this.styles.outlineColor,
 				styles.polygonOutlineColor,
-				feature
+				feature,
 			);
 
 			styles.polygonOutlineWidth = this.getNumericStylingValue(
 				this.styles.outlineWidth,
 				styles.polygonOutlineWidth,
-				feature
+				feature,
 			);
 
 			styles.polygonFillOpacity = this.getNumericStylingValue(
 				this.styles.fillOpacity,
 				styles.polygonFillOpacity,
-				feature
+				feature,
 			);
 
 			return styles;
@@ -301,25 +300,25 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 			styles.pointWidth = this.getNumericStylingValue(
 				this.styles.closingPointWidth,
 				styles.pointWidth,
-				feature
+				feature,
 			);
 
 			styles.pointColor = this.getHexColorStylingValue(
 				this.styles.closingPointColor,
 				styles.pointColor,
-				feature
+				feature,
 			);
 
 			styles.pointOutlineColor = this.getHexColorStylingValue(
 				this.styles.closingPointOutlineColor,
 				styles.pointOutlineColor,
-				feature
+				feature,
 			);
 
 			styles.pointOutlineWidth = this.getNumericStylingValue(
 				this.styles.closingPointOutlineWidth,
 				2,
-				feature
+				feature,
 			);
 
 			return styles;

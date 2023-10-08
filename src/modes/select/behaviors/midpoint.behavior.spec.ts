@@ -1,5 +1,3 @@
-import { Position } from "geojson";
-import { Project, Unproject } from "../../../common";
 import {
 	createStoreLineString,
 	createStorePolygon,
@@ -21,14 +19,14 @@ describe("MidPointBehavior", () => {
 			(lng: number, lat: number) => ({
 				x: lng * 100,
 				y: lat * 100,
-			})
+			}),
 		);
 
 		(config.unproject as jest.Mock).mockImplementation(
 			(x: number, y: number) => ({
 				lng: x / 100,
 				lat: y / 100,
-			})
+			}),
 		);
 	});
 
@@ -43,7 +41,7 @@ describe("MidPointBehavior", () => {
 			it("get ids", () => {
 				const midPointBehavior = new MidPointBehavior(
 					config,
-					new SelectionPointBehavior(config)
+					new SelectionPointBehavior(config),
 				);
 
 				expect(midPointBehavior.ids).toStrictEqual([]);
@@ -52,7 +50,7 @@ describe("MidPointBehavior", () => {
 			it("set ids fails", () => {
 				const midPointBehavior = new MidPointBehavior(
 					config,
-					new SelectionPointBehavior(config)
+					new SelectionPointBehavior(config),
 				);
 
 				midPointBehavior.ids = ["test"];
@@ -63,7 +61,7 @@ describe("MidPointBehavior", () => {
 			it("create fails when the feature does not exist", () => {
 				const midPointBehavior = new MidPointBehavior(
 					config,
-					new SelectionPointBehavior(config)
+					new SelectionPointBehavior(config),
 				);
 
 				jest.spyOn(config.store, "create");
@@ -75,7 +73,7 @@ describe("MidPointBehavior", () => {
 							[0, 1],
 						],
 						"e3ccd3b9-afb1-4f0b-91d8-22a768d5f284",
-						coordinatePrecision
+						coordinatePrecision,
 					);
 				}).toThrowError();
 			});
@@ -83,7 +81,7 @@ describe("MidPointBehavior", () => {
 			it("create", () => {
 				const midPointBehavior = new MidPointBehavior(
 					config,
-					new SelectionPointBehavior(config)
+					new SelectionPointBehavior(config),
 				);
 
 				jest.spyOn(config.store, "create");
@@ -96,7 +94,7 @@ describe("MidPointBehavior", () => {
 						[0, 1],
 					],
 					createdId,
-					coordinatePrecision
+					coordinatePrecision,
 				);
 
 				expect(config.store.create).toBeCalledTimes(2);
@@ -107,7 +105,7 @@ describe("MidPointBehavior", () => {
 			it("delete", () => {
 				const midPointBehavior = new MidPointBehavior(
 					config,
-					new SelectionPointBehavior(config)
+					new SelectionPointBehavior(config),
 				);
 
 				const createdId = createStoreLineString(config);
@@ -118,7 +116,7 @@ describe("MidPointBehavior", () => {
 						[0, 1],
 					],
 					createdId,
-					coordinatePrecision
+					coordinatePrecision,
 				);
 
 				expect(midPointBehavior.ids.length).toBe(1);
@@ -130,7 +128,7 @@ describe("MidPointBehavior", () => {
 				it("should return empty array if trying to get updated coordinates when non exist", () => {
 					const midPointBehavior = new MidPointBehavior(
 						config,
-						new SelectionPointBehavior(config)
+						new SelectionPointBehavior(config),
 					);
 					const result = midPointBehavior.getUpdated([
 						[0, 0],
@@ -145,7 +143,7 @@ describe("MidPointBehavior", () => {
 				it("should get updated coordinates if lengths match", () => {
 					const midPointBehavior = new MidPointBehavior(
 						config,
-						new SelectionPointBehavior(config)
+						new SelectionPointBehavior(config),
 					);
 
 					const createdId = createStoreLineString(config);
@@ -159,7 +157,7 @@ describe("MidPointBehavior", () => {
 							[0, 0],
 						],
 						createdId,
-						coordinatePrecision
+						coordinatePrecision,
 					);
 
 					const result = midPointBehavior.getUpdated([
@@ -188,7 +186,7 @@ describe("MidPointBehavior", () => {
 				it("insert midpoint into the linestring", () => {
 					const midPointBehavior = new MidPointBehavior(
 						config,
-						new SelectionPointBehavior(config)
+						new SelectionPointBehavior(config),
 					);
 
 					jest.spyOn(config.store, "create");
@@ -201,7 +199,7 @@ describe("MidPointBehavior", () => {
 							[0, 1],
 						],
 						createdId,
-						coordinatePrecision
+						coordinatePrecision,
 					);
 
 					const createCalls = (config.store.create as jest.Mock).mock.calls;
@@ -246,7 +244,7 @@ describe("MidPointBehavior", () => {
 				it("insert midpoint into the polygon", () => {
 					const midPointBehavior = new MidPointBehavior(
 						config,
-						new SelectionPointBehavior(config)
+						new SelectionPointBehavior(config),
 					);
 
 					jest.spyOn(config.store, "create");
@@ -262,7 +260,7 @@ describe("MidPointBehavior", () => {
 							[0, 0],
 						],
 						createdId,
-						coordinatePrecision
+						coordinatePrecision,
 					);
 
 					const createCalls = (config.store.create as jest.Mock).mock.calls;

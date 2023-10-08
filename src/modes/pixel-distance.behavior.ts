@@ -13,7 +13,7 @@ export class PixelDistanceBehavior extends TerraDrawModeBehavior {
 
 		const distance = pixelDistance(
 			{ x, y },
-			{ x: clickEvent.containerX, y: clickEvent.containerY }
+			{ x: clickEvent.containerX, y: clickEvent.containerY },
 		);
 
 		return distance;

@@ -12,7 +12,7 @@ export class FeatureAtPointerEventBehavior extends TerraDrawModeBehavior {
 	constructor(
 		readonly config: BehaviorConfig,
 		private readonly createClickBoundingBox: ClickBoundingBoxBehavior,
-		private readonly pixelDistance: PixelDistanceBehavior
+		private readonly pixelDistance: PixelDistanceBehavior,
 	) {
 		super(config);
 	}
@@ -43,7 +43,7 @@ export class FeatureAtPointerEventBehavior extends TerraDrawModeBehavior {
 
 				const distance = this.pixelDistance.measure(
 					event,
-					geometry.coordinates
+					geometry.coordinates,
 				);
 
 				// We want to catch both clicked
@@ -71,7 +71,7 @@ export class FeatureAtPointerEventBehavior extends TerraDrawModeBehavior {
 					const distanceToLine = pixelDistanceToLine(
 						{ x: event.containerX, y: event.containerY },
 						this.project(coord[0], coord[1]),
-						this.project(nextCoord[0], nextCoord[1])
+						this.project(nextCoord[0], nextCoord[1]),
 					);
 
 					if (
@@ -85,7 +85,7 @@ export class FeatureAtPointerEventBehavior extends TerraDrawModeBehavior {
 			} else if (geometry.type === "Polygon") {
 				const clickInsidePolygon = pointInPolygon(
 					[event.lng, event.lat],
-					geometry.coordinates
+					geometry.coordinates,
 				);
 
 				if (clickInsidePolygon) {

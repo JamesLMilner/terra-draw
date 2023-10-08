@@ -9,11 +9,11 @@ import { SpatialIndex } from "./spatial-index";
 describe("Spatial Index", () => {
 	describe("construct", () => {
 		it("can construct with default maxEntries", () => {
-			const spatialIndex = new SpatialIndex();
+			new SpatialIndex();
 		});
 
 		it("can construct with custom maxEntries", () => {
-			const spatialIndex = new SpatialIndex({ maxEntries: 9 });
+			new SpatialIndex({ maxEntries: 9 });
 		});
 	});
 
@@ -104,7 +104,7 @@ describe("Spatial Index", () => {
 			expect(() => {
 				spatialIndex.insert(createMockPoint("1") as GeoJSONStoreFeatures);
 				spatialIndex.insert(
-					createMockPolygonSquare("1") as GeoJSONStoreFeatures
+					createMockPolygonSquare("1") as GeoJSONStoreFeatures,
 				);
 			}).toThrowError();
 		});
@@ -114,14 +114,14 @@ describe("Spatial Index", () => {
 			const spatialIndex = new SpatialIndex();
 			for (let i = 0; i < 100; i++) {
 				spatialIndex.insert(
-					createMockPolygonSquare(String(i), 0, 1) as GeoJSONStoreFeatures
+					createMockPolygonSquare(String(i), 0, 1) as GeoJSONStoreFeatures,
 				);
 			}
 			spatialIndex.insert(
-				createMockPolygonSquare(String(101), 0, 2) as GeoJSONStoreFeatures
+				createMockPolygonSquare(String(101), 0, 2) as GeoJSONStoreFeatures,
 			);
 			spatialIndex.insert(
-				createMockPolygonSquare(String(102), 0, 1) as GeoJSONStoreFeatures
+				createMockPolygonSquare(String(102), 0, 1) as GeoJSONStoreFeatures,
 			);
 		});
 
@@ -132,8 +132,8 @@ describe("Spatial Index", () => {
 					createMockPoint(
 						String(i),
 						Math.sqrt(i / 1000) * 90,
-						Math.sqrt(i / 1000) * -90
-					) as GeoJSONStoreFeatures
+						Math.sqrt(i / 1000) * -90,
+					) as GeoJSONStoreFeatures,
 				);
 			}
 		});
@@ -151,10 +151,10 @@ describe("Spatial Index", () => {
 		it("does not throw if inserted already", () => {
 			const spatialIndex = new SpatialIndex();
 			spatialIndex.insert(
-				createMockPolygonSquare("1", 0, 1) as GeoJSONStoreFeatures
+				createMockPolygonSquare("1", 0, 1) as GeoJSONStoreFeatures,
 			);
 			spatialIndex.update(
-				createMockPolygonSquare("1", 0, 2) as GeoJSONStoreFeatures
+				createMockPolygonSquare("1", 0, 2) as GeoJSONStoreFeatures,
 			);
 		});
 	});
@@ -193,12 +193,12 @@ describe("Spatial Index", () => {
 			const spatialIndex = new SpatialIndex();
 
 			spatialIndex.insert(
-				createMockPolygonSquare("1", 0, 1) as GeoJSONStoreFeatures
+				createMockPolygonSquare("1", 0, 1) as GeoJSONStoreFeatures,
 			);
 			expect(
 				spatialIndex.collides(
-					createMockPolygonSquare("2", 0, 2) as GeoJSONStoreFeatures
-				)
+					createMockPolygonSquare("2", 0, 2) as GeoJSONStoreFeatures,
+				),
 			).toBe(true);
 		});
 
@@ -206,12 +206,12 @@ describe("Spatial Index", () => {
 			const spatialIndex = new SpatialIndex();
 
 			spatialIndex.insert(
-				createMockPolygonSquare("1", 0, 1) as GeoJSONStoreFeatures
+				createMockPolygonSquare("1", 0, 1) as GeoJSONStoreFeatures,
 			);
 			expect(
 				spatialIndex.collides(
-					createMockPolygonSquare("2", 2, 3) as GeoJSONStoreFeatures
-				)
+					createMockPolygonSquare("2", 2, 3) as GeoJSONStoreFeatures,
+				),
 			).toBe(false);
 		});
 
@@ -219,12 +219,12 @@ describe("Spatial Index", () => {
 			const spatialIndex = new SpatialIndex();
 
 			spatialIndex.insert(
-				createMockPolygonSquare("1", 0, 1) as GeoJSONStoreFeatures
+				createMockPolygonSquare("1", 0, 1) as GeoJSONStoreFeatures,
 			);
 			expect(
 				spatialIndex.collides(
-					createMockPolygonSquare("2", 45, 90) as GeoJSONStoreFeatures
-				)
+					createMockPolygonSquare("2", 45, 90) as GeoJSONStoreFeatures,
+				),
 			).toBe(false);
 		});
 	});
@@ -234,12 +234,12 @@ describe("Spatial Index", () => {
 			const spatialIndex = new SpatialIndex();
 
 			spatialIndex.insert(
-				createMockPolygonSquare("1", 0, 1) as GeoJSONStoreFeatures
+				createMockPolygonSquare("1", 0, 1) as GeoJSONStoreFeatures,
 			);
 			expect(
 				spatialIndex.search(
-					createMockPolygonSquare("2", 0, 2) as GeoJSONStoreFeatures
-				)
+					createMockPolygonSquare("2", 0, 2) as GeoJSONStoreFeatures,
+				),
 			).toStrictEqual(["1"]);
 		});
 
@@ -247,12 +247,12 @@ describe("Spatial Index", () => {
 			const spatialIndex = new SpatialIndex();
 
 			spatialIndex.insert(
-				createMockPolygonSquare("1", 0, 1) as GeoJSONStoreFeatures
+				createMockPolygonSquare("1", 0, 1) as GeoJSONStoreFeatures,
 			);
 			expect(
 				spatialIndex.search(
-					createMockPolygonSquare("2", 2, 3) as GeoJSONStoreFeatures
-				)
+					createMockPolygonSquare("2", 2, 3) as GeoJSONStoreFeatures,
+				),
 			).toStrictEqual([]);
 		});
 
@@ -260,19 +260,19 @@ describe("Spatial Index", () => {
 			const spatialIndex = new SpatialIndex();
 
 			spatialIndex.insert(
-				createMockPolygonSquare("1", 0.2, 0.8) as GeoJSONStoreFeatures
+				createMockPolygonSquare("1", 0.2, 0.8) as GeoJSONStoreFeatures,
 			);
 			spatialIndex.insert(
-				createMockPolygonSquare("2", 0.3, 0.7) as GeoJSONStoreFeatures
+				createMockPolygonSquare("2", 0.3, 0.7) as GeoJSONStoreFeatures,
 			);
 			spatialIndex.insert(
-				createMockPolygonSquare("3", 0.4, 0.6) as GeoJSONStoreFeatures
+				createMockPolygonSquare("3", 0.4, 0.6) as GeoJSONStoreFeatures,
 			);
 
 			expect(
 				spatialIndex.search(
-					createMockPolygonSquare("4", 0, 1) as GeoJSONStoreFeatures
-				)
+					createMockPolygonSquare("4", 0, 1) as GeoJSONStoreFeatures,
+				),
 			).toStrictEqual(["1", "2", "3"]);
 		});
 	});
@@ -293,17 +293,17 @@ describe("Spatial Index", () => {
 					createMockPolygonSquare(
 						String(i + "B"),
 						i,
-						i + 1
-					) as GeoJSONStoreFeatures
+						i + 1,
+					) as GeoJSONStoreFeatures,
 				);
 			}
 
 			for (let i = -90; i < 90; i += 1) {
 				spatialIndex.search(
-					createMockPolygonSquare("4", i, i + 1) as GeoJSONStoreFeatures
+					createMockPolygonSquare("4", i, i + 1) as GeoJSONStoreFeatures,
 				);
 				spatialIndex.collides(
-					createMockPolygonSquare("4", i + 0.5, i + 1) as GeoJSONStoreFeatures
+					createMockPolygonSquare("4", i + 0.5, i + 1) as GeoJSONStoreFeatures,
 				);
 				spatialIndex.remove(String(i + "B"));
 				spatialIndex.remove(String(i + "A"));

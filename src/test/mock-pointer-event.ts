@@ -9,4 +9,4 @@ export const getMockPointerEvent = () =>
 		pointerId: 1,
 		pointerType: "mouse",
 		isPrimary: true,
-	} as PointerEvent);
+	}) as PointerEvent;

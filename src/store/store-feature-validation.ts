@@ -14,13 +14,13 @@ export const StoreValidationErrors = {
 } as const;
 
 function isObject(
-	feature: unknown
+	feature: unknown,
 ): feature is Record<string | number, unknown> {
 	return Boolean(
 		feature &&
 			typeof feature === "object" &&
 			feature !== null &&
-			!Array.isArray(feature)
+			!Array.isArray(feature),
 	);
 }
 
@@ -40,7 +40,7 @@ export function isValidTimestamp(timestamp: unknown): boolean {
 }
 
 export function isValidStoreFeature(
-	feature: unknown
+	feature: unknown,
 ): feature is GeoJSONStoreFeatures {
 	let error;
 	if (!isObject(feature)) {

@@ -1,7 +1,7 @@
 export const pixelDistanceToLine = (
 	point: { x: number; y: number },
 	linePointOne: { x: number; y: number },
-	linePointTwo: { x: number; y: number }
+	linePointTwo: { x: number; y: number },
 ) => {
 	const square = (x: number) => {
 		return x * x;
@@ -12,7 +12,7 @@ export const pixelDistanceToLine = (
 	const distToSegmentSquared = (
 		p: { x: number; y: number },
 		v: { x: number; y: number },
-		w: { x: number; y: number }
+		w: { x: number; y: number },
 	) => {
 		const l2 = dist2(v, w);
 

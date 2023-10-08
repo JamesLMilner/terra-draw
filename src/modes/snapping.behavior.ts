@@ -1,6 +1,6 @@
 import { BehaviorConfig, TerraDrawModeBehavior } from "./base.behavior";
 import { TerraDrawMouseEvent } from "../common";
-import { Feature, Polygon, Position } from "geojson";
+import { Feature, Position } from "geojson";
 import { ClickBoundingBoxBehavior } from "./click-bounding-box.behavior";
 import { BBoxPolygon } from "../store/store";
 import { PixelDistanceBehavior } from "./pixel-distance.behavior";
@@ -9,7 +9,7 @@ export class SnappingBehavior extends TerraDrawModeBehavior {
 	constructor(
 		readonly config: BehaviorConfig,
 		private readonly pixelDistance: PixelDistanceBehavior,
-		private readonly clickBoundingBox: ClickBoundingBoxBehavior
+		private readonly clickBoundingBox: ClickBoundingBoxBehavior,
 	) {
 		super(config);
 	}
@@ -18,27 +18,27 @@ export class SnappingBehavior extends TerraDrawModeBehavior {
 	public getSnappableCoordinateFirstClick = (event: TerraDrawMouseEvent) => {
 		return this.getSnappable(event, (feature) => {
 			return Boolean(
-				feature.properties && feature.properties.mode === this.mode
+				feature.properties && feature.properties.mode === this.mode,
 			);
 		});
 	};
 
 	public getSnappableCoordinate = (
 		event: TerraDrawMouseEvent,
-		currentFeatureId: string
+		currentFeatureId: string,
 	) => {
 		return this.getSnappable(event, (feature) => {
 			return Boolean(
 				feature.properties &&
 					feature.properties.mode === this.mode &&
-					feature.id !== currentFeatureId
+					feature.id !== currentFeatureId,
 			);
 		});
 	};
 
 	private getSnappable(
 		event: TerraDrawMouseEvent,
-		filter: (feature: Feature) => boolean
+		filter: (feature: Feature) => boolean,
 	) {
 		const bbox = this.clickBoundingBox.create(event) as BBoxPolygon;
 

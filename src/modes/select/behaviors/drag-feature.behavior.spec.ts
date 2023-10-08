@@ -1,4 +1,3 @@
-import { Position } from "geojson";
 import { createStorePolygon } from "../../../test/create-store-features";
 import { mockBehaviorConfig } from "../../../test/mock-behavior-config";
 import { mockDrawEvent } from "../../../test/mock-mouse-event";
@@ -18,18 +17,18 @@ describe("DragFeatureBehavior", () => {
 			const featureAtPointerEventBehavior = new FeatureAtPointerEventBehavior(
 				config,
 				new ClickBoundingBoxBehavior(config),
-				new PixelDistanceBehavior(config)
+				new PixelDistanceBehavior(config),
 			);
 			const midpointBehavior = new MidPointBehavior(
 				config,
-				selectionPointBehavior
+				selectionPointBehavior,
 			);
 
 			new DragFeatureBehavior(
 				config,
 				featureAtPointerEventBehavior,
 				selectionPointBehavior,
-				midpointBehavior
+				midpointBehavior,
 			);
 		});
 	});
@@ -44,18 +43,18 @@ describe("DragFeatureBehavior", () => {
 			const featureAtPointerEventBehavior = new FeatureAtPointerEventBehavior(
 				config,
 				new ClickBoundingBoxBehavior(config),
-				new PixelDistanceBehavior(config)
+				new PixelDistanceBehavior(config),
 			);
 			const midpointBehavior = new MidPointBehavior(
 				config,
-				selectionPointBehavior
+				selectionPointBehavior,
 			);
 
 			dragFeatureBehavior = new DragFeatureBehavior(
 				config,
 				featureAtPointerEventBehavior,
 				selectionPointBehavior,
-				midpointBehavior
+				midpointBehavior,
 			);
 		});
 

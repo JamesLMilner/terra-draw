@@ -25,7 +25,7 @@ export function rhumbBearing(start: Position, end: Position): number {
 	}
 
 	const deltaPsi = Math.log(
-		Math.tan(phi2 / 2 + Math.PI / 4) / Math.tan(phi1 / 2 + Math.PI / 4)
+		Math.tan(phi2 / 2 + Math.PI / 4) / Math.tan(phi1 / 2 + Math.PI / 4),
 	);
 
 	const theta = Math.atan2(deltaLambda, deltaPsi);

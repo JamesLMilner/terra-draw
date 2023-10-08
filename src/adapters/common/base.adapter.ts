@@ -114,7 +114,7 @@ export abstract class TerraDrawBaseAdapter {
 
 						const pixelDistanceToCheck = pixelDistance(
 							lastEventXY,
-							currentEventXY
+							currentEventXY,
 						);
 
 						// We start off assuming it is not a microdrag
@@ -147,7 +147,7 @@ export abstract class TerraDrawBaseAdapter {
 							drawEvent,
 							(enabled: boolean) => {
 								this.setDraggability.bind(this)(enabled);
-							}
+							},
 						);
 					} else if (this._dragState === "dragging") {
 						this._currentModeCallbacks.onDrag(drawEvent, (enabled: boolean) => {
@@ -330,7 +330,7 @@ export abstract class TerraDrawBaseAdapter {
 	}
 
 	protected getDrawEventFromEvent(
-		event: PointerEvent | MouseEvent
+		event: PointerEvent | MouseEvent,
 	): TerraDrawMouseEvent | null {
 		const latLng = this.getLngLatFromEvent(event);
 
@@ -402,6 +402,6 @@ export abstract class TerraDrawBaseAdapter {
 
 	public abstract render(
 		changes: TerraDrawChanges,
-		styling: TerraDrawStylingFunction
+		styling: TerraDrawStylingFunction,
 	): void;
 }

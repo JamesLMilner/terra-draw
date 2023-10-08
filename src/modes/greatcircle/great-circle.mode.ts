@@ -2,7 +2,6 @@ import {
 	TerraDrawMouseEvent,
 	TerraDrawAdapterStyling,
 	TerraDrawKeyboardEvent,
-	HexColor,
 	HexColorStyling,
 	NumericStyling,
 	Cursor,
@@ -111,7 +110,7 @@ export class TerraDrawGreatCircleMode extends TerraDrawBaseDrawMode<GreateCircle
 		this.snapping = new GreatCircleSnappingBehavior(
 			config,
 			new PixelDistanceBehavior(config),
-			new ClickBoundingBoxBehavior(config)
+			new ClickBoundingBoxBehavior(config),
 		);
 	}
 
@@ -154,7 +153,7 @@ export class TerraDrawGreatCircleMode extends TerraDrawBaseDrawMode<GreateCircle
 			]);
 
 			const currentLineGeometry = this.store.getGeometryCopy<LineString>(
-				this.currentId
+				this.currentId,
 			);
 
 			// Remove the 'live' point that changes on mouse move
@@ -275,13 +274,13 @@ export class TerraDrawGreatCircleMode extends TerraDrawBaseDrawMode<GreateCircle
 			styles.lineStringColor = this.getHexColorStylingValue(
 				this.styles.lineStringColor,
 				styles.lineStringColor,
-				feature
+				feature,
 			);
 
 			styles.lineStringWidth = this.getNumericStylingValue(
 				this.styles.lineStringWidth,
 				styles.lineStringWidth,
-				feature
+				feature,
 			);
 
 			return styles;
@@ -293,25 +292,25 @@ export class TerraDrawGreatCircleMode extends TerraDrawBaseDrawMode<GreateCircle
 			styles.pointColor = this.getHexColorStylingValue(
 				this.styles.closingPointColor,
 				styles.pointColor,
-				feature
+				feature,
 			);
 
 			styles.pointWidth = this.getNumericStylingValue(
 				this.styles.closingPointWidth,
 				styles.pointWidth,
-				feature
+				feature,
 			);
 
 			styles.pointOutlineColor = this.getHexColorStylingValue(
 				this.styles.closingPointOutlineColor,
 				"#ffffff",
-				feature
+				feature,
 			);
 
 			styles.pointOutlineWidth = this.getNumericStylingValue(
 				this.styles.closingPointOutlineWidth,
 				2,
-				feature
+				feature,
 			);
 
 			return styles;

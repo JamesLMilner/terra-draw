@@ -16,7 +16,7 @@ describe("getMidPointCoordinates", () => {
 			},
 			(x: number, y: number) => {
 				return { lng: x / 100, lat: y / 100 };
-			}
+			},
 		);
 
 		expect(result).toStrictEqual([

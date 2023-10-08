@@ -1,4 +1,3 @@
-import { Feature, LineString, Polygon } from "geojson";
 import { createLineString, createPolygon } from "../util/geoms";
 import { centroid } from "./centroid";
 

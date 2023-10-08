@@ -12,7 +12,7 @@ describe("Geometry", () => {
 			const result = pixelDistanceToLine(
 				{ x: 0, y: 0 },
 				{ x: 0, y: 0 },
-				{ x: 1, y: 1 }
+				{ x: 1, y: 1 },
 			);
 			expect(result).toBe(0);
 		});
@@ -21,7 +21,7 @@ describe("Geometry", () => {
 			const result = pixelDistanceToLine(
 				{ x: 1, y: 1 },
 				{ x: 0, y: 0 },
-				{ x: 1, y: 1 }
+				{ x: 1, y: 1 },
 			);
 			expect(result).toBe(0);
 		});
@@ -30,7 +30,7 @@ describe("Geometry", () => {
 			const result = pixelDistanceToLine(
 				{ x: 0.5, y: 0.5 },
 				{ x: 0, y: 0 },
-				{ x: 1, y: 1 }
+				{ x: 1, y: 1 },
 			);
 			expect(result).toBe(0);
 		});
@@ -39,7 +39,7 @@ describe("Geometry", () => {
 			const result = pixelDistanceToLine(
 				{ x: 1, y: 2 },
 				{ x: 0, y: 0 },
-				{ x: 1, y: 1 }
+				{ x: 1, y: 1 },
 			);
 			expect(result).toBe(1);
 		});
@@ -48,7 +48,7 @@ describe("Geometry", () => {
 			const result = pixelDistanceToLine(
 				{ x: 2, y: 2 },
 				{ x: 0, y: 0 },
-				{ x: 1, y: 1 }
+				{ x: 1, y: 1 },
 			);
 			expect(checkApprox(result, 1.4142135623730951)).toBe(true);
 		});
@@ -57,7 +57,7 @@ describe("Geometry", () => {
 			const result = pixelDistanceToLine(
 				{ x: 0, y: 0 },
 				{ x: 0, y: 0 },
-				{ x: 0, y: 0 }
+				{ x: 0, y: 0 },
 			);
 			expect(result).toBe(0);
 		});

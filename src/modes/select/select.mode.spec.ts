@@ -16,7 +16,7 @@ describe("TerraDrawSelectMode", () => {
 	let onFinish: jest.Mock;
 
 	const setSelectMode = (
-		options?: ConstructorParameters<typeof TerraDrawSelectMode>[0]
+		options?: ConstructorParameters<typeof TerraDrawSelectMode>[0],
 	) => {
 		selectMode = new TerraDrawSelectMode(options);
 		const mockConfig = getMockModeConfig(selectMode.mode);
@@ -96,13 +96,13 @@ describe("TerraDrawSelectMode", () => {
 			[number, number],
 			[number, number],
 			[number, number],
-			[number, number]
+			[number, number],
 		] = [
 			[0, 0],
 			[0, 0],
 			[0, 0],
 			[0, 0],
-		]
+		],
 	) => {
 		unproject
 			.mockReturnValueOnce({ lng: bbox[0][0], lat: bbox[0][1] })
@@ -119,7 +119,7 @@ describe("TerraDrawSelectMode", () => {
 		});
 
 		it("constructs with options", () => {
-			const selectMode = new TerraDrawSelectMode({
+			new TerraDrawSelectMode({
 				pointerDistance: 40,
 				keyEvents: {
 					deselect: "Backspace",
@@ -361,7 +361,7 @@ describe("TerraDrawSelectMode", () => {
 
 			describe("linestring", () => {
 				it("does select if feature is clicked", () => {
-					const id = addLineStringToStore([
+					addLineStringToStore([
 						[0, 0],
 						[1, 1],
 					]);
@@ -514,7 +514,7 @@ describe("TerraDrawSelectMode", () => {
 					expect(onChange).toHaveBeenNthCalledWith(
 						1,
 						[expect.any(String)],
-						"create"
+						"create",
 					);
 
 					// Store the ids of the created feature
@@ -554,7 +554,7 @@ describe("TerraDrawSelectMode", () => {
 							// We only create 4, not one for the closing coord
 							// as it is identical to to the first
 						],
-						"create"
+						"create",
 					);
 				});
 
@@ -591,7 +591,7 @@ describe("TerraDrawSelectMode", () => {
 					expect(onChange).toHaveBeenNthCalledWith(
 						1,
 						[expect.any(String)],
-						"create"
+						"create",
 					);
 
 					// Store the ids of the created feature
@@ -631,7 +631,7 @@ describe("TerraDrawSelectMode", () => {
 							// We only create 4, not one for the closing coord
 							// as it is identical to to the first
 						],
-						"create"
+						"create",
 					);
 
 					// Create mid points
@@ -643,7 +643,7 @@ describe("TerraDrawSelectMode", () => {
 							expect.any(String),
 							expect.any(String),
 						],
-						"create"
+						"create",
 					);
 				});
 
@@ -666,7 +666,7 @@ describe("TerraDrawSelectMode", () => {
 						expect(onChange).toHaveBeenNthCalledWith(
 							1,
 							[expect.any(String)],
-							"create"
+							"create",
 						);
 
 						addPolygonToStore([
@@ -680,7 +680,7 @@ describe("TerraDrawSelectMode", () => {
 						expect(onChange).toHaveBeenNthCalledWith(
 							2,
 							[expect.any(String)],
-							"create"
+							"create",
 						);
 
 						// Store the ids of the created features
@@ -765,7 +765,7 @@ describe("TerraDrawSelectMode", () => {
 						expect(onChange).toHaveBeenNthCalledWith(
 							1,
 							[expect.any(String)],
-							"create"
+							"create",
 						);
 
 						addPolygonToStore([
@@ -779,7 +779,7 @@ describe("TerraDrawSelectMode", () => {
 						expect(onChange).toHaveBeenNthCalledWith(
 							2,
 							[expect.any(String)],
-							"create"
+							"create",
 						);
 
 						// Store the ids of the created features
@@ -820,7 +820,7 @@ describe("TerraDrawSelectMode", () => {
 								// We only create 4, not one for the closing coord
 								// as it is identical to to the first
 							],
-							"create"
+							"create",
 						);
 
 						mockMouseEventBoundingBox([
@@ -860,7 +860,7 @@ describe("TerraDrawSelectMode", () => {
 								expect.any(String),
 								// Again only 4 points as we skip closing coord
 							],
-							"delete"
+							"delete",
 						);
 
 						// Second polygon selected set to true
@@ -900,7 +900,7 @@ describe("TerraDrawSelectMode", () => {
 						expect(onChange).toHaveBeenNthCalledWith(
 							1,
 							[expect.any(String)],
-							"create"
+							"create",
 						);
 
 						addPolygonToStore([
@@ -914,7 +914,7 @@ describe("TerraDrawSelectMode", () => {
 						expect(onChange).toHaveBeenNthCalledWith(
 							2,
 							[expect.any(String)],
-							"create"
+							"create",
 						);
 
 						// Store the ids of the created features
@@ -955,7 +955,7 @@ describe("TerraDrawSelectMode", () => {
 								// We only create 4, not one for the closing coord
 								// as it is identical to to the first
 							],
-							"create"
+							"create",
 						);
 
 						// Create mid points
@@ -967,7 +967,7 @@ describe("TerraDrawSelectMode", () => {
 								expect.any(String),
 								expect.any(String),
 							],
-							"create"
+							"create",
 						);
 
 						mockMouseEventBoundingBox([
@@ -1026,7 +1026,7 @@ describe("TerraDrawSelectMode", () => {
 								expect.any(String),
 								// Again only 4 points as we skip closing coord
 							],
-							"delete"
+							"delete",
 						);
 
 						// Delete first polygon mid points
@@ -1038,7 +1038,7 @@ describe("TerraDrawSelectMode", () => {
 								expect.any(String),
 								expect.any(String),
 							],
-							"delete"
+							"delete",
 						);
 
 						// Second polygon selected set to true
@@ -1084,7 +1084,7 @@ describe("TerraDrawSelectMode", () => {
 				expect(onChange).toHaveBeenNthCalledWith(
 					1,
 					[expect.any(String)],
-					"create"
+					"create",
 				);
 
 				addPolygonToStore([
@@ -1098,7 +1098,7 @@ describe("TerraDrawSelectMode", () => {
 				expect(onChange).toHaveBeenNthCalledWith(
 					2,
 					[expect.any(String)],
-					"create"
+					"create",
 				);
 
 				// Store the ids of the created features
@@ -1180,7 +1180,7 @@ describe("TerraDrawSelectMode", () => {
 				expect(onChange).toHaveBeenNthCalledWith(
 					1,
 					[expect.any(String)],
-					"create"
+					"create",
 				);
 
 				// Store the ids of the created features
@@ -1255,7 +1255,7 @@ describe("TerraDrawSelectMode", () => {
 				expect(onChange).toHaveBeenNthCalledWith(
 					1,
 					[expect.any(String)],
-					"create"
+					"create",
 				);
 
 				// Store the ids of the created features
@@ -1329,7 +1329,7 @@ describe("TerraDrawSelectMode", () => {
 				expect(onChange).toHaveBeenNthCalledWith(
 					1,
 					[expect.any(String)],
-					"create"
+					"create",
 				);
 
 				// Store the ids of the created features
@@ -1404,7 +1404,7 @@ describe("TerraDrawSelectMode", () => {
 				expect(onChange).toHaveBeenNthCalledWith(
 					1,
 					[expect.any(String)],
-					"create"
+					"create",
 				);
 
 				// Store the ids of the created features
@@ -1498,7 +1498,7 @@ describe("TerraDrawSelectMode", () => {
 				expect(onChange).toHaveBeenNthCalledWith(
 					2,
 					[expect.any(String)],
-					"update"
+					"update",
 				);
 
 				expect(onSelect).toBeCalledTimes(1);
@@ -1515,7 +1515,7 @@ describe("TerraDrawSelectMode", () => {
 				expect(onChange).toHaveBeenNthCalledWith(
 					3,
 					[expect.any(String)],
-					"delete"
+					"delete",
 				);
 			});
 		});
@@ -1576,7 +1576,7 @@ describe("TerraDrawSelectMode", () => {
 					button: "left",
 					heldKeys: [],
 				},
-				jest.fn()
+				jest.fn(),
 			);
 
 			expect(onChange).toBeCalledTimes(0);
@@ -1620,7 +1620,7 @@ describe("TerraDrawSelectMode", () => {
 					button: "left",
 					heldKeys: [],
 				},
-				setMapDraggability
+				setMapDraggability,
 			);
 
 			expect(setMapDraggability).not.toBeCalled();
@@ -1678,7 +1678,7 @@ describe("TerraDrawSelectMode", () => {
 					button: "left",
 					heldKeys: [],
 				},
-				setMapDraggability
+				setMapDraggability,
 			);
 			expect(setCursor).toBeCalled();
 			expect(setMapDraggability).toBeCalled();
@@ -1697,7 +1697,7 @@ describe("TerraDrawSelectMode", () => {
 					button: "left",
 					heldKeys: [],
 				},
-				setMapDraggability
+				setMapDraggability,
 			);
 
 			expect(onChange).toBeCalledTimes(0);
@@ -1737,7 +1737,7 @@ describe("TerraDrawSelectMode", () => {
 					button: "left",
 					heldKeys: [],
 				},
-				setMapDraggability
+				setMapDraggability,
 			);
 
 			expect(onChange).toBeCalledTimes(2);
@@ -1777,7 +1777,7 @@ describe("TerraDrawSelectMode", () => {
 							button: "left",
 							heldKeys: [],
 						},
-						setMapDraggability
+						setMapDraggability,
 					);
 
 					expect(onChange).toBeCalledTimes(2);
@@ -1826,7 +1826,7 @@ describe("TerraDrawSelectMode", () => {
 							button: "left",
 							heldKeys: [],
 						},
-						setMapDraggability
+						setMapDraggability,
 					);
 
 					expect(onChange).toBeCalledTimes(2);
@@ -1874,7 +1874,7 @@ describe("TerraDrawSelectMode", () => {
 							button: "left",
 							heldKeys: [],
 						},
-						jest.fn()
+						jest.fn(),
 					);
 
 					project.mockReturnValueOnce({
@@ -1899,7 +1899,7 @@ describe("TerraDrawSelectMode", () => {
 							button: "left",
 							heldKeys: [],
 						},
-						setMapDraggability
+						setMapDraggability,
 					);
 
 					expect(onChange).toBeCalledTimes(3);
@@ -1970,7 +1970,7 @@ describe("TerraDrawSelectMode", () => {
 							button: "left",
 							heldKeys: [],
 						},
-						jest.fn()
+						jest.fn(),
 					);
 
 					mockMouseEventBoundingBox();
@@ -2004,7 +2004,7 @@ describe("TerraDrawSelectMode", () => {
 							button: "left",
 							heldKeys: [],
 						},
-						setMapDraggability
+						setMapDraggability,
 					);
 
 					expect(onChange).toBeCalledTimes(3);
@@ -2079,7 +2079,7 @@ describe("TerraDrawSelectMode", () => {
 							button: "left",
 							heldKeys: [],
 						},
-						jest.fn()
+						jest.fn(),
 					);
 
 					// mock for both drag coordinate and drag feature
@@ -2113,7 +2113,7 @@ describe("TerraDrawSelectMode", () => {
 							button: "left",
 							heldKeys: [],
 						},
-						setMapDraggability
+						setMapDraggability,
 					);
 
 					expect(onChange).toBeCalledTimes(3);
@@ -2167,14 +2167,14 @@ describe("TerraDrawSelectMode", () => {
 				expect(onChange).toHaveBeenNthCalledWith(
 					3,
 					[expect.any(String)],
-					"update"
+					"update",
 				);
 
 				// Create selection points
 				expect(onChange).toHaveBeenNthCalledWith(
 					4,
 					[expect.any(String), expect.any(String)],
-					"create"
+					"create",
 				);
 
 				mockMouseEventBoundingBox();
@@ -2197,7 +2197,7 @@ describe("TerraDrawSelectMode", () => {
 						button: "left",
 						heldKeys: [],
 					},
-					jest.fn()
+					jest.fn(),
 				);
 
 				const setMapDraggability = jest.fn();
@@ -2210,7 +2210,7 @@ describe("TerraDrawSelectMode", () => {
 						button: "left",
 						heldKeys: [],
 					},
-					setMapDraggability
+					setMapDraggability,
 				);
 
 				expect(onChange).toBeCalledTimes(5);
@@ -2220,7 +2220,7 @@ describe("TerraDrawSelectMode", () => {
 				expect(onChange).toHaveBeenNthCalledWith(
 					5,
 					[expect.any(String), expect.any(String)],
-					"update"
+					"update",
 				);
 			});
 
@@ -2272,7 +2272,7 @@ describe("TerraDrawSelectMode", () => {
 				expect(onChange).toHaveBeenNthCalledWith(
 					3,
 					[expect.any(String)],
-					"update"
+					"update",
 				);
 
 				// Create selection points
@@ -2284,7 +2284,7 @@ describe("TerraDrawSelectMode", () => {
 						expect.any(String),
 						expect.any(String),
 					],
-					"create"
+					"create",
 				);
 
 				mockMouseEventBoundingBox();
@@ -2307,7 +2307,7 @@ describe("TerraDrawSelectMode", () => {
 						button: "left",
 						heldKeys: [],
 					},
-					jest.fn()
+					jest.fn(),
 				);
 
 				const setMapDraggability = jest.fn();
@@ -2320,7 +2320,7 @@ describe("TerraDrawSelectMode", () => {
 						button: "left",
 						heldKeys: [],
 					},
-					setMapDraggability
+					setMapDraggability,
 				);
 
 				expect(onChange).toBeCalledTimes(5);
@@ -2330,7 +2330,7 @@ describe("TerraDrawSelectMode", () => {
 				expect(onChange).toHaveBeenNthCalledWith(
 					5,
 					[expect.any(String), expect.any(String)],
-					"update"
+					"update",
 				);
 			});
 		});
@@ -2350,7 +2350,7 @@ describe("TerraDrawSelectMode", () => {
 					button: "left",
 					heldKeys: [],
 				},
-				setMapDraggability
+				setMapDraggability,
 			);
 
 			expect(setMapDraggability).toBeCalledTimes(1);
@@ -2407,7 +2407,7 @@ describe("TerraDrawSelectMode", () => {
 			expect(onChange).toHaveBeenNthCalledWith(
 				3,
 				[expect.any(String)],
-				"update"
+				"update",
 			);
 
 			// Create selection points
@@ -2419,7 +2419,7 @@ describe("TerraDrawSelectMode", () => {
 					expect.any(String),
 					expect.any(String),
 				],
-				"create"
+				"create",
 			);
 
 			mockMouseEventBoundingBox();
@@ -2442,7 +2442,7 @@ describe("TerraDrawSelectMode", () => {
 					button: "left",
 					heldKeys: [],
 				},
-				jest.fn()
+				jest.fn(),
 			);
 
 			const setMapDraggability = jest.fn();
@@ -2455,7 +2455,7 @@ describe("TerraDrawSelectMode", () => {
 					button: "left",
 					heldKeys: [],
 				},
-				setMapDraggability
+				setMapDraggability,
 			);
 
 			selectMode.onDragEnd(
@@ -2467,7 +2467,7 @@ describe("TerraDrawSelectMode", () => {
 					button: "left",
 					heldKeys: [],
 				},
-				setMapDraggability
+				setMapDraggability,
 			);
 
 			expect(onFinish).toBeCalledTimes(1);
@@ -2539,7 +2539,7 @@ describe("TerraDrawSelectMode", () => {
 					button: "left",
 					heldKeys: [],
 				},
-				jest.fn()
+				jest.fn(),
 			);
 
 			// mock for both drag coordinate and drag feature
@@ -2573,7 +2573,7 @@ describe("TerraDrawSelectMode", () => {
 					button: "left",
 					heldKeys: [],
 				},
-				setMapDraggability
+				setMapDraggability,
 			);
 
 			expect(onChange).toBeCalledTimes(3);
@@ -2587,7 +2587,7 @@ describe("TerraDrawSelectMode", () => {
 					button: "left",
 					heldKeys: [],
 				},
-				setMapDraggability
+				setMapDraggability,
 			);
 
 			expect(onFinish).toBeCalledTimes(1);
@@ -2633,10 +2633,8 @@ describe("TerraDrawSelectMode", () => {
 
 	describe("onSelect", () => {
 		let selectMode: TerraDrawSelectMode;
-		let store: GeoJSONStore;
 
 		beforeEach(() => {
-			store = new GeoJSONStore();
 			selectMode = new TerraDrawSelectMode();
 		});
 		it("no op for unregistered onSelect function", () => {
@@ -2646,10 +2644,8 @@ describe("TerraDrawSelectMode", () => {
 
 	describe("onDeselect", () => {
 		let selectMode: TerraDrawSelectMode;
-		let store: GeoJSONStore;
 
 		beforeEach(() => {
-			store = new GeoJSONStore();
 			selectMode = new TerraDrawSelectMode();
 		});
 		it("no op for unregistered onSelect function", () => {
@@ -2705,7 +2701,7 @@ describe("TerraDrawSelectMode", () => {
 					type: "Feature",
 					geometry: { type: "Polygon", coordinates: [] },
 					properties: { mode: "polygon", selected: true },
-				})
+				}),
 			).toMatchObject({
 				polygonFillColor: "#222222",
 				polygonOutlineColor: "#111111",
@@ -2718,7 +2714,7 @@ describe("TerraDrawSelectMode", () => {
 					type: "Feature",
 					geometry: { type: "Polygon", coordinates: [] },
 					properties: { mode: "polygon" },
-				})
+				}),
 			).toMatchObject({
 				polygonFillColor: "#3f97e0",
 				polygonFillOpacity: 0.3,
@@ -2741,7 +2737,7 @@ describe("TerraDrawSelectMode", () => {
 					type: "Feature",
 					geometry: { type: "Polygon", coordinates: [] },
 					properties: { mode: "polygon", selected: true },
-				})
+				}),
 			).toMatchObject({
 				polygonFillColor: "#222222",
 				polygonOutlineColor: "#111111",
@@ -2754,7 +2750,7 @@ describe("TerraDrawSelectMode", () => {
 					type: "Feature",
 					geometry: { type: "Polygon", coordinates: [] },
 					properties: { mode: "polygon" },
-				})
+				}),
 			).toMatchObject({
 				polygonFillColor: "#3f97e0",
 				polygonFillOpacity: 0.3,

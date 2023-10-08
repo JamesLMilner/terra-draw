@@ -45,7 +45,7 @@ import SimpleMarkerSymbol from "@arcgis/core/symbols/SimpleMarkerSymbol";
 
 const addModeChangeHandler = (
 	draw: TerraDraw,
-	currentSelected: { button: undefined | HTMLButtonElement; mode: string }
+	currentSelected: { button: undefined | HTMLButtonElement; mode: string },
 ) => {
 	[
 		"select",
@@ -67,10 +67,10 @@ const addModeChangeHandler = (
 					currentSelected.button.style.color = "565656";
 				}
 				currentSelected.button = document.getElementById(
-					mode
+					mode,
 				) as HTMLButtonElement;
 				currentSelected.button.style.color = "#27ccff";
-			}
+			},
 		);
 	});
 
@@ -78,7 +78,7 @@ const addModeChangeHandler = (
 		"click",
 		() => {
 			draw.clear();
-		}
+		},
 	);
 };
 
@@ -335,7 +335,7 @@ const example = {
 					zoom: this.zoom,
 					clickableIcons: false,
 					mapId: process.env.GOOGLE_MAP_ID,
-				}
+				},
 			);
 
 			map.addListener("projection_changed", () => {

@@ -62,7 +62,7 @@ export type SetCursor = (
 		| "crosshair"
 		| "pointer"
 		| "wait"
-		| "move"
+		| "move",
 ) => void;
 
 export type Project = (lng: number, lat: number) => { x: number; y: number };
@@ -101,15 +101,15 @@ export interface TerraDrawCallbacks {
 	onMouseMove: (event: TerraDrawMouseEvent) => void;
 	onDragStart: (
 		event: TerraDrawMouseEvent,
-		setMapDraggability: (enabled: boolean) => void
+		setMapDraggability: (enabled: boolean) => void,
 	) => void;
 	onDrag: (
 		event: TerraDrawMouseEvent,
-		setMapDraggability: (enabled: boolean) => void
+		setMapDraggability: (enabled: boolean) => void,
 	) => void;
 	onDragEnd: (
 		event: TerraDrawMouseEvent,
-		setMapDraggability: (enabled: boolean) => void
+		setMapDraggability: (enabled: boolean) => void,
 	) => void;
 	onClear: () => void;
 }

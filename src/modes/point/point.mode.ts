@@ -108,25 +108,25 @@ export class TerraDrawPointMode extends TerraDrawBaseDrawMode<PointModeStyling> 
 			styles.pointWidth = this.getNumericStylingValue(
 				this.styles.pointWidth,
 				styles.pointWidth,
-				feature
+				feature,
 			);
 
 			styles.pointColor = this.getHexColorStylingValue(
 				this.styles.pointColor,
 				styles.pointColor,
-				feature
+				feature,
 			);
 
 			styles.pointOutlineColor = this.getHexColorStylingValue(
 				this.styles.pointOutlineColor,
 				styles.pointOutlineColor,
-				feature
+				feature,
 			);
 
 			styles.pointOutlineWidth = this.getNumericStylingValue(
 				this.styles.pointOutlineWidth,
 				2,
-				feature
+				feature,
 			);
 		}
 

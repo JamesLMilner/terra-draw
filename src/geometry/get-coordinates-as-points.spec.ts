@@ -11,9 +11,9 @@ describe("getCoordinatesAsPoints", () => {
 				[0, 0],
 			],
 			"Polygon",
-			(_: number) => {
+			() => {
 				return {};
-			}
+			},
 		);
 		expect(result.length).toStrictEqual(4);
 		result.forEach((point) => {
@@ -30,9 +30,9 @@ describe("getCoordinatesAsPoints", () => {
 				[1, 0],
 			],
 			"LineString",
-			(_: number) => {
+			() => {
 				return {};
-			}
+			},
 		);
 		expect(result.length).toStrictEqual(4);
 		result.forEach((point) => {

@@ -18,7 +18,7 @@ describe("DragCoordinateBehavior", () => {
 		coordinates: Position[] = [
 			[0, 0],
 			[0, 1],
-		]
+		],
 	) => {
 		const [createdId] = config.store.create([
 			{
@@ -43,7 +43,7 @@ describe("DragCoordinateBehavior", () => {
 				config,
 				new PixelDistanceBehavior(config),
 				selectionPointBehavior,
-				new MidPointBehavior(config, selectionPointBehavior)
+				new MidPointBehavior(config, selectionPointBehavior),
 			);
 		});
 	});
@@ -58,14 +58,14 @@ describe("DragCoordinateBehavior", () => {
 			const pixelDistanceBehavior = new PixelDistanceBehavior(config);
 			const midpointBehavior = new MidPointBehavior(
 				config,
-				selectionPointBehavior
+				selectionPointBehavior,
 			);
 
 			dragCoordinateBehavior = new DragCoordinateBehavior(
 				config,
 				pixelDistanceBehavior,
 				selectionPointBehavior,
-				midpointBehavior
+				midpointBehavior,
 			);
 		});
 
@@ -76,7 +76,7 @@ describe("DragCoordinateBehavior", () => {
 
 				const index = dragCoordinateBehavior.getDraggableIndex(
 					mockDrawEvent(),
-					id
+					id,
 				);
 				expect(index).toBe(-1);
 			});
@@ -94,7 +94,7 @@ describe("DragCoordinateBehavior", () => {
 
 				const index = dragCoordinateBehavior.getDraggableIndex(
 					mockDrawEvent(),
-					id
+					id,
 				);
 				expect(index).toBe(-1);
 			});
@@ -112,7 +112,7 @@ describe("DragCoordinateBehavior", () => {
 
 				const index = dragCoordinateBehavior.getDraggableIndex(
 					mockDrawEvent(),
-					id
+					id,
 				);
 				expect(index).toBe(0);
 			});
@@ -127,7 +127,7 @@ describe("DragCoordinateBehavior", () => {
 
 				const index = dragCoordinateBehavior.getDraggableIndex(
 					mockDrawEvent(),
-					id
+					id,
 				);
 				expect(index).toBe(0);
 			});
@@ -143,7 +143,7 @@ describe("DragCoordinateBehavior", () => {
 			});
 
 			it("returns early if geometry is a point", () => {
-				const id = createStorePoint(config);
+				createStorePoint(config);
 				jest.spyOn(config.store, "updateGeometry");
 
 				dragCoordinateBehavior.drag(mockDrawEvent(), true);

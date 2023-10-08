@@ -1,6 +1,5 @@
 import { mockBehaviorConfig } from "../../../test/mock-behavior-config";
 import { mockDrawEvent } from "../../../test/mock-mouse-event";
-import { mockProject } from "../../../test/mock-project";
 import { BehaviorConfig } from "../../base.behavior";
 import { PixelDistanceBehavior } from "../../pixel-distance.behavior";
 import { ClosingPointsBehavior } from "./closing-points.behavior";
@@ -21,7 +20,7 @@ describe("ClosingPointsBehavior", () => {
 			config = mockBehaviorConfig("test");
 			startEndPointBehavior = new ClosingPointsBehavior(
 				config,
-				new PixelDistanceBehavior(config)
+				new PixelDistanceBehavior(config),
 			);
 		});
 
@@ -45,7 +44,7 @@ describe("ClosingPointsBehavior", () => {
 							[0, 0],
 							[0, 1],
 						],
-						"polygon"
+						"polygon",
 					);
 				}).toThrowError();
 			});
@@ -59,7 +58,7 @@ describe("ClosingPointsBehavior", () => {
 						[1, 0],
 						[0, 0],
 					],
-					"polygon"
+					"polygon",
 				);
 
 				expect(startEndPointBehavior.ids.length).toBe(2);
@@ -76,7 +75,7 @@ describe("ClosingPointsBehavior", () => {
 						[1, 0],
 						[0, 0],
 					],
-					"polygon"
+					"polygon",
 				);
 
 				expect(() => {
@@ -88,7 +87,7 @@ describe("ClosingPointsBehavior", () => {
 							[1, 0],
 							[0, 0],
 						],
-						"polygon"
+						"polygon",
 					);
 				}).toThrowError();
 			});
@@ -110,7 +109,7 @@ describe("ClosingPointsBehavior", () => {
 						[1, 0],
 						[0, 0],
 					],
-					"polygon"
+					"polygon",
 				);
 
 				expect(startEndPointBehavior.ids.length).toBe(2);
@@ -142,7 +141,7 @@ describe("ClosingPointsBehavior", () => {
 						[1, 1],
 						[0, 0],
 					],
-					"polygon"
+					"polygon",
 				);
 
 				expect(config.store.updateGeometry).toBeCalledTimes(0);
@@ -171,7 +170,7 @@ describe("ClosingPointsBehavior", () => {
 						[1, 0],
 						[0, 0],
 					],
-					"polygon"
+					"polygon",
 				);
 
 				(config.project as jest.Mock).mockReturnValueOnce({
@@ -186,7 +185,7 @@ describe("ClosingPointsBehavior", () => {
 
 				const { isClosing, isPreviousClosing } =
 					startEndPointBehavior.isClosingPoint(
-						mockDrawEvent({ containerX: 0, containerY: 0 })
+						mockDrawEvent({ containerX: 0, containerY: 0 }),
 					);
 
 				expect(isClosing).toBe(true);
@@ -204,7 +203,7 @@ describe("ClosingPointsBehavior", () => {
 						[1, 0],
 						[0, 0],
 					],
-					"polygon"
+					"polygon",
 				);
 
 				(config.project as jest.Mock).mockReturnValueOnce({
@@ -219,7 +218,7 @@ describe("ClosingPointsBehavior", () => {
 
 				const { isClosing, isPreviousClosing } =
 					startEndPointBehavior.isClosingPoint(
-						mockDrawEvent({ containerX: 0, containerY: 0 })
+						mockDrawEvent({ containerX: 0, containerY: 0 }),
 					);
 
 				expect(isClosing).toBe(false);
@@ -237,7 +236,7 @@ describe("ClosingPointsBehavior", () => {
 						[1, 0],
 						[0, 0],
 					],
-					"polygon"
+					"polygon",
 				);
 
 				(config.project as jest.Mock).mockReturnValueOnce({
@@ -252,7 +251,7 @@ describe("ClosingPointsBehavior", () => {
 
 				const { isClosing, isPreviousClosing } =
 					startEndPointBehavior.isClosingPoint(
-						mockDrawEvent({ containerX: 0, containerY: 0 })
+						mockDrawEvent({ containerX: 0, containerY: 0 }),
 					);
 
 				expect(isClosing).toBe(false);

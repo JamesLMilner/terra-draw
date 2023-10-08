@@ -133,7 +133,7 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawBaseAdapter {
 	private _addLayer(
 		id: string,
 		featureType: "Point" | "LineString" | "Polygon",
-		beneath?: string
+		beneath?: string,
 	) {
 		if (featureType === "Point") {
 			this._addPointLayer(id, beneath);
@@ -149,7 +149,7 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawBaseAdapter {
 
 	private _addGeoJSONLayer<T extends GeoJSONStoreGeometries>(
 		featureType: Feature<T>["geometry"]["type"],
-		features: Feature<T>[]
+		features: Feature<T>[],
 	) {
 		const id = `td-${featureType.toLowerCase()}`;
 		this._addGeoJSONSource(id, features);
@@ -160,7 +160,7 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawBaseAdapter {
 
 	private _setGeoJSONLayerData<T extends GeoJSONStoreGeometries>(
 		featureType: Feature<T>["geometry"]["type"],
-		features: Feature<T>[]
+		features: Feature<T>[],
 	) {
 		const id = `td-${featureType.toLowerCase()}`;
 		(this._map.getSource(id) as any).setData({
@@ -370,11 +370,11 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawBaseAdapter {
 				this._addGeoJSONLayer<Point>("Point", points as Feature<Point>[]);
 				this._addGeoJSONLayer<LineString>(
 					"LineString",
-					linestrings as Feature<LineString>[]
+					linestrings as Feature<LineString>[],
 				);
 				this._addGeoJSONLayer<Polygon>(
 					"Polygon",
-					polygons as Feature<Polygon>[]
+					polygons as Feature<Polygon>[],
 				);
 				this._rendered = true;
 			} else {
@@ -393,21 +393,21 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawBaseAdapter {
 				if (updatePoints) {
 					pointId = this._setGeoJSONLayerData<Point>(
 						"Point",
-						points as Feature<Point>[]
+						points as Feature<Point>[],
 					);
 				}
 
 				if (updateLineStrings) {
 					this._setGeoJSONLayerData<LineString>(
 						"LineString",
-						linestrings as Feature<LineString>[]
+						linestrings as Feature<LineString>[],
 					);
 				}
 
 				if (updatedPolygon) {
 					this._setGeoJSONLayerData<Polygon>(
 						"Polygon",
-						polygons as Feature<Polygon>[]
+						polygons as Feature<Polygon>[],
 					);
 				}
 

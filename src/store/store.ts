@@ -25,7 +25,7 @@ export type StoreChangeEvents = "delete" | "create" | "update" | "styling";
 
 export type StoreChangeHandler = (
 	ids: string[],
-	change: StoreChangeEvents
+	change: StoreChangeEvents,
 ) => void;
 
 export type GeoJSONStoreConfig = {
@@ -67,7 +67,7 @@ export class GeoJSONStore {
 
 	load(
 		data: GeoJSONStoreFeatures[],
-		featureValidation?: (feature: unknown, tracked?: boolean) => boolean
+		featureValidation?: (feature: unknown, tracked?: boolean) => boolean,
 	) {
 		if (data.length === 0) {
 			return;
@@ -107,7 +107,7 @@ export class GeoJSONStore {
 				// does not throw something more specific itself
 				if (!isValid) {
 					throw new Error(
-						`Feature is not ${feature.id} valid: ${JSON.stringify(feature)}`
+						`Feature is not ${feature.id} valid: ${JSON.stringify(feature)}`,
 					);
 				}
 			}
@@ -120,7 +120,7 @@ export class GeoJSONStore {
 
 	search(
 		bbox: BBoxPolygon,
-		filter?: (feature: GeoJSONStoreFeatures) => boolean
+		filter?: (feature: GeoJSONStoreFeatures) => boolean,
 	) {
 		const features = this.spatialIndex.search(bbox).map((id) => this.store[id]);
 		if (filter) {
@@ -140,7 +140,7 @@ export class GeoJSONStore {
 		const feature = this.store[id];
 		if (!feature) {
 			throw new Error(
-				`No feature with this id (${id}), can not get geometry copy`
+				`No feature with this id (${id}), can not get geometry copy`,
 			);
 		}
 		return this.clone(feature.geometry as T);
@@ -150,14 +150,14 @@ export class GeoJSONStore {
 		const feature = this.store[id];
 		if (!feature) {
 			throw new Error(
-				`No feature with this id (${id}), can not get properties copy`
+				`No feature with this id (${id}), can not get properties copy`,
 			);
 		}
 		return this.clone(feature.properties);
 	}
 
 	updateProperty(
-		propertiesToUpdate: { id: string; property: string; value: JSON }[]
+		propertiesToUpdate: { id: string; property: string; value: JSON }[],
 	): void {
 		const ids: string[] = [];
 		propertiesToUpdate.forEach(({ id, property, value }) => {
@@ -165,7 +165,7 @@ export class GeoJSONStore {
 
 			if (!feature) {
 				throw new Error(
-					`No feature with this (${id}), can not update geometry`
+					`No feature with this (${id}), can not update geometry`,
 				);
 			}
 
@@ -185,7 +185,7 @@ export class GeoJSONStore {
 	}
 
 	updateGeometry(
-		geometriesToUpdate: { id: string; geometry: GeoJSONStoreGeometries }[]
+		geometriesToUpdate: { id: string; geometry: GeoJSONStoreGeometries }[],
 	): void {
 		const ids: string[] = [];
 		geometriesToUpdate.forEach(({ id, geometry }) => {
@@ -195,7 +195,7 @@ export class GeoJSONStore {
 
 			if (!feature) {
 				throw new Error(
-					`No feature with this (${id}), can not update geometry`
+					`No feature with this (${id}), can not update geometry`,
 				);
 			}
 
@@ -218,7 +218,7 @@ export class GeoJSONStore {
 		features: {
 			geometry: GeoJSONStoreGeometries;
 			properties?: JSONObject;
-		}[]
+		}[],
 	): string[] {
 		const ids: string[] = [];
 		features.forEach(({ geometry, properties }) => {

@@ -526,7 +526,7 @@ describe("TerraDrawGreatCircleMode", () => {
 					type: "Feature",
 					geometry: { type: "Polygon", coordinates: [] },
 					properties: { mode: "greatcircle" },
-				})
+				}),
 			).toMatchObject({
 				lineStringColor: "#3f97e0",
 				lineStringWidth: 4,
@@ -546,7 +546,7 @@ describe("TerraDrawGreatCircleMode", () => {
 					type: "Feature",
 					geometry: { type: "LineString", coordinates: [] },
 					properties: { mode: "greatcircle" },
-				})
+				}),
 			).toMatchObject({
 				lineStringColor: "#ffffff",
 				lineStringWidth: 2,
@@ -566,7 +566,7 @@ describe("TerraDrawGreatCircleMode", () => {
 					type: "Feature",
 					geometry: { type: "LineString", coordinates: [] },
 					properties: { mode: "greatcircle" },
-				})
+				}),
 			).toMatchObject({
 				lineStringColor: "#ffffff",
 				lineStringWidth: 2,
@@ -588,7 +588,7 @@ describe("TerraDrawGreatCircleMode", () => {
 					type: "Feature",
 					geometry: { type: "Point", coordinates: [] },
 					properties: { mode: "greatcircle" },
-				})
+				}),
 			).toMatchObject({
 				pointColor: "#1111111",
 				pointOutlineColor: "#333333",
@@ -613,7 +613,7 @@ describe("TerraDrawGreatCircleMode", () => {
 					type: "Feature",
 					geometry: { type: "Point", coordinates: [] },
 					properties: { mode: "greatcircle" },
-				})
+				}),
 			).toMatchObject({
 				pointColor: "#1111111",
 				pointOutlineColor: "#333333",
@@ -645,7 +645,7 @@ describe("TerraDrawGreatCircleMode", () => {
 						createdAt: 1685568434891,
 						updatedAt: 1685568435434,
 					},
-				})
+				}),
 			).toBe(false);
 		});
 
@@ -770,7 +770,7 @@ describe("TerraDrawGreatCircleMode", () => {
 						createdAt: 1685654356961,
 						updatedAt: 1685654358553,
 					},
-				})
+				}),
 			).toBe(true);
 		});
 	});

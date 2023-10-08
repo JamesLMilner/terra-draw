@@ -1,4 +1,3 @@
-import { Position } from "geojson";
 import {
 	createStorePoint,
 	createStoreLineString,
@@ -19,7 +18,7 @@ describe("ScaleFeatureBehavior", () => {
 			new ScaleFeatureBehavior(
 				config,
 				selectionPointBehavior,
-				new MidPointBehavior(config, selectionPointBehavior)
+				new MidPointBehavior(config, selectionPointBehavior),
 			);
 		});
 	});
@@ -34,7 +33,7 @@ describe("ScaleFeatureBehavior", () => {
 			scaleFeatureBehavior = new ScaleFeatureBehavior(
 				config,
 				selectionPointBehavior,
-				new MidPointBehavior(config, selectionPointBehavior)
+				new MidPointBehavior(config, selectionPointBehavior),
 			);
 
 			jest.spyOn(config.store, "updateGeometry");

@@ -88,57 +88,57 @@ export class TerraDrawRenderMode extends TerraDrawBaseDrawMode<RenderModeStyling
 			pointColor: this.getHexColorStylingValue(
 				this.styles.pointColor,
 				defaultStyles.pointColor,
-				feature
+				feature,
 			),
 			pointWidth: this.getNumericStylingValue(
 				this.styles.pointWidth,
 				defaultStyles.pointWidth,
-				feature
+				feature,
 			),
 			pointOutlineColor: this.getHexColorStylingValue(
 				this.styles.pointOutlineColor,
 				defaultStyles.pointOutlineColor,
-				feature
+				feature,
 			),
 			pointOutlineWidth: this.getNumericStylingValue(
 				this.styles.pointOutlineWidth,
 				defaultStyles.pointOutlineWidth,
-				feature
+				feature,
 			),
 			polygonFillColor: this.getHexColorStylingValue(
 				this.styles.polygonFillColor,
 				defaultStyles.polygonFillColor,
-				feature
+				feature,
 			),
 			polygonFillOpacity: this.getNumericStylingValue(
 				this.styles.polygonFillOpacity,
 				defaultStyles.polygonFillOpacity,
-				feature
+				feature,
 			),
 			polygonOutlineColor: this.getHexColorStylingValue(
 				this.styles.polygonOutlineColor,
 				defaultStyles.polygonOutlineColor,
-				feature
+				feature,
 			),
 			polygonOutlineWidth: this.getNumericStylingValue(
 				this.styles.polygonOutlineWidth,
 				defaultStyles.polygonOutlineWidth,
-				feature
+				feature,
 			),
 			lineStringWidth: this.getNumericStylingValue(
 				this.styles.lineStringWidth,
 				defaultStyles.lineStringWidth,
-				feature
+				feature,
 			),
 			lineStringColor: this.getHexColorStylingValue(
 				this.styles.lineStringColor,
 				defaultStyles.lineStringColor,
-				feature
+				feature,
 			),
 			zIndex: this.getNumericStylingValue(
 				this.styles.zIndex,
 				defaultStyles.zIndex,
-				feature
+				feature,
 			),
 		};
 	}

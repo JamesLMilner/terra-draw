@@ -8,7 +8,7 @@ describe("Geometry", () => {
 
 		it("measures distance between two points", () => {
 			expect(
-				haversineDistanceKilometers([0.119, 52.205], [2.351, 48.857])
+				haversineDistanceKilometers([0.119, 52.205], [2.351, 48.857]),
 			).toBe(404.27916398867916);
 		});
 	});

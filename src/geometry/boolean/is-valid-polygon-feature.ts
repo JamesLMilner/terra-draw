@@ -12,27 +12,27 @@ function coordinatesMatch(coordinateOne: Position, coordinateTwo: Position) {
 
 export function isValidPolygonFeature(
 	feature: GeoJSONStoreFeatures,
-	coordinatePrecision: number
+	coordinatePrecision: number,
 ): boolean {
 	return (
 		feature.geometry.type === "Polygon" &&
 		feature.geometry.coordinates.length === 1 && // No hole support
 		feature.geometry.coordinates[0].length >= 4 &&
 		feature.geometry.coordinates[0].every((coordinate) =>
-			coordinateIsValid(coordinate, coordinatePrecision)
+			coordinateIsValid(coordinate, coordinatePrecision),
 		) &&
 		coordinatesMatch(
 			feature.geometry.coordinates[0][0],
 			feature.geometry.coordinates[0][
 				feature.geometry.coordinates[0].length - 1
-			]
+			],
 		)
 	);
 }
 
 export function isValidNonIntersectingPolygonFeature(
 	feature: GeoJSONStoreFeatures,
-	coordinatePrecision: number
+	coordinatePrecision: number,
 ): boolean {
 	return (
 		isValidPolygonFeature(feature, coordinatePrecision) &&

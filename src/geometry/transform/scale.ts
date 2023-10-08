@@ -8,7 +8,7 @@ import { rhumbDistance } from "../measure/rhumb-distance";
 
 export function transformScale(
 	feature: Feature<Polygon | LineString>,
-	factor: number
+	factor: number,
 ) {
 	// Shortcut no-scaling
 	if (factor === 1) {

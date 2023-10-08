@@ -35,7 +35,7 @@ describe("Geometry", () => {
 								],
 							],
 						},
-					} as Feature<Polygon>)
+					} as Feature<Polygon>),
 				).toBe(false);
 			});
 
@@ -56,7 +56,7 @@ describe("Geometry", () => {
 								],
 							],
 						},
-					})
+					}),
 				).toBe(true);
 			});
 
@@ -78,7 +78,7 @@ describe("Geometry", () => {
 							],
 						},
 						properties: {},
-					})
+					}),
 				).toBe(false);
 			});
 
@@ -99,7 +99,7 @@ describe("Geometry", () => {
 							],
 						},
 						properties: {},
-					})
+					}),
 				).toBe(true);
 			});
 		});
@@ -117,7 +117,7 @@ describe("Geometry", () => {
 							[16.5234375, -12.64033830684679],
 						],
 					},
-				})
+				}),
 			).toBe(false);
 
 			expect(
@@ -133,7 +133,7 @@ describe("Geometry", () => {
 							[-8.173828125, 24.367113562651262],
 						],
 					},
-				})
+				}),
 			).toBe(true);
 		});
 	});

@@ -4,7 +4,7 @@ const mockUUID = "29da86c2-92e2-4095-a1b3-22103535ebfa";
 
 function createMockFeature<T extends Polygon | LineString | Point>(
 	id: string,
-	geometry: T
+	geometry: T,
 ): Feature<T> {
 	return {
 		id: id ? id : mockUUID,
@@ -19,7 +19,7 @@ function createMockFeature<T extends Polygon | LineString | Point>(
 export function createMockPolygonSquare(
 	id?: string,
 	squareStart?: number,
-	squareEnd?: number
+	squareEnd?: number,
 ): Feature<Polygon> {
 	squareStart = squareStart !== undefined ? squareStart : 0;
 	squareEnd = squareEnd !== undefined ? squareEnd : 1;
@@ -47,7 +47,7 @@ export function createMockPolygonSquare(
 export function createMockPoint(
 	id?: string,
 	lng?: number,
-	lat?: number
+	lat?: number,
 ): Feature<Point> {
 	return createMockFeature(id || mockUUID, {
 		type: "Point",

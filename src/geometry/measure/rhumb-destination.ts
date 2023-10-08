@@ -7,7 +7,7 @@ import { degreesToRadians, earthRadius } from "../helpers";
 export function rhumbDestination(
 	origin: Position,
 	distanceMeters: number,
-	bearing: number
+	bearing: number,
 ): Position {
 	const wasNegativeDistance = distanceMeters < 0;
 	let distanceInMeters = distanceMeters;
@@ -16,7 +16,7 @@ export function rhumbDestination(
 		distanceInMeters = -Math.abs(distanceInMeters);
 	}
 
-	const delta = distanceMeters / earthRadius; // angular distance in radians
+	const delta = distanceInMeters / earthRadius; // angular distance in radians
 	const lambda1 = (origin[0] * Math.PI) / 180; // to radians, but without normalize to 𝜋
 	const phi1 = degreesToRadians(origin[1]);
 	const theta = degreesToRadians(bearing);
@@ -30,7 +30,7 @@ export function rhumbDestination(
 	}
 
 	const DeltaPsi = Math.log(
-		Math.tan(phi2 / 2 + Math.PI / 4) / Math.tan(phi1 / 2 + Math.PI / 4)
+		Math.tan(phi2 / 2 + Math.PI / 4) / Math.tan(phi1 / 2 + Math.PI / 4),
 	);
 	// E-W course becomes ill-conditioned with 0/0
 	const q = Math.abs(DeltaPsi) > 10e-12 ? DeltaPhi / DeltaPsi : Math.cos(phi1);

@@ -8,7 +8,7 @@ import { rhumbDistance } from "../measure/rhumb-distance";
 
 export function transformRotate(
 	geojson: Feature<Polygon | LineString>,
-	angle: number
+	angle: number,
 ) {
 	// Shortcut no-rotation
 	if (angle === 0) {

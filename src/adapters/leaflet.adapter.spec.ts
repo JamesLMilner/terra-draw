@@ -13,7 +13,7 @@ const callbacks = () =>
 		onDrag: jest.fn(),
 		onDragEnd: jest.fn(),
 		onClear: jest.fn(),
-	} as TerraDrawCallbacks);
+	}) as TerraDrawCallbacks;
 
 const createLeafletMap = () => {
 	return {
@@ -24,10 +24,10 @@ const createLeafletMap = () => {
 					style: { removeProperty: jest.fn(), cursor: "initial" },
 					addEventListener: jest.fn(),
 					removeEventListener: jest.fn(),
-				} as any)
+				}) as any,
 		),
-		latLngToContainerPoint: jest.fn(() => ({ x: 0, y: 0 } as any)),
-		containerPointToLatLng: jest.fn(() => ({ lng: 0, lat: 0 } as any)),
+		latLngToContainerPoint: jest.fn(() => ({ x: 0, y: 0 }) as any),
+		containerPointToLatLng: jest.fn(() => ({ lng: 0, lat: 0 }) as any),
 		doubleClickZoom: {
 			enable: jest.fn(),
 			disable: jest.fn(),
@@ -79,7 +79,7 @@ describe("TerraDrawLeafletAdapter", () => {
 		});
 		it("getLngLatFromEvent returns correct coordinates", () => {
 			// Mock the containerPointToLatLng function
-			map.containerPointToLatLng = jest.fn((point) => ({
+			map.containerPointToLatLng = jest.fn(() => ({
 				lat: 51.507222,
 				lng: -0.1275,
 			})) as unknown as (point: L.PointExpression) => L.LatLng;
@@ -224,8 +224,8 @@ describe("TerraDrawLeafletAdapter", () => {
 			adapter.render(
 				{ unchanged: [], created: [], deletedIds: [], updated: [] },
 				{
-					test: () => ({} as any),
-				}
+					test: () => ({}) as any,
+				},
 			);
 		});
 
@@ -287,8 +287,8 @@ describe("TerraDrawLeafletAdapter", () => {
 					],
 				},
 				{
-					test: () => ({} as any),
-				}
+					test: () => ({}) as any,
+				},
 			);
 
 			expect(lib.geoJSON).toBeCalledTimes(2);
@@ -332,8 +332,8 @@ describe("TerraDrawLeafletAdapter", () => {
 				updated: [],
 			},
 			{
-				test: () => ({} as any),
-			}
+				test: () => ({}) as any,
+			},
 		);
 
 		adapter.register(callbacks());

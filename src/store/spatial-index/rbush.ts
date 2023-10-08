@@ -25,7 +25,7 @@ function distBBox(
 	k: number,
 	p: number,
 	toBBox: (node: Node) => Node,
-	destNode?: Node
+	destNode?: Node,
 ) {
 	if (!destNode) destNode = createNode([]);
 	destNode.minX = Infinity;
@@ -116,7 +116,7 @@ function multiSelect<T>(
 	left: number,
 	right: number,
 	n: number,
-	compare: CompareFunction<T>
+	compare: CompareFunction<T>,
 ) {
 	const stack = [left, right];
 
@@ -430,7 +430,7 @@ export class RBush {
 		const splitIndex = this._chooseSplitIndex(node, m, M);
 
 		const newNode = createNode(
-			node.children.splice(splitIndex, node.children.length - splitIndex)
+			node.children.splice(splitIndex, node.children.length - splitIndex),
 		);
 		newNode.height = node.height;
 		newNode.leaf = node.leaf;
@@ -499,7 +499,7 @@ export class RBush {
 		node: Node,
 		m: number,
 		M: number,
-		compare: CompareFunction<Node>
+		compare: CompareFunction<Node>,
 	) {
 		node.children.sort(compare);
 

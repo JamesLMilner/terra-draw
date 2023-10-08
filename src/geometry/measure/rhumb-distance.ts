@@ -30,13 +30,13 @@ export function rhumbDistance(destination: Position, origin: Position): number {
 	// on Mercator projection, longitude distances shrink by latitude; q is the 'stretch factor'
 	// q becomes ill-conditioned along E-W line (0/0); use empirical tolerance to avoid it
 	const DeltaPsi = Math.log(
-		Math.tan(phi2 / 2 + Math.PI / 4) / Math.tan(phi1 / 2 + Math.PI / 4)
+		Math.tan(phi2 / 2 + Math.PI / 4) / Math.tan(phi1 / 2 + Math.PI / 4),
 	);
 	const q = Math.abs(DeltaPsi) > 10e-12 ? DeltaPhi / DeltaPsi : Math.cos(phi1);
 
 	// distance is pythagoras on 'stretched' Mercator projection
 	const delta = Math.sqrt(
-		DeltaPhi * DeltaPhi + q * q * DeltaLambda * DeltaLambda
+		DeltaPhi * DeltaPhi + q * q * DeltaLambda * DeltaLambda,
 	); // angular distance in radians
 
 	const distanceMeters = delta * R;

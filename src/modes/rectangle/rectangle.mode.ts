@@ -1,9 +1,8 @@
-import { Feature, Polygon, Position } from "geojson";
+import { Position } from "geojson";
 import {
 	TerraDrawMouseEvent,
 	TerraDrawAdapterStyling,
 	TerraDrawKeyboardEvent,
-	HexColor,
 	HexColorStyling,
 	NumericStyling,
 	Cursor,
@@ -203,25 +202,25 @@ export class TerraDrawRectangleMode extends TerraDrawBaseDrawMode<RectanglePolyg
 			styles.polygonFillColor = this.getHexColorStylingValue(
 				this.styles.fillColor,
 				styles.polygonFillColor,
-				feature
+				feature,
 			);
 
 			styles.polygonOutlineColor = this.getHexColorStylingValue(
 				this.styles.outlineColor,
 				styles.polygonOutlineColor,
-				feature
+				feature,
 			);
 
 			styles.polygonOutlineWidth = this.getNumericStylingValue(
 				this.styles.outlineWidth,
 				styles.polygonOutlineWidth,
-				feature
+				feature,
 			);
 
 			styles.polygonFillOpacity = this.getNumericStylingValue(
 				this.styles.fillOpacity,
 				styles.polygonFillOpacity,
-				feature
+				feature,
 			);
 
 			return styles;

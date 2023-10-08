@@ -9,4 +9,4 @@ export const mockDrawEvent = (partial?: Partial<TerraDrawMouseEvent>) =>
 		button: "left",
 		heldKeys: [],
 		...partial,
-	} as TerraDrawMouseEvent);
+	}) as TerraDrawMouseEvent;

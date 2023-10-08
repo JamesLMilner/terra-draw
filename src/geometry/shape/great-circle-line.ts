@@ -72,12 +72,12 @@ class GreatCircleLine<Properties extends JSONObject> {
 	constructor(start: Position, end: Position, properties?: Properties) {
 		if (!start || start[0] === undefined || start[1] === undefined) {
 			throw new Error(
-				"GreatCircle constructor expects two args: start and end objects with x and y properties"
+				"GreatCircle constructor expects two args: start and end objects with x and y properties",
 			);
 		}
 		if (!end || end[0] === undefined || end[1] === undefined) {
 			throw new Error(
-				"GreatCircle constructor expects two args: start and end objects with x and y properties"
+				"GreatCircle constructor expects two args: start and end objects with x and y properties",
 			);
 		}
 		this.start = {
@@ -107,11 +107,11 @@ class GreatCircleLine<Properties extends JSONObject> {
 
 		if (this.g === Math.PI) {
 			throw new Error(
-				`it appears ${start} and ${end} are 'antipodal', e.g diametrically opposite, thus there is no single route but rather infinite`
+				`it appears ${start} and ${end} are 'antipodal', e.g diametrically opposite, thus there is no single route but rather infinite`,
 			);
 		} else if (isNaN(this.g)) {
 			throw new Error(
-				`could not calculate great circle between ${start} and ${end}`
+				`could not calculate great circle between ${start} and ${end}`,
 			);
 		}
 	}
@@ -144,7 +144,7 @@ class GreatCircleLine<Properties extends JSONObject> {
 	 */
 	arc(
 		numberOfPoints: number,
-		options: { offset: number; coordinatePrecision: number }
+		options: { offset: number; coordinatePrecision: number },
 	) {
 		const firstPass = [];
 		if (!numberOfPoints || numberOfPoints <= 2) {

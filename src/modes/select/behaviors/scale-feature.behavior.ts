@@ -12,7 +12,7 @@ export class ScaleFeatureBehavior extends TerraDrawModeBehavior {
 	constructor(
 		readonly config: BehaviorConfig,
 		private readonly selectionPoints: SelectionPointBehavior,
-		private readonly midPoints: MidPointBehavior
+		private readonly midPoints: MidPointBehavior,
 	) {
 		super(config);
 	}
@@ -25,7 +25,7 @@ export class ScaleFeatureBehavior extends TerraDrawModeBehavior {
 
 	scale(event: TerraDrawMouseEvent, selectedId: string) {
 		const geometry = this.store.getGeometryCopy<LineString | Polygon>(
-			selectedId
+			selectedId,
 		);
 
 		// Update the geometry of the dragged feature
@@ -37,7 +37,7 @@ export class ScaleFeatureBehavior extends TerraDrawModeBehavior {
 
 		const distance = haversineDistanceKilometers(
 			centroid({ type: "Feature", geometry, properties: {} }),
-			mouseCoord
+			mouseCoord,
 		);
 
 		// We need an original bearing to compare against

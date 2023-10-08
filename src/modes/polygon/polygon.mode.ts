@@ -105,7 +105,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 		}
 
 		const currentPolygonCoordinates = this.store.getGeometryCopy<Polygon>(
-			this.currentId
+			this.currentId,
 		).coordinates[0];
 
 		// We don't want to allow closing if there is not enough
@@ -150,7 +150,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 		this.snapping = new SnappingBehavior(
 			config,
 			this.pixelDistance,
-			new ClickBoundingBoxBehavior(config)
+			new ClickBoundingBoxBehavior(config),
 		);
 		this.closingPoints = new ClosingPointsBehavior(config, this.pixelDistance);
 	}
@@ -182,7 +182,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 			: undefined;
 
 		const currentPolygonCoordinates = this.store.getGeometryCopy<Polygon>(
-			this.currentId
+			this.currentId,
 		).coordinates[0];
 
 		if (closestCoord) {
@@ -296,13 +296,13 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 			}
 
 			const currentPolygonGeometry = this.store.getGeometryCopy<Polygon>(
-				this.currentId
+				this.currentId,
 			);
 
 			const previousCoordinate = currentPolygonGeometry.coordinates[0][0];
 			const isIdentical = coordinatesIdentical(
 				[event.lng, event.lat],
-				previousCoordinate
+				previousCoordinate,
 			);
 
 			if (isIdentical) {
@@ -338,13 +338,13 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 			}
 
 			const currentPolygonCoordinates = this.store.getGeometryCopy<Polygon>(
-				this.currentId
+				this.currentId,
 			).coordinates[0];
 
 			const previousCoordinate = currentPolygonCoordinates[1];
 			const isIdentical = coordinatesIdentical(
 				[event.lng, event.lat],
-				previousCoordinate
+				previousCoordinate,
 			);
 
 			if (isIdentical) {
@@ -380,7 +380,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 				: undefined;
 
 			const currentPolygonCoordinates = this.store.getGeometryCopy<Polygon>(
-				this.currentId
+				this.currentId,
 			).coordinates[0];
 
 			const { isClosing, isPreviousClosing } =
@@ -398,7 +398,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 					currentPolygonCoordinates[this.currentCoordinate - 1];
 				const isIdentical = coordinatesIdentical(
 					[event.lng, event.lat],
-					previousCoordinate
+					previousCoordinate,
 				);
 
 				if (isIdentical) {
@@ -490,25 +490,25 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 				styles.polygonFillColor = this.getHexColorStylingValue(
 					this.styles.fillColor,
 					styles.polygonFillColor,
-					feature
+					feature,
 				);
 
 				styles.polygonOutlineColor = this.getHexColorStylingValue(
 					this.styles.outlineColor,
 					styles.polygonOutlineColor,
-					feature
+					feature,
 				);
 
 				styles.polygonOutlineWidth = this.getNumericStylingValue(
 					this.styles.outlineWidth,
 					styles.polygonOutlineWidth,
-					feature
+					feature,
 				);
 
 				styles.polygonFillOpacity = this.getNumericStylingValue(
 					this.styles.fillOpacity,
 					styles.polygonFillOpacity,
-					feature
+					feature,
 				);
 
 				styles.zIndex = 10;
@@ -517,25 +517,25 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 				styles.pointWidth = this.getNumericStylingValue(
 					this.styles.closingPointWidth,
 					styles.pointWidth,
-					feature
+					feature,
 				);
 
 				styles.pointColor = this.getHexColorStylingValue(
 					this.styles.closingPointColor,
 					styles.pointColor,
-					feature
+					feature,
 				);
 
 				styles.pointOutlineColor = this.getHexColorStylingValue(
 					this.styles.closingPointOutlineColor,
 					styles.pointOutlineColor,
-					feature
+					feature,
 				);
 
 				styles.pointOutlineWidth = this.getNumericStylingValue(
 					this.styles.closingPointOutlineWidth,
 					2,
-					feature
+					feature,
 				);
 				styles.zIndex = 30;
 				return styles;

@@ -9,7 +9,7 @@ export function createPolygon(
 			[1, 0],
 			[0, 0],
 		],
-	]
+	],
 ): Feature<Polygon> {
 	return {
 		type: "Feature",

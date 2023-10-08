@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
 import { BehaviorConfig, TerraDrawModeBehavior } from "./base.behavior";
 import {
 	HexColor,
@@ -154,21 +156,21 @@ export abstract class TerraDrawBaseDrawMode<T extends CustomStyling> {
 	onClick(event: TerraDrawMouseEvent) {}
 	onDragStart(
 		event: TerraDrawMouseEvent,
-		setMapDraggability: (enabled: boolean) => void
+		setMapDraggability: (enabled: boolean) => void,
 	) {}
 	onDrag(
 		event: TerraDrawMouseEvent,
-		setMapDraggability: (enabled: boolean) => void
+		setMapDraggability: (enabled: boolean) => void,
 	) {}
 	onDragEnd(
 		event: TerraDrawMouseEvent,
-		setMapDraggability: (enabled: boolean) => void
+		setMapDraggability: (enabled: boolean) => void,
 	) {}
 
 	protected getHexColorStylingValue(
 		value: HexColor | ((feature: GeoJSONStoreFeatures) => HexColor) | undefined,
 		defaultValue: HexColor,
-		feature: GeoJSONStoreFeatures
+		feature: GeoJSONStoreFeatures,
 	): HexColor {
 		return this.getStylingValue(value, defaultValue, feature);
 	}
@@ -176,7 +178,7 @@ export abstract class TerraDrawBaseDrawMode<T extends CustomStyling> {
 	protected getNumericStylingValue(
 		value: number | ((feature: GeoJSONStoreFeatures) => number) | undefined,
 		defaultValue: number,
-		feature: GeoJSONStoreFeatures
+		feature: GeoJSONStoreFeatures,
 	): number {
 		return this.getStylingValue(value, defaultValue, feature);
 	}
@@ -184,7 +186,7 @@ export abstract class TerraDrawBaseDrawMode<T extends CustomStyling> {
 	private getStylingValue<T extends string | number>(
 		value: T | ((feature: GeoJSONStoreFeatures) => T) | undefined,
 		defaultValue: T,
-		feature: GeoJSONStoreFeatures
+		feature: GeoJSONStoreFeatures,
 	) {
 		if (value === undefined) {
 			return defaultValue;

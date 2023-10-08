@@ -178,7 +178,7 @@ describe("TerraDrawRenderMode", () => {
 					type: "Feature",
 					geometry: { type: "Polygon", coordinates: [] },
 					properties: { mode: "polygon" },
-				}).pointColor
+				}).pointColor,
 			).toEqual("#12121");
 		});
 	});
@@ -200,7 +200,7 @@ describe("TerraDrawRenderMode", () => {
 					type: "Feature",
 					geometry: { type: "Polygon", coordinates: [] },
 					properties: { mode: "render" },
-				})
+				}),
 			).toMatchObject({
 				polygonFillColor: "#ffffff",
 				polygonOutlineColor: "#111111",
@@ -225,7 +225,7 @@ describe("TerraDrawRenderMode", () => {
 					type: "Feature",
 					geometry: { type: "Polygon", coordinates: [] },
 					properties: { mode: "render" },
-				})
+				}),
 			).toMatchObject({
 				polygonFillColor: "#ffffff",
 				polygonOutlineColor: "#111111",

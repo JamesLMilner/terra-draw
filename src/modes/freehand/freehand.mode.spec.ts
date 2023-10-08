@@ -152,7 +152,7 @@ describe("TerraDrawFreehandMode", () => {
 				expect(onChange).toBeCalledTimes(1);
 				expect(onChange).toBeCalledWith(
 					[expect.any(String), expect.any(String)],
-					"create"
+					"create",
 				);
 			});
 
@@ -185,7 +185,7 @@ describe("TerraDrawFreehandMode", () => {
 				expect(onChange).toBeCalledTimes(2);
 				expect(onChange).toBeCalledWith(
 					[expect.any(String), expect.any(String)],
-					"create"
+					"create",
 				);
 			});
 		});
@@ -222,7 +222,7 @@ describe("TerraDrawFreehandMode", () => {
 			expect(onChange).toHaveBeenNthCalledWith(
 				1,
 				[expect.any(String), expect.any(String)],
-				"create"
+				"create",
 			);
 
 			const feature = store.copyAll()[0];
@@ -254,7 +254,7 @@ describe("TerraDrawFreehandMode", () => {
 
 			expect(feature.id).toBe(updatedFeature.id);
 			expect(feature.geometry.coordinates).not.toStrictEqual(
-				updatedFeature.geometry.coordinates
+				updatedFeature.geometry.coordinates,
 			);
 		});
 
@@ -274,13 +274,11 @@ describe("TerraDrawFreehandMode", () => {
 
 	describe("cleanUp", () => {
 		let freehandMode: TerraDrawFreehandMode;
-		let store: GeoJSONStore;
 		let onChange: jest.Mock;
 
 		beforeEach(() => {
 			freehandMode = new TerraDrawFreehandMode();
 			const mockConfig = getMockModeConfig(freehandMode.mode);
-			store = mockConfig.store;
 			onChange = mockConfig.onChange;
 			freehandMode.register(mockConfig);
 			freehandMode.start();
@@ -307,7 +305,7 @@ describe("TerraDrawFreehandMode", () => {
 			expect(onChange).toHaveBeenNthCalledWith(
 				2,
 				[expect.any(String)],
-				"delete"
+				"delete",
 			);
 		});
 	});
@@ -318,8 +316,6 @@ describe("TerraDrawFreehandMode", () => {
 		let onChange: jest.Mock;
 		let onFinish: jest.Mock;
 
-		let project: jest.Mock;
-
 		beforeEach(() => {
 			jest.resetAllMocks();
 
@@ -329,7 +325,6 @@ describe("TerraDrawFreehandMode", () => {
 			store = mockConfig.store;
 			onChange = mockConfig.onChange;
 			onFinish = mockConfig.onFinish;
-			project = mockConfig.project;
 			freehandMode.register(mockConfig);
 			freehandMode.start();
 		});
@@ -372,7 +367,6 @@ describe("TerraDrawFreehandMode", () => {
 				const mockConfig = getMockModeConfig(freehandMode.mode);
 				store = mockConfig.store;
 				onChange = mockConfig.onChange;
-				project = mockConfig.project;
 				freehandMode.register(mockConfig);
 				freehandMode.start();
 
@@ -426,12 +420,12 @@ describe("TerraDrawFreehandMode", () => {
 				expect(onChange).toHaveBeenNthCalledWith(
 					1,
 					[expect.any(String), expect.any(String)],
-					"create"
+					"create",
 				);
 				expect(onChange).toHaveBeenNthCalledWith(
 					2,
 					[expect.any(String)],
-					"delete"
+					"delete",
 				);
 				expect(onFinish).toBeCalledTimes(1);
 			});
@@ -484,7 +478,7 @@ describe("TerraDrawFreehandMode", () => {
 					type: "Feature",
 					geometry: { type: "Polygon", coordinates: [] },
 					properties: { mode: "freehand" },
-				})
+				}),
 			).toMatchObject({
 				polygonFillColor: "#ffffff",
 				polygonOutlineColor: "#ffffff",
@@ -508,7 +502,7 @@ describe("TerraDrawFreehandMode", () => {
 					type: "Feature",
 					geometry: { type: "Polygon", coordinates: [] },
 					properties: { mode: "freehand" },
-				})
+				}),
 			).toMatchObject({
 				polygonFillColor: "#ffffff",
 				polygonOutlineColor: "#ffffff",
@@ -532,7 +526,7 @@ describe("TerraDrawFreehandMode", () => {
 					type: "Feature",
 					geometry: { type: "Point", coordinates: [] },
 					properties: { mode: "freehand" },
-				})
+				}),
 			).toMatchObject({
 				pointColor: "#ffffff",
 				pointOutlineWidth: 2,
@@ -566,7 +560,7 @@ describe("TerraDrawFreehandMode", () => {
 						createdAt: 1685568434891,
 						updatedAt: 1685568435434,
 					},
-				})
+				}),
 			).toBe(false);
 		});
 
@@ -608,7 +602,7 @@ describe("TerraDrawFreehandMode", () => {
 						createdAt: 1685569592712,
 						updatedAt: 1685569593386,
 					},
-				})
+				}),
 			).toBe(true);
 		});
 	});

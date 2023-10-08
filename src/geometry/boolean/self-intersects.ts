@@ -11,7 +11,7 @@ type SelfIntersectsOptions = {
 };
 
 export function selfIntersects(
-	feature: Feature<Polygon> | Feature<LineString>
+	feature: Feature<Polygon> | Feature<LineString>,
 ): boolean {
 	const options: SelfIntersectsOptions = {
 		epsilon: 0,
@@ -59,7 +59,7 @@ export function selfIntersects(
 		ring0: number,
 		edge0: number,
 		ring1: number,
-		edge1: number
+		edge1: number,
 	) {
 		const start0 = coord[ring0][edge0];
 		const end0 = coord[ring0][edge0 + 1];
@@ -127,7 +127,7 @@ function intersect(
 	start0: Position,
 	end0: Position,
 	start1: Position,
-	end1: Position
+	end1: Position,
 ) {
 	if (
 		equalArrays(start0, start1) ||

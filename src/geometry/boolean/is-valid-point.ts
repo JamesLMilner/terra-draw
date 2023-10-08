@@ -3,7 +3,7 @@ import { coordinateIsValid } from "./is-valid-coordinate";
 
 export function isValidPoint(
 	feature: GeoJSONStoreFeatures,
-	coordinatePrecision: number
+	coordinatePrecision: number,
 ): boolean {
 	return (
 		feature.geometry.type === "Point" &&

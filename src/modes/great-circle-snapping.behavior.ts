@@ -9,14 +9,14 @@ export class GreatCircleSnappingBehavior extends TerraDrawModeBehavior {
 	constructor(
 		readonly config: BehaviorConfig,
 		private readonly pixelDistance: PixelDistanceBehavior,
-		private readonly clickBoundingBox: ClickBoundingBoxBehavior
+		private readonly clickBoundingBox: ClickBoundingBoxBehavior,
 	) {
 		super(config);
 	}
 
 	public getSnappableCoordinate = (
 		event: TerraDrawMouseEvent,
-		currentFeatureId?: string
+		currentFeatureId?: string,
 	) => {
 		return this.getSnappableEnds(event, (feature) => {
 			return Boolean(
@@ -24,14 +24,14 @@ export class GreatCircleSnappingBehavior extends TerraDrawModeBehavior {
 					feature.properties.mode === this.mode &&
 					currentFeatureId
 					? feature.id !== currentFeatureId
-					: true
+					: true,
 			);
 		});
 	};
 
 	private getSnappableEnds(
 		event: TerraDrawMouseEvent,
-		filter: (feature: Feature) => boolean
+		filter: (feature: Feature) => boolean,
 	) {
 		const bbox = this.clickBoundingBox.create(event) as BBoxPolygon;
 

@@ -4,7 +4,7 @@ import { BehaviorConfig } from "../modes/base.behavior";
 
 export const createStoreMidPoint = (
 	config: BehaviorConfig,
-	coordinates: Position = [0, 0]
+	coordinates: Position = [0, 0],
 ) => {
 	const [createdId] = config.store.create([
 		{
@@ -24,7 +24,7 @@ export const createStoreMidPoint = (
 export const createStorePoint = (
 	config: BehaviorConfig,
 	coordinates: Position = [0, 0],
-	selected = true
+	selected = true,
 ) => {
 	const [createdId] = config.store.create([
 		{
@@ -53,7 +53,7 @@ export const createStorePolygon = (
 		],
 	],
 	selected = true,
-	mode = "test"
+	mode = "test",
 ) => {
 	const [createdId] = config.store.create([
 		{
@@ -77,7 +77,7 @@ export const createStoreLineString = (
 		[0, 0],
 		[0, 1],
 	],
-	selected = true
+	selected = true,
 ) => {
 	const [createdId] = config.store.create([
 		{

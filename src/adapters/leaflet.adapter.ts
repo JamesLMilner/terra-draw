@@ -71,13 +71,13 @@ export class TerraDrawLeafletAdapter extends TerraDrawBaseAdapter {
 	 * @param styling - The styling function
 	 * */
 	private styleGeoJSONLayer(
-		styling: TerraDrawStylingFunction
+		styling: TerraDrawStylingFunction,
 	): L.GeoJSONOptions {
 		return {
 			// Style points - convert markers to circle markers
 			pointToLayer: (
 				feature: GeoJSONStoreFeatures,
-				latlng: L.LatLngExpression
+				latlng: L.LatLngExpression,
 			) => {
 				if (!feature.properties) {
 					throw new Error("Feature has no properties");
@@ -95,7 +95,7 @@ export class TerraDrawLeafletAdapter extends TerraDrawBaseAdapter {
 				if (!pane) {
 					this._panes[paneId] = this.createPaneStyleSheet(
 						paneId,
-						featureStyles.zIndex
+						featureStyles.zIndex,
 					);
 				}
 
@@ -132,7 +132,7 @@ export class TerraDrawLeafletAdapter extends TerraDrawBaseAdapter {
 				if (!pane) {
 					this._panes[paneId] = this.createPaneStyleSheet(
 						paneId,
-						featureStyles.zIndex
+						featureStyles.zIndex,
 					);
 				}
 
@@ -261,7 +261,7 @@ export class TerraDrawLeafletAdapter extends TerraDrawBaseAdapter {
 		changes.created.forEach((created) => {
 			this._layers[created.id as string] = this._lib.geoJSON(
 				created,
-				this.styleGeoJSONLayer(styling)
+				this.styleGeoJSONLayer(styling),
 			);
 			this._map.addLayer(this._layers[created.id as string]);
 		});
@@ -274,7 +274,7 @@ export class TerraDrawLeafletAdapter extends TerraDrawBaseAdapter {
 			this._map.removeLayer(this._layers[updated.id as string]);
 			this._layers[updated.id as string] = this._lib.geoJSON(
 				updated,
-				this.styleGeoJSONLayer(styling)
+				this.styleGeoJSONLayer(styling),
 			);
 			this._map.addLayer(this._layers[updated.id as string]);
 		});

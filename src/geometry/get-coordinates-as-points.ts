@@ -4,7 +4,7 @@ import { JSONObject } from "../store/store";
 export function getCoordinatesAsPoints(
 	selectedCoords: Position[],
 	geometryType: "Polygon" | "LineString",
-	properties: (index: number) => JSONObject
+	properties: (index: number) => JSONObject,
 ) {
 	const selectionPoints = [];
 

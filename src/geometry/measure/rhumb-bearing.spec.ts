@@ -1,4 +1,3 @@
-import { pixelDistance } from "./pixel-distance";
 import { rhumbBearing } from "./rhumb-bearing";
 
 describe("rhumbBearing", () => {
@@ -11,6 +10,8 @@ describe("rhumbBearing", () => {
 		for (let i = 0; i < 180; i++) {
 			const result = rhumbBearing([i, i / 2], [-i, -(i / 2)]);
 			const result2 = rhumbBearing([-i, -(i / 2)], [i, i / 2]);
+			expect(typeof result).toBe("number");
+			expect(typeof result2).toBe("number");
 		}
 	});
 });

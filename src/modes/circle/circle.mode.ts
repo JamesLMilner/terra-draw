@@ -3,10 +3,8 @@ import {
 	TerraDrawMouseEvent,
 	TerraDrawAdapterStyling,
 	TerraDrawKeyboardEvent,
-	HexColor,
 	HexColorStyling,
 	NumericStyling,
-	SetCursor,
 	Cursor,
 } from "../../common";
 import { haversineDistanceKilometers } from "../../geometry/measure/haversine-distance";
@@ -197,25 +195,25 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 			styles.polygonFillColor = this.getHexColorStylingValue(
 				this.styles.fillColor,
 				styles.polygonFillColor,
-				feature
+				feature,
 			);
 
 			styles.polygonOutlineColor = this.getHexColorStylingValue(
 				this.styles.outlineColor,
 				styles.polygonOutlineColor,
-				feature
+				feature,
 			);
 
 			styles.polygonOutlineWidth = this.getNumericStylingValue(
 				this.styles.outlineWidth,
 				styles.polygonOutlineWidth,
-				feature
+				feature,
 			);
 
 			styles.polygonFillOpacity = this.getNumericStylingValue(
 				this.styles.fillOpacity,
 				styles.polygonFillOpacity,
-				feature
+				feature,
 			);
 
 			return styles;

@@ -7,37 +7,37 @@ import {
 describe("isValidStoreFeature", () => {
 	it("throws on data with non object feature", () => {
 		expect(() => isValidStoreFeature(undefined)).toThrowError(
-			StoreValidationErrors.FeatureIsNotObject
+			StoreValidationErrors.FeatureIsNotObject,
 		);
 		expect(() => isValidStoreFeature(null)).toThrowError(
-			StoreValidationErrors.FeatureIsNotObject
+			StoreValidationErrors.FeatureIsNotObject,
 		);
 	});
 
 	it("throws on data with no id", () => {
 		expect(() => isValidStoreFeature({ id: undefined })).toThrowError(
-			StoreValidationErrors.FeatureHasNoId
+			StoreValidationErrors.FeatureHasNoId,
 		);
 		expect(() => isValidStoreFeature({ id: null })).toThrowError(
-			StoreValidationErrors.FeatureHasNoId
+			StoreValidationErrors.FeatureHasNoId,
 		);
 	});
 
 	it("throws on data with non string id", () => {
 		expect(() => isValidStoreFeature({ id: 1 })).toThrowError(
-			StoreValidationErrors.FeatureIdIsNotUUID4
+			StoreValidationErrors.FeatureIdIsNotUUID4,
 		);
 	});
 
 	it("throws on data with non uuid4 id", () => {
 		expect(() => isValidStoreFeature({ id: "1" })).toThrowError(
-			StoreValidationErrors.FeatureIdIsNotUUID4
+			StoreValidationErrors.FeatureIdIsNotUUID4,
 		);
 	});
 
 	it("throws on data with no geometry", () => {
 		expect(() =>
-			isValidStoreFeature({ id: "e3ccd3b9-afb1-4f0b-91d8-22a768d5f284" })
+			isValidStoreFeature({ id: "e3ccd3b9-afb1-4f0b-91d8-22a768d5f284" }),
 		).toThrowError(StoreValidationErrors.FeatureHasNoGeometry);
 	});
 
@@ -84,7 +84,7 @@ describe("isValidStoreFeature", () => {
 				properties: {
 					mode: 1,
 				},
-			})
+			}),
 		).toThrowError(StoreValidationErrors.InvalidModeProperty);
 	});
 
@@ -97,13 +97,13 @@ describe("isValidStoreFeature", () => {
 				properties: {
 					mode: "test",
 				},
-			})
+			}),
 		).not.toThrowError();
 	});
 
 	it("throws if tracked is explicitly true and tracked properties are not provided", () => {
 		expect(() => isValidTimestamp(undefined)).toThrowError(
-			StoreValidationErrors.InvalidTrackedProperties
+			StoreValidationErrors.InvalidTrackedProperties,
 		);
 	});
 

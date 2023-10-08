@@ -6,7 +6,7 @@ describe("RBush", () => {
 		number,
 		number,
 		number,
-		number
+		number,
 	]) {
 		const children: Node[] = [];
 		return {
@@ -98,8 +98,6 @@ describe("RBush", () => {
 		for (let i = 0; i < data.length; i++) {
 			tree.insert(data[i]);
 		}
-
-		const tree2 = new RBush(4).load(data as any);
 	});
 
 	it("insert handles the insertion of maxEntries + 2 empty bboxes", () => {

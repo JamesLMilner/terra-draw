@@ -1,7 +1,4 @@
-import {
-	createStoreLineString,
-	createStorePolygon,
-} from "../test/create-store-features";
+import { createStoreLineString } from "../test/create-store-features";
 import { mockBehaviorConfig } from "../test/mock-behavior-config";
 import { mockDrawEvent } from "../test/mock-mouse-event";
 import { mockProject } from "../test/mock-project";
@@ -18,7 +15,7 @@ describe("GreatCircleSnappingBehavior", () => {
 			new GreatCircleSnappingBehavior(
 				config,
 				new PixelDistanceBehavior(config),
-				new ClickBoundingBoxBehavior(config)
+				new ClickBoundingBoxBehavior(config),
 			);
 		});
 	});
@@ -32,7 +29,7 @@ describe("GreatCircleSnappingBehavior", () => {
 			snappingBehavior = new GreatCircleSnappingBehavior(
 				config,
 				new PixelDistanceBehavior(config),
-				new ClickBoundingBoxBehavior(config)
+				new ClickBoundingBoxBehavior(config),
 			);
 		});
 
@@ -44,7 +41,7 @@ describe("GreatCircleSnappingBehavior", () => {
 
 				const snappedCoord = snappingBehavior.getSnappableCoordinate(
 					mockDrawEvent(),
-					"mockId"
+					"mockId",
 				);
 
 				expect(snappedCoord).toBe(undefined);
@@ -65,7 +62,7 @@ describe("GreatCircleSnappingBehavior", () => {
 
 				const snappedCoord = snappingBehavior.getSnappableCoordinate(
 					mockDrawEvent(),
-					"currentId"
+					"currentId",
 				);
 
 				expect(snappedCoord).toStrictEqual([0, 1]);

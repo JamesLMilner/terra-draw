@@ -18,7 +18,7 @@ export class SelectionPointBehavior extends TerraDrawModeBehavior {
 	public create(
 		selectedCoords: Position[],
 		type: Polygon["type"] | LineString["type"],
-		featureId: string
+		featureId: string,
 	) {
 		this._selectionPoints = this.store.create(
 			getCoordinatesAsPoints(selectedCoords, type, (i) => ({
@@ -26,7 +26,7 @@ export class SelectionPointBehavior extends TerraDrawModeBehavior {
 				selectionPoint: true,
 				selectionPointFeatureId: featureId,
 				index: i,
-			}))
+			})),
 		);
 	}
 

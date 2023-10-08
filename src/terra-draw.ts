@@ -83,14 +83,19 @@ class TerraDraw {
 		const duplicateModeTracker = new Set();
 
 		// Construct a map of the mode name to the mode
-		const modesMap = options.modes.reduce((modeMap, currentMode) => {
-			if (duplicateModeTracker.has(currentMode.mode)) {
-				throw new Error(`There is already a ${currentMode.mode} mode provided`);
-			}
-			duplicateModeTracker.add(currentMode.mode);
-			modeMap[currentMode.mode] = currentMode;
-			return modeMap;
-		}, {} as { [mode: string]: TerraDrawBaseDrawMode<any> });
+		const modesMap = options.modes.reduce(
+			(modeMap, currentMode) => {
+				if (duplicateModeTracker.has(currentMode.mode)) {
+					throw new Error(
+						`There is already a ${currentMode.mode} mode provided`,
+					);
+				}
+				duplicateModeTracker.add(currentMode.mode);
+				modeMap[currentMode.mode] = currentMode;
+				return modeMap;
+			},
+			{} as { [mode: string]: TerraDrawBaseDrawMode<any> },
+		);
 
 		// Construct an array of the mode keys (names)
 		const modeKeys = Object.keys(modesMap);
@@ -117,7 +122,7 @@ class TerraDraw {
 		this._store = new GeoJSONStore();
 
 		const getChanged = (
-			ids: string[]
+			ids: string[],
 		): {
 			changed: GeoJSONStoreFeatures[];
 			unchanged: GeoJSONStoreFeatures[];
@@ -165,7 +170,7 @@ class TerraDraw {
 						unchanged,
 						updated: [],
 					},
-					this.getModeStyles()
+					this.getModeStyles(),
 				);
 			} else if (event === "update") {
 				this._adapter.render(
@@ -175,17 +180,17 @@ class TerraDraw {
 						unchanged,
 						updated: changed,
 					},
-					this.getModeStyles()
+					this.getModeStyles(),
 				);
 			} else if (event === "delete") {
 				this._adapter.render(
 					{ created: [], deletedIds: ids, unchanged, updated: [] },
-					this.getModeStyles()
+					this.getModeStyles(),
 				);
 			} else if (event === "styling") {
 				this._adapter.render(
 					{ created: [], deletedIds: [], unchanged, updated: [] },
-					this.getModeStyles()
+					this.getModeStyles(),
 				);
 			}
 		};
@@ -203,7 +208,7 @@ class TerraDraw {
 
 			this._adapter.render(
 				{ created: [], deletedIds: [], unchanged, updated: changed },
-				this.getModeStyles()
+				this.getModeStyles(),
 			);
 		};
 
@@ -229,7 +234,7 @@ class TerraDraw {
 						unchanged,
 						updated: changed,
 					},
-					this.getModeStyles()
+					this.getModeStyles(),
 				);
 			}
 		};
@@ -243,7 +248,7 @@ class TerraDraw {
 				project: this._adapter.project.bind(this._adapter),
 				unproject: this._adapter.unproject.bind(this._adapter),
 				setDoubleClickToZoom: this._adapter.setDoubleClickToZoom.bind(
-					this._adapter
+					this._adapter,
 				),
 				onChange: onChange,
 				onSelect: onSelect,
@@ -272,7 +277,7 @@ class TerraDraw {
 					feature.properties[SELECT_PROPERTIES.SELECTED]
 				) {
 					return this._modes[this._instanceSelectMode].styleFeature.bind(
-						this._modes[this._instanceSelectMode]
+						this._modes[this._instanceSelectMode],
 					)(feature);
 				}
 
@@ -291,7 +296,7 @@ class TerraDraw {
 			lng: number;
 			lat: number;
 		},
-		options?: { pointerDistance: number; ignoreSelectFeatures: boolean }
+		options?: { pointerDistance: number; ignoreSelectFeatures: boolean },
 	) {
 		const pointerDistance =
 			options && options.pointerDistance !== undefined
@@ -341,7 +346,7 @@ class TerraDraw {
 					const distanceToLine = pixelDistanceToLine(
 						inputPoint,
 						project(coord[0], coord[1]),
-						project(nextCoord[0], nextCoord[1])
+						project(nextCoord[0], nextCoord[1]),
 					);
 
 					if (distanceToLine < pointerDistance) {
@@ -352,7 +357,7 @@ class TerraDraw {
 			} else {
 				const lngLatInsidePolygon = pointInPolygon(
 					[lng, lat],
-					feature.geometry.coordinates
+					feature.geometry.coordinates,
 				);
 
 				if (lngLatInsidePolygon) {
@@ -373,7 +378,7 @@ class TerraDraw {
 	 */
 	setModeStyles<Styling extends Record<string, number | HexColor>>(
 		mode: string,
-		styles: Styling
+		styles: Styling,
 	) {
 		this.checkEnabled();
 		if (!this._modes[mode]) {
@@ -503,7 +508,7 @@ class TerraDraw {
 					"properties" in feature &&
 					typeof feature.properties === "object" &&
 					feature.properties !== null &&
-					"mode" in feature.properties
+					"mode" in feature.properties,
 			);
 
 			if (hasModeProperty) {
@@ -580,7 +585,7 @@ class TerraDraw {
 	 */
 	getFeaturesAtLngLat(
 		lngLat: { lng: number; lat: number },
-		options?: { pointerDistance: number; ignoreSelectFeatures: boolean }
+		options?: { pointerDistance: number; ignoreSelectFeatures: boolean },
 	) {
 		const { lng, lat } = lngLat;
 
@@ -589,7 +594,7 @@ class TerraDraw {
 				lng,
 				lat,
 			},
-			options
+			options,
 		);
 	}
 
@@ -602,10 +607,10 @@ class TerraDraw {
 	 */
 	getFeaturesAtPointerEvent(
 		event: PointerEvent | MouseEvent,
-		options?: { pointerDistance: number; ignoreSelectFeatures: boolean }
+		options?: { pointerDistance: number; ignoreSelectFeatures: boolean },
 	) {
 		const getLngLatFromEvent = this._adapter.getLngLatFromEvent.bind(
-			this._adapter
+			this._adapter,
 		);
 
 		const lngLat = getLngLatFromEvent(event);
@@ -640,7 +645,7 @@ class TerraDraw {
 	 */
 	on<T extends TerraDrawEvents>(
 		event: T,
-		callback: TerraDrawEventListeners[T]
+		callback: TerraDrawEventListeners[T],
 	) {
 		const listeners = this._eventListeners[
 			event
@@ -660,7 +665,7 @@ class TerraDraw {
 	 */
 	off<T extends TerraDrawEvents>(
 		event: TerraDrawEvents,
-		callback: TerraDrawEventListeners[T]
+		callback: TerraDrawEventListeners[T],
 	) {
 		const listeners = this._eventListeners[
 			event

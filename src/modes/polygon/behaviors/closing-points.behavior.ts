@@ -6,7 +6,7 @@ import { PixelDistanceBehavior } from "../../pixel-distance.behavior";
 export class ClosingPointsBehavior extends TerraDrawModeBehavior {
 	constructor(
 		readonly config: BehaviorConfig,
-		private readonly pixelDistance: PixelDistanceBehavior
+		private readonly pixelDistance: PixelDistanceBehavior,
 	) {
 		super(config);
 	}
@@ -52,7 +52,7 @@ export class ClosingPointsBehavior extends TerraDrawModeBehavior {
 						[POLYGON_PROPERTIES.CLOSING_POINT]: true,
 					},
 				},
-			]
+			],
 		);
 	}
 
@@ -86,7 +86,7 @@ export class ClosingPointsBehavior extends TerraDrawModeBehavior {
 						coordinates: updatedCoordinates[updatedCoordinates.length - 3],
 					} as Point,
 				},
-			]
+			],
 		);
 	}
 
@@ -96,12 +96,12 @@ export class ClosingPointsBehavior extends TerraDrawModeBehavior {
 
 		const distance = this.pixelDistance.measure(
 			event,
-			opening.coordinates as Position
+			opening.coordinates as Position,
 		);
 
 		const distancePrevious = this.pixelDistance.measure(
 			event,
-			closing.coordinates as Position
+			closing.coordinates as Position,
 		);
 
 		const isClosing = distance < this.pointerDistance;

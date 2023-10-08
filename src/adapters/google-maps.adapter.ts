@@ -1,12 +1,9 @@
 import {
-	TerraDrawAdapterStyling,
 	TerraDrawChanges,
 	SetCursor,
 	TerraDrawStylingFunction,
 } from "../common";
 import { GeoJsonObject } from "geojson";
-
-import { GeoJSONStoreFeatures } from "../store/store";
 import { TerraDrawBaseAdapter } from "./common/base.adapter";
 
 export class TerraDrawGoogleMapsAdapter extends TerraDrawBaseAdapter {
@@ -111,7 +108,7 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawBaseAdapter {
 		}
 
 		const point = projection.fromLatLngToContainerPixel(
-			new google.maps.LatLng(lat, lng)
+			new google.maps.LatLng(lat, lng),
 		);
 
 		if (point === null) {
@@ -134,7 +131,7 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawBaseAdapter {
 		}
 
 		const latLng = projection.fromContainerPixelToLatLng(
-			new google.maps.Point(x, y)
+			new google.maps.Point(x, y),
 		);
 
 		if (latLng === null) {
@@ -216,7 +213,7 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawBaseAdapter {
 				}
 
 				const featureToUpdate = this._map.data.getFeatureById(
-					updatedFeature.id
+					updatedFeature.id,
 				);
 
 				if (!featureToUpdate) {
@@ -232,7 +229,7 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawBaseAdapter {
 				Object.keys(updatedFeature.properties).forEach((property) => {
 					featureToUpdate.setProperty(
 						property,
-						updatedFeature.properties[property]
+						updatedFeature.properties[property],
 					);
 				});
 
@@ -243,8 +240,8 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawBaseAdapter {
 
 							featureToUpdate.setGeometry(
 								new google.maps.Data.Point(
-									new google.maps.LatLng(coordinates[1], coordinates[0])
-								)
+									new google.maps.LatLng(coordinates[1], coordinates[0]),
+								),
 							);
 						}
 						break;
@@ -257,13 +254,13 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawBaseAdapter {
 								const coordinate = coordinates[i];
 								const latLng = new google.maps.LatLng(
 									coordinate[1],
-									coordinate[0]
+									coordinate[0],
 								);
 								path.push(latLng);
 							}
 
 							featureToUpdate.setGeometry(
-								new google.maps.Data.LineString(path)
+								new google.maps.Data.LineString(path),
 							);
 						}
 						break;
@@ -277,7 +274,7 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawBaseAdapter {
 								for (let j = 0; j < coordinates[i].length; j++) {
 									const latLng = new google.maps.LatLng(
 										coordinates[i][j][1],
-										coordinates[i][j][0]
+										coordinates[i][j][0],
 									);
 									path.push(latLng);
 								}
@@ -305,15 +302,15 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawBaseAdapter {
 				(
 					event: google.maps.MapMouseEvent & {
 						domEvent: MouseEvent;
-					}
+					},
 				) => {
 					const clickListener = this._listeners.find(
-						({ name }) => name === "click"
+						({ name }) => name === "click",
 					);
 					if (clickListener) {
 						clickListener.callback(event);
 					}
-				}
+				},
 			);
 
 			this._map.data.addListener(
@@ -321,15 +318,15 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawBaseAdapter {
 				(
 					event: google.maps.MapMouseEvent & {
 						domEvent: MouseEvent;
-					}
+					},
 				) => {
 					const mouseMoveListener = this._listeners.find(
-						({ name }) => name === "mousemove"
+						({ name }) => name === "mousemove",
 					);
 					if (mouseMoveListener) {
 						mouseMoveListener.callback(event);
 					}
-				}
+				},
 			);
 		}
 

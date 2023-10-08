@@ -11,7 +11,7 @@ describe("SelectionPointBehavior", () => {
 	describe("api", () => {
 		it("get ids", () => {
 			const selectionPointBehavior = new SelectionPointBehavior(
-				mockBehaviorConfig("test")
+				mockBehaviorConfig("test"),
 			);
 
 			expect(selectionPointBehavior.ids).toStrictEqual([]);
@@ -19,7 +19,7 @@ describe("SelectionPointBehavior", () => {
 
 		it("set ids fails", () => {
 			const selectionPointBehavior = new SelectionPointBehavior(
-				mockBehaviorConfig("test")
+				mockBehaviorConfig("test"),
 			);
 
 			selectionPointBehavior.ids = ["test"];
@@ -29,7 +29,7 @@ describe("SelectionPointBehavior", () => {
 
 		it("create - for polygon", () => {
 			const selectionPointBehavior = new SelectionPointBehavior(
-				mockBehaviorConfig("test")
+				mockBehaviorConfig("test"),
 			);
 
 			selectionPointBehavior.create(
@@ -38,7 +38,7 @@ describe("SelectionPointBehavior", () => {
 					[0, 1],
 				],
 				"LineString",
-				"id"
+				"id",
 			);
 
 			expect(selectionPointBehavior.ids.length).toBe(2);
@@ -47,7 +47,7 @@ describe("SelectionPointBehavior", () => {
 
 		it("delete", () => {
 			const selectionPointBehavior = new SelectionPointBehavior(
-				mockBehaviorConfig("test")
+				mockBehaviorConfig("test"),
 			);
 
 			selectionPointBehavior.create(
@@ -59,7 +59,7 @@ describe("SelectionPointBehavior", () => {
 					[0, 0],
 				],
 				"Polygon",
-				"id"
+				"id",
 			);
 
 			expect(selectionPointBehavior.ids.length).toBe(4);
@@ -97,7 +97,7 @@ describe("SelectionPointBehavior", () => {
 						[0, 0],
 					],
 					"Polygon",
-					"id"
+					"id",
 				);
 
 				const result = selectionPointBehavior.getUpdated([
@@ -144,7 +144,7 @@ describe("SelectionPointBehavior", () => {
 						[0, 0],
 					],
 					"Polygon",
-					"id"
+					"id",
 				);
 
 				const result = selectionPointBehavior.getOneUpdated(0, [2, 2]);

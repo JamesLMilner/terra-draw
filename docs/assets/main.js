@@ -27,7 +27,7 @@
 			e || !t || !t.__esModule
 				? ae(n, "default", { value: t, enumerable: !0 })
 				: n,
-			t
+			t,
 		)
 	);
 	var de = _e((ce, he) => {
@@ -73,7 +73,7 @@
 							continue;
 						}
 						throw new TypeError(
-							"clone is not deep and does not support nested objects"
+							"clone is not deep and does not support nested objects",
 						);
 					}
 					return n;
@@ -151,7 +151,7 @@
 						: e === t.Set.empty
 						? this
 						: new t.Set(
-								Object.keys(this.elements).concat(Object.keys(e.elements))
+								Object.keys(this.elements).concat(Object.keys(e.elements)),
 						  );
 				}),
 				(t.idf = function (e, n) {
@@ -185,7 +185,7 @@
 					return e.map(function (m) {
 						return new t.Token(
 							t.utils.asString(m).toLowerCase(),
-							t.utils.clone(n)
+							t.utils.clone(n),
 						);
 					});
 				for (
@@ -228,7 +228,7 @@
 						t.utils.warn(
 							`Function is not registered with pipeline. This may cause problems when serialising the index.
 `,
-							e
+							e,
 						);
 				}),
 				(t.Pipeline.load = function (e) {
@@ -1021,7 +1021,7 @@
 								t.version +
 								"' does not match serialized index '" +
 								e.version +
-								"'"
+								"'",
 						);
 					for (var l = 0; l < i.length; l++) {
 						var h = i[l],
@@ -1067,7 +1067,7 @@
 				(t.Builder.prototype.field = function (e, n) {
 					if (/\//.test(e))
 						throw new RangeError(
-							"Field '" + e + "' contains illegal character '/'"
+							"Field '" + e + "' contains illegal character '/'",
 						);
 					this._fields[e] = n || {};
 				}),
@@ -1190,7 +1190,7 @@
 				}),
 				(t.Builder.prototype.createTokenSet = function () {
 					this.tokenSet = t.TokenSet.fromArray(
-						Object.keys(this.invertedIndex).sort()
+						Object.keys(this.invertedIndex).sort(),
 					);
 				}),
 				(t.Builder.prototype.build = function () {
@@ -1241,7 +1241,7 @@
 								this.metadata[i][a][h] == null
 									? (this.metadata[i][a][h] = e.metadata[i][a][h])
 									: (this.metadata[i][a][h] = this.metadata[i][a][h].concat(
-											e.metadata[i][a][h]
+											e.metadata[i][a][h],
 									  ));
 							}
 						}
@@ -1649,7 +1649,7 @@
 			this.createComponents(document.body),
 				this.ensureFocusedElementVisible(),
 				window.addEventListener("hashchange", () =>
-					this.ensureFocusedElementVisible()
+					this.ensureFocusedElementVisible(),
 				);
 		}
 		createComponents(e) {
@@ -1730,11 +1730,11 @@
 					(this.navigation = document.querySelector(".col-menu")),
 					window.addEventListener(
 						"scroll",
-						ne(() => this.onScroll(), 10)
+						ne(() => this.onScroll(), 10),
 					),
 					window.addEventListener(
 						"resize",
-						ne(() => this.onResize(), 10)
+						ne(() => this.onResize(), 10),
 					),
 					(this.searchInput = document.querySelector("#tsd-search input")),
 					this.searchInput &&
@@ -1853,7 +1853,7 @@
 			r = document.querySelector("#tsd-search .results");
 		if (!n || !r)
 			throw new Error(
-				"The input field or the result list wrapper was not found"
+				"The input field or the result list wrapper was not found",
 			);
 		let i = !1;
 		r.addEventListener("mousedown", () => (i = !0)),
@@ -1872,7 +1872,7 @@
 			"input",
 			ue(() => {
 				He(t, e, n, r);
-			}, 200)
+			}, 200),
 		);
 		let i = !1;
 		n.addEventListener("keydown", (s) => {
@@ -1969,7 +1969,7 @@
 		for (; o != -1; )
 			i.push(
 				ie(t.substring(s, o)),
-				`<b>${ie(t.substring(o, o + r.length))}</b>`
+				`<b>${ie(t.substring(o, o + r.length))}</b>`,
 			),
 				(s = o + r.length),
 				(o = n.indexOf(r, s));
@@ -1994,7 +1994,7 @@
 		Be = !1,
 		A = !1,
 		xe = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-			navigator.userAgent
+			navigator.userAgent,
 		);
 	document.documentElement.classList.add(xe ? "is-mobile" : "not-mobile");
 	xe &&
@@ -2100,7 +2100,7 @@
 				document.querySelectorAll(".tsd-index-section").forEach((n) => {
 					n.style.display = "block";
 					let r = Array.from(n.querySelectorAll(".tsd-index-link")).every(
-						(i) => i.offsetParent == null
+						(i) => i.offsetParent == null,
 					);
 					n.style.display = r ? "none" : "block";
 				});
@@ -2166,7 +2166,7 @@
 								this.getIconRotation(i),
 							],
 						},
-						o
+						o,
 					)
 					.addEventListener("finish", () => {
 						this.icon.style.transform = this.getIconRotation(i);

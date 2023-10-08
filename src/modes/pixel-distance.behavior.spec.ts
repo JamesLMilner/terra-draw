@@ -20,7 +20,7 @@ describe("PixelDistanceBehavior", () => {
 				() => ({
 					x: 0,
 					y: 1,
-				})
+				}),
 			);
 
 			const pxielDistanceBehavior = new PixelDistanceBehavior(config);

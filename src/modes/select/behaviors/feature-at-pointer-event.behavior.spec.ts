@@ -19,7 +19,7 @@ describe("FeatureAtPointerEventBehavior", () => {
 			new FeatureAtPointerEventBehavior(
 				config,
 				new ClickBoundingBoxBehavior(config),
-				new PixelDistanceBehavior(config)
+				new PixelDistanceBehavior(config),
 			);
 		});
 	});
@@ -31,7 +31,7 @@ describe("FeatureAtPointerEventBehavior", () => {
 				const featureAtPointerEventBehavior = new FeatureAtPointerEventBehavior(
 					config,
 					new ClickBoundingBoxBehavior(config),
-					new PixelDistanceBehavior(config)
+					new PixelDistanceBehavior(config),
 				);
 				// Mock the unproject to return a valid set
 				// of bbox coordinates
@@ -39,7 +39,7 @@ describe("FeatureAtPointerEventBehavior", () => {
 
 				const result = featureAtPointerEventBehavior.find(
 					mockDrawEvent(),
-					false
+					false,
 				);
 				expect(result).toStrictEqual({
 					clickedFeature: undefined,
@@ -52,7 +52,7 @@ describe("FeatureAtPointerEventBehavior", () => {
 				const featureAtPointerEventBehavior = new FeatureAtPointerEventBehavior(
 					config,
 					new ClickBoundingBoxBehavior(config),
-					new PixelDistanceBehavior(config)
+					new PixelDistanceBehavior(config),
 				);
 
 				config.store.create([
@@ -73,7 +73,7 @@ describe("FeatureAtPointerEventBehavior", () => {
 
 				const result = featureAtPointerEventBehavior.find(
 					mockDrawEvent(),
-					false
+					false,
 				);
 
 				expect(result).toStrictEqual({
@@ -87,7 +87,7 @@ describe("FeatureAtPointerEventBehavior", () => {
 				const featureAtPointerEventBehavior = new FeatureAtPointerEventBehavior(
 					config,
 					new ClickBoundingBoxBehavior(config),
-					new PixelDistanceBehavior(config)
+					new PixelDistanceBehavior(config),
 				);
 
 				// Mock the unproject to return a valid set
@@ -114,7 +114,7 @@ describe("FeatureAtPointerEventBehavior", () => {
 
 				const result = featureAtPointerEventBehavior.find(
 					mockDrawEvent(),
-					false
+					false,
 				);
 
 				expect((result.clickedFeature as GeoJSONStoreFeatures).id).toBeUUID4();
@@ -125,7 +125,7 @@ describe("FeatureAtPointerEventBehavior", () => {
 				const featureAtPointerEventBehavior = new FeatureAtPointerEventBehavior(
 					config,
 					new ClickBoundingBoxBehavior(config),
-					new PixelDistanceBehavior(config)
+					new PixelDistanceBehavior(config),
 				);
 
 				// Mock the unproject to return a valid set
@@ -151,7 +151,7 @@ describe("FeatureAtPointerEventBehavior", () => {
 
 				const result = featureAtPointerEventBehavior.find(
 					mockDrawEvent(),
-					true
+					true,
 				);
 
 				expect((result.clickedMidPoint as GeoJSONStoreFeatures).id).toBeUUID4();

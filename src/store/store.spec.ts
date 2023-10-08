@@ -321,7 +321,7 @@ describe("GeoJSONStore", () => {
 						id,
 						geometry: { type: "Point", coordinates: [1, 1] },
 					},
-				])
+				]),
 			).toThrowError();
 		});
 	});
@@ -395,9 +395,9 @@ describe("GeoJSONStore", () => {
 							feature &&
 								typeof feature === "object" &&
 								"type" in feature &&
-								feature.type === "Polygon"
+								feature.type === "Polygon",
 						);
-					}
+					},
 				);
 			}).toThrowError();
 		});

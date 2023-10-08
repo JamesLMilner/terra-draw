@@ -7,7 +7,7 @@ export function getMidPointCoordinates(
 	featureCoords: Position[],
 	precision: number,
 	project: Project,
-	unproject: Unproject
+	unproject: Unproject,
 ) {
 	const midPointCoords: Position[] = [];
 	for (let i = 0; i < featureCoords.length - 1; i++) {
@@ -16,7 +16,7 @@ export function getMidPointCoordinates(
 			featureCoords[i + 1],
 			precision,
 			project,
-			unproject
+			unproject,
 		);
 		midPointCoords.push(mid);
 	}
@@ -28,13 +28,13 @@ export function getMidPoints(
 	properties: (index: number) => JSONObject,
 	precision: number,
 	project: Project,
-	unproject: Unproject
+	unproject: Unproject,
 ) {
 	return getMidPointCoordinates(
 		selectedCoords,
 		precision,
 		project,
-		unproject
+		unproject,
 	).map((coord, i) => ({
 		geometry: { type: "Point", coordinates: coord } as Point,
 		properties: properties(i),

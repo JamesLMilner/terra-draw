@@ -11,7 +11,7 @@ export class DragFeatureBehavior extends TerraDrawModeBehavior {
 		readonly config: BehaviorConfig,
 		private readonly featuresAtMouseEvent: FeatureAtPointerEventBehavior,
 		private readonly selectionPoints: SelectionPointBehavior,
-		private readonly midPoints: MidPointBehavior
+		private readonly midPoints: MidPointBehavior,
 	) {
 		super(config);
 	}
@@ -82,12 +82,12 @@ export class DragFeatureBehavior extends TerraDrawModeBehavior {
 				// Keep precision limited when calculating new coordinates
 				const updatedLng = limitPrecision(
 					coordinate[0] - delta[0],
-					this.config.coordinatePrecision
+					this.config.coordinatePrecision,
 				);
 
 				const updatedLat = limitPrecision(
 					coordinate[1] - delta[1],
-					this.config.coordinatePrecision
+					this.config.coordinatePrecision,
 				);
 
 				// Ensure that coordinates do not exceed

@@ -171,14 +171,14 @@ export class TerraDrawArcGISMapsSDKAdapter extends TerraDrawBaseAdapter {
 
 	private removeFeatureById(id: string | number | undefined) {
 		const feature = this._featureLayer.graphics.find(
-			(g) => g.attributes[this._featureIdAttributeName] === id
+			(g) => g.attributes[this._featureIdAttributeName] === id,
 		);
 		this._featureLayer.remove(feature);
 	}
 
 	private addFeature(
 		feature: GeoJSONStoreFeatures,
-		styling: TerraDrawStylingFunction
+		styling: TerraDrawStylingFunction,
 	) {
 		const { coordinates, type } = feature.geometry;
 		const style = styling[feature.properties.mode as string](feature);
@@ -213,7 +213,7 @@ export class TerraDrawArcGISMapsSDKAdapter extends TerraDrawBaseAdapter {
 				symbol = new this._lib.SimpleFillSymbol({
 					color: this.getColorFromHex(
 						style.polygonFillColor,
-						style.polygonFillOpacity
+						style.polygonFillOpacity,
 					),
 					outline: {
 						color: this.getColorFromHex(style.polygonOutlineColor),

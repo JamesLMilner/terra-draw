@@ -3,7 +3,7 @@ import { createPolygon } from "../util/geoms";
 
 export function mockUnproject(
 	unproject: jest.Mock,
-	feature: Feature<Polygon> | Feature<LineString> | Feature<Point>
+	feature: Feature<Polygon> | Feature<LineString> | Feature<Point>,
 ) {
 	if (feature.geometry.type === "Polygon") {
 		feature.geometry.coordinates[0].forEach((coordinate) => {
@@ -37,7 +37,7 @@ export function mockBoundingBoxUnproject(
 			[1, 0],
 			[0, 0],
 		],
-	])
+	]),
 ) {
 	return mockUnproject(unproject, bbox);
 }

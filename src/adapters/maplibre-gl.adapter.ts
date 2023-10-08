@@ -23,7 +23,7 @@ export class TerraDrawMapLibreGLAdapter extends TerraDrawBaseAdapter {
 			config as {
 				map: any; //
 				coordinatePrecision: number;
-			}
+			},
 		);
 	}
 

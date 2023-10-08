@@ -27,7 +27,7 @@ const createMockEsriMapView = () => {
 			setAttribute: jest.fn(),
 		})),
 		toScreen: jest.fn(() => ({ x: 0, y: 0 })),
-		toMap: jest.fn((point) => ({ latitude: 0, longitude: 0 })),
+		toMap: jest.fn(() => ({ latitude: 0, longitude: 0 })),
 		on: jest.fn(),
 	} as unknown as MapView;
 };
@@ -61,16 +61,18 @@ describe("TerraDrawArcGISMapsSDKAdapter", () => {
 				} as any,
 			});
 
+			expect(adapter).toBeDefined();
+
 			expect(mockMapView.on).toHaveBeenCalledTimes(2);
 			expect(mockMapView.on).toHaveBeenNthCalledWith(
 				1,
 				"drag",
-				expect.any(Function)
+				expect.any(Function),
 			);
 			expect(mockMapView.on).toHaveBeenNthCalledWith(
 				2,
 				"double-click",
-				expect.any(Function)
+				expect.any(Function),
 			);
 		});
 
@@ -296,8 +298,8 @@ describe("TerraDrawArcGISMapsSDKAdapter", () => {
 			adapter.render(
 				{ unchanged: [], created: [], deletedIds: [], updated: [] },
 				{
-					test: () => ({} as any),
-				}
+					test: () => ({}) as any,
+				},
 			);
 		});
 
@@ -322,8 +324,8 @@ describe("TerraDrawArcGISMapsSDKAdapter", () => {
 					updated: [],
 				},
 				{
-					test: () => ({} as any),
-				}
+					test: () => ({}) as any,
+				},
 			);
 
 			expect(graphicsMock.add).toBeCalledTimes(1);
@@ -352,8 +354,8 @@ describe("TerraDrawArcGISMapsSDKAdapter", () => {
 					],
 				},
 				{
-					test: () => ({} as any),
-				}
+					test: () => ({}) as any,
+				},
 			);
 
 			expect(graphicsMock.find).toHaveBeenCalledTimes(1);
@@ -372,8 +374,8 @@ describe("TerraDrawArcGISMapsSDKAdapter", () => {
 					updated: [],
 				},
 				{
-					test: () => ({} as any),
-				}
+					test: () => ({}) as any,
+				},
 			);
 
 			expect(graphicsMock.find).toHaveBeenCalledTimes(1);
@@ -406,8 +408,8 @@ describe("TerraDrawArcGISMapsSDKAdapter", () => {
 						updated: [],
 					},
 					{
-						test: () => ({} as any),
-					}
+						test: () => ({}) as any,
+					},
 				);
 
 				expect(lib.Point).toHaveBeenCalledWith({
@@ -417,7 +419,7 @@ describe("TerraDrawArcGISMapsSDKAdapter", () => {
 				expect(lib.Graphic).toHaveBeenCalledWith(
 					expect.objectContaining({
 						attributes: { [adapter["_featureIdAttributeName"]]: testId },
-					})
+					}),
 				);
 			});
 
@@ -451,7 +453,7 @@ describe("TerraDrawArcGISMapsSDKAdapter", () => {
 					},
 					{
 						test: () => testStyling as TerraDrawAdapterStyling,
-					}
+					},
 				);
 
 				const expected = {
@@ -487,8 +489,8 @@ describe("TerraDrawArcGISMapsSDKAdapter", () => {
 						updated: [],
 					},
 					{
-						test: () => ({} as any),
-					}
+						test: () => ({}) as any,
+					},
 				);
 
 				expect(graphicsMock.add).toHaveBeenCalledWith(mockedGraphicCall);
@@ -522,15 +524,15 @@ describe("TerraDrawArcGISMapsSDKAdapter", () => {
 						updated: [],
 					},
 					{
-						test: () => ({} as any),
-					}
+						test: () => ({}) as any,
+					},
 				);
 
 				expect(lib.Polyline).toHaveBeenCalledWith({ paths: [testCoordinates] });
 				expect(lib.Graphic).toHaveBeenCalledWith(
 					expect.objectContaining({
 						attributes: { [adapter["_featureIdAttributeName"]]: testId },
-					})
+					}),
 				);
 			});
 
@@ -562,7 +564,7 @@ describe("TerraDrawArcGISMapsSDKAdapter", () => {
 					},
 					{
 						test: () => testStyling as TerraDrawAdapterStyling,
-					}
+					},
 				);
 
 				const expected = {
@@ -594,8 +596,8 @@ describe("TerraDrawArcGISMapsSDKAdapter", () => {
 						updated: [],
 					},
 					{
-						test: () => ({} as any),
-					}
+						test: () => ({}) as any,
+					},
 				);
 
 				expect(graphicsMock.add).toHaveBeenCalledWith(mockedGraphicCall, 0);
@@ -631,15 +633,15 @@ describe("TerraDrawArcGISMapsSDKAdapter", () => {
 						updated: [],
 					},
 					{
-						test: () => ({} as any),
-					}
+						test: () => ({}) as any,
+					},
 				);
 
 				expect(lib.Polygon).toHaveBeenCalledWith({ rings: testCoordinates });
 				expect(lib.Graphic).toHaveBeenCalledWith(
 					expect.objectContaining({
 						attributes: { [adapter["_featureIdAttributeName"]]: testId },
-					})
+					}),
 				);
 			});
 
@@ -673,7 +675,7 @@ describe("TerraDrawArcGISMapsSDKAdapter", () => {
 					},
 					{
 						test: () => testStyling as TerraDrawAdapterStyling,
-					}
+					},
 				);
 
 				const expected = {
@@ -709,8 +711,8 @@ describe("TerraDrawArcGISMapsSDKAdapter", () => {
 						updated: [],
 					},
 					{
-						test: () => ({} as any),
-					}
+						test: () => ({}) as any,
+					},
 				);
 
 				expect(graphicsMock.add).toHaveBeenCalledWith(mockedGraphicCall, 0);

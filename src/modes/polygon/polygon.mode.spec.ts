@@ -2,12 +2,9 @@ import { TerraDrawMouseEvent } from "../../common";
 import { GeoJSONStore } from "../../store/store";
 import { getMockModeConfig } from "../../test/mock-config";
 import { mockDrawEvent } from "../../test/mock-mouse-event";
-import { getDefaultStyling } from "../../util/styling";
 import { TerraDrawPolygonMode } from "./polygon.mode";
 
 describe("TerraDrawPolygonMode", () => {
-	const defaultStyles = getDefaultStyling();
-
 	describe("constructor", () => {
 		it("constructs with no options", () => {
 			const polygonMode = new TerraDrawPolygonMode();
@@ -343,13 +340,13 @@ describe("TerraDrawPolygonMode", () => {
 				[number, number],
 				[number, number],
 				[number, number],
-				[number, number]
+				[number, number],
 			] = [
 				[0, 0],
 				[0, 0],
 				[0, 0],
 				[0, 0],
-			]
+			],
 		) => {
 			unproject
 				.mockReturnValueOnce({ lng: bbox[0][0], lat: bbox[0][1] })
@@ -952,13 +949,13 @@ describe("TerraDrawPolygonMode", () => {
 				[number, number],
 				[number, number],
 				[number, number],
-				[number, number]
+				[number, number],
 			] = [
 				[0, 0],
 				[0, 0],
 				[0, 0],
 				[0, 0],
-			]
+			],
 		) => {
 			unproject
 				.mockReturnValueOnce({ lng: bbox[0][0], lat: bbox[0][1] })
@@ -1258,8 +1255,6 @@ describe("TerraDrawPolygonMode", () => {
 describe("cleanUp", () => {
 	let store: GeoJSONStore;
 	let polygonMode: TerraDrawPolygonMode;
-	let onChange: jest.Mock;
-	let project: jest.Mock;
 
 	beforeEach(() => {
 		jest.resetAllMocks();
@@ -1267,8 +1262,6 @@ describe("cleanUp", () => {
 
 		const mockConfig = getMockModeConfig(polygonMode.mode);
 		store = mockConfig.store;
-		onChange = mockConfig.onChange;
-		project = mockConfig.project;
 
 		polygonMode.register(mockConfig);
 		polygonMode.start();
@@ -1384,7 +1377,7 @@ describe("styleFeature", () => {
 				type: "Feature",
 				geometry: { type: "Polygon", coordinates: [] },
 				properties: { mode: "polygon" },
-			})
+			}),
 		).toMatchObject({
 			polygonFillColor: "#ffffff",
 			polygonOutlineColor: "#111111",
@@ -1396,7 +1389,7 @@ describe("styleFeature", () => {
 	it("returns the correct styles for polygon using function", () => {
 		const polygonMode = new TerraDrawPolygonMode({
 			styles: {
-				fillColor: (_) => "#ffffff",
+				fillColor: () => "#ffffff",
 				outlineColor: () => "#111111",
 				outlineWidth: () => 2,
 				fillOpacity: () => 0.5,
@@ -1412,7 +1405,7 @@ describe("styleFeature", () => {
 				type: "Feature",
 				geometry: { type: "Polygon", coordinates: [] },
 				properties: { mode: "polygon" },
-			})
+			}),
 		).toMatchObject({
 			polygonFillColor: "#ffffff",
 			polygonOutlineColor: "#111111",
@@ -1440,7 +1433,7 @@ describe("styleFeature", () => {
 				type: "Feature",
 				geometry: { type: "Point", coordinates: [] },
 				properties: { mode: "polygon" },
-			})
+			}),
 		).toMatchObject({
 			pointWidth: 2,
 			pointColor: "#dddddd",
@@ -1474,7 +1467,7 @@ describe("validateFeature", () => {
 					createdAt: 1685568434891,
 					updatedAt: 1685568435434,
 				},
-			})
+			}),
 		).toBe(false);
 	});
 
@@ -1509,7 +1502,7 @@ describe("validateFeature", () => {
 					createdAt: 1685655516297,
 					updatedAt: 1685655518118,
 				},
-			})
+			}),
 		).toBe(true);
 	});
 });

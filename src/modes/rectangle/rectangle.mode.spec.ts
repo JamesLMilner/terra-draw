@@ -310,7 +310,7 @@ describe("TerraDrawRectangleMode", () => {
 			expect(onChange).toHaveBeenNthCalledWith(
 				1,
 				[expect.any(String)],
-				"create"
+				"create",
 			);
 
 			const feature = store.copyAll()[0];
@@ -327,21 +327,20 @@ describe("TerraDrawRectangleMode", () => {
 			expect(onChange).toHaveBeenNthCalledWith(
 				2,
 				[expect.any(String)],
-				"update"
+				"update",
 			);
 
 			const updatedFeature = store.copyAll()[0];
 
 			expect(feature.id).toBe(updatedFeature.id);
 			expect(feature.geometry.coordinates).not.toStrictEqual(
-				updatedFeature.geometry.coordinates
+				updatedFeature.geometry.coordinates,
 			);
 		});
 	});
 
 	describe("cleanUp", () => {
 		let rectangleMode: TerraDrawRectangleMode;
-		let store: GeoJSONStore;
 		let onChange: jest.Mock;
 
 		beforeEach(() => {
@@ -349,7 +348,6 @@ describe("TerraDrawRectangleMode", () => {
 
 			const mockConfig = getMockModeConfig(rectangleMode.mode);
 
-			store = mockConfig.store;
 			onChange = mockConfig.onChange;
 
 			rectangleMode.register(mockConfig);
@@ -377,7 +375,7 @@ describe("TerraDrawRectangleMode", () => {
 			expect(onChange).toHaveBeenNthCalledWith(
 				2,
 				[expect.any(String)],
-				"delete"
+				"delete",
 			);
 		});
 	});
@@ -385,8 +383,6 @@ describe("TerraDrawRectangleMode", () => {
 	describe("onKeyUp", () => {
 		let store: GeoJSONStore;
 		let rectangleMode: TerraDrawRectangleMode;
-		let onChange: jest.Mock;
-		let project: jest.Mock;
 
 		beforeEach(() => {
 			jest.resetAllMocks();
@@ -394,8 +390,6 @@ describe("TerraDrawRectangleMode", () => {
 
 			const mockConfig = getMockModeConfig(rectangleMode.mode);
 			store = mockConfig.store;
-			onChange = mockConfig.onChange;
-			project = mockConfig.project;
 			rectangleMode.register(mockConfig);
 			rectangleMode.start();
 		});
@@ -480,7 +474,7 @@ describe("TerraDrawRectangleMode", () => {
 					type: "Feature",
 					geometry: { type: "Polygon", coordinates: [] },
 					properties: { mode: "rectangle" },
-				})
+				}),
 			).toMatchObject({
 				polygonFillColor: "#ffffff",
 				polygonOutlineColor: "#111111",
@@ -492,7 +486,7 @@ describe("TerraDrawRectangleMode", () => {
 		it("returns the correct styles for polygon using function", () => {
 			const rectangleMode = new TerraDrawRectangleMode({
 				styles: {
-					fillColor: (_) => "#ffffff",
+					fillColor: () => "#ffffff",
 					outlineColor: () => "#111111",
 					outlineWidth: () => 2,
 					fillOpacity: () => 0.5,
@@ -504,7 +498,7 @@ describe("TerraDrawRectangleMode", () => {
 					type: "Feature",
 					geometry: { type: "Polygon", coordinates: [] },
 					properties: { mode: "rectangle" },
-				})
+				}),
 			).toMatchObject({
 				polygonFillColor: "#ffffff",
 				polygonOutlineColor: "#111111",
@@ -538,7 +532,7 @@ describe("TerraDrawRectangleMode", () => {
 						createdAt: 1685568434891,
 						updatedAt: 1685568435434,
 					},
-				})
+				}),
 			).toBe(false);
 		});
 
@@ -572,7 +566,7 @@ describe("TerraDrawRectangleMode", () => {
 						createdAt: 1685655516297,
 						updatedAt: 1685655518118,
 					},
-				})
+				}),
 			).toBe(false);
 		});
 	});

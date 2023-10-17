@@ -31,7 +31,7 @@ export abstract class TerraDrawBaseAdapter {
 		this._minPixelDragDistanceSelecting =
 			typeof config.minPixelDragDistanceSelecting === "number"
 				? config.minPixelDragDistanceSelecting
-				: 8;
+				: 1;
 
 		this._minPixelDragDistanceDrawing =
 			typeof config.minPixelDragDistanceDrawing === "number"

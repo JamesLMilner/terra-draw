@@ -23,6 +23,8 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawBaseAdapter {
 		this._overlay = new this._lib.OverlayView();
 		this._overlay.draw = function () {};
 		this._overlay.setMap(this._map);
+
+		this.initializeEventListeners();
 	}
 
 	private _cursor: string | undefined;
@@ -43,6 +45,43 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawBaseAdapter {
 	private circlePath(cx: number, cy: number, r: number) {
 		const d = r * 2;
 		return `M ${cx} ${cy} m -${r}, 0 a ${r},${r} 0 1,0 ${d},0 a ${r},${r} 0 1,0 -${d},0`;
+	}
+
+	private initializeEventListeners() {
+		// Clicking on data geometries triggers
+		// swallows the map onclick event,
+		// so we need to forward it to the click callback handler
+		this._map.data.addListener(
+			"click",
+			(
+				event: google.maps.MapMouseEvent & {
+					domEvent: MouseEvent;
+				},
+			) => {
+				const clickListener = this._listeners.find(
+					({ name }) => name === "click",
+				);
+				if (clickListener) {
+					clickListener.callback(event);
+				}
+			},
+		);
+
+		this._map.data.addListener(
+			"mousemove",
+			(
+				event: google.maps.MapMouseEvent & {
+					domEvent: MouseEvent;
+				},
+			) => {
+				const mouseMoveListener = this._listeners.find(
+					({ name }) => name === "mousemove",
+				);
+				if (mouseMoveListener) {
+					mouseMoveListener.callback(event);
+				}
+			},
+		);
 	}
 
 	/**
@@ -291,41 +330,6 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawBaseAdapter {
 				this.renderedFeatures.add(createdFeature.id as string);
 				this._map.data.addGeoJson(createdFeature);
 			});
-		} else {
-			// Clicking on data geometries triggers
-			// swallows the map onclick event,
-			// so we need to forward it to the click callback handler
-			this._map.data.addListener(
-				"click",
-				(
-					event: google.maps.MapMouseEvent & {
-						domEvent: MouseEvent;
-					},
-				) => {
-					const clickListener = this._listeners.find(
-						({ name }) => name === "click",
-					);
-					if (clickListener) {
-						clickListener.callback(event);
-					}
-				},
-			);
-
-			this._map.data.addListener(
-				"mousemove",
-				(
-					event: google.maps.MapMouseEvent & {
-						domEvent: MouseEvent;
-					},
-				) => {
-					const mouseMoveListener = this._listeners.find(
-						({ name }) => name === "mousemove",
-					);
-					if (mouseMoveListener) {
-						mouseMoveListener.callback(event);
-					}
-				},
-			);
 		}
 
 		changes.created.forEach((feature) => {

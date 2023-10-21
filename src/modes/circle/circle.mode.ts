@@ -102,6 +102,7 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 
 	/** @internal */
 	onClick(event: TerraDrawMouseEvent) {
+		this.clickCount = this.clickCount ?? 0;
 		if (this.clickCount === 0) {
 			this.center = [event.lng, event.lat];
 			const startingCircle = circle({
@@ -122,6 +123,8 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 			this.clickCount++;
 			this.setDrawing();
 		} else {
+			if (document.documentElement.classList.contains("is-mobile"))
+				this.onMouseMove(event);
 			// Finish drawing
 			this.close();
 		}

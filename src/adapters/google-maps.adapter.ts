@@ -2,6 +2,7 @@ import {
 	TerraDrawChanges,
 	SetCursor,
 	TerraDrawStylingFunction,
+	TerraDrawCallbacks,
 } from "../common";
 import { GeoJsonObject } from "geojson";
 import { TerraDrawBaseAdapter } from "./common/base.adapter";
@@ -23,8 +24,6 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawBaseAdapter {
 		this._overlay = new this._lib.OverlayView();
 		this._overlay.draw = function () {};
 		this._overlay.setMap(this._map);
-
-		this.initializeEventListeners();
 	}
 
 	private _cursor: string | undefined;
@@ -32,6 +31,8 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawBaseAdapter {
 	private _lib: typeof google.maps;
 	private _map: google.maps.Map;
 	private _overlay: google.maps.OverlayView;
+	private _clickEventListener: google.maps.MapsEventListener | undefined;
+	private _mouseMoveEventListener: google.maps.MapsEventListener | undefined;
 
 	private get _layers(): boolean {
 		return Boolean(this.renderedFeatureIds?.size > 0);
@@ -50,11 +51,13 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawBaseAdapter {
 		return `M ${cx} ${cy} m -${r}, 0 a ${r},${r} 0 1,0 ${d},0 a ${r},${r} 0 1,0 -${d},0`;
 	}
 
-	private initializeEventListeners() {
+	public register(callbacks: TerraDrawCallbacks) {
+		super.register(callbacks);
+
 		// Clicking on data geometries triggers
 		// swallows the map onclick event,
 		// so we need to forward it to the click callback handler
-		this._map.data.addListener(
+		this._clickEventListener = this._map.data.addListener(
 			"click",
 			(
 				event: google.maps.MapMouseEvent & {
@@ -70,7 +73,7 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawBaseAdapter {
 			},
 		);
 
-		this._map.data.addListener(
+		this._mouseMoveEventListener = this._map.data.addListener(
 			"mousemove",
 			(
 				event: google.maps.MapMouseEvent & {
@@ -85,6 +88,12 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawBaseAdapter {
 				}
 			},
 		);
+	}
+
+	public unregister(): void {
+		super.unregister();
+		this._clickEventListener?.remove();
+		this._mouseMoveEventListener?.remove();
 	}
 
 	/**

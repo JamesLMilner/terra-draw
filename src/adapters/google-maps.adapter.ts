@@ -31,8 +31,11 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawBaseAdapter {
 	private _cursorStyleSheet: HTMLStyleElement | undefined;
 	private _lib: typeof google.maps;
 	private _map: google.maps.Map;
-	private _layers = false;
 	private _overlay: google.maps.OverlayView;
+
+	private get _layers(): boolean {
+		return Boolean(this.renderedFeatureIds?.size > 0);
+	}
 
 	/**
 	 * Generates an SVG path string for a circle with the given center coordinates and radius.
@@ -398,8 +401,6 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawBaseAdapter {
 
 			throw Error("Unknown feature type");
 		});
-
-		this._layers = true;
 	}
 
 	private clearLayers() {
@@ -412,7 +413,6 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawBaseAdapter {
 				}
 			});
 			this.renderedFeatureIds = new Set();
-			this._layers = false;
 		}
 	}
 

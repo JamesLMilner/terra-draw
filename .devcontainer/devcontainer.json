@@ -1,0 +1,21 @@
+{
+	"name": "terra-draw",
+	"dockerFile": "Dockerfile",
+	"build": {
+		"args": { "NODE_MAJOR_VERSION": "18" }
+	},
+	"postCreateCommand": [".devcontainer/post-create.sh"],
+	"portsAttributes": {
+		"3000": { "label": "Docs" },
+		"9000": { "label": "Development" }
+	},
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"dbaeumer.vscode-eslint",
+				"esbenp.prettier-vscode",
+				"mikestead.dotenv"
+			]
+		}
+	}
+}

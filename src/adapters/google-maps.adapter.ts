@@ -2,6 +2,7 @@ import {
 	TerraDrawChanges,
 	SetCursor,
 	TerraDrawStylingFunction,
+	TerraDrawCallbacks,
 } from "../common";
 import { GeoJsonObject } from "geojson";
 import { TerraDrawBaseAdapter } from "./common/base.adapter";
@@ -29,8 +30,13 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawBaseAdapter {
 	private _cursorStyleSheet: HTMLStyleElement | undefined;
 	private _lib: typeof google.maps;
 	private _map: google.maps.Map;
-	private _layers = false;
 	private _overlay: google.maps.OverlayView;
+	private _clickEventListener: google.maps.MapsEventListener | undefined;
+	private _mouseMoveEventListener: google.maps.MapsEventListener | undefined;
+
+	private get _layers(): boolean {
+		return Boolean(this.renderedFeatureIds?.size > 0);
+	}
 
 	/**
 	 * Generates an SVG path string for a circle with the given center coordinates and radius.
@@ -43,6 +49,51 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawBaseAdapter {
 	private circlePath(cx: number, cy: number, r: number) {
 		const d = r * 2;
 		return `M ${cx} ${cy} m -${r}, 0 a ${r},${r} 0 1,0 ${d},0 a ${r},${r} 0 1,0 -${d},0`;
+	}
+
+	public register(callbacks: TerraDrawCallbacks) {
+		super.register(callbacks);
+
+		// Clicking on data geometries triggers
+		// swallows the map onclick event,
+		// so we need to forward it to the click callback handler
+		this._clickEventListener = this._map.data.addListener(
+			"click",
+			(
+				event: google.maps.MapMouseEvent & {
+					domEvent: MouseEvent;
+				},
+			) => {
+				const clickListener = this._listeners.find(
+					({ name }) => name === "click",
+				);
+				if (clickListener) {
+					clickListener.callback(event);
+				}
+			},
+		);
+
+		this._mouseMoveEventListener = this._map.data.addListener(
+			"mousemove",
+			(
+				event: google.maps.MapMouseEvent & {
+					domEvent: MouseEvent;
+				},
+			) => {
+				const mouseMoveListener = this._listeners.find(
+					({ name }) => name === "mousemove",
+				);
+				if (mouseMoveListener) {
+					mouseMoveListener.callback(event);
+				}
+			},
+		);
+	}
+
+	public unregister(): void {
+		super.unregister();
+		this._clickEventListener?.remove();
+		this._mouseMoveEventListener?.remove();
 	}
 
 	/**
@@ -190,7 +241,7 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawBaseAdapter {
 		this._map.setOptions({ draggable: enabled });
 	}
 
-	private renderedFeatures: Set<string> = new Set();
+	private renderedFeatureIds: Set<string> = new Set();
 
 	/**
 	 * Renders GeoJSON features on the map using the provided styling configuration.
@@ -203,7 +254,7 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawBaseAdapter {
 				const featureToDelete = this._map.data.getFeatureById(deletedId);
 				if (featureToDelete) {
 					this._map.data.remove(featureToDelete);
-					this.renderedFeatures.delete(deletedId);
+					this.renderedFeatureIds.delete(deletedId);
 				}
 			});
 
@@ -288,48 +339,13 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawBaseAdapter {
 
 			// Create new features
 			changes.created.forEach((createdFeature) => {
-				this.renderedFeatures.add(createdFeature.id as string);
+				this.renderedFeatureIds.add(createdFeature.id as string);
 				this._map.data.addGeoJson(createdFeature);
 			});
-		} else {
-			// Clicking on data geometries triggers
-			// swallows the map onclick event,
-			// so we need to forward it to the click callback handler
-			this._map.data.addListener(
-				"click",
-				(
-					event: google.maps.MapMouseEvent & {
-						domEvent: MouseEvent;
-					},
-				) => {
-					const clickListener = this._listeners.find(
-						({ name }) => name === "click",
-					);
-					if (clickListener) {
-						clickListener.callback(event);
-					}
-				},
-			);
-
-			this._map.data.addListener(
-				"mousemove",
-				(
-					event: google.maps.MapMouseEvent & {
-						domEvent: MouseEvent;
-					},
-				) => {
-					const mouseMoveListener = this._listeners.find(
-						({ name }) => name === "mousemove",
-					);
-					if (mouseMoveListener) {
-						mouseMoveListener.callback(event);
-					}
-				},
-			);
 		}
 
 		changes.created.forEach((feature) => {
-			this.renderedFeatures.add(feature.id as string);
+			this.renderedFeatureIds.add(feature.id as string);
 		});
 
 		const featureCollection = {
@@ -394,21 +410,18 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawBaseAdapter {
 
 			throw Error("Unknown feature type");
 		});
-
-		this._layers = true;
 	}
 
 	private clearLayers() {
 		if (this._layers) {
 			this._map.data.forEach((feature) => {
 				const id = feature.getId() as string;
-				const hasFeature = this.renderedFeatures.has(id);
+				const hasFeature = this.renderedFeatureIds.has(id);
 				if (hasFeature) {
 					this._map.data.remove(feature);
 				}
 			});
-			this.renderedFeatures = new Set();
-			this._layers = false;
+			this.renderedFeatureIds = new Set();
 		}
 	}
 

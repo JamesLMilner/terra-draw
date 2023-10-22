@@ -3,6 +3,7 @@
  */
 import { TerraDrawAdapterStyling } from "../common";
 import { GeoJSONStoreFeatures } from "../store/store";
+import { createMockCallbacks } from "../test/mock-callbacks";
 import {
 	createMockLineString,
 	createMockPoint,
@@ -23,7 +24,9 @@ const createMockGoogleMap = (overrides?: Partial<google.maps.Map>) => {
 		addListener: jest.fn(),
 		getBounds: jest.fn(),
 		controls: [],
-		data: {} as any,
+		data: {
+			addListener: jest.fn(),
+		} as any,
 		fitBounds: jest.fn(),
 		getCenter: jest.fn(),
 		getClickableIcons: jest.fn(),
@@ -78,6 +81,107 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 			expect(adapter.project).toBeDefined();
 			expect(adapter.unproject).toBeDefined();
 			expect(adapter.setCursor).toBeDefined();
+		});
+	});
+
+	describe("register", () => {
+		it("registers event listeners", () => {
+			const addListenerMock = jest.fn();
+
+			const div = {
+				addEventListener: jest.fn(),
+			} as unknown as HTMLDivElement;
+			const mockMap = createMockGoogleMap({
+				getDiv: jest.fn(() => div),
+				data: {
+					addListener: addListenerMock,
+				} as any,
+			});
+			const adapter = new TerraDrawGoogleMapsAdapter({
+				lib: {
+					OverlayView: jest.fn(() => ({
+						setMap: jest.fn(),
+					})),
+				} as any,
+				map: mockMap,
+			});
+
+			const callbackMock = createMockCallbacks();
+			adapter.register(callbackMock);
+
+			expect(div.addEventListener).toHaveBeenCalledTimes(6);
+
+			expect(addListenerMock).toHaveBeenNthCalledWith(
+				1,
+				"click",
+				expect.any(Function),
+			);
+			expect(addListenerMock).toHaveBeenNthCalledWith(
+				2,
+				"mousemove",
+				expect.any(Function),
+			);
+		});
+	});
+
+	describe("unregister", () => {
+		it("is safe to call without listeners", () => {
+			const div = {
+				addEventListener: jest.fn(),
+				removeEventListener: jest.fn(),
+			} as unknown as HTMLDivElement;
+			const mockMap = createMockGoogleMap({
+				getDiv: jest.fn(() => div),
+				data: {} as any,
+			});
+			const adapter = new TerraDrawGoogleMapsAdapter({
+				lib: {
+					OverlayView: jest.fn(() => ({
+						setMap: jest.fn(),
+					})),
+				} as any,
+				map: mockMap,
+			});
+
+			adapter.unregister();
+		});
+
+		it("removes listeners", () => {
+			const removeListenerMock = jest.fn();
+			const addListenerMock = jest.fn(() => ({
+				remove: removeListenerMock,
+			}));
+
+			const div = {
+				addEventListener: jest.fn(),
+				removeEventListener: jest.fn(),
+			} as unknown as HTMLDivElement;
+			const mockMap = createMockGoogleMap({
+				getDiv: jest.fn(() => div),
+				data: {
+					addListener: addListenerMock,
+				} as any,
+			});
+			const adapter = new TerraDrawGoogleMapsAdapter({
+				lib: {
+					OverlayView: jest.fn(() => ({
+						setMap: jest.fn(),
+					})),
+				} as any,
+				map: mockMap,
+			});
+
+			adapter.register(createMockCallbacks());
+
+			expect(removeListenerMock).not.toHaveBeenCalled();
+
+			adapter.unregister();
+
+			// These are the callbacks registered with the Google Maps API
+			expect(removeListenerMock).toHaveBeenCalledTimes(2);
+
+			// These are the general listeners (registered in base)
+			expect(div.removeEventListener).toHaveBeenCalledTimes(6);
 		});
 	});
 
@@ -454,48 +558,6 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 	});
 
 	describe("render", () => {
-		it("first invocation registers event listeners", () => {
-			const addListenerMock = jest.fn();
-			const addGeoJsonMock = jest.fn();
-			const mockMap = createMockGoogleMap({
-				data: {
-					addListener: addListenerMock,
-					addGeoJson: addGeoJsonMock,
-					setStyle: jest.fn(),
-				} as any,
-			});
-			const adapter = new TerraDrawGoogleMapsAdapter({
-				lib: {
-					OverlayView: jest.fn(() => ({
-						setMap: jest.fn(),
-						getProjection: jest.fn(),
-					})),
-				} as any,
-				map: mockMap,
-			});
-
-			adapter.render(
-				{ unchanged: [], created: [], deletedIds: [], updated: [] },
-				mockStyleDraw,
-			);
-
-			expect(addListenerMock).toHaveBeenNthCalledWith(
-				1,
-				"click",
-				expect.any(Function),
-			);
-			expect(addListenerMock).toHaveBeenNthCalledWith(
-				2,
-				"mousemove",
-				expect.any(Function),
-			);
-			expect(addGeoJsonMock).toHaveBeenCalledWith(
-				expect.objectContaining({
-					features: [],
-				}),
-			);
-		});
-
 		it("rejects updates to invalid features", () => {
 			const p1 = createMockPoint("point-1") as GeoJSONStoreFeatures;
 			const mockMap = createMockGoogleMap({

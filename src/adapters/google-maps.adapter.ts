@@ -210,11 +210,16 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawBaseAdapter {
 			// TODO: We could cache these individually per cursor
 
 			const div = this.getMapContainer();
-			const style = document.createElement("style");
-			const selector = `#${div.id} [aria-label="Map"]`;
-			style.innerHTML = `${selector} { cursor: ${cursor} !important; }`;
-			document.getElementsByTagName("head")[0].appendChild(style);
-			this._cursorStyleSheet = style;
+			const mapSelector = `#${div.id} div[aria-label]`;
+			const map = document.querySelector(mapSelector);
+
+			if (map) {
+				const style = document.createElement("style");
+				const selector = `#${div.id} div[aria-label="${map.ariaLabel}"]`;
+				style.innerHTML = `${selector} { cursor: ${cursor} !important; }`;
+				document.getElementsByTagName("head")[0].appendChild(style);
+				this._cursorStyleSheet = style;
+			}
 		}
 
 		this._cursor = cursor;

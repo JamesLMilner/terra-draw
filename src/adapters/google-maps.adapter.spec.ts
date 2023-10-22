@@ -514,9 +514,16 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 				map,
 			});
 
+			const mockQuerySelector = jest.spyOn(document, "querySelector");
+
+			mockQuerySelector.mockImplementationOnce(
+				() => ({ ariaLabel: "Map" }) as Element,
+			);
+
 			adapter.setCursor("pointer");
 
 			expect(map.getDiv).toHaveBeenCalledTimes(1);
+
 			const firstSheetAndRule = document.styleSheets[0]
 				.cssRules[0] as CSSStyleRule;
 			expect(

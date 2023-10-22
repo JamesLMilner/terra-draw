@@ -211,7 +211,6 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawBaseAdapter {
 
 			const div = this.getMapContainer();
 			const style = document.createElement("style");
-			style.type = "text/css";
 			const selector = `#${div.id} [aria-label="Map"]`;
 			style.innerHTML = `${selector} { cursor: ${cursor} !important; }`;
 			document.getElementsByTagName("head")[0].appendChild(style);

@@ -27,7 +27,6 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawBaseAdapter {
 	}
 
 	private _cursor: string | undefined;
-	private _cursorStyleSheet: HTMLStyleElement | undefined;
 	private _lib: typeof google.maps;
 	private _map: google.maps.Map;
 	private _overlay: google.maps.OverlayView;
@@ -201,26 +200,11 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawBaseAdapter {
 			return;
 		}
 
-		if (this._cursorStyleSheet) {
-			this._cursorStyleSheet.remove();
-			this._cursorStyleSheet = undefined;
-		}
-
-		if (cursor !== "unset") {
-			// TODO: We could cache these individually per cursor
-
-			const div = this.getMapContainer();
-			const mapSelector = `#${div.id} div[aria-label]`;
-			const map = document.querySelector(mapSelector);
-
-			if (map) {
-				const style = document.createElement("style");
-				const selector = `#${div.id} div[aria-label="${map.ariaLabel}"]`;
-				style.innerHTML = `${selector} { cursor: ${cursor} !important; }`;
-				document.getElementsByTagName("head")[0].appendChild(style);
-				this._cursorStyleSheet = style;
-			}
-		}
+		// Restore to the (Google-provided) defaults, when "unset" received
+		this._map.setOptions({
+			draggableCursor: cursor !== "unset" ? cursor : undefined,
+			draggingCursor: cursor !== "unset" ? cursor : undefined,
+		});
 
 		this._cursor = cursor;
 	}
@@ -242,7 +226,7 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawBaseAdapter {
 	 * @param enabled Set to true to enable map dragging, or false to disable it.
 	 */
 	setDraggability(enabled: boolean) {
-		this._map.setOptions({ draggable: enabled });
+		this._map.setOptions({ gestureHandling: enabled ? "auto" : "none" });
 	}
 
 	private renderedFeatureIds: Set<string> = new Set();

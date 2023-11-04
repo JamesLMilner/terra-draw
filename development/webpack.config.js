@@ -24,9 +24,14 @@ module.exports = {
 	},
 	devServer: {
 		static: {
-			directory: path.join(__dirname),
+			directory: path.join(__dirname, "public"),
 		},
-		watchFiles: ["../**/**"],
+		watchFiles: [
+			"./src",
+			"./*.{js,json,ts,html}",
+			"../src",
+			"../*.{js,json,ts,html}",
+		],
 		compress: true,
 		port: 9000,
 	},

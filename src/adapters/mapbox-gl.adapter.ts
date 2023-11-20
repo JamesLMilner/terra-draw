@@ -50,6 +50,7 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawBaseAdapter {
 	}
 
 	private _addGeoJSONSource(id: string, features: Feature[]) {
+		if (this._map.getSource(id)) return;
 		this._map.addSource(id, {
 			type: "geojson",
 			data: {
@@ -135,6 +136,7 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawBaseAdapter {
 		featureType: "Point" | "LineString" | "Polygon",
 		beneath?: string,
 	) {
+		if (this._map.getLayer(id)) return;
 		if (featureType === "Point") {
 			this._addPointLayer(id, beneath);
 		}

@@ -71,7 +71,7 @@ points.forEach((point) => {
 
 draw.addFeatures(points);
 
-// This will add the points to hte TerraDrawRenderMode 'arbitary' rendering them to the screen
+// This will add the points to the TerraDrawRenderMode 'arbitary' rendering them to the screen
 ```
 
 ### Styling Selected Data

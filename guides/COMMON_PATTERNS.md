@@ -196,43 +196,43 @@ You can add callback functions to Terra Draw events like this:
 
 ```typescript
 draw.on('change', (ids, type) => {
-    //Done editing
-    if (type === 'delete') {
-      // Get the snapshot
-			const snapshot = draw.getSnapshot()
+  //Done editing
+  if (type === 'delete') {
+    // Get the snapshot
+    const snapshot = draw.getSnapshot()
 
-			// Do something
-      //...
-    }
-  })
+    // Do something
+    //...
+  }
+})
 ```
 
 The other Terra Draw events are:
 
 ```typescript
 draw.on('finish', (ids: string) => {
-	// Do something
-	//...
+  // Do something
+  //...
 })
 
 draw.on('change', (ids: string[], type: string) => {
-	// Possible type values:
-	// 'create'
-	// 'update'
-	// 'delete'
-	// 'styling'
+  // Possible type values:
+  // 'create'
+  // 'update'
+  // 'delete'
+  // 'styling'
 
-	// Do something
-	//...
+  // Do something
+  //...
 })
 
 draw.on('select', (id: string) => {
-	// Do something
-	//...
+  // Do something
+  //...
 })
 
 draw.on('deselect', () => {
-	// Do something
-	//...
+  // Do something
+  //...
 })
 ```

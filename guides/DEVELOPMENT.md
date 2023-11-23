@@ -79,7 +79,9 @@ Terra Draw has a few elementary concepts that allow it to stay strongly decouple
 
 ### Adapters Explained
 
-Adapters are a core aspect of Terra Draw - they are the layer between the core of the library and the external mapping libraries (Leaflet, Google Maps etc). In simple terms an adapter takes input events, passes them through to create geometries in the store and then passes them back to the adapter to be rendered specifically for the mapping library. For example, in the `LeafletAdapter` we create and update a GeoJSON layer that Leaflet knows how to render to the screen. In theory an adapter could be created for any mapping library that can fill out the Adapter abstract class (TerraDrawBaseAdapter). Namely these are methods that would need to be completed:
+Adapters are a core aspect of Terra Draw - they are the layer between the core of the library and the external mapping libraries (Leaflet, Google Maps etc). In simple terms an adapter takes input events, passes them through to create geometries in the store and then passes them back to the adapter to be rendered specifically for the mapping library.
+
+For example, in the `LeafletAdapter` we create and update a GeoJSON layer that Leaflet knows how to render to the screen. In theory an adapter could be created for any mapping library that can fill out the Adapter abstract class (TerraDrawBaseAdapter). Namely these are methods that would need to be completed:
 
 ```typescript
 	public project(...args: Parameters<Project>): ReturnType<Project>;
@@ -113,7 +115,7 @@ Adapters are a core aspect of Terra Draw - they are the layer between the core o
 
 Modes are another important concept in Terra Draw. Modes are a way to encapsulate specific logic for drawing a certain entity. For example, there are built in modes for drawing points, lines, polygons, circles and rectangles.
 
-Modes can go beyond just drawing however, for example the built in `TerraDrawSelectMode` allows for selection and editing of geometries that have previously been drawn. Another example of a mode that is not explicitly just editing is `TerraDrawRenderMode` which can be considered to be a 'view only mode' and used if you wanted to show some contextual data in your application alongside data that you want to edit.
+Modes can go beyond just drawing however, for example the built in `TerraDrawSelectMode` allows for selection and editing of geometries that have previously been drawn. `TerraDrawRenderMode` is a 'view only mode' and useful for showing non-editable data alongside editable data in your application.
 
 Assuming that a mode extends from `TerraDrawBaseMode`
 

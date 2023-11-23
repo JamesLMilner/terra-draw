@@ -189,3 +189,50 @@ map.on("mousemove", (event) => {
 ```
 
 The second argument is optional, with defaults set to ignoreSelectFeatures: false and pointerDistance: 30
+
+### Handling Draw Events
+
+You can add callback functions to Terra Draw events like this:
+
+```typescript
+draw.on('change', (ids, type) => {
+    //Done editing
+    if (type === 'delete') {
+      // Get the snapshot
+			const snapshot = draw.getSnapshot()
+
+			// Do something
+      //...
+    }
+  })
+```
+
+The other Terra Draw events are:
+
+```typescript
+draw.on('finish', (ids: string) => {
+	// Do something
+	//...
+})
+
+draw.on('change', (ids: string[], type: string) => {
+	// Possible type values:
+	// 'create'
+	// 'update'
+	// 'delete'
+	// 'styling'
+
+	// Do something
+	//...
+})
+
+draw.on('select', (id: string) => {
+	// Do something
+	//...
+})
+
+draw.on('deselect', () => {
+	// Do something
+	//...
+})
+```

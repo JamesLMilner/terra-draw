@@ -52,7 +52,7 @@ describe("TerraDrawMapboxGLAdapter", () => {
 			});
 
 			expect(adapter).toBeDefined();
-			expect(adapter.getMapContainer).toBeDefined();
+			expect(adapter.getMapEventElement).toBeDefined();
 			expect(adapter.render).toBeDefined();
 			expect(adapter.register).toBeDefined();
 			expect(adapter.unregister).toBeDefined();
@@ -79,21 +79,6 @@ describe("TerraDrawMapboxGLAdapter", () => {
 
 			const result = adapter.getLngLatFromEvent(getMockPointerEvent());
 			expect(result).toEqual({ lat: 51.507222, lng: -0.1275 });
-		});
-	});
-
-	describe("getMapContainer", () => {
-		let adapter: TerraDrawMapboxGLAdapter;
-		const map = createMapboxGLMap();
-		beforeEach(() => {
-			adapter = new TerraDrawMapboxGLAdapter({
-				map: map as mapboxgl.Map,
-			});
-		});
-
-		it("returns the container", () => {
-			const container = adapter.getMapContainer();
-			expect(container.getBoundingClientRect).toBeDefined();
 		});
 	});
 

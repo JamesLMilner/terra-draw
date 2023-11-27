@@ -18,10 +18,12 @@ const createMockEsriMapView = () => {
 			add: jest.fn(),
 		},
 		container: {
-			getBoundingClientRect: jest.fn(() => ({ top: 0, left: 0 })),
-			style: { removeProperty: jest.fn(), cursor: "initial" },
-			addEventListener: jest.fn(),
-			removeEventListener: jest.fn(),
+			querySelector: jest.fn(() => ({
+				style: { removeProperty: jest.fn(), cursor: "initial" },
+				addEventListener: jest.fn(),
+				removeEventListener: jest.fn(),
+				getBoundingClientRect: jest.fn(() => ({ top: 0, left: 0 })),
+			})),
 		} as any,
 		getViewport: jest.fn(() => ({
 			setAttribute: jest.fn(),
@@ -43,7 +45,7 @@ describe("TerraDrawArcGISMapsSDKAdapter", () => {
 			});
 
 			expect(adapter).toBeDefined();
-			expect(adapter.getMapContainer).toBeDefined();
+			expect(adapter.getMapEventElement).toBeDefined();
 			expect(adapter.render).toBeDefined();
 			expect(adapter.register).toBeDefined();
 			expect(adapter.unregister).toBeDefined();
@@ -115,24 +117,6 @@ describe("TerraDrawArcGISMapsSDKAdapter", () => {
 
 			const result = adapter.getLngLatFromEvent(getMockPointerEvent());
 			expect(result).toEqual({ lat: 51.507222, lng: -0.1275 });
-		});
-	});
-
-	describe("getMapContainer", () => {
-		let adapter: TerraDrawArcGISMapsSDKAdapter;
-		const map = createMockEsriMapView();
-		beforeEach(() => {
-			adapter = new TerraDrawArcGISMapsSDKAdapter({
-				map: map,
-				lib: {
-					GraphicsLayer: jest.fn(),
-				} as any,
-			});
-		});
-
-		it("returns the container", () => {
-			const container = adapter.getMapContainer();
-			expect(container.getBoundingClientRect).toBeDefined();
 		});
 	});
 
@@ -220,9 +204,11 @@ describe("TerraDrawArcGISMapsSDKAdapter", () => {
 			offsetLeft: 0,
 			offsetTop: 0,
 			style: { removeProperty: jest.fn(), cursor: "initial" },
-		} as any;
+		};
 
-		map.container = container;
+		map.container = {
+			querySelector: jest.fn(() => container),
+		} as any;
 		const adapter = new TerraDrawArcGISMapsSDKAdapter({
 			lib: {
 				GraphicsLayer: jest.fn(),

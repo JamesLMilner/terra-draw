@@ -45,11 +45,11 @@ export class TerraDrawMapLibreGLAdapter extends TerraDrawBaseAdapter {
 	}
 
 	/**
-	 * Retrieves the HTML container element of the Leaflet map.
+	 * Retrieves the HTML element of the MapLibre element that handles interaction events
 	 * @returns The HTMLElement representing the map container.
 	 */
-	public getMapContainer() {
-		return this.mapboxglAdapter.getMapContainer();
+	public getMapEventElement() {
+		return this.mapboxglAdapter.getMapEventElement();
 	}
 
 	/**

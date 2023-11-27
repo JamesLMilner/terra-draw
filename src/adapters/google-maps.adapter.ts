@@ -133,11 +133,13 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawBaseAdapter {
 	}
 
 	/**
-	 * Retrieves the HTML container element of the Leaflet map.
+	 * Retrieves the HTML element of the Google Map element that handles interaction events
 	 * @returns The HTMLElement representing the map container.
 	 */
-	getMapContainer() {
-		return this._map.getDiv();
+	public getMapEventElement() {
+		// TODO: This is a bit hacky, maybe there is a better solution here
+		const selector = 'div[style*="z-index: 3;"]';
+		return this._map.getDiv().querySelector(selector) as HTMLDivElement;
 	}
 
 	/**
@@ -209,7 +211,7 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawBaseAdapter {
 		if (cursor !== "unset") {
 			// TODO: We could cache these individually per cursor
 
-			const div = this.getMapContainer();
+			const div = this._map.getDiv();
 			const mapSelector = `#${div.id} div[aria-label]`;
 			const map = document.querySelector(mapSelector);
 

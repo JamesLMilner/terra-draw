@@ -30,7 +30,9 @@ const createMockGoogleMap = (overrides?: Partial<google.maps.Map>) => {
 		fitBounds: jest.fn(),
 		getCenter: jest.fn(),
 		getClickableIcons: jest.fn(),
-		getDiv: jest.fn(),
+		getDiv: jest.fn(() => ({
+			querySelector: jest.fn(),
+		})),
 		getHeading: jest.fn(),
 		getMapTypeId: jest.fn(),
 		getProjection: jest.fn(),
@@ -74,7 +76,6 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 			});
 
 			expect(adapter).toBeDefined();
-			expect(adapter.getMapContainer).toBeDefined();
 			expect(adapter.render).toBeDefined();
 			expect(adapter.register).toBeDefined();
 			expect(adapter.unregister).toBeDefined();
@@ -92,7 +93,7 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 				addEventListener: jest.fn(),
 			} as unknown as HTMLDivElement;
 			const mockMap = createMockGoogleMap({
-				getDiv: jest.fn(() => div),
+				getDiv: jest.fn(() => ({ querySelector: jest.fn(() => div) })) as any,
 				data: {
 					addListener: addListenerMock,
 				} as any,
@@ -131,7 +132,7 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 				removeEventListener: jest.fn(),
 			} as unknown as HTMLDivElement;
 			const mockMap = createMockGoogleMap({
-				getDiv: jest.fn(() => div),
+				getDiv: jest.fn(() => ({ querySelector: jest.fn(() => div) })) as any,
 				data: {} as any,
 			});
 			const adapter = new TerraDrawGoogleMapsAdapter({
@@ -157,7 +158,7 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 				removeEventListener: jest.fn(),
 			} as unknown as HTMLDivElement;
 			const mockMap = createMockGoogleMap({
-				getDiv: jest.fn(() => div),
+				getDiv: jest.fn(() => ({ querySelector: jest.fn(() => div) })) as any,
 				data: {
 					addListener: addListenerMock,
 				} as any,
@@ -182,27 +183,6 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 
 			// These are the general listeners (registered in base)
 			expect(div.removeEventListener).toHaveBeenCalledTimes(6);
-		});
-	});
-
-	describe("getContainer", () => {
-		it("returns map div", () => {
-			const div = {} as HTMLDivElement;
-			const mapMock = createMockGoogleMap({
-				getDiv: jest.fn(() => div),
-			});
-			const adapter = new TerraDrawGoogleMapsAdapter({
-				lib: {
-					LatLng: jest.fn(),
-					OverlayView: jest.fn(() => ({
-						setMap: jest.fn(),
-						getProjection: jest.fn(() => undefined),
-					})),
-				} as any,
-				map: mapMock,
-			});
-
-			expect(adapter.getMapContainer()).toBe(div);
 		});
 	});
 

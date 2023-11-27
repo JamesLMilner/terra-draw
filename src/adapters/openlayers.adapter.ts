@@ -41,11 +41,28 @@ export class TerraDrawOpenLayersAdapter extends TerraDrawBaseAdapter {
 		this._map = config.map;
 		this._lib = config.lib;
 
+		this._geoJSONReader = new this._lib.GeoJSON();
+
 		this._container = this._map.getViewport();
 
 		// TODO: Is this the best way to recieve keyboard events
 		this._container.setAttribute("tabindex", "0");
+
+		const vectorSource = new this._lib.VectorSource({
+			features: [],
+		});
+
+		this._vectorSource = vectorSource;
+
+		const vectorLayer = new this._lib.VectorLayer({
+			source: vectorSource,
+			style: (feature) => this.getStyles(feature, this.stylingFunction()),
+		});
+
+		this._map.addLayer(vectorLayer);
 	}
+
+	private stylingFunction = () => ({});
 
 	private _lib: InjectableOL;
 	private _map: Map;
@@ -176,7 +193,8 @@ export class TerraDrawOpenLayersAdapter extends TerraDrawBaseAdapter {
 	 * @returns An object with 'lng' and 'lat' properties representing the longitude and latitude, or null if the conversion is not possible.
 	 */
 	public getLngLatFromEvent(event: PointerEvent | MouseEvent) {
-		const { containerX: x, containerY: y } = this.getContainerXYPosition(event);
+		const { containerX: x, containerY: y } =
+			this.getMapElementXYPosition(event);
 		try {
 			return this.unproject(x, y);
 		} catch (_) {
@@ -185,11 +203,19 @@ export class TerraDrawOpenLayersAdapter extends TerraDrawBaseAdapter {
 	}
 
 	/**
-	 * Retrieves the HTML container element of the Leaflet map.
+	 * Retrieves the HTML element of the OpenLayers element that handles interaction events
 	 * @returns The HTMLElement representing the map container.
 	 */
-	public getMapContainer() {
-		return this._container;
+	public getMapEventElement() {
+		const canvases = this._container.querySelectorAll("canvas");
+
+		if (canvases.length > 1) {
+			throw Error(
+				"Terra Draw currently only supports 1 canvas with OpenLayers",
+			);
+		}
+
+		return canvases[0];
 	}
 
 	/**
@@ -232,9 +258,9 @@ export class TerraDrawOpenLayersAdapter extends TerraDrawBaseAdapter {
 	 */
 	public setCursor(cursor: Parameters<SetCursor>[0]) {
 		if (cursor === "unset") {
-			this.getMapContainer().style.removeProperty("cursor");
+			this.getMapEventElement().style.removeProperty("cursor");
 		} else {
-			this.getMapContainer().style.cursor = cursor;
+			this.getMapEventElement().style.cursor = cursor;
 		}
 	}
 
@@ -256,52 +282,26 @@ export class TerraDrawOpenLayersAdapter extends TerraDrawBaseAdapter {
 	 * @param styling An object mapping draw modes to feature styling functions
 	 */
 	public render(changes: TerraDrawChanges, styling: TerraDrawStylingFunction) {
-		if (!this._vectorSource) {
-			this._geoJSONReader = new this._lib.GeoJSON();
+		this.stylingFunction = () => styling;
 
-			const vectorSourceFeatures = this._geoJSONReader.readFeatures(
-				{
-					type: "FeatureCollection",
-					features: [
-						...changes.created,
-						...changes.updated,
-						...changes.unchanged,
-					],
-				},
-				{ featureProjection: this._projection },
-			);
-			const vectorSource = new this._lib.VectorSource({
-				features: vectorSourceFeatures,
-			});
+		const source = this._vectorSource;
 
-			this._vectorSource = vectorSource;
-
-			const vectorLayer = new this._lib.VectorLayer({
-				source: vectorSource,
-				style: (feature) => this.getStyles(feature, styling),
-			});
-
-			this._map.addLayer(vectorLayer);
-		} else {
-			const source = this._vectorSource;
-
-			if (!source) {
-				throw new Error("Vector Layer source has disappeared");
-			}
-
-			changes.deletedIds.forEach((id) => {
-				this.removeFeature(id);
-			});
-
-			changes.updated.forEach((feature) => {
-				this.removeFeature(feature.id as string);
-				this.addFeature(feature);
-			});
-
-			changes.created.forEach((feature) => {
-				this.addFeature(feature);
-			});
+		if (!source) {
+			throw new Error("Vector Layer source has disappeared");
 		}
+
+		changes.deletedIds.forEach((id) => {
+			this.removeFeature(id);
+		});
+
+		changes.updated.forEach((feature) => {
+			this.removeFeature(feature.id as string);
+			this.addFeature(feature);
+		});
+
+		changes.created.forEach((feature) => {
+			this.addFeature(feature);
+		});
 	}
 
 	/**

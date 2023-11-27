@@ -131,7 +131,7 @@ export interface TerraDrawAdapter {
 	setCursor: SetCursor;
 	getLngLatFromEvent: GetLngLatFromEvent;
 	setDoubleClickToZoom: (enabled: boolean) => void;
-	getMapContainer: () => HTMLElement;
+	getMapEventElement: () => HTMLElement;
 	register(callbacks: TerraDrawCallbacks): void;
 	unregister(): void;
 	render(changes: TerraDrawChanges, styling: TerraDrawStylingFunction): void;

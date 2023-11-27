@@ -288,29 +288,31 @@ const example = {
 			controls: [],
 		});
 
-		const draw = new TerraDraw({
-			adapter: new TerraDrawOpenLayersAdapter({
-				lib: {
-					Circle,
-					Feature,
-					GeoJSON,
-					Style,
-					VectorLayer,
-					VectorSource,
-					Stroke,
-					toLonLat,
-					CircleStyle,
-				},
-				map,
-				coordinatePrecision: 9,
-			}),
-			modes: getModes(),
+		map.once("postrender", () => {
+			const draw = new TerraDraw({
+				adapter: new TerraDrawOpenLayersAdapter({
+					lib: {
+						Circle,
+						Feature,
+						GeoJSON,
+						Style,
+						VectorLayer,
+						VectorSource,
+						Stroke,
+						toLonLat,
+						CircleStyle,
+					},
+					map,
+					coordinatePrecision: 9,
+				}),
+				modes: getModes(),
+			});
+			draw.start();
+
+			addModeChangeHandler(draw, currentSelected);
+
+			this.initialised.push("openlayers");
 		});
-		draw.start();
-
-		addModeChangeHandler(draw, currentSelected);
-
-		this.initialised.push("openlayers");
 	},
 	initGoogleMaps(id: string, apiKey: string | undefined) {
 		if (this.initialised.includes("google")) {

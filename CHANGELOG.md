@@ -2,6 +2,48 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.1-alpha.49](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.48...v0.0.1-alpha.49) (2023-11-27)
+
+
+### Features
+
+* add devcontainer configuration ([dcd6886](https://github.com/JamesLMilner/terra-draw/commit/dcd68860e3b6a3906ecad7a8f1a20de61eefa184))
+
+
+### Bug Fixes
+
+* change default minPixelDragDistanceSelecting to 1 ([027f63c](https://github.com/JamesLMilner/terra-draw/commit/027f63c808d020bdf443d396cd61ff5727349a82))
+* ensure post-create runs in codespaces ([ea354a9](https://github.com/JamesLMilner/terra-draw/commit/ea354a972f172cbd15394fe61ee1761f89e945ee))
+* ensure that google maps cursor changing work across different language settings ([cb8431e](https://github.com/JamesLMilner/terra-draw/commit/cb8431e6bf0dc117e0c9d3fe178eaa9412a9a3b6))
+* ignore input events not on the map surface ([#121](https://github.com/JamesLMilner/terra-draw/issues/121)) ([2a8a176](https://github.com/JamesLMilner/terra-draw/commit/2a8a1761012f706eed3ab5eeb3efcd1145c29a94))
+
+
+### Tests
+
+* improve test coverage of Google Maps adapter ([814fc17](https://github.com/JamesLMilner/terra-draw/commit/814fc1720aef5790f64757b27fc108a3662c2be9))
+
+
+### Refactors
+
+* move Adapter event listener init and small convention improvements ([252c9ef](https://github.com/JamesLMilner/terra-draw/commit/252c9ef05e76c5d52ad0388efc05b3351cccdcf8)), closes [/github.com/JamesLMilner/terra-draw/pull/98#discussion_r1359947432](https://github.com/JamesLMilner//github.com/JamesLMilner/terra-draw/pull/98/issues/discussion_r1359947432) [/github.com/JamesLMilner/terra-draw/pull/103#issuecomment-1773853793](https://github.com/JamesLMilner//github.com/JamesLMilner/terra-draw/pull/103/issues/issuecomment-1773853793)
+
+
+### Chore
+
+* fix eslint error in circle unit test ([a131686](https://github.com/JamesLMilner/terra-draw/commit/a1316865658a29c5e5d25cf4e58ad01c94039c2d))
+* fix nocheck testing on windows ([a7ad32a](https://github.com/JamesLMilner/terra-draw/commit/a7ad32acf530080359a1ff93b96c9d3e81f6a9d1))
+* prevent dev server from reloading unnecessarily ([89843cf](https://github.com/JamesLMilner/terra-draw/commit/89843cfe936395283fa139cde587fbecd0072c46))
+* remove style.type setting for style sheets as it is deprecated ([321d438](https://github.com/JamesLMilner/terra-draw/commit/321d4385ecc6eb76dd8c78a6a4d279b3adabab2e))
+* update eslint plugins to get commit hooks working ([fa054f4](https://github.com/JamesLMilner/terra-draw/commit/fa054f4188648472b47f627f90c3b086bcfc50dd))
+* update github actions to use Node v18 ([74e78e6](https://github.com/JamesLMilner/terra-draw/commit/74e78e6a2043b836d71b6618271306cab329543d))
+* update typescript from version 5.0.3 to 5.2.2 ([25bbb26](https://github.com/JamesLMilner/terra-draw/commit/25bbb26529a53cc479f9af7259a2f529c287b62a))
+
+
+### Documentation
+
+* added getting started code for MapLibre ([#119](https://github.com/JamesLMilner/terra-draw/issues/119)) ([fa47aa1](https://github.com/JamesLMilner/terra-draw/commit/fa47aa10fa498569065a4d96e9f8e6892f8ee00c))
+* updated DEVELOPMENT to reference Node 18 ([96fc5d4](https://github.com/JamesLMilner/terra-draw/commit/96fc5d4f3932c263bb826bef0d0976414b913ed1))
+
 ### [0.0.1-alpha.48](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.47...v0.0.1-alpha.48) (2023-09-20)
 
 

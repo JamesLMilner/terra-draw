@@ -15,12 +15,17 @@ describe("TerraDrawOpenLayersAdapter", () => {
 					getViewport: jest.fn(() => ({
 						setAttribute: jest.fn(),
 					})),
+					addLayer: jest.fn(),
 				} as any,
-				lib: {} as any,
+				lib: {
+					GeoJSON: jest.fn(),
+					VectorSource: jest.fn(),
+					VectorLayer: jest.fn(),
+				} as any,
 			});
 
 			expect(adapter).toBeDefined();
-			expect(adapter.getMapContainer).toBeDefined();
+			expect(adapter.getMapEventElement).toBeDefined();
 			expect(adapter.render).toBeDefined();
 			expect(adapter.register).toBeDefined();
 			expect(adapter.unregister).toBeDefined();

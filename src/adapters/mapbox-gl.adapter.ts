@@ -226,7 +226,7 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawBaseAdapter {
 	 * @returns An object with 'lng' and 'lat' properties representing the longitude and latitude, or null if the conversion is not possible.
 	 */
 	public getLngLatFromEvent(event: PointerEvent | MouseEvent) {
-		const { left, top } = this.getMapContainer().getBoundingClientRect();
+		const { left, top } = this._container.getBoundingClientRect();
 		const x = event.clientX - left;
 		const y = event.clientY - top;
 
@@ -234,11 +234,11 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawBaseAdapter {
 	}
 
 	/**
-	 * Retrieves the HTML container element of the Leaflet map.
+	 *Retrieves the HTML element of the Mapbox element that handles interaction events
 	 * @returns The HTMLElement representing the map container.
 	 */
-	public getMapContainer() {
-		return this._container;
+	public getMapEventElement() {
+		return this._map.getCanvas();
 	}
 
 	/**

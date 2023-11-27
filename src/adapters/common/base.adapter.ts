@@ -42,11 +42,97 @@ export abstract class TerraDrawBaseAdapter {
 			typeof config.coordinatePrecision === "number"
 				? config.coordinatePrecision
 				: 9;
+	}
 
-		this._listeners = [
+	protected _minPixelDragDistance: number;
+	protected _minPixelDragDistanceDrawing: number;
+	protected _minPixelDragDistanceSelecting: number;
+	protected _lastDrawEvent: TerraDrawMouseEvent | undefined;
+	protected _coordinatePrecision: number;
+	protected _heldKeys: Set<string> = new Set();
+	protected _listeners: AdapterListener<
+		BasePointerListener | BaseKeyboardListener | BaseMouseListener
+	>[] = [];
+	protected _dragState: "not-dragging" | "pre-dragging" | "dragging" =
+		"not-dragging";
+	protected _currentModeCallbacks: TerraDrawCallbacks | undefined;
+
+	protected abstract getMapEventElement(): HTMLElement;
+
+	protected getButton(event: PointerEvent | MouseEvent) {
+		if (event.button === -1) {
+			return "neither";
+		} else if (event.button === 0) {
+			return "left";
+		} else if (event.button === 1) {
+			return "middle";
+		} else if (event.button === 2) {
+			return "right";
+		}
+
+		// This shouldn't happen (?)
+		return "neither";
+	}
+
+	protected getMapElementXYPosition(event: PointerEvent | MouseEvent) {
+		const mapElement = this.getMapEventElement();
+		const { left, top } = mapElement.getBoundingClientRect();
+
+		return {
+			containerX: event.clientX - left,
+			containerY: event.clientY - top,
+		};
+	}
+
+	protected getDrawEventFromEvent(
+		event: PointerEvent | MouseEvent,
+	): TerraDrawMouseEvent | null {
+		const latLng = this.getLngLatFromEvent(event);
+
+		if (!latLng) {
+			return null;
+		}
+
+		const { lng, lat } = latLng;
+		const { containerX, containerY } = this.getMapElementXYPosition(event);
+		const button = this.getButton(event);
+		const heldKeys = Array.from(this._heldKeys);
+
+		return {
+			lng: limitPrecision(lng, this._coordinatePrecision),
+			lat: limitPrecision(lat, this._coordinatePrecision),
+			containerX,
+			containerY,
+			button,
+			heldKeys,
+		};
+	}
+
+	/**
+	 * Registers the provided callbacks for the current drawing mode and attaches
+	 * the necessary event listeners.
+	 * @param {TerraDrawCallbacks} callbacks - An object containing callback functions
+	 * for handling various drawing events in the current mode.
+	 */
+	public register(callbacks: TerraDrawCallbacks) {
+		this._currentModeCallbacks = callbacks;
+
+		this._listeners = this.getAdapterListeners();
+
+		this._listeners.forEach((listener) => {
+			listener.register();
+		});
+	}
+
+	private getAdapterListeners() {
+		return [
 			new AdapterListener<BasePointerListener>({
 				name: "pointerdown",
 				callback: (event) => {
+					if (!this._currentModeCallbacks) {
+						return;
+					}
+
 					// We don't support multitouch as this point in time
 					if (!event.isPrimary) {
 						return;
@@ -65,10 +151,13 @@ export abstract class TerraDrawBaseAdapter {
 					this._lastDrawEvent = drawEvent;
 				},
 				register: (callback) => {
-					this.getMapContainer().addEventListener("pointerdown", callback);
+					this.getMapEventElement().addEventListener("pointerdown", callback);
 				},
 				unregister: (callback) => {
-					this.getMapContainer().removeEventListener("pointerdown", callback);
+					this.getMapEventElement().removeEventListener(
+						"pointerdown",
+						callback,
+					);
 				},
 			}),
 			new AdapterListener<BasePointerListener>({
@@ -156,12 +245,12 @@ export abstract class TerraDrawBaseAdapter {
 					}
 				},
 				register: (callback) => {
-					const container = this.getMapContainer();
-					container.addEventListener("pointermove", callback);
+					const mapElement = this.getMapEventElement();
+					mapElement.addEventListener("pointermove", callback);
 				},
 				unregister: (callback) => {
-					const container = this.getMapContainer();
-					container.removeEventListener("pointermove", callback);
+					const mapElement = this.getMapEventElement();
+					mapElement.removeEventListener("pointermove", callback);
 				},
 			}),
 			new AdapterListener<BaseMouseListener>({
@@ -189,12 +278,12 @@ export abstract class TerraDrawBaseAdapter {
 					}
 				},
 				register: (callback) => {
-					const container = this.getMapContainer();
-					container.addEventListener("contextmenu", callback);
+					const mapElement = this.getMapEventElement();
+					mapElement.addEventListener("contextmenu", callback);
 				},
 				unregister: (callback) => {
-					const container = this.getMapContainer();
-					container.removeEventListener("contextmenu", callback);
+					const mapElement = this.getMapEventElement();
+					mapElement.removeEventListener("contextmenu", callback);
 				},
 			}),
 			new AdapterListener<BasePointerListener>({
@@ -232,12 +321,12 @@ export abstract class TerraDrawBaseAdapter {
 					this.setDraggability(true);
 				},
 				register: (callback) => {
-					const container = this.getMapContainer();
-					container.addEventListener("pointerup", callback);
+					const mapElement = this.getMapEventElement();
+					mapElement.addEventListener("pointerup", callback);
 				},
 				unregister: (callback) => {
-					const container = this.getMapContainer();
-					container.removeEventListener("pointerup", callback);
+					const mapElement = this.getMapEventElement();
+					mapElement.removeEventListener("pointerup", callback);
 				},
 			}),
 			new AdapterListener({
@@ -256,12 +345,12 @@ export abstract class TerraDrawBaseAdapter {
 					});
 				},
 				register: (callback) => {
-					const container = this.getMapContainer();
-					container.addEventListener("keyup", callback);
+					const mapElement = this.getMapEventElement();
+					mapElement.addEventListener("keyup", callback);
 				},
 				unregister: (callback) => {
-					const container = this.getMapContainer();
-					container.removeEventListener("keyup", callback);
+					const mapElement = this.getMapEventElement();
+					mapElement.removeEventListener("keyup", callback);
 				},
 			}),
 			new AdapterListener({
@@ -280,90 +369,15 @@ export abstract class TerraDrawBaseAdapter {
 					});
 				},
 				register: (callback) => {
-					const container = this.getMapContainer();
-					container.addEventListener("keydown", callback);
+					const mapElement = this.getMapEventElement();
+					mapElement.addEventListener("keydown", callback);
 				},
 				unregister: (callback) => {
-					const container = this.getMapContainer();
-					container.removeEventListener("keydown", callback);
+					const mapElement = this.getMapEventElement();
+					mapElement.removeEventListener("keydown", callback);
 				},
 			}),
 		];
-	}
-
-	protected _minPixelDragDistance: number;
-	protected _minPixelDragDistanceDrawing: number;
-	protected _minPixelDragDistanceSelecting: number;
-	protected _lastDrawEvent: TerraDrawMouseEvent | undefined;
-	protected _coordinatePrecision: number;
-	protected _heldKeys: Set<string> = new Set();
-	protected _listeners: AdapterListener<
-		BasePointerListener | BaseKeyboardListener | BaseMouseListener
-	>[] = [];
-	protected _dragState: "not-dragging" | "pre-dragging" | "dragging" =
-		"not-dragging";
-	protected _currentModeCallbacks: TerraDrawCallbacks | undefined;
-
-	protected getButton(event: PointerEvent | MouseEvent) {
-		if (event.button === -1) {
-			return "neither";
-		} else if (event.button === 0) {
-			return "left";
-		} else if (event.button === 1) {
-			return "middle";
-		} else if (event.button === 2) {
-			return "right";
-		}
-
-		// This shouldn't happen (?)
-		return "neither";
-	}
-
-	protected getContainerXYPosition(event: PointerEvent | MouseEvent) {
-		const container = this.getMapContainer();
-		const { left, top } = container.getBoundingClientRect();
-
-		return {
-			containerX: event.clientX - left,
-			containerY: event.clientY - top,
-		};
-	}
-
-	protected getDrawEventFromEvent(
-		event: PointerEvent | MouseEvent,
-	): TerraDrawMouseEvent | null {
-		const latLng = this.getLngLatFromEvent(event);
-
-		if (!latLng) {
-			return null;
-		}
-
-		const { lng, lat } = latLng;
-		const { containerX, containerY } = this.getContainerXYPosition(event);
-		const button = this.getButton(event);
-		const heldKeys = Array.from(this._heldKeys);
-
-		return {
-			lng: limitPrecision(lng, this._coordinatePrecision),
-			lat: limitPrecision(lat, this._coordinatePrecision),
-			containerX,
-			containerY,
-			button,
-			heldKeys,
-		};
-	}
-
-	/**
-	 * Registers the provided callbacks for the current drawing mode and attaches
-	 * the necessary event listeners.
-	 * @param {TerraDrawCallbacks} callbacks - An object containing callback functions
-	 * for handling various drawing events in the current mode.
-	 */
-	public register(callbacks: TerraDrawCallbacks) {
-		this._currentModeCallbacks = callbacks;
-		this._listeners.forEach((listener) => {
-			listener.register();
-		});
 	}
 
 	/**
@@ -397,8 +411,6 @@ export abstract class TerraDrawBaseAdapter {
 	public abstract setDraggability(enabled: boolean): void;
 
 	public abstract setDoubleClickToZoom(enabled: boolean): void;
-
-	public abstract getMapContainer(): HTMLElement;
 
 	public abstract render(
 		changes: TerraDrawChanges,

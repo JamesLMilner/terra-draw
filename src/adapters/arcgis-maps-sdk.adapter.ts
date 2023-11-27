@@ -65,16 +65,17 @@ export class TerraDrawArcGISMapsSDKAdapter extends TerraDrawBaseAdapter {
 	 * @returns An object with 'lng' and 'lat' properties representing the longitude and latitude, or null if the conversion is not possible.
 	 */
 	public getLngLatFromEvent(event: PointerEvent | MouseEvent) {
-		const { containerX: x, containerY: y } = this.getContainerXYPosition(event);
+		const { containerX: x, containerY: y } =
+			this.getMapElementXYPosition(event);
 		return this.unproject(x, y);
 	}
 
 	/**
-	 * Retrieves the HTML container element of the Leaflet map.
+	 * Retrieves the HTML element of the ArcGIS element that handles interaction events
 	 * @returns The HTMLElement representing the map container.
 	 */
-	public getMapContainer() {
-		return this._container;
+	public getMapEventElement() {
+		return this._container.querySelector(".esri-view-surface") as HTMLElement;
 	}
 
 	/**
@@ -114,9 +115,9 @@ export class TerraDrawArcGISMapsSDKAdapter extends TerraDrawBaseAdapter {
 	 */
 	public setCursor(cursor: Parameters<SetCursor>[0]) {
 		if (cursor === "unset") {
-			this.getMapContainer().style.removeProperty("cursor");
+			this.getMapEventElement().style.removeProperty("cursor");
 		} else {
-			this.getMapContainer().style.cursor = cursor;
+			this.getMapEventElement().style.cursor = cursor;
 		}
 	}
 

@@ -25,7 +25,7 @@ describe("TerraDrawMapLibreGLAdapter", () => {
 			});
 
 			expect(adapter).toBeDefined();
-			expect(adapter.getMapContainer).toBeDefined();
+			expect(adapter.getMapEventElement).toBeDefined();
 			expect(adapter.render).toBeDefined();
 			expect(adapter.register).toBeDefined();
 			expect(adapter.unregister).toBeDefined();

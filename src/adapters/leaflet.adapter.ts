@@ -165,7 +165,8 @@ export class TerraDrawLeafletAdapter extends TerraDrawBaseAdapter {
 	 * @returns An object with 'lng' and 'lat' properties representing the longitude and latitude, or null if the conversion is not possible.
 	 */
 	public getLngLatFromEvent(event: PointerEvent | MouseEvent) {
-		const { containerX: x, containerY: y } = this.getContainerXYPosition(event);
+		const { containerX: x, containerY: y } =
+			this.getMapElementXYPosition(event);
 
 		const point = { x, y } as L.Point;
 
@@ -183,10 +184,10 @@ export class TerraDrawLeafletAdapter extends TerraDrawBaseAdapter {
 	}
 
 	/**
-	 * Retrieves the HTML container element of the Leaflet map.
+	 * Retrieves the HTML element of the Leaflet element that handles interaction events
 	 * @returns The HTMLElement representing the map container.
 	 */
-	public getMapContainer() {
+	public getMapEventElement() {
 		return this._container;
 	}
 
@@ -233,9 +234,9 @@ export class TerraDrawLeafletAdapter extends TerraDrawBaseAdapter {
 	 */
 	public setCursor(cursor: Parameters<SetCursor>[0]) {
 		if (cursor === "unset") {
-			this.getMapContainer().style.removeProperty("cursor");
+			this.getMapEventElement().style.removeProperty("cursor");
 		} else {
-			this.getMapContainer().style.cursor = cursor;
+			this.getMapEventElement().style.cursor = cursor;
 		}
 	}
 

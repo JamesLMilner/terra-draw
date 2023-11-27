@@ -103,7 +103,7 @@ For example, in the `LeafletAdapter` we create and update a GeoJSON layer that L
 
 	public setDoubleClickToZoom(enabled: boolean): void;
 
-	public getMapContainer(): HTMLElement;
+	public getMapEventElement(): HTMLElement;
 
 	public render(
 		changes: TerraDrawChanges,

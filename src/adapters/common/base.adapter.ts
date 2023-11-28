@@ -133,6 +133,11 @@ export abstract class TerraDrawBaseAdapter {
 						return;
 					}
 
+					// If it isn't the map surface, ignore it
+					if (event.target !== this.getMapEventElement()) {
+						return;
+					}
+
 					// We don't support multitouch as this point in time
 					if (!event.isPrimary) {
 						return;
@@ -164,6 +169,11 @@ export abstract class TerraDrawBaseAdapter {
 				name: "pointermove",
 				callback: (event) => {
 					if (!this._currentModeCallbacks) return;
+
+					// If it isn't the map surface, ignore it
+					if (event.target !== this.getMapEventElement()) {
+						return;
+					}
 
 					// We don't support multitouch as this point in time
 					if (!event.isPrimary) {
@@ -258,6 +268,11 @@ export abstract class TerraDrawBaseAdapter {
 				callback: (event) => {
 					if (!this._currentModeCallbacks) return;
 
+					// If it isn't the map surface, ignore it
+					if (event.target !== this.getMapEventElement()) {
+						return;
+					}
+
 					// We do not want the context menu to open
 					event.preventDefault();
 
@@ -289,7 +304,13 @@ export abstract class TerraDrawBaseAdapter {
 			new AdapterListener<BasePointerListener>({
 				name: "pointerup",
 				callback: (event) => {
-					if (!this._currentModeCallbacks) return;
+					if (!this._currentModeCallbacks) {
+						return;
+					}
+
+					if (event.target !== this.getMapEventElement()) {
+						return;
+					}
 
 					// We don't support multitouch as this point in time
 					if (!event.isPrimary) {

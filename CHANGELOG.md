@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.1-alpha.51](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.50...v0.0.1-alpha.51) (2023-11-29)
+
+
+### Bug Fixes
+
+* remove specific check for map event element to fix interacting with all controls ([ab7853a](https://github.com/JamesLMilner/terra-draw/commit/ab7853aabebe0b8971825e0a1b6155f946b1c117))
+
 ### [0.0.1-alpha.50](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.49...v0.0.1-alpha.50) (2023-11-28)
 
 

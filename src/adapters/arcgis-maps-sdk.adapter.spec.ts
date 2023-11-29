@@ -5,12 +5,15 @@ import Point from "@arcgis/core/geometry/Point";
 import { TerraDrawAdapterStyling } from "../common";
 import Color from "@arcgis/core/Color";
 import MapViewScreenPoint = __esri.MapViewScreenPoint;
+import { createMockCallbacks } from "../test/mock-callbacks";
 
 jest.mock("@arcgis/core/views/MapView", () => jest.fn());
 jest.mock("@arcgis/core/geometry/Point");
 jest.mock("@arcgis/core/geometry/Polyline", () => jest.fn());
 jest.mock("@arcgis/core/geometry/Polygon", () => jest.fn());
 jest.mock("@arcgis/core/layers/GraphicsLayer");
+
+const remove = jest.fn();
 
 const createMockEsriMapView = () => {
 	return {
@@ -30,7 +33,7 @@ const createMockEsriMapView = () => {
 		})),
 		toScreen: jest.fn(() => ({ x: 0, y: 0 })),
 		toMap: jest.fn(() => ({ latitude: 0, longitude: 0 })),
-		on: jest.fn(),
+		on: jest.fn(() => ({ remove })),
 	} as unknown as MapView;
 };
 
@@ -54,30 +57,6 @@ describe("TerraDrawArcGISMapsSDKAdapter", () => {
 			expect(adapter.setCursor).toBeDefined();
 		});
 
-		it("adds drag and double-click event listeners", () => {
-			const mockMapView = createMockEsriMapView();
-			const adapter = new TerraDrawArcGISMapsSDKAdapter({
-				map: mockMapView,
-				lib: {
-					GraphicsLayer: jest.fn(),
-				} as any,
-			});
-
-			expect(adapter).toBeDefined();
-
-			expect(mockMapView.on).toHaveBeenCalledTimes(2);
-			expect(mockMapView.on).toHaveBeenNthCalledWith(
-				1,
-				"drag",
-				expect.any(Function),
-			);
-			expect(mockMapView.on).toHaveBeenNthCalledWith(
-				2,
-				"double-click",
-				expect.any(Function),
-			);
-		});
-
 		it("initializes a GraphicsLayer with the internal ID and adds it to the mapView", () => {
 			const mockGraphicsLayer = { id: "xx" };
 			const lib = {
@@ -95,6 +74,54 @@ describe("TerraDrawArcGISMapsSDKAdapter", () => {
 			});
 			expect(mockMapView.map.add).toHaveBeenCalledTimes(1);
 			expect(mockMapView.map.add).toHaveBeenCalledWith(mockGraphicsLayer);
+		});
+	});
+
+	describe("register", () => {
+		it("adds drag and double-click event listeners", () => {
+			const mockMapView = createMockEsriMapView();
+			const adapter = new TerraDrawArcGISMapsSDKAdapter({
+				map: mockMapView,
+				lib: {
+					GraphicsLayer: jest.fn(),
+				} as any,
+			});
+
+			expect(adapter).toBeDefined();
+
+			adapter.register(createMockCallbacks());
+
+			expect(mockMapView.on).toHaveBeenCalledTimes(2);
+			expect(mockMapView.on).toHaveBeenNthCalledWith(
+				1,
+				"drag",
+				expect.any(Function),
+			);
+			expect(mockMapView.on).toHaveBeenNthCalledWith(
+				2,
+				"double-click",
+				expect.any(Function),
+			);
+		});
+	});
+
+	describe("unregister", () => {
+		it("removes drag and double-click event listeners", () => {
+			const mockMapView = createMockEsriMapView();
+			const removeAll = jest.fn();
+			const adapter = new TerraDrawArcGISMapsSDKAdapter({
+				map: mockMapView,
+				lib: {
+					GraphicsLayer: jest.fn(() => ({ graphics: { removeAll } })),
+				} as any,
+			});
+
+			expect(adapter).toBeDefined();
+
+			adapter.register(createMockCallbacks());
+			adapter.unregister();
+			expect(removeAll).toBeCalledTimes(1);
+			expect(remove).toBeCalledTimes(2);
 		});
 	});
 

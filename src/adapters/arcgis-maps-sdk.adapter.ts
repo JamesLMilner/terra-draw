@@ -1,5 +1,6 @@
 import {
 	SetCursor,
+	TerraDrawCallbacks,
 	TerraDrawChanges,
 	TerraDrawStylingFunction,
 } from "../common";
@@ -40,6 +41,8 @@ export class TerraDrawArcGISMapsSDKAdapter extends TerraDrawBaseAdapter {
 
 	private _dragEnabled = true;
 	private _zoomEnabled = true;
+	private _dragHandler: undefined | IHandle;
+	private _doubleClickHandler: undefined | IHandle;
 
 	constructor(config: {
 		map: MapView;
@@ -56,7 +59,33 @@ export class TerraDrawArcGISMapsSDKAdapter extends TerraDrawBaseAdapter {
 		});
 
 		this._mapView.map.add(this._featureLayer);
-		this.initializeMapViewListeners();
+	}
+
+	public register(callbacks: TerraDrawCallbacks) {
+		super.register(callbacks);
+
+		this._dragHandler = this._mapView.on("drag", (event) => {
+			if (!this._dragEnabled) {
+				event.stopPropagation();
+			}
+		});
+		this._doubleClickHandler = this._mapView.on("double-click", (event) => {
+			if (!this._zoomEnabled) {
+				event.stopPropagation();
+			}
+		});
+	}
+
+	public unregister() {
+		super.unregister();
+
+		if (this._dragHandler) {
+			this._dragHandler.remove();
+		}
+
+		if (this._doubleClickHandler) {
+			this._doubleClickHandler.remove();
+		}
 	}
 
 	/**
@@ -155,19 +184,6 @@ export class TerraDrawArcGISMapsSDKAdapter extends TerraDrawBaseAdapter {
 	 * */
 	public clear() {
 		this._featureLayer.graphics.removeAll();
-	}
-
-	private initializeMapViewListeners() {
-		this._mapView.on("drag", (event) => {
-			if (!this._dragEnabled) {
-				event.stopPropagation();
-			}
-		});
-		this._mapView.on("double-click", (event) => {
-			if (!this._zoomEnabled) {
-				event.stopPropagation();
-			}
-		});
 	}
 
 	private removeFeatureById(id: string | number | undefined) {

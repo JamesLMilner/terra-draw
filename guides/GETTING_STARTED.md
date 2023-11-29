@@ -13,7 +13,7 @@ npm install terra-draw
 Be aware Terra Draw is currently in alpha, the initial API is still being finalised. It is strongly advised to pin your installation to a specific version i.e. not using carat, asterix or tilde for versions but giving a version explicitly in your `package.json`.
 
 ```
-"terra-draw": "0.0.1-alpha.49"
+"terra-draw": "0.0.1-alpha.50"
 ```
 
 Once terra-draw is out of alpha this suggestion will be removed as we will aim to move to semantic versioning.

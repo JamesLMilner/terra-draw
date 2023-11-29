@@ -18,7 +18,7 @@ A few things you will need to have installed in order to develop on this project
 - `dist` - the bundled distributed files of the project
 - `docs` - the demo app that is published to GitHub pages
 - `development` - the local development app that is used for developing locally (see below)
-- `common` - code that is used across `development` and `docs` folder`
+- `common` - code that is used across `development` and `docs` folder
 
 ### Technologies Used
 
@@ -43,19 +43,19 @@ Terra Draw uses [jest](https://jestjs.io/) as it's testing framework. You can di
 
 To run the tests as they would run in CI:
 
-```
+```shell
 npm run test
 ```
 
 You can also check the coverage by running:
 
-```
+```shell
 npm run test:coverage
 ```
 
 For local development you may benefit from the `nocheck` option which allows you to avoid running TypeScript type checking when running the tests. This option also only checks files which are explicitly tested (i.e. have a spec file.)
 
-```
+```shell
 npm run test:nocheck
 npm run test:nocheck:coverage
 ```

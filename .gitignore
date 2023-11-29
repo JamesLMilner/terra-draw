@@ -5,9 +5,9 @@ dist/
 node_modules/
 example/dist/
 example/node_modules/
-example/.env
 ROADMAP.md
 data/
 scratch/
 .idea
-.env
+.env*
+!.env.example

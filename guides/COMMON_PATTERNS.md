@@ -2,19 +2,7 @@
 
 ### Changing Mode
 
-To change mode we need to set the current mode to match the name of the mode we want. You can see the name of the mode
-in each modes 'mode' property in the modes source file. For convenience here are the built in mode names listed out:
-
-- TerraDrawStaticMode - 'static'
-- TerraDrawPolygonMode - 'polygon'
-- TerraDrawPointMode - 'point'
-- TerraDrawCircleMode - 'circle'
-- TerraDrawLineStringMode - 'linestring'
-- TerraDrawSelectMode - 'select'
-- TerraDrawLineStringMode - 'freehand'
-- TerraDraqwGreatCircleMode - 'greatcircle'
-
-We can then create these modes and change to them like so:
+Modes are added to Terra Draw when you instantiate it through the `modes` property like so:
 
 ```typescript
 const draw = new TerraDraw({
@@ -30,13 +18,32 @@ const draw = new TerraDraw({
 });
 
 draw.start();
+```
 
+Once you have created a Terra Draw instance you can change mode by calling the `setMode` method and providing the mode name:
+
+```typescript
 // Change to our TerraDrawPolygonMode instance
 draw.setMode("polygon");
 
 // We can use our custom render mode name to change to it.
 draw.setMode("arbitary");
 ```
+
+The `mode` property represents the mode name and can be found in each modes source file. The available mode names are:
+
+| Class                     | Mode Name       |
+|---------------------------|-----------------|
+| TerraDrawCircleMode       | 'circle'        |
+| TerraDrawLineStringMode   | 'freehand'      |
+| TerraDraqwGreatCircleMode | 'greatcircle'   |
+| TerraDrawLineStringMode   | 'linestring'    |
+| TerraDrawPointMode        | 'point'         |
+| TerraDrawPolygonMode      | 'polygon'       |
+| TerraDrawRectangleMode    | 'rectangle'     |
+| TerraDrawSelectMode       | 'select'        |
+| TerraDrawStaticMode       | 'static'        |
+
 
 ### Loading in External Data
 

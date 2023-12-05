@@ -155,6 +155,27 @@ let currentSelected: { button: undefined | HTMLButtonElement; mode: string } = {
 	mode: "static",
 };
 
+// Used by both Mapbox and MapLibre
+let OSMStyle: Object = {
+	version: 8,
+	sources: {
+		"osm-tiles": {
+			type: "raster",
+			tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
+			tileSize: 256,
+			attribution:
+				'&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+		},
+	},
+	layers: [
+		{
+			id: "osm-tiles",
+			type: "raster",
+			source: "osm-tiles",
+		},
+	],
+};
+
 const example = {
 	lng: -0.118092,
 	lat: 51.509865,
@@ -199,20 +220,28 @@ const example = {
 			return;
 		}
 
-		if (!accessToken) {
-			return;
-		}
-
 		const { lng, lat, zoom } = this;
-
-		mapboxgl.accessToken = accessToken;
 
 		const map = new mapboxgl.Map({
 			container: id, // container ID
-			style: "mapbox://styles/mapbox/streets-v11", // style URL
 			center: [lng, lat], // starting position [lng, lat]
 			zoom: zoom, // starting zoom
 		});
+
+		// If we have an access token
+		if (accessToken) {
+			// Use it
+			mapboxgl.accessToken = accessToken;
+
+			// Use the Mapbox Streets style
+			map.setStyle("mapbox://styles/mapbox/streets-v11");
+		} else {
+			// Use invalid access token
+			mapboxgl.accessToken = "123";
+
+			// Use the OpenStreetMap style
+			map.setStyle(OSMStyle as mapboxgl.Style);
+		}
 
 		map.on("style.load", () => {
 			const draw = new TerraDraw({
@@ -229,24 +258,18 @@ const example = {
 		});
 		this.initialised.push("mapbox");
 	},
-	initMapLibre(id: string, accessToken: string | undefined) {
+	initMapLibre(id: string) {
 		if (this.initialised.includes("maplibre")) {
-			return;
-		}
-
-		if (!accessToken) {
 			return;
 		}
 
 		const { lng, lat, zoom } = this;
 
-		mapboxgl.accessToken = accessToken;
-
 		const map = new maplibregl.Map({
-			container: id, // container ID
-			style: "https://demotiles.maplibre.org/style.json", // style URL
-			center: [lng, lat], // starting position [lng, lat]
-			zoom: zoom, // starting zoom
+			container: id,
+			style: OSMStyle as maplibregl.StyleSpecification,
+			center: [lng, lat],
+			zoom: zoom,
 		});
 
 		map.on("style.load", () => {
@@ -283,7 +306,7 @@ const example = {
 			target: id,
 			view: new View({
 				center,
-				zoom,
+				zoom: zoom + 1, // adjusted to match raster maps
 			}),
 			controls: [],
 		});
@@ -319,8 +342,10 @@ const example = {
 			return;
 		}
 
+		// If no API key is provided
 		if (!apiKey) {
-			return;
+			// Using an empty key will still work for development
+			apiKey = "";
 		}
 
 		const loader = new Loader({
@@ -334,7 +359,7 @@ const example = {
 				{
 					disableDefaultUI: true,
 					center: { lat: this.lat, lng: this.lng },
-					zoom: this.zoom,
+					zoom: this.zoom + 1, // adjusted to match raster maps
 					clickableIcons: false,
 					mapId: process.env.GOOGLE_MAP_ID,
 				},
@@ -405,7 +430,7 @@ example.initOpenLayers("openlayers-map");
 example.initLeaflet("leaflet-map");
 example.initMapbox("mapbox-map", process.env.MAPBOX_ACCESS_TOKEN);
 example.initGoogleMaps("google-map", process.env.GOOGLE_API_KEY);
-example.initMapLibre("maplibre-map", process.env.MAPBOX_ACCESS_TOKEN);
+example.initMapLibre("maplibre-map");
 example.initArcGISMapsSDK("arcgis-maps-sdk");
 document.addEventListener("keyup", (event) => {
 	(document.getElementById("keybind") as HTMLButtonElement).innerHTML =

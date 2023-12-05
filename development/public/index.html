@@ -1,84 +1,124 @@
 <html>
+	<head>
+		<style>
+			button {
+				padding: 20px;
+				background: rgb(253, 253, 253);
+				border: solid 1px #ebebeb;
+				cursor: pointer;
+				border-radius: 10px;
+				font-weight: bold;
+				font-size: 20px;
+				color: #565656;
+				margin: 5px;
+				border: solid 3px #565656;
+			}
 
-<head>
-	<style>
-		button {
-			padding: 20px;
-			background: #fdfdfd;
-			border: solid 1px #ebebeb;
-			cursor: pointer;
-			border-radius: 10px;
-			font-weight: bold;
-			font-size: 20px;
-			color: #565656;
-			margin: 5px;
-			border: solid 3px #565656;
-		}
+			button:hover {
+				background: white;
+				border: solid 3px #222222;
+			}
 
-		button:hover {
-			background: white;
-			border: solid 3px #222222;
-		}
+			.example {
+				position: relative;
 
-		.example {
-			cursor: pointer;
-			font-family: sans-serif;
-			height: 100%;
-			width: 25%;
-			outline: solid 1px #d7d7d7;
-		}
+				cursor: pointer;
+				font-family: sans-serif;
+				height: 100%;
+				width: 25%;
+				outline: solid 1px #d7d7d7;
+			}
 
-		#keybind {
-			font-family: sans-serif;
-			background: white;
-			width: 100px;
-			align-items: center;
-			display: flex;
-			justify-content: center;
-			border: solid 1px black;
-			font-weight: bold;
-			margin-left: 10px;
-		}
-	</style>
-	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.8.0/dist/leaflet.css"
-		integrity="sha512-hoalWLoI8r4UszCkZ5kL8vayOGVae1oxXe/2A4AO6J9+580uKHDO3JdHb7NzwwzK5xr/Fs0W40kiNHxM9vyTtQ=="
-		crossorigin="" />
-	<link href="https://api.mapbox.com/mapbox-gl-js/v2.9.1/mapbox-gl.css" rel="stylesheet" />
-	<link rel="stylesheet" href="https://js.arcgis.com/4.27/esri/themes/light/main.css">
-</head>
+			.label {
+				position: absolute;
+				top: 0;
+				left: 0;
+				width: 100%;
+				z-index: +100000000;
+				background: rgb(253, 253, 253, 0.5);
+				padding: 5px;
+				font-size: 20px;
+				color: #565656;
+				text-align: center;
+			}
 
-<body style="width: 100%; height: 100%; margin: 0">
-	<div style="display: flex; flex-direction: row; height: 100%; width: 100%">
-		<div class="example" id="leaflet-map"></div>
-		<div class="example" id="openlayers-map"></div>
-		<div class="example" id="mapbox-map"></div>
-		<div class="example" id="maplibre-map"></div>
-		<div class="example" id="google-map"></div>
-		<div class="example" id="arcgis-maps-sdk"></div>
-	</div>
+			#keybind {
+				font-family: sans-serif;
+				background: white;
+				width: 100px;
+				align-items: center;
+				display: flex;
+				justify-content: center;
+				border: solid 1px black;
+				font-weight: bold;
+				margin-left: 10px;
+			}
+		</style>
+		<link
+			rel="stylesheet"
+			href="https://unpkg.com/leaflet@1.8.0/dist/leaflet.css"
+			integrity="sha512-hoalWLoI8r4UszCkZ5kL8vayOGVae1oxXe/2A4AO6J9+580uKHDO3JdHb7NzwwzK5xr/Fs0W40kiNHxM9vyTtQ=="
+			crossorigin=""
+		/>
+		<link
+			href="https://api.mapbox.com/mapbox-gl-js/v2.9.1/mapbox-gl.css"
+			rel="stylesheet"
+		/>
+		<link
+			rel="stylesheet"
+			href="https://js.arcgis.com/4.27/esri/themes/light/main.css"
+		/>
+		<link
+			rel="stylesheet"
+			href="https://unpkg.com/maplibre-gl/dist/maplibre-gl.css"
+		/>
+	</head>
 
-	<div style="
-		position: absolute;
-		top: 0;
-		z-index: 1000;
-		width: 100%;
-		margin: auto 0;
-		display: flex;
-		justify-content: center;
-	">
-		<button id="select">Select</button>
-		<button id="point">Point</button>
-		<button id="greatcircle">Great Circle</button>
-		<button id="linestring">LineString</button>
-		<button id="polygon">Polygon</button>
-		<button id="freehand">Freehand</button>
-		<button id="circle">Circle</button>
-		<button id="rectangle">Rectangle</button>
+	<body style="width: 100%; height: 100%; margin: 0">
+		<div style="display: flex; flex-direction: row; height: 100%; width: 100%">
+			<div class="example" id="leaflet-map">
+				<div class="label">Leaflet</div>
+			</div>
+			<div class="example" id="openlayers-map">
+				<div class="label">OpenLayers</div>
+			</div>
+			<div class="example" id="mapbox-map">
+				<div class="label">Mapbox</div>
+			</div>
+			<div class="example" id="maplibre-map">
+				<div class="label">MapLibre</div>
+			</div>
+			<div class="example" id="google-map">
+				<div class="label">Google Maps</div>
+			</div>
+			<div class="example" id="arcgis-maps-sdk">
+				<div class="label">ArcGIS Maps</div>
+			</div>
+		</div>
 
-		<button id="clear">Clear</button>
-		<div id="keybind"></div>
-	</div>
-	<script src="./bundle.js"></script>
-</body>
+		<div
+			style="
+				position: absolute;
+				top: 40px;
+				z-index: 1000;
+				width: 100%;
+				margin: auto 0;
+				display: flex;
+				justify-content: center;
+			"
+		>
+			<button id="select">Select</button>
+			<button id="point">Point</button>
+			<button id="greatcircle">Great Circle</button>
+			<button id="linestring">LineString</button>
+			<button id="polygon">Polygon</button>
+			<button id="freehand">Freehand</button>
+			<button id="circle">Circle</button>
+			<button id="rectangle">Rectangle</button>
 
+			<button id="clear">Clear</button>
+			<div id="keybind"></div>
+		</div>
+		<script src="./bundle.js"></script>
+	</body>
 </html>

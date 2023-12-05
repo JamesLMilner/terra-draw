@@ -17,6 +17,7 @@ import {
 	TerraDrawGoogleMapsAdapter,
 	TerraDrawMapLibreGLAdapter,
 	TerraDrawGreatCircleMode,
+	TerraDrawArcGISMapsSDKAdapter,
 } from "../../src/terra-draw";
 import { TerraDrawRenderMode } from "../../src/modes/render/render.mode";
 
@@ -32,7 +33,6 @@ import { Tile as TileLayer, Vector as VectorLayer } from "ol/layer";
 import { fromLonLat, toLonLat } from "ol/proj";
 import EsriMap from "@arcgis/core/Map";
 import MapView from "@arcgis/core/views/MapView.js";
-import { TerraDrawArcGISMapsSDKAdapter } from "../../src/adapters/arcgis-maps-sdk.adapter";
 import GraphicsLayer from "@arcgis/core/layers/GraphicsLayer";
 import Point from "@arcgis/core/geometry/Point";
 import Polyline from "@arcgis/core/geometry/Polyline";

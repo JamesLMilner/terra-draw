@@ -11,3 +11,4 @@ scratch/
 .idea
 .env*
 !.env.example
+.DS_Store

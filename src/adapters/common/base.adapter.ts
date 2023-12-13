@@ -351,12 +351,10 @@ export abstract class TerraDrawBaseAdapter {
 					});
 				},
 				register: (callback) => {
-					const mapElement = this.getMapEventElement();
-					mapElement.addEventListener("keyup", callback);
+					document.addEventListener("keyup", callback);
 				},
 				unregister: (callback) => {
-					const mapElement = this.getMapEventElement();
-					mapElement.removeEventListener("keyup", callback);
+					document.removeEventListener("keyup", callback);
 				},
 			}),
 			new AdapterListener({
@@ -375,12 +373,10 @@ export abstract class TerraDrawBaseAdapter {
 					});
 				},
 				register: (callback) => {
-					const mapElement = this.getMapEventElement();
-					mapElement.addEventListener("keydown", callback);
+					document.addEventListener("keydown", callback);
 				},
 				unregister: (callback) => {
-					const mapElement = this.getMapEventElement();
-					mapElement.removeEventListener("keydown", callback);
+					document.removeEventListener("keydown", callback);
 				},
 			}),
 		];

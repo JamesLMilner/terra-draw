@@ -110,7 +110,7 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 			const callbackMock = createMockCallbacks();
 			adapter.register(callbackMock);
 
-			expect(div.addEventListener).toHaveBeenCalledTimes(5);
+			expect(div.addEventListener).toHaveBeenCalledTimes(6);
 
 			expect(addListenerMock).toHaveBeenNthCalledWith(
 				1,
@@ -182,7 +182,7 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 			expect(removeListenerMock).toHaveBeenCalledTimes(2);
 
 			// These are the general listeners (registered in base)
-			expect(div.removeEventListener).toHaveBeenCalledTimes(5);
+			expect(div.removeEventListener).toHaveBeenCalledTimes(6);
 		});
 	});
 

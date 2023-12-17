@@ -57,7 +57,9 @@ export abstract class TerraDrawBaseAdapter {
 		"not-dragging";
 	protected _currentModeCallbacks: TerraDrawCallbacks | undefined;
 
-	protected abstract getMapEventElement(): HTMLElement;
+	protected abstract getMapEventElement(
+		type?: "keyboard" | "pointer",
+	): HTMLElement;
 
 	protected getButton(event: PointerEvent | MouseEvent) {
 		if (event.button === -1) {
@@ -351,11 +353,11 @@ export abstract class TerraDrawBaseAdapter {
 					});
 				},
 				register: (callback) => {
-					const mapElement = this.getMapEventElement();
+					const mapElement = this.getMapEventElement("keyboard");
 					mapElement.addEventListener("keyup", callback);
 				},
 				unregister: (callback) => {
-					const mapElement = this.getMapEventElement();
+					const mapElement = this.getMapEventElement("keyboard");
 					mapElement.removeEventListener("keyup", callback);
 				},
 			}),

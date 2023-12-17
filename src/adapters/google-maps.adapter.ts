@@ -136,7 +136,13 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawBaseAdapter {
 	 * Retrieves the HTML element of the Google Map element that handles interaction events
 	 * @returns The HTMLElement representing the map container.
 	 */
-	public getMapEventElement() {
+	public getMapEventElement(type?: "keyboard" | "pointer") {
+		if (type === "keyboard") {
+			// Google Maps for some reason seems to swallow all keyboard events
+			// and sets the focused element to document.body
+			return document.body;
+		}
+
 		// TODO: This is a bit hacky, maybe there is a better solution here
 		const selector = 'div[style*="z-index: 3;"]';
 		return this._map.getDiv().querySelector(selector) as HTMLDivElement;

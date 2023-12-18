@@ -497,7 +497,7 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 			const mockQuerySelector = jest.spyOn(document, "querySelector");
 
 			mockQuerySelector.mockImplementationOnce(
-				() => ({ ariaLabel: "Map" }) as Element,
+				() => ({ classList: { add: jest.fn() } }) as unknown as Element,
 			);
 
 			adapter.setCursor("pointer");
@@ -507,7 +507,7 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 			const firstSheetAndRule = document.styleSheets[0]
 				.cssRules[0] as CSSStyleRule;
 			expect(
-				firstSheetAndRule.selectorText.startsWith(`#${elId}`),
+				firstSheetAndRule.selectorText.startsWith(`.terra-draw-google-maps`),
 			).toBeTruthy();
 			expect(
 				firstSheetAndRule.cssText.includes(`cursor: pointer`),

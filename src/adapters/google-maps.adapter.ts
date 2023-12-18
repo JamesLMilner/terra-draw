@@ -212,13 +212,14 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawBaseAdapter {
 			// TODO: We could cache these individually per cursor
 
 			const div = this._map.getDiv();
-			const mapSelector = `#${div.id} div[aria-label]`;
-			const map = document.querySelector(mapSelector);
+			const styleDivSelector = `#${div.id} div[aria-label] .gm-style > div`;
+			const styleDiv = document.querySelector(styleDivSelector);
 
-			if (map) {
+			if (styleDiv) {
+				styleDiv.classList.add("terra-draw-google-maps");
+
 				const style = document.createElement("style");
-				const selector = `#${div.id} div[aria-label="${map.ariaLabel}"]`;
-				style.innerHTML = `${selector} { cursor: ${cursor} !important; }`;
+				style.innerHTML = `.terra-draw-google-maps { cursor: ${cursor} !important; }`;
 				document.getElementsByTagName("head")[0].appendChild(style);
 				this._cursorStyleSheet = style;
 			}

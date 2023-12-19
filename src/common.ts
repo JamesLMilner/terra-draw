@@ -136,6 +136,7 @@ export interface TerraDrawAdapter {
 	unregister(): void;
 	render(changes: TerraDrawChanges, styling: TerraDrawStylingFunction): void;
 	clear(): void;
+	getCoordinatePrecision(): number;
 }
 
 export const SELECT_PROPERTIES = {

@@ -16,7 +16,7 @@ import {
 } from "../store/store";
 import { isValidStoreFeature } from "../store/store-feature-validation";
 
-type CustomStyling = Record<
+export type CustomStyling = Record<
 	string,
 	| string
 	| number
@@ -30,6 +30,13 @@ export enum ModeTypes {
 	Static = "static",
 	Render = "render",
 }
+
+export type BaseModeOptions<T extends CustomStyling> = {
+	styles?: Partial<T>;
+	pointerDistance?: number;
+	coordinatePrecision?: number;
+};
+
 export abstract class TerraDrawBaseDrawMode<T extends CustomStyling> {
 	protected _state: TerraDrawModeState;
 	get state() {
@@ -63,11 +70,7 @@ export abstract class TerraDrawBaseDrawMode<T extends CustomStyling> {
 	protected setCursor!: TerraDrawModeRegisterConfig["setCursor"];
 	protected registerBehaviors(behaviorConfig: BehaviorConfig): void {}
 
-	constructor(options?: {
-		styles?: Partial<T>;
-		pointerDistance?: number;
-		coordinatePrecision?: number;
-	}) {
+	constructor(options?: BaseModeOptions<T>) {
 		this._state = "unregistered";
 		this._styles =
 			options && options.styles ? { ...options.styles } : ({} as Partial<T>);
@@ -195,5 +198,14 @@ export abstract class TerraDrawBaseDrawMode<T extends CustomStyling> {
 		} else {
 			return value;
 		}
+	}
+
+	/**
+	 * Sets the coordinate precision for the mode.
+	 *
+	 * @param {number} coordinatePrecision The precision value for the coordinates.
+	 */
+	public setCoordinatePrecision(coordinatePrecision: number) {
+		this.coordinatePrecision = coordinatePrecision;
 	}
 }

@@ -11,7 +11,11 @@ import { haversineDistanceKilometers } from "../../geometry/measure/haversine-di
 import { circle } from "../../geometry/shape/create-circle";
 import { GeoJSONStoreFeatures } from "../../store/store";
 import { getDefaultStyling } from "../../util/styling";
-import { TerraDrawBaseDrawMode } from "../base.mode";
+import {
+	BaseModeOptions,
+	CustomStyling,
+	TerraDrawBaseDrawMode,
+} from "../base.mode";
 import { isValidNonIntersectingPolygonFeature } from "../../geometry/boolean/is-valid-polygon-feature";
 
 type TerraDrawCircleModeKeyEvents = {
@@ -30,6 +34,12 @@ interface Cursors {
 	start?: Cursor;
 }
 
+interface TerraDrawCircleModeOptions<T extends CustomStyling>
+	extends BaseModeOptions<T> {
+	keyEvents?: TerraDrawCircleModeKeyEvents | null;
+	cursors?: Cursors;
+}
+
 export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyling> {
 	mode = "circle";
 	private center: Position | undefined;
@@ -38,11 +48,7 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 	private keyEvents: TerraDrawCircleModeKeyEvents;
 	private cursors: Required<Cursors>;
 
-	constructor(options?: {
-		styles?: Partial<CirclePolygonStyling>;
-		keyEvents?: TerraDrawCircleModeKeyEvents | null;
-		cursors?: Cursors;
-	}) {
+	constructor(options?: TerraDrawCircleModeOptions<CirclePolygonStyling>) {
 		super(options);
 
 		const defaultCursors = {

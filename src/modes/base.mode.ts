@@ -142,7 +142,7 @@ export abstract class TerraDrawBaseDrawMode<T extends CustomStyling> {
 		return isValidStoreFeature(feature);
 	}
 
-	abstract start(): void;
+	abstract start(opts?: { [key: string]: any }): void;
 	abstract stop(): void;
 	abstract cleanUp(): void;
 	abstract styleFeature(feature: GeoJSONStoreFeatures): TerraDrawAdapterStyling;

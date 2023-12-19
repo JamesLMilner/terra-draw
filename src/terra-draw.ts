@@ -453,7 +453,7 @@ class TerraDraw {
 	 *
 	 * @alpha
 	 */
-	setMode(mode: string) {
+	setMode(mode: string, opts?: { [key: string]: any }) {
 		this.checkEnabled();
 
 		if (this._modes[mode]) {
@@ -467,7 +467,7 @@ class TerraDraw {
 			this._mode = this._modes[mode];
 
 			// Start the new mode
-			this._mode.start();
+			this._mode.start(opts);
 		} else {
 			// If the mode doesn't exist, we throw an error
 			throw new Error("No mode with this name present");

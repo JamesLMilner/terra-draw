@@ -435,12 +435,77 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode<SelectionStyling>
 		}
 	}
 
-	/** @internal */
-	start() {
-		this.setStarted();
-		this.setSelecting();
+	public selectFeature(featureId: string) {
+		if (!this.store.has(featureId)) {
+			throw new Error(`Feature with id ${featureId} does not exist `);
+		}
+		const { mode } = this.store.getPropertiesCopy(featureId as string);
+
+		// This will be undefined for points
+		const modeFlags = this.flags[mode as string];
+
+		// If feature is not selectable then return
+		if (!modeFlags || !modeFlags.feature) {
+			return;
+		}
+
+		const previouslySelectedId = this.selected[0];
+
+		// If we have something currently selected
+		if (previouslySelectedId) {
+			// If it matches the current selected feature id, do nothing
+			if (previouslySelectedId === featureId) {
+				return;
+			} else {
+				// If it's a different feature set selected
+				// to false on previously selected feature
+				this.deselect();
+			}
+		}
+
+		this.setCursor(this.cursors.pointerOver);
+
+		// Select feature
+		this.selected = [featureId];
+		this.store.updateProperty([
+			{ id: featureId, property: "selected", value: true },
+		]);
+		this.onSelect(featureId);
+
+		// Get the clicked feature
+		const { type, coordinates } = this.store.getGeometryCopy(featureId);
+
+		if (type !== "LineString" && type !== "Polygon") {
+			return;
+		}
+
+		// LineString does not have nesting so we can just take 'coordinates'
+		// directly. Polygon is nested so we need to take [0] item in the array
+		const selectedCoords: Position[] =
+			type === "LineString" ? coordinates : coordinates[0];
+
+		if (selectedCoords && modeFlags && modeFlags.feature.coordinates) {
+			this.selectionPoints.create(selectedCoords, type, featureId);
+
+			if (modeFlags.feature.coordinates.midpoints) {
+				this.midPoints.create(
+					selectedCoords,
+					featureId,
+					this.coordinatePrecision,
+				);
+			}
+		}
 	}
 
+	/** @internal */
+	start(opts?: { [key: string]: any }) {
+		this.setStarted();
+		this.setSelecting();
+
+		if (opts && opts.featureId) {
+			this.selectFeature(opts.featureId);
+		}
+	}
 	/** @internal */
 	stop() {
 		this.cleanUp();

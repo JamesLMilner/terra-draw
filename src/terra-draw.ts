@@ -79,11 +79,7 @@ class TerraDraw {
 	}) {
 		this._adapter = options.adapter;
 
-		const coordinatePrecision = this._adapter.getCoordinatePrecision();
-
-		this._mode = new TerraDrawStaticMode({
-			coordinatePrecision,
-		});
+		this._mode = new TerraDrawStaticMode();
 
 		// Keep track of if there are duplicate modes
 		const duplicateModeTracker = new Set();
@@ -97,8 +93,6 @@ class TerraDraw {
 			}
 			duplicateModeTracker.add(currentMode.mode);
 			modeMap[currentMode.mode] = currentMode;
-			// ovveride the coordinate precision of the mode
-			modeMap[currentMode.mode].setCoordinatePrecision(coordinatePrecision);
 			return modeMap;
 		}, {});
 
@@ -259,6 +253,7 @@ class TerraDraw {
 				onSelect: onSelect,
 				onDeselect: onDeselect,
 				onFinish: onFinish,
+				coordinatePrecision: this._adapter.getCoordinatePrecision(),
 			});
 		});
 	}

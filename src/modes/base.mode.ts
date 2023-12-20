@@ -34,7 +34,6 @@ export enum ModeTypes {
 export type BaseModeOptions<T extends CustomStyling> = {
 	styles?: Partial<T>;
 	pointerDistance?: number;
-	coordinatePrecision?: number;
 };
 
 export abstract class TerraDrawBaseDrawMode<T extends CustomStyling> {
@@ -61,7 +60,7 @@ export abstract class TerraDrawBaseDrawMode<T extends CustomStyling> {
 
 	protected behaviors: TerraDrawModeBehavior[] = [];
 	protected pointerDistance: number;
-	protected coordinatePrecision: number;
+	protected coordinatePrecision!: number;
 	protected onStyleChange!: StoreChangeHandler;
 	protected store!: GeoJSONStore;
 	protected setDoubleClickToZoom!: TerraDrawModeRegisterConfig["setDoubleClickToZoom"];
@@ -76,8 +75,6 @@ export abstract class TerraDrawBaseDrawMode<T extends CustomStyling> {
 			options && options.styles ? { ...options.styles } : ({} as Partial<T>);
 
 		this.pointerDistance = (options && options.pointerDistance) || 40;
-
-		this.coordinatePrecision = (options && options.coordinatePrecision) || 9;
 	}
 
 	type = ModeTypes.Drawing;
@@ -134,7 +131,7 @@ export abstract class TerraDrawBaseDrawMode<T extends CustomStyling> {
 				project: this.project,
 				unproject: this.unproject,
 				pointerDistance: this.pointerDistance,
-				coordinatePrecision: this.coordinatePrecision,
+				coordinatePrecision: config.coordinatePrecision,
 			});
 		} else {
 			throw new Error("Can not register unless mode is unregistered");

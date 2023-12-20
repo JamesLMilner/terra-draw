@@ -83,6 +83,7 @@ export interface TerraDrawModeRegisterConfig {
 	onFinish: (finishedId: string) => void;
 	project: Project;
 	unproject: Unproject;
+	coordinatePrecision: number;
 }
 
 export type TerraDrawModeState =

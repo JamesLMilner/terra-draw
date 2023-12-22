@@ -73,8 +73,8 @@ export abstract class TerraDrawBaseDrawMode<T extends CustomStyling> {
 		this._state = "unregistered";
 		this._styles =
 			options && options.styles ? { ...options.styles } : ({} as Partial<T>);
-
 		this.pointerDistance = (options && options.pointerDistance) || 40;
+		this.coordinatePrecision = 9;
 	}
 
 	type = ModeTypes.Drawing;
@@ -195,14 +195,5 @@ export abstract class TerraDrawBaseDrawMode<T extends CustomStyling> {
 		} else {
 			return value;
 		}
-	}
-
-	/**
-	 * Sets the coordinate precision for the mode.
-	 *
-	 * @param {number} coordinatePrecision The precision value for the coordinates.
-	 */
-	public setCoordinatePrecision(coordinatePrecision: number) {
-		this.coordinatePrecision = coordinatePrecision;
 	}
 }

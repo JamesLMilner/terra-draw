@@ -74,7 +74,6 @@ export abstract class TerraDrawBaseDrawMode<T extends CustomStyling> {
 		this._styles =
 			options && options.styles ? { ...options.styles } : ({} as Partial<T>);
 		this.pointerDistance = (options && options.pointerDistance) || 40;
-		this.coordinatePrecision = 9;
 	}
 
 	type = ModeTypes.Drawing;
@@ -124,6 +123,7 @@ export abstract class TerraDrawBaseDrawMode<T extends CustomStyling> {
 			this.setCursor = config.setCursor;
 			this.onStyleChange = config.onChange;
 			this.onFinish = config.onFinish;
+			this.coordinatePrecision = config.coordinatePrecision;
 
 			this.registerBehaviors({
 				mode: config.mode,
@@ -139,6 +139,10 @@ export abstract class TerraDrawBaseDrawMode<T extends CustomStyling> {
 	}
 
 	validateFeature(feature: unknown): feature is GeoJSONStoreFeatures {
+		if (this._state === "unregistered") {
+			throw new Error("Mode must be registered");
+		}
+
 		return isValidStoreFeature(feature);
 	}
 

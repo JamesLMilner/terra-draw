@@ -8,7 +8,11 @@ import {
 } from "../../common";
 import { Polygon } from "geojson";
 
-import { TerraDrawBaseDrawMode } from "../base.mode";
+import {
+	BaseModeOptions,
+	CustomStyling,
+	TerraDrawBaseDrawMode,
+} from "../base.mode";
 import { getDefaultStyling } from "../../util/styling";
 import { GeoJSONStoreFeatures } from "../../store/store";
 import { pixelDistance } from "../../geometry/measure/pixel-distance";
@@ -35,6 +39,14 @@ interface Cursors {
 	close?: Cursor;
 }
 
+interface TerraDrawFreehandModeOptions<T extends CustomStyling>
+	extends BaseModeOptions<T> {
+	minDistance?: number;
+	preventPointsNearClose?: boolean;
+	keyEvents?: TerraDrawFreehandModeKeyEvents | null;
+	cursors?: Cursors;
+}
+
 export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygonStyling> {
 	mode = "freehand";
 
@@ -46,13 +58,7 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 	private cursors: Required<Cursors>;
 	private preventPointsNearClose: boolean;
 
-	constructor(options?: {
-		styles?: Partial<FreehandPolygonStyling>;
-		minDistance?: number;
-		preventPointsNearClose?: boolean;
-		keyEvents?: TerraDrawFreehandModeKeyEvents | null;
-		cursors?: Cursors;
-	}) {
+	constructor(options?: TerraDrawFreehandModeOptions<FreehandPolygonStyling>) {
 		super(options);
 
 		const defaultCursors = {

@@ -83,6 +83,7 @@ export interface TerraDrawModeRegisterConfig {
 	onFinish: (finishedId: string) => void;
 	project: Project;
 	unproject: Unproject;
+	coordinatePrecision: number;
 }
 
 export type TerraDrawModeState =
@@ -136,6 +137,7 @@ export interface TerraDrawAdapter {
 	unregister(): void;
 	render(changes: TerraDrawChanges, styling: TerraDrawStylingFunction): void;
 	clear(): void;
+	getCoordinatePrecision(): number;
 }
 
 export const SELECT_PROPERTIES = {

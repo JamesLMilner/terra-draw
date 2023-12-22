@@ -8,7 +8,11 @@ import {
 } from "../../common";
 import { LineString } from "geojson";
 import { selfIntersects } from "../../geometry/boolean/self-intersects";
-import { TerraDrawBaseDrawMode } from "../base.mode";
+import {
+	BaseModeOptions,
+	CustomStyling,
+	TerraDrawBaseDrawMode,
+} from "../base.mode";
 import { pixelDistance } from "../../geometry/measure/pixel-distance";
 import { BehaviorConfig } from "../base.behavior";
 import { ClickBoundingBoxBehavior } from "../click-bounding-box.behavior";
@@ -36,6 +40,15 @@ interface Cursors {
 	close?: Cursor;
 }
 
+interface TerraDrawLineStringModeOptions<T extends CustomStyling>
+	extends BaseModeOptions<T> {
+	snapping?: boolean;
+	allowSelfIntersections?: boolean;
+	pointerDistance?: number;
+	keyEvents?: TerraDrawLineStringModeKeyEvents | null;
+	cursors?: Cursors;
+}
+
 export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringStyling> {
 	mode = "linestring";
 
@@ -51,14 +64,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 	// Behaviors
 	private snapping!: SnappingBehavior;
 
-	constructor(options?: {
-		snapping?: boolean;
-		allowSelfIntersections?: boolean;
-		pointerDistance?: number;
-		styles?: Partial<LineStringStyling>;
-		keyEvents?: TerraDrawLineStringModeKeyEvents | null;
-		cursors?: Cursors;
-	}) {
+	constructor(options?: TerraDrawLineStringModeOptions<LineStringStyling>) {
 		super(options);
 
 		const defaultCursors = {

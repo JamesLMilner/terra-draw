@@ -8,7 +8,11 @@ import {
 } from "../../common";
 import { Polygon } from "geojson";
 import { selfIntersects } from "../../geometry/boolean/self-intersects";
-import { TerraDrawBaseDrawMode } from "../base.mode";
+import {
+	TerraDrawBaseDrawMode,
+	BaseModeOptions,
+	CustomStyling,
+} from "../base.mode";
 import { PixelDistanceBehavior } from "../pixel-distance.behavior";
 import { ClickBoundingBoxBehavior } from "../click-bounding-box.behavior";
 import { BehaviorConfig } from "../base.behavior";
@@ -41,6 +45,15 @@ interface Cursors {
 	close?: Cursor;
 }
 
+interface TerraDrawPolygonModeOptions<T extends CustomStyling>
+	extends BaseModeOptions<T> {
+	allowSelfIntersections?: boolean;
+	snapping?: boolean;
+	pointerDistance?: number;
+	keyEvents?: TerraDrawPolygonModeKeyEvents | null;
+	cursors?: Cursors;
+}
+
 export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> {
 	mode = "polygon";
 
@@ -57,14 +70,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 	private cursors: Required<Cursors>;
 	private mouseMove = false;
 
-	constructor(options?: {
-		allowSelfIntersections?: boolean;
-		snapping?: boolean;
-		pointerDistance?: number;
-		styles?: Partial<PolygonStyling>;
-		keyEvents?: TerraDrawPolygonModeKeyEvents | null;
-		cursors?: Cursors;
-	}) {
+	constructor(options?: TerraDrawPolygonModeOptions<PolygonStyling>) {
 		super(options);
 
 		const defaultCursors = {

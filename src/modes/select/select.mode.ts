@@ -8,7 +8,12 @@ import {
 	Cursor,
 } from "../../common";
 import { Point, Position } from "geojson";
-import { ModeTypes, TerraDrawBaseDrawMode } from "../base.mode";
+import {
+	BaseModeOptions,
+	CustomStyling,
+	ModeTypes,
+	TerraDrawBaseDrawMode,
+} from "../base.mode";
 import { MidPointBehavior } from "./behaviors/midpoint.behavior";
 import { SelectionPointBehavior } from "./behaviors/selection-point.behavior";
 import { FeatureAtPointerEventBehavior } from "./behaviors/feature-at-pointer-event.behavior";
@@ -80,6 +85,15 @@ interface Cursors {
 	insertMidpoint?: Cursor;
 }
 
+interface TerraDrawSelectModeOptions<T extends CustomStyling>
+	extends BaseModeOptions<T> {
+	pointerDistance?: number;
+	flags?: { [mode: string]: ModeFlags };
+	keyEvents?: TerraDrawSelectModeKeyEvents | null;
+	dragEventThrottle?: number;
+	cursors?: Cursors;
+}
+
 export class TerraDrawSelectMode extends TerraDrawBaseDrawMode<SelectionStyling> {
 	public type = ModeTypes.Select;
 	public mode = "select";
@@ -103,14 +117,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode<SelectionStyling>
 	private scaleFeature!: ScaleFeatureBehavior;
 	private cursors: Required<Cursors>;
 
-	constructor(options?: {
-		styles?: Partial<SelectionStyling>;
-		pointerDistance?: number;
-		flags?: { [mode: string]: ModeFlags };
-		keyEvents?: TerraDrawSelectModeKeyEvents | null;
-		dragEventThrottle?: number;
-		cursors?: Cursors;
-	}) {
+	constructor(options?: TerraDrawSelectModeOptions<SelectionStyling>) {
 		super(options);
 
 		this.flags = options && options.flags ? options.flags : {};

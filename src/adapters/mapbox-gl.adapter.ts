@@ -46,6 +46,12 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawBaseAdapter {
 			});
 
 			this._rendered = false;
+
+			// TODO: This is necessary to prevent render artifacts, perhaps there is a nicer solution?
+			if (this._nextRender) {
+				cancelAnimationFrame(this._nextRender);
+				this._nextRender = undefined;
+			}
 		}
 	}
 

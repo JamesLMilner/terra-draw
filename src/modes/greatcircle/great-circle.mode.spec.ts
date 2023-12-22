@@ -631,6 +631,7 @@ describe("TerraDrawGreatCircleMode", () => {
 					lineStringColor: "#ffffff",
 				},
 			});
+			greatCircleMode.register(getMockModeConfig("greatcircle"));
 
 			expect(
 				greatCircleMode.validateFeature({
@@ -655,6 +656,7 @@ describe("TerraDrawGreatCircleMode", () => {
 					lineStringColor: "#ffffff",
 				},
 			});
+			greatCircleMode.register(getMockModeConfig("greatcircle"));
 
 			expect(
 				greatCircleMode.validateFeature({

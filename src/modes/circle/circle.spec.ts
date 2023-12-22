@@ -505,6 +505,7 @@ describe("TerraDrawCircleMode", () => {
 					fillOpacity: 0.5,
 				},
 			});
+			circleMode.register(getMockModeConfig("circle"));
 
 			expect(
 				circleMode.validateFeature({
@@ -532,6 +533,7 @@ describe("TerraDrawCircleMode", () => {
 					fillOpacity: 0.5,
 				},
 			});
+			circleMode.register(getMockModeConfig("circle"));
 
 			expect(
 				circleMode.validateFeature({

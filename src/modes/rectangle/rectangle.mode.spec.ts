@@ -518,6 +518,7 @@ describe("TerraDrawRectangleMode", () => {
 					fillOpacity: 0.5,
 				},
 			});
+			rectangleMode.register(getMockModeConfig("rectangle"));
 
 			expect(
 				rectangleMode.validateFeature({
@@ -545,6 +546,7 @@ describe("TerraDrawRectangleMode", () => {
 					fillOpacity: 0.5,
 				},
 			});
+			rectangleMode.register(getMockModeConfig("rectangle"));
 
 			expect(
 				rectangleMode.validateFeature({

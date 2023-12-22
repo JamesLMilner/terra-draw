@@ -238,18 +238,21 @@ describe("TerraDrawRenderMode", () => {
 	describe("validateFeature", () => {
 		it("validates points", () => {
 			const renderMode = new TerraDrawRenderMode(options);
+			renderMode.register(getMockModeConfig("arbitary"));
 
 			expect(renderMode.validateFeature(createMockPoint())).toBe(true);
 		});
 
 		it("validates linestrings", () => {
 			const renderMode = new TerraDrawRenderMode(options);
+			renderMode.register(getMockModeConfig("arbitary"));
 
 			expect(renderMode.validateFeature(createMockLineString())).toBe(true);
 		});
 
 		it("validates polygons", () => {
 			const renderMode = new TerraDrawRenderMode(options);
+			renderMode.register(getMockModeConfig("arbitary"));
 
 			expect(renderMode.validateFeature(createMockPolygonSquare())).toBe(true);
 		});

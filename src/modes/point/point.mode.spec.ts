@@ -276,6 +276,8 @@ describe("TerraDrawPointMode", () => {
 				},
 			});
 
+			pointMode.register(getMockModeConfig("point"));
+
 			expect(
 				pointMode.validateFeature({
 					id: "ed030248-d7ee-45a2-b8e8-37ad2f622509",
@@ -299,6 +301,8 @@ describe("TerraDrawPointMode", () => {
 					pointColor: "#ffffff",
 				},
 			});
+
+			pointMode.register(getMockModeConfig("point"));
 
 			expect(
 				pointMode.validateFeature({

@@ -1453,6 +1453,7 @@ describe("validateFeature", () => {
 				fillOpacity: 0.5,
 			},
 		});
+		polygonMode.register(getMockModeConfig("polygon"));
 
 		expect(
 			polygonMode.validateFeature({
@@ -1480,6 +1481,7 @@ describe("validateFeature", () => {
 				fillOpacity: 0.5,
 			},
 		});
+		polygonMode.register(getMockModeConfig("polygon"));
 
 		expect(
 			polygonMode.validateFeature({

@@ -124,6 +124,15 @@ export abstract class TerraDrawBaseAdapter {
 		});
 	}
 
+	/**
+	 * Gets the coordinate precision.
+	 * @returns {number} The coordinate precision.
+	 * @description The coordinate precision is the number of decimal places. Note that the precision will be overriden by the precision of the TerraDraw Adapter.
+	 */
+	public getCoordinatePrecision() {
+		return this._coordinatePrecision;
+	}
+
 	private getAdapterListeners() {
 		return [
 			new AdapterListener<BasePointerListener>({

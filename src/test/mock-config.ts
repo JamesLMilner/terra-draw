@@ -12,5 +12,6 @@ export function getMockModeConfig(mode: string) {
 		unproject: jest.fn(),
 		setDoubleClickToZoom: jest.fn(),
 		onFinish: jest.fn(),
+		coordinatePrecision: 9,
 	};
 }

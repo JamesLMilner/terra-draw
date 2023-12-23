@@ -876,6 +876,7 @@ describe("TerraDrawLineStringMode", () => {
 					lineStringColor: "#ffffff",
 				},
 			});
+			lineStringMode.register(getMockModeConfig("linestring"));
 
 			expect(
 				lineStringMode.validateFeature({
@@ -900,6 +901,7 @@ describe("TerraDrawLineStringMode", () => {
 					lineStringColor: "#ffffff",
 				},
 			});
+			lineStringMode.register(getMockModeConfig("linestring"));
 
 			expect(
 				lineStringMode.validateFeature({

@@ -546,6 +546,7 @@ describe("TerraDrawFreehandMode", () => {
 					closingPointOutlineColor: "#111111",
 				},
 			});
+			freehandMode.register(getMockModeConfig("freehand"));
 
 			expect(
 				freehandMode.validateFeature({
@@ -573,6 +574,7 @@ describe("TerraDrawFreehandMode", () => {
 					closingPointOutlineColor: "#111111",
 				},
 			});
+			freehandMode.register(getMockModeConfig("freehand"));
 
 			expect(
 				freehandMode.validateFeature({

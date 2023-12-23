@@ -3,7 +3,12 @@ import {
 	NumericStyling,
 	TerraDrawAdapterStyling,
 } from "../../common";
-import { ModeTypes, TerraDrawBaseDrawMode } from "../base.mode";
+import {
+	BaseModeOptions,
+	CustomStyling,
+	ModeTypes,
+	TerraDrawBaseDrawMode,
+} from "../base.mode";
 import { BehaviorConfig } from "../base.behavior";
 import { getDefaultStyling } from "../../util/styling";
 import { GeoJSONStoreFeatures } from "../../terra-draw";
@@ -25,14 +30,18 @@ type RenderModeStyling = {
 	zIndex: NumericStyling;
 };
 
+interface TerraDrawRenderModeOptions<T extends CustomStyling>
+	extends BaseModeOptions<T> {
+	modeName: string;
+	// styles need to be there else we could fall back to BaseModeOptions
+	styles: Partial<T>;
+}
+
 export class TerraDrawRenderMode extends TerraDrawBaseDrawMode<RenderModeStyling> {
 	public type = ModeTypes.Render; // The type of the mode
 	public mode = "render"; // This gets changed dynamically
 
-	constructor(options: {
-		modeName: string;
-		styles: Partial<RenderModeStyling>;
-	}) {
+	constructor(options: TerraDrawRenderModeOptions<RenderModeStyling>) {
 		super({ styles: options.styles });
 		this.mode = options.modeName;
 	}

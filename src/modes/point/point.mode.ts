@@ -7,7 +7,11 @@ import {
 } from "../../common";
 import { GeoJSONStoreFeatures } from "../../store/store";
 import { getDefaultStyling } from "../../util/styling";
-import { TerraDrawBaseDrawMode } from "../base.mode";
+import {
+	BaseModeOptions,
+	CustomStyling,
+	TerraDrawBaseDrawMode,
+} from "../base.mode";
 import { isValidPoint } from "../../geometry/boolean/is-valid-point";
 
 type PointModeStyling = {
@@ -21,15 +25,17 @@ interface Cursors {
 	create?: Cursor;
 }
 
+interface TerraDrawPointModeOptions<T extends CustomStyling>
+	extends BaseModeOptions<T> {
+	cursors?: Cursors;
+}
+
 export class TerraDrawPointMode extends TerraDrawBaseDrawMode<PointModeStyling> {
 	mode = "point";
 
 	private cursors: Required<Cursors>;
 
-	constructor(options?: {
-		styles?: Partial<PointModeStyling>;
-		cursors?: Cursors;
-	}) {
+	constructor(options?: TerraDrawPointModeOptions<PointModeStyling>) {
 		super(options);
 		const defaultCursors = {
 			create: "crosshair",

@@ -7,7 +7,11 @@ import {
 	Cursor,
 } from "../../common";
 import { LineString } from "geojson";
-import { TerraDrawBaseDrawMode } from "../base.mode";
+import {
+	BaseModeOptions,
+	CustomStyling,
+	TerraDrawBaseDrawMode,
+} from "../base.mode";
 import { BehaviorConfig } from "../base.behavior";
 import { getDefaultStyling } from "../../util/styling";
 import { GeoJSONStoreFeatures } from "../../store/store";
@@ -35,6 +39,14 @@ interface Cursors {
 	close?: Cursor;
 }
 
+interface TerraDrawGreatCircleModeOptions<T extends CustomStyling>
+	extends BaseModeOptions<T> {
+	snapping?: boolean;
+	pointerDistance?: number;
+	keyEvents?: TerraDrawGreateCircleModeKeyEvents | null;
+	cursors?: Cursors;
+}
+
 export class TerraDrawGreatCircleMode extends TerraDrawBaseDrawMode<GreateCircleStyling> {
 	mode = "greatcircle";
 
@@ -48,13 +60,7 @@ export class TerraDrawGreatCircleMode extends TerraDrawBaseDrawMode<GreateCircle
 	// Behaviors
 	private snapping!: GreatCircleSnappingBehavior;
 
-	constructor(options?: {
-		snapping?: boolean;
-		pointerDistance?: number;
-		styles?: Partial<GreateCircleStyling>;
-		keyEvents?: TerraDrawGreateCircleModeKeyEvents | null;
-		cursors?: Cursors;
-	}) {
+	constructor(options?: TerraDrawGreatCircleModeOptions<GreateCircleStyling>) {
 		super(options);
 
 		const defaultCursors = {

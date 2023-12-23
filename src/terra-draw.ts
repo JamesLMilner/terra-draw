@@ -78,25 +78,23 @@ class TerraDraw {
 		modes: TerraDrawBaseDrawMode<any>[];
 	}) {
 		this._adapter = options.adapter;
+
 		this._mode = new TerraDrawStaticMode();
 
 		// Keep track of if there are duplicate modes
 		const duplicateModeTracker = new Set();
 
 		// Construct a map of the mode name to the mode
-		const modesMap = options.modes.reduce(
-			(modeMap, currentMode) => {
-				if (duplicateModeTracker.has(currentMode.mode)) {
-					throw new Error(
-						`There is already a ${currentMode.mode} mode provided`,
-					);
-				}
-				duplicateModeTracker.add(currentMode.mode);
-				modeMap[currentMode.mode] = currentMode;
-				return modeMap;
-			},
-			{} as { [mode: string]: TerraDrawBaseDrawMode<any> },
-		);
+		const modesMap = options.modes.reduce<{
+			[mode: string]: TerraDrawBaseDrawMode<any>;
+		}>((modeMap, currentMode) => {
+			if (duplicateModeTracker.has(currentMode.mode)) {
+				throw new Error(`There is already a ${currentMode.mode} mode provided`);
+			}
+			duplicateModeTracker.add(currentMode.mode);
+			modeMap[currentMode.mode] = currentMode;
+			return modeMap;
+		}, {});
 
 		// Construct an array of the mode keys (names)
 		const modeKeys = Object.keys(modesMap);
@@ -255,6 +253,7 @@ class TerraDraw {
 				onSelect: onSelect,
 				onDeselect: onDeselect,
 				onFinish: onFinish,
+				coordinatePrecision: this._adapter.getCoordinatePrecision(),
 			});
 		});
 	}

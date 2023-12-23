@@ -10,6 +10,19 @@ on:
     types: [opened, synchronize, reopened, ready_for_review]
 
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18.x"
+      - name: Install Parent Folder
+        run: npm install
+      - name: Run linting
+        run: npm run lint
+
   build:
     runs-on: ubuntu-latest
     steps:

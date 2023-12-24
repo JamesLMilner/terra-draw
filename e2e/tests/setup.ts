@@ -31,7 +31,14 @@ export const changeMode = async ({
 	mode,
 }: {
 	page: Page;
-	mode: "point" | "polygon" | "linestring" | "select";
+	mode:
+		| "point"
+		| "polygon"
+		| "linestring"
+		| "select"
+		| "rectangle"
+		| "circle"
+		| "greatcircle";
 }) => {
 	const modeText = mode.charAt(0).toUpperCase() + mode.slice(1);
 	const button = page.getByText(modeText);
@@ -61,4 +68,21 @@ export const expectPaths = async ({
 	} else {
 		await expect(await page.locator(selector).count()).toBe(0);
 	}
+};
+
+export const expectPathDimensions = async ({
+	page,
+	width,
+	height,
+}: {
+	page: Page;
+	width: number;
+	height: number;
+}) => {
+	const selector = "svg > g > path";
+
+	const boundingBox = await page.locator(selector).boundingBox();
+
+	expect(boundingBox?.width).toBe(width);
+	expect(boundingBox?.height).toBe(height);
 };

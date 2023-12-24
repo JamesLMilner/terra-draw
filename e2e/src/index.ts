@@ -113,7 +113,15 @@ const example = {
 
 		draw.start();
 
-		["select", "point", "linestring", "polygon"].forEach((mode) => {
+		[
+			"select",
+			"point",
+			"linestring",
+			"polygon",
+			"rectangle",
+			"circle",
+			"greatcircle",
+		].forEach((mode) => {
 			(document.getElementById(mode) as HTMLButtonElement).addEventListener(
 				"click",
 				() => {

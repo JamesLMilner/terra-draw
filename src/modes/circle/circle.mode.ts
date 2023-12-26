@@ -128,6 +128,10 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 			this.clickCount++;
 			this.setDrawing();
 		} else {
+			if (this.clickCount === 1 && this.center && this.currentCircleId) {
+				this.createCircle(event);
+			}
+
 			// Finish drawing
 			this.close();
 		}
@@ -135,22 +139,7 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 
 	/** @internal */
 	onMouseMove(event: TerraDrawMouseEvent) {
-		if (this.clickCount === 1 && this.center && this.currentCircleId) {
-			const distanceKm = haversineDistanceKilometers(this.center, [
-				event.lng,
-				event.lat,
-			]);
-
-			const updatedCircle = circle({
-				center: this.center,
-				radiusKilometers: distanceKm,
-				coordinatePrecision: this.coordinatePrecision,
-			});
-
-			this.store.updateGeometry([
-				{ id: this.currentCircleId, geometry: updatedCircle.geometry },
-			]);
-		}
+		this.createCircle(event);
 	}
 
 	/** @internal */
@@ -236,6 +225,25 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 			);
 		} else {
 			return false;
+		}
+	}
+
+	private createCircle(event: TerraDrawMouseEvent) {
+		if (this.clickCount === 1 && this.center && this.currentCircleId) {
+			const distanceKm = haversineDistanceKilometers(this.center, [
+				event.lng,
+				event.lat,
+			]);
+
+			const updatedCircle = circle({
+				center: this.center,
+				radiusKilometers: distanceKm,
+				coordinatePrecision: this.coordinatePrecision,
+			});
+
+			this.store.updateGeometry([
+				{ id: this.currentCircleId, geometry: updatedCircle.geometry },
+			]);
 		}
 	}
 }

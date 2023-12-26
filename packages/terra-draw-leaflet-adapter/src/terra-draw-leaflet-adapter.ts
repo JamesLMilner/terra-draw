@@ -173,12 +173,17 @@ export class TerraDrawLeafletAdapter extends TerraDrawExtend.TerraDrawBaseAdapte
 						featureStyles as { lineStringOpacity?: number }
 					).lineStringOpacity;
 
+					console.log(featureStyles.lineStringDash);
+
 					return {
 						interactive: false, // Removes mouse hover cursor styles
 						color: featureStyles.lineStringColor,
 						weight: featureStyles.lineStringWidth,
 						pane: paneId,
 						opacity: lineStringOpacity === undefined ? 1 : lineStringOpacity,
+						dashArray: featureStyles.lineStringDash
+							? `${featureStyles.lineStringDash[0]}%, ${featureStyles.lineStringDash[1]}%`
+							: undefined,
 					};
 				} else if (feature.geometry.type === "Polygon") {
 					const polygonOutlineOpacity = (

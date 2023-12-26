@@ -182,12 +182,14 @@ export class TerraDrawOpenLayersAdapter extends TerraDrawExtend.TerraDrawBaseAda
 					.lineStringOpacity;
 
 				const color = `rgba(${r},${g},${b},${lineStringOpacity === undefined ? 1 : lineStringOpacity})`;
+				const width = this.getMapEventElement().width;
 
 				return new this._lib.Style({
 					zIndex: style.zIndex,
 					stroke: new this._lib.Stroke({
 						color,
 						width: style.lineStringWidth,
+						lineDash: style.lineStringDash?.map((i) => (width / 100) * i), // Convert from % to pixel equivalent as OL does not support %
 					}),
 				});
 			},

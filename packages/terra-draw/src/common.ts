@@ -37,6 +37,7 @@ export interface TerraDrawAdapterStyling {
 	markerUrl?: string;
 	markerHeight?: number;
 	markerWidth?: number;
+	lineStringDash: [number, number] | undefined;
 }
 
 export type CartesianPoint = { x: number; y: number };

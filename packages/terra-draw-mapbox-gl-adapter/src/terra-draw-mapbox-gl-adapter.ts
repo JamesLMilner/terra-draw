@@ -27,7 +27,6 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawExtend.TerraDrawBaseAdapt
 		} & TerraDrawExtend.BaseAdapterConfig,
 	) {
 		super(config);
-
 		this._map = config.map;
 		this._container = this._map.getContainer();
 
@@ -123,6 +122,14 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawExtend.TerraDrawBaseAdapt
 	}
 
 	private _addLineLayer(id: string) {
+		const paint: { "line-dasharray"?: any[] } = {};
+
+		paint["line-dasharray"] = [
+			"coalesce",
+			["get", "lineStringDash"],
+			["literal", []],
+		];
+
 		const layer = this._map.addLayer({
 			id,
 			source: id,
@@ -132,6 +139,7 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawExtend.TerraDrawBaseAdapt
 			},
 			// No need for filters as style is driven by properties
 			paint: {
+				...paint,
 				"line-width": ["get", "lineStringWidth"],
 				"line-color": ["get", "lineStringColor"],
 				"line-opacity": ["get", "lineStringOpacity"],
@@ -226,12 +234,12 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawExtend.TerraDrawBaseAdapt
 		polygons: boolean;
 		styling: boolean;
 	} = {
-		deletion: false,
-		points: false,
-		linestrings: false,
-		polygons: false,
-		styling: false,
-	};
+			deletion: false,
+			points: false,
+			linestrings: false,
+			polygons: false,
+			styling: false,
+		};
 
 	private updateChangedIds(changes: TerraDrawChanges) {
 		[...changes.updated, ...changes.created].forEach((feature) => {
@@ -461,6 +469,7 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawExtend.TerraDrawBaseAdapt
 
 					points.push(feature);
 				} else if (feature.geometry.type === "LineString") {
+					properties.lineStringDash = styles.lineStringDash || null;
 					properties.lineStringColor = styles.lineStringColor;
 					properties.lineStringWidth = styles.lineStringWidth;
 					// Backwards compatible read: pre Terra Draw v1.24.0 will not have this field in the interface

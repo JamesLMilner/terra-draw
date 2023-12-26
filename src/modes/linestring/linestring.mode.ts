@@ -36,6 +36,7 @@ type TerraDrawLineStringModeKeyEvents = {
 type LineStringStyling = {
 	lineStringWidth: NumericStyling;
 	lineStringColor: HexColorStyling;
+	lineStringDash: [number, number];
 	closingPointColor: HexColorStyling;
 	closingPointWidth: NumericStyling;
 	closingPointOutlineColor: HexColorStyling;
@@ -521,6 +522,10 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 				styles.lineStringColor,
 				feature,
 			);
+
+			styles.lineStringDash = this.styles.lineStringDash
+				? this.styles.lineStringDash
+				: undefined;
 
 			styles.lineStringWidth = this.getNumericStylingValue(
 				this.styles.lineStringWidth,

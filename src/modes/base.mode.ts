@@ -25,6 +25,7 @@ export type CustomStyling = Record<
 	string,
 	| string
 	| number
+	| [number, number]
 	| ((feature: GeoJSONStoreFeatures) => HexColor)
 	| ((feature: GeoJSONStoreFeatures) => number)
 >;

@@ -13,5 +13,6 @@ export const getDefaultStyling = (): TerraDrawAdapterStyling => {
 		lineStringColor: "#3f97e0",
 		lineStringWidth: 4,
 		zIndex: 0,
+		lineStringDash: undefined,
 	};
 };

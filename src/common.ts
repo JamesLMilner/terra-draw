@@ -27,6 +27,7 @@ export interface TerraDrawAdapterStyling {
 	lineStringWidth: number;
 	lineStringColor: HexColor;
 	zIndex: number;
+	lineStringDash: [number, number] | undefined;
 }
 
 // Neither buttons nor touch/pen contact changed since last event	-1

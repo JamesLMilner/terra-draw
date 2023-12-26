@@ -15,14 +15,23 @@ import { GeoJSONStoreGeometries } from "../store/store";
 import { BaseAdapterConfig, TerraDrawBaseAdapter } from "./common/base.adapter";
 
 export class TerraDrawMapboxGLAdapter extends TerraDrawBaseAdapter {
-	constructor(config: { map: mapboxgl.Map } & BaseAdapterConfig) {
+	constructor(config: { map: mapboxgl.Map, supportLineDash?: boolean } & BaseAdapterConfig) {
 		super(config);
 
+		console.log({ config });
+
+		this._supportLineDash =
+			typeof config.supportLineDash === "boolean"
+				? config.supportLineDash
+				: true;
 		this._map = config.map;
 		this._container = this._map.getContainer();
+
+		console.trace(this._supportLineDash);
 	}
 
 	private _nextRender: number | undefined;
+	private _supportLineDash: boolean;
 	private _map: mapboxgl.Map;
 	private _container: HTMLElement;
 	private _rendered = false;
@@ -96,12 +105,24 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawBaseAdapter {
 	}
 
 	private _addLineLayer(id: string) {
+		const paint: { "line-dasharray"?: any[] } = {};
+		if (this._supportLineDash) {
+			paint["line-dasharray"] = [
+				"coalesce",
+				["get", "lineStringDash"],
+				["literal", []],
+			];
+		} else {
+			paint["line-dasharray"] = ["literal", [1, 1]];
+		}
+
 		const layer = this._map.addLayer({
 			id,
 			source: id,
 			type: "line",
 			// No need for filters as style is driven by properties
 			paint: {
+				...paint,
 				"line-width": ["get", "lineStringWidth"],
 				"line-color": ["get", "lineStringColor"],
 			},
@@ -173,12 +194,12 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawBaseAdapter {
 		polygons: boolean;
 		styling: boolean;
 	} = {
-		deletion: false,
-		points: false,
-		linestrings: false,
-		polygons: false,
-		styling: false,
-	};
+			deletion: false,
+			points: false,
+			linestrings: false,
+			polygons: false,
+			styling: false,
+		};
 
 	private updateChangedIds(changes: TerraDrawChanges) {
 		[...changes.updated, ...changes.created].forEach((feature) => {
@@ -330,6 +351,7 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawBaseAdapter {
 					properties.pointWidth = styles.pointWidth;
 					points.push(feature);
 				} else if (feature.geometry.type === "LineString") {
+					properties.lineStringDash = styles.lineStringDash || null;
 					properties.lineStringColor = styles.lineStringColor;
 					properties.lineStringWidth = styles.lineStringWidth;
 					linestrings.push(feature);

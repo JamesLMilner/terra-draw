@@ -139,11 +139,16 @@ export class TerraDrawLeafletAdapter extends TerraDrawBaseAdapter {
 				}
 
 				if (feature.geometry.type === "LineString") {
+					console.log(featureStyles.lineStringDash);
+
 					return {
 						interactive: false, // Removes mouse hover cursor styles
 						color: featureStyles.lineStringColor,
 						weight: featureStyles.lineStringWidth,
 						pane: paneId,
+						dashArray: featureStyles.lineStringDash
+							? `${featureStyles.lineStringDash[0]}%, ${featureStyles.lineStringDash[1]}%`
+							: undefined,
 					};
 				} else if (feature.geometry.type === "Polygon") {
 					return {

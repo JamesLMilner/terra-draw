@@ -19,12 +19,13 @@ export class TerraDrawMapLibreGLAdapter extends TerraDrawBaseAdapter {
 		// This may change over time and gives us a shell to allow for rewriting the internals
 		// of the adapter should the MapboxGL and MapbLibre APIs diverge in the instances where
 		// we rely on them.
-		this.mapboxglAdapter = new TerraDrawMapboxGLAdapter(
-			config as {
+		this.mapboxglAdapter = new TerraDrawMapboxGLAdapter({
+			...(config as {
 				map: any; //
 				coordinatePrecision: number;
-			},
-		);
+			}),
+			supportLineDash: false,
+		});
 	}
 
 	public register(callbacks: TerraDrawCallbacks): void {

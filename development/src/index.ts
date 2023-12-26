@@ -173,9 +173,8 @@ const getModes = () => {
 		}),
 		new TerraDrawPointMode(),
 		new TerraDrawLineStringMode({
-			insertCoordinates: {
-				strategy: "amount",
-				value: 10,
+			styles: {
+				lineStringDash: [1, 1],
 			},
 		}),
 		new TerraDrawPolygonMode({
@@ -205,10 +204,10 @@ const getModes = () => {
 };
 
 const currentSelected: { button: undefined | HTMLButtonElement; mode: string } =
-	{
-		button: undefined,
-		mode: "static",
-	};
+{
+	button: undefined,
+	mode: "static",
+};
 
 // Used by both Mapbox and MapLibre
 const OSMStyle = {

@@ -149,6 +149,7 @@ export class TerraDrawRenderMode extends TerraDrawBaseDrawMode<RenderModeStyling
 				defaultStyles.zIndex,
 				feature,
 			),
+			lineStringDash: undefined,
 		};
 	}
 

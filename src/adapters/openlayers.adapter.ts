@@ -128,10 +128,14 @@ export class TerraDrawOpenLayersAdapter extends TerraDrawBaseAdapter {
 					geometry: { type: "LineString", coordinates: [] },
 					properties,
 				});
+
+				const width = this.getMapEventElement().width;
+
 				return new this._lib.Style({
 					stroke: new this._lib.Stroke({
 						color: style.lineStringColor,
 						width: style.lineStringWidth,
+						lineDash: style.lineStringDash?.map((i) => (width / 100) * i), // Convert from % to pixel equivalent as OL does not support %
 					}),
 				});
 			},

@@ -141,6 +141,7 @@ describe("TerraDrawCircleMode", () => {
 				circleMode.register(mockConfig);
 				circleMode.start();
 			});
+
 			it("adds a circle to store if registered", () => {
 				circleMode.onClick({
 					lng: 0,
@@ -180,7 +181,7 @@ describe("TerraDrawCircleMode", () => {
 				features = store.copyAll();
 				expect(features.length).toBe(1);
 
-				expect(onChange).toBeCalledTimes(1);
+				expect(onChange).toBeCalledTimes(2);
 				expect(onChange).toBeCalledWith([expect.any(String)], "create");
 
 				expect(onFinish).toBeCalledTimes(1);

@@ -15,8 +15,5 @@
 		"exclude": ["src/geometry/**/*.ts", "src/test/**/*.ts", "src/util/**/*.ts"],
 		"out": "docs",
 		"skipErrorChecking": true
-		// "compilerOptions": {
-		//     "skipLibCheck": true
-		// }
 	}
 }

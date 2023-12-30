@@ -6,7 +6,8 @@
 		"docs": "typedoc",
 		"docs:serve": "serve ./docs",
 		"release": "standard-version",
-		"release:alpha:next": "ts-node --esm ./scripts/next-alpha-version.ts",
+		"release:alpha:changelog": "tsx ./scripts/changelog-valid.ts",
+		"release:alpha:next": "tsx ./scripts/next-alpha-version.ts",
 		"build": "microbundle",
 		"watch": "microbundle --watch --format modern",
 		"test": "jest --config jest.config.ts",
@@ -78,7 +79,7 @@
 		"standard-version": "^9.5.0",
 		"ts-jest": "^29.1.0",
 		"ts-loader": "^9.4.2",
-		"ts-node": "^10.9.1",
+		"tsx": "^4.7.0",
 		"typedoc": "^0.25.1",
 		"typescript": "^5.2.2"
 	},

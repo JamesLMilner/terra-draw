@@ -17,6 +17,12 @@ jobs:
           node-version: "18.x"
           registry-url: "https://registry.npmjs.org"
 
+      - name: Get previous commit
+        run: echo "LAST_COMMIT=$(echo $(git log -n 1))" >> $GITHUB_ENV 
+        
+      - name: Check previous commit is not a release
+        run: if [[ $LAST_COMMIT = *"chore(release):"* ]];  then echo "Last commit was a release!" && exit 1; fi
+
       - name: Install
         run: npm ci
 
@@ -39,6 +45,9 @@ jobs:
 
       - name: Release
         run: npm run release -- --prerelease --release-as $(echo ${{ env.NEXT }})
+
+      - name: Check changelog is correct
+        run: npm run release:alpha:changelog
 
       - name: Push upstream
         run: git push origin main --tags

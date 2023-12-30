@@ -53,6 +53,9 @@ jobs:
         run: npm run release:alpha:changelog
 
       - name: Push upstream
+        run: git push origin main
+
+      - name: Push tags upstream
         run: git push origin main --tags
 
       - run: npm publish

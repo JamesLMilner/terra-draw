@@ -5,14 +5,15 @@ import {
 	TerraDrawCallbacks,
 } from "../common";
 import { GeoJsonObject } from "geojson";
-import { TerraDrawBaseAdapter } from "./common/base.adapter";
+import { BaseAdapterConfig, TerraDrawBaseAdapter } from "./common/base.adapter";
 
 export class TerraDrawGoogleMapsAdapter extends TerraDrawBaseAdapter {
-	constructor(config: {
-		lib: typeof google.maps;
-		map: google.maps.Map;
-		coordinatePrecision?: number;
-	}) {
+	constructor(
+		config: {
+			lib: typeof google.maps;
+			map: google.maps.Map;
+		} & BaseAdapterConfig,
+	) {
 		super(config);
 		this._lib = config.lib;
 		this._map = config.map;

@@ -16,7 +16,7 @@ import VectorSource from "ol/source/Vector";
 import VectorLayer from "ol/layer/Vector";
 import { fromLonLat, toLonLat } from "ol/proj";
 import Geometry from "ol/geom/Geometry";
-import { TerraDrawBaseAdapter } from "./common/base.adapter";
+import { BaseAdapterConfig, TerraDrawBaseAdapter } from "./common/base.adapter";
 
 type InjectableOL = {
 	Circle: typeof CircleGeom;
@@ -31,11 +31,12 @@ type InjectableOL = {
 };
 
 export class TerraDrawOpenLayersAdapter extends TerraDrawBaseAdapter {
-	constructor(config: {
-		map: Map;
-		lib: InjectableOL;
-		coordinatePrecision?: number;
-	}) {
+	constructor(
+		config: {
+			map: Map;
+			lib: InjectableOL;
+		} & BaseAdapterConfig,
+	) {
 		super(config);
 
 		this._map = config.map;

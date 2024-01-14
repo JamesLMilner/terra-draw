@@ -5,15 +5,15 @@ import {
 } from "../common";
 import L from "leaflet";
 import { GeoJSONStoreFeatures } from "../store/store";
-import { TerraDrawBaseAdapter } from "./common/base.adapter";
+import { BaseAdapterConfig, TerraDrawBaseAdapter } from "./common/base.adapter";
 
 export class TerraDrawLeafletAdapter extends TerraDrawBaseAdapter {
-	constructor(config: {
-		lib: typeof L;
-		map: L.Map;
-		coordinatePrecision?: number;
-		minPixelDragDistance?: number;
-	}) {
+	constructor(
+		config: {
+			lib: typeof L;
+			map: L.Map;
+		} & BaseAdapterConfig,
+	) {
 		super(config);
 
 		this._lib = config.lib;

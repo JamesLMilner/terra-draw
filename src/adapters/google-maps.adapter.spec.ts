@@ -73,6 +73,10 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 					})),
 				} as any,
 				map: createMockGoogleMap(),
+				minPixelDragDistance: 1,
+				minPixelDragDistanceSelecting: 8,
+				minPixelDragDistanceDrawing: 8,
+				coordinatePrecision: 9,
 			});
 
 			expect(adapter).toBeDefined();

@@ -49,6 +49,10 @@ describe("TerraDrawMapboxGLAdapter", () => {
 		it("instantiates the adapter correctly", () => {
 			const adapter = new TerraDrawMapboxGLAdapter({
 				map: createMapboxGLMap() as mapboxgl.Map,
+				minPixelDragDistance: 1,
+				minPixelDragDistanceSelecting: 8,
+				minPixelDragDistanceDrawing: 8,
+				coordinatePrecision: 9,
 			});
 
 			expect(adapter).toBeDefined();

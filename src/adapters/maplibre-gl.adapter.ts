@@ -6,12 +6,12 @@ import {
 } from "../common";
 import { Map } from "maplibre-gl";
 import { TerraDrawMapboxGLAdapter } from "./mapbox-gl.adapter";
-import { TerraDrawBaseAdapter } from "./common/base.adapter";
+import { BaseAdapterConfig, TerraDrawBaseAdapter } from "./common/base.adapter";
 
 export class TerraDrawMapLibreGLAdapter extends TerraDrawBaseAdapter {
 	private mapboxglAdapter: TerraDrawMapboxGLAdapter;
 
-	constructor(config: { map: Map; coordinatePrecision?: number }) {
+	constructor(config: { map: Map } & BaseAdapterConfig) {
 		super(config);
 
 		// At the moment the APIs of MapboxGL and MapLibre are so compatible that

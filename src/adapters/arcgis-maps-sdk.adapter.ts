@@ -4,7 +4,7 @@ import {
 	TerraDrawChanges,
 	TerraDrawStylingFunction,
 } from "../common";
-import { TerraDrawBaseAdapter } from "./common/base.adapter";
+import { BaseAdapterConfig, TerraDrawBaseAdapter } from "./common/base.adapter";
 import MapView from "@arcgis/core/views/MapView";
 import Point from "@arcgis/core/geometry/Point";
 import Polyline from "@arcgis/core/geometry/Polyline";
@@ -44,11 +44,12 @@ export class TerraDrawArcGISMapsSDKAdapter extends TerraDrawBaseAdapter {
 	private _dragHandler: undefined | IHandle;
 	private _doubleClickHandler: undefined | IHandle;
 
-	constructor(config: {
-		map: MapView;
-		lib: InjectableArcGISMapsSDK;
-		coordinatePrecision?: number;
-	}) {
+	constructor(
+		config: {
+			map: MapView;
+			lib: InjectableArcGISMapsSDK;
+		} & BaseAdapterConfig,
+	) {
 		super(config);
 
 		this._mapView = config.map;

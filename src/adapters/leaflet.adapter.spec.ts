@@ -52,6 +52,10 @@ describe("TerraDrawLeafletAdapter", () => {
 					geoJSON: jest.fn(),
 				} as any,
 				map: createLeafletMap() as L.Map,
+				minPixelDragDistance: 1,
+				minPixelDragDistanceSelecting: 8,
+				minPixelDragDistanceDrawing: 8,
+				coordinatePrecision: 9,
 			});
 
 			expect(adapter).toBeDefined();

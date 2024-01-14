@@ -16,13 +16,15 @@ type BasePointerListener = (event: PointerEvent) => void;
 type BaseKeyboardListener = (event: KeyboardEvent) => void;
 type BaseMouseListener = (event: MouseEvent) => void;
 
+export type BaseAdapterConfig = {
+	coordinatePrecision?: number;
+	minPixelDragDistanceDrawing?: number;
+	minPixelDragDistance?: number;
+	minPixelDragDistanceSelecting?: number;
+};
+
 export abstract class TerraDrawBaseAdapter {
-	constructor(config: {
-		coordinatePrecision?: number;
-		minPixelDragDistanceDrawing?: number;
-		minPixelDragDistance?: number;
-		minPixelDragDistanceSelecting?: number;
-	}) {
+	constructor(config: BaseAdapterConfig) {
 		this._minPixelDragDistance =
 			typeof config.minPixelDragDistance === "number"
 				? config.minPixelDragDistance

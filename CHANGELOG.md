@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.1-alpha.54](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.53...v0.0.1-alpha.54) (2024-01-15)
+
+
+### Bug Fixes
+
+* ensure that base config parameters can be configured for adapters ([#170](https://github.com/JamesLMilner/terra-draw/issues/170)) ([8e1775b](https://github.com/JamesLMilner/terra-draw/commit/8e1775b4611b699f42327d21d7d9aa9e136ee651))
+
+
+### Documentation
+
+* add GitHub pull request template for the repository ([#161](https://github.com/JamesLMilner/terra-draw/issues/161)) ([6b62cec](https://github.com/JamesLMilner/terra-draw/commit/6b62cecfa04aad460a5c3c1e4fd9950d365e9505))
+
 ### [0.0.1-alpha.53](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.51...v0.0.1-alpha.53) (2023-12-30)
 
 

@@ -6,6 +6,7 @@ import {
 } from "../common";
 import { GeoJsonObject } from "geojson";
 import { BaseAdapterConfig, TerraDrawBaseAdapter } from "./common/base.adapter";
+import { FeatureId } from "../store/store";
 
 export class TerraDrawGoogleMapsAdapter extends TerraDrawBaseAdapter {
 	constructor(
@@ -256,7 +257,7 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawBaseAdapter {
 		this._map.setOptions({ draggable: enabled });
 	}
 
-	private renderedFeatureIds: Set<string> = new Set();
+	private renderedFeatureIds: Set<FeatureId> = new Set();
 
 	/**
 	 * Renders GeoJSON features on the map using the provided styling configuration.

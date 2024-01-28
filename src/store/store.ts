@@ -24,44 +24,61 @@ export type GeoJSONStoreFeatures = Feature<
 export type StoreChangeEvents = "delete" | "create" | "update" | "styling";
 
 export type StoreChangeHandler = (
-	ids: string[],
+	ids: FeatureId[],
 	change: StoreChangeEvents,
 ) => void;
 
-export type GeoJSONStoreConfig = {
+export type FeatureId = string | number;
+
+export type IdStrategy<Id extends FeatureId> = {
+	isValidId: (id: Id) => boolean;
+	getId: () => Id;
+};
+
+export type GeoJSONStoreConfig<Id extends FeatureId> = {
+	idStrategy?: IdStrategy<Id>;
 	tracked?: boolean;
 };
 
-export class GeoJSONStore {
-	constructor(config?: GeoJSONStoreConfig) {
+export const defaultIdStrategy = {
+	getId: <FeatureId>() => uuid4() as FeatureId,
+	isValidId: (id: FeatureId) => typeof id === "string" && id.length === 36,
+};
+
+export class GeoJSONStore<Id extends FeatureId = FeatureId> {
+	constructor(config?: GeoJSONStoreConfig<Id>) {
 		this.store = {};
 		this.spatialIndex = new SpatialIndex();
 
 		// Setting tracked has to happen first
 		// because we use it in featureValidation
 		this.tracked = config && config.tracked === false ? false : true;
+		this.idStrategy =
+			config && config.idStrategy ? config.idStrategy : defaultIdStrategy;
 	}
+
+	public idStrategy: IdStrategy<Id>;
 
 	private tracked: boolean;
 
 	private spatialIndex: SpatialIndex;
 
 	private store: {
-		[key: string]: GeoJSONStoreFeatures;
+		[key: FeatureId]: GeoJSONStoreFeatures;
 	};
 
 	// Default to no-op
 	private _onChange: StoreChangeHandler = () => {};
 
-	private getId(): string {
-		return uuid4();
-	}
-
 	private clone<T>(obj: T): T {
 		return JSON.parse(JSON.stringify(obj));
 	}
 
-	has(id: string): boolean {
+	getId(): FeatureId {
+		return this.idStrategy.getId();
+	}
+
+	has(id: FeatureId): boolean {
 		return Boolean(this.store[id]);
 	}
 
@@ -79,8 +96,8 @@ export class GeoJSONStore {
 		// We try to be a bit forgiving here as many users
 		// may not set a feature id as UUID or createdAt/updatedAt
 		clonedData.forEach((feature) => {
-			if (!feature.id) {
-				feature.id = uuid4();
+			if (feature.id === undefined || feature.id === null) {
+				feature.id = this.idStrategy.getId();
 			}
 
 			if (this.tracked) {
@@ -98,8 +115,9 @@ export class GeoJSONStore {
 			}
 		});
 
-		const changes: string[] = [];
+		const changes: FeatureId[] = [];
 		clonedData.forEach((feature) => {
+			const id = feature.id as FeatureId;
 			if (featureValidation) {
 				const isValid = featureValidation(feature);
 
@@ -107,12 +125,18 @@ export class GeoJSONStore {
 				// does not throw something more specific itself
 				if (!isValid) {
 					throw new Error(
-						`Feature is not ${feature.id} valid: ${JSON.stringify(feature)}`,
+						`Feature is not ${id} valid: ${JSON.stringify(feature)}`,
 					);
 				}
 			}
-			this.store[feature.id as string] = feature;
-			changes.push(feature.id as string);
+
+			// We have to be sure that the feature does not already exist with this ID
+			if (this.has(id)) {
+				throw new Error(`Feature already exists with this id: ${id}`);
+			}
+
+			this.store[id] = feature;
+			changes.push(id);
 		});
 		this.spatialIndex.load(clonedData);
 		this._onChange(changes, "create");
@@ -136,7 +160,7 @@ export class GeoJSONStore {
 		};
 	}
 
-	getGeometryCopy<T extends GeoJSONStoreGeometries>(id: string): T {
+	getGeometryCopy<T extends GeoJSONStoreGeometries>(id: FeatureId): T {
 		const feature = this.store[id];
 		if (!feature) {
 			throw new Error(
@@ -146,7 +170,7 @@ export class GeoJSONStore {
 		return this.clone(feature.geometry as T);
 	}
 
-	getPropertiesCopy(id: string) {
+	getPropertiesCopy(id: FeatureId) {
 		const feature = this.store[id];
 		if (!feature) {
 			throw new Error(
@@ -157,9 +181,9 @@ export class GeoJSONStore {
 	}
 
 	updateProperty(
-		propertiesToUpdate: { id: string; property: string; value: JSON }[],
+		propertiesToUpdate: { id: FeatureId; property: string; value: JSON }[],
 	): void {
-		const ids: string[] = [];
+		const ids: FeatureId[] = [];
 		propertiesToUpdate.forEach(({ id, property, value }) => {
 			const feature = this.store[id];
 
@@ -185,9 +209,9 @@ export class GeoJSONStore {
 	}
 
 	updateGeometry(
-		geometriesToUpdate: { id: string; geometry: GeoJSONStoreGeometries }[],
+		geometriesToUpdate: { id: FeatureId; geometry: GeoJSONStoreGeometries }[],
 	): void {
-		const ids: string[] = [];
+		const ids: FeatureId[] = [];
 		geometriesToUpdate.forEach(({ id, geometry }) => {
 			ids.push(id);
 
@@ -214,13 +238,13 @@ export class GeoJSONStore {
 		}
 	}
 
-	create(
+	create<Id extends FeatureId>(
 		features: {
 			geometry: GeoJSONStoreGeometries;
 			properties?: JSONObject;
 		}[],
-	): string[] {
-		const ids: string[] = [];
+	): Id[] {
+		const ids: FeatureId[] = [];
 		features.forEach(({ geometry, properties }) => {
 			let createdAt;
 			let createdProperties = { ...properties };
@@ -260,14 +284,14 @@ export class GeoJSONStore {
 			this._onChange([...ids], "create");
 		}
 
-		return ids;
+		return ids as Id[];
 	}
 
-	delete(ids: string[]): void {
+	delete(ids: FeatureId[]): void {
 		ids.forEach((id) => {
 			if (this.store[id]) {
 				delete this.store[id];
-				this.spatialIndex.remove(id as string);
+				this.spatialIndex.remove(id as FeatureId);
 			} else {
 				throw new Error("No feature with this id, can not delete");
 			}

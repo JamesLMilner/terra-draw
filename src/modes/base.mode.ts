@@ -10,6 +10,7 @@ import {
 	TerraDrawMouseEvent,
 } from "../common";
 import {
+	FeatureId,
 	GeoJSONStore,
 	GeoJSONStoreFeatures,
 	StoreChangeHandler,
@@ -143,7 +144,7 @@ export abstract class TerraDrawBaseDrawMode<T extends CustomStyling> {
 			throw new Error("Mode must be registered");
 		}
 
-		return isValidStoreFeature(feature);
+		return isValidStoreFeature(feature, this.store.idStrategy.isValidId);
 	}
 
 	abstract start(): void;
@@ -151,9 +152,9 @@ export abstract class TerraDrawBaseDrawMode<T extends CustomStyling> {
 	abstract cleanUp(): void;
 	abstract styleFeature(feature: GeoJSONStoreFeatures): TerraDrawAdapterStyling;
 
-	onFinish(finishedId: string) {}
-	onDeselect(deselectedId: string) {}
-	onSelect(selectedId: string) {}
+	onFinish(finishedId: FeatureId) {}
+	onDeselect(deselectedId: FeatureId) {}
+	onSelect(selectedId: FeatureId) {}
 	onKeyDown(event: TerraDrawKeyboardEvent) {}
 	onKeyUp(event: TerraDrawKeyboardEvent) {}
 	onMouseMove(event: TerraDrawMouseEvent) {}

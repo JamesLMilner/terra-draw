@@ -6,6 +6,7 @@ import { PixelDistanceBehavior } from "../../pixel-distance.behavior";
 import { MidPointBehavior } from "./midpoint.behavior";
 import { SelectionPointBehavior } from "./selection-point.behavior";
 import { selfIntersects } from "../../../geometry/boolean/self-intersects";
+import { FeatureId } from "../../../store/store";
 
 export class DragCoordinateBehavior extends TerraDrawModeBehavior {
 	constructor(
@@ -17,7 +18,7 @@ export class DragCoordinateBehavior extends TerraDrawModeBehavior {
 		super(config);
 	}
 
-	private draggedCoordinate: { id: null | string; index: number } = {
+	private draggedCoordinate: { id: null | FeatureId; index: number } = {
 		id: null,
 		index: -1,
 	};
@@ -72,7 +73,7 @@ export class DragCoordinateBehavior extends TerraDrawModeBehavior {
 
 	public getDraggableIndex(
 		event: TerraDrawMouseEvent,
-		selectedId: string,
+		selectedId: FeatureId,
 	): number {
 		const geometry = this.store.getGeometryCopy(selectedId);
 		const closestCoordinate = this.getClosestCoordinate(event, geometry);
@@ -171,7 +172,7 @@ export class DragCoordinateBehavior extends TerraDrawModeBehavior {
 		return this.draggedCoordinate.id !== null;
 	}
 
-	startDragging(id: string, index: number) {
+	startDragging(id: FeatureId, index: number) {
 		this.draggedCoordinate = {
 			id,
 			index,

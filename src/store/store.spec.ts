@@ -6,7 +6,7 @@ describe("GeoJSONStore", () => {
 		it("Point", () => {
 			const store = new GeoJSONStore();
 
-			const [id] = store.create([
+			const [id] = store.create<string>([
 				{ geometry: { type: "Point", coordinates: [0, 0] } },
 			]);
 
@@ -16,7 +16,7 @@ describe("GeoJSONStore", () => {
 		it("LineString", () => {
 			const store = new GeoJSONStore();
 
-			const [id] = store.create([
+			const [id] = store.create<string>([
 				{
 					geometry: {
 						type: "LineString",
@@ -35,7 +35,7 @@ describe("GeoJSONStore", () => {
 		it("Polygon", () => {
 			const store = new GeoJSONStore();
 
-			const [id] = store.create([
+			const [id] = store.create<string>([
 				{
 					geometry: {
 						type: "Polygon",
@@ -66,7 +66,7 @@ describe("GeoJSONStore", () => {
 		it("returns true for existing store feature", () => {
 			const store = new GeoJSONStore();
 
-			const [id] = store.create([
+			const [id] = store.create<string>([
 				{ geometry: { type: "Point", coordinates: [0, 0] } },
 			]);
 
@@ -78,7 +78,7 @@ describe("GeoJSONStore", () => {
 		it("removes geometry from the store", () => {
 			const store = new GeoJSONStore();
 
-			const ids = store.create([
+			const ids = store.create<string>([
 				{ geometry: { type: "Point", coordinates: [0, 0] } },
 			]);
 
@@ -107,7 +107,9 @@ describe("GeoJSONStore", () => {
 		it("gets size one after feature added", () => {
 			const store = new GeoJSONStore();
 
-			store.create([{ geometry: { type: "Point", coordinates: [0, 0] } }]);
+			store.create<string>([
+				{ geometry: { type: "Point", coordinates: [0, 0] } },
+			]);
 
 			expect(store.size()).toBe(1);
 		});
@@ -117,7 +119,7 @@ describe("GeoJSONStore", () => {
 		it("removes all data from store", () => {
 			const store = new GeoJSONStore();
 
-			const ids = store.create([
+			const ids = store.create<string>([
 				{ geometry: { type: "Point", coordinates: [0, 0] } },
 			]);
 
@@ -135,7 +137,7 @@ describe("GeoJSONStore", () => {
 		it("copy existing geometry", () => {
 			const store = new GeoJSONStore();
 
-			const ids = store.create([
+			const ids = store.create<string>([
 				{ geometry: { type: "Point", coordinates: [0, 0] } },
 			]);
 
@@ -158,7 +160,7 @@ describe("GeoJSONStore", () => {
 		it("copy existing properties", () => {
 			const store = new GeoJSONStore();
 
-			const ids = store.create([
+			const ids = store.create<string>([
 				{
 					geometry: { type: "Point", coordinates: [0, 0] },
 					properties: { mode: "test" },
@@ -175,7 +177,7 @@ describe("GeoJSONStore", () => {
 		it("do not expect createdAt and updatedAt in returned properties if flag is disabled", () => {
 			const store = new GeoJSONStore({ tracked: false });
 
-			const ids = store.create([
+			const ids = store.create<string>([
 				{
 					geometry: { type: "Point", coordinates: [0, 0] },
 					properties: { mode: "test" },
@@ -191,7 +193,7 @@ describe("GeoJSONStore", () => {
 			const store = new GeoJSONStore();
 
 			const createdAt = +new Date();
-			const ids = store.create([
+			const ids = store.create<string>([
 				{
 					geometry: { type: "Point", coordinates: [0, 0] },
 					properties: {
@@ -222,7 +224,7 @@ describe("GeoJSONStore", () => {
 		it("updates geometry", () => {
 			const store = new GeoJSONStore();
 
-			const [id] = store.create([
+			const [id] = store.create<string>([
 				{ geometry: { type: "Point", coordinates: [0, 0] } },
 			]);
 
@@ -257,7 +259,7 @@ describe("GeoJSONStore", () => {
 		it("updates geometry", () => {
 			const store = new GeoJSONStore();
 
-			const [id] = store.create([
+			const [id] = store.create<string>([
 				{ geometry: { type: "Point", coordinates: [0, 0] } },
 			]);
 
@@ -288,7 +290,7 @@ describe("GeoJSONStore", () => {
 			const mockCallback = jest.fn();
 			store.registerOnChange(mockCallback);
 
-			const [id] = store.create([
+			const [id] = store.create<string>([
 				{ geometry: { type: "Point", coordinates: [0, 0] } },
 			]);
 
@@ -308,7 +310,7 @@ describe("GeoJSONStore", () => {
 		it("deletes feature", () => {
 			const store = new GeoJSONStore();
 
-			const [id] = store.create([
+			const [id] = store.create<string>([
 				{ geometry: { type: "Point", coordinates: [0, 0] } },
 			]);
 			store.delete([id]);
@@ -445,10 +447,10 @@ describe("GeoJSONStore", () => {
 			const mockCallback = jest.fn();
 			store.registerOnChange(mockCallback);
 
-			const [one] = store.create([
+			const [one] = store.create<string>([
 				{ geometry: { type: "Point", coordinates: [0, 0] } },
 			]);
-			const [two] = store.create([
+			const [two] = store.create<string>([
 				{ geometry: { type: "Point", coordinates: [1, 1] } },
 			]);
 

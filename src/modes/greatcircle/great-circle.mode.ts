@@ -14,7 +14,7 @@ import {
 } from "../base.mode";
 import { BehaviorConfig } from "../base.behavior";
 import { getDefaultStyling } from "../../util/styling";
-import { GeoJSONStoreFeatures } from "../../store/store";
+import { FeatureId, GeoJSONStoreFeatures } from "../../store/store";
 import { greatCircleLine } from "../../geometry/shape/great-circle-line";
 import { GreatCircleSnappingBehavior } from "../great-circle-snapping.behavior";
 import { PixelDistanceBehavior } from "../pixel-distance.behavior";
@@ -51,8 +51,8 @@ export class TerraDrawGreatCircleMode extends TerraDrawBaseDrawMode<GreateCircle
 	mode = "greatcircle";
 
 	private currentCoordinate = 0;
-	private currentId: string | undefined;
-	private closingPointId: string | undefined;
+	private currentId: FeatureId | undefined;
+	private closingPointId: FeatureId | undefined;
 	private keyEvents: TerraDrawGreateCircleModeKeyEvents;
 	private snappingEnabled: boolean;
 	private cursors: Required<Cursors>;
@@ -91,7 +91,7 @@ export class TerraDrawGreatCircleMode extends TerraDrawBaseDrawMode<GreateCircle
 	}
 
 	private close() {
-		if (!this.currentId) {
+		if (this.currentId === undefined) {
 			return;
 		}
 
@@ -137,7 +137,7 @@ export class TerraDrawGreatCircleMode extends TerraDrawBaseDrawMode<GreateCircle
 	onMouseMove(event: TerraDrawMouseEvent) {
 		this.setCursor(this.cursors.start);
 
-		if (!this.currentId && this.currentCoordinate === 0) {
+		if (this.currentId === undefined && this.currentCoordinate === 0) {
 			return;
 		} else if (
 			this.currentId &&

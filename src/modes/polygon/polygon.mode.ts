@@ -21,7 +21,7 @@ import { SnappingBehavior } from "../snapping.behavior";
 import { coordinatesIdentical } from "../../geometry/coordinates-identical";
 import { ClosingPointsBehavior } from "./behaviors/closing-points.behavior";
 import { getDefaultStyling } from "../../util/styling";
-import { GeoJSONStoreFeatures } from "../../store/store";
+import { FeatureId, GeoJSONStoreFeatures } from "../../store/store";
 import { isValidPolygonFeature } from "../../geometry/boolean/is-valid-polygon-feature";
 
 type TerraDrawPolygonModeKeyEvents = {
@@ -58,7 +58,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 	mode = "polygon";
 
 	private currentCoordinate = 0;
-	private currentId: string | undefined;
+	private currentId: FeatureId | undefined;
 	private allowSelfIntersections: boolean;
 	private keyEvents: TerraDrawPolygonModeKeyEvents;
 	private snappingEnabled: boolean;
@@ -106,7 +106,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 	}
 
 	private close() {
-		if (!this.currentId) {
+		if (this.currentId === undefined) {
 			return;
 		}
 
@@ -179,7 +179,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 		this.mouseMove = true;
 		this.setCursor(this.cursors.start);
 
-		if (!this.currentId || this.currentCoordinate === 0) {
+		if (this.currentId === undefined || this.currentCoordinate === 0) {
 			return;
 		}
 

@@ -5,6 +5,7 @@ import { Position } from "geojson";
 import { SelectionPointBehavior } from "./selection-point.behavior";
 import { MidPointBehavior } from "./midpoint.behavior";
 import { limitPrecision } from "../../../geometry/limit-decimal-precision";
+import { FeatureId } from "../../../store/store";
 
 export class DragFeatureBehavior extends TerraDrawModeBehavior {
 	constructor(
@@ -16,11 +17,11 @@ export class DragFeatureBehavior extends TerraDrawModeBehavior {
 		super(config);
 	}
 
-	private draggedFeatureId: string | null = null;
+	private draggedFeatureId: FeatureId | null = null;
 
 	private dragPosition: Position | undefined;
 
-	startDragging(event: TerraDrawMouseEvent, id: string) {
+	startDragging(event: TerraDrawMouseEvent, id: FeatureId) {
 		this.draggedFeatureId = id;
 		this.dragPosition = [event.lng, event.lat];
 	}
@@ -34,7 +35,7 @@ export class DragFeatureBehavior extends TerraDrawModeBehavior {
 		return this.draggedFeatureId !== null;
 	}
 
-	canDrag(event: TerraDrawMouseEvent, selectedId: string) {
+	canDrag(event: TerraDrawMouseEvent, selectedId: FeatureId) {
 		const { clickedFeature } = this.featuresAtMouseEvent.find(event, true);
 
 		// If the cursor is not over the selected

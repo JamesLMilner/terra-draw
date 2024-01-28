@@ -2,7 +2,7 @@ import { BehaviorConfig, TerraDrawModeBehavior } from "./base.behavior";
 import { TerraDrawMouseEvent } from "../common";
 import { Feature, Position } from "geojson";
 import { ClickBoundingBoxBehavior } from "./click-bounding-box.behavior";
-import { BBoxPolygon } from "../store/store";
+import { BBoxPolygon, FeatureId } from "../store/store";
 import { PixelDistanceBehavior } from "./pixel-distance.behavior";
 
 export class GreatCircleSnappingBehavior extends TerraDrawModeBehavior {
@@ -16,7 +16,7 @@ export class GreatCircleSnappingBehavior extends TerraDrawModeBehavior {
 
 	public getSnappableCoordinate = (
 		event: TerraDrawMouseEvent,
-		currentFeatureId?: string,
+		currentFeatureId?: FeatureId,
 	) => {
 		return this.getSnappableEnds(event, (feature) => {
 			return Boolean(

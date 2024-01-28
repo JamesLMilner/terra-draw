@@ -24,7 +24,7 @@ import { DragCoordinateBehavior } from "./behaviors/drag-coordinate.behavior";
 import { BehaviorConfig } from "../base.behavior";
 import { RotateFeatureBehavior } from "./behaviors/rotate-feature.behavior";
 import { ScaleFeatureBehavior } from "./behaviors/scale-feature.behavior";
-import { GeoJSONStoreFeatures } from "../../store/store";
+import { FeatureId, GeoJSONStoreFeatures } from "../../store/store";
 import { getDefaultStyling } from "../../util/styling";
 
 type TerraDrawSelectModeKeyEvents = {
@@ -251,7 +251,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode<SelectionStyling>
 
 		let clickedFeatureDistance = Infinity;
 
-		this.selectionPoints.ids.forEach((id: string) => {
+		this.selectionPoints.ids.forEach((id) => {
 			const geometry = this.store.getGeometryCopy<Point>(id);
 			const distance = this.pixelDistance.measure(event, geometry.coordinates);
 
@@ -706,7 +706,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode<SelectionStyling>
 		let nearbySelectionPoint = false;
 		// TODO: Is there a cleaner way to handle prioritising
 		// dragging selection points?
-		this.selectionPoints.ids.forEach((id: string) => {
+		this.selectionPoints.ids.forEach((id: FeatureId) => {
 			const geometry = this.store.getGeometryCopy<Point>(id);
 			const distance = this.pixelDistance.measure(event, geometry.coordinates);
 			if (distance < this.pointerDistance) {

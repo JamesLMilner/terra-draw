@@ -32,8 +32,10 @@ import { TerraDrawSelectMode } from "./modes/select/select.mode";
 import { TerraDrawStaticMode } from "./modes/static/static.mode";
 import {
 	BBoxPolygon,
+	FeatureId,
 	GeoJSONStore,
 	GeoJSONStoreFeatures,
+	IdStrategy,
 	StoreChangeHandler,
 } from "./store/store";
 import { BehaviorConfig } from "./modes/base.behavior";
@@ -43,9 +45,9 @@ import { Position } from "geojson";
 import { pointInPolygon } from "./geometry/boolean/point-in-polygon";
 import { createBBoxFromPoint } from "./geometry/shape/create-bbox";
 
-type FinishListener = (ids: string) => void;
-type ChangeListener = (ids: string[], type: string) => void;
-type SelectListener = (id: string) => void;
+type FinishListener = (ids: FeatureId) => void;
+type ChangeListener = (ids: FeatureId[], type: string) => void;
+type SelectListener = (id: FeatureId) => void;
 type DeselectListener = () => void;
 
 interface TerraDrawEventListeners {
@@ -76,6 +78,8 @@ class TerraDraw {
 	constructor(options: {
 		adapter: TerraDrawAdapter;
 		modes: TerraDrawBaseDrawMode<any>[];
+		idStrategy?: IdStrategy<FeatureId>;
+		tracked?: boolean;
 	}) {
 		this._adapter = options.adapter;
 
@@ -118,10 +122,13 @@ class TerraDraw {
 
 		this._modes = { ...modesMap, static: this._mode };
 		this._eventListeners = { change: [], select: [], deselect: [], finish: [] };
-		this._store = new GeoJSONStore();
+		this._store = new GeoJSONStore<FeatureId>({
+			tracked: options.tracked ? true : false,
+			idStrategy: options.idStrategy ? options.idStrategy : undefined,
+		});
 
 		const getChanged = (
-			ids: string[],
+			ids: FeatureId[],
 		): {
 			changed: GeoJSONStoreFeatures[];
 			unchanged: GeoJSONStoreFeatures[];
@@ -140,7 +147,7 @@ class TerraDraw {
 			return { changed, unchanged };
 		};
 
-		const onFinish = (finishedId: string) => {
+		const onFinish = (finishedId: FeatureId) => {
 			if (!this._enabled) {
 				return;
 			}
@@ -480,9 +487,31 @@ class TerraDraw {
 	 *
 	 * @alpha
 	 */
-	removeFeatures(ids: string[]) {
+	removeFeatures(ids: FeatureId[]) {
 		this.checkEnabled();
 		this._store.delete(ids);
+	}
+
+	/**
+	 * Returns the next feature id from the store - defaults to UUID4 unless you have
+	 * set a custom idStrategy. This method can be useful if you are needing creating features
+	 * outside of the Terra Draw instance but want to add them in to the store.
+	 * @returns a id, either number of string based on whatever the configured idStrategy is
+	 *
+	 * @alpha
+	 */
+	getFeatureId(): FeatureId {
+		return this._store.getId();
+	}
+
+	/**
+	 * Returns true or false depending on if the Terra Draw instance has a feature with a given id
+	 * @returns a boolean determining if the instance has a feature with the given id
+	 *
+	 * @alpha
+	 */
+	hasFeature(id: FeatureId): boolean {
+		return this._store.has(id);
 	}
 
 	/**

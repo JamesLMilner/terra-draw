@@ -1,24 +1,25 @@
 import { LineString, Point, Polygon, Position } from "geojson";
 import { BehaviorConfig, TerraDrawModeBehavior } from "../../base.behavior";
 import { getCoordinatesAsPoints } from "../../../geometry/get-coordinates-as-points";
+import { FeatureId } from "../../../store/store";
 
 export class SelectionPointBehavior extends TerraDrawModeBehavior {
 	constructor(config: BehaviorConfig) {
 		super(config);
 	}
 
-	private _selectionPoints: string[] = [];
+	private _selectionPoints: FeatureId[] = [];
 
 	get ids() {
 		return this._selectionPoints.concat();
 	}
 
-	set ids(_: string[]) {}
+	set ids(_: FeatureId[]) {}
 
 	public create(
 		selectedCoords: Position[],
 		type: Polygon["type"] | LineString["type"],
-		featureId: string,
+		featureId: FeatureId,
 	) {
 		this._selectionPoints = this.store.create(
 			getCoordinatesAsPoints(selectedCoords, type, (i) => ({

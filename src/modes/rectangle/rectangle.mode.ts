@@ -7,7 +7,7 @@ import {
 	NumericStyling,
 	Cursor,
 } from "../../common";
-import { GeoJSONStoreFeatures } from "../../store/store";
+import { FeatureId, GeoJSONStoreFeatures } from "../../store/store";
 import { getDefaultStyling } from "../../util/styling";
 import {
 	BaseModeOptions,
@@ -42,7 +42,7 @@ export class TerraDrawRectangleMode extends TerraDrawBaseDrawMode<RectanglePolyg
 	mode = "rectangle";
 	private center: Position | undefined;
 	private clickCount = 0;
-	private currentRectangleId: string | undefined;
+	private currentRectangleId: FeatureId | undefined;
 	private keyEvents: TerraDrawRectangleModeKeyEvents;
 	private cursors: Required<Cursors>;
 

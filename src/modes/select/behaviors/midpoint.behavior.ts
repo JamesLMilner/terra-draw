@@ -6,6 +6,7 @@ import {
 } from "../../../geometry/get-midpoints";
 import { SelectionPointBehavior } from "./selection-point.behavior";
 import { SELECT_PROPERTIES } from "../../../common";
+import { FeatureId } from "../../../store/store";
 
 export class MidPointBehavior extends TerraDrawModeBehavior {
 	constructor(
@@ -74,7 +75,7 @@ export class MidPointBehavior extends TerraDrawModeBehavior {
 
 	public create(
 		selectedCoords: Position[],
-		featureId: string,
+		featureId: FeatureId,
 		coordinatePrecision: number,
 	) {
 		if (!this.store.has(featureId)) {

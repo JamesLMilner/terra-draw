@@ -9,7 +9,7 @@ import {
 } from "../../common";
 import { haversineDistanceKilometers } from "../../geometry/measure/haversine-distance";
 import { circle } from "../../geometry/shape/create-circle";
-import { GeoJSONStoreFeatures } from "../../store/store";
+import { FeatureId, GeoJSONStoreFeatures } from "../../store/store";
 import { getDefaultStyling } from "../../util/styling";
 import {
 	BaseModeOptions,
@@ -44,7 +44,7 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 	mode = "circle";
 	private center: Position | undefined;
 	private clickCount = 0;
-	private currentCircleId: string | undefined;
+	private currentCircleId: FeatureId | undefined;
 	private keyEvents: TerraDrawCircleModeKeyEvents;
 	private cursors: Required<Cursors>;
 
@@ -75,7 +75,7 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 	}
 
 	private close() {
-		if (!this.currentCircleId) {
+		if (this.currentCircleId === undefined) {
 			return;
 		}
 
@@ -128,7 +128,11 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 			this.clickCount++;
 			this.setDrawing();
 		} else {
-			if (this.clickCount === 1 && this.center && this.currentCircleId) {
+			if (
+				this.clickCount === 1 &&
+				this.center &&
+				this.currentCircleId !== undefined
+			) {
 				this.createCircle(event);
 			}
 
@@ -166,7 +170,7 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 	/** @internal */
 	cleanUp() {
 		try {
-			if (this.currentCircleId) {
+			if (this.currentCircleId !== undefined) {
 				this.store.delete([this.currentCircleId]);
 			}
 		} catch (error) {}

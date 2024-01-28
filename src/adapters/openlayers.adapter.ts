@@ -3,7 +3,7 @@ import {
 	SetCursor,
 	TerraDrawStylingFunction,
 } from "../common";
-import { GeoJSONStoreFeatures } from "../store/store";
+import { FeatureId, GeoJSONStoreFeatures } from "../store/store";
 import CircleGeom from "ol/geom/Circle";
 import Feature, { FeatureLike } from "ol/Feature";
 import GeoJSON from "ol/format/GeoJSON";
@@ -176,7 +176,7 @@ export class TerraDrawOpenLayersAdapter extends TerraDrawBaseAdapter {
 		}
 	}
 
-	private removeFeature(id: string) {
+	private removeFeature(id: FeatureId) {
 		if (this._vectorSource) {
 			const deleted = this._vectorSource.getFeatureById(id);
 			if (!deleted) {

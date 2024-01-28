@@ -2,6 +2,7 @@ import {
 	StoreChangeHandler,
 	GeoJSONStore,
 	GeoJSONStoreFeatures,
+	FeatureId,
 } from "./store/store";
 
 export type HexColor = `#${string}`;
@@ -119,7 +120,7 @@ export interface TerraDrawChanges {
 	created: GeoJSONStoreFeatures[];
 	updated: GeoJSONStoreFeatures[];
 	unchanged: GeoJSONStoreFeatures[];
-	deletedIds: string[];
+	deletedIds: FeatureId[];
 }
 
 export type TerraDrawStylingFunction = {

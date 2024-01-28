@@ -7,6 +7,7 @@ import { centroid } from "../../../geometry/centroid";
 import { haversineDistanceKilometers } from "../../../geometry/measure/haversine-distance";
 import { transformScale } from "../../../geometry/transform/scale";
 import { limitPrecision } from "../../../geometry/limit-decimal-precision";
+import { FeatureId } from "../../../store/store";
 
 export class ScaleFeatureBehavior extends TerraDrawModeBehavior {
 	constructor(
@@ -23,7 +24,7 @@ export class ScaleFeatureBehavior extends TerraDrawModeBehavior {
 		this.lastDistance = undefined;
 	}
 
-	scale(event: TerraDrawMouseEvent, selectedId: string) {
+	scale(event: TerraDrawMouseEvent, selectedId: FeatureId) {
 		const geometry = this.store.getGeometryCopy<LineString | Polygon>(
 			selectedId,
 		);

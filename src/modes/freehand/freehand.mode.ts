@@ -14,7 +14,7 @@ import {
 	TerraDrawBaseDrawMode,
 } from "../base.mode";
 import { getDefaultStyling } from "../../util/styling";
-import { GeoJSONStoreFeatures } from "../../store/store";
+import { FeatureId, GeoJSONStoreFeatures } from "../../store/store";
 import { pixelDistance } from "../../geometry/measure/pixel-distance";
 import { isValidPolygonFeature } from "../../geometry/boolean/is-valid-polygon-feature";
 
@@ -51,8 +51,8 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 	mode = "freehand";
 
 	private startingClick = false;
-	private currentId: string | undefined;
-	private closingPointId: string | undefined;
+	private currentId: FeatureId | undefined;
+	private closingPointId: FeatureId | undefined;
 	private minDistance: number;
 	private keyEvents: TerraDrawFreehandModeKeyEvents;
 	private cursors: Required<Cursors>;
@@ -91,7 +91,7 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 	}
 
 	private close() {
-		if (!this.currentId) {
+		if (this.currentId === undefined) {
 			return;
 		}
 
@@ -125,7 +125,7 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 
 	/** @internal */
 	onMouseMove(event: TerraDrawMouseEvent) {
-		if (!this.currentId || this.startingClick === false) {
+		if (this.currentId === undefined || this.startingClick === false) {
 			return;
 		}
 

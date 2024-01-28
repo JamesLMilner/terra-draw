@@ -7,6 +7,7 @@ import { transformRotate } from "../../../geometry/transform/rotate";
 import { centroid } from "../../../geometry/centroid";
 import { rhumbBearing } from "../../../geometry/measure/rhumb-bearing";
 import { limitPrecision } from "../../../geometry/limit-decimal-precision";
+import { FeatureId } from "../../../store/store";
 
 export class RotateFeatureBehavior extends TerraDrawModeBehavior {
 	constructor(
@@ -23,7 +24,7 @@ export class RotateFeatureBehavior extends TerraDrawModeBehavior {
 		this.lastBearing = undefined;
 	}
 
-	rotate(event: TerraDrawMouseEvent, selectedId: string) {
+	rotate(event: TerraDrawMouseEvent, selectedId: FeatureId) {
 		const geometry = this.store.getGeometryCopy<LineString | Polygon>(
 			selectedId,
 		);

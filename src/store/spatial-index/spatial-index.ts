@@ -1,11 +1,11 @@
 import { Position } from "geojson";
-import { GeoJSONStoreFeatures } from "../store";
+import { FeatureId, GeoJSONStoreFeatures } from "../store";
 import { RBush, Node } from "./rbush";
 
 export class SpatialIndex {
 	private tree: RBush;
-	private idToNode: Map<string, Node>;
-	private nodeToId: Map<Node, string>;
+	private idToNode: Map<FeatureId, Node>;
+	private nodeToId: Map<Node, FeatureId>;
 
 	constructor(options?: { maxEntries: number }) {
 		this.tree = new RBush(
@@ -16,8 +16,8 @@ export class SpatialIndex {
 	}
 
 	private setMaps(feature: GeoJSONStoreFeatures, bbox: Node) {
-		this.idToNode.set(String(feature.id), bbox);
-		this.nodeToId.set(bbox, String(feature.id));
+		this.idToNode.set(feature.id as FeatureId, bbox);
+		this.nodeToId.set(bbox, feature.id as FeatureId);
 	}
 
 	private toBBox(feature: GeoJSONStoreFeatures) {
@@ -78,13 +78,13 @@ export class SpatialIndex {
 	}
 
 	update(feature: GeoJSONStoreFeatures): void {
-		this.remove(feature.id as string);
+		this.remove(feature.id as FeatureId);
 		const bbox = this.toBBox(feature);
 		this.setMaps(feature, bbox);
 		this.tree.insert(bbox);
 	}
 
-	remove(featureId: string): void {
+	remove(featureId: FeatureId): void {
 		const node = this.idToNode.get(featureId);
 		if (!node) {
 			throw new Error(`${featureId} not inserted into the spatial index`);
@@ -97,10 +97,10 @@ export class SpatialIndex {
 		this.tree.clear();
 	}
 
-	search(feature: GeoJSONStoreFeatures): string[] {
+	search(feature: GeoJSONStoreFeatures): FeatureId[] {
 		const found = this.tree.search(this.toBBox(feature));
 		return found.map((node) => {
-			return this.nodeToId.get(node) as string;
+			return this.nodeToId.get(node) as FeatureId;
 		});
 	}
 

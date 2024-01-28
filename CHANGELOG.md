@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.1-alpha.55](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.54...v0.0.1-alpha.55) (2024-01-28)
+
+
+### Features
+
+* allow custom id strategies, so features can have other ids other than UUID4 ([#180](https://github.com/JamesLMilner/terra-draw/issues/180)) ([05255f8](https://github.com/JamesLMilner/terra-draw/commit/05255f82e09fc0841575cd755128a58e940d6f85))
+
+
+### Documentation
+
+* clarify the requiremnts for google maps and throw error if element id is not set ([#178](https://github.com/JamesLMilner/terra-draw/issues/178)) ([aab4761](https://github.com/JamesLMilner/terra-draw/commit/aab476102075f7b41ce9f2e98779f7753897cbfa))
+* improve documentation around changing mode ([#173](https://github.com/JamesLMilner/terra-draw/issues/173)) ([9a74ef8](https://github.com/JamesLMilner/terra-draw/commit/9a74ef886ea9197e74106af688eed986e3fcc06d))
+
 ### [0.0.1-alpha.54](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.53...v0.0.1-alpha.54) (2024-01-15)
 
 

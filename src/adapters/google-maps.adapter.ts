@@ -221,7 +221,7 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawBaseAdapter {
 			// TODO: We could cache these individually per cursor
 
 			const div = this._map.getDiv();
-			const styleDivSelector = `#${div.id} div[aria-label] .gm-style > div`;
+			const styleDivSelector = `#${div.id} .gm-style > div`;
 			const styleDiv = document.querySelector(styleDivSelector);
 
 			if (styleDiv) {

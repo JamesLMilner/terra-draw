@@ -17,6 +17,13 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawBaseAdapter {
 		super(config);
 		this._lib = config.lib;
 		this._map = config.map;
+
+		// In order for the internals of the adapter to work we require an ID to
+		// allow query selectors  to work
+		if (!this._map.getDiv().id) {
+			throw new Error("Google Map container div requires and id to be set");
+		}
+
 		this._coordinatePrecision =
 			typeof config.coordinatePrecision === "number"
 				? config.coordinatePrecision

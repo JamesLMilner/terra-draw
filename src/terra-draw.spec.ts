@@ -1,3 +1,6 @@
+/**
+ * @jest-environment jsdom
+ */
 import {
 	TerraDraw,
 	TerraDrawGoogleMapsAdapter,
@@ -22,6 +25,7 @@ describe("Terra Draw", () => {
 					id: "map",
 					querySelector: () => ({ addEventListener: jest.fn() }),
 				}),
+				setOptions: jest.fn(),
 				data: {
 					addListener: jest.fn(),
 					addGeoJson: jest.fn(),
@@ -256,6 +260,45 @@ describe("Terra Draw", () => {
 			expect(draw.hasFeature("f8e5a38d-ecfa-4294-8461-d9cff0e0d7f8")).toBe(
 				false,
 			);
+		});
+	});
+
+	describe("enabled", () => {
+		it("returns false if disabled", () => {
+			const draw = new TerraDraw({
+				adapter,
+				modes: [new TerraDrawPointMode()],
+			});
+
+			expect(draw.enabled).toBe(false);
+		});
+
+		it("returns true if enabled", () => {
+			const draw = new TerraDraw({
+				adapter,
+				modes: [new TerraDrawPointMode()],
+			});
+
+			draw.start();
+
+			expect(draw.enabled).toBe(true);
+		});
+	});
+
+	describe("setMode", () => {
+		it("point mode when mode is set", () => {
+			const draw = new TerraDraw({
+				adapter,
+				modes: [new TerraDrawPointMode()],
+			});
+
+			draw.start();
+
+			expect(draw.getMode()).toBe("static");
+
+			draw.setMode("point");
+
+			expect(draw.getMode()).toBe("point");
 		});
 	});
 });

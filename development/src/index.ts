@@ -27,7 +27,7 @@ import GeoJSON from "ol/format/GeoJSON";
 import Map from "ol/Map";
 import { TerraDrawOpenLayersAdapter } from "../../src/adapters/openlayers.adapter";
 import View from "ol/View";
-import { Circle as CircleStyle, Fill, Stroke, Style } from "ol/style";
+import { Circle as CircleStyle, Stroke, Style } from "ol/style";
 import { OSM, Vector as VectorSource } from "ol/source";
 import { Tile as TileLayer, Vector as VectorLayer } from "ol/layer";
 import { fromLonLat, toLonLat } from "ol/proj";

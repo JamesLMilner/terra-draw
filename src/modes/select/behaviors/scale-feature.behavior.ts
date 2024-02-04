@@ -1,6 +1,6 @@
 import { TerraDrawMouseEvent } from "../../../common";
 import { BehaviorConfig, TerraDrawModeBehavior } from "../../base.behavior";
-import { LineString, Polygon, Position } from "geojson";
+import { Feature, LineString, Polygon, Position } from "geojson";
 import { SelectionPointBehavior } from "./selection-point.behavior";
 import { MidPointBehavior } from "./midpoint.behavior";
 import { centroid } from "../../../geometry/centroid";
@@ -49,7 +49,11 @@ export class ScaleFeatureBehavior extends TerraDrawModeBehavior {
 
 		const scale = 1 - (this.lastDistance - distance) / distance;
 
-		transformScale({ type: "Feature", geometry, properties: {} }, scale);
+		const feature = { type: "Feature", geometry, properties: {} } as Feature<
+			Polygon | LineString
+		>;
+		const origin = centroid(feature);
+		transformScale(feature, scale, origin);
 
 		// Coordinates are either polygon or linestring at this point
 		const updatedCoords: Position[] =

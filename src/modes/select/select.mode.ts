@@ -26,6 +26,7 @@ import { RotateFeatureBehavior } from "./behaviors/rotate-feature.behavior";
 import { ScaleFeatureBehavior } from "./behaviors/scale-feature.behavior";
 import { FeatureId, GeoJSONStoreFeatures } from "../../store/store";
 import { getDefaultStyling } from "../../util/styling";
+import { DragMaintainedShapeBehavior } from "./behaviors/drag-maintained-shape.behavior";
 
 type TerraDrawSelectModeKeyEvents = {
 	deselect: KeyboardEvent["key"] | null;
@@ -43,6 +44,7 @@ type ModeFlags = {
 		coordinates?: {
 			midpoints?: boolean;
 			draggable?: boolean;
+			maintainShapeFrom?: "center" | "opposite";
 			deletable?: boolean;
 		};
 	};
@@ -115,6 +117,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode<SelectionStyling>
 	private dragCoordinate!: DragCoordinateBehavior;
 	private rotateFeature!: RotateFeatureBehavior;
 	private scaleFeature!: ScaleFeatureBehavior;
+	private maintainShape!: DragMaintainedShapeBehavior;
 	private cursors: Required<Cursors>;
 
 	constructor(options?: TerraDrawSelectModeOptions<SelectionStyling>) {
@@ -203,6 +206,12 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode<SelectionStyling>
 			this.midPoints,
 		);
 		this.dragCoordinate = new DragCoordinateBehavior(
+			config,
+			this.pixelDistance,
+			this.selectionPoints,
+			this.midPoints,
+		);
+		this.maintainShape = new DragMaintainedShapeBehavior(
 			config,
 			this.pixelDistance,
 			this.selectionPoints,
@@ -564,6 +573,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode<SelectionStyling>
 			selectedId,
 		);
 
+		// Drag Coordinate
 		if (
 			modeFlags &&
 			modeFlags.feature &&
@@ -572,11 +582,20 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode<SelectionStyling>
 			draggableCoordinateIndex !== -1
 		) {
 			this.setCursor(this.cursors.dragStart);
-			this.dragCoordinate.startDragging(selectedId, draggableCoordinateIndex);
+
+			// With Maintained Shape
+			if (modeFlags.feature.coordinates.maintainShapeFrom) {
+				this.maintainShape.startDragging(selectedId, draggableCoordinateIndex);
+			} else {
+				// Without with Maintained Shape
+				this.dragCoordinate.startDragging(selectedId, draggableCoordinateIndex);
+			}
+
 			setMapDraggability(false);
 			return;
 		}
 
+		// Drag Feature
 		if (
 			modeFlags &&
 			modeFlags.feature &&
@@ -642,6 +661,20 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode<SelectionStyling>
 			return;
 		}
 
+		if (
+			this.maintainShape.isDragging() &&
+			modeFlags.feature &&
+			modeFlags.feature.coordinates &&
+			modeFlags.feature.coordinates.maintainShapeFrom
+		) {
+			setMapDraggability(false);
+			this.maintainShape.drag(
+				event,
+				modeFlags.feature.coordinates.maintainShapeFrom,
+			);
+			return;
+		}
+
 		// Check if coordinate is draggable and is dragged
 		if (this.dragCoordinate.isDragging()) {
 			this.dragCoordinate.drag(event, canSelfIntersect);
@@ -674,6 +707,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode<SelectionStyling>
 
 		this.dragCoordinate.stopDragging();
 		this.dragFeature.stopDragging();
+		this.maintainShape.stopDragging();
 		this.rotateFeature.reset();
 		this.scaleFeature.reset();
 		setMapDraggability(true);

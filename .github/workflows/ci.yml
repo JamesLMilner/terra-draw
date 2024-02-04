@@ -61,11 +61,11 @@ jobs:
     - uses: actions/setup-node@v3
       with:
         node-version: "18.x"
-    - name: Change to E2E test folder
-      run: cd ./e2e
-
+    - name: Install parent directory
+      run: npm install
     - name: Get installed Playwright version
       id: playwright-version
+      working-directory: ./e2e
       run: echo "PLAYWRIGHT_VERSION=$(node -e "console.log(require('./package-lock.json').dependencies['@playwright/test'].version)")" >> $GITHUB_ENV
     - name: Cache playwright binaries
       uses: actions/cache@v3
@@ -75,10 +75,14 @@ jobs:
           ~/.cache/ms-playwright
         key: ${{ runner.os }}-playwright-${{ env.PLAYWRIGHT_VERSION }}
     - name: Install e2e test
+      working-directory: ./e2e
       run: npm install
     - run: npx playwright install --with-deps
+      working-directory: ./e2e
       if: steps.playwright-cache.outputs.cache-hit != 'true'
     - run: npx playwright install-deps
+      working-directory: ./e2e
       if: steps.playwright-cache.outputs.cache-hit != 'true'
     - name: Run Playwright tests
+      working-directory: ./e2e
       run: npm run test

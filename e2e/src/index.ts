@@ -76,9 +76,22 @@ const example = {
 								},
 							},
 						},
+						rectangle: {
+							feature: {
+								draggable: true,
+								coordinates: {
+									draggable: true,
+									maintainShapeFrom: "opposite",
+								},
+							},
+						},
 						circle: {
 							feature: {
 								draggable: true,
+								coordinates: {
+									draggable: true,
+									maintainShapeFrom: "center",
+								},
 							},
 						},
 						point: {

@@ -1,7 +1,8 @@
 import { test, expect } from "@playwright/test";
 import {
 	changeMode,
-	drawRectanglePolygon,
+	drawTwoClickShape,
+	drawRectangularPolygon,
 	expectGroupPosition,
 	expectPathDimensions,
 	expectPaths,
@@ -257,7 +258,7 @@ test.describe("select mode", () => {
 		await changeMode({ page, mode: "polygon" });
 
 		// Draw a rectangle
-		const { topLeft } = await drawRectanglePolygon({ mapDiv, page });
+		const { topLeft } = await drawRectangularPolygon({ mapDiv, page });
 
 		// Change to select mode
 		await changeMode({ page, mode });
@@ -292,7 +293,7 @@ test.describe("select mode", () => {
 		await changeMode({ page, mode: "polygon" });
 
 		// Draw a rectangle
-		const { topLeft } = await drawRectanglePolygon({ mapDiv, page });
+		const { topLeft } = await drawRectangularPolygon({ mapDiv, page });
 
 		// Change to select mode
 		await changeMode({ page, mode });
@@ -318,6 +319,73 @@ test.describe("select mode", () => {
 		// Dragged the coordinate to the left and down slightly
 		await expectGroupPosition({ page, x: 538, y: 308 });
 	});
+
+	test("selected rectangle can has it's shape maintained when coordinates are dragged", async ({
+		page,
+	}) => {
+		const mapDiv = await setupMap({ page });
+
+		await changeMode({ page, mode: "rectangle" });
+
+		// Draw a rectangle
+		const { topLeft } = await drawTwoClickShape({ mapDiv, page });
+
+		// Change to select mode
+		await changeMode({ page, mode });
+
+		// Before drag
+		const x = topLeft.x - 2;
+		const y = topLeft.y - 2;
+		await expectGroupPosition({ page, x, y });
+
+		// Select
+		await page.mouse.click(mapDiv.width / 2, mapDiv.height / 2);
+		await expectPaths({ page, count: 5 }); // 4 selection points and 1 square
+
+		// Drag
+		await page.mouse.move(topLeft.x, topLeft.y);
+		await page.mouse.down();
+		await page.mouse.move(topLeft.x - 100, topLeft.y + 100, { steps: 50 }); // Steps is required
+		await page.mouse.up();
+
+		// Deselect
+		await page.mouse.click(mapDiv.width - 10, mapDiv.height / 2);
+
+		// Dragged the square up and to the left
+		await expectGroupPosition({ page, x: 547, y: 267 });
+	});
+
+	test("selected circle can has it's shape maintained from center origin when coordinates are dragged", async ({
+		page,
+	}) => {
+		const mapDiv = await setupMap({ page });
+
+		await changeMode({ page, mode: "circle" });
+
+		// Draw a circle
+		await drawTwoClickShape({ mapDiv, page });
+
+		// Change to select mode
+		await changeMode({ page, mode });
+
+		// Select
+		await page.mouse.click(mapDiv.width / 2, mapDiv.height / 2);
+		await expectPaths({ page, count: 65 }); // 4 selection points and 1 square
+
+		// Drag
+		await page.mouse.move(mapDiv.width / 2, mapDiv.height / 2 + 50);
+		await page.mouse.down();
+		await page.mouse.move(mapDiv.width / 2, mapDiv.height / 2 + 100, {
+			steps: 50,
+		}); // Steps is required
+		await page.mouse.up();
+
+		// Deselect
+		await page.mouse.click(mapDiv.width - 10, mapDiv.height / 2);
+
+		// Dragged the square up and to the left
+		await expectGroupPosition({ page, x: 392, y: 112 });
+	});
 });
 
 test.describe("clear", () => {
@@ -333,7 +401,7 @@ test.describe("clear", () => {
 		await page.mouse.click(mapDiv.width / 3, mapDiv.height / 3);
 
 		await changeMode({ page, mode: "polygon" });
-		await drawRectanglePolygon({ mapDiv, page });
+		await drawRectangularPolygon({ mapDiv, page });
 
 		await expectPaths({ page, count: 3 });
 

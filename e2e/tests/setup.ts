@@ -105,7 +105,7 @@ export const expectGroupPosition = async ({
 	expect(boundingBox?.y).toBe(y);
 };
 
-export const drawRectanglePolygon = async ({
+export const drawRectangularPolygon = async ({
 	mapDiv,
 	page,
 }: {
@@ -131,6 +131,34 @@ export const drawRectanglePolygon = async ({
 	await page.mouse.click(bottomRight.x, bottomRight.y);
 	await page.mouse.click(bottomLeft.x, bottomLeft.y);
 	await page.mouse.click(bottomLeft.x, bottomLeft.y); // Closed
+
+	return { topLeft, topRight, bottomRight, bottomLeft };
+};
+
+export const drawTwoClickShape = async ({
+	mapDiv,
+	page,
+}: {
+	mapDiv: {
+		x: number;
+		y: number;
+		width: number;
+		height: number;
+	};
+	page: Page;
+}) => {
+	// Draw a rectangle
+	const sideLength = 100;
+	const halfLength = sideLength / 2;
+	const centerX = mapDiv.width / 2;
+	const centerY = mapDiv.height / 2;
+	const topLeft = { x: centerX - halfLength, y: centerY - halfLength };
+	const topRight = { x: centerX + halfLength, y: centerY - halfLength };
+	const bottomLeft = { x: centerX - halfLength, y: centerY + halfLength };
+	const bottomRight = { x: centerX + halfLength, y: centerY + halfLength };
+	await page.mouse.click(topLeft.x, topLeft.y);
+
+	await page.mouse.click(bottomRight.x, bottomRight.y); // Closed
 
 	return { topLeft, topRight, bottomRight, bottomLeft };
 };

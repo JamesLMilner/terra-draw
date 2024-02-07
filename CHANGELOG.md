@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.1-alpha.56](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.55...v0.0.1-alpha.56) (2024-02-07)
+
+
+### Features
+
+* allow maintaining shape when dragging coordinates in select mode ([#188](https://github.com/JamesLMilner/terra-draw/issues/188)) ([e1b88cc](https://github.com/JamesLMilner/terra-draw/commit/e1b88ccd508a146abf15e17320fff7c58ca66fcf))
+
+
+### Bug Fixes
+
+* ensure that cursors are respected on google maps ([#182](https://github.com/JamesLMilner/terra-draw/issues/182)) ([614018f](https://github.com/JamesLMilner/terra-draw/commit/614018f8358fe9a71554bc31a972d94537056b7f))
+
+
+### Tests
+
+* improve test coverage of terra-draw.ts ([#185](https://github.com/JamesLMilner/terra-draw/issues/185)) ([a9cc85f](https://github.com/JamesLMilner/terra-draw/commit/a9cc85fd038d3596ca84ce2afb3e16fb12af201c))
+
 ### [0.0.1-alpha.55](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.54...v0.0.1-alpha.55) (2024-01-28)
 
 

@@ -46,6 +46,7 @@ const example = {
 			}),
 			modes: [
 				new TerraDrawSelectMode({
+					dragEventThrottle: 0,
 					flags: {
 						arbitary: {
 							feature: {},

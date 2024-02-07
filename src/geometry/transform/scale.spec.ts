@@ -1,5 +1,6 @@
 import { Feature, LineString, Polygon } from "geojson";
 import { transformScale } from "./scale";
+import { centroid } from "../centroid";
 
 describe("scale", () => {
 	it("returns a polygon as is if scale is set to 1", () => {
@@ -19,7 +20,8 @@ describe("scale", () => {
 			},
 			properties: {},
 		} as Feature<Polygon>;
-		const result = transformScale(polygon, 1);
+		const origin = centroid(polygon);
+		const result = transformScale(polygon, 1, origin);
 		expect(result).toStrictEqual(polygon);
 	});
 
@@ -40,7 +42,8 @@ describe("scale", () => {
 			},
 			properties: {},
 		} as Feature<Polygon>;
-		const result = transformScale(polygon, 2);
+		const origin = centroid(polygon);
+		const result = transformScale(polygon, 2, origin);
 		expect(result).toStrictEqual({
 			type: "Feature",
 			geometry: {
@@ -73,7 +76,8 @@ describe("scale", () => {
 			},
 			properties: {},
 		} as Feature<LineString>;
-		const result = transformScale(linestring, 2);
+		const origin = centroid(linestring);
+		const result = transformScale(linestring, 2, origin);
 		expect(result).toStrictEqual({
 			type: "Feature",
 			geometry: {

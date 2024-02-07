@@ -41,7 +41,8 @@ export const changeMode = async ({
 		| "greatcircle";
 }) => {
 	const modeText = mode.charAt(0).toUpperCase() + mode.slice(1);
-	const button = page.getByText(modeText);
+	const buttons = page.getByTestId("buttons");
+	const button = buttons.getByText(modeText, { exact: true });
 
 	// Click the mode button
 	await button.click();
@@ -63,7 +64,7 @@ export const expectPaths = async ({
 	const selector = "svg > g > path";
 
 	if (count > 0) {
-		page.waitForSelector(selector);
+		await page.waitForSelector(selector);
 		expect(await page.locator(selector).count()).toBe(count);
 	} else {
 		await expect(await page.locator(selector).count()).toBe(0);
@@ -85,4 +86,51 @@ export const expectPathDimensions = async ({
 
 	expect(boundingBox?.width).toBe(width);
 	expect(boundingBox?.height).toBe(height);
+};
+
+export const expectGroupPosition = async ({
+	page,
+	x,
+	y,
+}: {
+	page: Page;
+	x: number;
+	y: number;
+}) => {
+	const selector = "svg > g > path";
+
+	const boundingBox = await page.locator(selector).boundingBox();
+
+	expect(boundingBox?.x).toBe(x);
+	expect(boundingBox?.y).toBe(y);
+};
+
+export const drawRectanglePolygon = async ({
+	mapDiv,
+	page,
+}: {
+	mapDiv: {
+		x: number;
+		y: number;
+		width: number;
+		height: number;
+	};
+	page: Page;
+}) => {
+	// Draw a rectangle
+	const sideLength = 100;
+	const halfLength = sideLength / 2;
+	const centerX = mapDiv.width / 2;
+	const centerY = mapDiv.height / 2;
+	const topLeft = { x: centerX - halfLength, y: centerY - halfLength };
+	const topRight = { x: centerX + halfLength, y: centerY - halfLength };
+	const bottomLeft = { x: centerX - halfLength, y: centerY + halfLength };
+	const bottomRight = { x: centerX + halfLength, y: centerY + halfLength };
+	await page.mouse.click(topLeft.x, topLeft.y);
+	await page.mouse.click(topRight.x, topRight.y);
+	await page.mouse.click(bottomRight.x, bottomRight.y);
+	await page.mouse.click(bottomLeft.x, bottomLeft.y);
+	await page.mouse.click(bottomLeft.x, bottomLeft.y); // Closed
+
+	return { topLeft, topRight, bottomRight, bottomLeft };
 };

@@ -26,12 +26,10 @@ module.exports = {
 		static: {
 			directory: path.join(__dirname, "public"),
 		},
-		watchFiles: [
-			"./src",
-			"./*.{js,json,ts,html}",
-			"../src",
-			"../*.{js,json,ts,html}",
-		],
+		liveReload: !process.env.CI,
+		watchFiles: !process.env.CI
+			? ["./src", "./*.{js,json,ts,html}", "../src", "../*.{js,json,ts,html}"]
+			: [],
 		compress: true,
 		port: 3000,
 	},

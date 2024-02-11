@@ -11,7 +11,11 @@ import { haversineDistanceKilometers } from "../../../geometry/measure/haversine
 import { limitPrecision } from "../../../geometry/limit-decimal-precision";
 import { transformScale } from "../../../geometry/transform/scale";
 
-export class DragMaintainedShapeBehavior extends TerraDrawModeBehavior {
+export type ResizeOptions = "center-fixed" | "opposite-corner-fixed";
+
+type OppositeMapIndex = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
+
+export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 	constructor(
 		readonly config: BehaviorConfig,
 		private readonly pixelDistance: PixelDistanceBehavior,
@@ -92,7 +96,7 @@ export class DragMaintainedShapeBehavior extends TerraDrawModeBehavior {
 
 	public drag(
 		event: TerraDrawMouseEvent,
-		maintainShapeFrom: "center" | "opposite",
+		resizeOption: ResizeOptions,
 	): boolean {
 		if (!this.draggedCoordinate.id) {
 			return false;
@@ -120,9 +124,9 @@ export class DragMaintainedShapeBehavior extends TerraDrawModeBehavior {
 
 		// Get the origin for the scaling to occur from
 		let origin: Position | undefined;
-		if (maintainShapeFrom === "center") {
+		if (resizeOption === "center-fixed") {
 			origin = this.getCenterOrigin(feature);
-		} else if (maintainShapeFrom === "opposite") {
+		} else if (resizeOption === "opposite-corner-fixed") {
 			origin = this.getOppositeOrigin(feature, selectedCoordinate);
 		}
 
@@ -222,19 +226,18 @@ export class DragMaintainedShapeBehavior extends TerraDrawModeBehavior {
 		const lowLeft = [west, south];
 		const midLeft = [west, (south + north) / 2];
 
-		//                  0       1         2        3          4         5         6        7
 		const options = [
-			topLeft,
-			midTop,
+			topLeft, // 1
+			midTop, // 2
 			topRight,
 			midRight,
 			lowRight,
 			midBottom,
 			lowLeft,
 			midLeft,
-		];
+		] as const;
 
-		let closest: number | undefined;
+		let closest: OppositeMapIndex | undefined;
 		let closestDistance = Infinity;
 
 		for (let i = 0; i < options.length; i++) {
@@ -243,25 +246,19 @@ export class DragMaintainedShapeBehavior extends TerraDrawModeBehavior {
 				options[i],
 			);
 			if (distance < closestDistance) {
-				closest = i;
+				closest = i as OppositeMapIndex;
 				closestDistance = distance;
 			}
 		}
 
-		// This map provides the oppsite corner of the bbox
-		// to the index of the coordinate provided
-		const opposite = {
-			0: 4,
-			1: 5,
-			2: 6,
-			3: 7,
-			4: 0,
-			5: 1,
-			6: 2,
-			7: 3,
-		}[closest as number];
+		if (closest === undefined) {
+			throw new Error("No closest coordinate found");
+		}
 
-		return options[opposite as number];
+		// Depending on where what the origin is set to, we need to find the position to
+		// scale from
+		const oppositeIndex = this.boundingBoxMaps["opposite"][closest];
+		return options[oppositeIndex];
 	}
 
 	isDragging() {
@@ -282,4 +279,27 @@ export class DragMaintainedShapeBehavior extends TerraDrawModeBehavior {
 			index: -1,
 		};
 	}
+
+	// This map provides the oppsite corner of the bbox
+	// to the index of the coordinate provided
+	//   0    1    2
+	//   *----*----*
+	// 	 |		   |
+	// 7 *		   *  3
+	//   |		   |
+	//   *----*----*
+	// 	 6    5    4
+	//
+	private boundingBoxMaps = {
+		opposite: {
+			0: 4,
+			1: 5,
+			2: 6,
+			3: 7,
+			4: 0,
+			5: 1,
+			6: 2,
+			7: 3,
+		},
+	};
 }

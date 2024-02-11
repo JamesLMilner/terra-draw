@@ -2341,7 +2341,7 @@ describe("TerraDrawSelectMode", () => {
 					flags: {
 						linestring: {
 							feature: {
-								coordinates: { draggable: true, maintainShapeFrom: "center" },
+								coordinates: { draggable: true, resizable: "center-fixed" },
 							},
 						},
 					},
@@ -2458,7 +2458,7 @@ describe("TerraDrawSelectMode", () => {
 					flags: {
 						polygon: {
 							feature: {
-								coordinates: { draggable: true, maintainShapeFrom: "center" },
+								coordinates: { draggable: true, resizable: "center-fixed" },
 							},
 						},
 					},

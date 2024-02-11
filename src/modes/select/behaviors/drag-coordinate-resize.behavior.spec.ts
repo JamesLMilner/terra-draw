@@ -7,11 +7,11 @@ import { mockBehaviorConfig } from "../../../test/mock-behavior-config";
 import { mockDrawEvent } from "../../../test/mock-mouse-event";
 import { BehaviorConfig } from "../../base.behavior";
 import { PixelDistanceBehavior } from "../../pixel-distance.behavior";
-import { DragMaintainedShapeBehavior } from "./drag-maintained-shape.behavior";
+import { DragCoordinateResizeBehavior } from "./drag-coordinate-resize.behavior";
 import { MidPointBehavior } from "./midpoint.behavior";
 import { SelectionPointBehavior } from "./selection-point.behavior";
 
-describe("DragMaintainedShapeBehaviour", () => {
+describe("DragCoordinateResizeBehavior", () => {
 	const createLineString = (
 		config: BehaviorConfig,
 		coordinates: Position[] = [
@@ -38,7 +38,7 @@ describe("DragMaintainedShapeBehaviour", () => {
 		it("constructs", () => {
 			const config = mockBehaviorConfig("test");
 			const selectionPointBehavior = new SelectionPointBehavior(config);
-			new DragMaintainedShapeBehavior(
+			new DragCoordinateResizeBehavior(
 				config,
 				new PixelDistanceBehavior(config),
 				selectionPointBehavior,
@@ -49,7 +49,7 @@ describe("DragMaintainedShapeBehaviour", () => {
 
 	describe("api", () => {
 		let config: BehaviorConfig;
-		let dragMaintainedShapeBehavior: DragMaintainedShapeBehavior;
+		let dragMaintainedShapeBehavior: DragCoordinateResizeBehavior;
 
 		beforeEach(() => {
 			config = mockBehaviorConfig("test");
@@ -60,7 +60,7 @@ describe("DragMaintainedShapeBehaviour", () => {
 				selectionPointBehavior,
 			);
 
-			dragMaintainedShapeBehavior = new DragMaintainedShapeBehavior(
+			dragMaintainedShapeBehavior = new DragCoordinateResizeBehavior(
 				config,
 				pixelDistanceBehavior,
 				selectionPointBehavior,
@@ -136,7 +136,7 @@ describe("DragMaintainedShapeBehaviour", () => {
 			it("returns early if nothing is being dragged", () => {
 				jest.spyOn(config.store, "updateGeometry");
 
-				dragMaintainedShapeBehavior.drag(mockDrawEvent(), "center");
+				dragMaintainedShapeBehavior.drag(mockDrawEvent(), "center-fixed");
 
 				expect(config.store.updateGeometry).toBeCalledTimes(0);
 			});
@@ -145,12 +145,12 @@ describe("DragMaintainedShapeBehaviour", () => {
 				createStorePoint(config);
 				jest.spyOn(config.store, "updateGeometry");
 
-				dragMaintainedShapeBehavior.drag(mockDrawEvent(), "center");
+				dragMaintainedShapeBehavior.drag(mockDrawEvent(), "center-fixed");
 
 				expect(config.store.updateGeometry).toBeCalledTimes(0);
 			});
 
-			describe("center", () => {
+			describe("center-fixed", () => {
 				it("updates the Polygon coordinate if within pointer distance", () => {
 					const id = createStorePolygon(config);
 
@@ -165,8 +165,8 @@ describe("DragMaintainedShapeBehaviour", () => {
 						.mockReturnValueOnce({ x: 1, y: 0 })
 						.mockReturnValueOnce({ x: 0, y: 0 });
 
-					dragMaintainedShapeBehavior.drag(mockDrawEvent(), "center");
-					dragMaintainedShapeBehavior.drag(mockDrawEvent(), "center");
+					dragMaintainedShapeBehavior.drag(mockDrawEvent(), "center-fixed");
+					dragMaintainedShapeBehavior.drag(mockDrawEvent(), "center-fixed");
 
 					expect(config.store.updateGeometry).toBeCalledTimes(1);
 				});
@@ -181,14 +181,14 @@ describe("DragMaintainedShapeBehaviour", () => {
 						.mockReturnValueOnce({ x: 0, y: 0 })
 						.mockReturnValueOnce({ x: 0, y: 1 });
 
-					dragMaintainedShapeBehavior.drag(mockDrawEvent(), "center");
-					dragMaintainedShapeBehavior.drag(mockDrawEvent(), "center");
+					dragMaintainedShapeBehavior.drag(mockDrawEvent(), "center-fixed");
+					dragMaintainedShapeBehavior.drag(mockDrawEvent(), "center-fixed");
 
 					expect(config.store.updateGeometry).toBeCalledTimes(1);
 				});
 			});
 
-			describe("opposite", () => {
+			describe("opposite-corner-fixed", () => {
 				it("updates the Polygon coordinate if within pointer distance", () => {
 					const id = createStorePolygon(config);
 
@@ -203,8 +203,14 @@ describe("DragMaintainedShapeBehaviour", () => {
 						.mockReturnValueOnce({ x: 1, y: 0 })
 						.mockReturnValueOnce({ x: 0, y: 0 });
 
-					dragMaintainedShapeBehavior.drag(mockDrawEvent(), "opposite");
-					dragMaintainedShapeBehavior.drag(mockDrawEvent(), "opposite");
+					dragMaintainedShapeBehavior.drag(
+						mockDrawEvent(),
+						"opposite-corner-fixed",
+					);
+					dragMaintainedShapeBehavior.drag(
+						mockDrawEvent(),
+						"opposite-corner-fixed",
+					);
 
 					expect(config.store.updateGeometry).toBeCalledTimes(1);
 				});
@@ -219,8 +225,14 @@ describe("DragMaintainedShapeBehaviour", () => {
 						.mockReturnValueOnce({ x: 0, y: 0 })
 						.mockReturnValueOnce({ x: 0, y: 1 });
 
-					dragMaintainedShapeBehavior.drag(mockDrawEvent(), "opposite");
-					dragMaintainedShapeBehavior.drag(mockDrawEvent(), "opposite");
+					dragMaintainedShapeBehavior.drag(
+						mockDrawEvent(),
+						"opposite-corner-fixed",
+					);
+					dragMaintainedShapeBehavior.drag(
+						mockDrawEvent(),
+						"opposite-corner-fixed",
+					);
 
 					expect(config.store.updateGeometry).toBeCalledTimes(1);
 				});

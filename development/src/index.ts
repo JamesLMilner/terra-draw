@@ -114,9 +114,26 @@ const getModes = () => {
 						},
 					},
 				},
+				rectangle: {
+					feature: {
+						draggable: true,
+						coordinates: {
+							midpoints: false,
+							draggable: true,
+							resizable: "opposite-corner-fixed",
+							deletable: true,
+						},
+					},
+				},
 				circle: {
 					feature: {
 						draggable: true,
+						coordinates: {
+							midpoints: false,
+							draggable: true,
+							resizable: "opposite-corner-fixed",
+							deletable: true,
+						},
 					},
 				},
 				point: {

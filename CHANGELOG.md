@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.1-alpha.57](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.56...v0.0.1-alpha.57) (2024-02-11)
+
+
+### Features
+
+* allow prevention of deselection on map click with new select mode parameter ([#194](https://github.com/JamesLMilner/terra-draw/issues/194)) ([4cb0049](https://github.com/JamesLMilner/terra-draw/commit/4cb004961b1cb0497876923b7093ebff1547326a))
+
+
+### Tests
+
+* add e2e tests for new maintainShape property in select mode ([#190](https://github.com/JamesLMilner/terra-draw/issues/190)) ([bd853b3](https://github.com/JamesLMilner/terra-draw/commit/bd853b30820d08471b40c6b9a6238860009909a0))
+
+
+### Chore
+
+* refactor maintainShapeFrom to resizeable in select mode ([#193](https://github.com/JamesLMilner/terra-draw/issues/193)) ([def45d1](https://github.com/JamesLMilner/terra-draw/commit/def45d1c976a27f177c067e0c1471a8b106f09a5))
+
 ### [0.0.1-alpha.56](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.55...v0.0.1-alpha.56) (2024-02-07)
 
 

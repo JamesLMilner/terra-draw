@@ -461,6 +461,120 @@ describe("TerraDrawSelectMode", () => {
 					expect(onSelect).toBeCalledTimes(1);
 				});
 
+				it("does deselect if feature is clicked then map area is clicked and allowManualDeselection is true", () => {
+					setSelectMode({
+						allowManualDeselection: true,
+						flags: {
+							polygon: { feature: {} },
+						},
+					});
+
+					// Square Polygon
+					addPolygonToStore([
+						[0, 0],
+						[0, 1],
+						[1, 1],
+						[1, 0],
+						[0, 0],
+					]);
+
+					mockMouseEventBoundingBox([
+						[0, 0],
+						[0, 1],
+						[1, 1],
+						[1, 0],
+					]);
+
+					selectMode.onClick({
+						lng: 0.5,
+						lat: 0.5,
+						containerX: 0,
+						containerY: 0,
+						button: "left",
+						heldKeys: [],
+					});
+
+					expect(onSelect).toBeCalledTimes(1);
+
+					expect(onDeselect).toBeCalledTimes(0);
+
+					mockMouseEventBoundingBox([
+						[0, 0],
+						[0, 1],
+						[1, 1],
+						[1, 0],
+					]);
+
+					selectMode.onClick({
+						lng: 50.0,
+						lat: 59.0,
+						containerX: 100,
+						containerY: 100,
+						button: "left",
+						heldKeys: [],
+					});
+
+					expect(onSelect).toBeCalledTimes(1);
+					expect(onDeselect).toBeCalledTimes(1);
+				});
+
+				it("does not deselect if feature is clicked then map area is clicked but allowManualDeselection is false", () => {
+					setSelectMode({
+						allowManualDeselection: false,
+						flags: {
+							polygon: { feature: {} },
+						},
+					});
+
+					// Square Polygon
+					addPolygonToStore([
+						[0, 0],
+						[0, 1],
+						[1, 1],
+						[1, 0],
+						[0, 0],
+					]);
+
+					mockMouseEventBoundingBox([
+						[0, 0],
+						[0, 1],
+						[1, 1],
+						[1, 0],
+					]);
+
+					selectMode.onClick({
+						lng: 0.5,
+						lat: 0.5,
+						containerX: 0,
+						containerY: 0,
+						button: "left",
+						heldKeys: [],
+					});
+
+					expect(onSelect).toBeCalledTimes(1);
+
+					expect(onDeselect).toBeCalledTimes(0);
+
+					mockMouseEventBoundingBox([
+						[0, 0],
+						[0, 1],
+						[1, 1],
+						[1, 0],
+					]);
+
+					selectMode.onClick({
+						lng: 50.0,
+						lat: 59.0,
+						containerX: 100,
+						containerY: 100,
+						button: "left",
+						heldKeys: [],
+					});
+
+					expect(onSelect).toBeCalledTimes(1);
+					expect(onDeselect).toBeCalledTimes(0);
+				});
+
 				it("does not select if feature is not clicked", () => {
 					// Square Polygon
 					addPolygonToStore([

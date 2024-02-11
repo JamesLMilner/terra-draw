@@ -97,12 +97,14 @@ interface TerraDrawSelectModeOptions<T extends CustomStyling>
 	keyEvents?: TerraDrawSelectModeKeyEvents | null;
 	dragEventThrottle?: number;
 	cursors?: Cursors;
+	allowManualDeselection?: boolean;
 }
 
 export class TerraDrawSelectMode extends TerraDrawBaseDrawMode<SelectionStyling> {
 	public type = ModeTypes.Select;
 	public mode = "select";
 
+	private allowManualDeselection = true;
 	private dragEventThrottle = 5;
 	private dragEventCount = 0;
 	private selected: string[] = [];
@@ -168,6 +170,8 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode<SelectionStyling>
 				options.dragEventThrottle !== undefined &&
 				options.dragEventThrottle) ||
 			5;
+
+		this.allowManualDeselection = options?.allowManualDeselection ?? true;
 	}
 
 	setSelecting() {
@@ -367,7 +371,6 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode<SelectionStyling>
 	private onLeftClick(event: TerraDrawMouseEvent) {
 		const { clickedFeature, clickedMidPoint } = this.featuresAtMouseEvent.find(
 			event,
-
 			this.selected.length > 0,
 		);
 
@@ -448,7 +451,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode<SelectionStyling>
 					);
 				}
 			}
-		} else if (this.selected.length) {
+		} else if (this.selected.length && this.allowManualDeselection) {
 			this.deselect();
 			return;
 		}

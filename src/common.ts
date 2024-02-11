@@ -114,6 +114,7 @@ export interface TerraDrawCallbacks {
 		setMapDraggability: (enabled: boolean) => void,
 	) => void;
 	onClear: () => void;
+	onCancel: () => void;
 }
 
 export interface TerraDrawChanges {
@@ -138,6 +139,7 @@ export interface TerraDrawAdapter {
 	unregister(): void;
 	render(changes: TerraDrawChanges, styling: TerraDrawStylingFunction): void;
 	clear(): void;
+	cancel(): void;
 	getCoordinatePrecision(): number;
 }
 

@@ -159,6 +159,14 @@ const example = {
 				draw.clear();
 			},
 		);
+		(document.getElementById("cancel") as HTMLButtonElement).addEventListener(
+			"click",
+			() => {
+				if (currentSelected.mode && currentSelected.mode === "select") {
+					draw.cancel();
+				}
+			},
+		);
 	},
 };
 

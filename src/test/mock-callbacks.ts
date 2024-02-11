@@ -12,5 +12,6 @@ export const createMockCallbacks = (
 	onDrag: jest.fn(),
 	onDragEnd: jest.fn(),
 	onClear: jest.fn(),
+	onCancel: jest.fn(),
 	...overrides,
 });

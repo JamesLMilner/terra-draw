@@ -13,6 +13,7 @@ const callbacks = () =>
 		onDrag: jest.fn(),
 		onDragEnd: jest.fn(),
 		onClear: jest.fn(),
+		onCancel: jest.fn(),
 	}) as TerraDrawCallbacks;
 
 const createLeafletMap = () => {

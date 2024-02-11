@@ -187,6 +187,17 @@ export class TerraDrawArcGISMapsSDKAdapter extends TerraDrawBaseAdapter {
 		this._featureLayer.graphics.removeAll();
 	}
 
+	/**
+	 * Cancel the selected state and keep the drawing mode
+	 * @returns void
+	 * */
+	public cancel() {
+		if (this._currentModeCallbacks) {
+			// Exit edit mode
+			this._currentModeCallbacks.onCancel();
+		}
+	}
+
 	private removeFeatureById(id: string | number | undefined) {
 		const feature = this._featureLayer.graphics.find(
 			(g) => g.attributes[this._featureIdAttributeName] === id,

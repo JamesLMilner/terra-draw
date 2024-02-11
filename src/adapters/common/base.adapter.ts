@@ -314,7 +314,6 @@ export abstract class TerraDrawBaseAdapter {
 					}
 
 					const drawEvent = this.getDrawEventFromEvent(event);
-
 					if (!drawEvent) {
 						return;
 					}

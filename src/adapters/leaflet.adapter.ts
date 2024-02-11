@@ -294,4 +294,15 @@ export class TerraDrawLeafletAdapter extends TerraDrawBaseAdapter {
 			this.clearPanes();
 		}
 	}
+
+	/**
+	 * Cancel the selected state and keep the drawing mode
+	 * @returns void
+	 * */
+	public cancel() {
+		if (this._currentModeCallbacks) {
+			// Exit edit mode
+			this._currentModeCallbacks.onCancel();
+		}
+	}
 }

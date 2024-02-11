@@ -318,4 +318,15 @@ export class TerraDrawOpenLayersAdapter extends TerraDrawBaseAdapter {
 			this.clearLayers();
 		}
 	}
+
+	/**
+	 * Cancel the selected state and keep the drawing mode
+	 * @returns void
+	 * */
+	public cancel() {
+		if (this._currentModeCallbacks) {
+			// Exit edit mode
+			this._currentModeCallbacks.onCancel();
+		}
+	}
 }

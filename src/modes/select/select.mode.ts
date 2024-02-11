@@ -445,9 +445,6 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode<SelectionStyling>
 					);
 				}
 			}
-		} else if (this.selected.length) {
-			this.deselect();
-			return;
 		}
 	}
 

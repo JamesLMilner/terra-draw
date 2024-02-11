@@ -112,4 +112,12 @@ export class TerraDrawMapLibreGLAdapter extends TerraDrawBaseAdapter {
 	public clear() {
 		this.mapboxglAdapter.clear();
 	}
+
+	/**
+	 * Cancel the selected state and keep the drawing mode
+	 * @returns void
+	 * */
+	public cancel() {
+		this.mapboxglAdapter.cancel();
+	}
 }

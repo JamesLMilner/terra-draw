@@ -419,6 +419,15 @@ class TerraDraw {
 	}
 
 	/**
+	 * Cancel the selected state and keep the drawing mode
+	 * @returns void
+	 * */
+	cancel() {
+		this.checkEnabled();
+		console.log(this.checkEnabled());
+		this._adapter.cancel();
+	}
+	/**
 	 * A property used to determine whether the instance is active or not. You
 	 * can use the start method to set this to true, and stop method to set this to false.
 	 * This is a read only property.
@@ -471,6 +480,7 @@ class TerraDraw {
 
 			// Swap the mode to the new mode
 			this._mode = this._modes[mode];
+			console.log(this._mode);
 
 			// Start the new mode
 			this._mode.start();
@@ -574,6 +584,8 @@ class TerraDraw {
 				return this._mode.state;
 			},
 			onClick: (event) => {
+				console.log(event);
+				// debugger
 				this._mode.onClick(event);
 			},
 			onMouseMove: (event) => {
@@ -601,6 +613,10 @@ class TerraDraw {
 
 				// Remove all features from the store
 				this._store.clear();
+			},
+			onCancel: () => {
+				//Cancel the selected state and keep the drawing mode
+				this._mode.cleanUp();
 			},
 		});
 	}

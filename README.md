@@ -24,17 +24,19 @@ Terra Draw uses the concept of 'adapters' to allow it to work with a host of dif
 
 Please see the [the getting started guide](./guides/1.GETTING_STARTED.md) - this provides a host of information on how to get up and running with Terra Draw.
 
-### Development
+### Development & Contributing
 
-Please see the [the development documentation](./guides/6.DEVELOPMENT.md)
+* For development, please see the [the development documentation](./guides/6.DEVELOPMENT.md)
+* For guidance on contributing, please see the [the contributing documentation](./guides/CONTRIBUTING.md)
 
-### Contributing
-
-Please see the [the contributing documentation](./guides/CONTRIBUTING.md)
 
 ### Project Website
 
 You can check out the official Terra Draw website at [terradraw.io](https://www.terradraw.io). If you are interested in contributing to the website please see [this repository](https://www.github.com/JamesLMilner/terra-draw-website).
+
+### Contact
+
+Email: [contact@terradraw.io](mailto:contact@terradraw.io)
 
 ### License
 

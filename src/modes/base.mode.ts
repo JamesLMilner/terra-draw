@@ -202,3 +202,12 @@ export abstract class TerraDrawBaseDrawMode<T extends CustomStyling> {
 		}
 	}
 }
+
+export abstract class TerraDrawBaseSelectMode<
+	T extends CustomStyling,
+> extends TerraDrawBaseDrawMode<T> {
+	public type = ModeTypes.Select;
+
+	public abstract selectFeature(featureId: FeatureId): void;
+	public abstract deselectFeature(featureId: FeatureId): void;
+}

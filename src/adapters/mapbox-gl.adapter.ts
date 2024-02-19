@@ -374,7 +374,10 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawBaseAdapter {
 			const { points, linestrings, polygons } = geometryFeatures;
 
 			if (!this._rendered) {
-				this._addGeoJSONLayer<Point>("Point", points as Feature<Point>[]);
+				const pointId = this._addGeoJSONLayer<Point>(
+					"Point",
+					points as Feature<Point>[],
+				);
 				this._addGeoJSONLayer<LineString>(
 					"LineString",
 					linestrings as Feature<LineString>[],
@@ -384,6 +387,9 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawBaseAdapter {
 					polygons as Feature<Polygon>[],
 				);
 				this._rendered = true;
+
+				// Ensure selection/mid points are rendered on top
+				pointId && this._map.moveLayer(pointId);
 			} else {
 				// If deletion occured we always have to update all layers
 				// as we don't know the type (TODO: perhaps we could pass that back?)

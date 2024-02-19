@@ -1,6 +1,7 @@
 /**
  * @jest-environment jsdom
  */
+import { TerraDrawSelectMode } from "./modes/select/select.mode";
 import {
 	TerraDraw,
 	TerraDrawGoogleMapsAdapter,
@@ -30,6 +31,11 @@ describe("Terra Draw", () => {
 					addListener: jest.fn(),
 					addGeoJson: jest.fn(),
 					setStyle: jest.fn(),
+					getFeatureById: jest.fn(() => ({
+						setProperty: jest.fn(),
+						forEachProperty: jest.fn(),
+						setGeometry: jest.fn(),
+					})),
 				},
 			} as any,
 			lib: {
@@ -37,6 +43,9 @@ describe("Terra Draw", () => {
 				OverlayView: jest.fn().mockImplementation(() => ({
 					setMap: jest.fn(),
 				})),
+				Data: {
+					Point: jest.fn().mockImplementation(() => ({})),
+				},
 			} as any,
 			coordinatePrecision: 9,
 		});
@@ -260,6 +269,135 @@ describe("Terra Draw", () => {
 			expect(draw.hasFeature("f8e5a38d-ecfa-4294-8461-d9cff0e0d7f8")).toBe(
 				false,
 			);
+		});
+	});
+
+	describe("selectFeature", () => {
+		it("throws an error if there is no select moded", () => {
+			const draw = new TerraDraw({
+				adapter,
+				modes: [new TerraDrawPointMode()],
+			});
+
+			draw.start();
+			draw.addFeatures([
+				{
+					id: "f8e5a38d-ecfa-4294-8461-d9cff0e0d7f8",
+					type: "Feature",
+					geometry: {
+						type: "Point",
+						coordinates: [-25.431289673, 34.355907891],
+					},
+					properties: {
+						mode: "point",
+					},
+				},
+			]);
+
+			expect(() => {
+				draw.selectFeature("f8e5a38d-ecfa-4294-8461-d9cff0e0d7f8");
+			}).toThrowError("No select mode defined in instance");
+		});
+
+		it("returns false if there is no feature with a given id", () => {
+			const draw = new TerraDraw({
+				adapter,
+				modes: [
+					new TerraDrawPointMode(),
+					new TerraDrawSelectMode({
+						flags: {
+							point: {
+								feature: { draggable: true },
+							},
+						},
+					}),
+				],
+			});
+
+			draw.start();
+			draw.addFeatures([
+				{
+					id: "f8e5a38d-ecfa-4294-8461-d9cff0e0d7f8",
+					type: "Feature",
+					geometry: {
+						type: "Point",
+						coordinates: [-25.431289673, 34.355907891],
+					},
+					properties: {
+						mode: "point",
+					},
+				},
+			]);
+
+			draw.selectFeature("f8e5a38d-ecfa-4294-8461-d9cff0e0d7f8");
+
+			const snapshot = draw.getSnapshot();
+			expect(snapshot.length).toBe(1);
+
+			const feature = draw.getSnapshot()[0];
+			expect(feature.properties.selected).toBe(true);
+		});
+	});
+
+	describe("deselectFeature", () => {
+		it("throws an error if there is no select moded", () => {
+			const draw = new TerraDraw({
+				adapter,
+				modes: [new TerraDrawPointMode()],
+			});
+
+			draw.start();
+
+			expect(() => {
+				draw.deselectFeature("f8e5a38d-ecfa-4294-8461-d9cff0e0d7f8");
+			}).toThrowError("No select mode defined in instance");
+		});
+
+		it("returns false if there is no feature with a given id", () => {
+			const draw = new TerraDraw({
+				adapter,
+				modes: [
+					new TerraDrawPointMode(),
+					new TerraDrawSelectMode({
+						flags: {
+							point: {
+								feature: { draggable: true },
+							},
+						},
+					}),
+				],
+			});
+
+			draw.start();
+			draw.addFeatures([
+				{
+					id: "f8e5a38d-ecfa-4294-8461-d9cff0e0d7f8",
+					type: "Feature",
+					geometry: {
+						type: "Point",
+						coordinates: [-25.431289673, 34.355907891],
+					},
+					properties: {
+						mode: "point",
+					},
+				},
+			]);
+
+			draw.selectFeature("f8e5a38d-ecfa-4294-8461-d9cff0e0d7f8");
+
+			const snapshotAfterSelect = draw.getSnapshot();
+			expect(snapshotAfterSelect.length).toBe(1);
+
+			const featureAfterSelect = draw.getSnapshot()[0];
+			expect(featureAfterSelect.properties.selected).toBe(true);
+
+			draw.deselectFeature("f8e5a38d-ecfa-4294-8461-d9cff0e0d7f8");
+
+			const snapshotAfterDeselect = draw.getSnapshot();
+			expect(snapshotAfterDeselect.length).toBe(1);
+
+			const featureAfterDeselect = draw.getSnapshot()[0];
+			expect(featureAfterDeselect.properties.selected).toBe(false);
 		});
 	});
 

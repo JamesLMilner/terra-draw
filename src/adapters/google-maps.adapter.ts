@@ -115,6 +115,8 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawBaseAdapter {
 		super.unregister();
 		this._clickEventListener?.remove();
 		this._mouseMoveEventListener?.remove();
+		this._overlay?.setMap(null);
+		this._overlay = undefined;
 	}
 
 	/**
@@ -143,7 +145,6 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawBaseAdapter {
 		const screenCoord = new this._lib.Point(offsetX, offsetY);
 
 		const projection = this._overlay.getProjection();
-
 		if (!projection) {
 			return null;
 		}

@@ -114,6 +114,7 @@ export interface TerraDrawCallbacks {
 		setMapDraggability: (enabled: boolean) => void,
 	) => void;
 	onClear: () => void;
+	onReady?(): void;
 }
 
 export interface TerraDrawChanges {

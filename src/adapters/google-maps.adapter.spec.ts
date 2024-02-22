@@ -32,7 +32,9 @@ const createMockGoogleMap = (overrides?: Partial<google.maps.Map>) => {
 		getClickableIcons: jest.fn(),
 		getDiv: jest.fn(() => ({
 			id: "map",
-			querySelector: jest.fn(),
+			querySelector: jest.fn(() => ({
+				addEventListener: jest.fn(),
+			})),
 		})),
 		getHeading: jest.fn(),
 		getMapTypeId: jest.fn(),
@@ -235,6 +237,8 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 				map: mapMock,
 			});
 
+			adapter.register(createMockCallbacks());
+
 			expect(adapter.getLngLatFromEvent(getMockPointerEvent())).toBeNull();
 			expect(mapMock.getBounds).toHaveBeenCalled();
 		});
@@ -252,6 +256,9 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 					() =>
 						({
 							id: "map",
+							querySelector: jest.fn(() => ({
+								addEventListener: jest.fn(),
+							})),
 							getBoundingClientRect: jest.fn(() => ({})),
 						}) as unknown as HTMLDivElement,
 				),
@@ -271,6 +278,8 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 				map: mapMock,
 			});
 
+			adapter.register(createMockCallbacks());
+
 			expect(adapter.getLngLatFromEvent(getMockPointerEvent())).toBeNull();
 			expect(getProjectionMock).toHaveBeenCalled();
 		});
@@ -288,6 +297,9 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 					() =>
 						({
 							id: "map",
+							querySelector: jest.fn(() => ({
+								addEventListener: jest.fn(),
+							})),
 							getBoundingClientRect: jest.fn(() => ({})),
 						}) as unknown as HTMLDivElement,
 				),
@@ -315,6 +327,8 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 				map: mapMock,
 			});
 
+			adapter.register(createMockCallbacks());
+
 			const lngLatFromEvent = adapter.getLngLatFromEvent(getMockPointerEvent());
 			expect(lngLatFromEvent?.lng).toEqual(testLng);
 			expect(lngLatFromEvent?.lat).toEqual(testLat);
@@ -322,7 +336,7 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 	});
 
 	describe("project", () => {
-		it("throws for invalid long & lat", () => {
+		it("throws when not registered and cannot get overlay", () => {
 			const mapMock = createMockGoogleMap({
 				getBounds: jest.fn(() => undefined),
 			});
@@ -340,7 +354,32 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 
 			expect(() => {
 				adapter.project(-1, -2);
-			}).toThrowError();
+			}).toThrowError("cannot get overlay");
+
+			expect(mapMock.getBounds).not.toHaveBeenCalled();
+		});
+
+		it("throws when cannot get bounds", () => {
+			const mapMock = createMockGoogleMap({
+				getBounds: jest.fn(() => undefined),
+			});
+
+			const adapter = new TerraDrawGoogleMapsAdapter({
+				lib: {
+					LatLng: jest.fn(),
+					OverlayView: jest.fn().mockImplementation(() => ({
+						setMap: jest.fn(),
+						getProjection: jest.fn(() => undefined),
+					})),
+				} as any,
+				map: mapMock,
+			});
+
+			adapter.register(createMockCallbacks());
+
+			expect(() => {
+				adapter.project(-1, -2);
+			}).toThrowError("cannot get bounds");
 
 			expect(mapMock.getBounds).toHaveBeenCalled();
 		});
@@ -362,6 +401,8 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 				} as any,
 				map: mapMock,
 			});
+
+			adapter.register(createMockCallbacks());
 
 			expect(() => {
 				adapter.project(testLng, testLat);
@@ -390,6 +431,8 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 				} as any,
 				map: mapMock,
 			});
+
+			adapter.register(createMockCallbacks());
 
 			expect(() => {
 				adapter.project(testLng, testLat);
@@ -422,6 +465,8 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 				map: mapMock,
 			});
 
+			adapter.register(createMockCallbacks());
+
 			const projected = adapter.project(testLng, testLat);
 
 			expect(getProjectionMock).toHaveBeenCalledTimes(1);
@@ -432,6 +477,27 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 	});
 
 	describe("unproject", () => {
+		it("throws when unregistered and overlay unavailable", () => {
+			const getProjectionMock = jest.fn(() => undefined);
+
+			const adapter = new TerraDrawGoogleMapsAdapter({
+				lib: {
+					LatLng: jest.fn(),
+					OverlayView: jest.fn(() => ({
+						setMap: jest.fn(),
+						getProjection: getProjectionMock,
+					})),
+				} as any,
+				map: createMockGoogleMap(),
+			});
+
+			expect(() => {
+				adapter.unproject(50, 80);
+			}).toThrowError();
+
+			expect(getProjectionMock).not.toHaveBeenCalled();
+		});
+
 		it("throws when projection unavailable", () => {
 			const getProjectionMock = jest.fn(() => undefined);
 
@@ -445,6 +511,8 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 				} as any,
 				map: createMockGoogleMap(),
 			});
+
+			adapter.register(createMockCallbacks());
 
 			expect(() => {
 				adapter.unproject(-1, -2);
@@ -472,6 +540,8 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 				} as any,
 				map: createMockGoogleMap(),
 			});
+
+			adapter.register(createMockCallbacks());
 
 			const unprojected = adapter.unproject(50, 80);
 			expect(getProjectionMock).toHaveBeenCalledTimes(1);

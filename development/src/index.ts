@@ -383,19 +383,25 @@ const example = {
 			);
 
 			map.addListener("projection_changed", () => {
+				const adapter = new TerraDrawGoogleMapsAdapter({
+					lib: google.maps,
+					map,
+					coordinatePrecision: 9,
+				});
+
 				const draw = new TerraDraw({
-					adapter: new TerraDrawGoogleMapsAdapter({
-						lib: google.maps,
-						map,
-						coordinatePrecision: 9,
-					}),
+					adapter,
 					modes: getModes(),
 				});
+
 				draw.start();
 
-				addModeChangeHandler(draw, currentSelected);
-
-				this.initialised.push("google");
+				draw.on("ready", () => {
+					// If we wanted to do operaations which require project/unproject
+					// we ould ned to do them in here
+					this.initialised.push("google");
+					addModeChangeHandler(draw, currentSelected);
+				});
 			});
 		});
 	},

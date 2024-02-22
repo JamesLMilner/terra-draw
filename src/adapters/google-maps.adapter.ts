@@ -29,17 +29,13 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawBaseAdapter {
 			typeof config.coordinatePrecision === "number"
 				? config.coordinatePrecision
 				: 9;
-
-		this._overlay = new this._lib.OverlayView();
-		this._overlay.draw = function () {};
-		this._overlay.setMap(this._map);
 	}
 
 	private _cursor: string | undefined;
 	private _cursorStyleSheet: HTMLStyleElement | undefined;
 	private _lib: typeof google.maps;
 	private _map: google.maps.Map;
-	private _overlay: google.maps.OverlayView;
+	private _overlay: google.maps.OverlayView | undefined;
 	private _clickEventListener: google.maps.MapsEventListener | undefined;
 	private _mouseMoveEventListener: google.maps.MapsEventListener | undefined;
 
@@ -62,6 +58,22 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawBaseAdapter {
 
 	public register(callbacks: TerraDrawCallbacks) {
 		super.register(callbacks);
+
+		// The overlay is responsible for allow us to
+		// get the projection, which in turn allows us to
+		// go through lng/lat to pixel space and vice versa
+		this._overlay = new this._lib.OverlayView();
+		this._overlay.draw = function () {};
+
+		// Unforunately it is only ready after the onAdd
+		// method is called, which is why we need to use the 'ready'
+		// listener with the Google Maps adapter
+		this._overlay.onAdd = () => {
+			this._currentModeCallbacks &&
+				this._currentModeCallbacks.onReady &&
+				this._currentModeCallbacks.onReady();
+		};
+		this._overlay.setMap(this._map);
 
 		// Clicking on data geometries triggers
 		// swallows the map onclick event,
@@ -111,6 +123,10 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawBaseAdapter {
 	 * @returns An object with 'lng' and 'lat' properties representing the longitude and latitude, or null if the conversion is not possible.
 	 */
 	getLngLatFromEvent(event: PointerEvent | MouseEvent) {
+		if (!this._overlay) {
+			throw new Error("cannot get overlay");
+		}
+
 		const bounds = this._map.getBounds();
 
 		if (!bounds) {
@@ -158,6 +174,10 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawBaseAdapter {
 	 * @returns An object with 'x' and 'y' properties representing the pixel coordinates within the map container.
 	 */
 	project(lng: number, lat: number) {
+		if (!this._overlay) {
+			throw new Error("cannot get overlay");
+		}
+
 		const bounds = this._map.getBounds();
 
 		if (bounds === undefined) {
@@ -187,6 +207,10 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawBaseAdapter {
 	 * @returns An object with 'lng' and 'lat' properties representing the longitude and latitude coordinates.
 	 */
 	unproject(x: number, y: number) {
+		if (!this._overlay) {
+			throw new Error("cannot get overlay");
+		}
+
 		const projection = this._overlay.getProjection();
 		if (projection === undefined) {
 			throw new Error("cannot get projection");

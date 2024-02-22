@@ -2,6 +2,7 @@ import {
 	TerraDrawChanges,
 	SetCursor,
 	TerraDrawStylingFunction,
+	TerraDrawCallbacks,
 } from "../common";
 import { Feature, LineString, Point, Polygon } from "geojson";
 import mapboxgl, {
@@ -447,5 +448,12 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawBaseAdapter {
 			// Then clean up rendering
 			this.clearLayers();
 		}
+	}
+
+	public register(callbacks: TerraDrawCallbacks) {
+		super.register(callbacks);
+		this._currentModeCallbacks &&
+			this._currentModeCallbacks.onReady &&
+			this._currentModeCallbacks.onReady();
 	}
 }

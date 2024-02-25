@@ -19,7 +19,11 @@ import {
 	SELECT_PROPERTIES,
 } from "./common";
 import { TerraDrawBaseAdapter } from "./adapters/common/base.adapter";
-import { ModeTypes, TerraDrawBaseDrawMode } from "./modes/base.mode";
+import {
+	ModeTypes,
+	TerraDrawBaseDrawMode,
+	TerraDrawBaseSelectMode,
+} from "./modes/base.mode";
 import { TerraDrawCircleMode } from "./modes/circle/circle.mode";
 import { TerraDrawFreehandMode } from "./modes/freehand/freehand.mode";
 import { TerraDrawGreatCircleMode } from "./modes/greatcircle/great-circle.mode";
@@ -61,8 +65,10 @@ interface TerraDrawEventListeners {
 type TerraDrawEvents = keyof TerraDrawEventListeners;
 
 class TerraDraw {
-	private _modes: { [mode: string]: TerraDrawBaseDrawMode<any> };
-	private _mode: TerraDrawBaseDrawMode<any>;
+	private _modes: {
+		[mode: string]: TerraDrawBaseDrawMode<any> | TerraDrawBaseSelectMode<any>;
+	};
+	private _mode: TerraDrawBaseDrawMode<any> | TerraDrawBaseSelectMode<any>;
 	private _adapter: TerraDrawAdapter;
 	private _enabled = false;
 	private _store: GeoJSONStore;
@@ -382,6 +388,27 @@ class TerraDraw {
 		});
 	}
 
+	private getSelectMode() {
+		this.checkEnabled();
+
+		if (!this._instanceSelectMode) {
+			throw new Error("No select mode defined in instance");
+		}
+
+		const currentMode = this.getMode();
+
+		// If we're not already in the select mode, we switch to it
+		if (currentMode !== this._instanceSelectMode) {
+			this.setMode(this._instanceSelectMode);
+		}
+
+		const selectMode = this._modes[
+			this._instanceSelectMode
+		] as TerraDrawBaseSelectMode<any>;
+
+		return selectMode;
+	}
+
 	/**
 	 * Allows the setting of a style for a given mode
 	 *
@@ -400,7 +427,8 @@ class TerraDraw {
 			throw new Error("No mode with this name present");
 		}
 
-		this._modes[mode].styles = styles;
+		// TODO: Not sure why this fails TypeScript with TerraDrawBaseSelectMode?
+		(this._modes[mode] as TerraDrawBaseDrawMode<any>).styles = styles;
 	}
 
 	/**
@@ -498,6 +526,30 @@ class TerraDraw {
 	removeFeatures(ids: FeatureId[]) {
 		this.checkEnabled();
 		this._store.delete(ids);
+	}
+
+	/**
+	 * Provides the ability to programmatically select a feature using the instances provided select mode.
+	 * If not select mode is provided in the instance, an error will be thrown. If the instance is not currently
+	 * in the select mode, it will switch to it.
+	 * @param id - the id of the feature to select
+	 * @alpha
+	 */
+	selectFeature(id: FeatureId) {
+		const selectMdode = this.getSelectMode();
+		selectMdode.selectFeature(id);
+	}
+
+	/**
+	 * Provides the ability to programmatically deselect a feature using the instances provided select mode.
+	 * If not select mode is provided in the instance, an error will be thrown. If the instance is not currently
+	 * in the select mode, it will switch to it.
+	 * @param id  - the id of the feature to deselect
+	 * @alpha
+	 */
+	deselectFeature(id: FeatureId) {
+		const selectMode = this.getSelectMode();
+		selectMode.deselectFeature(id);
 	}
 
 	/**

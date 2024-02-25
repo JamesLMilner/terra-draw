@@ -11,8 +11,7 @@ import { Point, Position } from "geojson";
 import {
 	BaseModeOptions,
 	CustomStyling,
-	ModeTypes,
-	TerraDrawBaseDrawMode,
+	TerraDrawBaseSelectMode,
 } from "../base.mode";
 import { MidPointBehavior } from "./behaviors/midpoint.behavior";
 import { SelectionPointBehavior } from "./behaviors/selection-point.behavior";
@@ -100,14 +99,13 @@ interface TerraDrawSelectModeOptions<T extends CustomStyling>
 	allowManualDeselection?: boolean;
 }
 
-export class TerraDrawSelectMode extends TerraDrawBaseDrawMode<SelectionStyling> {
-	public type = ModeTypes.Select;
+export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStyling> {
 	public mode = "select";
 
 	private allowManualDeselection = true;
 	private dragEventThrottle = 5;
 	private dragEventCount = 0;
-	private selected: string[] = [];
+	private selected: FeatureId[] = [];
 
 	private flags: { [mode: string]: ModeFlags };
 	private keyEvents: TerraDrawSelectModeKeyEvents;
@@ -174,6 +172,10 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode<SelectionStyling>
 		this.allowManualDeselection = options?.allowManualDeselection ?? true;
 	}
 
+	selectFeature(featureId: FeatureId) {
+		this.select(featureId, false);
+	}
+
 	setSelecting() {
 		if (this._state === "started") {
 			this._state = "selecting";
@@ -224,6 +226,10 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode<SelectionStyling>
 			this.selectionPoints,
 			this.midPoints,
 		);
+	}
+
+	public deselectFeature() {
+		this.deselect();
 	}
 
 	private deselect() {
@@ -368,6 +374,72 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode<SelectionStyling>
 		}
 	}
 
+	private select(featureId: FeatureId, fromCursor = true) {
+		if (this.selected[0] === featureId) {
+			return;
+		}
+
+		const { mode } = this.store.getPropertiesCopy(featureId);
+
+		// This will be undefined for points
+		const modeFlags = this.flags[mode as string];
+
+		// If feature is not selectable then return
+		if (!modeFlags || !modeFlags.feature) {
+			return;
+		}
+
+		const previouslySelectedId = this.selected[0];
+
+		// If we have something currently selected
+		if (previouslySelectedId) {
+			// If it matches the current selected feature id, do nothing
+			if (previouslySelectedId === featureId) {
+				return;
+			} else {
+				// If it's a different feature set selected
+				// to false on previously selected feature
+				this.deselect();
+			}
+		}
+
+		if (fromCursor) {
+			this.setCursor(this.cursors.pointerOver);
+		}
+
+		// Select feature
+		this.selected = [featureId];
+		console.log("setting selected");
+		this.store.updateProperty([
+			{ id: featureId, property: "selected", value: true },
+		]);
+		this.onSelect(featureId);
+
+		// Get the clicked feature
+		const { type, coordinates } = this.store.getGeometryCopy(featureId);
+
+		if (type !== "LineString" && type !== "Polygon") {
+			return;
+		}
+
+		// LineString does not have nesting so we can just take 'coordinates'
+		// directly. Polygon is nested so we need to take [0] item in the array
+		const selectedCoords: Position[] =
+			type === "LineString" ? coordinates : coordinates[0];
+
+		if (selectedCoords && modeFlags && modeFlags.feature.coordinates) {
+			this.selectionPoints.create(selectedCoords, type, featureId);
+
+			if (modeFlags.feature.coordinates.midpoints) {
+				this.midPoints.create(
+					selectedCoords,
+					featureId,
+					this.coordinatePrecision,
+				);
+			}
+		}
+	}
+
 	private onLeftClick(event: TerraDrawMouseEvent) {
 		const { clickedFeature, clickedMidPoint } = this.featuresAtMouseEvent.find(
 			event,
@@ -386,71 +458,8 @@ export class TerraDrawSelectMode extends TerraDrawBaseDrawMode<SelectionStyling>
 			return;
 		}
 
-		if (clickedFeature) {
-			const { mode } = this.store.getPropertiesCopy(
-				clickedFeature.id as string,
-			);
-
-			// This will be undefined for points
-			const modeFlags = this.flags[mode as string];
-
-			// If feature is not selectable then return
-			if (!modeFlags || !modeFlags.feature) {
-				return;
-			}
-
-			const previouslySelectedId = this.selected[0];
-
-			// If we have something currently selected
-			if (previouslySelectedId) {
-				// If it matches the current selected feature id, do nothing
-				if (previouslySelectedId === clickedFeature.id) {
-					return;
-				} else {
-					// If it's a different feature set selected
-					// to false on previously selected feature
-					this.deselect();
-				}
-			}
-
-			this.setCursor(this.cursors.pointerOver);
-
-			// Select feature
-			this.selected = [clickedFeature.id as string];
-			this.store.updateProperty([
-				{ id: clickedFeature.id as string, property: "selected", value: true },
-			]);
-			this.onSelect(clickedFeature.id as string);
-
-			// Get the clicked feature
-			const { type, coordinates } = this.store.getGeometryCopy(
-				clickedFeature.id as string,
-			);
-
-			if (type !== "LineString" && type !== "Polygon") {
-				return;
-			}
-
-			// LineString does not have nesting so we can just take 'coordinates'
-			// directly. Polygon is nested so we need to take [0] item in the array
-			const selectedCoords: Position[] =
-				type === "LineString" ? coordinates : coordinates[0];
-
-			if (selectedCoords && modeFlags && modeFlags.feature.coordinates) {
-				this.selectionPoints.create(
-					selectedCoords,
-					type,
-					clickedFeature.id as string,
-				);
-
-				if (modeFlags.feature.coordinates.midpoints) {
-					this.midPoints.create(
-						selectedCoords,
-						clickedFeature.id as string,
-						this.coordinatePrecision,
-					);
-				}
-			}
+		if (clickedFeature && clickedFeature.id) {
+			this.select(clickedFeature.id, true);
 		} else if (this.selected.length && this.allowManualDeselection) {
 			this.deselect();
 			return;

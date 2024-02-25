@@ -51,6 +51,7 @@ type SelectListener = (id: FeatureId) => void;
 type DeselectListener = () => void;
 
 interface TerraDrawEventListeners {
+	ready: () => void;
 	finish: FinishListener;
 	change: ChangeListener;
 	select: SelectListener;
@@ -66,6 +67,7 @@ class TerraDraw {
 	private _enabled = false;
 	private _store: GeoJSONStore;
 	private _eventListeners: {
+		ready: (() => void)[];
 		change: ChangeListener[];
 		finish: FinishListener[];
 		select: SelectListener[];
@@ -121,7 +123,13 @@ class TerraDraw {
 		});
 
 		this._modes = { ...modesMap, static: this._mode };
-		this._eventListeners = { change: [], select: [], deselect: [], finish: [] };
+		this._eventListeners = {
+			change: [],
+			select: [],
+			deselect: [],
+			finish: [],
+			ready: [],
+		};
 		this._store = new GeoJSONStore<FeatureId>({
 			tracked: options.tracked ? true : false,
 			idStrategy: options.idStrategy ? options.idStrategy : undefined,
@@ -570,6 +578,11 @@ class TerraDraw {
 	start() {
 		this._enabled = true;
 		this._adapter.register({
+			onReady: () => {
+				this._eventListeners.ready.forEach((listener) => {
+					listener();
+				});
+			},
 			getState: () => {
 				return this._mode.state;
 			},

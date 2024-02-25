@@ -2,6 +2,7 @@ import {
 	TerraDrawChanges,
 	SetCursor,
 	TerraDrawStylingFunction,
+	TerraDrawCallbacks,
 } from "../common";
 import { FeatureId, GeoJSONStoreFeatures } from "../store/store";
 import CircleGeom from "ol/geom/Circle";
@@ -309,7 +310,7 @@ export class TerraDrawOpenLayersAdapter extends TerraDrawBaseAdapter {
 	 * Clears the map and store of all rendered data layers
 	 * @returns void
 	 * */
-	clear() {
+	public clear() {
 		if (this._currentModeCallbacks) {
 			// Clean up state first
 			this._currentModeCallbacks.onClear();
@@ -317,5 +318,12 @@ export class TerraDrawOpenLayersAdapter extends TerraDrawBaseAdapter {
 			// Then clean up rendering
 			this.clearLayers();
 		}
+	}
+
+	public register(callbacks: TerraDrawCallbacks) {
+		super.register(callbacks);
+		this._currentModeCallbacks &&
+			this._currentModeCallbacks.onReady &&
+			this._currentModeCallbacks.onReady();
 	}
 }

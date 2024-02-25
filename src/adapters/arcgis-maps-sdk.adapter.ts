@@ -75,6 +75,10 @@ export class TerraDrawArcGISMapsSDKAdapter extends TerraDrawBaseAdapter {
 				event.stopPropagation();
 			}
 		});
+
+		this._currentModeCallbacks &&
+			this._currentModeCallbacks.onReady &&
+			this._currentModeCallbacks.onReady();
 	}
 
 	public unregister() {

@@ -2,6 +2,7 @@ import {
 	TerraDrawChanges,
 	SetCursor,
 	TerraDrawStylingFunction,
+	TerraDrawCallbacks,
 } from "../common";
 import L from "leaflet";
 import { GeoJSONStoreFeatures } from "../store/store";
@@ -293,5 +294,13 @@ export class TerraDrawLeafletAdapter extends TerraDrawBaseAdapter {
 			this.clearLayers();
 			this.clearPanes();
 		}
+	}
+
+	public register(callbacks: TerraDrawCallbacks) {
+		super.register(callbacks);
+
+		this._currentModeCallbacks &&
+			this._currentModeCallbacks.onReady &&
+			this._currentModeCallbacks.onReady();
 	}
 }

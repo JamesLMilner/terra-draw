@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.1-alpha.58](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.57...v0.0.1-alpha.58) (2024-02-25)
+
+
+### Features
+
+* allow users to select features programmatically ([#202](https://github.com/JamesLMilner/terra-draw/issues/202)) ([e5ea2ef](https://github.com/JamesLMilner/terra-draw/commit/e5ea2ef45b3c420fb0e6f9518be13d92e553faec))
+
+
+### Bug Fixes
+
+* create ready event which can be used by the Google Maps Adapter to avoid async issues ([#201](https://github.com/JamesLMilner/terra-draw/issues/201)) ([81a010f](https://github.com/JamesLMilner/terra-draw/commit/81a010f61c17365dff6baf5f831b72a428e2e456))
+
+
+### Documentation
+
+* remove lib passed to various adapters in the adapters guide ([#196](https://github.com/JamesLMilner/terra-draw/issues/196)) ([c9a8686](https://github.com/JamesLMilner/terra-draw/commit/c9a86865a06880efba3af6930af8a5312b40ae04))
+
+
+### Chore
+
+* add contact email ([#198](https://github.com/JamesLMilner/terra-draw/issues/198)) ([0312035](https://github.com/JamesLMilner/terra-draw/commit/0312035c3a358c2d8a7ba631a1ff59a79bc43aee))
+
 ### [0.0.1-alpha.57](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.56...v0.0.1-alpha.57) (2024-02-11)
 
 

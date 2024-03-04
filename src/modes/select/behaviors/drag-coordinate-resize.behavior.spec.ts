@@ -43,6 +43,7 @@ describe("DragCoordinateResizeBehavior", () => {
 				new PixelDistanceBehavior(config),
 				selectionPointBehavior,
 				new MidPointBehavior(config, selectionPointBehavior),
+				10,
 			);
 		});
 	});
@@ -65,6 +66,7 @@ describe("DragCoordinateResizeBehavior", () => {
 				pixelDistanceBehavior,
 				selectionPointBehavior,
 				midpointBehavior,
+				10,
 			);
 		});
 
@@ -158,12 +160,13 @@ describe("DragCoordinateResizeBehavior", () => {
 
 					jest.spyOn(config.store, "updateGeometry");
 
-					(config.project as jest.Mock)
-						.mockReturnValueOnce({ x: 0, y: 0 })
-						.mockReturnValueOnce({ x: 0, y: 1 })
-						.mockReturnValueOnce({ x: 1, y: 1 })
-						.mockReturnValueOnce({ x: 1, y: 0 })
-						.mockReturnValueOnce({ x: 0, y: 0 });
+					// Mock the projection for the cooridinates of the bounding box
+					// when measuring against them to prevent overlap
+					for (let i = 0; i < 10; i++) {
+						(config.project as jest.Mock)
+							.mockReturnValueOnce({ x: 0, y: 0 })
+							.mockReturnValueOnce({ x: 100, y: 100 });
+					}
 
 					dragMaintainedShapeBehavior.drag(mockDrawEvent(), "center-fixed");
 					dragMaintainedShapeBehavior.drag(mockDrawEvent(), "center-fixed");
@@ -177,9 +180,13 @@ describe("DragCoordinateResizeBehavior", () => {
 
 					dragMaintainedShapeBehavior.startDragging(id, 0);
 
-					(config.project as jest.Mock)
-						.mockReturnValueOnce({ x: 0, y: 0 })
-						.mockReturnValueOnce({ x: 0, y: 1 });
+					// Mock the projection for the cooridinates of the bounding box
+					// when measuring against them to prevent overlap
+					for (let i = 0; i < 10; i++) {
+						(config.project as jest.Mock)
+							.mockReturnValueOnce({ x: 0, y: 0 })
+							.mockReturnValueOnce({ x: 100, y: 100 });
+					}
 
 					dragMaintainedShapeBehavior.drag(mockDrawEvent(), "center-fixed");
 					dragMaintainedShapeBehavior.drag(mockDrawEvent(), "center-fixed");
@@ -188,7 +195,7 @@ describe("DragCoordinateResizeBehavior", () => {
 				});
 			});
 
-			describe("opposite-corner-fixed", () => {
+			describe("opposite-fixed", () => {
 				it("updates the Polygon coordinate if within pointer distance", () => {
 					const id = createStorePolygon(config);
 
@@ -196,21 +203,16 @@ describe("DragCoordinateResizeBehavior", () => {
 
 					jest.spyOn(config.store, "updateGeometry");
 
-					(config.project as jest.Mock)
-						.mockReturnValueOnce({ x: 0, y: 0 })
-						.mockReturnValueOnce({ x: 0, y: 1 })
-						.mockReturnValueOnce({ x: 1, y: 1 })
-						.mockReturnValueOnce({ x: 1, y: 0 })
-						.mockReturnValueOnce({ x: 0, y: 0 });
+					// Mock the projection for the cooridinates of the bounding box
+					// when measuring against them to prevent overlap
+					for (let i = 0; i < 10; i++) {
+						(config.project as jest.Mock)
+							.mockReturnValueOnce({ x: 0, y: 0 })
+							.mockReturnValueOnce({ x: 100, y: 100 });
+					}
 
-					dragMaintainedShapeBehavior.drag(
-						mockDrawEvent(),
-						"opposite-corner-fixed",
-					);
-					dragMaintainedShapeBehavior.drag(
-						mockDrawEvent(),
-						"opposite-corner-fixed",
-					);
+					dragMaintainedShapeBehavior.drag(mockDrawEvent(), "opposite-fixed");
+					dragMaintainedShapeBehavior.drag(mockDrawEvent(), "opposite-fixed");
 
 					expect(config.store.updateGeometry).toBeCalledTimes(1);
 				});
@@ -221,18 +223,63 @@ describe("DragCoordinateResizeBehavior", () => {
 
 					dragMaintainedShapeBehavior.startDragging(id, 0);
 
-					(config.project as jest.Mock)
-						.mockReturnValueOnce({ x: 0, y: 0 })
-						.mockReturnValueOnce({ x: 0, y: 1 });
+					// (config.project as jest.Mock)
+					// 	.mockReturnValueOnce({ x: 0, y: 0 })
+					// 	.mockReturnValueOnce({ x: 0, y: 1 });
 
-					dragMaintainedShapeBehavior.drag(
-						mockDrawEvent(),
-						"opposite-corner-fixed",
-					);
-					dragMaintainedShapeBehavior.drag(
-						mockDrawEvent(),
-						"opposite-corner-fixed",
-					);
+					// Mock the projection for the cooridinates of the bounding box
+					// when measuring against them to prevent overlap
+					for (let i = 0; i < 10; i++) {
+						(config.project as jest.Mock)
+							.mockReturnValueOnce({ x: 0, y: 0 })
+							.mockReturnValueOnce({ x: 100, y: 100 });
+					}
+
+					dragMaintainedShapeBehavior.drag(mockDrawEvent(), "opposite-fixed");
+					dragMaintainedShapeBehavior.drag(mockDrawEvent(), "opposite-fixed");
+
+					expect(config.store.updateGeometry).toBeCalledTimes(1);
+				});
+			});
+
+			describe("opposite", () => {
+				it("updates the Polygon coordinate if within pointer distance", () => {
+					const id = createStorePolygon(config);
+
+					dragMaintainedShapeBehavior.startDragging(id, 0);
+
+					jest.spyOn(config.store, "updateGeometry");
+
+					// Mock the projection for the cooridinates of the bounding box
+					// when measuring against them to prevent overlap
+					for (let i = 0; i < 10; i++) {
+						(config.project as jest.Mock)
+							.mockReturnValueOnce({ x: 0, y: 0 })
+							.mockReturnValueOnce({ x: 100, y: 100 });
+					}
+
+					dragMaintainedShapeBehavior.drag(mockDrawEvent(), "opposite");
+					dragMaintainedShapeBehavior.drag(mockDrawEvent(), "opposite");
+
+					expect(config.store.updateGeometry).toBeCalledTimes(1);
+				});
+
+				it("updates the LineString coordinate if within pointer distance", () => {
+					const id = createLineString(config);
+					jest.spyOn(config.store, "updateGeometry");
+
+					dragMaintainedShapeBehavior.startDragging(id, 0);
+
+					// Mock the projection for the cooridinates of the bounding box
+					// when measuring against them to prevent overlap
+					for (let i = 0; i < 10; i++) {
+						(config.project as jest.Mock)
+							.mockReturnValueOnce({ x: 0, y: 0 })
+							.mockReturnValueOnce({ x: 100, y: 100 });
+					}
+
+					dragMaintainedShapeBehavior.drag(mockDrawEvent(), "opposite");
+					dragMaintainedShapeBehavior.drag(mockDrawEvent(), "opposite");
 
 					expect(config.store.updateGeometry).toBeCalledTimes(1);
 				});

@@ -2449,7 +2449,7 @@ describe("TerraDrawSelectMode", () => {
 			});
 		});
 
-		describe("drag maintaining shape", () => {
+		describe("drag reszing with center-fixed", () => {
 			it("does trigger drag events if mode is draggable for linestring", () => {
 				setSelectMode({
 					flags: {
@@ -2543,6 +2543,18 @@ describe("TerraDrawSelectMode", () => {
 					},
 					setMapDraggability,
 				);
+
+				for (let i = 0; i < 10; i++) {
+					project
+						.mockReturnValueOnce({
+							x: 0,
+							y: 0,
+						})
+						.mockReturnValueOnce({
+							x: 100,
+							y: 100,
+						});
+				}
 
 				selectMode.onDrag(
 					{
@@ -2671,6 +2683,18 @@ describe("TerraDrawSelectMode", () => {
 					},
 					setMapDraggability,
 				);
+
+				for (let i = 0; i < 10; i++) {
+					project
+						.mockReturnValueOnce({
+							x: 0,
+							y: 0,
+						})
+						.mockReturnValueOnce({
+							x: 100,
+							y: 100,
+						});
+				}
 
 				selectMode.onDrag(
 					{

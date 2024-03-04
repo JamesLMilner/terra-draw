@@ -225,6 +225,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 			this.pixelDistance,
 			this.selectionPoints,
 			this.midPoints,
+			10,
 		);
 	}
 
@@ -409,7 +410,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 
 		// Select feature
 		this.selected = [featureId];
-		console.log("setting selected");
+
 		this.store.updateProperty([
 			{ id: featureId, property: "selected", value: true },
 		]);

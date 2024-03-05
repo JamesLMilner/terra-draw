@@ -12,7 +12,13 @@ import { limitPrecision } from "../../../geometry/limit-decimal-precision";
 import { transformScale } from "../../../geometry/transform/scale";
 import { pixelDistance } from "../../../geometry/measure/pixel-distance";
 
-export type ResizeOptions = "center-fixed" | "opposite-fixed" | "opposite";
+export type ResizeOptions =
+	| "center-fixed"
+	| "opposite-fixed"
+	| "opposite"
+	| "center"
+	| "center-planar"
+	| "opposite-planar";
 
 type OppositeMapIndex = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
@@ -127,11 +133,17 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 		// Get the origin for the scaling to occur from
 		let origin: Position | undefined;
 		let oppositeIndex: OppositeMapIndex | undefined;
-		if (resizeOption === "center-fixed") {
+
+		if (
+			resizeOption === "center-fixed" ||
+			resizeOption === "center" ||
+			resizeOption === "center-planar"
+		) {
 			origin = this.getCenterOrigin(feature);
 		} else if (
 			resizeOption === "opposite-fixed" ||
-			resizeOption === "opposite"
+			resizeOption === "opposite" ||
+			resizeOption === "opposite-planar"
 		) {
 			const { origin: oppositeOrigin, index } = this.getOppositeOrigin(
 				feature,
@@ -194,7 +206,7 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 
 		if (resizeOption === "center-fixed" || resizeOption === "opposite-fixed") {
 			transformScale(feature, scale, origin as Position);
-		} else if (resizeOption === "opposite") {
+		} else if (resizeOption === "opposite" || resizeOption === "center") {
 			// Quick check to ensure it's viable to even scale
 			// TODO: We could probably be smarter about this as this will
 			// break in some instances
@@ -202,17 +214,21 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 				return false;
 			}
 
-			const validX =
-				!isNaN(xScale) && xScale > 0 && yScale < Number.MAX_SAFE_INTEGER;
-			const validY =
-				!isNaN(yScale) && yScale > 0 && yScale < Number.MAX_SAFE_INTEGER;
-
-			if (validX && validY) {
-				transformScale(feature, xScale, origin as Position, "x");
-				transformScale(feature, yScale, origin as Position, "y");
-			} else {
+			if (!this.validateScale(xScale, yScale)) {
 				return false;
 			}
+
+			transformScale(feature, xScale, origin as Position, "x");
+			transformScale(feature, yScale, origin as Position, "y");
+		} else if (
+			resizeOption === "center-planar" ||
+			resizeOption === "opposite-planar"
+		) {
+			if (!this.validateScale(xScale, yScale)) {
+				return false;
+			}
+
+			this.scalePlanar(updatedCoords, originX, originY, xScale, yScale);
 		} else {
 			throw new Error("Invalid resize option");
 		}
@@ -266,6 +282,34 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 		this.lastDistanceY = distanceYAbs;
 
 		return true;
+	}
+
+	private validateScale(xScale: number, yScale: number) {
+		const validX =
+			!isNaN(xScale) && xScale > 0 && yScale < Number.MAX_SAFE_INTEGER;
+		const validY =
+			!isNaN(yScale) && yScale > 0 && yScale < Number.MAX_SAFE_INTEGER;
+
+		return validX && validY;
+	}
+
+	private scalePlanar(
+		coordinates: Position[],
+		originX: number,
+		originY: number,
+		xScale: number,
+		yScale: number,
+	) {
+		coordinates.forEach((coordinate) => {
+			const { x, y } = this.project(coordinate[0], coordinate[1]);
+
+			const updatedX = originX + (x - originX) * xScale;
+			const updatedY = originY + (y - originY) * yScale;
+			const updatedCoordinate = this.unproject(updatedX, updatedY);
+
+			coordinate[0] = updatedCoordinate.lng;
+			coordinate[1] = updatedCoordinate.lat;
+		});
 	}
 
 	private getCenterOrigin(feature: Feature<Polygon | LineString>) {

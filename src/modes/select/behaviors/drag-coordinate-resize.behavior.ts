@@ -10,8 +10,9 @@ import { centroid } from "../../../geometry/centroid";
 import { haversineDistanceKilometers } from "../../../geometry/measure/haversine-distance";
 import { limitPrecision } from "../../../geometry/limit-decimal-precision";
 import { transformScale } from "../../../geometry/transform/scale";
+import { pixelDistance } from "../../../geometry/measure/pixel-distance";
 
-export type ResizeOptions = "center-fixed" | "opposite-corner-fixed";
+export type ResizeOptions = "center-fixed" | "opposite-fixed" | "opposite";
 
 type OppositeMapIndex = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
@@ -21,6 +22,7 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 		private readonly pixelDistance: PixelDistanceBehavior,
 		private readonly selectionPoints: SelectionPointBehavior,
 		private readonly midPoints: MidPointBehavior,
+		private readonly minDistanceFromSelectionPoint: number,
 	) {
 		super(config);
 	}
@@ -93,6 +95,8 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 	}
 
 	private lastDistance: number | undefined;
+	private lastDistanceX: number | undefined;
+	private lastDistanceY: number | undefined;
 
 	public drag(
 		event: TerraDrawMouseEvent,
@@ -109,8 +113,6 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 			return false;
 		}
 
-		const mouseCoord = [event.lng, event.lat];
-
 		// Coordinates are either polygon or linestring at this point
 		const updatedCoords: Position[] =
 			geometry.type === "Polygon"
@@ -124,26 +126,119 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 
 		// Get the origin for the scaling to occur from
 		let origin: Position | undefined;
+		let oppositeIndex: OppositeMapIndex | undefined;
 		if (resizeOption === "center-fixed") {
 			origin = this.getCenterOrigin(feature);
-		} else if (resizeOption === "opposite-corner-fixed") {
-			origin = this.getOppositeOrigin(feature, selectedCoordinate);
+		} else if (
+			resizeOption === "opposite-fixed" ||
+			resizeOption === "opposite"
+		) {
+			const { origin: oppositeOrigin, index } = this.getOppositeOrigin(
+				feature,
+				selectedCoordinate,
+			);
+			origin = oppositeOrigin;
+			oppositeIndex = index;
 		}
 
-		const distance = haversineDistanceKilometers(
-			origin as Position,
-			mouseCoord,
-		);
-
-		// We need an original bearing to compare against
-		if (!this.lastDistance) {
-			this.lastDistance = distance;
+		if (!origin) {
 			return false;
 		}
 
-		const scale = 1 - (this.lastDistance - distance) / distance;
+		const { x: selectedX, y: selectedY } = this.project(
+			selectedCoordinate[0],
+			selectedCoordinate[1],
+		);
+		const distanceSelectedToCursor = pixelDistance(
+			{ x: event.containerX, y: event.containerY },
+			{ x: selectedX, y: selectedY },
+		);
 
-		transformScale(feature, scale, origin as Position);
+		const { x: originX, y: originY } = this.project(origin[0], origin[1]);
+		const distanceOriginToCursor = pixelDistance(
+			{ x: event.containerX, y: event.containerY },
+			{ x: originX, y: originY },
+		);
+
+		const distanceXAbs = Math.abs(event.containerX - originX);
+		const distanceYAbs = Math.abs(event.containerY - originY);
+
+		// We need an original bearing to compare against
+		if (
+			this.lastDistance === undefined ||
+			this.lastDistanceX === undefined ||
+			this.lastDistanceY === undefined
+		) {
+			this.lastDistance = distanceOriginToCursor;
+			this.lastDistanceX = distanceXAbs;
+			this.lastDistanceY = distanceYAbs;
+			return false;
+		}
+
+		let scale = 1;
+		if (!(this.lastDistance === 0 && distanceOriginToCursor === 0)) {
+			scale =
+				1 -
+				(this.lastDistance - distanceOriginToCursor) / distanceOriginToCursor;
+		}
+
+		let xScale = 1;
+		if (!(this.lastDistanceX === 0 && distanceXAbs === 0)) {
+			xScale = 1 - (this.lastDistanceX - distanceXAbs) / distanceXAbs;
+		}
+
+		let yScale = 1;
+		if (!(this.lastDistanceY === 0 && distanceYAbs === 0)) {
+			yScale = 1 - (this.lastDistanceY - distanceYAbs) / distanceYAbs;
+		}
+
+		if (resizeOption === "center-fixed" || resizeOption === "opposite-fixed") {
+			transformScale(feature, scale, origin as Position);
+		} else if (resizeOption === "opposite") {
+			// Quick check to ensure it's viable to even scale
+			// TODO: We could probably be smarter about this as this will
+			// break in some instances
+			if (distanceSelectedToCursor > distanceOriginToCursor) {
+				return false;
+			}
+
+			const validX =
+				!isNaN(xScale) && xScale > 0 && yScale < Number.MAX_SAFE_INTEGER;
+			const validY =
+				!isNaN(yScale) && yScale > 0 && yScale < Number.MAX_SAFE_INTEGER;
+
+			if (validX && validY) {
+				transformScale(feature, xScale, origin as Position, "x");
+				transformScale(feature, yScale, origin as Position, "y");
+			} else {
+				return false;
+			}
+		} else {
+			throw new Error("Invalid resize option");
+		}
+
+		// We want to ensure that we are not causing the corners
+		// of the bounding box to overlap. This also has the side
+		// affect of preventing bugs
+		const bbox = this.getBBox(updatedCoords);
+		for (let i = 0; i < bbox.length; i++) {
+			if (i === oppositeIndex) {
+				continue;
+			}
+
+			const bboxPixelCoordinate = this.config.project(bbox[i][0], bbox[i][1]);
+			const distanceToOtherBboxCoordinate = this.pixelDistance.measure(
+				{
+					containerX: bboxPixelCoordinate.x,
+					containerY: bboxPixelCoordinate.y,
+				} as TerraDrawMouseEvent,
+				origin,
+			);
+
+			if (distanceToOtherBboxCoordinate < this.minDistanceFromSelectionPoint) {
+				return false;
+			}
+		}
 
 		// Ensure that coordinate precision is maintained
 		updatedCoords.forEach((coordinate) => {
@@ -166,7 +261,9 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 			...updatedMidPoints,
 		]);
 
-		this.lastDistance = distance;
+		this.lastDistance = distanceOriginToCursor;
+		this.lastDistanceX = distanceXAbs;
+		this.lastDistanceY = distanceYAbs;
 
 		return true;
 	}
@@ -175,15 +272,7 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 		return centroid(feature);
 	}
 
-	private getOppositeOrigin(
-		feature: Feature<Polygon | LineString>,
-		selectedCoordinate: Position,
-	) {
-		const coordinates =
-			feature.geometry.type === "Polygon"
-				? feature.geometry.coordinates[0]
-				: feature.geometry.coordinates;
-
+	private getBBox(coordinates: Position[]) {
 		const bbox: [number, number, number, number] = [
 			Infinity,
 			Infinity,
@@ -226,7 +315,7 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 		const lowLeft = [west, south];
 		const midLeft = [west, (south + north) / 2];
 
-		const options = [
+		return [
 			topLeft, // 1
 			midTop, // 2
 			topRight,
@@ -236,6 +325,18 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 			lowLeft,
 			midLeft,
 		] as const;
+	}
+
+	private getOppositeOrigin(
+		feature: Feature<Polygon | LineString>,
+		selectedCoordinate: Position,
+	) {
+		const coordinates =
+			feature.geometry.type === "Polygon"
+				? feature.geometry.coordinates[0]
+				: feature.geometry.coordinates;
+
+		const options = this.getBBox(coordinates);
 
 		let closest: OppositeMapIndex | undefined;
 		let closestDistance = Infinity;
@@ -257,8 +358,11 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 
 		// Depending on where what the origin is set to, we need to find the position to
 		// scale from
-		const oppositeIndex = this.boundingBoxMaps["opposite"][closest];
-		return options[oppositeIndex];
+		const oppositeIndex = this.boundingBoxMaps["opposite"][
+			closest
+		] as OppositeMapIndex;
+
+		return { origin: options[oppositeIndex], index: oppositeIndex } as const;
 	}
 
 	isDragging() {

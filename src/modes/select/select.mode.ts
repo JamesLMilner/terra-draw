@@ -482,6 +482,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 
 	/** @internal */
 	onClick(event: TerraDrawMouseEvent) {
+		console.log("event::: ", event);
 		if (event.button === "right") {
 			this.onRightClick(event);
 			return;
@@ -564,11 +565,10 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 	) {
 		// We only need to stop the map dragging if
 		// we actually have something selected
+		this.selected.length > 0 && this.onClick(event);
 		if (!this.selected.length) {
 			return;
 		}
-		this.onClick(event);
-
 		// If the selected feature is not draggable
 		// don't do anything
 		const properties = this.store.getPropertiesCopy(this.selected[0]);

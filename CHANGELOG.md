@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.1-alpha.59](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.58...v0.0.1-alpha.59) (2024-03-05)
+
+
+### Features
+
+* add opposite resizeable option for select mode ([#204](https://github.com/JamesLMilner/terra-draw/issues/204)) ([0ce778f](https://github.com/JamesLMilner/terra-draw/commit/0ce778f1c229e291f923a30bbbb4dfca3d3b6768))
+* add planar options, opposite-planar and center-planar for resizeable in select mode ([#207](https://github.com/JamesLMilner/terra-draw/issues/207)) ([2a75186](https://github.com/JamesLMilner/terra-draw/commit/2a75186b9aff5c0c41da3d9be92bb22abc97ed57))
+
 ### [0.0.1-alpha.58](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.57...v0.0.1-alpha.58) (2024-02-25)
 
 

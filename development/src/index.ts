@@ -120,7 +120,7 @@ const getModes = () => {
 						coordinates: {
 							midpoints: false,
 							draggable: true,
-							resizable: "opposite-corner-fixed",
+							resizable: "opposite",
 							deletable: true,
 						},
 					},
@@ -131,7 +131,7 @@ const getModes = () => {
 						coordinates: {
 							midpoints: false,
 							draggable: true,
-							resizable: "opposite-corner-fixed",
+							resizable: "opposite",
 							deletable: true,
 						},
 					},
@@ -301,31 +301,6 @@ const example = {
 			draw.start();
 
 			addModeChangeHandler(draw, currentSelected);
-
-			draw.addFeatures([
-				{
-					id: "9489d9ca-54f9-4a81-9ab4-3d2503cf9ea1",
-					type: "Feature",
-					geometry: {
-						type: "Polygon",
-						coordinates: [
-							[
-								[-10.882644653, 50.185252473],
-								[-13.109436035, 19.597312986],
-								[39.221878052, 20.101075197],
-								[37.385101318, 57.384672869],
-								[4.678115845, 55.825201858],
-								[-10.882644653, 50.185252473],
-							],
-						],
-					},
-					properties: {
-						mode: "polygon",
-					},
-				},
-			]);
-
-			draw.selectFeature("9489d9ca-54f9-4a81-9ab4-3d2503cf9ea1");
 		});
 		this.initialised.push("maplibre");
 	},
@@ -375,31 +350,6 @@ const example = {
 			draw.start();
 
 			addModeChangeHandler(draw, currentSelected);
-
-			draw.addFeatures([
-				{
-					id: "9489d9ca-54f9-4a81-9ab4-3d2503cf9ea1",
-					type: "Feature",
-					geometry: {
-						type: "Polygon",
-						coordinates: [
-							[
-								[-10.882644653, 50.185252473],
-								[-13.109436035, 19.597312986],
-								[39.221878052, 20.101075197],
-								[37.385101318, 57.384672869],
-								[4.678115845, 55.825201858],
-								[-10.882644653, 50.185252473],
-							],
-						],
-					},
-					properties: {
-						mode: "polygon",
-					},
-				},
-			]);
-
-			draw.selectFeature("9489d9ca-54f9-4a81-9ab4-3d2503cf9ea1");
 
 			this.initialised.push("openlayers");
 		});
@@ -451,31 +401,6 @@ const example = {
 					// we ould ned to do them in here
 					this.initialised.push("google");
 					addModeChangeHandler(draw, currentSelected);
-
-					draw.addFeatures([
-						{
-							id: "9489d9ca-54f9-4a81-9ab4-3d2503cf9ea1",
-							type: "Feature",
-							geometry: {
-								type: "Polygon",
-								coordinates: [
-									[
-										[-10.882644653, 50.185252473],
-										[-13.109436035, 19.597312986],
-										[39.221878052, 20.101075197],
-										[37.385101318, 57.384672869],
-										[4.678115845, 55.825201858],
-										[-10.882644653, 50.185252473],
-									],
-								],
-							},
-							properties: {
-								mode: "polygon",
-							},
-						},
-					]);
-
-					draw.selectFeature("9489d9ca-54f9-4a81-9ab4-3d2503cf9ea1");
 				});
 			});
 

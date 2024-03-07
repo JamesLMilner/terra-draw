@@ -594,19 +594,20 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 			modeFlags &&
 			modeFlags.feature &&
 			modeFlags.feature.coordinates &&
-			modeFlags.feature.coordinates.draggable &&
+			(modeFlags.feature.coordinates.draggable ||
+				modeFlags.feature.coordinates.resizable) &&
 			draggableCoordinateIndex !== -1
 		) {
 			this.setCursor(this.cursors.dragStart);
 
-			// With Maintained Shape
+			// With resizeable
 			if (modeFlags.feature.coordinates.resizable) {
 				this.dragCoordinateResizeFeature.startDragging(
 					selectedId,
 					draggableCoordinateIndex,
 				);
 			} else {
-				// Without with Maintained Shape
+				// Without with resizable being set
 				this.dragCoordinate.startDragging(selectedId, draggableCoordinateIndex);
 			}
 
@@ -721,6 +722,8 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 		if (this.dragCoordinate.isDragging()) {
 			this.onFinish(this.selected[0]);
 		} else if (this.dragFeature.isDragging()) {
+			this.onFinish(this.selected[0]);
+		} else if (this.dragCoordinateResizeFeature.isDragging()) {
 			this.onFinish(this.selected[0]);
 		}
 

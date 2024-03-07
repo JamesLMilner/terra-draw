@@ -2984,6 +2984,126 @@ describe("TerraDrawSelectMode", () => {
 			expect(onFinish).toBeCalledTimes(1);
 			expect(onFinish).toBeCalledWith(expect.any(String));
 		});
+
+		it.only("fires onFinish for resizeable if it is currently being dragged", () => {
+			setSelectMode({
+				flags: {
+					polygon: {
+						feature: {
+							coordinates: { draggable: true, resizable: "center-fixed" },
+						},
+					},
+				},
+			});
+			// We want to account for ignoring points branch
+			addPointToStore([100, 89]);
+
+			expect(onChange).toBeCalledTimes(1);
+
+			addPolygonToStore([
+				[0, 0],
+				[0, 1],
+				[1, 1],
+				[1, 0],
+				[0, 0],
+			]);
+
+			expect(onChange).toBeCalledTimes(2);
+
+			mockMouseEventBoundingBox();
+
+			project
+				.mockReturnValueOnce({
+					x: 100,
+					y: 100,
+				})
+				.mockReturnValue({
+					x: 0,
+					y: 0,
+				});
+
+			selectMode.onClick({
+				lng: 0,
+				lat: 0,
+				containerX: 0,
+				containerY: 0,
+				button: "left",
+				heldKeys: [],
+			});
+
+			expect(onSelect).toBeCalledTimes(1);
+			expect(onChange).toBeCalledTimes(4);
+
+			// Select feature
+			expect(onChange).toHaveBeenNthCalledWith(
+				3,
+				[expect.any(String)],
+				"update",
+			);
+
+			// Create selection points
+			expect(onChange).toHaveBeenNthCalledWith(
+				4,
+				[
+					expect.any(String),
+					expect.any(String),
+					expect.any(String),
+					expect.any(String),
+				],
+				"create",
+			);
+
+			mockMouseEventBoundingBox();
+			project
+				.mockReturnValueOnce({
+					x: 100,
+					y: 100,
+				})
+				.mockReturnValue({
+					x: 0,
+					y: 0,
+				});
+
+			selectMode.onDragStart(
+				{
+					lng: 1,
+					lat: 1,
+					containerX: 1,
+					containerY: 1,
+					button: "left",
+					heldKeys: [],
+				},
+				jest.fn(),
+			);
+
+			const setMapDraggability = jest.fn();
+			selectMode.onDrag(
+				{
+					lng: 1,
+					lat: 1,
+					containerX: 1,
+					containerY: 1,
+					button: "left",
+					heldKeys: [],
+				},
+				setMapDraggability,
+			);
+
+			selectMode.onDragEnd(
+				{
+					lng: 1,
+					lat: 1,
+					containerX: 1,
+					containerY: 1,
+					button: "left",
+					heldKeys: [],
+				},
+				setMapDraggability,
+			);
+
+			expect(onFinish).toBeCalledTimes(1);
+			expect(onFinish).toBeCalledWith(expect.any(String));
+		});
 	});
 
 	describe("onMouseMove", () => {

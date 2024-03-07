@@ -487,6 +487,8 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 			return;
 		} else if (event.button === "left") {
 			this.onLeftClick(event);
+		} else if (event.button === "neither") {
+			this.onLeftClick(event);
 		}
 	}
 
@@ -565,6 +567,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 		if (!this.selected.length) {
 			return;
 		}
+		this.onClick(event);
 
 		// If the selected feature is not draggable
 		// don't do anything

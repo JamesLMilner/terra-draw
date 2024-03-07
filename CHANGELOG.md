@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.1-alpha.60](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.59...v0.0.1-alpha.60) (2024-03-07)
+
+
+### Bug Fixes
+
+* ensure 'finish' event is called for selected polygons with resizeable option ([#212](https://github.com/JamesLMilner/terra-draw/issues/212)) ([2cb6fc3](https://github.com/JamesLMilner/terra-draw/commit/2cb6fc35d06b18e22c67dcdd90427b1c7249b877))
+* make it so resizeable no longer requires draggable to be true to work ([#213](https://github.com/JamesLMilner/terra-draw/issues/213)) ([9bb227c](https://github.com/JamesLMilner/terra-draw/commit/9bb227ce04b60474a2383e7300f5e5d112d48221))
+
 ### [0.0.1-alpha.59](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.58...v0.0.1-alpha.59) (2024-03-05)
 
 

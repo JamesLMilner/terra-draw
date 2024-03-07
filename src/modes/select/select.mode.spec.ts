@@ -2985,12 +2985,12 @@ describe("TerraDrawSelectMode", () => {
 			expect(onFinish).toBeCalledWith(expect.any(String));
 		});
 
-		it.only("fires onFinish for resizeable if it is currently being dragged", () => {
+		it("fires onFinish for resizeable if it is currently being dragged", () => {
 			setSelectMode({
 				flags: {
 					polygon: {
 						feature: {
-							coordinates: { draggable: true, resizable: "center-fixed" },
+							coordinates: { resizable: "center-fixed" },
 						},
 					},
 				},

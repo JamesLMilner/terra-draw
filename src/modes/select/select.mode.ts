@@ -48,6 +48,7 @@ type ModeFlags = {
 			draggable?: boolean;
 			resizable?: ResizeOptions;
 			deletable?: boolean;
+			selfdraggable?: boolean;
 		};
 	};
 };
@@ -599,6 +600,8 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 			this.setCursor(this.cursors.dragStart);
 
 			// With Maintained Shape
+			console.log(modeFlags.feature.coordinates.resizable);
+
 			if (modeFlags.feature.coordinates.resizable) {
 				this.dragCoordinateResizeFeature.startDragging(
 					selectedId,
@@ -713,11 +716,19 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 		_: TerraDrawMouseEvent,
 		setMapDraggability: (enabled: boolean) => void,
 	) {
+		const properties = this.store.getPropertiesCopy(this.selected[0]);
+		const modeFlags = this.flags[properties.mode as string];
 		this.setCursor(this.cursors.dragEnd);
-
 		// If we have finished dragging a coordinate or a feature
 		// lets fire an onFinish event which can be listened to
-		if (this.dragCoordinate.isDragging()) {
+		if (
+			this.dragCoordinate.isDragging() ||
+			(modeFlags &&
+				modeFlags.feature &&
+				modeFlags.feature.coordinates &&
+				modeFlags.feature.coordinates.resizable &&
+				this.dragCoordinateResizeFeature.isDragging())
+		) {
 			this.onFinish(this.selected[0]);
 		} else if (this.dragFeature.isDragging()) {
 			this.onFinish(this.selected[0]);

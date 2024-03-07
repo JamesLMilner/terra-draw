@@ -575,7 +575,9 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 			modeFlags.feature &&
 			(modeFlags.feature.draggable ||
 				(modeFlags.feature.coordinates &&
-					modeFlags.feature.coordinates.draggable));
+					modeFlags.feature.coordinates.draggable) ||
+				(modeFlags.feature.coordinates &&
+					modeFlags.feature.coordinates.resizable));
 
 		if (!draggable) {
 			return;

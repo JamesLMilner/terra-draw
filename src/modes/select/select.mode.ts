@@ -44,7 +44,12 @@ type ModeFlags = {
 		scaleable?: boolean;
 		selfIntersectable?: boolean;
 		coordinates?: {
-			midpoints?: boolean;
+			midpoints?:
+				| {
+						show: boolean;
+						draggableMod: "free" | "afterClick";
+				  }
+				| boolean;
 			draggable?: boolean;
 			resizable?: ResizeOptions;
 			deletable?: boolean;
@@ -565,7 +570,16 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 	) {
 		// We only need to stop the map dragging if
 		// we actually have something selected
-		this.selected.length > 0 && this.onClick(event);
+		const midpoints =
+			this.flags[this.store.getPropertiesCopy(this.selected[0]).mode as string]
+				.feature?.coordinates?.midpoints;
+		if (
+			this.selected.length > 0 &&
+			typeof midpoints === "object" &&
+			midpoints.draggableMod === "free"
+		) {
+			this.onClick(event);
+		}
 		if (!this.selected.length) {
 			return;
 		}

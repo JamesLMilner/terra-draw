@@ -57,7 +57,10 @@ const example = {
 								rotateable: true,
 								scaleable: true,
 								coordinates: {
-									midpoints: true,
+									midpoints: {
+										show: true,
+										draggableMod: "free",
+									},
 									draggable: true,
 									deletable: true,
 								},

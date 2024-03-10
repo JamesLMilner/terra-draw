@@ -242,7 +242,14 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 				continue;
 			}
 
-			const bboxPixelCoordinate = this.config.project(bbox[i][0], bbox[i][1]);
+			// Projecting can sometimes cause invalid coordinates
+			let bboxPixelCoordinate;
+			try {
+				bboxPixelCoordinate = this.config.project(bbox[i][0], bbox[i][1]);
+			} catch (_) {
+				return false;
+			}
+
 			const distanceToOtherBboxCoordinate = this.pixelDistance.measure(
 				{
 					containerX: bboxPixelCoordinate.x,

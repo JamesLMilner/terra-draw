@@ -100,10 +100,6 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 		return closestCoordinate.index;
 	}
 
-	private lastDistance: number | undefined;
-	private lastDistanceX: number | undefined;
-	private lastDistanceY: number | undefined;
-
 	public drag(
 		event: TerraDrawMouseEvent,
 		resizeOption: ResizeOptions,
@@ -172,40 +168,35 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 			{ x: originX, y: originY },
 		);
 
-		const distanceXAbs = Math.abs(event.containerX - originX);
-		const distanceYAbs = Math.abs(event.containerY - originY);
-
-		// We need an original bearing to compare against
-		if (
-			this.lastDistance === undefined ||
-			this.lastDistanceX === undefined ||
-			this.lastDistanceY === undefined
-		) {
-			this.lastDistance = distanceOriginToCursor;
-			this.lastDistanceX = distanceXAbs;
-			this.lastDistanceY = distanceYAbs;
-			return false;
-		}
+		const distanceOriginToSelected = pixelDistance(
+			{ x: originX, y: originY },
+			{ x: selectedX, y: selectedY },
+		);
 
 		let scale = 1;
-		if (!(this.lastDistance === 0 && distanceOriginToCursor === 0)) {
+		if (distanceOriginToCursor !== 0) {
 			scale =
 				1 -
-				(this.lastDistance - distanceOriginToCursor) / distanceOriginToCursor;
+				(distanceOriginToSelected - distanceOriginToCursor) /
+					distanceOriginToCursor;
 		}
 
 		let xScale = 1;
-		if (!(this.lastDistanceX === 0 && distanceXAbs === 0)) {
-			xScale = 1 - (this.lastDistanceX - distanceXAbs) / distanceXAbs;
+		const cursorDistanceX = Math.abs(originX - event.containerX);
+		const currentDistanceX = Math.abs(originX - selectedX);
+		if (cursorDistanceX !== 0) {
+			xScale = 1 - (currentDistanceX - cursorDistanceX) / cursorDistanceX;
 		}
 
 		let yScale = 1;
-		if (!(this.lastDistanceY === 0 && distanceYAbs === 0)) {
-			yScale = 1 - (this.lastDistanceY - distanceYAbs) / distanceYAbs;
+		const cursorDistanceY = Math.abs(originY - event.containerY);
+		const currentDistanceY = Math.abs(originY - selectedY);
+		if (cursorDistanceY !== 0) {
+			yScale = 1 - (currentDistanceY - cursorDistanceY) / cursorDistanceY;
 		}
 
 		if (resizeOption === "center-fixed" || resizeOption === "opposite-fixed") {
-			transformScale(feature, scale, origin as Position);
+			transformScale(feature, scale, origin);
 		} else if (resizeOption === "opposite" || resizeOption === "center") {
 			// Quick check to ensure it's viable to even scale
 			// TODO: We could probably be smarter about this as this will
@@ -218,8 +209,8 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 				return false;
 			}
 
-			transformScale(feature, xScale, origin as Position, "x");
-			transformScale(feature, yScale, origin as Position, "y");
+			transformScale(feature, xScale, origin, "x");
+			transformScale(feature, yScale, origin, "y");
 		} else if (
 			resizeOption === "center-planar" ||
 			resizeOption === "opposite-planar"
@@ -283,10 +274,6 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 			...updatedSelectionPoints,
 			...updatedMidPoints,
 		]);
-
-		this.lastDistance = distanceOriginToCursor;
-		this.lastDistanceX = distanceXAbs;
-		this.lastDistanceY = distanceYAbs;
 
 		return true;
 	}
@@ -428,7 +415,6 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 	}
 
 	stopDragging() {
-		this.lastDistance = undefined;
 		this.draggedCoordinate = {
 			id: null,
 			index: -1,

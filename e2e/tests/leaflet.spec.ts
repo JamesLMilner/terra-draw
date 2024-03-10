@@ -352,7 +352,7 @@ test.describe("select mode", () => {
 		await page.mouse.click(mapDiv.width - 10, mapDiv.height / 2);
 
 		// Dragged the square up and to the left
-		await expectGroupPosition({ page, x: 546, y: 266 });
+		await expectGroupPosition({ page, x: 584, y: 304 });
 	});
 
 	test("selected circle can has it's shape maintained from center origin when coordinates are dragged", async ({

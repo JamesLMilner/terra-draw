@@ -168,6 +168,12 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 			{ x: originX, y: originY },
 		);
 
+		// This will mean that the cursor is not near the dragged coordinate
+		// and we should not scale
+		if (distanceSelectedToCursor > this.pointerDistance) {
+			return false;
+		}
+
 		const distanceOriginToSelected = pixelDistance(
 			{ x: originX, y: originY },
 			{ x: selectedX, y: selectedY },

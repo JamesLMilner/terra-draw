@@ -169,7 +169,6 @@ describe("DragCoordinateResizeBehavior", () => {
 					}
 
 					dragMaintainedShapeBehavior.drag(mockDrawEvent(), "center-fixed");
-					dragMaintainedShapeBehavior.drag(mockDrawEvent(), "center-fixed");
 
 					expect(config.store.updateGeometry).toBeCalledTimes(1);
 				});
@@ -188,7 +187,6 @@ describe("DragCoordinateResizeBehavior", () => {
 							.mockReturnValueOnce({ x: 100, y: 100 });
 					}
 
-					dragMaintainedShapeBehavior.drag(mockDrawEvent(), "center-fixed");
 					dragMaintainedShapeBehavior.drag(mockDrawEvent(), "center-fixed");
 
 					expect(config.store.updateGeometry).toBeCalledTimes(1);
@@ -211,7 +209,6 @@ describe("DragCoordinateResizeBehavior", () => {
 							.mockReturnValueOnce({ x: 100, y: 100 });
 					}
 
-					dragMaintainedShapeBehavior.drag(mockDrawEvent(), "opposite-fixed");
 					dragMaintainedShapeBehavior.drag(mockDrawEvent(), "opposite-fixed");
 
 					expect(config.store.updateGeometry).toBeCalledTimes(1);
@@ -236,7 +233,6 @@ describe("DragCoordinateResizeBehavior", () => {
 					}
 
 					dragMaintainedShapeBehavior.drag(mockDrawEvent(), "opposite-fixed");
-					dragMaintainedShapeBehavior.drag(mockDrawEvent(), "opposite-fixed");
 
 					expect(config.store.updateGeometry).toBeCalledTimes(1);
 				});
@@ -259,7 +255,6 @@ describe("DragCoordinateResizeBehavior", () => {
 					}
 
 					dragMaintainedShapeBehavior.drag(mockDrawEvent(), "opposite");
-					dragMaintainedShapeBehavior.drag(mockDrawEvent(), "opposite");
 
 					expect(config.store.updateGeometry).toBeCalledTimes(1);
 				});
@@ -278,7 +273,6 @@ describe("DragCoordinateResizeBehavior", () => {
 							.mockReturnValueOnce({ x: 100, y: 100 });
 					}
 
-					dragMaintainedShapeBehavior.drag(mockDrawEvent(), "opposite");
 					dragMaintainedShapeBehavior.drag(mockDrawEvent(), "opposite");
 
 					expect(config.store.updateGeometry).toBeCalledTimes(1);

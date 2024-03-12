@@ -38,6 +38,7 @@ interface TerraDrawCircleModeOptions<T extends CustomStyling>
 	extends BaseModeOptions<T> {
 	keyEvents?: TerraDrawCircleModeKeyEvents | null;
 	cursors?: Cursors;
+	minimumRadiusKilometers?: number;
 }
 
 export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyling> {
@@ -47,7 +48,17 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 	private currentCircleId: FeatureId | undefined;
 	private keyEvents: TerraDrawCircleModeKeyEvents;
 	private cursors: Required<Cursors>;
+	private minimumRadiusKilometers: number;
 
+	/**
+	 * Create a new circle mode instance
+	 * @param options - Options to customize the behavior of the circle mode
+	 * @param options.keyEvents - Key events to cancel or finish the mode
+	 * @param options.cursors - Cursors to use for the mode
+	 * @param options.minimumRadiusKilometers - Minimum radius for the circle
+	 * @param options.styles - Custom styling for the circle
+	 * @param options.pointerDistance - Distance in pixels to consider a pointer close to a vertex
+	 */
 	constructor(options?: TerraDrawCircleModeOptions<CirclePolygonStyling>) {
 		super(options);
 
@@ -72,6 +83,8 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 					? { ...defaultKeyEvents, ...options.keyEvents }
 					: defaultKeyEvents;
 		}
+
+		this.minimumRadiusKilometers = options?.minimumRadiusKilometers ?? 0.00001;
 	}
 
 	private close() {
@@ -112,7 +125,7 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 			this.center = [event.lng, event.lat];
 			const startingCircle = circle({
 				center: this.center,
-				radiusKilometers: 0.00001,
+				radiusKilometers: this.minimumRadiusKilometers,
 				coordinatePrecision: this.coordinatePrecision,
 			});
 
@@ -121,6 +134,7 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 					geometry: startingCircle.geometry,
 					properties: {
 						mode: this.mode,
+						radiusKilometers: this.minimumRadiusKilometers,
 					},
 				},
 			]);
@@ -239,14 +253,26 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 				event.lat,
 			]);
 
+			const newRadius =
+				distanceKm > this.minimumRadiusKilometers
+					? distanceKm
+					: this.minimumRadiusKilometers;
+
 			const updatedCircle = circle({
 				center: this.center,
-				radiusKilometers: distanceKm,
+				radiusKilometers: newRadius,
 				coordinatePrecision: this.coordinatePrecision,
 			});
 
 			this.store.updateGeometry([
 				{ id: this.currentCircleId, geometry: updatedCircle.geometry },
+			]);
+			this.store.updateProperty([
+				{
+					id: this.currentCircleId,
+					property: "radiusKilometers",
+					value: newRadius,
+				},
 			]);
 		}
 	}

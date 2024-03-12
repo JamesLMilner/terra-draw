@@ -34,6 +34,12 @@ describe("TerraDrawCircleMode", () => {
 				keyEvents: { cancel: null, finish: null },
 			});
 		});
+
+		it("constructs minimumRadiusKilometers", () => {
+			new TerraDrawCircleMode({
+				minimumRadiusKilometers: 0.00001,
+			});
+		});
 	});
 
 	describe("lifecycle", () => {
@@ -131,60 +137,130 @@ describe("TerraDrawCircleMode", () => {
 		});
 
 		describe("registered", () => {
-			beforeEach(() => {
-				const mockConfig = getMockModeConfig(circleMode.mode);
+			describe("default minimumRadiusKilometers", () => {
+				beforeEach(() => {
+					const mockConfig = getMockModeConfig(circleMode.mode);
 
-				store = mockConfig.store;
-				onChange = mockConfig.onChange;
-				onFinish = mockConfig.onFinish;
+					store = mockConfig.store;
+					onChange = mockConfig.onChange;
+					onFinish = mockConfig.onFinish;
 
-				circleMode.register(mockConfig);
-				circleMode.start();
+					circleMode.register(mockConfig);
+					circleMode.start();
+				});
+
+				it("adds a circle to store if registered", () => {
+					circleMode.onClick({
+						lng: 0,
+						lat: 0,
+						containerX: 0,
+						containerY: 0,
+						button: "left",
+						heldKeys: [],
+					});
+
+					expect(onChange).toBeCalledTimes(1);
+					expect(onChange).toBeCalledWith([expect.any(String)], "create");
+				});
+
+				it("finishes drawing circle on second click", () => {
+					circleMode.onClick({
+						lng: 0,
+						lat: 0,
+						containerX: 0,
+						containerY: 0,
+						button: "left",
+						heldKeys: [],
+					});
+
+					let features = store.copyAll();
+					expect(features.length).toBe(1);
+
+					circleMode.onClick({
+						lng: 0,
+						lat: 0,
+						containerX: 0,
+						containerY: 0,
+						button: "left",
+						heldKeys: [],
+					});
+
+					features = store.copyAll();
+					expect(features.length).toBe(1);
+
+					expect(onChange).toBeCalledTimes(3);
+					expect(onChange).toBeCalledWith([expect.any(String)], "create");
+
+					expect(onFinish).toBeCalledTimes(1);
+				});
 			});
 
-			it("adds a circle to store if registered", () => {
-				circleMode.onClick({
-					lng: 0,
-					lat: 0,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
+			describe("set minimumRadiusKilometers", () => {
+				beforeEach(() => {
+					circleMode = new TerraDrawCircleMode({
+						minimumRadiusKilometers: 1000,
+					});
+					const mockConfig = getMockModeConfig(circleMode.mode);
+
+					store = mockConfig.store;
+					onChange = mockConfig.onChange;
+					onFinish = mockConfig.onFinish;
+
+					circleMode.register(mockConfig);
+					circleMode.start();
 				});
 
-				expect(onChange).toBeCalledTimes(1);
-				expect(onChange).toBeCalledWith([expect.any(String)], "create");
-			});
+				it("adds a circle to store if registered with the minimum radius", () => {
+					circleMode.onClick({
+						lng: 0,
+						lat: 0,
+						containerX: 0,
+						containerY: 0,
+						button: "left",
+						heldKeys: [],
+					});
 
-			it("finishes drawing circle on second click", () => {
-				circleMode.onClick({
-					lng: 0,
-					lat: 0,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
+					expect(onChange).toBeCalledTimes(1);
+					expect(onChange).toBeCalledWith([expect.any(String)], "create");
+					expect(store.copyAll()[0].properties.radiusKilometers).toStrictEqual(
+						1000,
+					);
 				});
 
-				let features = store.copyAll();
-				expect(features.length).toBe(1);
+				it("finishes drawing circle on second click using the minimum radius", () => {
+					circleMode.onClick({
+						lng: 0,
+						lat: 0,
+						containerX: 0,
+						containerY: 0,
+						button: "left",
+						heldKeys: [],
+					});
 
-				circleMode.onClick({
-					lng: 0,
-					lat: 0,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
+					let features = store.copyAll();
+					expect(features.length).toBe(1);
+
+					circleMode.onClick({
+						lng: 0,
+						lat: 0,
+						containerX: 0,
+						containerY: 0,
+						button: "left",
+						heldKeys: [],
+					});
+
+					features = store.copyAll();
+					expect(features.length).toBe(1);
+
+					expect(onChange).toBeCalledTimes(3);
+					expect(onChange).toBeCalledWith([expect.any(String)], "create");
+
+					expect(store.copyAll()[0].properties.radiusKilometers).toStrictEqual(
+						1000,
+					);
+
+					expect(onFinish).toBeCalledTimes(1);
 				});
-
-				features = store.copyAll();
-				expect(features.length).toBe(1);
-
-				expect(onChange).toBeCalledTimes(2);
-				expect(onChange).toBeCalledWith([expect.any(String)], "create");
-
-				expect(onFinish).toBeCalledTimes(1);
 			});
 		});
 	});
@@ -280,7 +356,7 @@ describe("TerraDrawCircleMode", () => {
 				button: "left",
 				heldKeys: [],
 			});
-			expect(onChange).toBeCalledTimes(2);
+			expect(onChange).toBeCalledTimes(3);
 			expect(onChange).toHaveBeenNthCalledWith(
 				2,
 				[expect.any(String)],

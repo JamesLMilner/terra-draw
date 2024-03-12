@@ -34,6 +34,13 @@ describe("TerraDrawCircleMode", () => {
 				keyEvents: { cancel: null, finish: null },
 			});
 		});
+
+		it("constructs with startingRadiusKilometers", () => {
+			new TerraDrawCircleMode({
+				styles: { fillColor: "#ffffff" },
+				startingRadiusKilometers: 0.00001,
+			});
+		});
 	});
 
 	describe("lifecycle", () => {
@@ -112,7 +119,9 @@ describe("TerraDrawCircleMode", () => {
 		let onFinish: jest.Mock;
 
 		beforeEach(() => {
-			circleMode = new TerraDrawCircleMode();
+			circleMode = new TerraDrawCircleMode({
+				startingRadiusKilometers: 0.00001,
+			});
 			store = new GeoJSONStore();
 			onChange = jest.fn();
 		});

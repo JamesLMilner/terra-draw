@@ -38,6 +38,7 @@ interface TerraDrawCircleModeOptions<T extends CustomStyling>
 	extends BaseModeOptions<T> {
 	keyEvents?: TerraDrawCircleModeKeyEvents | null;
 	cursors?: Cursors;
+	startingRadiusKilometers?: number;
 }
 
 export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyling> {
@@ -47,6 +48,7 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 	private currentCircleId: FeatureId | undefined;
 	private keyEvents: TerraDrawCircleModeKeyEvents;
 	private cursors: Required<Cursors>;
+	private startingRadiusKilometers: number;
 
 	constructor(options?: TerraDrawCircleModeOptions<CirclePolygonStyling>) {
 		super(options);
@@ -72,6 +74,9 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 					? { ...defaultKeyEvents, ...options.keyEvents }
 					: defaultKeyEvents;
 		}
+
+		this.startingRadiusKilometers =
+			options?.startingRadiusKilometers ?? 0.00001;
 	}
 
 	private close() {
@@ -112,7 +117,7 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 			this.center = [event.lng, event.lat];
 			const startingCircle = circle({
 				center: this.center,
-				radiusKilometers: 0.00001,
+				radiusKilometers: this.startingRadiusKilometers,
 				coordinatePrecision: this.coordinatePrecision,
 			});
 

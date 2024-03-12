@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.1-alpha.61](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.60...v0.0.1-alpha.61) (2024-03-10)
+
+
+### Bug Fixes
+
+* ensure that project returns valid lat/lng when using resizable ([#216](https://github.com/JamesLMilner/terra-draw/issues/216)) ([57f126c](https://github.com/JamesLMilner/terra-draw/commit/57f126c3b20453504ac556d444681977d0ad61b2))
+* ensure that when using resizable you cannot resize after crossing origin axis ([#219](https://github.com/JamesLMilner/terra-draw/issues/219)) ([4a9fbf0](https://github.com/JamesLMilner/terra-draw/commit/4a9fbf02f080d3dfb5fdba6bf63f1f961086728d))
+* resizeable dragging should now track the cursor much more accurately ([#217](https://github.com/JamesLMilner/terra-draw/issues/217)) ([71272b2](https://github.com/JamesLMilner/terra-draw/commit/71272b2ac41760ed1a4bbb92266fd005a09e9f4e))
+
 ### [0.0.1-alpha.60](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.59...v0.0.1-alpha.60) (2024-03-07)
 
 

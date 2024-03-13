@@ -170,7 +170,7 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 
 		// This will mean that the cursor is not near the dragged coordinate
 		// and we should not scale
-		if (distanceSelectedToCursor > this.pointerDistance) {
+		if (resizeOption != "opposite-planar" && distanceSelectedToCursor > this.pointerDistance) {
 			return false;
 		}
 
@@ -190,15 +190,15 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 		let xScale = 1;
 		const cursorDistanceX = Math.abs(originX - event.containerX);
 		const currentDistanceX = Math.abs(originX - selectedX);
-		if (cursorDistanceX !== 0) {
-			xScale = 1 - (currentDistanceX - cursorDistanceX) / cursorDistanceX;
+		if (currentDistanceX !== 0) {
+			xScale = cursorDistanceX / currentDistanceX;
 		}
 
 		let yScale = 1;
 		const cursorDistanceY = Math.abs(originY - event.containerY);
 		const currentDistanceY = Math.abs(originY - selectedY);
-		if (cursorDistanceY !== 0) {
-			yScale = 1 - (currentDistanceY - cursorDistanceY) / cursorDistanceY;
+		if (currentDistanceY !== 0) {
+			yScale = cursorDistanceY / currentDistanceY;
 		}
 
 		if (resizeOption === "center-fixed" || resizeOption === "opposite-fixed") {
@@ -225,7 +225,16 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 				return false;
 			}
 
-			this.scalePlanar(updatedCoords, originX, originY, xScale, yScale);
+			if (resizeOption === "center-planar"){
+				this.scalePlanar(updatedCoords, originX, originY, xScale, yScale);
+			} else {
+				const invertX = selectedX < originX == event.containerX > originX;
+				const invertY = selectedY < originY == event.containerY > originY;
+				const allValid = this.scaleOPlanar(updatedCoords, originX, originY, xScale, yScale, invertX, invertY);
+				if (!allValid){
+					return false;
+				}
+			}
 		} else {
 			throw new Error("Invalid resize option");
 		}
@@ -255,7 +264,7 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 				origin,
 			);
 
-			if (distanceToOtherBboxCoordinate < this.minDistanceFromSelectionPoint) {
+			if (resizeOption != "opposite-planar" && distanceToOtherBboxCoordinate < this.minDistanceFromSelectionPoint) {
 				return false;
 			}
 		}
@@ -311,6 +320,72 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 			coordinate[1] = updatedCoordinate.lat;
 		});
 	}
+
+	private scaleOPlanar(
+		coordinates: Position[],
+		originX: number,
+		originY: number,
+		xScale: number,
+		yScale: number,
+		invertX: boolean,
+		invertY: boolean
+	) {
+		// flag to indicate if all coordinates are suficient far from the origin
+		let allValid = true;
+		coordinates.forEach((coordinate,idx) => {
+			// If invalid flag already set then ommit iteration
+			if (!allValid){
+				return;
+			}
+
+			// Get postion of the current coordinate
+			const { x, y } = this.project(coordinate[0], coordinate[1]);
+
+			// Calculate amount of pixels we want to move the coordinate on X and Y
+			let xSize = (x - originX) * xScale;
+			let ySize = (y - originY) * yScale;
+
+			// Check if the user is trying to cross axis and if so move coordinate to the opposite direction from the origin
+			if (invertX){
+				xSize *= -1;
+			}
+			if (invertY){
+				ySize *= -1;
+			}
+
+			// Calculate new coordinates on X and Y
+			const updatedX = originX + xSize;
+			const updatedY = originY + ySize;
+
+			// Calculate how close the updated coordinate would be to the origin
+			const xDiff = Math.abs(updatedX - originX);
+			const yDiff = Math.abs(updatedY - originY);
+
+			// If the coordinate was not already on the origin AND it will be very close to it
+			// we should prevent updating the feature since if it will get to exactly the origin
+			if ( (x != updatedX) && (xDiff < 0.00001) ){
+				console.log('invalidX',idx, xDiff);
+				allValid = false;
+				return;
+			}
+
+			if ( (y != updatedY) && (yDiff < 0.00001) ){
+				console.log('invalidY',idx, yDiff);
+				allValid = false;
+				return;
+			}
+
+			// If all validations passed calculate lng lat from updated coordinate
+			const updatedCoordinate = this.unproject(updatedX, updatedY);
+
+			// Update coordinates with these lng lat
+			coordinate[0] = updatedCoordinate.lng;
+			coordinate[1] = updatedCoordinate.lat;
+		});
+		// Return flag telling if the entire feature was able to be updated correctly
+		return allValid;
+	}
+	// Copyright © [2024,] , Oracle and/or its affiliates.
 
 	private getCenterOrigin(feature: Feature<Polygon | LineString>) {
 		return centroid(feature);

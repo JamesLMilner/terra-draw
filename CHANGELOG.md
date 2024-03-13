@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.1-alpha.62](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.61...v0.0.1-alpha.62) (2024-03-12)
+
+
+### Features
+
+* for circle mode provide minimum radius config and store radius in circle properties ([#223](https://github.com/JamesLMilner/terra-draw/issues/223)) ([ca301ef](https://github.com/JamesLMilner/terra-draw/commit/ca301efe7e0662385bbcb2c141955d1f3b02a800))
+
+
+### Documentation
+
+* update issue templates ([#224](https://github.com/JamesLMilner/terra-draw/issues/224)) ([76476d7](https://github.com/JamesLMilner/terra-draw/commit/76476d723fb9a77ae896c07629b83dd84d838b90))
+* update issue templates, include Feature request ([#225](https://github.com/JamesLMilner/terra-draw/issues/225)) ([e843529](https://github.com/JamesLMilner/terra-draw/commit/e843529b69481b62576e098e8196bed475561748))
+
 ### [0.0.1-alpha.61](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.60...v0.0.1-alpha.61) (2024-03-10)
 
 

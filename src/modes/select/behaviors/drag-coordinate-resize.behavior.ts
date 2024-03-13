@@ -364,13 +364,11 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 			// If the coordinate was not already on the origin AND it will be very close to it
 			// we should prevent updating the feature since if it will get to exactly the origin
 			if ( (x != updatedX) && (xDiff < 0.00001) ){
-				console.log('invalidX',idx, xDiff);
 				allValid = false;
 				return;
 			}
 
 			if ( (y != updatedY) && (yDiff < 0.00001) ){
-				console.log('invalidY',idx, yDiff);
 				allValid = false;
 				return;
 			}

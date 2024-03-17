@@ -20,7 +20,18 @@ export type ResizeOptions =
 	| "center-planar"
 	| "opposite-planar";
 
-type OppositeMapIndex = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
+type BoundingBoxIndex = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
+
+type BoundingBox = readonly [
+	number[],
+	number[],
+	number[],
+	number[],
+	number[],
+	number[],
+	number[],
+	number[],
+];
 
 export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 	constructor(
@@ -86,6 +97,71 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 		return closestCoordinate;
 	}
 
+	private isValidDrag(
+		index: BoundingBoxIndex,
+		distanceX: number,
+		distanceY: number,
+	) {
+		console.log({ index, distanceX, distanceY });
+
+		switch (index) {
+			case 0:
+				if (distanceX > 0 || distanceY < 0) {
+					return false;
+				}
+				break;
+			case 1:
+				if (distanceY < 0) {
+					return false;
+				}
+				break;
+			case 2:
+				if (distanceX < 0 || distanceY < 0) {
+					return false;
+				}
+				break;
+			case 3:
+				if (distanceX < 0) {
+					return false;
+				}
+				break;
+			case 4:
+				if (distanceX < 0 || distanceY > 0) {
+					return false;
+				}
+				break;
+			case 5:
+				if (distanceY > 0) {
+					return false;
+				}
+				break;
+			case 6:
+				if (distanceX > 0 || distanceY > 0) {
+					return false;
+				}
+				break;
+			case 7:
+				if (distanceX > 0) {
+					return false;
+				}
+				break;
+			default:
+				break;
+		}
+
+		return true;
+	}
+
+	private getOptions(feature: Feature<Polygon | LineString>) {
+		const coordinates =
+			feature.geometry.type === "Polygon"
+				? feature.geometry.coordinates[0]
+				: feature.geometry.coordinates;
+
+		const options = this.getBBox(coordinates);
+		return options;
+	}
+
 	public getDraggableIndex(
 		event: TerraDrawMouseEvent,
 		selectedId: FeatureId,
@@ -107,7 +183,7 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 		if (!this.draggedCoordinate.id) {
 			return false;
 		}
-		const index = this.draggedCoordinate.index;
+		const index = this.draggedCoordinate.index as BoundingBoxIndex;
 		const geometry = this.store.getGeometryCopy(this.draggedCoordinate.id);
 
 		// Update the geometry of the dragged feature
@@ -128,25 +204,26 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 
 		// Get the origin for the scaling to occur from
 		let origin: Position | undefined;
-		let oppositeIndex: OppositeMapIndex | undefined;
+
+		const options = this.getOptions(feature);
+
+		const { oppositeBboxIndex, closestBBoxIndex } = this.getIndexes(
+			options,
+			selectedCoordinate,
+		);
 
 		if (
 			resizeOption === "center-fixed" ||
 			resizeOption === "center" ||
 			resizeOption === "center-planar"
 		) {
-			origin = this.getCenterOrigin(feature);
+			origin = centroid(feature);
 		} else if (
 			resizeOption === "opposite-fixed" ||
 			resizeOption === "opposite" ||
 			resizeOption === "opposite-planar"
 		) {
-			const { origin: oppositeOrigin, index } = this.getOppositeOrigin(
-				feature,
-				selectedCoordinate,
-			);
-			origin = oppositeOrigin;
-			oppositeIndex = index;
+			origin = options[oppositeBboxIndex];
 		}
 
 		if (!origin) {
@@ -170,9 +247,9 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 
 		// This will mean that the cursor is not near the dragged coordinate
 		// and we should not scale
-		if (distanceSelectedToCursor > this.pointerDistance) {
-			return false;
-		}
+		// if (distanceSelectedToCursor > this.pointerDistance) {
+		// 	return false;
+		// }
 
 		const distanceOriginToSelected = pixelDistance(
 			{ x: originX, y: originY },
@@ -187,17 +264,36 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 					distanceOriginToCursor;
 		}
 
+		const distanceX = -(originX - event.containerX);
+		const distanceY = originY - event.containerY;
+
+		const valid = this.isValidDrag(closestBBoxIndex, distanceX, distanceY);
+
+		console.log({ valid });
+
+		if (!valid) {
+			return false;
+		}
+
 		let xScale = 1;
 		const cursorDistanceX = Math.abs(originX - event.containerX);
 		const currentDistanceX = Math.abs(originX - selectedX);
-		if (cursorDistanceX !== 0) {
+		if (
+			cursorDistanceX !== 0 &&
+			closestBBoxIndex !== 1 &&
+			closestBBoxIndex !== 5
+		) {
 			xScale = 1 - (currentDistanceX - cursorDistanceX) / cursorDistanceX;
 		}
 
 		let yScale = 1;
 		const cursorDistanceY = Math.abs(originY - event.containerY);
 		const currentDistanceY = Math.abs(originY - selectedY);
-		if (cursorDistanceY !== 0) {
+		if (
+			cursorDistanceY !== 0 &&
+			closestBBoxIndex !== 3 &&
+			closestBBoxIndex !== 7
+		) {
 			yScale = 1 - (currentDistanceY - cursorDistanceY) / cursorDistanceY;
 		}
 
@@ -235,7 +331,7 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 		// affect of preventing bugs
 		const bbox = this.getBBox(updatedCoords);
 		for (let i = 0; i < bbox.length; i++) {
-			if (i === oppositeIndex) {
+			if (i === oppositeBboxIndex) {
 				continue;
 			}
 
@@ -247,6 +343,7 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 				return false;
 			}
 
+			// eslint-disable-next-line @typescript-eslint/no-unused-vars
 			const distanceToOtherBboxCoordinate = this.pixelDistance.measure(
 				{
 					containerX: bboxPixelCoordinate.x,
@@ -255,9 +352,9 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 				origin,
 			);
 
-			if (distanceToOtherBboxCoordinate < this.minDistanceFromSelectionPoint) {
-				return false;
-			}
+			// if (distanceToOtherBboxCoordinate < this.minDistanceFromSelectionPoint) {
+			// 	return false;
+			// }
 		}
 
 		// Ensure that coordinate precision is maintained
@@ -371,18 +468,19 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 		] as const;
 	}
 
-	private getOppositeOrigin(
-		feature: Feature<Polygon | LineString>,
+	private getIndexes(
+		options: BoundingBox,
+		// feature: Feature<Polygon | LineString>,
 		selectedCoordinate: Position,
 	) {
-		const coordinates =
-			feature.geometry.type === "Polygon"
-				? feature.geometry.coordinates[0]
-				: feature.geometry.coordinates;
+		// const coordinates =
+		// 	feature.geometry.type === "Polygon"
+		// 		? feature.geometry.coordinates[0]
+		// 		: feature.geometry.coordinates;
 
-		const options = this.getBBox(coordinates);
+		// const options = this.getBBox(coordinates);
 
-		let closest: OppositeMapIndex | undefined;
+		let closestIndex: BoundingBoxIndex | undefined;
 		let closestDistance = Infinity;
 
 		for (let i = 0; i < options.length; i++) {
@@ -391,23 +489,68 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 				options[i],
 			);
 			if (distance < closestDistance) {
-				closest = i as OppositeMapIndex;
+				closestIndex = i as BoundingBoxIndex;
 				closestDistance = distance;
 			}
 		}
 
-		if (closest === undefined) {
+		if (closestIndex === undefined) {
 			throw new Error("No closest coordinate found");
 		}
 
 		// Depending on where what the origin is set to, we need to find the position to
 		// scale from
 		const oppositeIndex = this.boundingBoxMaps["opposite"][
-			closest
-		] as OppositeMapIndex;
+			closestIndex
+		] as BoundingBoxIndex;
 
-		return { origin: options[oppositeIndex], index: oppositeIndex } as const;
+		return {
+			oppositeBboxIndex: oppositeIndex,
+			closestBBoxIndex: closestIndex,
+		} as const;
 	}
+
+	// private getOppositeOrigin(options: BoundingBox, oppositeIndex: BoundingBoxIndex) {
+	// 	return options[oppositeIndex]
+	// }
+
+	// private getOppositeOrigin(
+	// 	feature: Feature<Polygon | LineString>,
+	// 	selectedCoordinate: Position,
+	// ) {
+	// 	const coordinates =
+	// 		feature.geometry.type === "Polygon"
+	// 			? feature.geometry.coordinates[0]
+	// 			: feature.geometry.coordinates;
+
+	// 	const options = this.getBBox(coordinates);
+
+	// 	let closest: BoundingBoxIndex | undefined;
+	// 	let closestDistance = Infinity;
+
+	// 	for (let i = 0; i < options.length; i++) {
+	// 		const distance = haversineDistanceKilometers(
+	// 			selectedCoordinate,
+	// 			options[i],
+	// 		);
+	// 		if (distance < closestDistance) {
+	// 			closest = i as BoundingBoxIndex;
+	// 			closestDistance = distance;
+	// 		}
+	// 	}
+
+	// 	if (closest === undefined) {
+	// 		throw new Error("No closest coordinate found");
+	// 	}
+
+	// 	// Depending on where what the origin is set to, we need to find the position to
+	// 	// scale from
+	// 	const oppositeIndex = this.boundingBoxMaps["opposite"][
+	// 		closest
+	// 	] as BoundingBoxIndex;
+
+	// 	return { origin: options[oppositeIndex], index: oppositeIndex, closest } as const;
+	// }
 
 	isDragging() {
 		return this.draggedCoordinate.id !== null;

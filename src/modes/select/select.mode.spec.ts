@@ -2449,13 +2449,16 @@ describe("TerraDrawSelectMode", () => {
 			});
 		});
 
-		describe("drag reszing with center-fixed", () => {
+		describe("drag reszing with center-web-mercator", () => {
 			it("does trigger drag events if mode is draggable for linestring", () => {
 				setSelectMode({
 					flags: {
 						linestring: {
 							feature: {
-								coordinates: { draggable: true, resizable: "center-fixed" },
+								coordinates: {
+									draggable: true,
+									resizable: "center-web-mercator",
+								},
 							},
 						},
 					},
@@ -2568,7 +2571,7 @@ describe("TerraDrawSelectMode", () => {
 					setMapDraggability,
 				);
 
-				expect(onChange).toBeCalledTimes(5);
+				expect(onChange).toBeCalledTimes(6);
 
 				// Update linestring position and 1 selection points
 				// that gets moved
@@ -2584,7 +2587,10 @@ describe("TerraDrawSelectMode", () => {
 					flags: {
 						polygon: {
 							feature: {
-								coordinates: { draggable: true, resizable: "center-fixed" },
+								coordinates: {
+									draggable: true,
+									resizable: "center-web-mercator",
+								},
 							},
 						},
 					},
@@ -2708,7 +2714,7 @@ describe("TerraDrawSelectMode", () => {
 					setMapDraggability,
 				);
 
-				expect(onChange).toBeCalledTimes(5);
+				expect(onChange).toBeCalledTimes(6);
 
 				// Update polygon position and 1 selection points
 				// that gets moved
@@ -2990,7 +2996,7 @@ describe("TerraDrawSelectMode", () => {
 				flags: {
 					polygon: {
 						feature: {
-							coordinates: { resizable: "center-fixed" },
+							coordinates: { resizable: "center-web-mercator" },
 						},
 					},
 				},

@@ -1,26 +1,33 @@
 import { TerraDrawMouseEvent } from "../../../common";
 import { BehaviorConfig, TerraDrawModeBehavior } from "../../base.behavior";
-
 import { LineString, Polygon, Position, Point, Feature } from "geojson";
 import { PixelDistanceBehavior } from "../../pixel-distance.behavior";
 import { MidPointBehavior } from "./midpoint.behavior";
 import { SelectionPointBehavior } from "./selection-point.behavior";
-import { FeatureId } from "../../../store/store";
+import { FeatureId, GeoJSONStoreGeometries } from "../../../store/store";
 import { centroid } from "../../../geometry/centroid";
-import { haversineDistanceKilometers } from "../../../geometry/measure/haversine-distance";
 import { limitPrecision } from "../../../geometry/limit-decimal-precision";
-import { transformScale } from "../../../geometry/transform/scale";
 import { pixelDistance } from "../../../geometry/measure/pixel-distance";
+import { coordinateIsValid } from "../../../geometry/boolean/is-valid-coordinate";
+import {
+	lngLatToWebMercatorXY,
+	webMercatorXYToLngLat,
+} from "../../../geometry/project/web-mercator";
 
-export type ResizeOptions =
-	| "center-fixed"
-	| "opposite-fixed"
-	| "opposite"
-	| "center"
-	| "center-planar"
-	| "opposite-planar";
+export type ResizeOptions = "center-web-mercator" | "opposite-web-mercator";
 
-type OppositeMapIndex = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
+type BoundingBoxIndex = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
+
+type BoundingBox = readonly [
+	number[],
+	number[],
+	number[],
+	number[],
+	number[],
+	number[],
+	number[],
+	number[],
+];
 
 export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 	constructor(
@@ -28,14 +35,38 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 		private readonly pixelDistance: PixelDistanceBehavior,
 		private readonly selectionPoints: SelectionPointBehavior,
 		private readonly midPoints: MidPointBehavior,
-		private readonly minDistanceFromSelectionPoint: number,
 	) {
 		super(config);
 	}
 
+	private minimumScale = 0.0001;
+
 	private draggedCoordinate: { id: null | FeatureId; index: number } = {
 		id: null,
 		index: -1,
+	};
+
+	// This map provides the oppsite corner of the bbox
+	// to the index of the coordinate provided
+	//   0    1    2
+	//   *----*----*
+	// 	 |		   |
+	// 7 *		   *  3
+	//   |		   |
+	//   *----*----*
+	// 	 6    5    4
+	//
+	private boundingBoxMaps = {
+		opposite: {
+			0: 4,
+			1: 5,
+			2: 6,
+			3: 7,
+			4: 0,
+			5: 1,
+			6: 2,
+			7: 3,
+		},
 	};
 
 	private getClosestCoordinate(
@@ -86,214 +117,256 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 		return closestCoordinate;
 	}
 
-	public getDraggableIndex(
-		event: TerraDrawMouseEvent,
-		selectedId: FeatureId,
-	): number {
-		const geometry = this.store.getGeometryCopy(selectedId);
-		const closestCoordinate = this.getClosestCoordinate(event, geometry);
-
-		// No coordinate was within the pointer distance
-		if (closestCoordinate.index === -1) {
-			return -1;
+	private isValidDragWebMercator(
+		index: BoundingBoxIndex,
+		distanceX: number,
+		distanceY: number,
+	) {
+		switch (index) {
+			case 0:
+				if (distanceX <= 0 || distanceY >= 0) {
+					return false;
+				}
+				break;
+			case 1:
+				if (distanceY >= 0) {
+					return false;
+				}
+				break;
+			case 2:
+				if (distanceX >= 0 || distanceY >= 0) {
+					return false;
+				}
+				break;
+			case 3:
+				if (distanceX >= 0) {
+					return false;
+				}
+				break;
+			case 4:
+				if (distanceX >= 0 || distanceY <= 0) {
+					return false;
+				}
+				break;
+			case 5:
+				if (distanceY <= 0) {
+					return false;
+				}
+				break;
+			case 6:
+				if (distanceX <= 0 || distanceY <= 0) {
+					return false;
+				}
+				break;
+			case 7:
+				if (distanceX <= 0) {
+					return false;
+				}
+				break;
+			default:
+				break;
 		}
-		return closestCoordinate.index;
+
+		return true;
 	}
 
-	public drag(
-		event: TerraDrawMouseEvent,
-		resizeOption: ResizeOptions,
-	): boolean {
-		if (!this.draggedCoordinate.id) {
-			return false;
+	private getSelectedFeatureDataWebMercator() {
+		if (!this.draggedCoordinate.id || this.draggedCoordinate.index === -1) {
+			return null;
 		}
-		const index = this.draggedCoordinate.index;
-		const geometry = this.store.getGeometryCopy(this.draggedCoordinate.id);
+
+		const feature = this.getFeature(this.draggedCoordinate.id);
+		if (!feature) {
+			return null;
+		}
+
+		const updatedCoords = this.getNormalisedCoordinates(feature.geometry);
+		const boundingBox = this.getBBoxWebMercator(updatedCoords);
+
+		return {
+			boundingBox,
+			feature,
+			updatedCoords,
+			selectedCoordinate: updatedCoords[this.draggedCoordinate.index],
+		};
+	}
+
+	private centerWebMercatorDrag(event: TerraDrawMouseEvent) {
+		const featureData = this.getSelectedFeatureDataWebMercator();
+		if (!featureData) {
+			return null;
+		}
+		const { feature, boundingBox, updatedCoords, selectedCoordinate } =
+			featureData;
+
+		const center = centroid(feature);
+
+		if (!center) {
+			return null;
+		}
+
+		const webMercatorSelected = lngLatToWebMercatorXY(
+			selectedCoordinate[0],
+			selectedCoordinate[1],
+		);
+
+		const { closestBBoxIndex } = this.getIndexesWebMercator(
+			boundingBox,
+			webMercatorSelected,
+		);
+
+		const webMercatorOrigin = lngLatToWebMercatorXY(center[0], center[1]);
+		const webMercatorCursor = lngLatToWebMercatorXY(event.lng, event.lat);
+
+		this.scaleWebMercator({
+			closestBBoxIndex,
+			updatedCoords,
+			webMercatorCursor,
+			webMercatorSelected,
+			webMercatorOrigin,
+		});
+
+		return updatedCoords;
+	}
+
+	private oppositeWebMercatorDrag(event: TerraDrawMouseEvent) {
+		const featureData = this.getSelectedFeatureDataWebMercator();
+		if (!featureData) {
+			return null;
+		}
+
+		const { boundingBox, updatedCoords, selectedCoordinate } = featureData;
+
+		const webMercatorSelected = lngLatToWebMercatorXY(
+			selectedCoordinate[0],
+			selectedCoordinate[1],
+		);
+
+		const { oppositeBboxIndex, closestBBoxIndex } = this.getIndexesWebMercator(
+			boundingBox,
+			webMercatorSelected,
+		);
+
+		const webMercatorOrigin = {
+			x: boundingBox[oppositeBboxIndex][0],
+			y: boundingBox[oppositeBboxIndex][1],
+		};
+		const webMercatorCursor = lngLatToWebMercatorXY(event.lng, event.lat);
+
+		this.scaleWebMercator({
+			closestBBoxIndex,
+			updatedCoords,
+			webMercatorCursor,
+			webMercatorSelected,
+			webMercatorOrigin,
+		});
+
+		return updatedCoords;
+	}
+
+	private scaleWebMercator({
+		closestBBoxIndex,
+		webMercatorOrigin,
+		webMercatorSelected,
+		webMercatorCursor,
+		updatedCoords,
+	}: {
+		closestBBoxIndex: BoundingBoxIndex;
+		updatedCoords: Position[];
+		webMercatorCursor: { x: number; y: number };
+		webMercatorSelected: { x: number; y: number };
+		webMercatorOrigin: { x: number; y: number };
+	}) {
+		const cursorDistanceX = webMercatorOrigin.x - webMercatorCursor.x;
+		const cursorDistanceY = webMercatorOrigin.y - webMercatorCursor.y;
+
+		const valid = this.isValidDragWebMercator(
+			closestBBoxIndex,
+			cursorDistanceX,
+			cursorDistanceY,
+		);
+
+		if (!valid) {
+			return null;
+		}
+
+		let xScale = 1;
+		if (
+			cursorDistanceX !== 0 &&
+			closestBBoxIndex !== 1 &&
+			closestBBoxIndex !== 5
+		) {
+			const currentDistanceX = webMercatorOrigin.x - webMercatorSelected.x;
+			xScale = 1 - (currentDistanceX - cursorDistanceX) / cursorDistanceX;
+		}
+
+		let yScale = 1;
+		if (
+			cursorDistanceY !== 0 &&
+			closestBBoxIndex !== 3 &&
+			closestBBoxIndex !== 7
+		) {
+			const currentDistanceY = webMercatorOrigin.y - webMercatorSelected.y;
+			yScale = 1 - (currentDistanceY - cursorDistanceY) / cursorDistanceY;
+		}
+
+		if (!this.validateScale(xScale, yScale)) {
+			return null;
+		}
+
+		if (xScale < 0) {
+			xScale = this.minimumScale;
+		}
+
+		if (yScale < 0) {
+			yScale = this.minimumScale;
+		}
+
+		this.performWebMercatorScale(
+			updatedCoords,
+			webMercatorOrigin.x,
+			webMercatorOrigin.y,
+			xScale,
+			yScale,
+		);
+
+		return updatedCoords;
+	}
+
+	private getFeature(id: FeatureId) {
+		if (this.draggedCoordinate.id === null) {
+			return null;
+		}
+
+		const geometry = this.store.getGeometryCopy(id);
 
 		// Update the geometry of the dragged feature
 		if (geometry.type !== "Polygon" && geometry.type !== "LineString") {
-			return false;
+			return null;
 		}
-
-		// Coordinates are either polygon or linestring at this point
-		const updatedCoords: Position[] =
-			geometry.type === "Polygon"
-				? geometry.coordinates[0]
-				: geometry.coordinates;
-		const selectedCoordinate = updatedCoords[index];
 
 		const feature = { type: "Feature", geometry, properties: {} } as Feature<
 			Polygon | LineString
 		>;
 
-		// Get the origin for the scaling to occur from
-		let origin: Position | undefined;
-		let oppositeIndex: OppositeMapIndex | undefined;
+		return feature;
+	}
 
-		if (
-			resizeOption === "center-fixed" ||
-			resizeOption === "center" ||
-			resizeOption === "center-planar"
-		) {
-			origin = this.getCenterOrigin(feature);
-		} else if (
-			resizeOption === "opposite-fixed" ||
-			resizeOption === "opposite" ||
-			resizeOption === "opposite-planar"
-		) {
-			const { origin: oppositeOrigin, index } = this.getOppositeOrigin(
-				feature,
-				selectedCoordinate,
-			);
-			origin = oppositeOrigin;
-			oppositeIndex = index;
-		}
-
-		if (!origin) {
-			return false;
-		}
-
-		const { x: selectedX, y: selectedY } = this.project(
-			selectedCoordinate[0],
-			selectedCoordinate[1],
-		);
-		const distanceSelectedToCursor = pixelDistance(
-			{ x: event.containerX, y: event.containerY },
-			{ x: selectedX, y: selectedY },
-		);
-
-		const { x: originX, y: originY } = this.project(origin[0], origin[1]);
-		const distanceOriginToCursor = pixelDistance(
-			{ x: event.containerX, y: event.containerY },
-			{ x: originX, y: originY },
-		);
-
-		// This will mean that the cursor is not near the dragged coordinate
-		// and we should not scale
-		if (distanceSelectedToCursor > this.pointerDistance) {
-			return false;
-		}
-
-		const distanceOriginToSelected = pixelDistance(
-			{ x: originX, y: originY },
-			{ x: selectedX, y: selectedY },
-		);
-
-		let scale = 1;
-		if (distanceOriginToCursor !== 0) {
-			scale =
-				1 -
-				(distanceOriginToSelected - distanceOriginToCursor) /
-					distanceOriginToCursor;
-		}
-
-		let xScale = 1;
-		const cursorDistanceX = Math.abs(originX - event.containerX);
-		const currentDistanceX = Math.abs(originX - selectedX);
-		if (cursorDistanceX !== 0) {
-			xScale = 1 - (currentDistanceX - cursorDistanceX) / cursorDistanceX;
-		}
-
-		let yScale = 1;
-		const cursorDistanceY = Math.abs(originY - event.containerY);
-		const currentDistanceY = Math.abs(originY - selectedY);
-		if (cursorDistanceY !== 0) {
-			yScale = 1 - (currentDistanceY - cursorDistanceY) / cursorDistanceY;
-		}
-
-		if (resizeOption === "center-fixed" || resizeOption === "opposite-fixed") {
-			transformScale(feature, scale, origin);
-		} else if (resizeOption === "opposite" || resizeOption === "center") {
-			// Quick check to ensure it's viable to even scale
-			// TODO: We could probably be smarter about this as this will
-			// break in some instances
-			if (distanceSelectedToCursor > distanceOriginToCursor) {
-				return false;
-			}
-
-			if (!this.validateScale(xScale, yScale)) {
-				return false;
-			}
-
-			transformScale(feature, xScale, origin, "x");
-			transformScale(feature, yScale, origin, "y");
-		} else if (
-			resizeOption === "center-planar" ||
-			resizeOption === "opposite-planar"
-		) {
-			if (!this.validateScale(xScale, yScale)) {
-				return false;
-			}
-
-			this.scalePlanar(updatedCoords, originX, originY, xScale, yScale);
-		} else {
-			throw new Error("Invalid resize option");
-		}
-
-		// We want to ensure that we are not causing the corners
-		// of the bounding box to overlap. This also has the side
-		// affect of preventing bugs
-		const bbox = this.getBBox(updatedCoords);
-		for (let i = 0; i < bbox.length; i++) {
-			if (i === oppositeIndex) {
-				continue;
-			}
-
-			// Projecting can sometimes cause invalid coordinates
-			let bboxPixelCoordinate;
-			try {
-				bboxPixelCoordinate = this.config.project(bbox[i][0], bbox[i][1]);
-			} catch (_) {
-				return false;
-			}
-
-			const distanceToOtherBboxCoordinate = this.pixelDistance.measure(
-				{
-					containerX: bboxPixelCoordinate.x,
-					containerY: bboxPixelCoordinate.y,
-				} as TerraDrawMouseEvent,
-				origin,
-			);
-
-			if (distanceToOtherBboxCoordinate < this.minDistanceFromSelectionPoint) {
-				return false;
-			}
-		}
-
-		// Ensure that coordinate precision is maintained
-		updatedCoords.forEach((coordinate) => {
-			coordinate[0] = limitPrecision(coordinate[0], this.coordinatePrecision);
-			coordinate[1] = limitPrecision(coordinate[1], this.coordinatePrecision);
-		});
-
-		const updatedMidPoints = this.midPoints.getUpdated(updatedCoords) || [];
-
-		const updatedSelectionPoints =
-			this.selectionPoints.getUpdated(updatedCoords) || [];
-
-		// Issue the update to the selected feature
-		this.store.updateGeometry([
-			{
-				id: this.draggedCoordinate.id,
-				geometry,
-			},
-			...updatedSelectionPoints,
-			...updatedMidPoints,
-		]);
-
-		return true;
+	private getNormalisedCoordinates(geometry: Polygon | LineString) {
+		// Coordinates are either polygon or linestring at this point
+		return geometry.type === "Polygon"
+			? geometry.coordinates[0]
+			: geometry.coordinates;
 	}
 
 	private validateScale(xScale: number, yScale: number) {
-		const validX =
-			!isNaN(xScale) && xScale > 0 && yScale < Number.MAX_SAFE_INTEGER;
-		const validY =
-			!isNaN(yScale) && yScale > 0 && yScale < Number.MAX_SAFE_INTEGER;
+		const validX = !isNaN(xScale) && yScale < Number.MAX_SAFE_INTEGER;
+		const validY = !isNaN(yScale) && yScale < Number.MAX_SAFE_INTEGER;
 
 		return validX && validY;
 	}
 
-	private scalePlanar(
+	private performWebMercatorScale(
 		coordinates: Position[],
 		originX: number,
 		originY: number,
@@ -301,40 +374,47 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 		yScale: number,
 	) {
 		coordinates.forEach((coordinate) => {
-			const { x, y } = this.project(coordinate[0], coordinate[1]);
+			const { x, y } = lngLatToWebMercatorXY(coordinate[0], coordinate[1]);
 
 			const updatedX = originX + (x - originX) * xScale;
 			const updatedY = originY + (y - originY) * yScale;
-			const updatedCoordinate = this.unproject(updatedX, updatedY);
 
-			coordinate[0] = updatedCoordinate.lng;
-			coordinate[1] = updatedCoordinate.lat;
+			const { lng, lat } = webMercatorXYToLngLat(updatedX, updatedY);
+
+			coordinate[0] = lng;
+			coordinate[1] = lat;
 		});
 	}
 
-	private getCenterOrigin(feature: Feature<Polygon | LineString>) {
-		return centroid(feature);
-	}
-
-	private getBBox(coordinates: Position[]) {
+	private getBBoxWebMercator(coordinates: Position[]) {
 		const bbox: [number, number, number, number] = [
 			Infinity,
 			Infinity,
 			-Infinity,
 			-Infinity,
 		];
-		coordinates.forEach((coord) => {
-			if (bbox[0] > coord[0]) {
-				bbox[0] = coord[0];
+
+		// Convert from [lng, lat] -> [x, y]
+		coordinates = coordinates.map((coord) => {
+			const { x, y } = lngLatToWebMercatorXY(coord[0], coord[1]);
+			return [x, y];
+		});
+
+		coordinates.forEach(([x, y]) => {
+			if (x < bbox[0]) {
+				bbox[0] = x;
 			}
-			if (bbox[1] > coord[1]) {
-				bbox[1] = coord[1];
+
+			if (y < bbox[1]) {
+				bbox[1] = y;
 			}
-			if (bbox[2] < coord[0]) {
-				bbox[2] = coord[0];
+
+			if (x > bbox[2]) {
+				bbox[2] = x;
 			}
-			if (bbox[3] < coord[1]) {
-				bbox[3] = coord[1];
+
+			if (y > bbox[3]) {
+				bbox[3] = y;
 			}
 		});
 
@@ -351,102 +431,177 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 		// 	 6    5    4
 		//
 		const topLeft = [west, north];
-		const midTop = [(west + east) / 2, north];
 		const topRight = [east, north];
-		const midRight = [east, (south + north) / 2];
 		const lowRight = [east, south];
-		const midBottom = [(west + east) / 2, south];
 		const lowLeft = [west, south];
-		const midLeft = [west, (south + north) / 2];
+
+		const midTop = [(west + east) / 2, north];
+		const midRight = [east, north + (south - north) / 2];
+		const midBottom = [(west + east) / 2, south];
+		const midLeft = [west, north + (south - north) / 2];
 
 		return [
-			topLeft, // 1
-			midTop, // 2
-			topRight,
-			midRight,
-			lowRight,
-			midBottom,
-			lowLeft,
-			midLeft,
+			topLeft, // 0
+			midTop, // 1
+			topRight, // 2
+			midRight, // 3
+			lowRight, // 4
+			midBottom, // 5
+			lowLeft, // 6
+			midLeft, // 7
 		] as const;
 	}
 
-	private getOppositeOrigin(
-		feature: Feature<Polygon | LineString>,
-		selectedCoordinate: Position,
+	private getIndexesWebMercator(
+		boundingBox: BoundingBox,
+		selectedXY: { x: number; y: number },
 	) {
-		const coordinates =
-			feature.geometry.type === "Polygon"
-				? feature.geometry.coordinates[0]
-				: feature.geometry.coordinates;
-
-		const options = this.getBBox(coordinates);
-
-		let closest: OppositeMapIndex | undefined;
+		let closestIndex: BoundingBoxIndex | undefined;
 		let closestDistance = Infinity;
 
-		for (let i = 0; i < options.length; i++) {
-			const distance = haversineDistanceKilometers(
-				selectedCoordinate,
-				options[i],
+		for (let i = 0; i < boundingBox.length; i++) {
+			const distance = pixelDistance(
+				{ x: selectedXY.x, y: selectedXY.y },
+				{ x: boundingBox[i][0], y: boundingBox[i][1] },
 			);
+
 			if (distance < closestDistance) {
-				closest = i as OppositeMapIndex;
+				closestIndex = i as BoundingBoxIndex;
 				closestDistance = distance;
 			}
 		}
 
-		if (closest === undefined) {
+		if (closestIndex === undefined) {
 			throw new Error("No closest coordinate found");
 		}
 
 		// Depending on where what the origin is set to, we need to find the position to
 		// scale from
 		const oppositeIndex = this.boundingBoxMaps["opposite"][
-			closest
-		] as OppositeMapIndex;
+			closestIndex
+		] as BoundingBoxIndex;
 
-		return { origin: options[oppositeIndex], index: oppositeIndex } as const;
+		return {
+			oppositeBboxIndex: oppositeIndex,
+			closestBBoxIndex: closestIndex,
+		} as const;
 	}
 
-	isDragging() {
+	/**
+	 * @returns - true if the feature is being dragged (resized), false otherwise
+	 */
+	public isDragging() {
 		return this.draggedCoordinate.id !== null;
 	}
 
-	startDragging(id: FeatureId, index: number) {
+	/**
+	 * Starts the resizing of the feature
+	 * @param id - feature id of the feature that is being dragged
+	 * @param index - index of the coordinate that is being dragged
+	 * @returns - void
+	 */
+	public startDragging(id: FeatureId, index: number) {
 		this.draggedCoordinate = {
 			id,
 			index,
 		};
 	}
 
-	stopDragging() {
+	/**
+	 * Stops the resizing of the feature
+	 * @returns - void	 *
+	 */
+	public stopDragging() {
 		this.draggedCoordinate = {
 			id: null,
 			index: -1,
 		};
 	}
 
-	// This map provides the oppsite corner of the bbox
-	// to the index of the coordinate provided
-	//   0    1    2
-	//   *----*----*
-	// 	 |		   |
-	// 7 *		   *  3
-	//   |		   |
-	//   *----*----*
-	// 	 6    5    4
-	//
-	private boundingBoxMaps = {
-		opposite: {
-			0: 4,
-			1: 5,
-			2: 6,
-			3: 7,
-			4: 0,
-			5: 1,
-			6: 2,
-			7: 3,
-		},
-	};
+	/**
+	 * Returns the index of the coordinate that is going to be dragged
+	 * @param event - cursor event
+	 * @param selectedId - feature id of the feature that is selected
+	 * @returns - the index to be dragged
+	 */
+	public getDraggableIndex(
+		event: TerraDrawMouseEvent,
+		selectedId: FeatureId,
+	): number {
+		const geometry = this.store.getGeometryCopy(selectedId);
+		const closestCoordinate = this.getClosestCoordinate(event, geometry);
+
+		// No coordinate was within the pointer distance
+		if (closestCoordinate.index === -1) {
+			return -1;
+		}
+		return closestCoordinate.index;
+	}
+
+	/**
+	 * Resizes the feature based on the cursor event
+	 * @param event - cursor event
+	 * @param resizeOption - the resize option, either "center-web-mercator" or "opposite-web-mercator"
+	 * @returns - true is resize was successful, false otherwise
+	 */
+	public drag(
+		event: TerraDrawMouseEvent,
+		resizeOption: ResizeOptions,
+	): boolean {
+		if (!this.draggedCoordinate.id) {
+			return false;
+		}
+
+		const feature = this.getFeature(this.draggedCoordinate.id);
+		if (!feature) {
+			return false;
+		}
+
+		let updatedCoords: Position[] | null = null;
+
+		if (resizeOption === "center-web-mercator") {
+			updatedCoords = this.centerWebMercatorDrag(event);
+		} else if (resizeOption === "opposite-web-mercator") {
+			updatedCoords = this.oppositeWebMercatorDrag(event);
+		}
+
+		if (!updatedCoords) {
+			return false;
+		}
+
+		// Ensure that coordinate precision is maintained
+		for (let i = 0; i < updatedCoords.length; i++) {
+			const coordinate = updatedCoords[i];
+			coordinate[0] = limitPrecision(coordinate[0], this.coordinatePrecision);
+			coordinate[1] = limitPrecision(coordinate[1], this.coordinatePrecision);
+
+			// Ensure the coordinate we are about to update with is valid
+			if (!coordinateIsValid(coordinate, this.coordinatePrecision)) {
+				return false;
+			}
+		}
+
+		// Perform the update to the midpoints and selection points
+		const updatedMidPoints = this.midPoints.getUpdated(updatedCoords) || [];
+		const updatedSelectionPoints =
+			this.selectionPoints.getUpdated(updatedCoords) || [];
+
+		// Issue the update to the selected feature
+		this.store.updateGeometry([
+			{
+				id: this.draggedCoordinate.id,
+				geometry: {
+					type: feature.geometry.type as "Polygon" | "LineString",
+					coordinates:
+						feature.geometry.type === "Polygon"
+							? [updatedCoords]
+							: updatedCoords,
+				} as GeoJSONStoreGeometries,
+			},
+			...updatedSelectionPoints,
+			...updatedMidPoints,
+		]);
+
+		return true;
+	}
 }

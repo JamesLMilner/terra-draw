@@ -225,7 +225,6 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 			this.pixelDistance,
 			this.selectionPoints,
 			this.midPoints,
-			10,
 		);
 	}
 

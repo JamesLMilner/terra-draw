@@ -81,7 +81,7 @@ const example = {
 								draggable: true,
 								coordinates: {
 									draggable: true,
-									resizable: "opposite-fixed",
+									resizable: "opposite-web-mercator",
 								},
 							},
 						},
@@ -90,7 +90,7 @@ const example = {
 								draggable: true,
 								coordinates: {
 									draggable: true,
-									resizable: "center-fixed",
+									resizable: "center-web-mercator",
 								},
 							},
 						},

@@ -98,6 +98,7 @@ const getModes = () => {
 							midpoints: true,
 							draggable: true,
 							deletable: true,
+							resizable: "opposite-web-mercator",
 						},
 					},
 				},
@@ -120,7 +121,7 @@ const getModes = () => {
 						coordinates: {
 							midpoints: false,
 							draggable: true,
-							resizable: "opposite",
+							resizable: "center-web-mercator",
 							deletable: true,
 						},
 					},
@@ -131,7 +132,7 @@ const getModes = () => {
 						coordinates: {
 							midpoints: false,
 							draggable: true,
-							resizable: "opposite",
+							resizable: "opposite-web-mercator",
 							deletable: true,
 						},
 					},

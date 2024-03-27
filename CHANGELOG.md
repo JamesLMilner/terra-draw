@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.1-alpha.63](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.62...v0.0.1-alpha.63) (2024-03-27)
+
+
+### Features
+
+* add additional web-mercator options for resizeable ([#233](https://github.com/JamesLMilner/terra-draw/issues/233)) ([c08b4fb](https://github.com/JamesLMilner/terra-draw/commit/c08b4fb2958aaf6e0007d277cf0383ddb71d0f2a))
+
+
+### Bug Fixes
+
+* completely refactor resizable  ([9573164](https://github.com/JamesLMilner/terra-draw/commit/9573164eb9d93eb93670c627f05606beb1f54d9d))
+
 ### [0.0.1-alpha.62](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.61...v0.0.1-alpha.62) (2024-03-12)
 
 

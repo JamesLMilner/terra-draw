@@ -14,7 +14,11 @@ import {
 	webMercatorXYToLngLat,
 } from "../../../geometry/project/web-mercator";
 
-export type ResizeOptions = "center-web-mercator" | "opposite-web-mercator";
+export type ResizeOptions =
+	| "center-web-mercator"
+	| "opposite-web-mercator"
+	| "center-fixed-web-mercator"
+	| "opposite-fixed-web-mercator";
 
 type BoundingBoxIndex = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
@@ -219,6 +223,124 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 		const webMercatorCursor = lngLatToWebMercatorXY(event.lng, event.lat);
 
 		this.scaleWebMercator({
+			closestBBoxIndex,
+			updatedCoords,
+			webMercatorCursor,
+			webMercatorSelected,
+			webMercatorOrigin,
+		});
+
+		return updatedCoords;
+	}
+
+	private centerFixedWebMercatorDrag(event: TerraDrawMouseEvent) {
+		const featureData = this.getSelectedFeatureDataWebMercator();
+		if (!featureData) {
+			return null;
+		}
+		const { feature, boundingBox, updatedCoords, selectedCoordinate } =
+			featureData;
+
+		const center = centroid(feature);
+
+		if (!center) {
+			return null;
+		}
+
+		const webMercatorSelected = lngLatToWebMercatorXY(
+			selectedCoordinate[0],
+			selectedCoordinate[1],
+		);
+
+		const { closestBBoxIndex } = this.getIndexesWebMercator(
+			boundingBox,
+			webMercatorSelected,
+		);
+
+		const webMercatorOrigin = lngLatToWebMercatorXY(center[0], center[1]);
+		const webMercatorCursor = lngLatToWebMercatorXY(event.lng, event.lat);
+
+		this.scaleFixedWebMercator({
+			closestBBoxIndex,
+			updatedCoords,
+			webMercatorCursor,
+			webMercatorSelected,
+			webMercatorOrigin,
+		});
+
+		return updatedCoords;
+	}
+
+	private scaleFixedWebMercator({
+		closestBBoxIndex,
+		webMercatorOrigin,
+		webMercatorSelected,
+		webMercatorCursor,
+		updatedCoords,
+	}: {
+		closestBBoxIndex: BoundingBoxIndex;
+		updatedCoords: Position[];
+		webMercatorCursor: { x: number; y: number };
+		webMercatorSelected: { x: number; y: number };
+		webMercatorOrigin: { x: number; y: number };
+	}) {
+		const cursorDistanceX = webMercatorOrigin.x - webMercatorCursor.x;
+		const cursorDistanceY = webMercatorOrigin.y - webMercatorCursor.y;
+
+		const valid = this.isValidDragWebMercator(
+			closestBBoxIndex,
+			cursorDistanceX,
+			cursorDistanceY,
+		);
+
+		if (!valid) {
+			return null;
+		}
+
+		let scale =
+			pixelDistance(webMercatorOrigin, webMercatorCursor) /
+			pixelDistance(webMercatorOrigin, webMercatorSelected);
+
+		if (scale < 0) {
+			scale = this.minimumScale;
+		}
+
+		this.performWebMercatorScale(
+			updatedCoords,
+			webMercatorOrigin.x,
+			webMercatorOrigin.y,
+			scale,
+			scale,
+		);
+
+		return updatedCoords;
+	}
+
+	private oppositeFixedWebMercatorDrag(event: TerraDrawMouseEvent) {
+		const featureData = this.getSelectedFeatureDataWebMercator();
+		if (!featureData) {
+			return null;
+		}
+
+		const { boundingBox, updatedCoords, selectedCoordinate } = featureData;
+
+		const webMercatorSelected = lngLatToWebMercatorXY(
+			selectedCoordinate[0],
+			selectedCoordinate[1],
+		);
+
+		const { oppositeBboxIndex, closestBBoxIndex } = this.getIndexesWebMercator(
+			boundingBox,
+			webMercatorSelected,
+		);
+
+		const webMercatorOrigin = {
+			x: boundingBox[oppositeBboxIndex][0],
+			y: boundingBox[oppositeBboxIndex][1],
+		};
+		const webMercatorCursor = lngLatToWebMercatorXY(event.lng, event.lat);
+
+		this.scaleFixedWebMercator({
 			closestBBoxIndex,
 			updatedCoords,
 			webMercatorCursor,
@@ -563,6 +685,10 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 			updatedCoords = this.centerWebMercatorDrag(event);
 		} else if (resizeOption === "opposite-web-mercator") {
 			updatedCoords = this.oppositeWebMercatorDrag(event);
+		} else if (resizeOption === "center-fixed-web-mercator") {
+			updatedCoords = this.centerFixedWebMercatorDrag(event);
+		} else if (resizeOption === "opposite-fixed-web-mercator") {
+			updatedCoords = this.oppositeFixedWebMercatorDrag(event);
 		}
 
 		if (!updatedCoords) {

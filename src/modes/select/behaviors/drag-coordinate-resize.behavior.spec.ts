@@ -156,6 +156,53 @@ describe("DragCoordinateResizeBehavior", () => {
 				expect(config.store.updateGeometry).toBeCalledTimes(0);
 			});
 
+			describe("center-web-mercator", () => {
+				it("updates the Polygon coordinate if within pointer distance", () => {
+					const id = createStorePolygon(config);
+
+					dragMaintainedShapeBehavior.startDragging(id, 0);
+
+					jest.spyOn(config.store, "updateGeometry");
+
+					// Mock the projection for the cooridinates of the bounding box
+					// when measuring against them to prevent overlap
+					for (let i = 0; i < 10; i++) {
+						(config.project as jest.Mock)
+							.mockReturnValueOnce({ x: 0, y: 0 })
+							.mockReturnValueOnce({ x: 100, y: 100 });
+					}
+
+					dragMaintainedShapeBehavior.drag(
+						mockDrawEvent(),
+						"center-web-mercator",
+					);
+
+					expect(config.store.updateGeometry).toBeCalledTimes(1);
+				});
+
+				it("updates the LineString coordinate if within pointer distance", () => {
+					const id = createLineString(config);
+					jest.spyOn(config.store, "updateGeometry");
+
+					dragMaintainedShapeBehavior.startDragging(id, 0);
+
+					// Mock the projection for the cooridinates of the bounding box
+					// when measuring against them to prevent overlap
+					for (let i = 0; i < 10; i++) {
+						(config.project as jest.Mock)
+							.mockReturnValueOnce({ x: 0, y: 0 })
+							.mockReturnValueOnce({ x: 100, y: 100 });
+					}
+
+					dragMaintainedShapeBehavior.drag(
+						mockDrawEvent(),
+						"center-web-mercator",
+					);
+
+					expect(config.store.updateGeometry).toBeCalledTimes(1);
+				});
+			});
+
 			describe("opposite-web-mercator", () => {
 				it("updates the Polygon coordinate if within pointer distance", () => {
 					const id = createStorePolygon(config);
@@ -197,6 +244,100 @@ describe("DragCoordinateResizeBehavior", () => {
 					dragMaintainedShapeBehavior.drag(
 						mockDrawEvent(),
 						"opposite-web-mercator",
+					);
+
+					expect(config.store.updateGeometry).toBeCalledTimes(1);
+				});
+			});
+
+			describe("center-fixed-web-mercator", () => {
+				it("updates the Polygon coordinate if within pointer distance", () => {
+					const id = createStorePolygon(config);
+
+					dragMaintainedShapeBehavior.startDragging(id, 0);
+
+					jest.spyOn(config.store, "updateGeometry");
+
+					// Mock the projection for the cooridinates of the bounding box
+					// when measuring against them to prevent overlap
+					for (let i = 0; i < 10; i++) {
+						(config.project as jest.Mock)
+							.mockReturnValueOnce({ x: 0, y: 0 })
+							.mockReturnValueOnce({ x: 100, y: 100 });
+					}
+
+					dragMaintainedShapeBehavior.drag(
+						mockDrawEvent(),
+						"center-fixed-web-mercator",
+					);
+
+					expect(config.store.updateGeometry).toBeCalledTimes(1);
+				});
+
+				it("updates the LineString coordinate if within pointer distance", () => {
+					const id = createLineString(config);
+					jest.spyOn(config.store, "updateGeometry");
+
+					dragMaintainedShapeBehavior.startDragging(id, 0);
+
+					// Mock the projection for the cooridinates of the bounding box
+					// when measuring against them to prevent overlap
+					for (let i = 0; i < 10; i++) {
+						(config.project as jest.Mock)
+							.mockReturnValueOnce({ x: 0, y: 0 })
+							.mockReturnValueOnce({ x: 100, y: 100 });
+					}
+
+					dragMaintainedShapeBehavior.drag(
+						mockDrawEvent(),
+						"center-fixed-web-mercator",
+					);
+
+					expect(config.store.updateGeometry).toBeCalledTimes(1);
+				});
+			});
+
+			describe("opposite-fixed-web-mercator", () => {
+				it("updates the Polygon coordinate if within pointer distance", () => {
+					const id = createStorePolygon(config);
+
+					dragMaintainedShapeBehavior.startDragging(id, 0);
+
+					jest.spyOn(config.store, "updateGeometry");
+
+					// Mock the projection for the cooridinates of the bounding box
+					// when measuring against them to prevent overlap
+					for (let i = 0; i < 10; i++) {
+						(config.project as jest.Mock)
+							.mockReturnValueOnce({ x: 0, y: 0 })
+							.mockReturnValueOnce({ x: 100, y: 100 });
+					}
+
+					dragMaintainedShapeBehavior.drag(
+						mockDrawEvent(),
+						"opposite-fixed-web-mercator",
+					);
+
+					expect(config.store.updateGeometry).toBeCalledTimes(1);
+				});
+
+				it("updates the LineString coordinate if within pointer distance", () => {
+					const id = createLineString(config);
+					jest.spyOn(config.store, "updateGeometry");
+
+					dragMaintainedShapeBehavior.startDragging(id, 0);
+
+					// Mock the projection for the cooridinates of the bounding box
+					// when measuring against them to prevent overlap
+					for (let i = 0; i < 10; i++) {
+						(config.project as jest.Mock)
+							.mockReturnValueOnce({ x: 0, y: 0 })
+							.mockReturnValueOnce({ x: 100, y: 100 });
+					}
+
+					dragMaintainedShapeBehavior.drag(
+						mockDrawEvent(),
+						"opposite-fixed-web-mercator",
 					);
 
 					expect(config.store.updateGeometry).toBeCalledTimes(1);

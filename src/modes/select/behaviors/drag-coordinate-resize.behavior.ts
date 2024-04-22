@@ -4,7 +4,11 @@ import { LineString, Polygon, Position, Point, Feature } from "geojson";
 import { PixelDistanceBehavior } from "../../pixel-distance.behavior";
 import { MidPointBehavior } from "./midpoint.behavior";
 import { SelectionPointBehavior } from "./selection-point.behavior";
-import { FeatureId, GeoJSONStoreGeometries } from "../../../store/store";
+import {
+	FeatureId,
+	GeoJSONStoreFeatures,
+	GeoJSONStoreGeometries,
+} from "../../../store/store";
 import { centroid } from "../../../geometry/centroid";
 import { limitPrecision } from "../../../geometry/limit-decimal-precision";
 import { pixelDistance } from "../../../geometry/measure/pixel-distance";
@@ -669,6 +673,7 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 	public drag(
 		event: TerraDrawMouseEvent,
 		resizeOption: ResizeOptions,
+		validateFeature?: (feature: GeoJSONStoreFeatures) => boolean,
 	): boolean {
 		if (!this.draggedCoordinate.id) {
 			return false;
@@ -712,17 +717,29 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 		const updatedSelectionPoints =
 			this.selectionPoints.getUpdated(updatedCoords) || [];
 
+		const updatedGeometry = {
+			type: feature.geometry.type as "Polygon" | "LineString",
+			coordinates:
+				feature.geometry.type === "Polygon" ? [updatedCoords] : updatedCoords,
+		} as GeoJSONStoreGeometries;
+
+		if (validateFeature) {
+			const valid = validateFeature({
+				id: this.draggedCoordinate.id,
+				type: "Feature",
+				geometry: updatedGeometry,
+				properties: {},
+			});
+			if (!valid) {
+				return false;
+			}
+		}
+
 		// Issue the update to the selected feature
 		this.store.updateGeometry([
 			{
 				id: this.draggedCoordinate.id,
-				geometry: {
-					type: feature.geometry.type as "Polygon" | "LineString",
-					coordinates:
-						feature.geometry.type === "Polygon"
-							? [updatedCoords]
-							: updatedCoords,
-				} as GeoJSONStoreGeometries,
+				geometry: updatedGeometry,
 			},
 			...updatedSelectionPoints,
 			...updatedMidPoints,

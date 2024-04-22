@@ -18,6 +18,7 @@ import {
 	TerraDrawMapLibreGLAdapter,
 	TerraDrawGreatCircleMode,
 	TerraDrawArcGISMapsSDKAdapter,
+	ValidateMinSizeSquareMeters,
 } from "../../src/terra-draw";
 import { TerraDrawRenderMode } from "../../src/modes/render/render.mode";
 
@@ -42,6 +43,9 @@ import SimpleFillSymbol from "@arcgis/core/symbols/SimpleFillSymbol";
 import SimpleLineSymbol from "@arcgis/core/symbols/SimpleLineSymbol";
 import Color from "@arcgis/core/Color";
 import SimpleMarkerSymbol from "@arcgis/core/symbols/SimpleMarkerSymbol";
+import { centroid } from "../../src/geometry/centroid";
+import { distance } from "ol/coordinate";
+import { haversineDistanceKilometers } from "../../src/geometry/measure/haversine-distance";
 
 const addModeChangeHandler = (
 	draw: TerraDraw,
@@ -98,7 +102,7 @@ const getModes = () => {
 							midpoints: true,
 							draggable: true,
 							deletable: true,
-							resizable: "opposite-web-mercator",
+							resizable: "center-web-mercator",
 						},
 					},
 				},
@@ -121,18 +125,25 @@ const getModes = () => {
 						coordinates: {
 							midpoints: false,
 							draggable: true,
-							resizable: "center-web-mercator",
+							resizable: "center-fixed-web-mercator",
 							deletable: true,
 						},
 					},
 				},
 				circle: {
 					feature: {
+						validation: (feature) => {
+							if (feature.geometry.type !== "Polygon") {
+								return false;
+							}
+
+							return ValidateMinSizeSquareMeters(feature.geometry, 1000);
+						},
 						draggable: true,
 						coordinates: {
 							midpoints: false,
 							draggable: true,
-							resizable: "opposite-web-mercator",
+							resizable: "center-fixed-web-mercator",
 							deletable: true,
 						},
 					},

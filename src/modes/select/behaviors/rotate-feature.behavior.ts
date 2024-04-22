@@ -7,7 +7,7 @@ import { transformRotate } from "../../../geometry/transform/rotate";
 import { centroid } from "../../../geometry/centroid";
 import { rhumbBearing } from "../../../geometry/measure/rhumb-bearing";
 import { limitPrecision } from "../../../geometry/limit-decimal-precision";
-import { FeatureId } from "../../../store/store";
+import { FeatureId, GeoJSONStoreFeatures } from "../../../store/store";
 
 export class RotateFeatureBehavior extends TerraDrawModeBehavior {
 	constructor(
@@ -24,7 +24,11 @@ export class RotateFeatureBehavior extends TerraDrawModeBehavior {
 		this.lastBearing = undefined;
 	}
 
-	rotate(event: TerraDrawMouseEvent, selectedId: FeatureId) {
+	rotate(
+		event: TerraDrawMouseEvent,
+		selectedId: FeatureId,
+		validateFeature?: (feature: GeoJSONStoreFeatures) => boolean,
+	) {
 		const geometry = this.store.getGeometryCopy<LineString | Polygon>(
 			selectedId,
 		);
@@ -67,6 +71,19 @@ export class RotateFeatureBehavior extends TerraDrawModeBehavior {
 
 		const updatedSelectionPoints =
 			this.selectionPoints.getUpdated(updatedCoords) || [];
+
+		if (validateFeature) {
+			if (
+				!validateFeature({
+					id: selectedId,
+					type: "Feature",
+					geometry,
+					properties: {},
+				})
+			) {
+				return false;
+			}
+		}
 
 		// Issue the update to the selected feature
 		this.store.updateGeometry([

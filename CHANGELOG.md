@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.1-alpha.64](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.63...v0.0.1-alpha.64) (2024-04-24)
+
+
+### Features
+
+* allow custom validations on select mode ([#240](https://github.com/JamesLMilner/terra-draw/issues/240)) ([9542a60](https://github.com/JamesLMilner/terra-draw/commit/9542a6053850afad8b9860cdafbd0d2a0554593d))
+
+
+### Chore
+
+* move to using Node 20 and npm 10 for development ([#235](https://github.com/JamesLMilner/terra-draw/issues/235)) ([a4e58d7](https://github.com/JamesLMilner/terra-draw/commit/a4e58d7feee3a2d5c820f6056a79b51eb4958dc4))
+* update various development packages to latest versions ([#236](https://github.com/JamesLMilner/terra-draw/issues/236)) ([cfbed7e](https://github.com/JamesLMilner/terra-draw/commit/cfbed7e0be62118ef487aadaf4a38cb4dd2f7505))
+
 ### [0.0.1-alpha.63](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.62...v0.0.1-alpha.63) (2024-03-27)
 
 

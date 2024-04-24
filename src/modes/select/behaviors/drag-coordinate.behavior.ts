@@ -6,7 +6,7 @@ import { PixelDistanceBehavior } from "../../pixel-distance.behavior";
 import { MidPointBehavior } from "./midpoint.behavior";
 import { SelectionPointBehavior } from "./selection-point.behavior";
 import { selfIntersects } from "../../../geometry/boolean/self-intersects";
-import { FeatureId } from "../../../store/store";
+import { FeatureId, GeoJSONStoreFeatures } from "../../../store/store";
 
 export class DragCoordinateBehavior extends TerraDrawModeBehavior {
 	constructor(
@@ -88,6 +88,7 @@ export class DragCoordinateBehavior extends TerraDrawModeBehavior {
 	public drag(
 		event: TerraDrawMouseEvent,
 		allowSelfIntersection: boolean,
+		validateFeature?: (feature: GeoJSONStoreFeatures) => boolean,
 	): boolean {
 		if (!this.draggedCoordinate.id) {
 			return false;
@@ -151,6 +152,18 @@ export class DragCoordinateBehavior extends TerraDrawModeBehavior {
 			} as Feature<Polygon>)
 		) {
 			return false;
+		}
+
+		if (validateFeature) {
+			const valid = validateFeature({
+				type: "Feature",
+				id: this.draggedCoordinate.id,
+				geometry,
+				properties: {},
+			});
+			if (!valid) {
+				return false;
+			}
 		}
 
 		// Apply all the updates

@@ -48,6 +48,8 @@ import { pixelDistanceToLine } from "./geometry/measure/pixel-distance-to-line";
 import { Position } from "geojson";
 import { pointInPolygon } from "./geometry/boolean/point-in-polygon";
 import { createBBoxFromPoint } from "./geometry/shape/create-bbox";
+import { ValidateMinSizeSquareMeters } from "./validations/min-size.validation";
+import { ValidateMaxSizeSquareMeters } from "./validations/max-size.validation";
 
 type FinishListener = (ids: FeatureId) => void;
 type ChangeListener = (ids: FeatureId[], type: string) => void;
@@ -814,4 +816,8 @@ export {
 	Unproject,
 	SetCursor,
 	GetLngLatFromEvent,
+
+	// Validations
+	ValidateMinSizeSquareMeters,
+	ValidateMaxSizeSquareMeters,
 };

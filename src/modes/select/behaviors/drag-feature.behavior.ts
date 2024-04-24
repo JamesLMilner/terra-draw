@@ -5,7 +5,7 @@ import { Position } from "geojson";
 import { SelectionPointBehavior } from "./selection-point.behavior";
 import { MidPointBehavior } from "./midpoint.behavior";
 import { limitPrecision } from "../../../geometry/limit-decimal-precision";
-import { FeatureId } from "../../../store/store";
+import { FeatureId, GeoJSONStoreFeatures } from "../../../store/store";
 
 export class DragFeatureBehavior extends TerraDrawModeBehavior {
 	constructor(
@@ -47,7 +47,10 @@ export class DragFeatureBehavior extends TerraDrawModeBehavior {
 		return true;
 	}
 
-	drag(event: TerraDrawMouseEvent) {
+	drag(
+		event: TerraDrawMouseEvent,
+		validateFeature?: (feature: GeoJSONStoreFeatures) => boolean,
+	) {
 		if (!this.draggedFeatureId) {
 			return;
 		}
@@ -119,6 +122,18 @@ export class DragFeatureBehavior extends TerraDrawModeBehavior {
 				this.selectionPoints.getUpdated(updatedCoords) || [];
 
 			const updatedMidPoints = this.midPoints.getUpdated(updatedCoords) || [];
+
+			if (validateFeature) {
+				const valid = validateFeature({
+					type: "Feature",
+					id: this.draggedFeatureId,
+					geometry,
+					properties: {},
+				});
+				if (!valid) {
+					return false;
+				}
+			}
 
 			// Issue the update to the selected feature
 			this.store.updateGeometry([

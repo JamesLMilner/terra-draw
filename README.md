@@ -16,7 +16,7 @@ Terra Draw uses the concept of 'adapters' to allow it to work with a host of dif
 - [Leaflet](https://leafletjs.com/) v1
 - [OpenLayers](https://openlayers.org/) v7
 - [Mapbox GL JS](https://www.mapbox.com/mapbox-gljs) v2
-- [MapLibre](https://maplibre.org/projects/maplibre-gl-js/) v2/v3
+- [MapLibre](https://maplibre.org/maplibre-gl-js/docs/) v2/v3
 - [Google Maps JS API](https://developers.google.com/maps/documentation/javascript/overview) v3
 - [ArcGIS JavaScript SDK](https://developers.arcgis.com/javascript/latest/) v4 (MapView)
 
@@ -26,8 +26,8 @@ Please see the [the getting started guide](./guides/1.GETTING_STARTED.md) - this
 
 ### Development & Contributing
 
-* For development, please see the [the development documentation](./guides/6.DEVELOPMENT.md)
-* For guidance on contributing, please see the [the contributing documentation](./guides/CONTRIBUTING.md)
+* For development, please see the [the development documentation](./guides/7.DEVELOPMENT.md)
+* For guidance on contributing, please see the [the contributing documentation](./guides/7.DEVELOPMENT.md#contributing)
 
 
 ### Project Website

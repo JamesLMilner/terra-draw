@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.1-alpha.65](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.64...v0.0.1-alpha.65) (2024-05-03)
+
+
+### Bug Fixes
+
+* fix issues with polygons moving when resizing via coordinates ([#244](https://github.com/JamesLMilner/terra-draw/issues/244)) ([415463e](https://github.com/JamesLMilner/terra-draw/commit/415463eef0fc0e13177b1cc5ecf6a11de1a37385))
+
+
+### Documentation
+
+* fix links in README ([#242](https://github.com/JamesLMilner/terra-draw/issues/242)) ([b48a672](https://github.com/JamesLMilner/terra-draw/commit/b48a67243e0dfd52cfc9b987520d13626f5d9179))
+
 ### [0.0.1-alpha.64](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.63...v0.0.1-alpha.64) (2024-04-24)
 
 

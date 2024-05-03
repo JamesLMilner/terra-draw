@@ -9,7 +9,6 @@ import {
 	GeoJSONStoreFeatures,
 	GeoJSONStoreGeometries,
 } from "../../../store/store";
-import { centroid } from "../../../geometry/centroid";
 import { limitPrecision } from "../../../geometry/limit-decimal-precision";
 import { pixelDistance } from "../../../geometry/measure/pixel-distance";
 import { coordinateIsValid } from "../../../geometry/boolean/is-valid-coordinate";
@@ -17,6 +16,7 @@ import {
 	lngLatToWebMercatorXY,
 	webMercatorXYToLngLat,
 } from "../../../geometry/project/web-mercator";
+import { webMercatorCenter } from "../../../geometry/web-mercator-center";
 
 export type ResizeOptions =
 	| "center-web-mercator"
@@ -207,9 +207,9 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 		const { feature, boundingBox, updatedCoords, selectedCoordinate } =
 			featureData;
 
-		const center = centroid(feature);
+		const webMercatorOrigin = webMercatorCenter(feature);
 
-		if (!center) {
+		if (!webMercatorOrigin) {
 			return null;
 		}
 
@@ -223,7 +223,6 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 			webMercatorSelected,
 		);
 
-		const webMercatorOrigin = lngLatToWebMercatorXY(center[0], center[1]);
 		const webMercatorCursor = lngLatToWebMercatorXY(event.lng, event.lat);
 
 		this.scaleWebMercator({
@@ -245,9 +244,9 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 		const { feature, boundingBox, updatedCoords, selectedCoordinate } =
 			featureData;
 
-		const center = centroid(feature);
+		const webMercatorOrigin = webMercatorCenter(feature);
 
-		if (!center) {
+		if (!webMercatorOrigin) {
 			return null;
 		}
 
@@ -261,7 +260,6 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 			webMercatorSelected,
 		);
 
-		const webMercatorOrigin = lngLatToWebMercatorXY(center[0], center[1]);
 		const webMercatorCursor = lngLatToWebMercatorXY(event.lng, event.lat);
 
 		this.scaleFixedWebMercator({

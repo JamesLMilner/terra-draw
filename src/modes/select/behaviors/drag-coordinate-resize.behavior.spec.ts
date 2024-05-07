@@ -156,6 +156,34 @@ describe("DragCoordinateResizeBehavior", () => {
 				expect(config.store.updateGeometry).toBeCalledTimes(0);
 			});
 
+			describe("validation", () => {
+				it("should not update if validation function returns false", () => {
+					const id = createStorePolygon(config);
+
+					dragMaintainedShapeBehavior.startDragging(id, 0);
+
+					jest.spyOn(config.store, "updateGeometry");
+
+					// Mock the projection for the cooridinates of the bounding box
+					// when measuring against them to prevent overlap
+					for (let i = 0; i < 10; i++) {
+						(config.project as jest.Mock)
+							.mockReturnValueOnce({ x: 0, y: 0 })
+							.mockReturnValueOnce({ x: 100, y: 100 });
+					}
+
+					dragMaintainedShapeBehavior.drag(
+						mockDrawEvent(),
+						"center-web-mercator",
+						() => {
+							return false;
+						},
+					);
+
+					expect(config.store.updateGeometry).toBeCalledTimes(0);
+				});
+			});
+
 			describe("center-web-mercator", () => {
 				it("updates the Polygon coordinate if within pointer distance", () => {
 					const id = createStorePolygon(config);

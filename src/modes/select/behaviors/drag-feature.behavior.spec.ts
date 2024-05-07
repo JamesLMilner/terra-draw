@@ -138,6 +138,54 @@ describe("DragFeatureBehavior", () => {
 				expect(config.store.getGeometryCopy).toBeCalledTimes(1);
 				expect(config.store.updateGeometry).toBeCalledTimes(1);
 			});
+
+			it("validation returning false does not update the polygon to the dragged position", () => {
+				const id = createStorePolygon(config);
+				const event = mockDrawEvent({ lat: 0.5, lng: 0.5 });
+
+				dragFeatureBehavior.startDragging(event, id);
+
+				jest.spyOn(config.store, "updateGeometry");
+				jest.spyOn(config.store, "getGeometryCopy");
+
+				// Mock the unproject to return a valid set
+				// of bbox coordinates
+				(config.unproject as jest.Mock)
+					.mockImplementationOnce(() => ({ lng: 0, lat: 1 }))
+					.mockImplementationOnce(() => ({ lng: 1, lat: 1 }))
+					.mockImplementationOnce(() => ({ lng: 1, lat: 0 }))
+					.mockImplementationOnce(() => ({ lng: 0, lat: 0 }))
+					.mockImplementationOnce(() => ({ lng: 0, lat: 1 }));
+
+				dragFeatureBehavior.drag(mockDrawEvent(), () => false);
+
+				expect(config.store.getGeometryCopy).toBeCalledTimes(1);
+				expect(config.store.updateGeometry).toBeCalledTimes(0);
+			});
+
+			it("validation returning true does update the polygon to the dragged position", () => {
+				const id = createStorePolygon(config);
+				const event = mockDrawEvent({ lat: 0.5, lng: 0.5 });
+
+				dragFeatureBehavior.startDragging(event, id);
+
+				jest.spyOn(config.store, "updateGeometry");
+				jest.spyOn(config.store, "getGeometryCopy");
+
+				// Mock the unproject to return a valid set
+				// of bbox coordinates
+				(config.unproject as jest.Mock)
+					.mockImplementationOnce(() => ({ lng: 0, lat: 1 }))
+					.mockImplementationOnce(() => ({ lng: 1, lat: 1 }))
+					.mockImplementationOnce(() => ({ lng: 1, lat: 0 }))
+					.mockImplementationOnce(() => ({ lng: 0, lat: 0 }))
+					.mockImplementationOnce(() => ({ lng: 0, lat: 1 }));
+
+				dragFeatureBehavior.drag(mockDrawEvent(), () => true);
+
+				expect(config.store.getGeometryCopy).toBeCalledTimes(1);
+				expect(config.store.updateGeometry).toBeCalledTimes(1);
+			});
 		});
 	});
 });

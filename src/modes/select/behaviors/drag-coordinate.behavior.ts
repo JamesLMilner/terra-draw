@@ -1,4 +1,4 @@
-import { TerraDrawMouseEvent } from "../../../common";
+import { TerraDrawMouseEvent, Validation } from "../../../common";
 import { BehaviorConfig, TerraDrawModeBehavior } from "../../base.behavior";
 
 import { LineString, Polygon, Position, Point, Feature } from "geojson";
@@ -6,7 +6,7 @@ import { PixelDistanceBehavior } from "../../pixel-distance.behavior";
 import { MidPointBehavior } from "./midpoint.behavior";
 import { SelectionPointBehavior } from "./selection-point.behavior";
 import { selfIntersects } from "../../../geometry/boolean/self-intersects";
-import { FeatureId, GeoJSONStoreFeatures } from "../../../store/store";
+import { FeatureId } from "../../../store/store";
 
 export class DragCoordinateBehavior extends TerraDrawModeBehavior {
 	constructor(
@@ -88,7 +88,7 @@ export class DragCoordinateBehavior extends TerraDrawModeBehavior {
 	public drag(
 		event: TerraDrawMouseEvent,
 		allowSelfIntersection: boolean,
-		validateFeature?: (feature: GeoJSONStoreFeatures) => boolean,
+		validateFeature?: Validation,
 	): boolean {
 		if (!this.draggedCoordinate.id) {
 			return false;
@@ -155,12 +155,20 @@ export class DragCoordinateBehavior extends TerraDrawModeBehavior {
 		}
 
 		if (validateFeature) {
-			const valid = validateFeature({
-				type: "Feature",
-				id: this.draggedCoordinate.id,
-				geometry,
-				properties: {},
-			});
+			const valid = validateFeature(
+				{
+					type: "Feature",
+					id: this.draggedCoordinate.id,
+					geometry,
+					properties: {},
+				},
+				{
+					project: this.config.project,
+					unproject: this.config.unproject,
+					coordinatePrecision: this.config.coordinatePrecision,
+				},
+			);
+
 			if (!valid) {
 				return false;
 			}

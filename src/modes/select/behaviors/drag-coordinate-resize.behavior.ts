@@ -1,14 +1,10 @@
-import { TerraDrawMouseEvent } from "../../../common";
+import { TerraDrawMouseEvent, Validation } from "../../../common";
 import { BehaviorConfig, TerraDrawModeBehavior } from "../../base.behavior";
 import { LineString, Polygon, Position, Point, Feature } from "geojson";
 import { PixelDistanceBehavior } from "../../pixel-distance.behavior";
 import { MidPointBehavior } from "./midpoint.behavior";
 import { SelectionPointBehavior } from "./selection-point.behavior";
-import {
-	FeatureId,
-	GeoJSONStoreFeatures,
-	GeoJSONStoreGeometries,
-} from "../../../store/store";
+import { FeatureId, GeoJSONStoreGeometries } from "../../../store/store";
 import { limitPrecision } from "../../../geometry/limit-decimal-precision";
 import { pixelDistance } from "../../../geometry/measure/pixel-distance";
 import { coordinateIsValid } from "../../../geometry/boolean/is-valid-coordinate";
@@ -671,7 +667,7 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 	public drag(
 		event: TerraDrawMouseEvent,
 		resizeOption: ResizeOptions,
-		validateFeature?: (feature: GeoJSONStoreFeatures) => boolean,
+		validateFeature?: Validation,
 	): boolean {
 		if (!this.draggedCoordinate.id) {
 			return false;
@@ -722,12 +718,19 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 		} as GeoJSONStoreGeometries;
 
 		if (validateFeature) {
-			const valid = validateFeature({
-				id: this.draggedCoordinate.id,
-				type: "Feature",
-				geometry: updatedGeometry,
-				properties: {},
-			});
+			const valid = validateFeature(
+				{
+					id: this.draggedCoordinate.id,
+					type: "Feature",
+					geometry: updatedGeometry,
+					properties: {},
+				},
+				{
+					project: this.config.project,
+					unproject: this.config.unproject,
+					coordinatePrecision: this.config.coordinatePrecision,
+				},
+			);
 			if (!valid) {
 				return false;
 			}

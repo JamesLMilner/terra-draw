@@ -1,4 +1,4 @@
-import { TerraDrawMouseEvent } from "../../../common";
+import { TerraDrawMouseEvent, Validation } from "../../../common";
 import { BehaviorConfig, TerraDrawModeBehavior } from "../../base.behavior";
 import { Feature, LineString, Polygon, Position } from "geojson";
 import { SelectionPointBehavior } from "./selection-point.behavior";
@@ -7,7 +7,7 @@ import { centroid } from "../../../geometry/centroid";
 import { haversineDistanceKilometers } from "../../../geometry/measure/haversine-distance";
 import { transformScale } from "../../../geometry/transform/scale";
 import { limitPrecision } from "../../../geometry/limit-decimal-precision";
-import { FeatureId, GeoJSONStoreFeatures } from "../../../store/store";
+import { FeatureId } from "../../../store/store";
 
 export class ScaleFeatureBehavior extends TerraDrawModeBehavior {
 	constructor(
@@ -27,7 +27,7 @@ export class ScaleFeatureBehavior extends TerraDrawModeBehavior {
 	scale(
 		event: TerraDrawMouseEvent,
 		selectedId: FeatureId,
-		validateFeature?: (feature: GeoJSONStoreFeatures) => boolean,
+		validateFeature?: Validation,
 	) {
 		const geometry = this.store.getGeometryCopy<LineString | Polygon>(
 			selectedId,
@@ -78,12 +78,19 @@ export class ScaleFeatureBehavior extends TerraDrawModeBehavior {
 
 		if (validateFeature) {
 			if (
-				!validateFeature({
-					id: selectedId,
-					type: "Feature",
-					geometry,
-					properties: {},
-				})
+				!validateFeature(
+					{
+						id: selectedId,
+						type: "Feature",
+						geometry,
+						properties: {},
+					},
+					{
+						project: this.config.project,
+						unproject: this.config.unproject,
+						coordinatePrecision: this.config.coordinatePrecision,
+					},
+				)
 			) {
 				return false;
 			}

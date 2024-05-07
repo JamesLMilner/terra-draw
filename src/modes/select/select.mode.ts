@@ -6,6 +6,7 @@ import {
 	HexColorStyling,
 	NumericStyling,
 	Cursor,
+	Validation,
 } from "../../common";
 import { Point, Position } from "geojson";
 import {
@@ -39,7 +40,7 @@ type TerraDrawSelectModeKeyEvents = {
 
 type ModeFlags = {
 	feature?: {
-		validation?: (geometry: GeoJSONStoreFeatures) => boolean;
+		validation?: Validation;
 		draggable?: boolean;
 		rotateable?: boolean;
 		scaleable?: boolean;

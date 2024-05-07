@@ -87,6 +87,15 @@ export interface TerraDrawModeRegisterConfig {
 	coordinatePrecision: number;
 }
 
+type ValidationContext = Pick<
+	TerraDrawModeRegisterConfig,
+	"project" | "unproject" | "coordinatePrecision"
+>;
+export type Validation = (
+	feature: GeoJSONStoreFeatures,
+	context: ValidationContext,
+) => boolean;
+
 export type TerraDrawModeState =
 	| "unregistered"
 	| "registered"

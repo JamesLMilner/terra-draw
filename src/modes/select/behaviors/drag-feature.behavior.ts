@@ -1,11 +1,11 @@
-import { TerraDrawMouseEvent } from "../../../common";
+import { TerraDrawMouseEvent, Validation } from "../../../common";
 import { BehaviorConfig, TerraDrawModeBehavior } from "../../base.behavior";
 import { FeatureAtPointerEventBehavior } from "./feature-at-pointer-event.behavior";
 import { Position } from "geojson";
 import { SelectionPointBehavior } from "./selection-point.behavior";
 import { MidPointBehavior } from "./midpoint.behavior";
 import { limitPrecision } from "../../../geometry/limit-decimal-precision";
-import { FeatureId, GeoJSONStoreFeatures } from "../../../store/store";
+import { FeatureId } from "../../../store/store";
 
 export class DragFeatureBehavior extends TerraDrawModeBehavior {
 	constructor(
@@ -47,10 +47,7 @@ export class DragFeatureBehavior extends TerraDrawModeBehavior {
 		return true;
 	}
 
-	drag(
-		event: TerraDrawMouseEvent,
-		validateFeature?: (feature: GeoJSONStoreFeatures) => boolean,
-	) {
+	drag(event: TerraDrawMouseEvent, validateFeature?: Validation) {
 		if (!this.draggedFeatureId) {
 			return;
 		}
@@ -124,12 +121,20 @@ export class DragFeatureBehavior extends TerraDrawModeBehavior {
 			const updatedMidPoints = this.midPoints.getUpdated(updatedCoords) || [];
 
 			if (validateFeature) {
-				const valid = validateFeature({
-					type: "Feature",
-					id: this.draggedFeatureId,
-					geometry,
-					properties: {},
-				});
+				const valid = validateFeature(
+					{
+						type: "Feature",
+						id: this.draggedFeatureId,
+						geometry,
+						properties: {},
+					},
+					{
+						project: this.config.project,
+						unproject: this.config.unproject,
+						coordinatePrecision: this.config.coordinatePrecision,
+					},
+				);
+
 				if (!valid) {
 					return false;
 				}

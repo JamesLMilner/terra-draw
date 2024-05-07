@@ -151,6 +151,44 @@ describe("DragCoordinateBehavior", () => {
 				expect(config.store.updateGeometry).toBeCalledTimes(0);
 			});
 
+			it("validation returning false means updates are not called", () => {
+				const id = createStorePolygon(config);
+
+				dragCoordinateBehavior.startDragging(id, 0);
+
+				jest.spyOn(config.store, "updateGeometry");
+
+				(config.project as jest.Mock)
+					.mockReturnValueOnce({ x: 0, y: 0 })
+					.mockReturnValueOnce({ x: 0, y: 1 })
+					.mockReturnValueOnce({ x: 1, y: 1 })
+					.mockReturnValueOnce({ x: 1, y: 0 })
+					.mockReturnValueOnce({ x: 0, y: 0 });
+
+				dragCoordinateBehavior.drag(mockDrawEvent(), true, () => false);
+
+				expect(config.store.updateGeometry).toBeCalledTimes(0);
+			});
+
+			it("validation returning false means updates are not called", () => {
+				const id = createStorePolygon(config);
+
+				dragCoordinateBehavior.startDragging(id, 0);
+
+				jest.spyOn(config.store, "updateGeometry");
+
+				(config.project as jest.Mock)
+					.mockReturnValueOnce({ x: 0, y: 0 })
+					.mockReturnValueOnce({ x: 0, y: 1 })
+					.mockReturnValueOnce({ x: 1, y: 1 })
+					.mockReturnValueOnce({ x: 1, y: 0 })
+					.mockReturnValueOnce({ x: 0, y: 0 });
+
+				dragCoordinateBehavior.drag(mockDrawEvent(), true, () => true);
+
+				expect(config.store.updateGeometry).toBeCalledTimes(1);
+			});
+
 			it("updates the Polygon coordinate if within pointer distance", () => {
 				const id = createStorePolygon(config);
 

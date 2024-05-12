@@ -456,6 +456,15 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawBaseAdapter {
 		}
 	}
 
+	public getCoordinatePrecision(): number {
+		return super.getCoordinatePrecision();
+	}
+
+	public unregister(): void {
+		// TODO: It seems this shouldn't be necessary as extends BaseAdapter which as this method
+		return super.unregister();
+	}
+
 	public register(callbacks: TerraDrawCallbacks) {
 		super.register(callbacks);
 		this._currentModeCallbacks &&

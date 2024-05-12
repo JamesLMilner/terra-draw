@@ -35,6 +35,10 @@ export class TerraDrawMapLibreGLAdapter extends TerraDrawBaseAdapter {
 		this.mapboxglAdapter.unregister();
 	}
 
+	public getCoordinatePrecision(): number {
+		return this.mapboxglAdapter.getCoordinatePrecision();
+	}
+
 	/**
 	 * Returns the longitude and latitude coordinates from a given PointerEvent on the map.
 	 * @param event The PointerEvent or MouseEvent  containing the screen coordinates of the pointer.

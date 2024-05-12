@@ -326,4 +326,13 @@ export class TerraDrawOpenLayersAdapter extends TerraDrawBaseAdapter {
 			this._currentModeCallbacks.onReady &&
 			this._currentModeCallbacks.onReady();
 	}
+
+	public getCoordinatePrecision(): number {
+		return super.getCoordinatePrecision();
+	}
+
+	public unregister(): void {
+		// TODO: It seems this shouldn't be necessary as extends BaseAdapter which as this method
+		return super.unregister();
+	}
 }

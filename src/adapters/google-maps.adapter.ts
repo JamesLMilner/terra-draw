@@ -479,4 +479,9 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawBaseAdapter {
 			this.clearLayers();
 		}
 	}
+
+	public getCoordinatePrecision(): number {
+		// TODO: It seems this shouldn't be necessary as extends BaseAdapter which as this method
+		return super.getCoordinatePrecision();
+	}
 }

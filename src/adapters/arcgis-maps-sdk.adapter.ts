@@ -93,6 +93,11 @@ export class TerraDrawArcGISMapsSDKAdapter extends TerraDrawBaseAdapter {
 		}
 	}
 
+	public getCoordinatePrecision(): number {
+		// TODO: It seems this shouldn't be necessary as extends BaseAdapter which as this method
+		return super.getCoordinatePrecision();
+	}
+
 	/**
 	 * Returns the longitude and latitude coordinates from a given PointerEvent on the map.
 	 * @param event The PointerEvent or MouseEvent  containing the screen coordinates of the pointer.

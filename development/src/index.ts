@@ -43,9 +43,6 @@ import SimpleFillSymbol from "@arcgis/core/symbols/SimpleFillSymbol";
 import SimpleLineSymbol from "@arcgis/core/symbols/SimpleLineSymbol";
 import Color from "@arcgis/core/Color";
 import SimpleMarkerSymbol from "@arcgis/core/symbols/SimpleMarkerSymbol";
-import { centroid } from "../../src/geometry/centroid";
-import { distance } from "ol/coordinate";
-import { haversineDistanceKilometers } from "../../src/geometry/measure/haversine-distance";
 
 const addModeChangeHandler = (
 	draw: TerraDraw,

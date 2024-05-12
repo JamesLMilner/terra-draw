@@ -7,6 +7,7 @@ import {
 	SetCursor,
 	TerraDrawStylingFunction,
 	GetLngLatFromEvent,
+	TerraDrawAdapter,
 } from "../../common";
 import { limitPrecision } from "../../geometry/limit-decimal-precision";
 import { pixelDistance } from "../../geometry/measure/pixel-distance";
@@ -23,7 +24,7 @@ export type BaseAdapterConfig = {
 	minPixelDragDistanceSelecting?: number;
 };
 
-export abstract class TerraDrawBaseAdapter {
+export abstract class TerraDrawBaseAdapter implements TerraDrawAdapter {
 	constructor(config: BaseAdapterConfig) {
 		this._minPixelDragDistance =
 			typeof config.minPixelDragDistance === "number"
@@ -59,7 +60,7 @@ export abstract class TerraDrawBaseAdapter {
 		"not-dragging";
 	protected _currentModeCallbacks: TerraDrawCallbacks | undefined;
 
-	protected abstract getMapEventElement(): HTMLElement;
+	public abstract getMapEventElement(): HTMLElement;
 
 	protected getButton(event: PointerEvent | MouseEvent) {
 		if (event.button === -1) {

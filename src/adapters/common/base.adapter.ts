@@ -272,22 +272,6 @@ export abstract class TerraDrawBaseAdapter implements TerraDrawAdapter {
 
 					// We do not want the context menu to open
 					event.preventDefault();
-
-					if (
-						this._dragState === "not-dragging" ||
-						this._dragState === "pre-dragging"
-					) {
-						const drawEvent = this.getDrawEventFromEvent(event);
-						if (!drawEvent) {
-							return;
-						}
-
-						// On mobile devices there is no real 'right click'
-						// so we want to make sure the event is genuine in this case
-						if (drawEvent.button !== "neither") {
-							this._currentModeCallbacks.onClick(drawEvent);
-						}
-					}
 				},
 				register: (callback) => {
 					const mapElement = this.getMapEventElement();

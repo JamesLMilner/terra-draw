@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.1-alpha.67](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.66...v0.0.1-alpha.67) (2024-05-16)
+
+
+### Bug Fixes
+
+* remove trigger of onClick from contextmenu handler ([#251](https://github.com/JamesLMilner/terra-draw/issues/251)) ([a43bc0f](https://github.com/JamesLMilner/terra-draw/commit/a43bc0f457f38c6b5f3498334e4d9e688dc50553))
+
 ### [0.0.1-alpha.66](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.65...v0.0.1-alpha.66) (2024-05-12)
 
 

@@ -15,5 +15,13 @@
 		"exclude": ["src/geometry/**/*.ts", "src/test/**/*.ts", "src/util/**/*.ts"],
 		"out": "docs",
 		"skipErrorChecking": true
-	}
+	},
+	"exclude": [
+		"node_modules/",
+		"guides/",
+		"docs/",
+		"dist/",
+		"development/dist",
+		"development/node_modules"
+	]
 }

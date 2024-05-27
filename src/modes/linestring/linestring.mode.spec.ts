@@ -1,5 +1,6 @@
 import { GeoJSONStore } from "../../store/store";
 import { getMockModeConfig } from "../../test/mock-config";
+import { ValidateNotSelfIntersecting } from "../../validations/not-self-intersecting.validation";
 import { TerraDrawLineStringMode } from "./linestring.mode";
 
 describe("TerraDrawLineStringMode", () => {
@@ -333,96 +334,210 @@ describe("TerraDrawLineStringMode", () => {
 			]);
 		});
 
-		it("handles self intersection", () => {
-			// TODO: Limit precision to 9 decimals
+		describe("validations", () => {
+			it("does not create a line if it has intersections and validate returns false", () => {
+				lineStringMode = new TerraDrawLineStringMode({
+					validate: (feature, { updateType }) => {
+						if (updateType === "finish" || updateType === "commit") {
+							return ValidateNotSelfIntersecting(feature);
+						}
+						return true;
+					},
+				});
 
-			lineStringMode = new TerraDrawLineStringMode({
-				allowSelfIntersections: false,
+				const mockConfig = getMockModeConfig(lineStringMode.mode);
+				onChange = mockConfig.onChange;
+				store = mockConfig.store;
+				project = mockConfig.project;
+				lineStringMode.register(mockConfig);
+				lineStringMode.start();
+
+				// We don't want there to be a closing click, so we
+				// make the distances between points huge (much large than 40 pixels)
+				project.mockImplementation((lng, lat) => ({
+					x: lng * 1000,
+					y: lat * 1000,
+				}));
+
+				lineStringMode.onClick({
+					lng: 6.50390625,
+					lat: 32.99023555965106,
+					containerX: 6.50390625,
+					containerY: 32.99023555965106,
+					button: "left",
+					heldKeys: [],
+				});
+
+				lineStringMode.onMouseMove({
+					lng: -9.931640625,
+					lat: 5.090944175033399,
+					containerX: -9.931640625,
+					containerY: 5.090944175033399,
+					button: "left",
+					heldKeys: [],
+				});
+
+				lineStringMode.onClick({
+					lng: -9.931640625,
+					lat: 5.090944175033399,
+					containerX: -9.931640625,
+					containerY: 5.090944175033399,
+					button: "left",
+					heldKeys: [],
+				});
+
+				lineStringMode.onMouseMove({
+					lng: 19.86328125,
+					lat: 2.0210651187669897,
+					containerX: 19.86328125,
+					containerY: 2.0210651187669897,
+					button: "left",
+					heldKeys: [],
+				});
+
+				lineStringMode.onClick({
+					lng: 19.86328125,
+					lat: 2.0210651187669897,
+					containerX: 19.86328125,
+					containerY: 2.0210651187669897,
+					button: "left",
+					heldKeys: [],
+				});
+
+				// This point is causing self intersection
+				lineStringMode.onMouseMove({
+					lng: -8.173828125,
+					lat: 24.367113562651262,
+					containerX: -8.173828125,
+					containerY: 24.367113562651262,
+					button: "left",
+					heldKeys: [],
+				});
+
+				expect(onChange).toBeCalledTimes(7);
+
+				lineStringMode.onClick({
+					lng: -8.173828125,
+					lat: 24.367113562651262,
+					containerX: -8.173828125,
+					containerY: 24.367113562651262,
+					button: "left",
+					heldKeys: [],
+				});
+
+				// Update geometry is NOT called because
+				// there is a self intersection
+				expect(onChange).toBeCalledTimes(8);
 			});
 
-			const mockConfig = getMockModeConfig(lineStringMode.mode);
-			onChange = mockConfig.onChange;
-			store = mockConfig.store;
-			project = mockConfig.project;
-			lineStringMode.register(mockConfig);
-			lineStringMode.start();
+			it("does create a line if no intersections and validate returns true", () => {
+				lineStringMode = new TerraDrawLineStringMode({
+					validate: (feature, { updateType }) => {
+						if (updateType === "finish" || updateType === "commit") {
+							return ValidateNotSelfIntersecting(feature);
+						}
+						return true;
+					},
+				});
 
-			// We don't want there to be a closing click, so we
-			// make the distances between points huge (much large than 40 pixels)
-			project.mockImplementation((lng, lat) => ({
-				x: lng * 1000,
-				y: lat * 1000,
-			}));
+				const mockConfig = getMockModeConfig(lineStringMode.mode);
+				onChange = mockConfig.onChange;
+				store = mockConfig.store;
+				project = mockConfig.project;
+				lineStringMode.register(mockConfig);
+				lineStringMode.start();
 
-			lineStringMode.onClick({
-				lng: 6.50390625,
-				lat: 32.99023555965106,
-				containerX: 6.50390625,
-				containerY: 32.99023555965106,
-				button: "left",
-				heldKeys: [],
+				project.mockReturnValueOnce({ x: 50, y: 50 });
+				project.mockReturnValueOnce({ x: 50, y: 50 });
+				project.mockReturnValueOnce({ x: 100, y: 100 });
+				project.mockReturnValueOnce({ x: 100, y: 100 });
+
+				lineStringMode.onClick({
+					lng: 0,
+					lat: 0,
+					containerX: 0,
+					containerY: 0,
+					button: "left",
+					heldKeys: [],
+				});
+
+				lineStringMode.onMouseMove({
+					lng: 1,
+					lat: 1,
+					containerX: 50,
+					containerY: 50,
+					button: "left",
+					heldKeys: [],
+				});
+
+				lineStringMode.onClick({
+					lng: 1,
+					lat: 1,
+					containerX: 50,
+					containerY: 50,
+					button: "left",
+					heldKeys: [],
+				});
+
+				let features = store.copyAll();
+
+				// Drawn LineString and Closing point
+				expect(features.length).toBe(2);
+
+				expect(features[0].geometry.coordinates).toStrictEqual([
+					[0, 0],
+					[1, 1],
+					[1, 1],
+				]);
+
+				expect(features[1].geometry.coordinates).toStrictEqual([1, 1]);
+
+				lineStringMode.onMouseMove({
+					lng: 2,
+					lat: 2,
+					containerX: 100,
+					containerY: 100,
+					button: "left",
+					heldKeys: [],
+				});
+
+				lineStringMode.onClick({
+					lng: 2,
+					lat: 2,
+					containerX: 100,
+					containerY: 100,
+					button: "left",
+					heldKeys: [],
+				});
+
+				expect(onChange).not.toBeCalledWith([expect.any(String)], "delete");
+
+				lineStringMode.onClick({
+					lng: 2,
+					lat: 2,
+					containerX: 100,
+					containerY: 100,
+					button: "left",
+					heldKeys: [],
+				});
+
+				expect(onChange).toBeCalledTimes(9);
+
+				expect(onChange).toHaveBeenNthCalledWith(
+					9,
+					[expect.any(String)],
+					"delete",
+				);
+
+				features = store.copyAll();
+				expect(features.length).toBe(1);
+
+				expect(features[0].geometry.coordinates).toStrictEqual([
+					[0, 0],
+					[1, 1],
+					[2, 2],
+				]);
 			});
-
-			lineStringMode.onMouseMove({
-				lng: -9.931640625,
-				lat: 5.090944175033399,
-				containerX: -9.931640625,
-				containerY: 5.090944175033399,
-				button: "left",
-				heldKeys: [],
-			});
-
-			lineStringMode.onClick({
-				lng: -9.931640625,
-				lat: 5.090944175033399,
-				containerX: -9.931640625,
-				containerY: 5.090944175033399,
-				button: "left",
-				heldKeys: [],
-			});
-
-			lineStringMode.onMouseMove({
-				lng: 19.86328125,
-				lat: 2.0210651187669897,
-				containerX: 19.86328125,
-				containerY: 2.0210651187669897,
-				button: "left",
-				heldKeys: [],
-			});
-
-			lineStringMode.onClick({
-				lng: 19.86328125,
-				lat: 2.0210651187669897,
-				containerX: 19.86328125,
-				containerY: 2.0210651187669897,
-				button: "left",
-				heldKeys: [],
-			});
-
-			// This point is causing self intersection
-			lineStringMode.onMouseMove({
-				lng: -8.173828125,
-				lat: 24.367113562651262,
-				containerX: -8.173828125,
-				containerY: 24.367113562651262,
-				button: "left",
-				heldKeys: [],
-			});
-
-			expect(onChange).toBeCalledTimes(7);
-
-			lineStringMode.onClick({
-				lng: -8.173828125,
-				lat: 24.367113562651262,
-				containerX: -8.173828125,
-				containerY: 24.367113562651262,
-				button: "left",
-				heldKeys: [],
-			});
-
-			// Update geometry is NOT called because
-			// there is a self intersection
-			expect(onChange).toBeCalledTimes(7);
 		});
 	});
 
@@ -921,6 +1036,37 @@ describe("TerraDrawLineStringMode", () => {
 					},
 				}),
 			).toBe(true);
+		});
+
+		it("returns false for valid linestring feature with validate function that returns false", () => {
+			const lineStringMode = new TerraDrawLineStringMode({
+				validate: () => {
+					return false;
+				},
+				styles: {
+					lineStringColor: "#ffffff",
+				},
+			});
+			lineStringMode.register(getMockModeConfig("linestring"));
+
+			expect(
+				lineStringMode.validateFeature({
+					id: "ed030248-d7ee-45a2-b8e8-37ad2f622509",
+					type: "Feature",
+					geometry: {
+						type: "LineString",
+						coordinates: [
+							[-2.329101563, 51.392350875],
+							[-0.439453125, 52.52290594],
+						],
+					},
+					properties: {
+						mode: "linestring",
+						createdAt: 1685654949450,
+						updatedAt: 1685654950609,
+					},
+				}),
+			).toBe(false);
 		});
 	});
 });

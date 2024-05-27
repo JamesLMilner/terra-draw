@@ -1,4 +1,4 @@
-import { TerraDrawMouseEvent, Validation } from "../../../common";
+import { TerraDrawMouseEvent, UpdateTypes, Validation } from "../../../common";
 import { BehaviorConfig, TerraDrawModeBehavior } from "../../base.behavior";
 import { FeatureAtPointerEventBehavior } from "./feature-at-pointer-event.behavior";
 import { Position } from "geojson";
@@ -132,6 +132,7 @@ export class DragFeatureBehavior extends TerraDrawModeBehavior {
 						project: this.config.project,
 						unproject: this.config.unproject,
 						coordinatePrecision: this.config.coordinatePrecision,
+						updateType: UpdateTypes.Provisional,
 					},
 				);
 

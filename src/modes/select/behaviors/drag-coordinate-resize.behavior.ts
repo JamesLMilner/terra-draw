@@ -1,4 +1,4 @@
-import { TerraDrawMouseEvent, Validation } from "../../../common";
+import { TerraDrawMouseEvent, UpdateTypes, Validation } from "../../../common";
 import { BehaviorConfig, TerraDrawModeBehavior } from "../../base.behavior";
 import { LineString, Polygon, Position, Point, Feature } from "geojson";
 import { PixelDistanceBehavior } from "../../pixel-distance.behavior";
@@ -729,6 +729,7 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 					project: this.config.project,
 					unproject: this.config.unproject,
 					coordinatePrecision: this.config.coordinatePrecision,
+					updateType: UpdateTypes.Provisional,
 				},
 			);
 			if (!valid) {

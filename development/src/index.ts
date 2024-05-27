@@ -21,6 +21,7 @@ import {
 	ValidateMinSizeSquareMeters,
 } from "../../src/terra-draw";
 import { TerraDrawRenderMode } from "../../src/modes/render/render.mode";
+import { ValidateNotSelfIntersecting } from "../../src/validations/not-self-intersecting.validation";
 
 import Circle from "ol/geom/Circle";
 import Feature from "ol/Feature";
@@ -37,7 +38,7 @@ import MapView from "@arcgis/core/views/MapView.js";
 import GraphicsLayer from "@arcgis/core/layers/GraphicsLayer";
 import Point from "@arcgis/core/geometry/Point";
 import Polyline from "@arcgis/core/geometry/Polyline";
-import Polygon from "@arcgis/core/geometry/Polygon";
+import ArcGISPolygon from "@arcgis/core/geometry/Polygon";
 import Graphic from "@arcgis/core/Graphic";
 import SimpleFillSymbol from "@arcgis/core/symbols/SimpleFillSymbol";
 import SimpleLineSymbol from "@arcgis/core/symbols/SimpleLineSymbol";
@@ -134,7 +135,7 @@ const getModes = () => {
 								return false;
 							}
 
-							return ValidateMinSizeSquareMeters(feature.geometry, 1000);
+							return ValidateMinSizeSquareMeters(feature, 1000);
 						},
 						draggable: true,
 						coordinates: {
@@ -155,14 +156,26 @@ const getModes = () => {
 		new TerraDrawPointMode(),
 		new TerraDrawLineStringMode({
 			snapping: true,
-			allowSelfIntersections: false,
+			validate: (feature) => {
+				return ValidateNotSelfIntersecting(feature);
+			},
 		}),
 		new TerraDrawGreatCircleMode({ snapping: true }),
 		new TerraDrawPolygonMode({
 			snapping: true,
-			allowSelfIntersections: false,
+			validate: (feature, { updateType }) => {
+				if (updateType === "finish" || updateType === "commit") {
+					return ValidateNotSelfIntersecting(feature);
+				}
+				return true;
+			},
 		}),
-		new TerraDrawRectangleMode(),
+		new TerraDrawRectangleMode({
+			validate: (feature) => {
+				console.log(feature);
+				return true;
+			},
+		}),
 		new TerraDrawCircleMode(),
 		new TerraDrawFreehandMode(),
 		new TerraDrawRenderMode({
@@ -176,13 +189,14 @@ const getModes = () => {
 	];
 };
 
-let currentSelected: { button: undefined | HTMLButtonElement; mode: string } = {
-	button: undefined,
-	mode: "static",
-};
+const currentSelected: { button: undefined | HTMLButtonElement; mode: string } =
+	{
+		button: undefined,
+		mode: "static",
+	};
 
 // Used by both Mapbox and MapLibre
-let OSMStyle: Object = {
+const OSMStyle = {
 	version: 8,
 	sources: {
 		"osm-tiles": {
@@ -439,7 +453,7 @@ const example = {
 					GraphicsLayer,
 					Point,
 					Polyline,
-					Polygon,
+					Polygon: ArcGISPolygon,
 					Graphic,
 					SimpleLineSymbol,
 					SimpleFillSymbol,

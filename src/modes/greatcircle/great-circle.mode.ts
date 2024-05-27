@@ -5,6 +5,7 @@ import {
 	HexColorStyling,
 	NumericStyling,
 	Cursor,
+	UpdateTypes,
 } from "../../common";
 import { LineString } from "geojson";
 import {
@@ -88,6 +89,8 @@ export class TerraDrawGreatCircleMode extends TerraDrawBaseDrawMode<GreateCircle
 					? { ...defaultKeyEvents, ...options.keyEvents }
 					: defaultKeyEvents;
 		}
+
+		this.validate = options?.validate;
 	}
 
 	private close() {
@@ -96,6 +99,30 @@ export class TerraDrawGreatCircleMode extends TerraDrawBaseDrawMode<GreateCircle
 		}
 
 		const finishedId = this.currentId;
+
+		if (this.validate && finishedId) {
+			const currentLineGeometry =
+				this.store.getGeometryCopy<LineString>(finishedId);
+
+			const valid = this.validate(
+				{
+					type: "Feature",
+					id: finishedId,
+					geometry: currentLineGeometry,
+					properties: {},
+				},
+				{
+					project: this.project,
+					unproject: this.unproject,
+					coordinatePrecision: this.coordinatePrecision,
+					updateType: UpdateTypes.Finish,
+				},
+			);
+
+			if (!valid) {
+				return;
+			}
+		}
 
 		// Reset the state back to starting state
 		this.closingPointId && this.store.delete([this.closingPointId]);
@@ -149,21 +176,14 @@ export class TerraDrawGreatCircleMode extends TerraDrawBaseDrawMode<GreateCircle
 				this.snappingEnabled &&
 				this.snapping.getSnappableCoordinate(event, this.currentId);
 
-			const updatedCoord = snappedCoord ? snappedCoord : [event.lng, event.lat];
-
-			this.store.updateGeometry([
-				{
-					id: this.closingPointId,
-					geometry: { type: "Point", coordinates: updatedCoord },
-				},
-			]);
-
 			const currentLineGeometry = this.store.getGeometryCopy<LineString>(
 				this.currentId,
 			);
 
 			// Remove the 'live' point that changes on mouse move
 			currentLineGeometry.coordinates.pop();
+
+			const updatedCoord = snappedCoord ? snappedCoord : [event.lng, event.lat];
 
 			// Update the 'live' point
 			const greatCircle = greatCircleLine({
@@ -172,14 +192,36 @@ export class TerraDrawGreatCircleMode extends TerraDrawBaseDrawMode<GreateCircle
 				options: { coordinatePrecision: this.coordinatePrecision },
 			});
 
-			if (greatCircle) {
-				this.store.updateGeometry([
-					{
-						id: this.currentId,
-						geometry: greatCircle.geometry,
-					},
-				]);
+			if (!greatCircle) {
+				return;
 			}
+
+			if (this.validate) {
+				const valid = this.validate(greatCircle as GeoJSONStoreFeatures, {
+					project: this.project,
+					unproject: this.unproject,
+					coordinatePrecision: this.coordinatePrecision,
+					updateType: UpdateTypes.Provisional,
+				});
+
+				if (!valid) {
+					return;
+				}
+			}
+
+			this.store.updateGeometry([
+				{
+					id: this.closingPointId,
+					geometry: { type: "Point", coordinates: updatedCoord },
+				},
+			]);
+
+			this.store.updateGeometry([
+				{
+					id: this.currentId,
+					geometry: greatCircle.geometry,
+				},
+			]);
 		}
 	}
 

@@ -5,9 +5,9 @@ import {
 	HexColorStyling,
 	NumericStyling,
 	Cursor,
+	UpdateTypes,
 } from "../../common";
 import { Polygon } from "geojson";
-import { selfIntersects } from "../../geometry/boolean/self-intersects";
 import {
 	TerraDrawBaseDrawMode,
 	BaseModeOptions,
@@ -22,7 +22,7 @@ import { coordinatesIdentical } from "../../geometry/coordinates-identical";
 import { ClosingPointsBehavior } from "./behaviors/closing-points.behavior";
 import { getDefaultStyling } from "../../util/styling";
 import { FeatureId, GeoJSONStoreFeatures } from "../../store/store";
-import { isValidPolygonFeature } from "../../geometry/boolean/is-valid-polygon-feature";
+import { ValidatePolygonFeature } from "../../validations/polygon.validation";
 
 type TerraDrawPolygonModeKeyEvents = {
 	cancel?: KeyboardEvent["key"] | null;
@@ -47,7 +47,6 @@ interface Cursors {
 
 interface TerraDrawPolygonModeOptions<T extends CustomStyling>
 	extends BaseModeOptions<T> {
-	allowSelfIntersections?: boolean;
 	snapping?: boolean;
 	pointerDistance?: number;
 	keyEvents?: TerraDrawPolygonModeKeyEvents | null;
@@ -59,7 +58,6 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 
 	private currentCoordinate = 0;
 	private currentId: FeatureId | undefined;
-	private allowSelfIntersections: boolean;
 	private keyEvents: TerraDrawPolygonModeKeyEvents;
 	private snappingEnabled: boolean;
 
@@ -86,11 +84,6 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 
 		this.snappingEnabled =
 			options && options.snapping !== undefined ? options.snapping : false;
-
-		this.allowSelfIntersections =
-			options && options.allowSelfIntersections !== undefined
-				? options.allowSelfIntersections
-				: true;
 
 		// We want to have some defaults, but also allow key bindings
 		// to be explicitly turned off
@@ -121,20 +114,14 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 			return;
 		}
 
-		this.store.updateGeometry([
-			{
-				id: this.currentId,
-				geometry: {
-					type: "Polygon",
-					coordinates: [
-						[
-							...currentPolygonCoordinates.slice(0, -2),
-							currentPolygonCoordinates[0],
-						],
-					],
-				},
-			},
-		]);
+		const updated = this.updatePolygonGeometry(
+			[...currentPolygonCoordinates.slice(0, -2), currentPolygonCoordinates[0]],
+			UpdateTypes.Finish,
+		);
+
+		if (!updated) {
+			return;
+		}
 
 		const finishedId = this.currentId;
 
@@ -238,15 +225,46 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 			}
 		}
 
-		this.store.updateGeometry([
-			{
-				id: this.currentId,
-				geometry: {
-					type: "Polygon",
-					coordinates: [updatedCoordinates],
+		this.updatePolygonGeometry(updatedCoordinates, UpdateTypes.Provisional);
+	}
+
+	private updatePolygonGeometry(
+		coordinates: Polygon["coordinates"][0],
+		updateType: UpdateTypes,
+	) {
+		if (!this.currentId) {
+			return false;
+		}
+
+		const updatedGeometry = {
+			type: "Polygon",
+			coordinates: [coordinates],
+		} as Polygon;
+
+		if (this.validate) {
+			const valid = this.validate(
+				{
+					type: "Feature",
+					geometry: updatedGeometry,
+				} as GeoJSONStoreFeatures,
+				{
+					project: this.project,
+					unproject: this.unproject,
+					coordinatePrecision: this.coordinatePrecision,
+					updateType,
 				},
-			},
+			);
+
+			if (!valid) {
+				return false;
+			}
+		}
+
+		this.store.updateGeometry([
+			{ id: this.currentId, geometry: updatedGeometry },
 		]);
+
+		return true;
 	}
 
 	/** @internal */
@@ -315,22 +333,19 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 				return;
 			}
 
-			this.store.updateGeometry([
-				{
-					id: this.currentId,
-					geometry: {
-						type: "Polygon",
-						coordinates: [
-							[
-								currentPolygonGeometry.coordinates[0][0],
-								[event.lng, event.lat],
-								[event.lng, event.lat],
-								currentPolygonGeometry.coordinates[0][0],
-							],
-						],
-					},
-				},
-			]);
+			const updated = this.updatePolygonGeometry(
+				[
+					currentPolygonGeometry.coordinates[0][0],
+					[event.lng, event.lat],
+					[event.lng, event.lat],
+					currentPolygonGeometry.coordinates[0][0],
+				],
+				UpdateTypes.Commit,
+			);
+
+			if (!updated) {
+				return;
+			}
 
 			this.currentCoordinate++;
 		} else if (this.currentCoordinate === 2 && this.currentId) {
@@ -361,23 +376,20 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 				this.closingPoints.create(currentPolygonCoordinates, "polygon");
 			}
 
-			this.store.updateGeometry([
-				{
-					id: this.currentId,
-					geometry: {
-						type: "Polygon",
-						coordinates: [
-							[
-								currentPolygonCoordinates[0],
-								currentPolygonCoordinates[1],
-								[event.lng, event.lat],
-								[event.lng, event.lat],
-								currentPolygonCoordinates[0],
-							],
-						],
-					},
-				},
-			]);
+			const updated = this.updatePolygonGeometry(
+				[
+					currentPolygonCoordinates[0],
+					currentPolygonCoordinates[1],
+					[event.lng, event.lat],
+					[event.lng, event.lat],
+					currentPolygonCoordinates[0],
+				],
+				UpdateTypes.Commit,
+			);
+
+			if (!updated) {
+				return;
+			}
 
 			this.currentCoordinate++;
 		} else if (this.currentId) {
@@ -419,19 +431,14 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 					],
 				]);
 
-				if (this.currentCoordinate > 2 && !this.allowSelfIntersections) {
-					const hasSelfIntersections = selfIntersects(updatedPolygon);
-
-					if (hasSelfIntersections) {
-						// Don't update the geometry!
-						return;
-					}
-				}
-
 				// If not close to the final point, keep adding points
-				this.store.updateGeometry([
-					{ id: this.currentId, geometry: updatedPolygon.geometry },
-				]);
+				const updated = this.updatePolygonGeometry(
+					updatedPolygon.geometry.coordinates[0],
+					UpdateTypes.Commit,
+				);
+				if (!updated) {
+					return;
+				}
 				this.currentCoordinate++;
 
 				// Update closing points straight away
@@ -555,7 +562,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 		if (super.validateFeature(feature)) {
 			return (
 				feature.properties.mode === this.mode &&
-				isValidPolygonFeature(feature, this.coordinatePrecision)
+				ValidatePolygonFeature(feature, this.coordinatePrecision)
 			);
 		} else {
 			return false;

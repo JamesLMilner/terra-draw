@@ -571,5 +571,69 @@ describe("TerraDrawRectangleMode", () => {
 				}),
 			).toBe(false);
 		});
+
+		it("returns true for valid rectangle feature with validation that returns true", () => {
+			const rectangleMode = new TerraDrawRectangleMode({
+				validate: () => {
+					return true;
+				},
+			});
+			rectangleMode.register(getMockModeConfig("rectangle"));
+
+			expect(
+				rectangleMode.validateFeature({
+					id: "5c582a42-c3a7-4bfc-b686-6036f311df3c",
+					geometry: {
+						type: "Polygon",
+						coordinates: [
+							[
+								[-0.127976611, 51.514237243],
+								[-0.106284245, 51.514237243],
+								[-0.106284245, 51.504807832],
+								[-0.127976611, 51.504807832],
+								[-0.127976611, 51.514237243],
+							],
+						],
+					},
+					properties: {
+						mode: "rectangle",
+						createdAt: 1685655516297,
+						updatedAt: 1685655518118,
+					},
+				}),
+			).toBe(true);
+		});
+
+		it("returns false for valid rectangle feature but with validation that returns false", () => {
+			const rectangleMode = new TerraDrawRectangleMode({
+				validate: () => {
+					return false;
+				},
+			});
+			rectangleMode.register(getMockModeConfig("rectangle"));
+
+			expect(
+				rectangleMode.validateFeature({
+					id: "5c582a42-c3a7-4bfc-b686-6036f311df3c",
+					geometry: {
+						type: "Polygon",
+						coordinates: [
+							[
+								[-0.127976611, 51.514237243],
+								[-0.106284245, 51.514237243],
+								[-0.106284245, 51.504807832],
+								[-0.127976611, 51.504807832],
+								[-0.127976611, 51.514237243],
+							],
+						],
+					},
+					properties: {
+						mode: "rectangle",
+						createdAt: 1685655516297,
+						updatedAt: 1685655518118,
+					},
+				}),
+			).toBe(false);
+		});
 	});
 });

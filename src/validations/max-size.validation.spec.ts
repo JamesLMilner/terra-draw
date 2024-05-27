@@ -1,25 +1,29 @@
-import { Polygon } from "geojson";
-import { ValidateMaxSizeSquareMeters } from "./max-size.validation";
+import { ValidateMaxAreaSquareMeters } from "./max-size.validation";
+import { GeoJSONStoreFeatures } from "../terra-draw";
 
-describe("ValidateMaxSizeSquareMeters", () => {
+describe("ValidateMaxAreaSquareMeters", () => {
 	it("should return true if the polygon area is less than the max size", () => {
 		// Arrange
 		const polygon = {
-			type: "Polygon",
-			coordinates: [
-				[
-					[0, 0],
-					[0, 1],
-					[1, 1],
-					[1, 0],
-					[0, 0],
+			type: "Feature",
+			properties: {},
+			geometry: {
+				type: "Polygon",
+				coordinates: [
+					[
+						[0, 0],
+						[0, 1],
+						[1, 1],
+						[1, 0],
+						[0, 0],
+					],
 				],
-			],
-		} as Polygon;
+			},
+		} as GeoJSONStoreFeatures;
 
 		const maxSize = 100000000000;
 		// Act
-		const result = ValidateMaxSizeSquareMeters(polygon, maxSize);
+		const result = ValidateMaxAreaSquareMeters(polygon, maxSize);
 		// Assert
 		expect(result).toBe(true);
 	});

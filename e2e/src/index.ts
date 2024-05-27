@@ -19,11 +19,6 @@ const example = {
 	zoom: 12,
 	initialised: [],
 	initLeaflet() {
-		const currentSelected: {
-			mode: undefined | string;
-			button: HTMLButtonElement | undefined;
-		} = { mode: undefined, button: undefined };
-
 		const { lng, lat, zoom } = this;
 
 		const map = L.map("map", {
@@ -38,6 +33,10 @@ const example = {
 				'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
 		}).addTo(map);
 
+		return map;
+	},
+
+	initDraw(map: L.Map) {
 		const draw = new TerraDraw({
 			adapter: new TerraDrawLeafletAdapter({
 				lib: L,
@@ -102,15 +101,9 @@ const example = {
 					},
 				}),
 				new TerraDrawPointMode(),
-				new TerraDrawLineStringMode({
-					snapping: true,
-					allowSelfIntersections: false,
-				}),
-				new TerraDrawGreatCircleMode({ snapping: true }),
-				new TerraDrawPolygonMode({
-					snapping: true,
-					allowSelfIntersections: false,
-				}),
+				new TerraDrawLineStringMode(),
+				new TerraDrawGreatCircleMode(),
+				new TerraDrawPolygonMode(),
 				new TerraDrawRectangleMode(),
 				new TerraDrawCircleMode(),
 				new TerraDrawFreehandMode(),
@@ -126,6 +119,11 @@ const example = {
 		});
 
 		draw.start();
+
+		const currentSelected: {
+			mode: undefined | string;
+			button: HTMLButtonElement | undefined;
+		} = { mode: undefined, button: undefined };
 
 		[
 			"select",
@@ -162,4 +160,5 @@ const example = {
 	},
 };
 
-example.initLeaflet();
+const map = example.initLeaflet();
+example.initDraw(map);

@@ -5,6 +5,7 @@ import {
 	HexColorStyling,
 	NumericStyling,
 	Cursor,
+	UpdateTypes,
 } from "../../common";
 import { Polygon } from "geojson";
 
@@ -16,7 +17,7 @@ import {
 import { getDefaultStyling } from "../../util/styling";
 import { FeatureId, GeoJSONStoreFeatures } from "../../store/store";
 import { pixelDistance } from "../../geometry/measure/pixel-distance";
-import { isValidPolygonFeature } from "../../geometry/boolean/is-valid-polygon-feature";
+import { ValidatePolygonFeature } from "../../validations/polygon.validation";
 
 type TerraDrawFreehandModeKeyEvents = {
 	cancel: KeyboardEvent["key"] | null;
@@ -88,6 +89,8 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 					? { ...defaultKeyEvents, ...options.keyEvents }
 					: defaultKeyEvents;
 		}
+
+		this.validate = options?.validate;
 	}
 
 	private close() {
@@ -96,6 +99,29 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 		}
 
 		const finishedId = this.currentId;
+
+		if (this.validate && finishedId) {
+			const currentGeometry = this.store.getGeometryCopy<Polygon>(finishedId);
+
+			const valid = this.validate(
+				{
+					type: "Feature",
+					id: finishedId,
+					geometry: currentGeometry,
+					properties: {},
+				},
+				{
+					project: this.project,
+					unproject: this.unproject,
+					coordinatePrecision: this.coordinatePrecision,
+					updateType: UpdateTypes.Finish,
+				},
+			);
+
+			if (!valid) {
+				return;
+			}
+		}
 
 		this.closingPointId && this.store.delete([this.closingPointId]);
 		this.startingClick = false;
@@ -170,19 +196,42 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 
 		currentLineGeometry.coordinates[0].pop();
 
+		const newGeometry = {
+			type: "Polygon",
+			coordinates: [
+				[
+					...currentLineGeometry.coordinates[0],
+					[event.lng, event.lat],
+					currentLineGeometry.coordinates[0][0],
+				],
+			],
+		} as Polygon;
+
+		if (this.validate) {
+			const valid = this.validate(
+				{
+					type: "Feature",
+					id: this.currentId,
+					geometry: newGeometry,
+					properties: {},
+				},
+				{
+					project: this.project,
+					unproject: this.unproject,
+					coordinatePrecision: this.coordinatePrecision,
+					updateType: UpdateTypes.Provisional,
+				},
+			);
+
+			if (!valid) {
+				return;
+			}
+		}
+
 		this.store.updateGeometry([
 			{
 				id: this.currentId,
-				geometry: {
-					type: "Polygon",
-					coordinates: [
-						[
-							...currentLineGeometry.coordinates[0],
-							[event.lng, event.lat],
-							currentLineGeometry.coordinates[0][0],
-						],
-					],
-				},
+				geometry: newGeometry,
 			},
 		]);
 	}
@@ -337,7 +386,7 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 		if (super.validateFeature(feature)) {
 			return (
 				feature.properties.mode === this.mode &&
-				isValidPolygonFeature(feature, this.coordinatePrecision)
+				ValidatePolygonFeature(feature, this.coordinatePrecision)
 			);
 		} else {
 			return false;

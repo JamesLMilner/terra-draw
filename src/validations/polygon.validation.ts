@@ -1,7 +1,7 @@
 import { Feature, Polygon, Position } from "geojson";
-import { GeoJSONStoreFeatures } from "../../terra-draw";
-import { selfIntersects } from "./self-intersects";
-import { coordinateIsValid } from "./is-valid-coordinate";
+import { GeoJSONStoreFeatures } from "../terra-draw";
+import { selfIntersects } from "../geometry/boolean/self-intersects";
+import { coordinateIsValid } from "./../geometry/boolean/is-valid-coordinate";
 
 function coordinatesMatch(coordinateOne: Position, coordinateTwo: Position) {
 	return (
@@ -10,7 +10,7 @@ function coordinatesMatch(coordinateOne: Position, coordinateTwo: Position) {
 	);
 }
 
-export function isValidPolygonFeature(
+export function ValidatePolygonFeature(
 	feature: GeoJSONStoreFeatures,
 	coordinatePrecision: number,
 ): boolean {
@@ -30,12 +30,12 @@ export function isValidPolygonFeature(
 	);
 }
 
-export function isValidNonIntersectingPolygonFeature(
+export function ValidateNonIntersectingPolygonFeature(
 	feature: GeoJSONStoreFeatures,
 	coordinatePrecision: number,
 ): boolean {
 	return (
-		isValidPolygonFeature(feature, coordinatePrecision) &&
+		ValidatePolygonFeature(feature, coordinatePrecision) &&
 		!selfIntersects(feature as Feature<Polygon>)
 	);
 }

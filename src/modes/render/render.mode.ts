@@ -12,9 +12,9 @@ import {
 import { BehaviorConfig } from "../base.behavior";
 import { getDefaultStyling } from "../../util/styling";
 import { GeoJSONStoreFeatures } from "../../terra-draw";
-import { isValidPoint } from "../../geometry/boolean/is-valid-point";
-import { isValidPolygonFeature } from "../../geometry/boolean/is-valid-polygon-feature";
-import { isValidLineStringFeature } from "../../geometry/boolean/is-valid-linestring-feature";
+import { ValidatePointFeature } from "../../validations/point.validation";
+import { ValidatePolygonFeature } from "../../validations/polygon.validation";
+import { ValidateLineStringFeature } from "../../validations/linestring.validation";
 
 type RenderModeStyling = {
 	pointColor: HexColorStyling;
@@ -155,9 +155,9 @@ export class TerraDrawRenderMode extends TerraDrawBaseDrawMode<RenderModeStyling
 	validateFeature(feature: unknown): feature is GeoJSONStoreFeatures {
 		return (
 			super.validateFeature(feature) &&
-			(isValidPoint(feature, this.coordinatePrecision) ||
-				isValidPolygonFeature(feature, this.coordinatePrecision) ||
-				isValidLineStringFeature(feature, this.coordinatePrecision))
+			(ValidatePointFeature(feature, this.coordinatePrecision) ||
+				ValidatePolygonFeature(feature, this.coordinatePrecision) ||
+				ValidateLineStringFeature(feature, this.coordinatePrecision))
 		);
 	}
 }

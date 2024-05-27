@@ -4,6 +4,7 @@ import {
 	NumericStyling,
 	HexColorStyling,
 	Cursor,
+	UpdateTypes,
 } from "../../common";
 import { GeoJSONStoreFeatures } from "../../store/store";
 import { getDefaultStyling } from "../../util/styling";
@@ -12,7 +13,8 @@ import {
 	CustomStyling,
 	TerraDrawBaseDrawMode,
 } from "../base.mode";
-import { isValidPoint } from "../../geometry/boolean/is-valid-point";
+import { ValidatePointFeature } from "../../validations/point.validation";
+import { Point } from "geojson";
 
 type PointModeStyling = {
 	pointWidth: NumericStyling;
@@ -67,15 +69,34 @@ export class TerraDrawPointMode extends TerraDrawBaseDrawMode<PointModeStyling> 
 			throw new Error("Mode must be registered first");
 		}
 
-		const [pointId] = this.store.create([
-			{
-				geometry: {
-					type: "Point",
-					coordinates: [event.lng, event.lat],
+		const geometry = {
+			type: "Point",
+			coordinates: [event.lng, event.lat],
+		} as Point;
+
+		const properties = { mode: this.mode };
+
+		if (this.validate) {
+			const valid = this.validate(
+				{
+					type: "Feature",
+					geometry,
+					properties,
+				} as GeoJSONStoreFeatures,
+				{
+					project: this.project,
+					unproject: this.unproject,
+					coordinatePrecision: this.coordinatePrecision,
+					updateType: UpdateTypes.Finish,
 				},
-				properties: { mode: this.mode },
-			},
-		]);
+			);
+
+			if (!valid) {
+				return;
+			}
+		}
+
+		const [pointId] = this.store.create([{ geometry, properties }]);
 
 		// Ensure that any listerers are triggered with the main created geometry
 		this.onFinish(pointId);
@@ -143,7 +164,7 @@ export class TerraDrawPointMode extends TerraDrawBaseDrawMode<PointModeStyling> 
 		if (super.validateFeature(feature)) {
 			return (
 				feature.properties.mode === this.mode &&
-				isValidPoint(feature, this.coordinatePrecision)
+				ValidatePointFeature(feature, this.coordinatePrecision)
 			);
 		} else {
 			return false;

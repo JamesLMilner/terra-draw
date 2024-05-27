@@ -1,4 +1,4 @@
-import { Position } from "geojson";
+import { Polygon, Position } from "geojson";
 import {
 	TerraDrawMouseEvent,
 	TerraDrawAdapterStyling,
@@ -6,6 +6,7 @@ import {
 	HexColorStyling,
 	NumericStyling,
 	Cursor,
+	UpdateTypes,
 } from "../../common";
 import { FeatureId, GeoJSONStoreFeatures } from "../../store/store";
 import { getDefaultStyling } from "../../util/styling";
@@ -14,7 +15,7 @@ import {
 	CustomStyling,
 	TerraDrawBaseDrawMode,
 } from "../base.mode";
-import { isValidNonIntersectingPolygonFeature } from "../../geometry/boolean/is-valid-polygon-feature";
+import { ValidateNonIntersectingPolygonFeature } from "../../validations/polygon.validation";
 
 type TerraDrawRectangleModeKeyEvents = {
 	cancel: KeyboardEvent["key"] | null;
@@ -74,27 +75,48 @@ export class TerraDrawRectangleMode extends TerraDrawBaseDrawMode<RectanglePolyg
 		}
 	}
 
-	private updateRectangle(event: TerraDrawMouseEvent) {
+	private updateRectangle(event: TerraDrawMouseEvent, updateType: UpdateTypes) {
 		if (this.clickCount === 1 && this.center && this.currentRectangleId) {
 			const geometry = this.store.getGeometryCopy(this.currentRectangleId);
 
 			const firstCoord = (geometry.coordinates as Position[][])[0][0];
 
+			const newGeometry = {
+				type: "Polygon",
+				coordinates: [
+					[
+						firstCoord,
+						[event.lng, firstCoord[1]],
+						[event.lng, event.lat],
+						[firstCoord[0], event.lat],
+						firstCoord,
+					],
+				],
+			} as Polygon;
+
+			if (this.validate) {
+				const valid = this.validate(
+					{
+						id: this.currentRectangleId,
+						geometry: newGeometry,
+					} as GeoJSONStoreFeatures,
+					{
+						project: this.project,
+						unproject: this.unproject,
+						coordinatePrecision: this.coordinatePrecision,
+						updateType,
+					},
+				);
+
+				if (!valid) {
+					return;
+				}
+			}
+
 			this.store.updateGeometry([
 				{
 					id: this.currentRectangleId,
-					geometry: {
-						type: "Polygon",
-						coordinates: [
-							[
-								firstCoord,
-								[event.lng, firstCoord[1]],
-								[event.lng, event.lat],
-								[firstCoord[0], event.lat],
-								firstCoord,
-							],
-						],
-					},
+					geometry: newGeometry,
 				},
 			]);
 		}
@@ -152,7 +174,7 @@ export class TerraDrawRectangleMode extends TerraDrawBaseDrawMode<RectanglePolyg
 			this.clickCount++;
 			this.setDrawing();
 		} else {
-			this.updateRectangle(event);
+			this.updateRectangle(event, UpdateTypes.Finish);
 			// Finish drawing
 			this.close();
 		}
@@ -160,7 +182,7 @@ export class TerraDrawRectangleMode extends TerraDrawBaseDrawMode<RectanglePolyg
 
 	/** @internal */
 	onMouseMove(event: TerraDrawMouseEvent) {
-		this.updateRectangle(event);
+		this.updateRectangle(event, UpdateTypes.Provisional);
 	}
 
 	/** @internal */
@@ -241,7 +263,7 @@ export class TerraDrawRectangleMode extends TerraDrawBaseDrawMode<RectanglePolyg
 		if (super.validateFeature(feature)) {
 			return (
 				feature.properties.mode === this.mode &&
-				isValidNonIntersectingPolygonFeature(feature, this.coordinatePrecision)
+				ValidateNonIntersectingPolygonFeature(feature, this.coordinatePrecision)
 			);
 		} else {
 			return false;

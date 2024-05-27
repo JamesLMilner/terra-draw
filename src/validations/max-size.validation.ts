@@ -1,9 +1,13 @@
-import { Polygon } from "geojson";
 import { polygonAreaSquareMeters } from "../geometry/measure/area";
+import { GeoJSONStoreFeatures } from "../terra-draw";
 
-export const ValidateMaxSizeSquareMeters = (
-	polygon: Polygon,
+export const ValidateMaxAreaSquareMeters = (
+	feature: GeoJSONStoreFeatures,
 	minSize: number,
 ): boolean => {
-	return polygonAreaSquareMeters(polygon) < minSize;
+	if (feature.geometry.type !== "Polygon") {
+		return false;
+	}
+
+	return polygonAreaSquareMeters(feature.geometry) < minSize;
 };

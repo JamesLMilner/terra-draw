@@ -5,9 +5,9 @@ import {
 	HexColorStyling,
 	NumericStyling,
 	Cursor,
+	UpdateTypes,
 } from "../../common";
-import { LineString } from "geojson";
-import { selfIntersects } from "../../geometry/boolean/self-intersects";
+import { LineString, Point } from "geojson";
 import {
 	BaseModeOptions,
 	CustomStyling,
@@ -19,7 +19,11 @@ import { ClickBoundingBoxBehavior } from "../click-bounding-box.behavior";
 import { PixelDistanceBehavior } from "../pixel-distance.behavior";
 import { SnappingBehavior } from "../snapping.behavior";
 import { getDefaultStyling } from "../../util/styling";
-import { FeatureId, GeoJSONStoreFeatures } from "../../store/store";
+import {
+	FeatureId,
+	GeoJSONStoreFeatures,
+	GeoJSONStoreGeometries,
+} from "../../store/store";
 
 type TerraDrawLineStringModeKeyEvents = {
 	cancel: KeyboardEvent["key"] | null;
@@ -43,7 +47,6 @@ interface Cursors {
 interface TerraDrawLineStringModeOptions<T extends CustomStyling>
 	extends BaseModeOptions<T> {
 	snapping?: boolean;
-	allowSelfIntersections?: boolean;
 	pointerDistance?: number;
 	keyEvents?: TerraDrawLineStringModeKeyEvents | null;
 	cursors?: Cursors;
@@ -55,7 +58,6 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 	private currentCoordinate = 0;
 	private currentId: FeatureId | undefined;
 	private closingPointId: FeatureId | undefined;
-	private allowSelfIntersections;
 	private keyEvents: TerraDrawLineStringModeKeyEvents;
 	private snappingEnabled: boolean;
 	private cursors: Required<Cursors>;
@@ -81,11 +83,6 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 		this.snappingEnabled =
 			options && options.snapping !== undefined ? options.snapping : false;
 
-		this.allowSelfIntersections =
-			options && options.allowSelfIntersections !== undefined
-				? options.allowSelfIntersections
-				: true;
-
 		// We want to have some defaults, but also allow key bindings
 		// to be explicitly turned off
 		if (options?.keyEvents === null) {
@@ -97,6 +94,8 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 					? { ...defaultKeyEvents, ...options.keyEvents }
 					: defaultKeyEvents;
 		}
+
+		this.validate = options?.validate;
 	}
 
 	private close() {
@@ -110,15 +109,12 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 
 		// Finish off the drawing
 		currentLineGeometry.coordinates.pop();
-		this.store.updateGeometry([
-			{
-				id: this.currentId,
-				geometry: {
-					type: "LineString",
-					coordinates: [...currentLineGeometry.coordinates],
-				},
-			},
-		]);
+
+		this.updateGeometries(
+			[...currentLineGeometry.coordinates],
+			undefined,
+			UpdateTypes.Commit,
+		);
 
 		const finishedId = this.currentId;
 
@@ -135,6 +131,59 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 
 		// Ensure that any listerers are triggered with the main created geometry
 		this.onFinish(finishedId);
+	}
+
+	private updateGeometries(
+		coordinates: LineString["coordinates"],
+		pointCoordinates: Point["coordinates"] | undefined,
+		updateType: UpdateTypes,
+	) {
+		if (!this.currentId) {
+			return;
+		}
+
+		const updatedGeometry = { type: "LineString", coordinates } as LineString;
+
+		if (this.validate) {
+			const valid = this.validate(
+				{
+					type: "Feature",
+					geometry: updatedGeometry,
+				} as GeoJSONStoreFeatures,
+				{
+					project: this.project,
+					unproject: this.unproject,
+					coordinatePrecision: this.coordinatePrecision,
+					updateType: updateType,
+				},
+			);
+
+			if (!valid) {
+				return;
+			}
+		}
+
+		const geometries = [
+			{
+				id: this.currentId,
+				geometry: updatedGeometry,
+			},
+		] as {
+			id: FeatureId;
+			geometry: GeoJSONStoreGeometries;
+		}[];
+
+		if (this.closingPointId && pointCoordinates) {
+			geometries.push({
+				id: this.closingPointId,
+				geometry: {
+					type: "Point",
+					coordinates: pointCoordinates,
+				},
+			});
+		}
+
+		this.store.updateGeometry(geometries);
 	}
 
 	/** @internal */
@@ -200,15 +249,11 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 		}
 
 		// Update the 'live' point
-		this.store.updateGeometry([
-			{
-				id: this.currentId,
-				geometry: {
-					type: "LineString",
-					coordinates: [...currentLineGeometry.coordinates, updatedCoord],
-				},
-			},
-		]);
+		this.updateGeometries(
+			[...currentLineGeometry.coordinates, updatedCoord],
+			undefined,
+			UpdateTypes.Provisional,
+		);
 	}
 
 	/** @internal */
@@ -264,19 +309,11 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 			// to set the point cursor to show it can be closed
 			this.setCursor(this.cursors.close);
 
-			this.store.updateGeometry([
-				{
-					id: this.currentId,
-					geometry: {
-						type: "LineString",
-						coordinates: [
-							currentLineGeometry.coordinates[0],
-							updatedCoord,
-							updatedCoord,
-						],
-					},
-				},
-			]);
+			this.updateGeometries(
+				[currentLineGeometry.coordinates[0], updatedCoord, updatedCoord],
+				undefined,
+				UpdateTypes.Provisional,
+			);
 
 			this.currentCoordinate++;
 		} else if (this.currentId) {
@@ -305,34 +342,17 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 					coordinates: [...currentLineGeometry.coordinates, updatedCoord],
 				} as LineString;
 
-				if (!this.allowSelfIntersections) {
-					const hasSelfIntersections = selfIntersects({
-						type: "Feature",
-						geometry: newLineString,
-						properties: {},
-					});
-
-					if (hasSelfIntersections) {
-						return;
-					}
-				}
-
 				if (this.closingPointId) {
 					this.setCursor(this.cursors.close);
 
-					this.store.updateGeometry([
-						{ id: this.currentId, geometry: newLineString },
-						{
-							id: this.closingPointId,
-							geometry: {
-								type: "Point",
-								coordinates:
-									currentLineGeometry.coordinates[
-										currentLineGeometry.coordinates.length - 1
-									],
-							},
-						},
-					]);
+					this.updateGeometries(
+						newLineString.coordinates,
+						currentLineGeometry.coordinates[
+							currentLineGeometry.coordinates.length - 1
+						],
+						UpdateTypes.Provisional,
+					);
+
 					this.currentCoordinate++;
 				}
 			}

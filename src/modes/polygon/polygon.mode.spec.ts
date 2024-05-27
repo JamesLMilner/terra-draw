@@ -2,6 +2,7 @@ import { TerraDrawMouseEvent } from "../../common";
 import { GeoJSONStore } from "../../store/store";
 import { getMockModeConfig } from "../../test/mock-config";
 import { mockDrawEvent } from "../../test/mock-mouse-event";
+import { ValidateNotSelfIntersecting } from "../../validations/not-self-intersecting.validation";
 import { TerraDrawPolygonMode } from "./polygon.mode";
 
 describe("TerraDrawPolygonMode", () => {
@@ -14,7 +15,6 @@ describe("TerraDrawPolygonMode", () => {
 		it("constructs with options", () => {
 			const polygonMode = new TerraDrawPolygonMode({
 				styles: { closingPointColor: "#ffffff" },
-				allowSelfIntersections: true,
 				pointerDistance: 40,
 				keyEvents: {
 					cancel: "Backspace",
@@ -753,9 +753,7 @@ describe("TerraDrawPolygonMode", () => {
 		});
 
 		it("it early returns early if a duplicate coordinate is provided", () => {
-			polygonMode = new TerraDrawPolygonMode({
-				allowSelfIntersections: false,
-			});
+			polygonMode = new TerraDrawPolygonMode();
 			const mockConfig = getMockModeConfig(polygonMode.mode);
 
 			store = mockConfig.store;
@@ -834,107 +832,219 @@ describe("TerraDrawPolygonMode", () => {
 			expect(store.updateGeometry).toBeCalledTimes(7);
 		});
 
-		it("does not create a polygon line if it has intersections and allowSelfIntersections is false", () => {
-			polygonMode = new TerraDrawPolygonMode({
-				allowSelfIntersections: false,
+		describe("validate", () => {
+			it("does not create a polygon if it has intersections and there is a validation that returns false", () => {
+				polygonMode = new TerraDrawPolygonMode({
+					validate: (feature, { updateType }) => {
+						if (updateType === "finish" || updateType === "commit") {
+							return ValidateNotSelfIntersecting(feature);
+						}
+						return true;
+					},
+				});
+				const mockConfig = getMockModeConfig(polygonMode.mode);
+
+				store = mockConfig.store;
+				project = mockConfig.project;
+
+				polygonMode.register(mockConfig);
+				polygonMode.start();
+
+				const coordOneEvent = {
+					lng: 11.162109375,
+					lat: 23.322080011,
+					containerX: 0,
+					containerY: 0,
+					button: "left",
+					heldKeys: [],
+				} as TerraDrawMouseEvent;
+				polygonMode.onClick(coordOneEvent);
+
+				const coordTwoEvent = {
+					lng: -21.884765625,
+					lat: -8.928487062,
+					containerX: 0,
+					containerY: 0,
+					button: "left",
+					heldKeys: [],
+				} as TerraDrawMouseEvent;
+				polygonMode.onMouseMove(coordTwoEvent);
+				polygonMode.onClick(coordTwoEvent);
+
+				const coordThreeEvent = {
+					lng: 26.894531249,
+					lat: -20.468189222,
+					containerX: 0,
+					containerY: 0,
+					button: "left",
+					heldKeys: [],
+				} as TerraDrawMouseEvent;
+				polygonMode.onMouseMove(coordThreeEvent);
+				polygonMode.onClick(coordThreeEvent);
+
+				// Overlapping point
+				const coordFourEvent = {
+					lng: -13.974609375,
+					lat: 22.187404991,
+					containerX: 0,
+					containerY: 0,
+					button: "left",
+					heldKeys: [],
+				} as TerraDrawMouseEvent;
+				project.mockReturnValueOnce({ x: 100, y: 100 });
+				project.mockReturnValueOnce({ x: 100, y: 100 });
+				polygonMode.onMouseMove(coordFourEvent);
+
+				project.mockReturnValueOnce({ x: 100, y: 100 });
+				project.mockReturnValueOnce({ x: 100, y: 100 });
+				polygonMode.onClick(coordFourEvent);
+
+				let features = store.copyAll();
+				expect(features.length).toBe(3);
+
+				// Here we still have the coordinate but it's not committed
+				// to the finished polygon
+				expect(features[0].geometry.coordinates).toStrictEqual([
+					[
+						[11.162109375, 23.322080011],
+						[-21.884765625, -8.928487062],
+						[26.894531249, -20.468189222],
+						[-13.974609375, 22.187404991],
+						[11.162109375, 23.322080011],
+					],
+				]);
+
+				const closingCoordEvent = {
+					...coordOneEvent,
+				};
+				project.mockReturnValueOnce({ x: 0, y: 0 });
+				project.mockReturnValueOnce({ x: 0, y: 0 });
+				polygonMode.onMouseMove(closingCoordEvent);
+
+				project.mockReturnValueOnce({ x: 0, y: 0 });
+				project.mockReturnValueOnce({ x: 0, y: 0 });
+				polygonMode.onClick(closingCoordEvent);
+
+				// No closing points as feature is closed
+				features = store.copyAll();
+				expect(features.length).toBe(1);
+				expect(project).toBeCalledTimes(8);
+
+				// The overlapping coordinate is not included
+				expect(features[0].geometry.coordinates).toStrictEqual([
+					[
+						[11.162109375, 23.322080011],
+						[-21.884765625, -8.928487062],
+						[26.894531249, -20.468189222],
+						[11.162109375, 23.322080011],
+					],
+				]);
 			});
-			const mockConfig = getMockModeConfig(polygonMode.mode);
 
-			store = mockConfig.store;
-			project = mockConfig.project;
+			it("does create a polygon if it does not have intersections and there is a validation that returns true", () => {
+				polygonMode = new TerraDrawPolygonMode({
+					validate: (feature, { updateType }) => {
+						if (updateType === "finish" || updateType === "commit") {
+							return ValidateNotSelfIntersecting(feature);
+						}
+						return true;
+					},
+				});
+				const mockConfig = getMockModeConfig(polygonMode.mode);
 
-			polygonMode.register(mockConfig);
-			polygonMode.start();
+				store = mockConfig.store;
+				project = mockConfig.project;
 
-			const coordOneEvent = {
-				lng: 11.162109375,
-				lat: 23.322080011,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			} as TerraDrawMouseEvent;
-			polygonMode.onClick(coordOneEvent);
+				polygonMode.register(mockConfig);
+				polygonMode.start();
 
-			const coordTwoEvent = {
-				lng: -21.884765625,
-				lat: -8.928487062,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			} as TerraDrawMouseEvent;
-			polygonMode.onMouseMove(coordTwoEvent);
-			polygonMode.onClick(coordTwoEvent);
+				polygonMode.onClick({
+					lng: 0,
+					lat: 0,
+					containerX: 0,
+					containerY: 0,
+					button: "left",
+					heldKeys: [],
+				});
 
-			const coordThreeEvent = {
-				lng: 26.894531249,
-				lat: -20.468189222,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			} as TerraDrawMouseEvent;
-			polygonMode.onMouseMove(coordThreeEvent);
-			polygonMode.onClick(coordThreeEvent);
+				polygonMode.onMouseMove({
+					lng: 0,
+					lat: 1,
+					containerX: 0,
+					containerY: 0,
+					button: "left",
+					heldKeys: [],
+				});
 
-			// Overlapping point
-			const coordFourEvent = {
-				lng: -13.974609375,
-				lat: 22.187404991,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			} as TerraDrawMouseEvent;
-			project.mockReturnValueOnce({ x: 100, y: 100 });
-			project.mockReturnValueOnce({ x: 100, y: 100 });
-			polygonMode.onMouseMove(coordFourEvent);
+				polygonMode.onClick({
+					lng: 0,
+					lat: 1,
+					containerX: 0,
+					containerY: 0,
+					button: "left",
+					heldKeys: [],
+				});
 
-			project.mockReturnValueOnce({ x: 100, y: 100 });
-			project.mockReturnValueOnce({ x: 100, y: 100 });
-			polygonMode.onClick(coordFourEvent);
+				polygonMode.onMouseMove({
+					lng: 1,
+					lat: 1,
+					containerX: 0,
+					containerY: 0,
+					button: "left",
+					heldKeys: [],
+				});
 
-			let features = store.copyAll();
-			expect(features.length).toBe(3);
+				polygonMode.onClick({
+					lng: 1,
+					lat: 1,
+					containerX: 0,
+					containerY: 0,
+					button: "left",
+					heldKeys: [],
+				});
 
-			// Here we still have the coordinate but it's not committed
-			// to the finished polygon
-			expect(features[0].geometry.coordinates).toStrictEqual([
-				[
-					[11.162109375, 23.322080011],
-					[-21.884765625, -8.928487062],
-					[26.894531249, -20.468189222],
-					[-13.974609375, 22.187404991],
-					[11.162109375, 23.322080011],
-				],
-			]);
+				// Close the polygon
+				project.mockReturnValueOnce({ x: 0, y: 0 });
+				project.mockReturnValueOnce({ x: 0, y: 0 });
 
-			const closingCoordEvent = {
-				...coordOneEvent,
-			};
-			project.mockReturnValueOnce({ x: 0, y: 0 });
-			project.mockReturnValueOnce({ x: 0, y: 0 });
-			polygonMode.onMouseMove(closingCoordEvent);
+				polygonMode.onMouseMove({
+					lng: 1,
+					lat: 1,
+					containerX: 0,
+					containerY: 0,
+					button: "left",
+					heldKeys: [],
+				});
 
-			project.mockReturnValueOnce({ x: 0, y: 0 });
-			project.mockReturnValueOnce({ x: 0, y: 0 });
-			polygonMode.onClick(closingCoordEvent);
+				project.mockReturnValueOnce({ x: 0, y: 0 });
+				project.mockReturnValueOnce({ x: 0, y: 0 });
 
-			// No closing points as feature is closed
-			features = store.copyAll();
-			expect(features.length).toBe(1);
-			expect(project).toBeCalledTimes(8);
+				polygonMode.onClick({
+					lng: 1,
+					lat: 1,
+					containerX: 0,
+					containerY: 0,
+					button: "left",
+					heldKeys: [],
+				});
 
-			// The overlapping coordinate is not included
-			expect(features[0].geometry.coordinates).toStrictEqual([
-				[
-					[11.162109375, 23.322080011],
-					[-21.884765625, -8.928487062],
-					[26.894531249, -20.468189222],
-					[11.162109375, 23.322080011],
-				],
-			]);
+				let features = store.copyAll();
+
+				expect(features.length).toBe(1);
+
+				// Create a new polygon
+				polygonMode.onClick({
+					lng: 0,
+					lat: 0,
+					containerX: 0,
+					containerY: 0,
+					button: "left",
+					heldKeys: [],
+				});
+
+				features = store.copyAll();
+				expect(features.length).toBe(2);
+			});
 		});
 	});
 
@@ -1506,5 +1616,36 @@ describe("validateFeature", () => {
 				},
 			}),
 		).toBe(true);
+	});
+
+	it("returns false for valid polygon feature but validate function returns false", () => {
+		const polygonMode = new TerraDrawPolygonMode({
+			validate: () => false,
+		});
+		polygonMode.register(getMockModeConfig("polygon"));
+
+		expect(
+			polygonMode.validateFeature({
+				id: "66608334-7cf1-4f9e-a7f9-75e5ac135e68",
+				type: "Feature",
+				geometry: {
+					type: "Polygon",
+					coordinates: [
+						[
+							[-1.812744141, 52.429222278],
+							[-1.889648438, 51.652110862],
+							[0.505371094, 52.052490476],
+							[-0.417480469, 52.476089041],
+							[-1.812744141, 52.429222278],
+						],
+					],
+				},
+				properties: {
+					mode: "polygon",
+					createdAt: 1685655516297,
+					updatedAt: 1685655518118,
+				},
+			}),
+		).toBe(false);
 	});
 });

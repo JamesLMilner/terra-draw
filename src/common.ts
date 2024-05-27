@@ -87,10 +87,19 @@ export interface TerraDrawModeRegisterConfig {
 	coordinatePrecision: number;
 }
 
+export enum UpdateTypes {
+	Commit = "commit",
+	Provisional = "provisional",
+	Finish = "finish",
+}
+
 type ValidationContext = Pick<
 	TerraDrawModeRegisterConfig,
 	"project" | "unproject" | "coordinatePrecision"
->;
+> & {
+	updateType: UpdateTypes;
+};
+
 export type Validation = (
 	feature: GeoJSONStoreFeatures,
 	context: ValidationContext,

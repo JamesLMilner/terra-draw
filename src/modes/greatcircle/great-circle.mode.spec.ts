@@ -225,7 +225,7 @@ describe("TerraDrawGreatCircleMode", () => {
 			expect(features[1].geometry.coordinates).toStrictEqual([0, 0]);
 		});
 
-		it("creates line on second click", () => {
+		it("creates great circle line on second click", () => {
 			project.mockReturnValueOnce({ x: 0, y: 0 });
 			project.mockReturnValueOnce({ x: 0, y: 0 });
 			project.mockReturnValueOnce({ x: 50, y: 50 });
@@ -274,6 +274,119 @@ describe("TerraDrawGreatCircleMode", () => {
 			features[0].geometry.coordinates.forEach((coordinate) => {
 				expect(typeof (coordinate as Position)[0]).toBe("number");
 				expect(typeof (coordinate as Position)[1]).toBe("number");
+			});
+		});
+
+		describe("validate", () => {
+			let valid = true;
+			beforeEach(() => {
+				greatCircleMode = new TerraDrawGreatCircleMode({
+					validate: () => valid,
+				});
+				const mockConfig = getMockModeConfig(greatCircleMode.mode);
+				onChange = mockConfig.onChange;
+				store = mockConfig.store;
+				project = mockConfig.project;
+				greatCircleMode.register(mockConfig);
+				greatCircleMode.start();
+			});
+
+			it("does not create great circle line on second click because validate returns false", () => {
+				valid = false;
+				project.mockReturnValueOnce({ x: 0, y: 0 });
+				project.mockReturnValueOnce({ x: 0, y: 0 });
+				project.mockReturnValueOnce({ x: 50, y: 50 });
+				project.mockReturnValueOnce({ x: 50, y: 50 });
+
+				greatCircleMode.onClick({
+					lng: 1,
+					lat: 1,
+					containerX: 0,
+					containerY: 0,
+					button: "left",
+					heldKeys: [],
+				});
+
+				let features = store.copyAll();
+				expect(features.length).toBe(2);
+
+				greatCircleMode.onMouseMove({
+					lng: 20,
+					lat: 20,
+					containerX: 100,
+					containerY: 100,
+					button: "left",
+					heldKeys: [],
+				});
+
+				features = store.copyAll();
+
+				greatCircleMode.onClick({
+					lng: 20,
+					lat: 20,
+					containerX: 100,
+					containerY: 100,
+					button: "left",
+					heldKeys: [],
+				});
+
+				expect(onChange).toBeCalledTimes(2);
+				features = store.copyAll();
+
+				expect(features.length).toBe(2);
+			});
+
+			it("does create great circle line on second click because validate returns true", () => {
+				valid = true;
+				project.mockReturnValueOnce({ x: 0, y: 0 });
+				project.mockReturnValueOnce({ x: 0, y: 0 });
+				project.mockReturnValueOnce({ x: 50, y: 50 });
+				project.mockReturnValueOnce({ x: 50, y: 50 });
+
+				greatCircleMode.onClick({
+					lng: 1,
+					lat: 1,
+					containerX: 0,
+					containerY: 0,
+					button: "left",
+					heldKeys: [],
+				});
+
+				let features = store.copyAll();
+				expect(features.length).toBe(2);
+
+				greatCircleMode.onMouseMove({
+					lng: 20,
+					lat: 20,
+					containerX: 100,
+					containerY: 100,
+					button: "left",
+					heldKeys: [],
+				});
+
+				features = store.copyAll();
+				expect(features.length).toBe(2);
+
+				expect(features[0].geometry.coordinates.length).toBe(100);
+
+				greatCircleMode.onClick({
+					lng: 20,
+					lat: 20,
+					containerX: 100,
+					containerY: 100,
+					button: "left",
+					heldKeys: [],
+				});
+
+				expect(onChange).toBeCalledTimes(5);
+				features = store.copyAll();
+
+				expect(features.length).toBe(1);
+				expect(features[0].geometry.coordinates.length).toBe(100);
+				features[0].geometry.coordinates.forEach((coordinate) => {
+					expect(typeof (coordinate as Position)[0]).toBe("number");
+					expect(typeof (coordinate as Position)[1]).toBe("number");
+				});
 			});
 		});
 	});
@@ -774,6 +887,135 @@ describe("TerraDrawGreatCircleMode", () => {
 					},
 				}),
 			).toBe(true);
+		});
+
+		it("returns false for valid great circle feature but validate function returns false", () => {
+			const greatCircleMode = new TerraDrawGreatCircleMode({
+				validate: () => {
+					return false;
+				},
+				styles: {
+					lineStringColor: "#ffffff",
+				},
+			});
+			greatCircleMode.register(getMockModeConfig("greatcircle"));
+
+			expect(
+				greatCircleMode.validateFeature({
+					id: "8375c1e1-79af-4870-8cbc-57bcf323f2e0",
+					type: "Feature",
+					geometry: {
+						type: "LineString",
+						coordinates: [
+							[-2.559814453, 52.536273041],
+							[-2.519973128, 52.545235198],
+							[-2.480115543, 52.554183976],
+							[-2.440241709, 52.563119364],
+							[-2.400351638, 52.572041353],
+							[-2.360445344, 52.580949932],
+							[-2.32052284, 52.589845092],
+							[-2.280584137, 52.598726824],
+							[-2.240629248, 52.607595117],
+							[-2.200658186, 52.616449962],
+							[-2.160670965, 52.625291349],
+							[-2.120667597, 52.634119268],
+							[-2.080648094, 52.642933709],
+							[-2.040612471, 52.651734663],
+							[-2.000560739, 52.660522121],
+							[-1.960492913, 52.669296071],
+							[-1.920409005, 52.678056506],
+							[-1.880309029, 52.686803414],
+							[-1.840192997, 52.695536786],
+							[-1.800060924, 52.704256613],
+							[-1.759912823, 52.712962884],
+							[-1.719748708, 52.721655591],
+							[-1.679568591, 52.730334723],
+							[-1.639372486, 52.739000271],
+							[-1.599160408, 52.747652225],
+							[-1.55893237, 52.756290575],
+							[-1.518688386, 52.764915312],
+							[-1.478428469, 52.773526426],
+							[-1.438152634, 52.782123908],
+							[-1.397860895, 52.790707748],
+							[-1.357553265, 52.799277935],
+							[-1.317229759, 52.807834462],
+							[-1.276890391, 52.816377317],
+							[-1.236535175, 52.824906492],
+							[-1.196164125, 52.833421976],
+							[-1.155777257, 52.841923761],
+							[-1.115374584, 52.850411836],
+							[-1.07495612, 52.858886192],
+							[-1.034521881, 52.867346819],
+							[-0.99407188, 52.875793709],
+							[-0.953606134, 52.88422685],
+							[-0.913124655, 52.892646235],
+							[-0.87262746, 52.901051852],
+							[-0.832114563, 52.909443694],
+							[-0.791585978, 52.917821749],
+							[-0.751041722, 52.926186009],
+							[-0.710481808, 52.934536464],
+							[-0.669906252, 52.942873104],
+							[-0.62931507, 52.951195921],
+							[-0.588708276, 52.959504904],
+							[-0.548085885, 52.967800044],
+							[-0.507447914, 52.976081332],
+							[-0.466794377, 52.984348757],
+							[-0.42612529, 52.992602312],
+							[-0.385440668, 53.000841985],
+							[-0.344740527, 53.009067768],
+							[-0.304024883, 53.017279652],
+							[-0.263293752, 53.025477626],
+							[-0.222547148, 53.033661682],
+							[-0.181785089, 53.041831809],
+							[-0.141007589, 53.049988],
+							[-0.100214666, 53.058130243],
+							[-0.059406334, 53.06625853],
+							[-0.01858261, 53.074372851],
+							[0.022256489, 53.082473198],
+							[0.063110948, 53.09055956],
+							[0.103980751, 53.098631928],
+							[0.14486588, 53.106690293],
+							[0.18576632, 53.114734645],
+							[0.226682054, 53.122764976],
+							[0.267613066, 53.130781276],
+							[0.308559339, 53.138783535],
+							[0.349520856, 53.146771744],
+							[0.390497601, 53.154745894],
+							[0.431489557, 53.162705976],
+							[0.472496707, 53.17065198],
+							[0.513519033, 53.178583897],
+							[0.554556521, 53.186501717],
+							[0.595609151, 53.194405432],
+							[0.636676907, 53.202295033],
+							[0.677759773, 53.210170509],
+							[0.718857729, 53.218031852],
+							[0.759970761, 53.225879052],
+							[0.801098849, 53.233712101],
+							[0.842241978, 53.241530988],
+							[0.883400128, 53.249335706],
+							[0.924573283, 53.257126244],
+							[0.965761426, 53.264902593],
+							[1.006964537, 53.272664745],
+							[1.048182601, 53.28041269],
+							[1.089415598, 53.288146419],
+							[1.130663512, 53.295865922],
+							[1.171926324, 53.303571191],
+							[1.213204016, 53.311262217],
+							[1.25449657, 53.31893899],
+							[1.295803969, 53.326601501],
+							[1.337126194, 53.334249741],
+							[1.378463226, 53.341883702],
+							[1.419815048, 53.349503373],
+							[1.461181641, 53.357108746],
+						],
+					},
+					properties: {
+						mode: "greatcircle",
+						createdAt: 1685654356961,
+						updatedAt: 1685654358553,
+					},
+				}),
+			).toBe(false);
 		});
 	});
 });

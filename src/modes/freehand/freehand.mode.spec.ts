@@ -111,6 +111,7 @@ describe("TerraDrawFreehandMode", () => {
 		let freehandMode: TerraDrawFreehandMode;
 		let store: GeoJSONStore;
 		let onChange: jest.Mock;
+		let onFinish: jest.Mock;
 
 		beforeEach(() => {
 			freehandMode = new TerraDrawFreehandMode();
@@ -187,6 +188,89 @@ describe("TerraDrawFreehandMode", () => {
 					[expect.any(String), expect.any(String)],
 					"create",
 				);
+			});
+		});
+
+		describe("registered with validate", () => {
+			let valid = true;
+			beforeEach(() => {
+				freehandMode = new TerraDrawFreehandMode({
+					validate: () => {
+						return valid;
+					},
+				});
+				store = new GeoJSONStore();
+
+				const mockConfig = getMockModeConfig(freehandMode.mode);
+				onChange = mockConfig.onChange;
+				onFinish = mockConfig.onFinish;
+				store = mockConfig.store;
+				freehandMode.register(mockConfig);
+				freehandMode.start();
+			});
+
+			it("does not finish drawing polygon on second click because validate returns false", () => {
+				valid = false;
+
+				freehandMode.onClick({
+					lng: 0,
+					lat: 0,
+					containerX: 0,
+					containerY: 0,
+					button: "left",
+					heldKeys: [],
+				});
+
+				let features = store.copyAll();
+				expect(features.length).toBe(2);
+
+				freehandMode.onClick({
+					lng: 0,
+					lat: 0,
+					containerX: 0,
+					containerY: 0,
+					button: "left",
+					heldKeys: [],
+				});
+
+				// Closing cooridnate should still exist
+				features = store.copyAll();
+				expect(features.length).toBe(2);
+
+				expect(onChange).toBeCalledTimes(1);
+				expect(onFinish).not.toBeCalled();
+			});
+
+			it("does finish drawing polygon on second click because validate returns true", () => {
+				valid = true;
+
+				freehandMode.onClick({
+					lng: 0,
+					lat: 0,
+					containerX: 0,
+					containerY: 0,
+					button: "left",
+					heldKeys: [],
+				});
+
+				let features = store.copyAll();
+				expect(features.length).toBe(2);
+
+				freehandMode.onClick({
+					lng: 0,
+					lat: 0,
+					containerX: 0,
+					containerY: 0,
+					button: "left",
+					heldKeys: [],
+				});
+
+				// Closing cooridnate should be removed
+				features = store.copyAll();
+				expect(features.length).toBe(1);
+
+				expect(onChange).toBeCalledTimes(2);
+				expect(onFinish).toBeCalled();
 			});
 		});
 	});
@@ -606,6 +690,52 @@ describe("TerraDrawFreehandMode", () => {
 					},
 				}),
 			).toBe(true);
+		});
+
+		it("returns false for valid freehand feature but the validate function returns false", () => {
+			const freehandMode = new TerraDrawFreehandMode({
+				validate: () => {
+					return false;
+				},
+				styles: {
+					closingPointColor: "#ffffff",
+					closingPointOutlineWidth: 2,
+					closingPointWidth: 1,
+					closingPointOutlineColor: "#111111",
+				},
+			});
+			freehandMode.register(getMockModeConfig("freehand"));
+
+			expect(
+				freehandMode.validateFeature({
+					id: "ddfa9367-3151-48b1-a7b2-c8ed3c0222db",
+					type: "Feature",
+					geometry: {
+						type: "Polygon",
+						coordinates: [
+							[
+								[-0.120849609, 52.348763182],
+								[-0.120849609, 52.348763182],
+								[-0.120849609, 52.348763182],
+								[-0.197753906, 52.207606673],
+								[-0.197753906, 52.072753654],
+								[-0.043945312, 51.951036645],
+								[0.186767578, 51.957807389],
+								[0.362548828, 52.066000283],
+								[0.373535156, 52.214338608],
+								[0.208740234, 52.308478624],
+								[-0.021972656, 52.315195264],
+								[-0.120849609, 52.348763182],
+							],
+						],
+					},
+					properties: {
+						mode: "freehand",
+						createdAt: 1685569592712,
+						updatedAt: 1685569593386,
+					},
+				}),
+			).toBe(false);
 		});
 	});
 });

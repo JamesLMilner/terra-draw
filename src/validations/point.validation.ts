@@ -1,7 +1,7 @@
-import { GeoJSONStoreFeatures } from "../../terra-draw";
-import { coordinateIsValid } from "./is-valid-coordinate";
+import { GeoJSONStoreFeatures } from "../terra-draw";
+import { coordinateIsValid } from "./../geometry/boolean/is-valid-coordinate";
 
-export function isValidPoint(
+export function ValidatePointFeature(
 	feature: GeoJSONStoreFeatures,
 	coordinatePrecision: number,
 ): boolean {

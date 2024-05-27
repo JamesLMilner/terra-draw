@@ -7,6 +7,7 @@ import {
 	NumericStyling,
 	Cursor,
 	Validation,
+	UpdateTypes,
 } from "../../common";
 import { Point, Position } from "geojson";
 import {
@@ -124,9 +125,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 	private scaleFeature!: ScaleFeatureBehavior;
 	private dragCoordinateResizeFeature!: DragCoordinateResizeBehavior;
 	private cursors: Required<Cursors>;
-	private validations: {
-		[mode: string]: (feature: GeoJSONStoreFeatures) => boolean;
-	} = {};
+	private validations: Record<string, Validation> = {};
 
 	constructor(options?: TerraDrawSelectModeOptions<SelectionStyling>) {
 		super(options);
@@ -370,12 +369,20 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 
 		// Validate the new geometry
 		if (validation) {
-			const valid = validation({
-				id: featureId,
-				type: "Feature",
-				geometry,
-				properties,
-			});
+			const valid = validation(
+				{
+					id: featureId,
+					type: "Feature",
+					geometry,
+					properties,
+				},
+				{
+					project: this.project,
+					unproject: this.unproject,
+					coordinatePrecision: this.coordinatePrecision,
+					updateType: UpdateTypes.Commit,
+				},
+			);
 			if (!valid) {
 				return;
 			}

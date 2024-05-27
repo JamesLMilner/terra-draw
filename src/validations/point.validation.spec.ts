@@ -1,5 +1,5 @@
 import { Feature, Point } from "geojson";
-import { isValidPoint } from "./is-valid-point";
+import { ValidatePointFeature } from "./point.validation";
 
 describe("isValidPoint", () => {
 	it("returns true for a valid Point with correct coordinate precision", () => {
@@ -11,7 +11,7 @@ describe("isValidPoint", () => {
 				coordinates: [45, 90],
 			},
 		} as Feature<Point, Record<string, any>>;
-		expect(isValidPoint(validPoint, 2)).toBe(true);
+		expect(ValidatePointFeature(validPoint, 2)).toBe(true);
 	});
 
 	it("returns false for a non-Point feature", () => {
@@ -26,7 +26,7 @@ describe("isValidPoint", () => {
 				],
 			},
 		} as any;
-		expect(isValidPoint(nonPointFeature, 2)).toBe(false);
+		expect(ValidatePointFeature(nonPointFeature, 2)).toBe(false);
 	});
 
 	it("returns false for a Point with incorrect coordinate precision", () => {
@@ -38,6 +38,6 @@ describe("isValidPoint", () => {
 				coordinates: [45.123, 90.123],
 			},
 		} as Feature<Point, Record<string, any>>;
-		expect(isValidPoint(invalidPoint, 2)).toBe(false);
+		expect(ValidatePointFeature(invalidPoint, 2)).toBe(false);
 	});
 });

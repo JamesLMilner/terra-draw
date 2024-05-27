@@ -1,3 +1,4 @@
+import { Point } from "geojson";
 import { TerraDrawMouseEvent } from "../../common";
 import { getMockModeConfig } from "../../test/mock-config";
 import { TerraDrawPointMode } from "./point.mode";
@@ -123,6 +124,58 @@ describe("TerraDrawPointMode", () => {
 				[expect.any(String)],
 				"create",
 			);
+		});
+
+		describe("validate", () => {
+			it("does not create the point if validation returns false", () => {
+				const pointMode = new TerraDrawPointMode({
+					validate: (feature) => {
+						return (feature.geometry as Point).coordinates[0] > 45;
+					},
+				});
+
+				const mockConfig = getMockModeConfig(pointMode.mode);
+
+				pointMode.register(mockConfig);
+
+				pointMode.onClick({
+					lng: 30,
+					lat: 0,
+					containerX: 0,
+					containerY: 0,
+				} as TerraDrawMouseEvent);
+
+				expect(mockConfig.onChange).toBeCalledTimes(0);
+				expect(mockConfig.onChange).not.toBeCalledWith(
+					[expect.any(String)],
+					"create",
+				);
+			});
+
+			it("does create the point if validation returns true", () => {
+				const pointMode = new TerraDrawPointMode({
+					validate: (feature) => {
+						return (feature.geometry as Point).coordinates[0] > 45;
+					},
+				});
+
+				const mockConfig = getMockModeConfig(pointMode.mode);
+
+				pointMode.register(mockConfig);
+
+				pointMode.onClick({
+					lng: 50,
+					lat: 0,
+					containerX: 0,
+					containerY: 0,
+				} as TerraDrawMouseEvent);
+
+				expect(mockConfig.onChange).toBeCalledTimes(1);
+				expect(mockConfig.onChange).toBeCalledWith(
+					[expect.any(String)],
+					"create",
+				);
+			});
 		});
 	});
 
@@ -319,6 +372,33 @@ describe("TerraDrawPointMode", () => {
 					},
 				}),
 			).toBe(true);
+		});
+
+		it("returns false for valid point feature but validate function returns false", () => {
+			const pointMode = new TerraDrawPointMode({
+				validate: () => false,
+				styles: {
+					pointColor: "#ffffff",
+				},
+			});
+
+			pointMode.register(getMockModeConfig("point"));
+
+			expect(
+				pointMode.validateFeature({
+					id: "ed030248-d7ee-45a2-b8e8-37ad2f622509",
+					type: "Feature",
+					geometry: {
+						type: "Point",
+						coordinates: [-2.329101563, 51.392350875],
+					},
+					properties: {
+						mode: "point",
+						createdAt: 1685654949450,
+						updatedAt: 1685654950609,
+					},
+				}),
+			).toBe(false);
 		});
 	});
 });

@@ -1,4 +1,4 @@
-import { TerraDrawMouseEvent, Validation } from "../../../common";
+import { TerraDrawMouseEvent, UpdateTypes, Validation } from "../../../common";
 import { BehaviorConfig, TerraDrawModeBehavior } from "../../base.behavior";
 import { LineString, Polygon, Position } from "geojson";
 import { SelectionPointBehavior } from "./selection-point.behavior";
@@ -85,6 +85,7 @@ export class RotateFeatureBehavior extends TerraDrawModeBehavior {
 						project: this.config.project,
 						unproject: this.config.unproject,
 						coordinatePrecision: this.config.coordinatePrecision,
+						updateType: UpdateTypes.Provisional,
 					},
 				)
 			) {

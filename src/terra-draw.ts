@@ -48,8 +48,9 @@ import { pixelDistanceToLine } from "./geometry/measure/pixel-distance-to-line";
 import { Position } from "geojson";
 import { pointInPolygon } from "./geometry/boolean/point-in-polygon";
 import { createBBoxFromPoint } from "./geometry/shape/create-bbox";
-import { ValidateMinSizeSquareMeters } from "./validations/min-size.validation";
-import { ValidateMaxSizeSquareMeters } from "./validations/max-size.validation";
+import { ValidateMinAreaSquareMeters } from "./validations/min-size.validation";
+import { ValidateMaxAreaSquareMeters } from "./validations/max-size.validation";
+import { ValidateNotSelfIntersecting } from "./validations/not-self-intersecting.validation";
 
 type FinishListener = (ids: FeatureId) => void;
 type ChangeListener = (ids: FeatureId[], type: string) => void;
@@ -818,6 +819,7 @@ export {
 	GetLngLatFromEvent,
 
 	// Validations
-	ValidateMinSizeSquareMeters,
-	ValidateMaxSizeSquareMeters,
+	ValidateMinAreaSquareMeters,
+	ValidateMaxAreaSquareMeters,
+	ValidateNotSelfIntersecting,
 };

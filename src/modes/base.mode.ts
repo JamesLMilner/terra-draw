@@ -8,6 +8,8 @@ import {
 	TerraDrawModeRegisterConfig,
 	TerraDrawModeState,
 	TerraDrawMouseEvent,
+	UpdateTypes,
+	Validation,
 } from "../common";
 import {
 	FeatureId,
@@ -35,6 +37,7 @@ export enum ModeTypes {
 export type BaseModeOptions<T extends CustomStyling> = {
 	styles?: Partial<T>;
 	pointerDistance?: number;
+	validate?: Validation;
 };
 
 export abstract class TerraDrawBaseDrawMode<T extends CustomStyling> {
@@ -60,6 +63,7 @@ export abstract class TerraDrawBaseDrawMode<T extends CustomStyling> {
 	}
 
 	protected behaviors: TerraDrawModeBehavior[] = [];
+	protected validate: Validation | undefined;
 	protected pointerDistance: number;
 	protected coordinatePrecision!: number;
 	protected onStyleChange!: StoreChangeHandler;
@@ -75,6 +79,8 @@ export abstract class TerraDrawBaseDrawMode<T extends CustomStyling> {
 		this._styles =
 			options && options.styles ? { ...options.styles } : ({} as Partial<T>);
 		this.pointerDistance = (options && options.pointerDistance) || 40;
+
+		this.validate = options && options.validate;
 	}
 
 	type = ModeTypes.Drawing;
@@ -144,7 +150,22 @@ export abstract class TerraDrawBaseDrawMode<T extends CustomStyling> {
 			throw new Error("Mode must be registered");
 		}
 
-		return isValidStoreFeature(feature, this.store.idStrategy.isValidId);
+		const validStoreFeature = isValidStoreFeature(
+			feature,
+			this.store.idStrategy.isValidId,
+		);
+
+		// We also want tp validate based on any specific valdiations passed in
+		if (this.validate) {
+			return this.validate(feature as GeoJSONStoreFeatures, {
+				project: this.project,
+				unproject: this.unproject,
+				coordinatePrecision: this.coordinatePrecision,
+				updateType: UpdateTypes.Provisional,
+			});
+		}
+
+		return validStoreFeature;
 	}
 
 	abstract start(): void;

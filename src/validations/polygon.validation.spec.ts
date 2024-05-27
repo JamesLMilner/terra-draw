@@ -1,8 +1,8 @@
 import { Feature, Polygon } from "geojson";
 import {
-	isValidNonIntersectingPolygonFeature,
-	isValidPolygonFeature,
-} from "./is-valid-polygon-feature";
+	ValidateNonIntersectingPolygonFeature,
+	ValidatePolygonFeature,
+} from "./polygon.validation";
 
 describe("isValidPolygonFeature", () => {
 	it("returns true for a valid Polygon feature", () => {
@@ -21,7 +21,7 @@ describe("isValidPolygonFeature", () => {
 				],
 			},
 		} as Feature<Polygon, Record<string, any>>;
-		expect(isValidPolygonFeature(validFeature, 9)).toBe(true);
+		expect(ValidatePolygonFeature(validFeature, 9)).toBe(true);
 	});
 
 	it("returns false for non-Polygon feature", () => {
@@ -33,7 +33,7 @@ describe("isValidPolygonFeature", () => {
 				coordinates: [[45, 90]],
 			},
 		} as any;
-		expect(isValidPolygonFeature(nonPolygonFeature, 9)).toBe(false);
+		expect(ValidatePolygonFeature(nonPolygonFeature, 9)).toBe(false);
 	});
 
 	it("returns false for Polygon feature with more than one coordinates array", () => {
@@ -58,7 +58,7 @@ describe("isValidPolygonFeature", () => {
 				],
 			},
 		} as Feature<Polygon, Record<string, any>>;
-		expect(isValidPolygonFeature(multiCoordinatesFeature, 9)).toBe(false);
+		expect(ValidatePolygonFeature(multiCoordinatesFeature, 9)).toBe(false);
 	});
 
 	it("returns false for Polygon feature with less than 4 coordinates in array", () => {
@@ -76,7 +76,7 @@ describe("isValidPolygonFeature", () => {
 				],
 			},
 		} as Feature<Polygon, Record<string, any>>;
-		expect(isValidPolygonFeature(lessCoordinatesFeature, 9)).toBe(false);
+		expect(ValidatePolygonFeature(lessCoordinatesFeature, 9)).toBe(false);
 	});
 
 	it("returns false for Polygon feature where first and last coordinates do not match", () => {
@@ -95,7 +95,9 @@ describe("isValidPolygonFeature", () => {
 				],
 			},
 		} as Feature<Polygon, Record<string, any>>;
-		expect(isValidPolygonFeature(nonMatchingCoordinatesFeature, 9)).toBe(false);
+		expect(ValidatePolygonFeature(nonMatchingCoordinatesFeature, 9)).toBe(
+			false,
+		);
 	});
 
 	it("returns false Polygon with excessive coordinate precision", () => {
@@ -114,7 +116,7 @@ describe("isValidPolygonFeature", () => {
 				],
 			},
 		} as Feature<Polygon, Record<string, any>>;
-		expect(isValidPolygonFeature(validFeature, 9)).toBe(false);
+		expect(ValidatePolygonFeature(validFeature, 9)).toBe(false);
 	});
 });
 
@@ -135,7 +137,7 @@ describe("isValidNonIntersectingPolygonFeature", () => {
 				],
 			},
 		} as Feature<Polygon, Record<string, any>>;
-		expect(isValidNonIntersectingPolygonFeature(validFeature, 9)).toBe(true);
+		expect(ValidateNonIntersectingPolygonFeature(validFeature, 9)).toBe(true);
 	});
 
 	it("returns false for a self intersecting Polygon feature", () => {
@@ -156,6 +158,6 @@ describe("isValidNonIntersectingPolygonFeature", () => {
 				],
 			},
 		} as Feature<Polygon, Record<string, any>>;
-		expect(isValidNonIntersectingPolygonFeature(validFeature, 9)).toBe(false);
+		expect(ValidateNonIntersectingPolygonFeature(validFeature, 9)).toBe(false);
 	});
 });

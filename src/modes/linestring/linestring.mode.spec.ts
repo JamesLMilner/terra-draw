@@ -337,7 +337,7 @@ describe("TerraDrawLineStringMode", () => {
 		describe("validations", () => {
 			it("does not create a line if it has intersections and validate returns false", () => {
 				lineStringMode = new TerraDrawLineStringMode({
-					validate: (feature, { updateType }) => {
+					validation: (feature, { updateType }) => {
 						if (updateType === "finish" || updateType === "commit") {
 							return ValidateNotSelfIntersecting(feature);
 						}
@@ -432,7 +432,7 @@ describe("TerraDrawLineStringMode", () => {
 
 			it("does create a line if no intersections and validate returns true", () => {
 				lineStringMode = new TerraDrawLineStringMode({
-					validate: (feature, { updateType }) => {
+					validation: (feature, { updateType }) => {
 						if (updateType === "finish" || updateType === "commit") {
 							return ValidateNotSelfIntersecting(feature);
 						}
@@ -1040,7 +1040,7 @@ describe("TerraDrawLineStringMode", () => {
 
 		it("returns false for valid linestring feature with validate function that returns false", () => {
 			const lineStringMode = new TerraDrawLineStringMode({
-				validate: () => {
+				validation: () => {
 					return false;
 				},
 				styles: {

@@ -574,7 +574,7 @@ describe("TerraDrawRectangleMode", () => {
 
 		it("returns true for valid rectangle feature with validation that returns true", () => {
 			const rectangleMode = new TerraDrawRectangleMode({
-				validate: () => {
+				validation: () => {
 					return true;
 				},
 			});
@@ -606,7 +606,7 @@ describe("TerraDrawRectangleMode", () => {
 
 		it("returns false for valid rectangle feature but with validation that returns false", () => {
 			const rectangleMode = new TerraDrawRectangleMode({
-				validate: () => {
+				validation: () => {
 					return false;
 				},
 			});

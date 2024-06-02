@@ -87,7 +87,7 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 
 		this.startingRadiusKilometers =
 			options?.startingRadiusKilometers ?? 0.00001;
-		this.validate = options?.validate;
+		this.validate = options?.validation;
 	}
 
 	private close() {

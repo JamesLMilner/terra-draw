@@ -90,7 +90,7 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 					: defaultKeyEvents;
 		}
 
-		this.validate = options?.validate;
+		this.validate = options?.validation;
 	}
 
 	private close() {

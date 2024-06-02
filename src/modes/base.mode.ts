@@ -37,7 +37,7 @@ export enum ModeTypes {
 export type BaseModeOptions<T extends CustomStyling> = {
 	styles?: Partial<T>;
 	pointerDistance?: number;
-	validate?: Validation;
+	validation?: Validation;
 };
 
 export abstract class TerraDrawBaseDrawMode<T extends CustomStyling> {
@@ -80,7 +80,7 @@ export abstract class TerraDrawBaseDrawMode<T extends CustomStyling> {
 			options && options.styles ? { ...options.styles } : ({} as Partial<T>);
 		this.pointerDistance = (options && options.pointerDistance) || 40;
 
-		this.validate = options && options.validate;
+		this.validate = options && options.validation;
 	}
 
 	type = ModeTypes.Drawing;

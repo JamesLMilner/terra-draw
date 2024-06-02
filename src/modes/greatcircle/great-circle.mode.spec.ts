@@ -281,7 +281,7 @@ describe("TerraDrawGreatCircleMode", () => {
 			let valid = true;
 			beforeEach(() => {
 				greatCircleMode = new TerraDrawGreatCircleMode({
-					validate: () => valid,
+					validation: () => valid,
 				});
 				const mockConfig = getMockModeConfig(greatCircleMode.mode);
 				onChange = mockConfig.onChange;
@@ -891,7 +891,7 @@ describe("TerraDrawGreatCircleMode", () => {
 
 		it("returns false for valid great circle feature but validate function returns false", () => {
 			const greatCircleMode = new TerraDrawGreatCircleMode({
-				validate: () => {
+				validation: () => {
 					return false;
 				},
 				styles: {

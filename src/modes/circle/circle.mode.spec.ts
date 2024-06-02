@@ -233,7 +233,7 @@ describe("TerraDrawCircleMode", () => {
 
 				beforeEach(() => {
 					circleMode = new TerraDrawCircleMode({
-						validate: () => valid,
+						validation: () => valid,
 					});
 					const mockConfig = getMockModeConfig(circleMode.mode);
 
@@ -747,7 +747,7 @@ describe("TerraDrawCircleMode", () => {
 
 		it("returns false for valid circle feature but with validation that returns false", () => {
 			const circleMode = new TerraDrawCircleMode({
-				validate: () => {
+				validation: () => {
 					return false;
 				},
 				styles: {

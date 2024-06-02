@@ -163,6 +163,84 @@ test.describe("polygon mode", () => {
 		// One point + one line
 		await expectPaths({ page, count: 1 });
 	});
+
+	test("can use validation setting to prevent maximum size", async ({
+		page,
+	}) => {
+		const mapDiv = await setupMap({
+			page,
+			configQueryParam: "validationFailure",
+		});
+		await changeMode({ page, mode });
+
+		// The length of the square sides in pixels
+		const sideLength = 100;
+
+		// Calculating the half of the side length
+		const halfLength = sideLength / 2;
+
+		// Coordinates of the center
+		const centerX = mapDiv.width / 2;
+		const centerY = mapDiv.height / 2;
+
+		// Coordinates of the four corners of the square
+		const topLeft = { x: centerX - halfLength, y: centerY - halfLength };
+		const topRight = { x: centerX + halfLength, y: centerY - halfLength };
+		const bottomLeft = { x: centerX - halfLength, y: centerY + halfLength };
+		const bottomRight = { x: centerX + halfLength, y: centerY + halfLength };
+
+		// Perform clicks at each corner
+		await page.mouse.click(topLeft.x, topLeft.y);
+		await page.mouse.click(topRight.x, topRight.y);
+		await page.mouse.click(bottomRight.x, bottomRight.y);
+		await page.mouse.click(bottomLeft.x, bottomLeft.y);
+
+		// Attempt to close the square
+		await page.mouse.click(bottomLeft.x, bottomLeft.y);
+
+		// Square will fail, as triangle will be 705665 square meters, but square will be
+		// over the limit of 1000000 square meters.
+		await expectPaths({ page, count: 3 });
+	});
+
+	test("can use validation setting to draw underneath maximum size ", async ({
+		page,
+	}) => {
+		const mapDiv = await setupMap({
+			page,
+			configQueryParam: "validationSuccess",
+		});
+		await changeMode({ page, mode });
+
+		// The length of the square sides in pixels
+		const sideLength = 100;
+
+		// Calculating the half of the side length
+		const halfLength = sideLength / 2;
+
+		// Coordinates of the center
+		const centerX = mapDiv.width / 2;
+		const centerY = mapDiv.height / 2;
+
+		// Coordinates of the four corners of the square
+		const topLeft = { x: centerX - halfLength, y: centerY - halfLength };
+		const topRight = { x: centerX + halfLength, y: centerY - halfLength };
+		const bottomLeft = { x: centerX - halfLength, y: centerY + halfLength };
+		const bottomRight = { x: centerX + halfLength, y: centerY + halfLength };
+
+		// Perform clicks at each corner
+		await page.mouse.click(topLeft.x, topLeft.y);
+		await page.mouse.click(topRight.x, topRight.y);
+		await page.mouse.click(bottomRight.x, bottomRight.y);
+		await page.mouse.click(bottomLeft.x, bottomLeft.y);
+
+		// Attempt to close the square
+		await page.mouse.click(bottomLeft.x, bottomLeft.y);
+
+		// Square will fail, as triangle will be 705665 square meters, but square will be
+		// over the limit of 1000000 square meters.
+		await expectPaths({ page, count: 1 });
+	});
 });
 
 test.describe("rectangle mode", () => {
@@ -320,7 +398,93 @@ test.describe("select mode", () => {
 		await expectGroupPosition({ page, x: 538, y: 308 });
 	});
 
-	test("selected rectangle can has it's shape maintained when coordinates are dragged", async ({
+	test("selected polygon can have individual coordinates dragged and fail when validation fails", async ({
+		page,
+	}) => {
+		const mapDiv = await setupMap({
+			page,
+			configQueryParam: "validationFailure",
+		});
+
+		await changeMode({ page, mode: "polygon" });
+
+		// Draw a rectangle
+		const { topLeft } = await drawRectangularPolygon({
+			mapDiv,
+			page,
+			size: "small",
+		});
+
+		// Change to select mode
+		await changeMode({ page, mode });
+
+		// Before drag
+		const x = topLeft.x - 2;
+		const y = topLeft.y - 2;
+		await expectGroupPosition({ page, x, y });
+
+		// Select
+		await page.mouse.click(mapDiv.width / 2, mapDiv.height / 2);
+		// await expectPaths({ page, count: 9 }); // 8 selection points and 1 square
+
+		// Drag
+		await page.mouse.move(topLeft.x, topLeft.y);
+		await page.mouse.down();
+		await page.mouse.move(0, 0, { steps: 30 });
+		await page.mouse.up();
+
+		// Deselect
+		await page.mouse.click(mapDiv.width - 10, mapDiv.height / 2);
+
+		// We are attempting to dragg right tothe top left corner but it is not getting there
+		// because it is capped by the validation. If this was allowed x would be ~90
+		await expectGroupPosition({ page, x: 563, y: 301 });
+	});
+
+	test("selected polygon can have individual coordinates dragged and succeeds when validation succeeds", async ({
+		page,
+	}) => {
+		const mapDiv = await setupMap({
+			page,
+			configQueryParam: "validationSuccess",
+		});
+
+		await changeMode({ page, mode: "polygon" });
+
+		// Draw a rectangle
+		const { topLeft } = await drawRectangularPolygon({
+			mapDiv,
+			page,
+			size: "small",
+		});
+
+		// Change to select mode
+		await changeMode({ page, mode });
+
+		// Before drag
+		const x = topLeft.x - 2;
+		const y = topLeft.y - 2;
+		await expectGroupPosition({ page, x, y });
+
+		// Select
+		await page.mouse.click(mapDiv.width / 2, mapDiv.height / 2);
+		// await expectPaths({ page, count: 9 }); // 8 selection points and 1 square
+
+		// Drag
+		await page.mouse.move(topLeft.x, topLeft.y);
+		await page.mouse.down();
+		await page.mouse.move(topLeft.x - 50, topLeft.y - 50, { steps: 30 });
+		await page.mouse.up();
+
+		// Deselect
+		await page.mouse.click(mapDiv.width - 10, mapDiv.height / 2);
+
+		// We are attempting to dragg right tothe top left corner but it is not getting there
+		// because it is capped by the validation. If this was allowed x would be ~90
+		await expectGroupPosition({ page, x: 553, y: 273 });
+	});
+
+	test("selected rectangle has it's shape maintained when coordinates are dragged with resizeable flag", async ({
 		page,
 	}) => {
 		const mapDiv = await setupMap({ page });

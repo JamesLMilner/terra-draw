@@ -21,11 +21,11 @@ export class ClosingPointsBehavior extends TerraDrawModeBehavior {
 
 	public create(selectedCoords: Position[], mode: string) {
 		if (this.ids.length) {
-			throw new Error("Opening and closing points already creating");
+			throw new Error("Opening and closing points already created");
 		}
 
 		if (selectedCoords.length <= 3) {
-			throw new Error("Requires at least 4 cooridnates");
+			throw new Error("Requires at least 4 coordinates");
 		}
 
 		this._startEndPoints = this.store.create(

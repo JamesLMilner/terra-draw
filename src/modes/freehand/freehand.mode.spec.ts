@@ -195,7 +195,7 @@ describe("TerraDrawFreehandMode", () => {
 			let valid = true;
 			beforeEach(() => {
 				freehandMode = new TerraDrawFreehandMode({
-					validate: () => {
+					validation: () => {
 						return valid;
 					},
 				});
@@ -694,7 +694,7 @@ describe("TerraDrawFreehandMode", () => {
 
 		it("returns false for valid freehand feature but the validate function returns false", () => {
 			const freehandMode = new TerraDrawFreehandMode({
-				validate: () => {
+				validation: () => {
 					return false;
 				},
 				styles: {

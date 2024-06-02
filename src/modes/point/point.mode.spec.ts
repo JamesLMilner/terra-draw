@@ -129,7 +129,7 @@ describe("TerraDrawPointMode", () => {
 		describe("validate", () => {
 			it("does not create the point if validation returns false", () => {
 				const pointMode = new TerraDrawPointMode({
-					validate: (feature) => {
+					validation: (feature) => {
 						return (feature.geometry as Point).coordinates[0] > 45;
 					},
 				});
@@ -154,7 +154,7 @@ describe("TerraDrawPointMode", () => {
 
 			it("does create the point if validation returns true", () => {
 				const pointMode = new TerraDrawPointMode({
-					validate: (feature) => {
+					validation: (feature) => {
 						return (feature.geometry as Point).coordinates[0] > 45;
 					},
 				});
@@ -376,7 +376,7 @@ describe("TerraDrawPointMode", () => {
 
 		it("returns false for valid point feature but validate function returns false", () => {
 			const pointMode = new TerraDrawPointMode({
-				validate: () => false,
+				validation: () => false,
 				styles: {
 					pointColor: "#ffffff",
 				},

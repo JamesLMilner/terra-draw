@@ -170,12 +170,7 @@ const getModes = () => {
 				return true;
 			},
 		}),
-		new TerraDrawRectangleMode({
-			validation: (feature) => {
-				console.log(feature);
-				return true;
-			},
-		}),
+		new TerraDrawRectangleMode(),
 		new TerraDrawCircleMode(),
 		new TerraDrawFreehandMode(),
 		new TerraDrawRenderMode({

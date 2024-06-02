@@ -73,6 +73,8 @@ export type GetLngLatFromEvent = (event: PointerEvent | MouseEvent) => {
 	lat: number;
 } | null;
 
+export type OnFinishContext = { mode: string; action: string };
+
 export interface TerraDrawModeRegisterConfig {
 	mode: string;
 	store: GeoJSONStore;
@@ -81,7 +83,7 @@ export interface TerraDrawModeRegisterConfig {
 	onChange: StoreChangeHandler;
 	onSelect: (selectedId: string) => void;
 	onDeselect: (deselectedId: string) => void;
-	onFinish: (finishedId: string) => void;
+	onFinish: (finishedId: string, context: OnFinishContext) => void;
 	project: Project;
 	unproject: Unproject;
 	coordinatePrecision: number;

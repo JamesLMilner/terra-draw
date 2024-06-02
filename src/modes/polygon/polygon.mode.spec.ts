@@ -1051,6 +1051,7 @@ describe("TerraDrawPolygonMode", () => {
 	describe("onKeyUp", () => {
 		let polygonMode: TerraDrawPolygonMode;
 		let store: GeoJSONStore;
+		let onFinish: jest.Mock;
 		let project: jest.Mock;
 		let unproject: jest.Mock;
 
@@ -1082,6 +1083,7 @@ describe("TerraDrawPolygonMode", () => {
 			store = mockConfig.store;
 			project = mockConfig.project;
 			unproject = mockConfig.project;
+			onFinish = mockConfig.onFinish;
 			polygonMode.register(mockConfig);
 			polygonMode.start();
 		});
@@ -1249,6 +1251,12 @@ describe("TerraDrawPolygonMode", () => {
 					heldKeys: [],
 				});
 
+				expect(onFinish).toHaveBeenCalledTimes(1);
+				expect(onFinish).toHaveBeenNthCalledWith(1, expect.any(String), {
+					action: "draw",
+					mode: "polygon",
+				});
+
 				// Creates a new polygon
 				polygonMode.onClick({
 					lng: 4,
@@ -1352,6 +1360,8 @@ describe("TerraDrawPolygonMode", () => {
 				preventDefault: jest.fn(),
 				heldKeys: [],
 			});
+
+			expect(onFinish).not.toHaveBeenCalled();
 
 			const features = store.copyAll();
 

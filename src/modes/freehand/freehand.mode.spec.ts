@@ -269,8 +269,12 @@ describe("TerraDrawFreehandMode", () => {
 				features = store.copyAll();
 				expect(features.length).toBe(1);
 
-				expect(onChange).toBeCalledTimes(2);
-				expect(onFinish).toBeCalled();
+				expect(onChange).toHaveBeenCalledTimes(2);
+				expect(onFinish).toHaveBeenCalledTimes(1);
+				expect(onFinish).toHaveBeenNthCalledWith(1, expect.any(String), {
+					action: "draw",
+					mode: "freehand",
+				});
 			});
 		});
 	});
@@ -511,7 +515,11 @@ describe("TerraDrawFreehandMode", () => {
 					[expect.any(String)],
 					"delete",
 				);
-				expect(onFinish).toBeCalledTimes(1);
+				expect(onFinish).toHaveBeenCalledTimes(1);
+				expect(onFinish).toHaveBeenNthCalledWith(1, expect.any(String), {
+					action: "draw",
+					mode: "freehand",
+				});
 			});
 		});
 	});

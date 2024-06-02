@@ -99,7 +99,7 @@ export class TerraDrawPointMode extends TerraDrawBaseDrawMode<PointModeStyling> 
 		const [pointId] = this.store.create([{ geometry, properties }]);
 
 		// Ensure that any listerers are triggered with the main created geometry
-		this.onFinish(pointId);
+		this.onFinish(pointId, { mode: this.mode, action: "draw" });
 	}
 
 	/** @internal */

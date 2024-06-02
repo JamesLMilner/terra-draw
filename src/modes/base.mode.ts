@@ -3,6 +3,7 @@
 import { BehaviorConfig, TerraDrawModeBehavior } from "./base.behavior";
 import {
 	HexColor,
+	OnFinishContext,
 	TerraDrawAdapterStyling,
 	TerraDrawKeyboardEvent,
 	TerraDrawModeRegisterConfig,
@@ -173,7 +174,7 @@ export abstract class TerraDrawBaseDrawMode<T extends CustomStyling> {
 	abstract cleanUp(): void;
 	abstract styleFeature(feature: GeoJSONStoreFeatures): TerraDrawAdapterStyling;
 
-	onFinish(finishedId: FeatureId) {}
+	onFinish(finishedId: FeatureId, context: OnFinishContext) {}
 	onDeselect(deselectedId: FeatureId) {}
 	onSelect(selectedId: FeatureId) {}
 	onKeyDown(event: TerraDrawKeyboardEvent) {}

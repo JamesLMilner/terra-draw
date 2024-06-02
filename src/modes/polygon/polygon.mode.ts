@@ -134,7 +134,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 			this.setStarted();
 		}
 
-		this.onFinish(finishedId);
+		this.onFinish(finishedId, { mode: this.mode, action: "draw" });
 	}
 
 	/** @internal */

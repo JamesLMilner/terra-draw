@@ -682,7 +682,11 @@ describe("TerraDrawLineStringMode", () => {
 					[2, 2],
 				]);
 
-				expect(onFinish).toBeCalledTimes(1);
+				expect(onFinish).toHaveBeenCalledTimes(1);
+				expect(onFinish).toHaveBeenNthCalledWith(1, expect.any(String), {
+					action: "draw",
+					mode: "linestring",
+				});
 			});
 
 			it("does not finish linestring when finish is set to null", () => {

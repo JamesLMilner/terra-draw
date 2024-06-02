@@ -762,11 +762,20 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 		// If we have finished dragging a coordinate or a feature
 		// lets fire an onFinish event which can be listened to
 		if (this.dragCoordinate.isDragging()) {
-			this.onFinish(this.selected[0]);
+			this.onFinish(this.selected[0], {
+				mode: this.mode,
+				action: "dragCoordinate",
+			});
 		} else if (this.dragFeature.isDragging()) {
-			this.onFinish(this.selected[0]);
+			this.onFinish(this.selected[0], {
+				mode: this.mode,
+				action: "dragFeature",
+			});
 		} else if (this.dragCoordinateResizeFeature.isDragging()) {
-			this.onFinish(this.selected[0]);
+			this.onFinish(this.selected[0], {
+				mode: this.mode,
+				action: "dragCoordinateResize",
+			});
 		}
 
 		this.dragCoordinate.stopDragging();

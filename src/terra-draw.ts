@@ -17,6 +17,7 @@ import {
 	TerraDrawKeyboardEvent,
 	TerraDrawMouseEvent,
 	SELECT_PROPERTIES,
+	OnFinishContext,
 } from "./common";
 import { TerraDrawBaseAdapter } from "./adapters/common/base.adapter";
 import {
@@ -52,7 +53,7 @@ import { ValidateMinAreaSquareMeters } from "./validations/min-size.validation";
 import { ValidateMaxAreaSquareMeters } from "./validations/max-size.validation";
 import { ValidateNotSelfIntersecting } from "./validations/not-self-intersecting.validation";
 
-type FinishListener = (ids: FeatureId) => void;
+type FinishListener = (id: FeatureId, context: OnFinishContext) => void;
 type ChangeListener = (ids: FeatureId[], type: string) => void;
 type SelectListener = (id: FeatureId) => void;
 type DeselectListener = () => void;
@@ -164,13 +165,13 @@ class TerraDraw {
 			return { changed, unchanged };
 		};
 
-		const onFinish = (finishedId: FeatureId) => {
+		const onFinish = (finishedId: FeatureId, context: OnFinishContext) => {
 			if (!this._enabled) {
 				return;
 			}
 
 			this._eventListeners.finish.forEach((listener) => {
-				listener(finishedId);
+				listener(finishedId, context);
 			});
 		};
 

@@ -130,7 +130,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 		}
 
 		// Ensure that any listerers are triggered with the main created geometry
-		this.onFinish(finishedId);
+		this.onFinish(finishedId, { mode: this.mode, action: "draw" });
 	}
 
 	private updateGeometries(

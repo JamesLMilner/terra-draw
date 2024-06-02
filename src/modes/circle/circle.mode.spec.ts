@@ -308,6 +308,10 @@ describe("TerraDrawCircleMode", () => {
 					expect(onChange).toBeCalledTimes(3);
 					expect(onChange).toBeCalledWith([expect.any(String)], "create");
 					expect(onFinish).toBeCalledTimes(1);
+					expect(onFinish).toHaveBeenNthCalledWith(1, expect.any(String), {
+						action: "draw",
+						mode: "circle",
+					});
 				});
 			});
 		});
@@ -357,6 +361,10 @@ describe("TerraDrawCircleMode", () => {
 			expect(onChange).toBeCalledTimes(1);
 			expect(onChange).toBeCalledWith([expect.any(String)], "create");
 			expect(onFinish).toBeCalledTimes(1);
+			expect(onFinish).toHaveBeenNthCalledWith(1, expect.any(String), {
+				action: "draw",
+				mode: "circle",
+			});
 		});
 	});
 

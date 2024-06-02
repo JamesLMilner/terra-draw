@@ -503,6 +503,10 @@ describe("TerraDrawGreatCircleMode", () => {
 				});
 
 				expect(onFinish).toBeCalledTimes(1);
+				expect(onFinish).toHaveBeenNthCalledWith(1, expect.any(String), {
+					action: "draw",
+					mode: "greatcircle",
+				});
 			});
 
 			it("does not finish great circle when finish is set to null", () => {

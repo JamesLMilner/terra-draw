@@ -182,7 +182,11 @@ describe("TerraDrawRectangleMode", () => {
 
 				expect(onChange).toBeCalledTimes(2);
 				expect(onChange).toBeCalledWith([expect.any(String)], "create");
-				expect(onFinish).toBeCalledTimes(1);
+				expect(onFinish).toHaveBeenCalledTimes(1);
+				expect(onFinish).toHaveBeenNthCalledWith(1, expect.any(String), {
+					action: "draw",
+					mode: "rectangle",
+				});
 			});
 		});
 	});

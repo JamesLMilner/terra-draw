@@ -2868,7 +2868,10 @@ describe("TerraDrawSelectMode", () => {
 			);
 
 			expect(onFinish).toBeCalledTimes(1);
-			expect(onFinish).toBeCalledWith(expect.any(String));
+			expect(onFinish).toBeCalledWith(expect.any(String), {
+				action: "dragCoordinate",
+				mode: "select",
+			});
 		});
 
 		it("fires onFinish for dragged feature if it is currently being dragged", () => {
@@ -2988,7 +2991,10 @@ describe("TerraDrawSelectMode", () => {
 			);
 
 			expect(onFinish).toBeCalledTimes(1);
-			expect(onFinish).toBeCalledWith(expect.any(String));
+			expect(onFinish).toBeCalledWith(expect.any(String), {
+				action: "dragFeature",
+				mode: "select",
+			});
 		});
 
 		it("fires onFinish for resizeable if it is currently being dragged", () => {
@@ -3108,7 +3114,10 @@ describe("TerraDrawSelectMode", () => {
 			);
 
 			expect(onFinish).toBeCalledTimes(1);
-			expect(onFinish).toBeCalledWith(expect.any(String));
+			expect(onFinish).toBeCalledWith(expect.any(String), {
+				action: "dragCoordinateResize",
+				mode: "select",
+			});
 		});
 	});
 

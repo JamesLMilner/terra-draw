@@ -129,7 +129,7 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 		}
 
 		// Ensure that any listerers are triggered with the main created geometry
-		this.onFinish(finishedId);
+		this.onFinish(finishedId, { mode: this.mode, action: "draw" });
 	}
 
 	/** @internal */

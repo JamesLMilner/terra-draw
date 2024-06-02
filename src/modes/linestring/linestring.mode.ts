@@ -95,7 +95,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 					: defaultKeyEvents;
 		}
 
-		this.validate = options?.validate;
+		this.validate = options?.validation;
 	}
 
 	private close() {

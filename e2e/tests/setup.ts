@@ -4,15 +4,21 @@ export const pageUrl = "http://localhost:3000/";
 
 export const setupMap = async ({
 	page,
+	configQueryParam,
 }: {
 	page: Page;
+	configQueryParam?: "validationSuccess" | "validationFailure";
 }): Promise<{
 	x: number;
 	y: number;
 	width: number;
 	height: number;
 }> => {
-	await page.goto(pageUrl);
+	if (configQueryParam) {
+		await page.goto(pageUrl + "?config=" + configQueryParam);
+	} else {
+		await page.goto(pageUrl);
+	}
 
 	const mapDiv = await page.getByRole("application");
 
@@ -108,6 +114,7 @@ export const expectGroupPosition = async ({
 export const drawRectangularPolygon = async ({
 	mapDiv,
 	page,
+	size = "regular",
 }: {
 	mapDiv: {
 		x: number;
@@ -116,9 +123,10 @@ export const drawRectangularPolygon = async ({
 		height: number;
 	};
 	page: Page;
+	size?: "regular" | "small";
 }) => {
 	// Draw a rectangle
-	const sideLength = 100;
+	const sideLength = size === "regular" ? 100 : 70;
 	const halfLength = sideLength / 2;
 	const centerX = mapDiv.width / 2;
 	const centerY = mapDiv.height / 2;

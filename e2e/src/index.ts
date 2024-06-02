@@ -11,6 +11,7 @@ import {
 	TerraDrawRectangleMode,
 	TerraDrawRenderMode,
 	TerraDrawSelectMode,
+	ValidateMaxAreaSquareMeters,
 } from "../../src/terra-draw";
 
 const example = {
@@ -18,6 +19,12 @@ const example = {
 	lat: 51.509865,
 	zoom: 12,
 	initialised: [],
+	config: null as string | null,
+	initPageConfig() {
+		const urlParams = new URLSearchParams(window.location.search);
+		console.log(urlParams);
+		this.config = urlParams.get("config");
+	},
 	initLeaflet() {
 		const { lng, lat, zoom } = this;
 
@@ -37,6 +44,8 @@ const example = {
 	},
 
 	initDraw(map: L.Map) {
+		console.log(this.config);
+
 		const draw = new TerraDraw({
 			adapter: new TerraDrawLeafletAdapter({
 				lib: L,
@@ -52,6 +61,18 @@ const example = {
 						},
 						polygon: {
 							feature: {
+								validation:
+									this.config === "validationSuccess" ||
+									this.config === "validationFailure"
+										? (feature) => {
+												return ValidateMaxAreaSquareMeters(
+													feature,
+													this.config === "validationFailure"
+														? 1000000
+														: 2000000,
+												);
+										  }
+										: undefined,
 								draggable: true,
 								rotateable: true,
 								scaleable: true,
@@ -103,7 +124,18 @@ const example = {
 				new TerraDrawPointMode(),
 				new TerraDrawLineStringMode(),
 				new TerraDrawGreatCircleMode(),
-				new TerraDrawPolygonMode(),
+				new TerraDrawPolygonMode({
+					validation:
+						this.config === "validationSuccess" ||
+						this.config === "validationFailure"
+							? (feature) => {
+									return ValidateMaxAreaSquareMeters(
+										feature,
+										this.config === "validationFailure" ? 1000000 : 2000000,
+									);
+							  }
+							: undefined,
+				}),
 				new TerraDrawRectangleMode(),
 				new TerraDrawCircleMode(),
 				new TerraDrawFreehandMode(),
@@ -120,10 +152,13 @@ const example = {
 
 		draw.start();
 
-		const currentSelected: {
-			mode: undefined | string;
-			button: HTMLButtonElement | undefined;
-		} = { mode: undefined, button: undefined };
+		return draw;
+	},
+	initControls(draw: TerraDraw) {
+		const currentSelected = { mode: "static", button: undefined } as {
+			mode: string;
+			button: undefined | HTMLButtonElement;
+		};
 
 		[
 			"select",
@@ -160,5 +195,7 @@ const example = {
 	},
 };
 
+example.initPageConfig();
 const map = example.initLeaflet();
-example.initDraw(map);
+const draw = example.initDraw(map);
+example.initControls(draw);

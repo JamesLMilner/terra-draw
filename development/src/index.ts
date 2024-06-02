@@ -156,14 +156,14 @@ const getModes = () => {
 		new TerraDrawPointMode(),
 		new TerraDrawLineStringMode({
 			snapping: true,
-			validate: (feature) => {
+			validation: (feature) => {
 				return ValidateNotSelfIntersecting(feature);
 			},
 		}),
 		new TerraDrawGreatCircleMode({ snapping: true }),
 		new TerraDrawPolygonMode({
 			snapping: true,
-			validate: (feature, { updateType }) => {
+			validation: (feature, { updateType }) => {
 				if (updateType === "finish" || updateType === "commit") {
 					return ValidateNotSelfIntersecting(feature);
 				}
@@ -171,7 +171,7 @@ const getModes = () => {
 			},
 		}),
 		new TerraDrawRectangleMode({
-			validate: (feature) => {
+			validation: (feature) => {
 				console.log(feature);
 				return true;
 			},

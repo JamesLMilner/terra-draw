@@ -835,7 +835,7 @@ describe("TerraDrawPolygonMode", () => {
 		describe("validate", () => {
 			it("does not create a polygon if it has intersections and there is a validation that returns false", () => {
 				polygonMode = new TerraDrawPolygonMode({
-					validate: (feature, { updateType }) => {
+					validation: (feature, { updateType }) => {
 						if (updateType === "finish" || updateType === "commit") {
 							return ValidateNotSelfIntersecting(feature);
 						}
@@ -943,7 +943,7 @@ describe("TerraDrawPolygonMode", () => {
 
 			it("does create a polygon if it does not have intersections and there is a validation that returns true", () => {
 				polygonMode = new TerraDrawPolygonMode({
-					validate: (feature, { updateType }) => {
+					validation: (feature, { updateType }) => {
 						if (updateType === "finish" || updateType === "commit") {
 							return ValidateNotSelfIntersecting(feature);
 						}
@@ -1620,7 +1620,7 @@ describe("validateFeature", () => {
 
 	it("returns false for valid polygon feature but validate function returns false", () => {
 		const polygonMode = new TerraDrawPolygonMode({
-			validate: () => false,
+			validation: () => false,
 		});
 		polygonMode.register(getMockModeConfig("polygon"));
 

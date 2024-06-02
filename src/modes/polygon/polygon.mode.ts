@@ -372,10 +372,6 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 				return;
 			}
 
-			if (this.currentCoordinate === 2) {
-				this.closingPoints.create(currentPolygonCoordinates, "polygon");
-			}
-
 			const updated = this.updatePolygonGeometry(
 				[
 					currentPolygonCoordinates[0],
@@ -389,6 +385,10 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 
 			if (!updated) {
 				return;
+			}
+
+			if (this.currentCoordinate === 2) {
+				this.closingPoints.create(currentPolygonCoordinates, "polygon");
 			}
 
 			this.currentCoordinate++;

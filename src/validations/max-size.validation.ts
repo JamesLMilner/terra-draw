@@ -9,5 +9,6 @@ export const ValidateMaxAreaSquareMeters = (
 		return false;
 	}
 
-	return polygonAreaSquareMeters(feature.geometry) < minSize;
+	const size = polygonAreaSquareMeters(feature.geometry);
+	return size < minSize;
 };

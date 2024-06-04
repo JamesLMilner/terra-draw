@@ -2,6 +2,30 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.1-alpha.68](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.67...v0.0.1-alpha.68) (2024-06-04)
+
+
+### Features
+
+* add validate to all built in modes ([#257](https://github.com/JamesLMilner/terra-draw/issues/257)) ([22006ea](https://github.com/JamesLMilner/terra-draw/commit/22006ea79634e9233b9f8e7d3df79d9e24ca3bf0))
+* context object for onFinish to allow more control for developers ([#261](https://github.com/JamesLMilner/terra-draw/issues/261)) ([b760255](https://github.com/JamesLMilner/terra-draw/commit/b760255f73bce94e8e799ebc3ae822df93fc709c))
+
+
+### Documentation
+
+* add closingPoint styling properties to Polygon drawing mode table in 5.STYLING.md ([#254](https://github.com/JamesLMilner/terra-draw/issues/254)) ([fffe296](https://github.com/JamesLMilner/terra-draw/commit/fffe29665e4538ac2b9bb94e5e54e26ce953270d))
+
+
+### Tests
+
+* improve the testing around mode validation ([#258](https://github.com/JamesLMilner/terra-draw/issues/258)) ([0420eaf](https://github.com/JamesLMilner/terra-draw/commit/0420eaf2ee7e970e3f2f92c80f254440c881bd01))
+
+
+### Chore
+
+* actively exclude folders from tsc to keep IDEs happy ([#252](https://github.com/JamesLMilner/terra-draw/issues/252)) ([c85acec](https://github.com/JamesLMilner/terra-draw/commit/c85acecd74e9e6352905288e699d5ef7530d4510))
+* remove all carats from package.json file ([#260](https://github.com/JamesLMilner/terra-draw/issues/260)) ([e95fc6c](https://github.com/JamesLMilner/terra-draw/commit/e95fc6cbde3a4e43bc5850f4928b4f98929f2741))
+
 ### [0.0.1-alpha.67](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.66...v0.0.1-alpha.67) (2024-05-16)
 
 

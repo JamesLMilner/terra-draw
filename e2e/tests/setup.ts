@@ -2,12 +2,18 @@ import { Page, expect } from "@playwright/test";
 
 export const pageUrl = "http://localhost:3000/";
 
+export type TestConfigOptions =
+	| "validationSuccess"
+	| "validationFailure"
+	| "insertCoordinates"
+	| "insertCoordinatesGlobe";
+
 export const setupMap = async ({
 	page,
 	configQueryParam,
 }: {
 	page: Page;
-	configQueryParam?: "validationSuccess" | "validationFailure";
+	configQueryParam?: TestConfigOptions;
 }): Promise<{
 	x: number;
 	y: number;
@@ -37,14 +43,7 @@ export const changeMode = async ({
 	mode,
 }: {
 	page: Page;
-	mode:
-		| "point"
-		| "polygon"
-		| "linestring"
-		| "select"
-		| "rectangle"
-		| "circle"
-		| "greatcircle";
+	mode: "point" | "polygon" | "linestring" | "select" | "rectangle" | "circle";
 }) => {
 	const modeText = mode.charAt(0).toUpperCase() + mode.slice(1);
 	const buttons = page.getByTestId("buttons");

@@ -63,6 +63,7 @@ export class SnappingBehavior extends TerraDrawModeBehavior {
 				const dist = this.pixelDistance.measure(event, coord);
 				if (dist < closest.minDist && dist < this.pointerDistance) {
 					closest.coord = coord;
+					closest.minDist = dist;
 				}
 			});
 		});

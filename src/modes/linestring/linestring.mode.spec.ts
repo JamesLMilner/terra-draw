@@ -427,7 +427,7 @@ describe("TerraDrawLineStringMode", () => {
 
 				// Update geometry is NOT called because
 				// there is a self intersection
-				expect(onChange).toBeCalledTimes(8);
+				expect(onChange).toBeCalledTimes(7);
 			});
 
 			it("does create a line if no intersections and validate returns true", () => {

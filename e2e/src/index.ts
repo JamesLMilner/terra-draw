@@ -3,7 +3,6 @@ import {
 	TerraDraw,
 	TerraDrawCircleMode,
 	TerraDrawFreehandMode,
-	TerraDrawGreatCircleMode,
 	TerraDrawLeafletAdapter,
 	TerraDrawLineStringMode,
 	TerraDrawPointMode,
@@ -122,8 +121,24 @@ const example = {
 					},
 				}),
 				new TerraDrawPointMode(),
-				new TerraDrawLineStringMode(),
-				new TerraDrawGreatCircleMode(),
+				new TerraDrawLineStringMode(
+					this.config === "insertCoordinates"
+						? {
+								insertCoordinates: {
+									strategy: "amount",
+									value: 10,
+								},
+						  }
+						: this.config === "insertCoordinatesGlobe"
+						? {
+								projection: "globe",
+								insertCoordinates: {
+									strategy: "amount",
+									value: 10,
+								},
+						  }
+						: undefined,
+				),
 				new TerraDrawPolygonMode({
 					validation:
 						this.config === "validationSuccess" ||
@@ -160,31 +175,25 @@ const example = {
 			button: undefined | HTMLButtonElement;
 		};
 
-		[
-			"select",
-			"point",
-			"linestring",
-			"polygon",
-			"rectangle",
-			"circle",
-			"greatcircle",
-		].forEach((mode) => {
-			(document.getElementById(mode) as HTMLButtonElement).addEventListener(
-				"click",
-				() => {
-					currentSelected.mode = mode;
-					draw.setMode(currentSelected.mode);
+		["select", "point", "linestring", "polygon", "rectangle", "circle"].forEach(
+			(mode) => {
+				(document.getElementById(mode) as HTMLButtonElement).addEventListener(
+					"click",
+					() => {
+						currentSelected.mode = mode;
+						draw.setMode(currentSelected.mode);
 
-					if (currentSelected.button) {
-						currentSelected.button.style.color = "565656";
-					}
-					currentSelected.button = document.getElementById(
-						mode,
-					) as HTMLButtonElement;
-					currentSelected.button.style.color = "#27ccff";
-				},
-			);
-		});
+						if (currentSelected.button) {
+							currentSelected.button.style.color = "565656";
+						}
+						currentSelected.button = document.getElementById(
+							mode,
+						) as HTMLButtonElement;
+						currentSelected.button.style.color = "#27ccff";
+					},
+				);
+			},
+		);
 
 		(document.getElementById("clear") as HTMLButtonElement).addEventListener(
 			"click",

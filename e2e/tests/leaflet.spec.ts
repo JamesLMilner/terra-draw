@@ -8,6 +8,7 @@ import {
 	expectPaths,
 	pageUrl,
 	setupMap,
+	TestConfigOptions,
 } from "./setup";
 
 test.describe("page setup", () => {
@@ -77,55 +78,120 @@ test.describe("point mode", () => {
 test.describe("linestring mode", () => {
 	const mode = "linestring";
 
-	test("mode can set and can be used to create a linestring", async ({
-		page,
-	}) => {
-		const mapDiv = await setupMap({ page });
-		await changeMode({ page, mode });
+	const options = [
+		{ name: "", config: undefined },
+		{
+			name: " with insert coordinates for web mercator projection",
+			config: "insertCoordinates",
+		},
+		{
+			name: " with insert coordinates for globe projection",
+			config: "insertCoordinatesGlobe",
+		},
+	] as { name: string; config: TestConfigOptions }[];
 
-		await page.mouse.move(mapDiv.width / 2, mapDiv.height / 2);
-		await page.mouse.click(mapDiv.width / 2, mapDiv.height / 2);
-		await page.mouse.move(mapDiv.width / 3, mapDiv.height / 3);
-		await page.mouse.click(mapDiv.width / 3, mapDiv.height / 3);
+	for (const { name, config } of options) {
+		test(`mode can set and can be used to create a linestring${name}`, async ({
+			page,
+		}) => {
+			const mapDiv = await setupMap({ page, configQueryParam: config });
+			await changeMode({ page, mode });
 
-		await page.mouse.click(mapDiv.width / 3, mapDiv.height / 3);
+			await page.mouse.move(mapDiv.width / 2, mapDiv.height / 2);
+			await page.mouse.click(mapDiv.width / 2, mapDiv.height / 2);
+			await page.mouse.move(mapDiv.width / 3, mapDiv.height / 3);
+			await page.mouse.click(mapDiv.width / 3, mapDiv.height / 3);
 
-		await expectPaths({ page, count: 1 });
-	});
+			// Close
+			await page.mouse.click(mapDiv.width / 3, mapDiv.height / 3);
 
-	test("mode can set and can be used to create multiple linestrings", async ({
-		page,
-	}) => {
-		const mapDiv = await setupMap({ page });
-		await changeMode({ page, mode });
+			await expectPaths({ page, count: 1 });
+		});
 
-		// First line
-		await page.mouse.move(mapDiv.width / 2, mapDiv.height / 2);
-		await page.mouse.click(mapDiv.width / 2, mapDiv.height / 2);
-		await page.mouse.move(mapDiv.width / 3, mapDiv.height / 3);
-		await page.mouse.click(mapDiv.width / 3, mapDiv.height / 3);
+		test(`mode can set and can be used to create a linestring with multiple points${name}`, async ({
+			page,
+		}) => {
+			const mapDiv = await setupMap({ page, configQueryParam: config });
+			await changeMode({ page, mode });
 
-		// One point + one line
-		await expectPaths({ page, count: 2 });
+			await page.mouse.move(mapDiv.width / 2, mapDiv.height / 2);
+			await page.mouse.click(mapDiv.width / 2, mapDiv.height / 2);
+			await page.mouse.move(mapDiv.width / 3, mapDiv.height / 3);
+			await page.mouse.click(mapDiv.width / 3, mapDiv.height / 3);
 
-		// Close first line
-		await page.mouse.click(mapDiv.width / 3, mapDiv.height / 3);
+			// Draw coordinate 2
+			await page.mouse.move(mapDiv.width / 3, mapDiv.height / 2);
+			await page.mouse.click(mapDiv.width / 3, mapDiv.height / 2);
 
-		// One line
-		await expectPaths({ page, count: 1 });
+			// Draw coordinate 3
+			await page.mouse.move(mapDiv.width / 2, mapDiv.height / 3);
+			await page.mouse.click(mapDiv.width / 2, mapDiv.height / 3);
 
-		// Second line
-		await page.mouse.move(mapDiv.width / 4, mapDiv.height / 4);
-		await page.mouse.click(mapDiv.width / 4, mapDiv.height / 4);
-		await page.mouse.move(mapDiv.width / 5, mapDiv.height / 5);
-		await page.mouse.click(mapDiv.width / 5, mapDiv.height / 5);
+			// Close
+			await page.mouse.click(mapDiv.width / 2, mapDiv.height / 3);
 
-		// Close second line
-		await page.mouse.click(mapDiv.width / 5, mapDiv.height / 5);
+			await expectPaths({ page, count: 1 });
+		});
 
-		// Two lines
-		await expectPaths({ page, count: 2 });
-	});
+		test(`mode can set and can be used to create a linestring with multiple clicked points${name}`, async ({
+			page,
+		}) => {
+			const mapDiv = await setupMap({ page, configQueryParam: config });
+			await changeMode({ page, mode });
+
+			await page.mouse.move(mapDiv.width / 2, mapDiv.height / 2);
+			await page.mouse.click(mapDiv.width / 2, mapDiv.height / 2);
+			await page.mouse.move(mapDiv.width / 3, mapDiv.height / 3);
+			await page.mouse.click(mapDiv.width / 3, mapDiv.height / 3);
+
+			// Draw coordinate 2
+			await page.mouse.move(mapDiv.width / 3, mapDiv.height / 2);
+			await page.mouse.click(mapDiv.width / 3, mapDiv.height / 2);
+
+			// Draw coordinate 3
+			await page.mouse.move(mapDiv.width / 2, mapDiv.height / 3);
+			await page.mouse.click(mapDiv.width / 2, mapDiv.height / 3);
+
+			// Close
+			await page.mouse.click(mapDiv.width / 2, mapDiv.height / 3);
+
+			await expectPaths({ page, count: 1 });
+		});
+
+		test(`mode can set and can be used to create multiple linestrings${name}`, async ({
+			page,
+		}) => {
+			const mapDiv = await setupMap({ page, configQueryParam: config });
+			await changeMode({ page, mode });
+
+			// First line
+			await page.mouse.move(mapDiv.width / 2, mapDiv.height / 2);
+			await page.mouse.click(mapDiv.width / 2, mapDiv.height / 2);
+			await page.mouse.move(mapDiv.width / 3, mapDiv.height / 3);
+			await page.mouse.click(mapDiv.width / 3, mapDiv.height / 3);
+
+			// One point + one line
+			await expectPaths({ page, count: 2 });
+
+			// Close first line
+			await page.mouse.click(mapDiv.width / 3, mapDiv.height / 3);
+
+			// One line
+			await expectPaths({ page, count: 1 });
+
+			// Second line
+			await page.mouse.move(mapDiv.width / 4, mapDiv.height / 4);
+			await page.mouse.click(mapDiv.width / 4, mapDiv.height / 4);
+			await page.mouse.move(mapDiv.width / 5, mapDiv.height / 5);
+			await page.mouse.click(mapDiv.width / 5, mapDiv.height / 5);
+
+			// Close second line
+			await page.mouse.click(mapDiv.width / 5, mapDiv.height / 5);
+
+			// Two lines
+			await expectPaths({ page, count: 2 });
+		});
+	}
 });
 
 test.describe("polygon mode", () => {
@@ -276,23 +342,6 @@ test.describe("circle mode", () => {
 		await expectPaths({ page, count: 1 });
 
 		await expectPathDimensions({ page, width: 146, height: 146 });
-	});
-});
-
-test.describe("greatcircle mode", () => {
-	const mode = "greatcircle";
-
-	test("mode can set and can be used to create a greatcircle", async ({
-		page,
-	}) => {
-		const mapDiv = await setupMap({ page });
-		await changeMode({ page, mode });
-
-		await page.mouse.click(mapDiv.width / 2, mapDiv.height / 2);
-		await page.mouse.click(mapDiv.width / 2 + 50, mapDiv.height / 2 + 50);
-
-		// One point + one line
-		await expectPaths({ page, count: 1 });
 	});
 });
 

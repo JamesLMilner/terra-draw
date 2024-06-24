@@ -3,7 +3,7 @@ import { haversineDistanceKilometers } from "./haversine-distance";
 describe("Geometry", () => {
 	describe("haversineDistance", () => {
 		it("distance between two identical points is zero", () => {
-			expect(haversineDistanceKilometers([0, 0], [0, 0]));
+			expect(haversineDistanceKilometers([0, 0], [0, 0])).toBe(0);
 		});
 
 		it("measures distance between two points", () => {

@@ -231,9 +231,9 @@ describe("TerraDrawSelectMode", () => {
 					heldKeys: [],
 				});
 
-				expect(onChange).not.toBeCalled();
-				expect(onDeselect).not.toBeCalled();
-				expect(onSelect).not.toBeCalled();
+				expect(onChange).not.toHaveBeenCalled();
+				expect(onDeselect).not.toHaveBeenCalled();
+				expect(onSelect).not.toHaveBeenCalled();
 			});
 
 			describe("point", () => {
@@ -260,7 +260,7 @@ describe("TerraDrawSelectMode", () => {
 						heldKeys: [],
 					});
 
-					expect(onSelect).toBeCalledTimes(1);
+					expect(onSelect).toHaveBeenCalledTimes(1);
 				});
 
 				it("does not select if feature is not clicked", () => {
@@ -286,7 +286,7 @@ describe("TerraDrawSelectMode", () => {
 						heldKeys: [],
 					});
 
-					expect(onSelect).toBeCalledTimes(0);
+					expect(onSelect).toHaveBeenCalledTimes(0);
 				});
 
 				it("does not select if selectable flag is false", () => {
@@ -314,7 +314,7 @@ describe("TerraDrawSelectMode", () => {
 						heldKeys: [],
 					});
 
-					expect(onSelect).toBeCalledTimes(0);
+					expect(onSelect).toHaveBeenCalledTimes(0);
 				});
 
 				it("deselects selected when click is not on same or different feature", () => {
@@ -341,7 +341,7 @@ describe("TerraDrawSelectMode", () => {
 						heldKeys: [],
 					});
 
-					expect(onSelect).toBeCalledTimes(1);
+					expect(onSelect).toHaveBeenCalledTimes(1);
 
 					mockMouseEventBoundingBox();
 
@@ -354,8 +354,8 @@ describe("TerraDrawSelectMode", () => {
 						heldKeys: [],
 					});
 
-					expect(onSelect).toBeCalledTimes(1);
-					expect(onDeselect).toBeCalledTimes(1);
+					expect(onSelect).toHaveBeenCalledTimes(1);
+					expect(onDeselect).toHaveBeenCalledTimes(1);
 				});
 			});
 
@@ -392,7 +392,7 @@ describe("TerraDrawSelectMode", () => {
 						heldKeys: [],
 					});
 
-					expect(onSelect).toBeCalledTimes(1);
+					expect(onSelect).toHaveBeenCalledTimes(1);
 				});
 
 				it("does not select if feature is not clicked", () => {
@@ -427,7 +427,7 @@ describe("TerraDrawSelectMode", () => {
 						heldKeys: [],
 					});
 
-					expect(onSelect).toBeCalledTimes(0);
+					expect(onSelect).toHaveBeenCalledTimes(0);
 				});
 			});
 
@@ -458,7 +458,7 @@ describe("TerraDrawSelectMode", () => {
 						heldKeys: [],
 					});
 
-					expect(onSelect).toBeCalledTimes(1);
+					expect(onSelect).toHaveBeenCalledTimes(1);
 				});
 
 				it("does deselect if feature is clicked then map area is clicked and allowManualDeselection is true", () => {
@@ -494,9 +494,9 @@ describe("TerraDrawSelectMode", () => {
 						heldKeys: [],
 					});
 
-					expect(onSelect).toBeCalledTimes(1);
+					expect(onSelect).toHaveBeenCalledTimes(1);
 
-					expect(onDeselect).toBeCalledTimes(0);
+					expect(onDeselect).toHaveBeenCalledTimes(0);
 
 					mockMouseEventBoundingBox([
 						[0, 0],
@@ -514,8 +514,8 @@ describe("TerraDrawSelectMode", () => {
 						heldKeys: [],
 					});
 
-					expect(onSelect).toBeCalledTimes(1);
-					expect(onDeselect).toBeCalledTimes(1);
+					expect(onSelect).toHaveBeenCalledTimes(1);
+					expect(onDeselect).toHaveBeenCalledTimes(1);
 				});
 
 				it("does not deselect if feature is clicked then map area is clicked but allowManualDeselection is false", () => {
@@ -551,9 +551,9 @@ describe("TerraDrawSelectMode", () => {
 						heldKeys: [],
 					});
 
-					expect(onSelect).toBeCalledTimes(1);
+					expect(onSelect).toHaveBeenCalledTimes(1);
 
-					expect(onDeselect).toBeCalledTimes(0);
+					expect(onDeselect).toHaveBeenCalledTimes(0);
 
 					mockMouseEventBoundingBox([
 						[0, 0],
@@ -571,8 +571,8 @@ describe("TerraDrawSelectMode", () => {
 						heldKeys: [],
 					});
 
-					expect(onSelect).toBeCalledTimes(1);
-					expect(onDeselect).toBeCalledTimes(0);
+					expect(onSelect).toHaveBeenCalledTimes(1);
+					expect(onDeselect).toHaveBeenCalledTimes(0);
 				});
 
 				it("does not select if feature is not clicked", () => {
@@ -601,7 +601,7 @@ describe("TerraDrawSelectMode", () => {
 						heldKeys: [],
 					});
 
-					expect(onSelect).toBeCalledTimes(0);
+					expect(onSelect).toHaveBeenCalledTimes(0);
 				});
 
 				it("creates selection points when feature selection flag enabled", () => {
@@ -651,7 +651,7 @@ describe("TerraDrawSelectMode", () => {
 						heldKeys: [],
 					});
 
-					expect(onSelect).toBeCalledTimes(1);
+					expect(onSelect).toHaveBeenCalledTimes(1);
 					expect(onSelect).toHaveBeenNthCalledWith(1, idOne[0]);
 
 					// Polygon selected set to true
@@ -728,7 +728,7 @@ describe("TerraDrawSelectMode", () => {
 						heldKeys: [],
 					});
 
-					expect(onSelect).toBeCalledTimes(1);
+					expect(onSelect).toHaveBeenCalledTimes(1);
 					expect(onSelect).toHaveBeenNthCalledWith(1, idOne[0]);
 
 					// Polygon selected set to true
@@ -818,7 +818,7 @@ describe("TerraDrawSelectMode", () => {
 							heldKeys: [],
 						});
 
-						expect(onSelect).toBeCalledTimes(1);
+						expect(onSelect).toHaveBeenCalledTimes(1);
 						expect(onSelect).toHaveBeenNthCalledWith(1, idOne[0]);
 
 						// First polygon selected set to true
@@ -842,11 +842,11 @@ describe("TerraDrawSelectMode", () => {
 						});
 
 						// Second polygon selected
-						expect(onSelect).toBeCalledTimes(2);
+						expect(onSelect).toHaveBeenCalledTimes(2);
 						expect(onSelect).toHaveBeenNthCalledWith(2, idTwo[0]);
 
 						// Deselect first polygon
-						expect(onDeselect).toBeCalledTimes(1);
+						expect(onDeselect).toHaveBeenCalledTimes(1);
 						expect(onDeselect).toHaveBeenNthCalledWith(1, idOne[0]);
 
 						// First polygon selected set to false
@@ -917,7 +917,7 @@ describe("TerraDrawSelectMode", () => {
 							heldKeys: [],
 						});
 
-						expect(onSelect).toBeCalledTimes(1);
+						expect(onSelect).toHaveBeenCalledTimes(1);
 						expect(onSelect).toHaveBeenNthCalledWith(1, idOne[0]);
 
 						// First polygon selected set to true
@@ -955,11 +955,11 @@ describe("TerraDrawSelectMode", () => {
 						});
 
 						// Second polygon selected
-						expect(onSelect).toBeCalledTimes(2);
+						expect(onSelect).toHaveBeenCalledTimes(2);
 						expect(onSelect).toHaveBeenNthCalledWith(2, idTwo[0]);
 
 						// Deselect first polygon selected set to false
-						expect(onDeselect).toBeCalledTimes(1);
+						expect(onDeselect).toHaveBeenCalledTimes(1);
 						expect(onDeselect).toHaveBeenNthCalledWith(1, idOne[0]);
 
 						expect(onChange).toHaveBeenNthCalledWith(5, idOne, "update");
@@ -1052,7 +1052,7 @@ describe("TerraDrawSelectMode", () => {
 							heldKeys: [],
 						});
 
-						expect(onSelect).toBeCalledTimes(1);
+						expect(onSelect).toHaveBeenCalledTimes(1);
 						expect(onSelect).toHaveBeenNthCalledWith(1, idOne[0]);
 
 						// First polygon selected set to true
@@ -1121,11 +1121,11 @@ describe("TerraDrawSelectMode", () => {
 						});
 
 						// Second polygon selected
-						expect(onSelect).toBeCalledTimes(2);
+						expect(onSelect).toHaveBeenCalledTimes(2);
 						expect(onSelect).toHaveBeenNthCalledWith(2, idTwo[0]);
 
 						// Deselect first polygon selected set to false
-						expect(onDeselect).toBeCalledTimes(1);
+						expect(onDeselect).toHaveBeenCalledTimes(1);
 						expect(onDeselect).toHaveBeenNthCalledWith(1, idOne[0]);
 
 						expect(onChange).toHaveBeenNthCalledWith(6, idOne, "update");
@@ -1175,9 +1175,9 @@ describe("TerraDrawSelectMode", () => {
 					heldKeys: [],
 				});
 
-				expect(onChange).not.toBeCalled();
-				expect(onDeselect).not.toBeCalled();
-				expect(onSelect).not.toBeCalled();
+				expect(onChange).not.toHaveBeenCalled();
+				expect(onDeselect).not.toHaveBeenCalled();
+				expect(onSelect).not.toHaveBeenCalled();
 			});
 
 			it("returns if different feature than selected is clicked on", () => {
@@ -1235,7 +1235,7 @@ describe("TerraDrawSelectMode", () => {
 					heldKeys: [],
 				});
 
-				expect(onSelect).toBeCalledTimes(1);
+				expect(onSelect).toHaveBeenCalledTimes(1);
 				expect(onSelect).toHaveBeenNthCalledWith(1, idOne[0]);
 
 				// First polygon selected set to true
@@ -1269,9 +1269,9 @@ describe("TerraDrawSelectMode", () => {
 					heldKeys: [],
 				});
 
-				expect(store.getGeometryCopy).toBeCalledTimes(4);
-				expect(onDeselect).toBeCalledTimes(0);
-				expect(store.getPropertiesCopy).toBeCalledTimes(0);
+				expect(store.getGeometryCopy).toHaveBeenCalledTimes(4);
+				expect(onDeselect).toHaveBeenCalledTimes(0);
+				expect(store.getPropertiesCopy).toHaveBeenCalledTimes(0);
 			});
 
 			it("returns if selected feature is clicked on but deleteable is false", () => {
@@ -1317,7 +1317,7 @@ describe("TerraDrawSelectMode", () => {
 					heldKeys: [],
 				});
 
-				expect(onSelect).toBeCalledTimes(1);
+				expect(onSelect).toHaveBeenCalledTimes(1);
 				expect(onSelect).toHaveBeenNthCalledWith(1, idOne[0]);
 
 				// First polygon selected set to true
@@ -1346,7 +1346,7 @@ describe("TerraDrawSelectMode", () => {
 
 				// Only called for checking distance to selection points,
 				// should hit early return otherwise
-				expect(store.getGeometryCopy).toBeCalledTimes(4);
+				expect(store.getGeometryCopy).toHaveBeenCalledTimes(4);
 			});
 
 			it("returns if selected feature is clicked on but deleteable is false", () => {
@@ -1392,7 +1392,7 @@ describe("TerraDrawSelectMode", () => {
 					heldKeys: [],
 				});
 
-				expect(onSelect).toBeCalledTimes(1);
+				expect(onSelect).toHaveBeenCalledTimes(1);
 				expect(onSelect).toHaveBeenNthCalledWith(1, idOne[0]);
 
 				// First polygon selected set to true
@@ -1421,7 +1421,7 @@ describe("TerraDrawSelectMode", () => {
 
 				// Only called for checking distance to selection points,
 				// should hit early return otherwise
-				expect(store.getGeometryCopy).toBeCalledTimes(4);
+				expect(store.getGeometryCopy).toHaveBeenCalledTimes(4);
 			});
 
 			it("returns early if creates a invalid polygon by deleting coordinate", () => {
@@ -1466,7 +1466,7 @@ describe("TerraDrawSelectMode", () => {
 					heldKeys: [],
 				});
 
-				expect(onSelect).toBeCalledTimes(1);
+				expect(onSelect).toHaveBeenCalledTimes(1);
 				expect(onSelect).toHaveBeenNthCalledWith(1, idOne[0]);
 
 				// First polygon selected set to true
@@ -1494,8 +1494,8 @@ describe("TerraDrawSelectMode", () => {
 					heldKeys: [],
 				});
 
-				expect(store.delete).toBeCalledTimes(0);
-				expect(store.updateGeometry).toBeCalledTimes(0);
+				expect(store.delete).toHaveBeenCalledTimes(0);
+				expect(store.updateGeometry).toHaveBeenCalledTimes(0);
 			});
 
 			it("deletes a coordinate in deleteable set to true and a coordinate is clicked on", () => {
@@ -1541,7 +1541,7 @@ describe("TerraDrawSelectMode", () => {
 					heldKeys: [],
 				});
 
-				expect(onSelect).toBeCalledTimes(1);
+				expect(onSelect).toHaveBeenCalledTimes(1);
 				expect(onSelect).toHaveBeenNthCalledWith(1, idOne[0]);
 
 				// First polygon selected set to true
@@ -1569,8 +1569,8 @@ describe("TerraDrawSelectMode", () => {
 					heldKeys: [],
 				});
 
-				expect(store.delete).toBeCalledTimes(1);
-				expect(store.updateGeometry).toBeCalledTimes(1);
+				expect(store.delete).toHaveBeenCalledTimes(1);
+				expect(store.updateGeometry).toHaveBeenCalledTimes(1);
 			});
 		});
 	});
@@ -1584,8 +1584,8 @@ describe("TerraDrawSelectMode", () => {
 					heldKeys: ["Delete"],
 				});
 
-				expect(onChange).not.toBeCalled();
-				expect(onDeselect).not.toBeCalled();
+				expect(onChange).not.toHaveBeenCalled();
+				expect(onDeselect).not.toHaveBeenCalled();
 			});
 
 			it("deletes when feature is selected", () => {
@@ -1608,14 +1608,14 @@ describe("TerraDrawSelectMode", () => {
 					heldKeys: [],
 				});
 
-				expect(onChange).toBeCalledTimes(2);
+				expect(onChange).toHaveBeenCalledTimes(2);
 				expect(onChange).toHaveBeenNthCalledWith(
 					2,
 					[expect.any(String)],
 					"update",
 				);
 
-				expect(onSelect).toBeCalledTimes(1);
+				expect(onSelect).toHaveBeenCalledTimes(1);
 
 				selectMode.onKeyUp({
 					key: "Delete",
@@ -1623,9 +1623,9 @@ describe("TerraDrawSelectMode", () => {
 					heldKeys: [],
 				});
 
-				expect(onDeselect).toBeCalledTimes(1);
+				expect(onDeselect).toHaveBeenCalledTimes(1);
 
-				expect(onChange).toBeCalledTimes(3);
+				expect(onChange).toHaveBeenCalledTimes(3);
 				expect(onChange).toHaveBeenNthCalledWith(
 					3,
 					[expect.any(String)],
@@ -1642,8 +1642,8 @@ describe("TerraDrawSelectMode", () => {
 					heldKeys: [],
 				});
 
-				expect(onChange).not.toBeCalled();
-				expect(onDeselect).not.toBeCalled();
+				expect(onChange).not.toHaveBeenCalled();
+				expect(onDeselect).not.toHaveBeenCalled();
 			});
 
 			it("does nothing with no features selected", () => {
@@ -1665,7 +1665,7 @@ describe("TerraDrawSelectMode", () => {
 					heldKeys: [],
 				});
 
-				expect(onSelect).toBeCalledTimes(1);
+				expect(onSelect).toHaveBeenCalledTimes(1);
 
 				selectMode.onKeyUp({
 					key: "Escape",
@@ -1673,8 +1673,8 @@ describe("TerraDrawSelectMode", () => {
 					heldKeys: [],
 				});
 
-				expect(onChange).toBeCalledTimes(3);
-				expect(onDeselect).toBeCalledTimes(1);
+				expect(onChange).toHaveBeenCalledTimes(3);
+				expect(onDeselect).toHaveBeenCalledTimes(1);
 			});
 		});
 	});
@@ -1693,10 +1693,10 @@ describe("TerraDrawSelectMode", () => {
 				jest.fn(),
 			);
 
-			expect(onChange).toBeCalledTimes(0);
-			expect(onDeselect).toBeCalledTimes(0);
-			expect(onSelect).toBeCalledTimes(0);
-			expect(project).toBeCalledTimes(0);
+			expect(onChange).toHaveBeenCalledTimes(0);
+			expect(onDeselect).toHaveBeenCalledTimes(0);
+			expect(onSelect).toHaveBeenCalledTimes(0);
+			expect(project).toHaveBeenCalledTimes(0);
 		});
 
 		it("does not trigger starting of drag events if mode not draggable", () => {
@@ -1720,9 +1720,9 @@ describe("TerraDrawSelectMode", () => {
 
 			// Pointer set to move when teh cursor is
 			expect(setCursor).toHaveBeenCalledTimes(1);
-			expect(setCursor).toBeCalledWith("move");
+			expect(setCursor).toHaveBeenCalledWith("move");
 
-			expect(onSelect).toBeCalledTimes(1);
+			expect(onSelect).toHaveBeenCalledTimes(1);
 
 			const setMapDraggability = jest.fn();
 			selectMode.onDragStart(
@@ -1737,7 +1737,7 @@ describe("TerraDrawSelectMode", () => {
 				setMapDraggability,
 			);
 
-			expect(setMapDraggability).not.toBeCalled();
+			expect(setMapDraggability).not.toHaveBeenCalled();
 		});
 
 		it("does trigger onDragStart events if mode is draggable", () => {
@@ -1780,7 +1780,7 @@ describe("TerraDrawSelectMode", () => {
 				heldKeys: [],
 			});
 
-			expect(onSelect).toBeCalledTimes(1);
+			expect(onSelect).toHaveBeenCalledTimes(1);
 
 			const setMapDraggability = jest.fn();
 			selectMode.onDragStart(
@@ -1794,8 +1794,8 @@ describe("TerraDrawSelectMode", () => {
 				},
 				setMapDraggability,
 			);
-			expect(setCursor).toBeCalled();
-			expect(setMapDraggability).toBeCalled();
+			expect(setCursor).toHaveBeenCalled();
+			expect(setMapDraggability).toHaveBeenCalled();
 		});
 	});
 
@@ -1814,10 +1814,10 @@ describe("TerraDrawSelectMode", () => {
 				setMapDraggability,
 			);
 
-			expect(onChange).toBeCalledTimes(0);
-			expect(onDeselect).toBeCalledTimes(0);
-			expect(onSelect).toBeCalledTimes(0);
-			expect(project).toBeCalledTimes(0);
+			expect(onChange).toHaveBeenCalledTimes(0);
+			expect(onDeselect).toHaveBeenCalledTimes(0);
+			expect(onSelect).toHaveBeenCalledTimes(0);
+			expect(project).toHaveBeenCalledTimes(0);
 		});
 
 		it("does not trigger drag events if mode not draggable", () => {
@@ -1838,8 +1838,8 @@ describe("TerraDrawSelectMode", () => {
 				heldKeys: [],
 			});
 
-			expect(onSelect).toBeCalledTimes(1);
-			expect(onChange).toBeCalledTimes(2);
+			expect(onSelect).toHaveBeenCalledTimes(1);
+			expect(onChange).toHaveBeenCalledTimes(2);
 
 			const setMapDraggability = jest.fn();
 			selectMode.onDrag(
@@ -1854,7 +1854,7 @@ describe("TerraDrawSelectMode", () => {
 				setMapDraggability,
 			);
 
-			expect(onChange).toBeCalledTimes(2);
+			expect(onChange).toHaveBeenCalledTimes(2);
 		});
 
 		describe("drag feature", () => {
@@ -1878,8 +1878,8 @@ describe("TerraDrawSelectMode", () => {
 						heldKeys: [],
 					});
 
-					expect(onSelect).toBeCalledTimes(1);
-					expect(onChange).toBeCalledTimes(2);
+					expect(onSelect).toHaveBeenCalledTimes(1);
+					expect(onChange).toHaveBeenCalledTimes(2);
 
 					const setMapDraggability = jest.fn();
 					selectMode.onDrag(
@@ -1894,7 +1894,7 @@ describe("TerraDrawSelectMode", () => {
 						setMapDraggability,
 					);
 
-					expect(onChange).toBeCalledTimes(2);
+					expect(onChange).toHaveBeenCalledTimes(2);
 				});
 
 				it("coordinate draggable flag has no effect for points", () => {
@@ -1927,8 +1927,8 @@ describe("TerraDrawSelectMode", () => {
 						heldKeys: [],
 					});
 
-					expect(onSelect).toBeCalledTimes(1);
-					expect(onChange).toBeCalledTimes(2);
+					expect(onSelect).toHaveBeenCalledTimes(1);
+					expect(onChange).toHaveBeenCalledTimes(2);
 
 					const setMapDraggability = jest.fn();
 					selectMode.onDrag(
@@ -1943,7 +1943,7 @@ describe("TerraDrawSelectMode", () => {
 						setMapDraggability,
 					);
 
-					expect(onChange).toBeCalledTimes(2);
+					expect(onChange).toHaveBeenCalledTimes(2);
 				});
 
 				it("does trigger drag events if mode is draggable for point", () => {
@@ -1970,8 +1970,8 @@ describe("TerraDrawSelectMode", () => {
 						heldKeys: [],
 					});
 
-					expect(onSelect).toBeCalledTimes(1);
-					expect(onChange).toBeCalledTimes(2);
+					expect(onSelect).toHaveBeenCalledTimes(1);
+					expect(onChange).toHaveBeenCalledTimes(2);
 
 					project.mockReturnValueOnce({
 						x: 0,
@@ -2016,7 +2016,7 @@ describe("TerraDrawSelectMode", () => {
 						setMapDraggability,
 					);
 
-					expect(onChange).toBeCalledTimes(3);
+					expect(onChange).toHaveBeenCalledTimes(3);
 				});
 			});
 
@@ -2031,7 +2031,7 @@ describe("TerraDrawSelectMode", () => {
 						[1, 1],
 					]);
 
-					expect(onChange).toBeCalledTimes(1);
+					expect(onChange).toHaveBeenCalledTimes(1);
 					const idOne = onChange.mock.calls[0][0] as string[];
 
 					mockMouseEventBoundingBox();
@@ -2071,9 +2071,9 @@ describe("TerraDrawSelectMode", () => {
 						heldKeys: [],
 					});
 
-					expect(onSelect).toBeCalledTimes(1);
+					expect(onSelect).toHaveBeenCalledTimes(1);
 					expect(onSelect).toHaveBeenNthCalledWith(1, id);
-					expect(onChange).toBeCalledTimes(2);
+					expect(onChange).toHaveBeenCalledTimes(2);
 
 					selectMode.onDragStart(
 						{
@@ -2121,7 +2121,7 @@ describe("TerraDrawSelectMode", () => {
 						setMapDraggability,
 					);
 
-					expect(onChange).toBeCalledTimes(3);
+					expect(onChange).toHaveBeenCalledTimes(3);
 					expect(onChange).toHaveBeenNthCalledWith(3, idOne, "update");
 				});
 			});
@@ -2140,7 +2140,7 @@ describe("TerraDrawSelectMode", () => {
 						[0, 0],
 					]);
 
-					expect(onChange).toBeCalledTimes(1);
+					expect(onChange).toHaveBeenCalledTimes(1);
 					const idOne = onChange.mock.calls[0][0] as string[];
 
 					// mock for both drag coordinate and drag feature
@@ -2181,8 +2181,8 @@ describe("TerraDrawSelectMode", () => {
 						heldKeys: [],
 					});
 
-					expect(onSelect).toBeCalledTimes(1);
-					expect(onChange).toBeCalledTimes(2);
+					expect(onSelect).toHaveBeenCalledTimes(1);
+					expect(onChange).toHaveBeenCalledTimes(2);
 
 					selectMode.onDragStart(
 						{
@@ -2230,7 +2230,7 @@ describe("TerraDrawSelectMode", () => {
 						setMapDraggability,
 					);
 
-					expect(onChange).toBeCalledTimes(3);
+					expect(onChange).toHaveBeenCalledTimes(3);
 					expect(onChange).toHaveBeenNthCalledWith(3, idOne, "update");
 				});
 			});
@@ -2246,13 +2246,13 @@ describe("TerraDrawSelectMode", () => {
 
 				// We want to account for ignoring points branch
 				addPointToStore([100, 89]);
-				expect(onChange).toBeCalledTimes(1);
+				expect(onChange).toHaveBeenCalledTimes(1);
 
 				addLineStringToStore([
 					[0, 0],
 					[1, 1],
 				]);
-				expect(onChange).toBeCalledTimes(2);
+				expect(onChange).toHaveBeenCalledTimes(2);
 
 				mockMouseEventBoundingBox();
 				project
@@ -2274,8 +2274,8 @@ describe("TerraDrawSelectMode", () => {
 					heldKeys: [],
 				});
 
-				expect(onSelect).toBeCalledTimes(1);
-				expect(onChange).toBeCalledTimes(4);
+				expect(onSelect).toHaveBeenCalledTimes(1);
+				expect(onChange).toHaveBeenCalledTimes(4);
 
 				// Select feature
 				expect(onChange).toHaveBeenNthCalledWith(
@@ -2327,7 +2327,7 @@ describe("TerraDrawSelectMode", () => {
 					setMapDraggability,
 				);
 
-				expect(onChange).toBeCalledTimes(5);
+				expect(onChange).toHaveBeenCalledTimes(5);
 
 				// Update linestring position and 1 selection points
 				// that gets moved
@@ -2346,7 +2346,7 @@ describe("TerraDrawSelectMode", () => {
 				// We want to account for ignoring points branch
 				addPointToStore([100, 89]);
 
-				expect(onChange).toBeCalledTimes(1);
+				expect(onChange).toHaveBeenCalledTimes(1);
 
 				addPolygonToStore([
 					[0, 0],
@@ -2356,7 +2356,7 @@ describe("TerraDrawSelectMode", () => {
 					[0, 0],
 				]);
 
-				expect(onChange).toBeCalledTimes(2);
+				expect(onChange).toHaveBeenCalledTimes(2);
 
 				mockMouseEventBoundingBox();
 
@@ -2379,8 +2379,8 @@ describe("TerraDrawSelectMode", () => {
 					heldKeys: [],
 				});
 
-				expect(onSelect).toBeCalledTimes(1);
-				expect(onChange).toBeCalledTimes(4);
+				expect(onSelect).toHaveBeenCalledTimes(1);
+				expect(onChange).toHaveBeenCalledTimes(4);
 
 				// Select feature
 				expect(onChange).toHaveBeenNthCalledWith(
@@ -2437,7 +2437,7 @@ describe("TerraDrawSelectMode", () => {
 					setMapDraggability,
 				);
 
-				expect(onChange).toBeCalledTimes(5);
+				expect(onChange).toHaveBeenCalledTimes(5);
 
 				// Update linestring position and 1 selection points
 				// that gets moved
@@ -2466,13 +2466,13 @@ describe("TerraDrawSelectMode", () => {
 
 				// We want to account for ignoring points branch
 				addPointToStore([100, 89]);
-				expect(onChange).toBeCalledTimes(1);
+				expect(onChange).toHaveBeenCalledTimes(1);
 
 				addLineStringToStore([
 					[0, 0],
 					[1, 1],
 				]);
-				expect(onChange).toBeCalledTimes(2);
+				expect(onChange).toHaveBeenCalledTimes(2);
 
 				mockMouseEventBoundingBox();
 				project
@@ -2494,8 +2494,8 @@ describe("TerraDrawSelectMode", () => {
 					heldKeys: [],
 				});
 
-				expect(onSelect).toBeCalledTimes(1);
-				expect(onChange).toBeCalledTimes(4);
+				expect(onSelect).toHaveBeenCalledTimes(1);
+				expect(onChange).toHaveBeenCalledTimes(4);
 
 				// Select feature
 				expect(onChange).toHaveBeenNthCalledWith(
@@ -2571,7 +2571,7 @@ describe("TerraDrawSelectMode", () => {
 					setMapDraggability,
 				);
 
-				expect(onChange).toBeCalledTimes(6);
+				expect(onChange).toHaveBeenCalledTimes(6);
 
 				// Update linestring position and 1 selection points
 				// that gets moved
@@ -2599,7 +2599,7 @@ describe("TerraDrawSelectMode", () => {
 				// We want to account for ignoring points branch
 				addPointToStore([100, 89]);
 
-				expect(onChange).toBeCalledTimes(1);
+				expect(onChange).toHaveBeenCalledTimes(1);
 
 				addPolygonToStore([
 					[0, 0],
@@ -2609,7 +2609,7 @@ describe("TerraDrawSelectMode", () => {
 					[0, 0],
 				]);
 
-				expect(onChange).toBeCalledTimes(2);
+				expect(onChange).toHaveBeenCalledTimes(2);
 
 				mockMouseEventBoundingBox();
 
@@ -2632,8 +2632,8 @@ describe("TerraDrawSelectMode", () => {
 					heldKeys: [],
 				});
 
-				expect(onSelect).toBeCalledTimes(1);
-				expect(onChange).toBeCalledTimes(4);
+				expect(onSelect).toHaveBeenCalledTimes(1);
+				expect(onChange).toHaveBeenCalledTimes(4);
 
 				// Select feature
 				expect(onChange).toHaveBeenNthCalledWith(
@@ -2714,7 +2714,7 @@ describe("TerraDrawSelectMode", () => {
 					setMapDraggability,
 				);
 
-				expect(onChange).toBeCalledTimes(6);
+				expect(onChange).toHaveBeenCalledTimes(6);
 
 				// Update polygon position and 1 selection points
 				// that gets moved
@@ -2750,10 +2750,10 @@ describe("TerraDrawSelectMode", () => {
 				setMapDraggability,
 			);
 
-			expect(setMapDraggability).toBeCalledTimes(1);
-			expect(setMapDraggability).toBeCalledWith(true);
-			expect(setCursor).toBeCalledTimes(1);
-			expect(setCursor).toBeCalledWith("move");
+			expect(setMapDraggability).toHaveBeenCalledTimes(1);
+			expect(setMapDraggability).toHaveBeenCalledWith(true);
+			expect(setCursor).toHaveBeenCalledTimes(1);
+			expect(setCursor).toHaveBeenCalledWith("move");
 		});
 
 		it("fires onFinish for dragged coordinate if it is currently being dragged", () => {
@@ -2764,7 +2764,7 @@ describe("TerraDrawSelectMode", () => {
 			// We want to account for ignoring points branch
 			addPointToStore([100, 89]);
 
-			expect(onChange).toBeCalledTimes(1);
+			expect(onChange).toHaveBeenCalledTimes(1);
 
 			addPolygonToStore([
 				[0, 0],
@@ -2774,7 +2774,7 @@ describe("TerraDrawSelectMode", () => {
 				[0, 0],
 			]);
 
-			expect(onChange).toBeCalledTimes(2);
+			expect(onChange).toHaveBeenCalledTimes(2);
 
 			mockMouseEventBoundingBox();
 
@@ -2797,8 +2797,8 @@ describe("TerraDrawSelectMode", () => {
 				heldKeys: [],
 			});
 
-			expect(onSelect).toBeCalledTimes(1);
-			expect(onChange).toBeCalledTimes(4);
+			expect(onSelect).toHaveBeenCalledTimes(1);
+			expect(onChange).toHaveBeenCalledTimes(4);
 
 			// Select feature
 			expect(onChange).toHaveBeenNthCalledWith(
@@ -2867,8 +2867,8 @@ describe("TerraDrawSelectMode", () => {
 				setMapDraggability,
 			);
 
-			expect(onFinish).toBeCalledTimes(1);
-			expect(onFinish).toBeCalledWith(expect.any(String), {
+			expect(onFinish).toHaveBeenCalledTimes(1);
+			expect(onFinish).toHaveBeenCalledWith(expect.any(String), {
 				action: "dragCoordinate",
 				mode: "select",
 			});
@@ -2887,7 +2887,7 @@ describe("TerraDrawSelectMode", () => {
 				[0, 0],
 			]);
 
-			expect(onChange).toBeCalledTimes(1);
+			expect(onChange).toHaveBeenCalledTimes(1);
 
 			// mock for both drag coordinate and drag feature
 			mockMouseEventBoundingBox();
@@ -2927,8 +2927,8 @@ describe("TerraDrawSelectMode", () => {
 				heldKeys: [],
 			});
 
-			expect(onSelect).toBeCalledTimes(1);
-			expect(onChange).toBeCalledTimes(2);
+			expect(onSelect).toHaveBeenCalledTimes(1);
+			expect(onChange).toHaveBeenCalledTimes(2);
 
 			selectMode.onDragStart(
 				{
@@ -2976,7 +2976,7 @@ describe("TerraDrawSelectMode", () => {
 				setMapDraggability,
 			);
 
-			expect(onChange).toBeCalledTimes(3);
+			expect(onChange).toHaveBeenCalledTimes(3);
 
 			selectMode.onDragEnd(
 				{
@@ -2990,8 +2990,8 @@ describe("TerraDrawSelectMode", () => {
 				setMapDraggability,
 			);
 
-			expect(onFinish).toBeCalledTimes(1);
-			expect(onFinish).toBeCalledWith(expect.any(String), {
+			expect(onFinish).toHaveBeenCalledTimes(1);
+			expect(onFinish).toHaveBeenCalledWith(expect.any(String), {
 				action: "dragFeature",
 				mode: "select",
 			});
@@ -3010,7 +3010,7 @@ describe("TerraDrawSelectMode", () => {
 			// We want to account for ignoring points branch
 			addPointToStore([100, 89]);
 
-			expect(onChange).toBeCalledTimes(1);
+			expect(onChange).toHaveBeenCalledTimes(1);
 
 			addPolygonToStore([
 				[0, 0],
@@ -3020,7 +3020,7 @@ describe("TerraDrawSelectMode", () => {
 				[0, 0],
 			]);
 
-			expect(onChange).toBeCalledTimes(2);
+			expect(onChange).toHaveBeenCalledTimes(2);
 
 			mockMouseEventBoundingBox();
 
@@ -3043,8 +3043,8 @@ describe("TerraDrawSelectMode", () => {
 				heldKeys: [],
 			});
 
-			expect(onSelect).toBeCalledTimes(1);
-			expect(onChange).toBeCalledTimes(4);
+			expect(onSelect).toHaveBeenCalledTimes(1);
+			expect(onChange).toHaveBeenCalledTimes(4);
 
 			// Select feature
 			expect(onChange).toHaveBeenNthCalledWith(
@@ -3113,8 +3113,8 @@ describe("TerraDrawSelectMode", () => {
 				setMapDraggability,
 			);
 
-			expect(onFinish).toBeCalledTimes(1);
-			expect(onFinish).toBeCalledWith(expect.any(String), {
+			expect(onFinish).toHaveBeenCalledTimes(1);
+			expect(onFinish).toHaveBeenCalledWith(expect.any(String), {
 				action: "dragCoordinateResize",
 				mode: "select",
 			});
@@ -3150,10 +3150,10 @@ describe("TerraDrawSelectMode", () => {
 				heldKeys: [],
 			});
 
-			expect(onChange).toBeCalledTimes(0);
-			expect(onDeselect).toBeCalledTimes(0);
-			expect(onSelect).toBeCalledTimes(0);
-			expect(project).toBeCalledTimes(0);
+			expect(onChange).toHaveBeenCalledTimes(0);
+			expect(onDeselect).toHaveBeenCalledTimes(0);
+			expect(onSelect).toHaveBeenCalledTimes(0);
+			expect(project).toHaveBeenCalledTimes(0);
 		});
 	});
 

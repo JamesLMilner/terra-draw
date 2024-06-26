@@ -299,7 +299,7 @@ describe("GeoJSONStore", () => {
 			]);
 			store.delete([id]);
 
-			expect(mockCallback).toBeCalledTimes(3);
+			expect(mockCallback).toHaveBeenCalledTimes(3);
 			expect(mockCallback).toHaveBeenNthCalledWith(1, [id], "create");
 			expect(mockCallback).toHaveBeenNthCalledWith(2, [id], "update");
 			expect(mockCallback).toHaveBeenNthCalledWith(3, [id], "delete");

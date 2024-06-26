@@ -26,7 +26,7 @@ describe("AdapterListener", () => {
 			});
 			listener.callback();
 
-			expect(callback).toBeCalledTimes(1);
+			expect(callback).toHaveBeenCalledTimes(1);
 		});
 	});
 
@@ -43,8 +43,8 @@ describe("AdapterListener", () => {
 
 			listener.register();
 
-			expect(register).toBeCalledTimes(1);
-			expect(register).toBeCalledWith(callback);
+			expect(register).toHaveBeenCalledTimes(1);
+			expect(register).toHaveBeenCalledWith(callback);
 		});
 	});
 
@@ -61,7 +61,7 @@ describe("AdapterListener", () => {
 
 			listener.unregister(callback);
 
-			expect(unregister).toBeCalledWith(callback);
+			expect(unregister).toHaveBeenCalledWith(callback);
 		});
 	});
 });

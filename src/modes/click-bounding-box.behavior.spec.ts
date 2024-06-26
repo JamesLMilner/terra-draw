@@ -27,7 +27,7 @@ describe("ClickBoundingBoxBehavior", () => {
 			const bbox = clickBoundingBoxBehavior.create(mockDrawEvent());
 
 			// Ensure unproject is called correctly with screen space square
-			expect(config.unproject).toBeCalledTimes(5);
+			expect(config.unproject).toHaveBeenCalledTimes(5);
 			expect(config.unproject).toHaveBeenNthCalledWith(1, -20, -20);
 			expect(config.unproject).toHaveBeenNthCalledWith(2, 20, -20);
 			expect(config.unproject).toHaveBeenNthCalledWith(3, 20, 20);

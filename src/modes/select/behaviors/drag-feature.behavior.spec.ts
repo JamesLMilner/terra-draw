@@ -111,8 +111,8 @@ describe("DragFeatureBehavior", () => {
 
 				dragFeatureBehavior.drag(event);
 
-				expect(config.store.getGeometryCopy).toBeCalledTimes(0);
-				expect(config.store.updateGeometry).toBeCalledTimes(0);
+				expect(config.store.getGeometryCopy).toHaveBeenCalledTimes(0);
+				expect(config.store.updateGeometry).toHaveBeenCalledTimes(0);
 			});
 
 			it("updates the polygon to the dragged position", () => {
@@ -135,8 +135,8 @@ describe("DragFeatureBehavior", () => {
 
 				dragFeatureBehavior.drag(mockDrawEvent());
 
-				expect(config.store.getGeometryCopy).toBeCalledTimes(1);
-				expect(config.store.updateGeometry).toBeCalledTimes(1);
+				expect(config.store.getGeometryCopy).toHaveBeenCalledTimes(1);
+				expect(config.store.updateGeometry).toHaveBeenCalledTimes(1);
 			});
 
 			it("validation returning false does not update the polygon to the dragged position", () => {
@@ -159,8 +159,8 @@ describe("DragFeatureBehavior", () => {
 
 				dragFeatureBehavior.drag(mockDrawEvent(), () => false);
 
-				expect(config.store.getGeometryCopy).toBeCalledTimes(1);
-				expect(config.store.updateGeometry).toBeCalledTimes(0);
+				expect(config.store.getGeometryCopy).toHaveBeenCalledTimes(1);
+				expect(config.store.updateGeometry).toHaveBeenCalledTimes(0);
 			});
 
 			it("validation returning true does update the polygon to the dragged position", () => {
@@ -183,8 +183,8 @@ describe("DragFeatureBehavior", () => {
 
 				dragFeatureBehavior.drag(mockDrawEvent(), () => true);
 
-				expect(config.store.getGeometryCopy).toBeCalledTimes(1);
-				expect(config.store.updateGeometry).toBeCalledTimes(1);
+				expect(config.store.getGeometryCopy).toHaveBeenCalledTimes(1);
+				expect(config.store.updateGeometry).toHaveBeenCalledTimes(1);
 			});
 		});
 	});

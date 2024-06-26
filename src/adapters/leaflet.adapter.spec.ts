@@ -129,7 +129,7 @@ describe("TerraDrawLeafletAdapter", () => {
 		// Test enabling dragging
 		adapter.project(0, 0);
 		expect(map.latLngToContainerPoint).toHaveBeenCalledTimes(1);
-		expect(map.latLngToContainerPoint).toBeCalledWith({ lat: 0, lng: 0 });
+		expect(map.latLngToContainerPoint).toHaveBeenCalledWith({ lat: 0, lng: 0 });
 	});
 
 	it("unproject", () => {
@@ -145,7 +145,7 @@ describe("TerraDrawLeafletAdapter", () => {
 		// Test enabling dragging
 		adapter.unproject(0, 0);
 		expect(map.containerPointToLatLng).toHaveBeenCalledTimes(1);
-		expect(map.containerPointToLatLng).toBeCalledWith({ x: 0, y: 0 });
+		expect(map.containerPointToLatLng).toHaveBeenCalledWith({ x: 0, y: 0 });
 	});
 
 	it("setCursor", () => {
@@ -276,9 +276,9 @@ describe("TerraDrawLeafletAdapter", () => {
 				},
 			);
 
-			expect(lib.geoJSON).toBeCalledTimes(2);
-			expect(map.addLayer).toBeCalledTimes(2); // 1 for created 1 for updated
-			expect(map.removeLayer).toBeCalledTimes(2); // 1 for update 1 for delete
+			expect(lib.geoJSON).toHaveBeenCalledTimes(2);
+			expect(map.addLayer).toHaveBeenCalledTimes(2); // 1 for created 1 for updated
+			expect(map.removeLayer).toHaveBeenCalledTimes(2); // 1 for update 1 for delete
 		});
 	});
 
@@ -325,6 +325,6 @@ describe("TerraDrawLeafletAdapter", () => {
 
 		adapter.clear();
 
-		expect(map.removeLayer).toBeCalledTimes(1);
+		expect(map.removeLayer).toHaveBeenCalledTimes(1);
 	});
 });

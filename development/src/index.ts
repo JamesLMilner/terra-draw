@@ -16,7 +16,6 @@ import {
 	TerraDrawLeafletAdapter,
 	TerraDrawGoogleMapsAdapter,
 	TerraDrawMapLibreGLAdapter,
-	TerraDrawGreatCircleMode,
 	TerraDrawArcGISMapsSDKAdapter,
 	ValidateMinAreaSquareMeters,
 } from "../../src/terra-draw";
@@ -53,7 +52,6 @@ const addModeChangeHandler = (
 		"select",
 		"point",
 		"linestring",
-		"greatcircle",
 		"polygon",
 		"freehand",
 		"circle",
@@ -88,7 +86,7 @@ const getModes = () => {
 	return [
 		new TerraDrawSelectMode({
 			flags: {
-				arbitary: {
+				arbitrary: {
 					feature: {},
 				},
 				polygon: {
@@ -155,12 +153,11 @@ const getModes = () => {
 		}),
 		new TerraDrawPointMode(),
 		new TerraDrawLineStringMode({
-			snapping: true,
-			validation: (feature) => {
-				return ValidateNotSelfIntersecting(feature);
+			insertCoordinates: {
+				strategy: "amount",
+				value: 10,
 			},
 		}),
-		new TerraDrawGreatCircleMode({ snapping: true }),
 		new TerraDrawPolygonMode({
 			snapping: true,
 			validation: (feature, { updateType }) => {
@@ -174,7 +171,7 @@ const getModes = () => {
 		new TerraDrawCircleMode(),
 		new TerraDrawFreehandMode(),
 		new TerraDrawRenderMode({
-			modeName: "arbitary",
+			modeName: "arbitrary",
 			styles: {
 				polygonFillColor: "#4357AD",
 				polygonOutlineColor: "#48A9A6",
@@ -261,6 +258,7 @@ const example = {
 			container: id, // container ID
 			center: [lng, lat], // starting position [lng, lat]
 			zoom: zoom, // starting zoom
+			projection: { name: "globe" },
 		});
 
 		// If we have an access token

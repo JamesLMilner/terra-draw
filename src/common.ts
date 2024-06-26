@@ -73,6 +73,8 @@ export type GetLngLatFromEvent = (event: PointerEvent | MouseEvent) => {
 	lat: number;
 } | null;
 
+export type Projection = "web-mercator" | "globe";
+
 export type OnFinishContext = { mode: string; action: string };
 
 export interface TerraDrawModeRegisterConfig {

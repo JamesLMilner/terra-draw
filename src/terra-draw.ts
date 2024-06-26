@@ -27,7 +27,6 @@ import {
 } from "./modes/base.mode";
 import { TerraDrawCircleMode } from "./modes/circle/circle.mode";
 import { TerraDrawFreehandMode } from "./modes/freehand/freehand.mode";
-import { TerraDrawGreatCircleMode } from "./modes/greatcircle/great-circle.mode";
 import { TerraDrawLineStringMode } from "./modes/linestring/linestring.mode";
 import { TerraDrawPointMode } from "./modes/point/point.mode";
 import { TerraDrawPolygonMode } from "./modes/polygon/polygon.mode";
@@ -787,7 +786,6 @@ export {
 	TerraDrawSelectMode,
 	TerraDrawPointMode,
 	TerraDrawLineStringMode,
-	TerraDrawGreatCircleMode,
 	TerraDrawPolygonMode,
 	TerraDrawCircleMode,
 	TerraDrawFreehandMode,

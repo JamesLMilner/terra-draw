@@ -6,8 +6,9 @@ import {
 	NumericStyling,
 	Cursor,
 	UpdateTypes,
+	Projection,
 } from "../../common";
-import { LineString, Point } from "geojson";
+import { LineString, Point, Position } from "geojson";
 import {
 	BaseModeOptions,
 	CustomStyling,
@@ -24,6 +25,9 @@ import {
 	GeoJSONStoreFeatures,
 	GeoJSONStoreGeometries,
 } from "../../store/store";
+import { InsertCoordinatesBehavior } from "../insert-coordinates.behavior";
+import { haversineDistanceKilometers } from "../../geometry/measure/haversine-distance";
+import { coordinatesIdentical } from "../../geometry/coordinates-identical";
 
 type TerraDrawLineStringModeKeyEvents = {
 	cancel: KeyboardEvent["key"] | null;
@@ -44,17 +48,25 @@ interface Cursors {
 	close?: Cursor;
 }
 
+interface InertCoordinates {
+	strategy: "amount"; // In future this could be extended
+	value: number;
+}
+
 interface TerraDrawLineStringModeOptions<T extends CustomStyling>
 	extends BaseModeOptions<T> {
 	snapping?: boolean;
 	pointerDistance?: number;
 	keyEvents?: TerraDrawLineStringModeKeyEvents | null;
 	cursors?: Cursors;
+	insertCoordinates?: InertCoordinates;
+	projection?: Projection;
 }
 
 export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringStyling> {
 	mode = "linestring";
 
+	private projection: Projection = "web-mercator";
 	private currentCoordinate = 0;
 	private currentId: FeatureId | undefined;
 	private closingPointId: FeatureId | undefined;
@@ -62,9 +74,12 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 	private snappingEnabled: boolean;
 	private cursors: Required<Cursors>;
 	private mouseMove = false;
+	private insertCoordinates: InertCoordinates | undefined;
+	private lastCommitedCoordinates: Position[] | undefined;
 
 	// Behaviors
 	private snapping!: SnappingBehavior;
+	private insertPoint!: InsertCoordinatesBehavior;
 
 	constructor(options?: TerraDrawLineStringModeOptions<LineStringStyling>) {
 		super(options);
@@ -96,6 +111,8 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 		}
 
 		this.validate = options?.validation;
+
+		this.insertCoordinates = options?.insertCoordinates;
 	}
 
 	private close() {
@@ -123,19 +140,20 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 		this.currentCoordinate = 0;
 		this.currentId = undefined;
 		this.closingPointId = undefined;
+		this.lastCommitedCoordinates = undefined;
 
 		// Go back to started state
 		if (this.state === "drawing") {
 			this.setStarted();
 		}
 
-		// Ensure that any listerers are triggered with the main created geometry
+		// Ensure that any listeners are triggered with the main created geometry
 		this.onFinish(finishedId, { mode: this.mode, action: "draw" });
 	}
 
 	private updateGeometries(
 		coordinates: LineString["coordinates"],
-		pointCoordinates: Point["coordinates"] | undefined,
+		closingPointCoordinate: Point["coordinates"] | undefined,
 		updateType: UpdateTypes,
 	) {
 		if (!this.currentId) {
@@ -173,17 +191,155 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 			geometry: GeoJSONStoreGeometries;
 		}[];
 
-		if (this.closingPointId && pointCoordinates) {
+		if (this.closingPointId && closingPointCoordinate) {
 			geometries.push({
 				id: this.closingPointId,
 				geometry: {
 					type: "Point",
-					coordinates: pointCoordinates,
+					coordinates: closingPointCoordinate,
 				},
 			});
 		}
 
+		if (updateType === "commit") {
+			this.lastCommitedCoordinates = updatedGeometry.coordinates;
+		}
+
 		this.store.updateGeometry(geometries);
+	}
+
+	private generateInsertCoordinates(startCoord: Position, endCoord: Position) {
+		if (!this.insertCoordinates || !this.lastCommitedCoordinates) {
+			throw new Error("Not able to insert coordinates");
+		}
+
+		// Other strategies my be implemented in the future
+		if (this.insertCoordinates.strategy !== "amount") {
+			throw new Error("Strategy does not exist");
+		}
+
+		const distance = haversineDistanceKilometers(startCoord, endCoord);
+		const segmentDistance = distance / (this.insertCoordinates.value + 1);
+		let insertedCoordinates: Position[] = [];
+
+		if (this.projection === "globe") {
+			insertedCoordinates =
+				this.insertPoint.generateInsertionGeodesicCoordinates(
+					startCoord,
+					endCoord,
+					segmentDistance,
+				);
+		} else if (this.projection === "web-mercator") {
+			insertedCoordinates = this.insertPoint.generateInsertionCoordinates(
+				startCoord,
+				endCoord,
+				segmentDistance,
+			);
+		}
+
+		return insertedCoordinates;
+	}
+
+	private createLine(startingCoord: Position) {
+		const [createdId] = this.store.create([
+			{
+				geometry: {
+					type: "LineString",
+					coordinates: [
+						startingCoord,
+						startingCoord, // This is the 'live' point that changes on mouse move
+					],
+				},
+				properties: { mode: this.mode },
+			},
+		]);
+		this.lastCommitedCoordinates = [startingCoord, startingCoord];
+		this.currentId = createdId;
+		this.currentCoordinate++;
+		this.setDrawing();
+	}
+
+	private firstUpdateToLine(updatedCoord: Position) {
+		if (!this.currentId) {
+			return;
+		}
+
+		const currentLineGeometry = this.store.getGeometryCopy<LineString>(
+			this.currentId,
+		);
+
+		const currentCoordinates = currentLineGeometry.coordinates;
+
+		const [pointId] = this.store.create([
+			{
+				geometry: {
+					type: "Point",
+					coordinates: [...updatedCoord],
+				},
+				properties: { mode: this.mode },
+			},
+		]);
+		this.closingPointId = pointId;
+
+		// We are creating the point so we immediately want
+		// to set the point cursor to show it can be closed
+		this.setCursor(this.cursors.close);
+
+		const initialLineCoordinates = [...currentCoordinates, updatedCoord];
+		const closingPointCoordinate = undefined; // We don't need this until second click
+
+		this.updateGeometries(
+			initialLineCoordinates,
+			closingPointCoordinate,
+			UpdateTypes.Commit,
+		);
+
+		this.currentCoordinate++;
+	}
+
+	private updateToLine(
+		updatedCoord: Position,
+		cursorXY: { x: number; y: number },
+	) {
+		if (!this.currentId) {
+			return;
+		}
+		const currentLineGeometry = this.store.getGeometryCopy<LineString>(
+			this.currentId,
+		);
+
+		const currentCoordinates = currentLineGeometry.coordinates;
+
+		// If we are not inserting points we can get the penultimate coordinated
+		const [previousLng, previousLat] = this.lastCommitedCoordinates
+			? this.lastCommitedCoordinates[this.lastCommitedCoordinates.length - 1]
+			: currentCoordinates[currentCoordinates.length - 2];
+
+		// Determine if the click closes the line and finished drawing
+		const { x, y } = this.project(previousLng, previousLat);
+		const distance = pixelDistance({ x, y }, { x: cursorXY.x, y: cursorXY.y });
+		const isClosingClick = distance < this.pointerDistance;
+
+		if (isClosingClick) {
+			this.close();
+			return;
+		}
+
+		// The cursor will immediately change to closing because the
+		// closing point will be underneath the cursor
+		this.setCursor(this.cursors.close);
+
+		const updatedLineCoordinates = [...currentCoordinates, updatedCoord];
+		const updatedClosingPointCoordinate =
+			currentCoordinates[currentCoordinates.length - 1];
+
+		this.updateGeometries(
+			updatedLineCoordinates,
+			updatedClosingPointCoordinate,
+			UpdateTypes.Commit,
+		);
+
+		this.currentCoordinate++;
 	}
 
 	/** @internal */
@@ -193,6 +349,8 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 			new PixelDistanceBehavior(config),
 			new ClickBoundingBoxBehavior(config),
 		);
+
+		this.insertPoint = new InsertCoordinatesBehavior(config);
 	}
 
 	/** @internal */
@@ -220,8 +378,10 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 			this.currentId,
 		);
 
+		const currentCoordinates = currentLineGeometry.coordinates;
+
 		// Remove the 'live' point that changes on mouse move
-		currentLineGeometry.coordinates.pop();
+		currentCoordinates.pop();
 
 		const snappedCoord =
 			this.snappingEnabled &&
@@ -229,12 +389,10 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 		const updatedCoord = snappedCoord ? snappedCoord : [event.lng, event.lat];
 
 		// We want to ensure that when we are hovering over
-		// the losign point that the pointer cursor is shown
+		// the closing point that the pointer cursor is shown
 		if (this.closingPointId) {
 			const [previousLng, previousLat] =
-				currentLineGeometry.coordinates[
-					currentLineGeometry.coordinates.length - 1
-				];
+				currentCoordinates[currentCoordinates.length - 1];
 			const { x, y } = this.project(previousLng, previousLat);
 			const distance = pixelDistance(
 				{ x, y },
@@ -248,12 +406,31 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 			}
 		}
 
+		let line = [...currentCoordinates, updatedCoord];
+
+		if (
+			this.insertCoordinates &&
+			this.currentId &&
+			this.lastCommitedCoordinates
+		) {
+			const startCoord =
+				this.lastCommitedCoordinates[this.lastCommitedCoordinates.length - 1];
+			const endCoord = updatedCoord;
+			if (!coordinatesIdentical(startCoord, endCoord)) {
+				const insertedCoordinates = this.generateInsertCoordinates(
+					startCoord,
+					endCoord,
+				);
+				line = [
+					...this.lastCommitedCoordinates.slice(0, -1),
+					...insertedCoordinates,
+					updatedCoord,
+				];
+			}
+		}
+
 		// Update the 'live' point
-		this.updateGeometries(
-			[...currentLineGeometry.coordinates, updatedCoord],
-			undefined,
-			UpdateTypes.Provisional,
-		);
+		this.updateGeometries(line, undefined, UpdateTypes.Provisional);
 	}
 
 	/** @internal */
@@ -274,88 +451,14 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 		const updatedCoord = snappedCoord ? snappedCoord : [event.lng, event.lat];
 
 		if (this.currentCoordinate === 0) {
-			const [createdId] = this.store.create([
-				{
-					geometry: {
-						type: "LineString",
-						coordinates: [
-							updatedCoord,
-							updatedCoord, // This is the 'live' point that changes on mouse move
-						],
-					},
-					properties: { mode: this.mode },
-				},
-			]);
-			this.currentId = createdId;
-			this.currentCoordinate++;
-			this.setDrawing();
+			this.createLine(updatedCoord);
 		} else if (this.currentCoordinate === 1 && this.currentId) {
-			const currentLineGeometry = this.store.getGeometryCopy<LineString>(
-				this.currentId,
-			);
-
-			const [pointId] = this.store.create([
-				{
-					geometry: {
-						type: "Point",
-						coordinates: [...updatedCoord],
-					},
-					properties: { mode: this.mode },
-				},
-			]);
-			this.closingPointId = pointId;
-
-			// We are creating the point so we immediately want
-			// to set the point cursor to show it can be closed
-			this.setCursor(this.cursors.close);
-
-			this.updateGeometries(
-				[currentLineGeometry.coordinates[0], updatedCoord, updatedCoord],
-				undefined,
-				UpdateTypes.Provisional,
-			);
-
-			this.currentCoordinate++;
+			this.firstUpdateToLine(updatedCoord);
 		} else if (this.currentId) {
-			const currentLineGeometry = this.store.getGeometryCopy<LineString>(
-				this.currentId,
-			);
-
-			const [previousLng, previousLat] =
-				currentLineGeometry.coordinates[
-					currentLineGeometry.coordinates.length - 2
-				];
-			const { x, y } = this.project(previousLng, previousLat);
-			const distance = pixelDistance(
-				{ x, y },
-				{ x: event.containerX, y: event.containerY },
-			);
-
-			const isClosingClick = distance < this.pointerDistance;
-
-			if (isClosingClick) {
-				this.close();
-			} else {
-				// If not close to the final point, keep adding points
-				const newLineString = {
-					type: "LineString",
-					coordinates: [...currentLineGeometry.coordinates, updatedCoord],
-				} as LineString;
-
-				if (this.closingPointId) {
-					this.setCursor(this.cursors.close);
-
-					this.updateGeometries(
-						newLineString.coordinates,
-						currentLineGeometry.coordinates[
-							currentLineGeometry.coordinates.length - 1
-						],
-						UpdateTypes.Provisional,
-					);
-
-					this.currentCoordinate++;
-				}
-			}
+			this.updateToLine(updatedCoord, {
+				x: event.containerX,
+				y: event.containerY,
+			});
 		}
 	}
 

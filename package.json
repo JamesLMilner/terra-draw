@@ -81,7 +81,7 @@
 		"ts-loader": "9.5.1",
 		"tsx": "4.7.2",
 		"typedoc": "0.25.12",
-		"typescript": "5.4.4"
+		"typescript": "5.5.2"
 	},
 	"commitlint": {
 		"extends": [

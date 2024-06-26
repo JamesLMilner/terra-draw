@@ -118,7 +118,7 @@ describe("TerraDrawMapboxGLAdapter", () => {
 		// Test enabling dragging
 		adapter.project(0, 0);
 		expect(map.project).toHaveBeenCalledTimes(1);
-		expect(map.project).toBeCalledWith({ lat: 0, lng: 0 });
+		expect(map.project).toHaveBeenCalledWith({ lat: 0, lng: 0 });
 	});
 
 	it("unproject", () => {
@@ -130,7 +130,7 @@ describe("TerraDrawMapboxGLAdapter", () => {
 		// Test enabling dragging
 		adapter.unproject(0, 0);
 		expect(map.unproject).toHaveBeenCalledTimes(1);
-		expect(map.unproject).toBeCalledWith({ x: 0, y: 0 });
+		expect(map.unproject).toHaveBeenCalledWith({ x: 0, y: 0 });
 	});
 
 	it("setCursor", () => {

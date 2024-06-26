@@ -141,7 +141,7 @@ describe("DragCoordinateResizeBehavior", () => {
 					"center-web-mercator",
 				);
 
-				expect(config.store.updateGeometry).toBeCalledTimes(0);
+				expect(config.store.updateGeometry).toHaveBeenCalledTimes(0);
 			});
 
 			it("returns early if geometry is a point", () => {
@@ -153,7 +153,7 @@ describe("DragCoordinateResizeBehavior", () => {
 					"center-web-mercator",
 				);
 
-				expect(config.store.updateGeometry).toBeCalledTimes(0);
+				expect(config.store.updateGeometry).toHaveBeenCalledTimes(0);
 			});
 
 			describe("validation", () => {
@@ -180,7 +180,7 @@ describe("DragCoordinateResizeBehavior", () => {
 						},
 					);
 
-					expect(config.store.updateGeometry).toBeCalledTimes(0);
+					expect(config.store.updateGeometry).toHaveBeenCalledTimes(0);
 				});
 			});
 
@@ -205,7 +205,7 @@ describe("DragCoordinateResizeBehavior", () => {
 						"center-web-mercator",
 					);
 
-					expect(config.store.updateGeometry).toBeCalledTimes(1);
+					expect(config.store.updateGeometry).toHaveBeenCalledTimes(1);
 				});
 
 				it("updates the LineString coordinate if within pointer distance", () => {
@@ -227,7 +227,7 @@ describe("DragCoordinateResizeBehavior", () => {
 						"center-web-mercator",
 					);
 
-					expect(config.store.updateGeometry).toBeCalledTimes(1);
+					expect(config.store.updateGeometry).toHaveBeenCalledTimes(1);
 				});
 			});
 
@@ -252,7 +252,7 @@ describe("DragCoordinateResizeBehavior", () => {
 						"opposite-web-mercator",
 					);
 
-					expect(config.store.updateGeometry).toBeCalledTimes(1);
+					expect(config.store.updateGeometry).toHaveBeenCalledTimes(1);
 				});
 
 				it("updates the LineString coordinate if within pointer distance", () => {
@@ -274,7 +274,7 @@ describe("DragCoordinateResizeBehavior", () => {
 						"opposite-web-mercator",
 					);
 
-					expect(config.store.updateGeometry).toBeCalledTimes(1);
+					expect(config.store.updateGeometry).toHaveBeenCalledTimes(1);
 				});
 			});
 
@@ -299,7 +299,7 @@ describe("DragCoordinateResizeBehavior", () => {
 						"center-fixed-web-mercator",
 					);
 
-					expect(config.store.updateGeometry).toBeCalledTimes(1);
+					expect(config.store.updateGeometry).toHaveBeenCalledTimes(1);
 				});
 
 				it("updates the LineString coordinate if within pointer distance", () => {
@@ -321,7 +321,7 @@ describe("DragCoordinateResizeBehavior", () => {
 						"center-fixed-web-mercator",
 					);
 
-					expect(config.store.updateGeometry).toBeCalledTimes(1);
+					expect(config.store.updateGeometry).toHaveBeenCalledTimes(1);
 				});
 			});
 
@@ -346,7 +346,7 @@ describe("DragCoordinateResizeBehavior", () => {
 						"opposite-fixed-web-mercator",
 					);
 
-					expect(config.store.updateGeometry).toBeCalledTimes(1);
+					expect(config.store.updateGeometry).toHaveBeenCalledTimes(1);
 				});
 
 				it("updates the LineString coordinate if within pointer distance", () => {
@@ -368,7 +368,7 @@ describe("DragCoordinateResizeBehavior", () => {
 						"opposite-fixed-web-mercator",
 					);
 
-					expect(config.store.updateGeometry).toBeCalledTimes(1);
+					expect(config.store.updateGeometry).toHaveBeenCalledTimes(1);
 				});
 			});
 		});

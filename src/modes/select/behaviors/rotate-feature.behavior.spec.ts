@@ -45,7 +45,7 @@ describe("RotateFeatureBehavior", () => {
 
 				rotateFeatureBehavior.rotate(mockDrawEvent(), id);
 
-				expect(config.store.updateGeometry).toBeCalledTimes(0);
+				expect(config.store.updateGeometry).toHaveBeenCalledTimes(0);
 			});
 
 			it("first event sets the initial bearing and does not update the LineString", () => {
@@ -53,7 +53,7 @@ describe("RotateFeatureBehavior", () => {
 
 				rotateFeatureBehavior.rotate(mockDrawEvent(), id);
 
-				expect(config.store.updateGeometry).toBeCalledTimes(0);
+				expect(config.store.updateGeometry).toHaveBeenCalledTimes(0);
 			});
 
 			it("second event rotates the LineString", () => {
@@ -61,7 +61,7 @@ describe("RotateFeatureBehavior", () => {
 
 				rotateFeatureBehavior.rotate(mockDrawEvent(), id);
 				rotateFeatureBehavior.rotate(mockDrawEvent(), id);
-				expect(config.store.updateGeometry).toBeCalledTimes(1);
+				expect(config.store.updateGeometry).toHaveBeenCalledTimes(1);
 			});
 
 			it("second event rotates the Polygon", () => {
@@ -69,7 +69,7 @@ describe("RotateFeatureBehavior", () => {
 
 				rotateFeatureBehavior.rotate(mockDrawEvent(), id);
 				rotateFeatureBehavior.rotate(mockDrawEvent(), id);
-				expect(config.store.updateGeometry).toBeCalledTimes(1);
+				expect(config.store.updateGeometry).toHaveBeenCalledTimes(1);
 			});
 		});
 
@@ -83,7 +83,7 @@ describe("RotateFeatureBehavior", () => {
 				rotateFeatureBehavior.reset();
 				rotateFeatureBehavior.rotate(mockDrawEvent(), id);
 
-				expect(config.store.updateGeometry).toBeCalledTimes(0);
+				expect(config.store.updateGeometry).toHaveBeenCalledTimes(0);
 			});
 		});
 	});

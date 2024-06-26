@@ -159,8 +159,8 @@ describe("TerraDrawCircleMode", () => {
 						heldKeys: [],
 					});
 
-					expect(onChange).toBeCalledTimes(1);
-					expect(onChange).toBeCalledWith([expect.any(String)], "create");
+					expect(onChange).toHaveBeenCalledTimes(1);
+					expect(onChange).toHaveBeenCalledWith([expect.any(String)], "create");
 				});
 
 				it("finishes drawing circle on second click", () => {
@@ -188,10 +188,10 @@ describe("TerraDrawCircleMode", () => {
 					features = store.copyAll();
 					expect(features.length).toBe(1);
 
-					expect(onChange).toBeCalledTimes(3);
-					expect(onChange).toBeCalledWith([expect.any(String)], "create");
+					expect(onChange).toHaveBeenCalledTimes(3);
+					expect(onChange).toHaveBeenCalledWith([expect.any(String)], "create");
 
-					expect(onFinish).toBeCalledTimes(1);
+					expect(onFinish).toHaveBeenCalledTimes(1);
 				});
 			});
 
@@ -220,8 +220,8 @@ describe("TerraDrawCircleMode", () => {
 						heldKeys: [],
 					});
 
-					expect(onChange).toBeCalledTimes(1);
-					expect(onChange).toBeCalledWith([expect.any(String)], "create");
+					expect(onChange).toHaveBeenCalledTimes(1);
+					expect(onChange).toHaveBeenCalledWith([expect.any(String)], "create");
 					expect(store.copyAll()[0].properties.radiusKilometers).toStrictEqual(
 						1000,
 					);
@@ -272,10 +272,10 @@ describe("TerraDrawCircleMode", () => {
 					features = store.copyAll();
 					expect(features.length).toBe(1);
 
-					expect(onChange).toBeCalledTimes(1);
-					expect(onChange).toBeCalledWith([expect.any(String)], "create");
+					expect(onChange).toHaveBeenCalledTimes(1);
+					expect(onChange).toHaveBeenCalledWith([expect.any(String)], "create");
 
-					expect(onFinish).toBeCalledTimes(0);
+					expect(onFinish).toHaveBeenCalledTimes(0);
 				});
 
 				it("does finish drawing circle on second click if validation returns true", () => {
@@ -305,9 +305,9 @@ describe("TerraDrawCircleMode", () => {
 					features = store.copyAll();
 					expect(features.length).toBe(1);
 
-					expect(onChange).toBeCalledTimes(3);
-					expect(onChange).toBeCalledWith([expect.any(String)], "create");
-					expect(onFinish).toBeCalledTimes(1);
+					expect(onChange).toHaveBeenCalledTimes(3);
+					expect(onChange).toHaveBeenCalledWith([expect.any(String)], "create");
+					expect(onFinish).toHaveBeenCalledTimes(1);
 					expect(onFinish).toHaveBeenNthCalledWith(1, expect.any(String), {
 						action: "draw",
 						mode: "circle",
@@ -358,9 +358,9 @@ describe("TerraDrawCircleMode", () => {
 			features = store.copyAll();
 			expect(features.length).toBe(1);
 
-			expect(onChange).toBeCalledTimes(1);
-			expect(onChange).toBeCalledWith([expect.any(String)], "create");
-			expect(onFinish).toBeCalledTimes(1);
+			expect(onChange).toHaveBeenCalledTimes(1);
+			expect(onChange).toHaveBeenCalledWith([expect.any(String)], "create");
+			expect(onFinish).toHaveBeenCalledTimes(1);
 			expect(onFinish).toHaveBeenNthCalledWith(1, expect.any(String), {
 				action: "draw",
 				mode: "circle",
@@ -395,7 +395,7 @@ describe("TerraDrawCircleMode", () => {
 				heldKeys: [],
 			});
 
-			expect(onChange).toBeCalledTimes(1);
+			expect(onChange).toHaveBeenCalledTimes(1);
 			expect(onChange).toHaveBeenNthCalledWith(
 				1,
 				[expect.any(String)],
@@ -412,7 +412,7 @@ describe("TerraDrawCircleMode", () => {
 				button: "left",
 				heldKeys: [],
 			});
-			expect(onChange).toBeCalledTimes(3);
+			expect(onChange).toHaveBeenCalledTimes(3);
 			expect(onChange).toHaveBeenNthCalledWith(
 				2,
 				[expect.any(String)],
@@ -445,7 +445,7 @@ describe("TerraDrawCircleMode", () => {
 
 		it("does not delete if no circle has been created", () => {
 			circleMode.cleanUp();
-			expect(onChange).toBeCalledTimes(0);
+			expect(onChange).toHaveBeenCalledTimes(0);
 		});
 
 		it("does delete if a circle has been created", () => {
@@ -460,7 +460,7 @@ describe("TerraDrawCircleMode", () => {
 
 			circleMode.cleanUp();
 
-			expect(onChange).toBeCalledTimes(2);
+			expect(onChange).toHaveBeenCalledTimes(2);
 			expect(onChange).toHaveBeenNthCalledWith(
 				2,
 				[expect.any(String)],

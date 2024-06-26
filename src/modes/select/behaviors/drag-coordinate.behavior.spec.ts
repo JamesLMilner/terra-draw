@@ -139,7 +139,7 @@ describe("DragCoordinateBehavior", () => {
 
 				dragCoordinateBehavior.drag(mockDrawEvent(), true);
 
-				expect(config.store.updateGeometry).toBeCalledTimes(0);
+				expect(config.store.updateGeometry).toHaveBeenCalledTimes(0);
 			});
 
 			it("returns early if geometry is a point", () => {
@@ -148,7 +148,7 @@ describe("DragCoordinateBehavior", () => {
 
 				dragCoordinateBehavior.drag(mockDrawEvent(), true);
 
-				expect(config.store.updateGeometry).toBeCalledTimes(0);
+				expect(config.store.updateGeometry).toHaveBeenCalledTimes(0);
 			});
 
 			it("validation returning false means updates are not called", () => {
@@ -167,7 +167,7 @@ describe("DragCoordinateBehavior", () => {
 
 				dragCoordinateBehavior.drag(mockDrawEvent(), true, () => false);
 
-				expect(config.store.updateGeometry).toBeCalledTimes(0);
+				expect(config.store.updateGeometry).toHaveBeenCalledTimes(0);
 			});
 
 			it("validation returning false means updates are not called", () => {
@@ -186,7 +186,7 @@ describe("DragCoordinateBehavior", () => {
 
 				dragCoordinateBehavior.drag(mockDrawEvent(), true, () => true);
 
-				expect(config.store.updateGeometry).toBeCalledTimes(1);
+				expect(config.store.updateGeometry).toHaveBeenCalledTimes(1);
 			});
 
 			it("updates the Polygon coordinate if within pointer distance", () => {
@@ -205,7 +205,7 @@ describe("DragCoordinateBehavior", () => {
 
 				dragCoordinateBehavior.drag(mockDrawEvent(), true);
 
-				expect(config.store.updateGeometry).toBeCalledTimes(1);
+				expect(config.store.updateGeometry).toHaveBeenCalledTimes(1);
 			});
 
 			it("updates the LineString coordinate if within pointer distance", () => {
@@ -220,7 +220,7 @@ describe("DragCoordinateBehavior", () => {
 
 				dragCoordinateBehavior.drag(mockDrawEvent(), true);
 
-				expect(config.store.updateGeometry).toBeCalledTimes(1);
+				expect(config.store.updateGeometry).toHaveBeenCalledTimes(1);
 			});
 
 			it("does not update Polygon coordinate of self-intersecting Polygon if self-intersections are disabled", () => {
@@ -250,7 +250,7 @@ describe("DragCoordinateBehavior", () => {
 					lat: 0,
 				} as Partial<TerraDrawMouseEvent>);
 				dragCoordinateBehavior.drag(mde, false);
-				expect(config.store.updateGeometry).toBeCalledTimes(0);
+				expect(config.store.updateGeometry).toHaveBeenCalledTimes(0);
 			});
 
 			it("does not update LineString coordinate of self-intersecting LineString if self-intersections are disabled", () => {
@@ -276,7 +276,7 @@ describe("DragCoordinateBehavior", () => {
 					lat: 0,
 				} as Partial<TerraDrawMouseEvent>);
 				dragCoordinateBehavior.drag(mde, false);
-				expect(config.store.updateGeometry).toBeCalledTimes(0);
+				expect(config.store.updateGeometry).toHaveBeenCalledTimes(0);
 			});
 		});
 	});

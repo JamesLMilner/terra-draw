@@ -120,8 +120,8 @@ describe("TerraDrawArcGISMapsSDKAdapter", () => {
 
 			adapter.register(createMockCallbacks());
 			adapter.unregister();
-			expect(removeAll).toBeCalledTimes(1);
-			expect(remove).toBeCalledTimes(2);
+			expect(removeAll).toHaveBeenCalledTimes(1);
+			expect(remove).toHaveBeenCalledTimes(2);
 		});
 	});
 
@@ -200,12 +200,12 @@ describe("TerraDrawArcGISMapsSDKAdapter", () => {
 			});
 
 			adapter.project(0, 0);
-			expect(mockPointImplementation).toBeCalledWith({
+			expect(mockPointImplementation).toHaveBeenCalledWith({
 				latitude: 0,
 				longitude: 0,
 			});
 			expect(map.toScreen).toHaveBeenCalledTimes(1);
-			expect(map.toScreen).toBeCalledWith({ x: 0, y: 0 });
+			expect(map.toScreen).toHaveBeenCalledWith({ x: 0, y: 0 });
 		});
 
 		it("unproject", () => {
@@ -221,7 +221,7 @@ describe("TerraDrawArcGISMapsSDKAdapter", () => {
 			// Test enabling dragging
 			adapter.unproject(0, 0);
 			expect(map.toMap).toHaveBeenCalledTimes(1);
-			expect(map.toMap).toBeCalledWith({ x: 0, y: 0 });
+			expect(map.toMap).toHaveBeenCalledWith({ x: 0, y: 0 });
 		});
 	});
 
@@ -341,9 +341,9 @@ describe("TerraDrawArcGISMapsSDKAdapter", () => {
 				},
 			);
 
-			expect(graphicsMock.add).toBeCalledTimes(1);
+			expect(graphicsMock.add).toHaveBeenCalledTimes(1);
 			expect(graphicsMock.add).toHaveBeenLastCalledWith(mockedGraphicCall);
-			expect(removeMock).not.toBeCalled();
+			expect(removeMock).not.toHaveBeenCalled();
 		});
 
 		it("handles updated ids", () => {
@@ -374,7 +374,7 @@ describe("TerraDrawArcGISMapsSDKAdapter", () => {
 			expect(graphicsMock.find).toHaveBeenCalledTimes(1);
 			expect(removeMock).toHaveBeenCalledTimes(1);
 			expect(removeMock).toHaveBeenLastCalledWith(mockedFeature);
-			expect(graphicsMock.add).toBeCalledTimes(1);
+			expect(graphicsMock.add).toHaveBeenCalledTimes(1);
 			expect(graphicsMock.add).toHaveBeenLastCalledWith(mockedGraphicCall);
 		});
 
@@ -394,7 +394,7 @@ describe("TerraDrawArcGISMapsSDKAdapter", () => {
 			expect(graphicsMock.find).toHaveBeenCalledTimes(1);
 			expect(removeMock).toHaveBeenCalledTimes(1);
 			expect(removeMock).toHaveBeenCalledWith(mockedFeature);
-			expect(graphicsMock.add).not.toBeCalled();
+			expect(graphicsMock.add).not.toHaveBeenCalled();
 		});
 
 		describe("point", () => {

@@ -150,8 +150,8 @@ describe("TerraDrawFreehandMode", () => {
 					heldKeys: [],
 				});
 
-				expect(onChange).toBeCalledTimes(1);
-				expect(onChange).toBeCalledWith(
+				expect(onChange).toHaveBeenCalledTimes(1);
+				expect(onChange).toHaveBeenCalledWith(
 					[expect.any(String), expect.any(String)],
 					"create",
 				);
@@ -183,8 +183,8 @@ describe("TerraDrawFreehandMode", () => {
 				features = store.copyAll();
 				expect(features.length).toBe(1);
 
-				expect(onChange).toBeCalledTimes(2);
-				expect(onChange).toBeCalledWith(
+				expect(onChange).toHaveBeenCalledTimes(2);
+				expect(onChange).toHaveBeenCalledWith(
 					[expect.any(String), expect.any(String)],
 					"create",
 				);
@@ -237,8 +237,8 @@ describe("TerraDrawFreehandMode", () => {
 				features = store.copyAll();
 				expect(features.length).toBe(2);
 
-				expect(onChange).toBeCalledTimes(1);
-				expect(onFinish).not.toBeCalled();
+				expect(onChange).toHaveBeenCalledTimes(1);
+				expect(onFinish).not.toHaveBeenCalled();
 			});
 
 			it("does finish drawing polygon on second click because validate returns true", () => {
@@ -306,7 +306,7 @@ describe("TerraDrawFreehandMode", () => {
 				heldKeys: [],
 			});
 
-			expect(onChange).toBeCalledTimes(1);
+			expect(onChange).toHaveBeenCalledTimes(1);
 			expect(onChange).toHaveBeenNthCalledWith(
 				1,
 				[expect.any(String), expect.any(String)],
@@ -336,7 +336,7 @@ describe("TerraDrawFreehandMode", () => {
 				});
 			}
 
-			expect(onChange).toBeCalledTimes(6);
+			expect(onChange).toHaveBeenCalledTimes(6);
 
 			const updatedFeature = store.copyAll()[0];
 
@@ -356,7 +356,7 @@ describe("TerraDrawFreehandMode", () => {
 				heldKeys: [],
 			});
 
-			expect(onChange).toBeCalledTimes(0);
+			expect(onChange).toHaveBeenCalledTimes(0);
 		});
 	});
 
@@ -374,7 +374,7 @@ describe("TerraDrawFreehandMode", () => {
 
 		it("does not delete if no freehand has been created", () => {
 			freehandMode.cleanUp();
-			expect(onChange).toBeCalledTimes(0);
+			expect(onChange).toHaveBeenCalledTimes(0);
 		});
 
 		it("does delete if a freehand has been created", () => {
@@ -389,7 +389,7 @@ describe("TerraDrawFreehandMode", () => {
 
 			freehandMode.cleanUp();
 
-			expect(onChange).toBeCalledTimes(3);
+			expect(onChange).toHaveBeenCalledTimes(3);
 			expect(onChange).toHaveBeenNthCalledWith(
 				2,
 				[expect.any(String)],
@@ -504,7 +504,7 @@ describe("TerraDrawFreehandMode", () => {
 				features = store.copyAll();
 				expect(features.length).toBe(1);
 
-				expect(onChange).toBeCalledTimes(2);
+				expect(onChange).toHaveBeenCalledTimes(2);
 				expect(onChange).toHaveBeenNthCalledWith(
 					1,
 					[expect.any(String), expect.any(String)],

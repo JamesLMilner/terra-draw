@@ -151,8 +151,8 @@ describe("TerraDrawRectangleMode", () => {
 					heldKeys: [],
 				});
 
-				expect(onChange).toBeCalledTimes(1);
-				expect(onChange).toBeCalledWith([expect.any(String)], "create");
+				expect(onChange).toHaveBeenCalledTimes(1);
+				expect(onChange).toHaveBeenCalledWith([expect.any(String)], "create");
 			});
 
 			it("finishes drawing rectangle on second click", () => {
@@ -180,8 +180,8 @@ describe("TerraDrawRectangleMode", () => {
 				features = store.copyAll();
 				expect(features.length).toBe(1);
 
-				expect(onChange).toBeCalledTimes(2);
-				expect(onChange).toBeCalledWith([expect.any(String)], "create");
+				expect(onChange).toHaveBeenCalledTimes(2);
+				expect(onChange).toHaveBeenCalledWith([expect.any(String)], "create");
 				expect(onFinish).toHaveBeenCalledTimes(1);
 				expect(onFinish).toHaveBeenNthCalledWith(1, expect.any(String), {
 					action: "draw",
@@ -239,9 +239,9 @@ describe("TerraDrawRectangleMode", () => {
 			// Two as the rectangle has been closed via enter
 			expect(features.length).toBe(2);
 
-			expect(onChange).toBeCalledTimes(2);
-			expect(onChange).toBeCalledWith([expect.any(String)], "create");
-			expect(onFinish).toBeCalledTimes(1);
+			expect(onChange).toHaveBeenCalledTimes(2);
+			expect(onChange).toHaveBeenCalledWith([expect.any(String)], "create");
+			expect(onFinish).toHaveBeenCalledTimes(1);
 		});
 
 		it("does not finish on key press when keyEvents null", () => {
@@ -277,9 +277,9 @@ describe("TerraDrawRectangleMode", () => {
 			// Only one as the click will close the rectangle
 			expect(features.length).toBe(1);
 
-			expect(onChange).toBeCalledTimes(1);
-			expect(onChange).toBeCalledWith([expect.any(String)], "create");
-			expect(onFinish).toBeCalledTimes(0);
+			expect(onChange).toHaveBeenCalledTimes(1);
+			expect(onChange).toHaveBeenCalledWith([expect.any(String)], "create");
+			expect(onFinish).toHaveBeenCalledTimes(0);
 		});
 	});
 
@@ -310,7 +310,7 @@ describe("TerraDrawRectangleMode", () => {
 				heldKeys: [],
 			});
 
-			expect(onChange).toBeCalledTimes(1);
+			expect(onChange).toHaveBeenCalledTimes(1);
 			expect(onChange).toHaveBeenNthCalledWith(
 				1,
 				[expect.any(String)],
@@ -327,7 +327,7 @@ describe("TerraDrawRectangleMode", () => {
 				button: "left",
 				heldKeys: [],
 			});
-			expect(onChange).toBeCalledTimes(2);
+			expect(onChange).toHaveBeenCalledTimes(2);
 			expect(onChange).toHaveBeenNthCalledWith(
 				2,
 				[expect.any(String)],
@@ -360,7 +360,7 @@ describe("TerraDrawRectangleMode", () => {
 
 		it("does not delete if no rectangle has been created", () => {
 			rectangleMode.cleanUp();
-			expect(onChange).toBeCalledTimes(0);
+			expect(onChange).toHaveBeenCalledTimes(0);
 		});
 
 		it("does delete if a rectangle has been created", () => {
@@ -375,7 +375,7 @@ describe("TerraDrawRectangleMode", () => {
 
 			rectangleMode.cleanUp();
 
-			expect(onChange).toBeCalledTimes(2);
+			expect(onChange).toHaveBeenCalledTimes(2);
 			expect(onChange).toHaveBeenNthCalledWith(
 				2,
 				[expect.any(String)],

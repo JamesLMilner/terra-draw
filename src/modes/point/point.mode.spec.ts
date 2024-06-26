@@ -119,8 +119,8 @@ describe("TerraDrawPointMode", () => {
 				containerY: 0,
 			} as TerraDrawMouseEvent);
 
-			expect(mockConfig.onChange).toBeCalledTimes(1);
-			expect(mockConfig.onChange).toBeCalledWith(
+			expect(mockConfig.onChange).toHaveBeenCalledTimes(1);
+			expect(mockConfig.onChange).toHaveBeenCalledWith(
 				[expect.any(String)],
 				"create",
 			);
@@ -145,8 +145,8 @@ describe("TerraDrawPointMode", () => {
 					containerY: 0,
 				} as TerraDrawMouseEvent);
 
-				expect(mockConfig.onChange).toBeCalledTimes(0);
-				expect(mockConfig.onChange).not.toBeCalledWith(
+				expect(mockConfig.onChange).toHaveBeenCalledTimes(0);
+				expect(mockConfig.onChange).not.toHaveBeenCalledWith(
 					[expect.any(String)],
 					"create",
 				);
@@ -170,8 +170,8 @@ describe("TerraDrawPointMode", () => {
 					containerY: 0,
 				} as TerraDrawMouseEvent);
 
-				expect(mockConfig.onChange).toBeCalledTimes(1);
-				expect(mockConfig.onChange).toBeCalledWith(
+				expect(mockConfig.onChange).toHaveBeenCalledTimes(1);
+				expect(mockConfig.onChange).toHaveBeenCalledWith(
 					[expect.any(String)],
 					"create",
 				);

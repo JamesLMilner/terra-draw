@@ -86,7 +86,7 @@ describe("MidPointBehavior", () => {
 
 				jest.spyOn(config.store, "create");
 				const createdId = createStoreLineString(config);
-				expect(config.store.create).toBeCalledTimes(1);
+				expect(config.store.create).toHaveBeenCalledTimes(1);
 
 				midPointBehavior.create(
 					[
@@ -97,7 +97,7 @@ describe("MidPointBehavior", () => {
 					coordinatePrecision,
 				);
 
-				expect(config.store.create).toBeCalledTimes(2);
+				expect(config.store.create).toHaveBeenCalledTimes(2);
 				expect(midPointBehavior.ids.length).toBe(1);
 				expect(midPointBehavior.ids[0]).toBeUUID4();
 			});
@@ -191,7 +191,7 @@ describe("MidPointBehavior", () => {
 
 					jest.spyOn(config.store, "create");
 					const createdId = createStoreLineString(config);
-					expect(config.store.create).toBeCalledTimes(1);
+					expect(config.store.create).toHaveBeenCalledTimes(1);
 
 					midPointBehavior.create(
 						[
@@ -218,7 +218,7 @@ describe("MidPointBehavior", () => {
 
 					midPointBehavior.insert(midPointId, coordinatePrecision);
 
-					expect(config.store.create).toBeCalledTimes(4);
+					expect(config.store.create).toHaveBeenCalledTimes(4);
 
 					// New Midpoints
 					createCalls[2][0].forEach((call: any, i: number) => {
@@ -249,7 +249,7 @@ describe("MidPointBehavior", () => {
 
 					jest.spyOn(config.store, "create");
 					const createdId = createStorePolygon(config);
-					expect(config.store.create).toBeCalledTimes(1);
+					expect(config.store.create).toHaveBeenCalledTimes(1);
 
 					midPointBehavior.create(
 						[
@@ -279,7 +279,7 @@ describe("MidPointBehavior", () => {
 
 					midPointBehavior.insert(midPointId, coordinatePrecision);
 
-					expect(config.store.create).toBeCalledTimes(4);
+					expect(config.store.create).toHaveBeenCalledTimes(4);
 
 					// New Midpoints
 					createCalls[2][0].forEach((call: any, i: number) => {

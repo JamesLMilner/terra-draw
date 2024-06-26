@@ -128,7 +128,7 @@ describe("TerraDrawLineStringMode", () => {
 				heldKeys: [],
 			});
 
-			expect(onChange).not.toBeCalled();
+			expect(onChange).not.toHaveBeenCalled();
 		});
 
 		it("updates the coordinate to the mouse position if a coordinate has been created", () => {
@@ -150,7 +150,7 @@ describe("TerraDrawLineStringMode", () => {
 				heldKeys: [],
 			});
 
-			expect(onChange).toBeCalledTimes(2);
+			expect(onChange).toHaveBeenCalledTimes(2);
 
 			const features = store.copyAll();
 			expect(features.length).toBe(1);
@@ -188,7 +188,7 @@ describe("TerraDrawLineStringMode", () => {
 				heldKeys: [],
 			});
 
-			expect(onChange).toBeCalledTimes(1);
+			expect(onChange).toHaveBeenCalledTimes(1);
 
 			const features = store.copyAll();
 			expect(features.length).toBe(1);
@@ -227,7 +227,7 @@ describe("TerraDrawLineStringMode", () => {
 				heldKeys: [],
 			});
 
-			expect(onChange).toBeCalledTimes(4);
+			expect(onChange).toHaveBeenCalledTimes(4);
 
 			const features = store.copyAll();
 
@@ -305,7 +305,7 @@ describe("TerraDrawLineStringMode", () => {
 				heldKeys: [],
 			});
 
-			expect(onChange).not.toBeCalledWith([expect.any(String)], "delete");
+			expect(onChange).not.toHaveBeenCalledWith([expect.any(String)], "delete");
 
 			lineStringMode.onClick({
 				lng: 2,
@@ -316,7 +316,7 @@ describe("TerraDrawLineStringMode", () => {
 				heldKeys: [],
 			});
 
-			expect(onChange).toBeCalledTimes(9);
+			expect(onChange).toHaveBeenCalledTimes(9);
 
 			expect(onChange).toHaveBeenNthCalledWith(
 				9,
@@ -414,7 +414,7 @@ describe("TerraDrawLineStringMode", () => {
 					heldKeys: [],
 				});
 
-				expect(onChange).toBeCalledTimes(7);
+				expect(onChange).toHaveBeenCalledTimes(7);
 
 				lineStringMode.onClick({
 					lng: -8.173828125,
@@ -427,7 +427,7 @@ describe("TerraDrawLineStringMode", () => {
 
 				// Update geometry is NOT called because
 				// there is a self intersection
-				expect(onChange).toBeCalledTimes(7);
+				expect(onChange).toHaveBeenCalledTimes(7);
 			});
 
 			it("does create a line if no intersections and validate returns true", () => {
@@ -510,7 +510,10 @@ describe("TerraDrawLineStringMode", () => {
 					heldKeys: [],
 				});
 
-				expect(onChange).not.toBeCalledWith([expect.any(String)], "delete");
+				expect(onChange).not.toHaveBeenCalledWith(
+					[expect.any(String)],
+					"delete",
+				);
 
 				lineStringMode.onClick({
 					lng: 2,
@@ -521,7 +524,7 @@ describe("TerraDrawLineStringMode", () => {
 					heldKeys: [],
 				});
 
-				expect(onChange).toBeCalledTimes(9);
+				expect(onChange).toHaveBeenCalledTimes(9);
 
 				expect(onChange).toHaveBeenNthCalledWith(
 					9,
@@ -657,7 +660,10 @@ describe("TerraDrawLineStringMode", () => {
 					heldKeys: [],
 				});
 
-				expect(onChange).not.toBeCalledWith([expect.any(String)], "delete");
+				expect(onChange).not.toHaveBeenCalledWith(
+					[expect.any(String)],
+					"delete",
+				);
 
 				lineStringMode.onKeyUp({
 					key: "Enter",
@@ -665,7 +671,7 @@ describe("TerraDrawLineStringMode", () => {
 					heldKeys: [],
 				});
 
-				expect(onChange).toBeCalledTimes(8);
+				expect(onChange).toHaveBeenCalledTimes(8);
 
 				expect(onChange).toHaveBeenNthCalledWith(
 					8,
@@ -761,7 +767,10 @@ describe("TerraDrawLineStringMode", () => {
 					heldKeys: [],
 				});
 
-				expect(onChange).not.toBeCalledWith([expect.any(String)], "delete");
+				expect(onChange).not.toHaveBeenCalledWith(
+					[expect.any(String)],
+					"delete",
+				);
 
 				lineStringMode.onKeyUp({
 					key: "Enter",
@@ -769,7 +778,7 @@ describe("TerraDrawLineStringMode", () => {
 					heldKeys: [],
 				});
 
-				expect(onChange).toBeCalledTimes(6);
+				expect(onChange).toHaveBeenCalledTimes(6);
 
 				features = store.copyAll();
 				expect(features.length).toBe(2);

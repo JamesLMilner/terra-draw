@@ -137,7 +137,7 @@ describe("TerraDrawPolygonMode", () => {
 				heldKeys: [],
 			});
 
-			expect(onChange).not.toBeCalled();
+			expect(onChange).not.toHaveBeenCalled();
 		});
 
 		it("updates the coordinate to the mouse position after first click", () => {
@@ -159,7 +159,7 @@ describe("TerraDrawPolygonMode", () => {
 				heldKeys: [],
 			});
 
-			expect(onChange).toBeCalledTimes(2);
+			expect(onChange).toHaveBeenCalledTimes(2);
 
 			const features = store.copyAll();
 			expect(features.length).toBe(1);
@@ -211,7 +211,7 @@ describe("TerraDrawPolygonMode", () => {
 				heldKeys: [],
 			});
 
-			expect(onChange).toBeCalledTimes(4);
+			expect(onChange).toHaveBeenCalledTimes(4);
 
 			const features = store.copyAll();
 			expect(features.length).toBe(1);
@@ -285,7 +285,7 @@ describe("TerraDrawPolygonMode", () => {
 				heldKeys: [],
 			});
 
-			expect(onChange).toBeCalledTimes(7);
+			expect(onChange).toHaveBeenCalledTimes(7);
 
 			// 1 times for the polygon
 			// 2 times for the closing points
@@ -772,37 +772,37 @@ describe("TerraDrawPolygonMode", () => {
 			polygonMode.onMouseMove(firstPoint);
 			polygonMode.onClick(firstPoint);
 
-			expect(store.updateGeometry).toBeCalledTimes(0);
-			expect(store.create).toBeCalledTimes(1);
+			expect(store.updateGeometry).toHaveBeenCalledTimes(0);
+			expect(store.create).toHaveBeenCalledTimes(1);
 
 			polygonMode.onMouseMove(firstPoint);
-			expect(store.updateGeometry).toBeCalledTimes(1);
+			expect(store.updateGeometry).toHaveBeenCalledTimes(1);
 
 			// Nothing happens here because the coordinates
 			// are identical
 
 			polygonMode.onClick(firstPoint);
-			expect(store.updateGeometry).toBeCalledTimes(1);
+			expect(store.updateGeometry).toHaveBeenCalledTimes(1);
 
 			const secondPoint = mockDrawEvent({
 				lng: 2,
 				lat: 2,
 			});
 			polygonMode.onMouseMove(secondPoint);
-			expect(store.updateGeometry).toBeCalledTimes(2);
+			expect(store.updateGeometry).toHaveBeenCalledTimes(2);
 
 			// This now updates because the coordinate is different
 
 			polygonMode.onClick(secondPoint);
-			expect(store.updateGeometry).toBeCalledTimes(3);
+			expect(store.updateGeometry).toHaveBeenCalledTimes(3);
 
 			polygonMode.onMouseMove(secondPoint);
-			expect(store.updateGeometry).toBeCalledTimes(4);
+			expect(store.updateGeometry).toHaveBeenCalledTimes(4);
 
 			// Again nothing happens because the coordinate is identical
 
 			polygonMode.onClick(secondPoint);
-			expect(store.updateGeometry).toBeCalledTimes(4);
+			expect(store.updateGeometry).toHaveBeenCalledTimes(4);
 
 			const thirdPoint = mockDrawEvent({
 				lng: 3,
@@ -810,26 +810,26 @@ describe("TerraDrawPolygonMode", () => {
 			});
 
 			polygonMode.onMouseMove(thirdPoint);
-			expect(store.updateGeometry).toBeCalledTimes(5);
+			expect(store.updateGeometry).toHaveBeenCalledTimes(5);
 
 			// This now updates because the coordinate is different
 
 			polygonMode.onClick(thirdPoint);
-			expect(store.updateGeometry).toBeCalledTimes(6);
+			expect(store.updateGeometry).toHaveBeenCalledTimes(6);
 
 			// We have to mock project in the final block
 			project.mockReturnValueOnce({ x: 0, y: 0 });
 			project.mockReturnValueOnce({ x: 0, y: 0 });
 
 			polygonMode.onMouseMove(thirdPoint);
-			expect(store.updateGeometry).toBeCalledTimes(7);
+			expect(store.updateGeometry).toHaveBeenCalledTimes(7);
 
 			// We have to mock project in the final block
 			project.mockReturnValueOnce({ x: 100, y: 100 });
 			project.mockReturnValueOnce({ x: 100, y: 100 });
 
 			polygonMode.onClick(thirdPoint);
-			expect(store.updateGeometry).toBeCalledTimes(7);
+			expect(store.updateGeometry).toHaveBeenCalledTimes(7);
 		});
 
 		describe("validate", () => {
@@ -928,7 +928,7 @@ describe("TerraDrawPolygonMode", () => {
 				// No closing points as feature is closed
 				features = store.copyAll();
 				expect(features.length).toBe(1);
-				expect(project).toBeCalledTimes(8);
+				expect(project).toHaveBeenCalledTimes(8);
 
 				// The overlapping coordinate is not included
 				expect(features[0].geometry.coordinates).toStrictEqual([

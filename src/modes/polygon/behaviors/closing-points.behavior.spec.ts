@@ -144,7 +144,7 @@ describe("ClosingPointsBehavior", () => {
 					"polygon",
 				);
 
-				expect(config.store.updateGeometry).toBeCalledTimes(0);
+				expect(config.store.updateGeometry).toHaveBeenCalledTimes(0);
 
 				startEndPointBehavior.update([
 					[0, 0],
@@ -154,7 +154,7 @@ describe("ClosingPointsBehavior", () => {
 					[0, 0],
 				]);
 
-				expect(config.store.updateGeometry).toBeCalledTimes(1);
+				expect(config.store.updateGeometry).toHaveBeenCalledTimes(1);
 			});
 		});
 

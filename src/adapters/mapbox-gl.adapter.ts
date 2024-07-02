@@ -64,6 +64,7 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawBaseAdapter {
 				features: features,
 			},
 			tolerance: 0,
+			promoteId: 'id',
 		});
 	}
 
@@ -344,6 +345,8 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawBaseAdapter {
 
 				Object.keys(styling).forEach((mode) => {
 					const { properties } = feature;
+
+					properties.id = feature.id;
 
 					if (properties.mode !== mode) {
 						return;

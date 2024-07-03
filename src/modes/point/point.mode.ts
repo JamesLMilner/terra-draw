@@ -155,6 +155,8 @@ export class TerraDrawPointMode extends TerraDrawBaseDrawMode<PointModeStyling> 
 				2,
 				feature,
 			);
+
+			styles.zIndex = 30;
 		}
 
 		return styles;

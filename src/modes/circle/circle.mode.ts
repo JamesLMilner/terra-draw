@@ -255,6 +255,8 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 				feature,
 			);
 
+			styles.zIndex = 30;
+
 			return styles;
 		}
 

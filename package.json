@@ -154,5 +154,6 @@
 				"section": "Reverts"
 			}
 		]
-	}
+	},
+	"sideEffects": false
 }

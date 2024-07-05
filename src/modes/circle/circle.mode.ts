@@ -1,4 +1,4 @@
-import { Position } from "geojson";
+import { Feature, Position } from "geojson";
 import {
 	TerraDrawMouseEvent,
 	TerraDrawAdapterStyling,
@@ -7,9 +7,10 @@ import {
 	NumericStyling,
 	Cursor,
 	UpdateTypes,
+	Projection,
 } from "../../common";
 import { haversineDistanceKilometers } from "../../geometry/measure/haversine-distance";
-import { circle } from "../../geometry/shape/create-circle";
+import { circle, circleWebMercator } from "../../geometry/shape/create-circle";
 import { FeatureId, GeoJSONStoreFeatures } from "../../store/store";
 import { getDefaultStyling } from "../../util/styling";
 import {
@@ -19,6 +20,7 @@ import {
 } from "../base.mode";
 import { ValidateNonIntersectingPolygonFeature } from "../../validations/polygon.validation";
 import { Polygon } from "geojson";
+import { calculateWebMercatorDistortion } from "../../geometry/shape/web-mercator-distortion";
 
 type TerraDrawCircleModeKeyEvents = {
 	cancel: KeyboardEvent["key"] | null;
@@ -41,10 +43,12 @@ interface TerraDrawCircleModeOptions<T extends CustomStyling>
 	keyEvents?: TerraDrawCircleModeKeyEvents | null;
 	cursors?: Cursors;
 	startingRadiusKilometers?: number;
+	projection?: Projection;
 }
 
 export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyling> {
 	mode = "circle";
+	private projection: Projection;
 	private center: Position | undefined;
 	private clickCount = 0;
 	private currentCircleId: FeatureId | undefined;
@@ -88,6 +92,8 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 		this.startingRadiusKilometers =
 			options?.startingRadiusKilometers ?? 0.00001;
 		this.validate = options?.validation;
+
+		this.projection = options?.projection ?? "web-mercator";
 	}
 
 	private close() {
@@ -281,11 +287,30 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 				event.lat,
 			]);
 
-			const updatedCircle = circle({
-				center: this.center,
-				radiusKilometers: newRadius,
-				coordinatePrecision: this.coordinatePrecision,
-			});
+			let updatedCircle: Feature<Polygon>;
+
+			if (this.projection === "web-mercator") {
+				// We want to track the mouse cursor, but we need to adjust the radius based
+				// on the distortion of the web mercator projection
+				const distortion = calculateWebMercatorDistortion(this.center, [
+					event.lng,
+					event.lat,
+				]);
+
+				updatedCircle = circleWebMercator({
+					center: this.center,
+					radiusKilometers: newRadius * distortion,
+					coordinatePrecision: this.coordinatePrecision,
+				});
+			} else if (this.projection === "globe") {
+				updatedCircle = circle({
+					center: this.center,
+					radiusKilometers: newRadius,
+					coordinatePrecision: this.coordinatePrecision,
+				});
+			} else {
+				throw new Error("Invalid projection");
+			}
 
 			if (this.validate) {
 				const valid = this.validate(

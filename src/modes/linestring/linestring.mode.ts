@@ -113,6 +113,8 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 		this.validate = options?.validation;
 
 		this.insertCoordinates = options?.insertCoordinates;
+
+		this.projection = options?.projection ?? "web-mercator";
 	}
 
 	private close() {

@@ -152,7 +152,10 @@ const example = {
 							: undefined,
 				}),
 				new TerraDrawRectangleMode(),
-				new TerraDrawCircleMode(),
+				new TerraDrawCircleMode({
+					projection:
+						this.config === "geodesicCircle" ? "globe" : "web-mercator",
+				}),
 				new TerraDrawFreehandMode(),
 				new TerraDrawRenderMode({
 					modeName: "arbitary",

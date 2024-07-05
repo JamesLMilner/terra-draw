@@ -35,8 +35,11 @@ export class TerraDrawLeafletAdapter extends TerraDrawBaseAdapter {
 	 * @returns The created style element
 	 */
 	private createPaneStyleSheet(pane: string, zIndex: number) {
+		const baseZIndex = 600;
 		const style = document.createElement("style");
-		style.innerHTML = `.leaflet-${pane} {z-index: ${zIndex};}`;
+		style.innerHTML = `.leaflet-${pane}-pane {z-index: ${
+			zIndex + baseZIndex
+		};}`;
 		document.getElementsByTagName("head")[0].appendChild(style);
 		this._map.createPane(pane);
 		return style;

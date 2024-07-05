@@ -346,6 +346,8 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 				feature,
 			);
 
+			styles.zIndex = 30;
+
 			return styles;
 		} else if (
 			feature.type === "Feature" &&
@@ -375,6 +377,8 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 				2,
 				feature,
 			);
+
+			styles.zIndex = 40;
 
 			return styles;
 		}

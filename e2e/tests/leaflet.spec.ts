@@ -331,8 +331,25 @@ test.describe("rectangle mode", () => {
 test.describe("circle mode", () => {
 	const mode = "circle";
 
-	test("mode can set and can be used to create a circle", async ({ page }) => {
+	test("mode can set and can be used to create a web mercator circle", async ({
+		page,
+	}) => {
 		const mapDiv = await setupMap({ page });
+		await changeMode({ page, mode });
+
+		await page.mouse.click(mapDiv.width / 2, mapDiv.height / 2);
+		await page.mouse.click(mapDiv.width / 2 + 50, mapDiv.height / 2 + 50);
+
+		// One point + one line
+		await expectPaths({ page, count: 1 });
+
+		await expectPathDimensions({ page, width: 146, height: 146 });
+	});
+
+	test("mode can set and can be used to create a geodesic circle", async ({
+		page,
+	}) => {
+		const mapDiv = await setupMap({ page, configQueryParam: "geodesicCircle" });
 		await changeMode({ page, mode });
 
 		await page.mouse.click(mapDiv.width / 2, mapDiv.height / 2);

@@ -5,6 +5,10 @@ import {
 	radiansToDegrees,
 } from "../helpers";
 import { limitPrecision } from "../limit-decimal-precision";
+import {
+	lngLatToWebMercatorXY,
+	webMercatorXYToLngLat,
+} from "../project/web-mercator";
 
 // Based on Turf.js Circle module
 // https://github.com/Turfjs/turf/blob/master/packages/turf-circle/index.ts
@@ -58,6 +62,43 @@ export function circle(options: {
 			limitPrecision(circleCoordinate[1], coordinatePrecision),
 		]);
 	}
+	coordinates.push(coordinates[0]);
+
+	return {
+		type: "Feature",
+		geometry: { type: "Polygon", coordinates: [coordinates] },
+		properties: {},
+	};
+}
+
+export function circleWebMercator(options: {
+	center: Position;
+	radiusKilometers: number;
+	coordinatePrecision: number;
+	steps?: number;
+}): GeoJSON.Feature<GeoJSON.Polygon> {
+	const { center, radiusKilometers, coordinatePrecision } = options;
+	const steps = options.steps ? options.steps : 64;
+
+	const radiusMeters = radiusKilometers * 1000;
+
+	const [lng, lat] = center;
+	const { x, y } = lngLatToWebMercatorXY(lng, lat);
+
+	const coordinates: Position[] = [];
+	for (let i = 0; i < steps; i++) {
+		const angle = (((i * 360) / steps) * Math.PI) / 180;
+		const dx = radiusMeters * Math.cos(angle);
+		const dy = radiusMeters * Math.sin(angle);
+		const [wx, wy] = [x + dx, y + dy];
+		const { lng, lat } = webMercatorXYToLngLat(wx, wy);
+		coordinates.push([
+			limitPrecision(lng, coordinatePrecision),
+			limitPrecision(lat, coordinatePrecision),
+		]);
+	}
+
+	// Close the circle by adding the first point at the end
 	coordinates.push(coordinates[0]);
 
 	return {

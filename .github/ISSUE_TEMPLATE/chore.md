@@ -1,7 +1,7 @@
 ---
 name: Chore
 about: Technical improvement tasks like updating a dependency etc
-title: ''
+title: '[Chore]'
 labels: chore
 assignees: ''
 

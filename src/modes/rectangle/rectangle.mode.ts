@@ -254,7 +254,7 @@ export class TerraDrawRectangleMode extends TerraDrawBaseDrawMode<RectanglePolyg
 				feature,
 			);
 
-			styles.zIndex = 30;
+			styles.zIndex = 10;
 
 			return styles;
 		}

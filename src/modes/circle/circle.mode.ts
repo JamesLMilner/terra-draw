@@ -48,7 +48,6 @@ interface TerraDrawCircleModeOptions<T extends CustomStyling>
 
 export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyling> {
 	mode = "circle";
-	private projection: Projection;
 	private center: Position | undefined;
 	private clickCount = 0;
 	private currentCircleId: FeatureId | undefined;
@@ -92,8 +91,6 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 		this.startingRadiusKilometers =
 			options?.startingRadiusKilometers ?? 0.00001;
 		this.validate = options?.validation;
-
-		this.projection = options?.projection ?? "web-mercator";
 	}
 
 	private close() {

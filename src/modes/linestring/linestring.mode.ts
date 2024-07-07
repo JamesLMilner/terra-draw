@@ -6,7 +6,6 @@ import {
 	NumericStyling,
 	Cursor,
 	UpdateTypes,
-	Projection,
 } from "../../common";
 import { LineString, Point, Position } from "geojson";
 import {
@@ -60,13 +59,11 @@ interface TerraDrawLineStringModeOptions<T extends CustomStyling>
 	keyEvents?: TerraDrawLineStringModeKeyEvents | null;
 	cursors?: Cursors;
 	insertCoordinates?: InertCoordinates;
-	projection?: Projection;
 }
 
 export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringStyling> {
 	mode = "linestring";
 
-	private projection: Projection = "web-mercator";
 	private currentCoordinate = 0;
 	private currentId: FeatureId | undefined;
 	private closingPointId: FeatureId | undefined;
@@ -113,8 +110,6 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 		this.validate = options?.validation;
 
 		this.insertCoordinates = options?.insertCoordinates;
-
-		this.projection = options?.projection ?? "web-mercator";
 	}
 
 	private close() {

@@ -186,6 +186,8 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 				}
 			}
 		}
+
+		console.log(this.projection);
 	}
 
 	selectFeature(featureId: FeatureId) {

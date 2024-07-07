@@ -86,6 +86,7 @@ const addModeChangeHandler = (
 const getModes = () => {
 	return [
 		new TerraDrawSelectMode({
+			projection: "globe",
 			flags: {
 				arbitrary: {
 					feature: {},

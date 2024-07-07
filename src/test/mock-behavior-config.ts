@@ -9,4 +9,5 @@ export const mockBehaviorConfig = (mode: string) =>
 		unproject: jest.fn(),
 		pointerDistance: 40,
 		coordinatePrecision: 9,
+		projection: "web-mercator",
 	}) as BehaviorConfig;

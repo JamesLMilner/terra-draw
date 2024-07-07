@@ -346,7 +346,7 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 				feature,
 			);
 
-			styles.zIndex = 30;
+			styles.zIndex = 10;
 
 			return styles;
 		} else if (

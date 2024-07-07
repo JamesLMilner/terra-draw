@@ -113,6 +113,8 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 		this.validate = options?.validation;
 
 		this.insertCoordinates = options?.insertCoordinates;
+
+		this.projection = options?.projection ?? "web-mercator";
 	}
 
 	private close() {
@@ -525,6 +527,8 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 				feature,
 			);
 
+			styles.zIndex = 10;
+
 			return styles;
 		} else if (
 			feature.type === "Feature" &&
@@ -554,6 +558,8 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 				2,
 				feature,
 			);
+
+			styles.zIndex = 40;
 
 			return styles;
 		}

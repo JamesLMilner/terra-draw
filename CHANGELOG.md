@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.1-alpha.69](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.68...v0.0.1-alpha.69) (2024-07-06)
+
+
+### Features
+
+* add projection property for circle mode to allow globe and web mercator circle drawing ([#276](https://github.com/JamesLMilner/terra-draw/issues/276)) ([03365b6](https://github.com/JamesLMilner/terra-draw/commit/03365b635f2badb49a4d93635cd01c8a9601adac))
+* remove TerraDrawGreatCircleMode, replace with insert midpoints ([#263](https://github.com/JamesLMilner/terra-draw/issues/263)) ([f5f5d04](https://github.com/JamesLMilner/terra-draw/commit/f5f5d045d67a7c2d93758aea46bfc0be44911039))
+
+
+### Bug Fixes
+
+* ensure z-indexing works correctly for TerraDrawLeafletAdapter ([#274](https://github.com/JamesLMilner/terra-draw/issues/274)) ([1d6af56](https://github.com/JamesLMilner/terra-draw/commit/1d6af563425c43655a687a2064e7171054865355))
+
+
+### Chore
+
+* add a action for ensuring conventional commits ([#278](https://github.com/JamesLMilner/terra-draw/issues/278)) ([4504ab9](https://github.com/JamesLMilner/terra-draw/commit/4504ab909eded42b3746d4ea7ae856c9289bd15a))
+* add sideEffects: false to package.json ([#273](https://github.com/JamesLMilner/terra-draw/issues/273)) ([a5edd98](https://github.com/JamesLMilner/terra-draw/commit/a5edd987a6e686576264a682948bef67f40d9cd9))
+* bump to Typescript 5.5 ([#264](https://github.com/JamesLMilner/terra-draw/issues/264)) ([ae991c5](https://github.com/JamesLMilner/terra-draw/commit/ae991c573201911139262a42bd4a65fc68184d94))
+* move all deprecated jest toBeCalled -> toHaveBeenCalled ([#265](https://github.com/JamesLMilner/terra-draw/issues/265)) ([390e805](https://github.com/JamesLMilner/terra-draw/commit/390e8051065d93de9b7effe08f96402492bca631))
+* rename minSize to maxSize in ValidateMaxAreaSquareMeters. ([#269](https://github.com/JamesLMilner/terra-draw/issues/269)) ([40d7357](https://github.com/JamesLMilner/terra-draw/commit/40d73577cdce02a3d93847b0f588d38467f0c4c8))
+
 ### [0.0.1-alpha.68](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.67...v0.0.1-alpha.68) (2024-06-04)
 
 

@@ -8,6 +8,7 @@
 
 ## PR Checklist
 
+- [ ] The PR title follows the [conventional commit](https://www.conventionalcommits.org/en/v1.0.0/#summary) standard
 - [ ] There is a associated GitHub issue 
 - [ ] If I have added significant code changes, there are relevant tests
 - [ ] If there are behaviour changes these are documented 

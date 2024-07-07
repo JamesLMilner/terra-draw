@@ -43,6 +43,7 @@ import SimpleFillSymbol from "@arcgis/core/symbols/SimpleFillSymbol";
 import SimpleLineSymbol from "@arcgis/core/symbols/SimpleLineSymbol";
 import Color from "@arcgis/core/Color";
 import SimpleMarkerSymbol from "@arcgis/core/symbols/SimpleMarkerSymbol";
+import { Config, Libraries } from "./config";
 
 const addModeChangeHandler = (
 	draw: TerraDraw,
@@ -212,15 +213,47 @@ const example = {
 	lng: -0.118092,
 	lat: 51.509865,
 	zoom: 12,
+	generateId(id: keyof typeof Libraries) {
+		return `${id.toLowerCase()}-map`;
+	},
+	init() {
+		for (const index in Config.libraries) {
+			const div = document.createElement("div");
+			div.style.position = "relative";
+			div.style.cursor = "pointer";
+			div.style.fontFamily = "sans-serif";
+			div.style.height = "100%";
+			div.style.width = `${100 / Object.keys(Config.libraries).length}%`;
+			div.style.outline = "solid 1px #d7d7d7";
+
+			div.id = this.generateId(Config.libraries[index]);
+			div.innerHTML = `<div class="label">${Config.libraries[index]}</div>`;
+
+			const container = document.getElementById("library-container");
+			if (container) {
+				container.appendChild(div);
+			}
+		}
+
+		Config.libraries.forEach((library) => {
+			this[library]();
+		});
+
+		// Key press output
+		document.addEventListener("keyup", (event) => {
+			(document.getElementById("keybind") as HTMLButtonElement).innerHTML =
+				event.key;
+		});
+	},
 	initialised: [] as string[],
-	initLeaflet(id: string) {
-		if (this.initialised.includes("leaflet")) {
+	[Libraries.Leaflet]() {
+		if (this.initialised.includes(Libraries.Leaflet)) {
 			return;
 		}
 
 		const { lng, lat, zoom } = this;
 
-		const map = L.map(id, {
+		const map = L.map(this.generateId(Libraries.Leaflet), {
 			center: [lat, lng],
 			zoom: zoom + 1, // starting zoom
 		});
@@ -245,21 +278,23 @@ const example = {
 
 		addModeChangeHandler(draw, currentSelected);
 
-		this.initialised.push("leaflet");
+		this.initialised.push(Libraries.Leaflet);
 	},
-	initMapbox(id: string, accessToken: string | undefined) {
-		if (this.initialised.includes("mapbox")) {
+	[Libraries.Mapbox]() {
+		if (this.initialised.includes(Libraries.Mapbox)) {
 			return;
 		}
 
 		const { lng, lat, zoom } = this;
 
 		const map = new mapboxgl.Map({
-			container: id, // container ID
+			container: this.generateId(Libraries.Mapbox), // container ID
 			center: [lng, lat], // starting position [lng, lat]
 			zoom: zoom, // starting zoom
 			projection: { name: "globe" },
 		});
+
+		const accessToken = process.env.MAPBOX_ACCESS_TOKEN;
 
 		// If we have an access token
 		if (accessToken) {
@@ -289,17 +324,17 @@ const example = {
 
 			addModeChangeHandler(draw, currentSelected);
 		});
-		this.initialised.push("mapbox");
+		this.initialised.push(Libraries.Mapbox);
 	},
-	initMapLibre(id: string) {
-		if (this.initialised.includes("maplibre")) {
+	[Libraries.MapLibre]() {
+		if (this.initialised.includes(Libraries.MapLibre)) {
 			return;
 		}
 
 		const { lng, lat, zoom } = this;
 
 		const map = new maplibregl.Map({
-			container: id,
+			container: this.generateId(Libraries.MapLibre),
 			style: OSMStyle as maplibregl.StyleSpecification,
 			center: [lng, lat],
 			zoom: zoom,
@@ -318,10 +353,10 @@ const example = {
 
 			addModeChangeHandler(draw, currentSelected);
 		});
-		this.initialised.push("maplibre");
+		this.initialised.push(Libraries.MapLibre);
 	},
-	initOpenLayers(id: string) {
-		if (this.initialised.includes("openlayers")) {
+	[Libraries.OpenLayers]() {
+		if (this.initialised.includes(Libraries.OpenLayers)) {
 			return;
 		}
 
@@ -336,7 +371,7 @@ const example = {
 					source: new OSM(),
 				}),
 			],
-			target: id,
+			target: this.generateId(Libraries.OpenLayers),
 			view: new View({
 				center,
 				zoom: zoom + 1, // adjusted to match raster maps
@@ -367,13 +402,15 @@ const example = {
 
 			addModeChangeHandler(draw, currentSelected);
 
-			this.initialised.push("openlayers");
+			this.initialised.push(Libraries.OpenLayers);
 		});
 	},
-	initGoogleMaps(id: string, apiKey: string | undefined) {
-		if (this.initialised.includes("google")) {
+	[Libraries.Google]() {
+		if (this.initialised.includes(Libraries.Google)) {
 			return;
 		}
+
+		let apiKey = process.env.GOOGLE_API_KEY;
 
 		// If no API key is provided
 		if (!apiKey) {
@@ -388,7 +425,9 @@ const example = {
 
 		loader.load().then((google) => {
 			const map = new google.maps.Map(
-				document.getElementById(id) as HTMLElement,
+				document.getElementById(
+					this.generateId(Libraries.Google),
+				) as HTMLElement,
 				{
 					disableDefaultUI: true,
 					center: { lat: this.lat, lng: this.lng },
@@ -423,8 +462,8 @@ const example = {
 			this.initialised.push("google");
 		});
 	},
-	initArcGISMapsSDK(id: string) {
-		if (this.initialised.includes("arcGISMapsSDK")) {
+	[Libraries.ArcGIS]() {
+		if (this.initialised.includes(Libraries.ArcGIS)) {
 			return;
 		}
 
@@ -437,7 +476,7 @@ const example = {
 			map: map,
 			center: [lng, lat], // Longitude, latitude
 			zoom: zoom + 1, // Zoom level
-			container: id, // Div element
+			container: this.generateId(Libraries.ArcGIS), // Div element
 		});
 
 		const draw = new TerraDraw({
@@ -461,19 +500,12 @@ const example = {
 		draw.start();
 		addModeChangeHandler(draw, currentSelected);
 
-		this.initialised.push("arcGISMapsSDK");
+		this.initialised.push(Libraries.ArcGIS);
 	},
 };
 
 console.log(process.env);
+console.log(Config.libraries);
 
-example.initOpenLayers("openlayers-map");
-example.initLeaflet("leaflet-map");
-example.initMapbox("mapbox-map", process.env.MAPBOX_ACCESS_TOKEN);
-example.initGoogleMaps("google-map", process.env.GOOGLE_API_KEY);
-example.initMapLibre("maplibre-map");
-example.initArcGISMapsSDK("arcgis-maps-sdk");
-document.addEventListener("keyup", (event) => {
-	(document.getElementById("keybind") as HTMLButtonElement).innerHTML =
-		event.key;
-});
+// Load base container and then load up all configured maps
+example.init();

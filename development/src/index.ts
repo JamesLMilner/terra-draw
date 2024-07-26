@@ -93,14 +93,14 @@ const getModes = () => {
 				},
 				polygon: {
 					feature: {
-						draggable: true,
+						// draggable: true,
 						rotateable: true,
 						scaleable: true,
 						coordinates: {
 							midpoints: true,
 							draggable: true,
 							deletable: true,
-							resizable: "center-web-mercator",
+							// resizable: "center",
 						},
 					},
 				},
@@ -109,11 +109,13 @@ const getModes = () => {
 				},
 				linestring: {
 					feature: {
-						draggable: true,
+						// draggable: true,
+						rotateable: true,
+						scaleable: true,
 						coordinates: {
-							midpoints: true,
-							draggable: true,
-							deletable: true,
+							// midpoints: true,
+							// draggable: true,
+							// deletable: true,
 						},
 					},
 				},
@@ -123,7 +125,7 @@ const getModes = () => {
 						coordinates: {
 							midpoints: false,
 							draggable: true,
-							resizable: "center-fixed-web-mercator",
+							resizable: "center-fixed",
 							deletable: true,
 						},
 					},
@@ -141,7 +143,7 @@ const getModes = () => {
 						coordinates: {
 							midpoints: false,
 							draggable: true,
-							resizable: "center-fixed-web-mercator",
+							resizable: "center-fixed",
 							deletable: true,
 						},
 					},

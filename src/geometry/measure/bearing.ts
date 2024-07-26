@@ -13,3 +13,26 @@ export function bearing(start: Position, end: Position): number {
 
 	return radiansToDegrees(Math.atan2(a, b));
 }
+
+export function webMercatorBearing(
+	{ x: x1, y: y1 }: { x: number; y: number },
+	{ x: x2, y: y2 }: { x: number; y: number },
+): number {
+	const deltaX = x2 - x1;
+	const deltaY = y2 - y1;
+
+	// Calculate the angle in radians
+	let angle = Math.atan2(deltaY, deltaX);
+
+	// Convert the angle to degrees
+	angle = angle * (180 / Math.PI);
+
+	// Normalize to -180 to 180
+	if (angle > 180) {
+		angle -= 360;
+	} else if (angle < -180) {
+		angle += 360;
+	}
+
+	return angle;
+}

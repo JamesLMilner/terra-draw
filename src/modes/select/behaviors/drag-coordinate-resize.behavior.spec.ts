@@ -136,10 +136,7 @@ describe("DragCoordinateResizeBehavior", () => {
 			it("returns early if nothing is being dragged", () => {
 				jest.spyOn(config.store, "updateGeometry");
 
-				dragMaintainedShapeBehavior.drag(
-					mockDrawEvent(),
-					"center-web-mercator",
-				);
+				dragMaintainedShapeBehavior.drag(mockDrawEvent(), "center");
 
 				expect(config.store.updateGeometry).toHaveBeenCalledTimes(0);
 			});
@@ -148,10 +145,7 @@ describe("DragCoordinateResizeBehavior", () => {
 				createStorePoint(config);
 				jest.spyOn(config.store, "updateGeometry");
 
-				dragMaintainedShapeBehavior.drag(
-					mockDrawEvent(),
-					"center-web-mercator",
-				);
+				dragMaintainedShapeBehavior.drag(mockDrawEvent(), "center");
 
 				expect(config.store.updateGeometry).toHaveBeenCalledTimes(0);
 			});
@@ -172,19 +166,15 @@ describe("DragCoordinateResizeBehavior", () => {
 							.mockReturnValueOnce({ x: 100, y: 100 });
 					}
 
-					dragMaintainedShapeBehavior.drag(
-						mockDrawEvent(),
-						"center-web-mercator",
-						() => {
-							return false;
-						},
-					);
+					dragMaintainedShapeBehavior.drag(mockDrawEvent(), "center", () => {
+						return false;
+					});
 
 					expect(config.store.updateGeometry).toHaveBeenCalledTimes(0);
 				});
 			});
 
-			describe("center-web-mercator", () => {
+			describe("center", () => {
 				it("updates the Polygon coordinate if within pointer distance", () => {
 					const id = createStorePolygon(config);
 
@@ -200,10 +190,7 @@ describe("DragCoordinateResizeBehavior", () => {
 							.mockReturnValueOnce({ x: 100, y: 100 });
 					}
 
-					dragMaintainedShapeBehavior.drag(
-						mockDrawEvent(),
-						"center-web-mercator",
-					);
+					dragMaintainedShapeBehavior.drag(mockDrawEvent(), "center");
 
 					expect(config.store.updateGeometry).toHaveBeenCalledTimes(1);
 				});
@@ -222,16 +209,13 @@ describe("DragCoordinateResizeBehavior", () => {
 							.mockReturnValueOnce({ x: 100, y: 100 });
 					}
 
-					dragMaintainedShapeBehavior.drag(
-						mockDrawEvent(),
-						"center-web-mercator",
-					);
+					dragMaintainedShapeBehavior.drag(mockDrawEvent(), "center");
 
 					expect(config.store.updateGeometry).toHaveBeenCalledTimes(1);
 				});
 			});
 
-			describe("opposite-web-mercator", () => {
+			describe("opposite", () => {
 				it("updates the Polygon coordinate if within pointer distance", () => {
 					const id = createStorePolygon(config);
 
@@ -247,10 +231,7 @@ describe("DragCoordinateResizeBehavior", () => {
 							.mockReturnValueOnce({ x: 100, y: 100 });
 					}
 
-					dragMaintainedShapeBehavior.drag(
-						mockDrawEvent(),
-						"opposite-web-mercator",
-					);
+					dragMaintainedShapeBehavior.drag(mockDrawEvent(), "opposite");
 
 					expect(config.store.updateGeometry).toHaveBeenCalledTimes(1);
 				});
@@ -269,16 +250,13 @@ describe("DragCoordinateResizeBehavior", () => {
 							.mockReturnValueOnce({ x: 100, y: 100 });
 					}
 
-					dragMaintainedShapeBehavior.drag(
-						mockDrawEvent(),
-						"opposite-web-mercator",
-					);
+					dragMaintainedShapeBehavior.drag(mockDrawEvent(), "opposite");
 
 					expect(config.store.updateGeometry).toHaveBeenCalledTimes(1);
 				});
 			});
 
-			describe("center-fixed-web-mercator", () => {
+			describe("center-fixed", () => {
 				it("updates the Polygon coordinate if within pointer distance", () => {
 					const id = createStorePolygon(config);
 
@@ -294,10 +272,7 @@ describe("DragCoordinateResizeBehavior", () => {
 							.mockReturnValueOnce({ x: 100, y: 100 });
 					}
 
-					dragMaintainedShapeBehavior.drag(
-						mockDrawEvent(),
-						"center-fixed-web-mercator",
-					);
+					dragMaintainedShapeBehavior.drag(mockDrawEvent(), "center-fixed");
 
 					expect(config.store.updateGeometry).toHaveBeenCalledTimes(1);
 				});
@@ -316,16 +291,13 @@ describe("DragCoordinateResizeBehavior", () => {
 							.mockReturnValueOnce({ x: 100, y: 100 });
 					}
 
-					dragMaintainedShapeBehavior.drag(
-						mockDrawEvent(),
-						"center-fixed-web-mercator",
-					);
+					dragMaintainedShapeBehavior.drag(mockDrawEvent(), "center-fixed");
 
 					expect(config.store.updateGeometry).toHaveBeenCalledTimes(1);
 				});
 			});
 
-			describe("opposite-fixed-web-mercator", () => {
+			describe("opposite-fixed", () => {
 				it("updates the Polygon coordinate if within pointer distance", () => {
 					const id = createStorePolygon(config);
 
@@ -341,10 +313,7 @@ describe("DragCoordinateResizeBehavior", () => {
 							.mockReturnValueOnce({ x: 100, y: 100 });
 					}
 
-					dragMaintainedShapeBehavior.drag(
-						mockDrawEvent(),
-						"opposite-fixed-web-mercator",
-					);
+					dragMaintainedShapeBehavior.drag(mockDrawEvent(), "opposite-fixed");
 
 					expect(config.store.updateGeometry).toHaveBeenCalledTimes(1);
 				});
@@ -363,10 +332,7 @@ describe("DragCoordinateResizeBehavior", () => {
 							.mockReturnValueOnce({ x: 100, y: 100 });
 					}
 
-					dragMaintainedShapeBehavior.drag(
-						mockDrawEvent(),
-						"opposite-fixed-web-mercator",
-					);
+					dragMaintainedShapeBehavior.drag(mockDrawEvent(), "opposite-fixed");
 
 					expect(config.store.updateGeometry).toHaveBeenCalledTimes(1);
 				});

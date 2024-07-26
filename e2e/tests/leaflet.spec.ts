@@ -365,149 +365,116 @@ test.describe("circle mode", () => {
 test.describe("select mode", () => {
 	const mode = "select";
 
-	test("mode can set and then polygon can be selected and deselected", async ({
-		page,
-	}) => {
-		const mapDiv = await setupMap({ page });
+	const options = [
+		{ name: "in web mercator projection", config: undefined },
+		{
+			name: "in globe projection",
+			config: "globeSelect",
+		},
+	] as { name: string; config: TestConfigOptions }[];
 
-		await changeMode({ page, mode: "polygon" });
-		const sideLength = 100;
-		const halfLength = sideLength / 2;
-		const centerX = mapDiv.width / 2;
-		const centerY = mapDiv.height / 2;
-		const topLeft = { x: centerX - halfLength, y: centerY - halfLength };
-		const topRight = { x: centerX + halfLength, y: centerY - halfLength };
-		const bottomLeft = { x: centerX - halfLength, y: centerY + halfLength };
-		const bottomRight = { x: centerX + halfLength, y: centerY + halfLength };
-		await page.mouse.click(topLeft.x, topLeft.y);
-		await page.mouse.click(topRight.x, topRight.y);
-		await page.mouse.click(bottomRight.x, bottomRight.y);
-		await page.mouse.click(bottomLeft.x, bottomLeft.y);
-		await page.mouse.click(bottomLeft.x, bottomLeft.y); // Closed
-
-		await changeMode({ page, mode });
-
-		// Select
-		await page.mouse.click(mapDiv.width / 2, mapDiv.height / 2);
-		await expectPaths({ page, count: 9 }); // 8 selection points and 1 square
-
-		// Deselect
-		await page.mouse.click(mapDiv.width - 10, mapDiv.height / 2);
-		await expectPaths({ page, count: 1 }); // 0 selection points and 1 square
-	});
-
-	test("selected polygon can be dragged", async ({ page }) => {
-		const mapDiv = await setupMap({ page });
-
-		await changeMode({ page, mode: "polygon" });
-
-		// Draw a rectangle
-		const { topLeft } = await drawRectangularPolygon({ mapDiv, page });
-
-		// Change to select mode
-		await changeMode({ page, mode });
-
-		// Before drag
-		const x = topLeft.x - 2;
-		const y = topLeft.y - 2;
-		await expectGroupPosition({ page, x, y });
-
-		// Select
-		await page.mouse.click(mapDiv.width / 2, mapDiv.height / 2);
-		await expectPaths({ page, count: 9 }); // 8 selection points and 1 square
-
-		// Drag
-		await page.mouse.move(mapDiv.width / 2, mapDiv.height / 2);
-		await page.mouse.down();
-		await page.mouse.move(mapDiv.width / 2 + 50, mapDiv.height / 2 + 50, {
-			steps: 30,
-		}); // Steps is required
-		await page.mouse.up();
-
-		await page.mouse.click(mapDiv.width - 10, mapDiv.height / 2);
-
-		await expectGroupPosition({ page, x: x + 48, y: y + 48 });
-	});
-
-	test("selected polygon can have individual coordinates dragged", async ({
-		page,
-	}) => {
-		const mapDiv = await setupMap({ page });
-
-		await changeMode({ page, mode: "polygon" });
-
-		// Draw a rectangle
-		const { topLeft } = await drawRectangularPolygon({ mapDiv, page });
-
-		// Change to select mode
-		await changeMode({ page, mode });
-
-		// Before drag
-		const x = topLeft.x - 2;
-		const y = topLeft.y - 2;
-		await expectGroupPosition({ page, x, y });
-
-		// Select
-		await page.mouse.click(mapDiv.width / 2, mapDiv.height / 2);
-		await expectPaths({ page, count: 9 }); // 8 selection points and 1 square
-
-		// Drag
-		await page.mouse.move(topLeft.x, topLeft.y);
-		await page.mouse.down();
-		await page.mouse.move(topLeft.x - 50, topLeft.y + 50, { steps: 30 }); // Steps is required
-		await page.mouse.up();
-
-		// Deselect
-		await page.mouse.click(mapDiv.width - 10, mapDiv.height / 2);
-
-		// Dragged the coordinate to the left and down slightly
-		await expectGroupPosition({ page, x: 538, y: 308 });
-	});
-
-	test("selected polygon can have individual coordinates dragged and fail when validation fails", async ({
-		page,
-	}) => {
-		const mapDiv = await setupMap({
+	for (const { name, config } of options) {
+		test(`mode can set and then polygon can be selected and deselected ${name}`, async ({
 			page,
-			configQueryParam: "validationFailure",
+		}) => {
+			const mapDiv = await setupMap({ page, configQueryParam: config });
+
+			await changeMode({ page, mode: "polygon" });
+			const sideLength = 100;
+			const halfLength = sideLength / 2;
+			const centerX = mapDiv.width / 2;
+			const centerY = mapDiv.height / 2;
+			const topLeft = { x: centerX - halfLength, y: centerY - halfLength };
+			const topRight = { x: centerX + halfLength, y: centerY - halfLength };
+			const bottomLeft = { x: centerX - halfLength, y: centerY + halfLength };
+			const bottomRight = { x: centerX + halfLength, y: centerY + halfLength };
+			await page.mouse.click(topLeft.x, topLeft.y);
+			await page.mouse.click(topRight.x, topRight.y);
+			await page.mouse.click(bottomRight.x, bottomRight.y);
+			await page.mouse.click(bottomLeft.x, bottomLeft.y);
+			await page.mouse.click(bottomLeft.x, bottomLeft.y); // Closed
+
+			await changeMode({ page, mode });
+
+			// Select
+			await page.mouse.click(mapDiv.width / 2, mapDiv.height / 2);
+			await expectPaths({ page, count: 9 }); // 8 selection points and 1 square
+
+			// Deselect
+			await page.mouse.click(mapDiv.width - 10, mapDiv.height / 2);
+			await expectPaths({ page, count: 1 }); // 0 selection points and 1 square
 		});
 
-		await changeMode({ page, mode: "polygon" });
+		test(`selected polygon can be dragged ${name}`, async ({ page }) => {
+			const mapDiv = await setupMap({ page, configQueryParam: config });
 
-		// Draw a rectangle
-		const { topLeft } = await drawRectangularPolygon({
-			mapDiv,
-			page,
-			size: "small",
+			await changeMode({ page, mode: "polygon" });
+
+			// Draw a rectangle
+			const { topLeft } = await drawRectangularPolygon({ mapDiv, page });
+
+			// Change to select mode
+			await changeMode({ page, mode });
+
+			// Before drag
+			const x = topLeft.x - 2;
+			const y = topLeft.y - 2;
+			await expectGroupPosition({ page, x, y });
+
+			// Select
+			await page.mouse.click(mapDiv.width / 2, mapDiv.height / 2);
+			await expectPaths({ page, count: 9 }); // 8 selection points and 1 square
+
+			// Drag
+			await page.mouse.move(mapDiv.width / 2, mapDiv.height / 2);
+			await page.mouse.down();
+			await page.mouse.move(mapDiv.width / 2 + 50, mapDiv.height / 2 + 50, {
+				steps: 30,
+			}); // Steps is required
+			await page.mouse.up();
+
+			await page.mouse.click(mapDiv.width - 10, mapDiv.height / 2);
+
+			await expectGroupPosition({ page, x: x + 48, y: y + 48 });
 		});
 
-		// Change to select mode
-		await changeMode({ page, mode });
+		test(`selected polygon can have individual coordinates dragged ${name}`, async ({
+			page,
+		}) => {
+			const mapDiv = await setupMap({ page, configQueryParam: config });
 
-		// Before drag
-		const x = topLeft.x - 2;
-		const y = topLeft.y - 2;
-		await expectGroupPosition({ page, x, y });
+			await changeMode({ page, mode: "polygon" });
 
-		// Select
-		await page.mouse.click(mapDiv.width / 2, mapDiv.height / 2);
-		// await expectPaths({ page, count: 9 }); // 8 selection points and 1 square
+			// Draw a rectangle
+			const { topLeft } = await drawRectangularPolygon({ mapDiv, page });
 
-		// Drag
-		await page.mouse.move(topLeft.x, topLeft.y);
-		await page.mouse.down();
-		await page.mouse.move(0, 0, { steps: 30 });
-		await page.mouse.up();
+			// Change to select mode
+			await changeMode({ page, mode });
 
-		// Deselect
-		await page.mouse.click(mapDiv.width - 10, mapDiv.height / 2);
+			// Before drag
+			const x = topLeft.x - 2;
+			const y = topLeft.y - 2;
+			await expectGroupPosition({ page, x, y });
 
-		// We are attempting to dragg right tothe top left corner but it is not getting there
-		// because it is capped by the validation. If this was allowed x would be ~90
-		await expectGroupPosition({ page, x: 563, y: 301 });
-	});
+			// Select
+			await page.mouse.click(mapDiv.width / 2, mapDiv.height / 2);
+			await expectPaths({ page, count: 9 }); // 8 selection points and 1 square
 
-	test("selected polygon can have individual coordinates dragged and succeeds when validation succeeds", async ({
+			// Drag
+			await page.mouse.move(topLeft.x, topLeft.y);
+			await page.mouse.down();
+			await page.mouse.move(topLeft.x - 50, topLeft.y + 50, { steps: 30 }); // Steps is required
+			await page.mouse.up();
+
+			// Deselect
+			await page.mouse.click(mapDiv.width - 10, mapDiv.height / 2);
+
+			// Dragged the coordinate to the left and down slightly
+			await expectGroupPosition({ page, x: 538, y: 308 });
+		});
+	}
+
+	test(`selected polygon can have individual coordinates dragged and succeeds when validation succeeds`, async ({
 		page,
 	}) => {
 		const mapDiv = await setupMap({
@@ -548,6 +515,49 @@ test.describe("select mode", () => {
 		// We are attempting to dragg right tothe top left corner but it is not getting there
 		// because it is capped by the validation. If this was allowed x would be ~90
 		await expectGroupPosition({ page, x: 553, y: 273 });
+	});
+
+	test(`selected polygon can have individual coordinates dragged and fail when validation fails`, async ({
+		page,
+	}) => {
+		const mapDiv = await setupMap({
+			page,
+			configQueryParam: "validationFailure",
+		});
+
+		await changeMode({ page, mode: "polygon" });
+
+		// Draw a rectangle
+		const { topLeft } = await drawRectangularPolygon({
+			mapDiv,
+			page,
+			size: "small",
+		});
+
+		// Change to select mode
+		await changeMode({ page, mode });
+
+		// Before drag
+		const x = topLeft.x - 2;
+		const y = topLeft.y - 2;
+		await expectGroupPosition({ page, x, y });
+
+		// Select
+		await page.mouse.click(mapDiv.width / 2, mapDiv.height / 2);
+		// await expectPaths({ page, count: 9 }); // 8 selection points and 1 square
+
+		// Drag
+		await page.mouse.move(topLeft.x, topLeft.y);
+		await page.mouse.down();
+		await page.mouse.move(0, 0, { steps: 30 });
+		await page.mouse.up();
+
+		// Deselect
+		await page.mouse.click(mapDiv.width - 10, mapDiv.height / 2);
+
+		// We are attempting to dragg right tothe top left corner but it is not getting there
+		// because it is capped by the validation. If this was allowed x would be ~90
+		await expectGroupPosition({ page, x: 563, y: 301 });
 	});
 
 	test("selected rectangle has it's shape maintained when coordinates are dragged with resizeable flag", async ({

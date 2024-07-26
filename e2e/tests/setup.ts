@@ -7,7 +7,8 @@ export type TestConfigOptions =
 	| "validationFailure"
 	| "insertCoordinates"
 	| "insertCoordinatesGlobe"
-	| "geodesicCircle";
+	| "geodesicCircle"
+	| "globeSelect";
 
 export const setupMap = async ({
 	page,

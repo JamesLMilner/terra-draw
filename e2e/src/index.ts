@@ -18,11 +18,15 @@ const example = {
 	lat: 51.509865,
 	zoom: 12,
 	initialised: [],
-	config: null as string | null,
+	config: null as string[] | null,
 	initPageConfig() {
 		const urlParams = new URLSearchParams(window.location.search);
 		console.log(urlParams);
-		this.config = urlParams.get("config");
+		const config = urlParams.get("config");
+
+		if (config) {
+			this.config = config.split(",");
+		}
 	},
 	initLeaflet() {
 		const { lng, lat, zoom } = this;
@@ -61,12 +65,12 @@ const example = {
 						polygon: {
 							feature: {
 								validation:
-									this.config === "validationSuccess" ||
-									this.config === "validationFailure"
+									this.config?.includes("validationSuccess") ||
+									this.config?.includes("validationFailure")
 										? (feature) => {
 												return ValidateMaxAreaSquareMeters(
 													feature,
-													this.config === "validationFailure"
+													this.config?.includes("validationFailure")
 														? 1000000
 														: 2000000,
 												);
@@ -122,14 +126,14 @@ const example = {
 				}),
 				new TerraDrawPointMode(),
 				new TerraDrawLineStringMode(
-					this.config === "insertCoordinates"
+					this.config?.includes("insertCoordinates")
 						? {
 								insertCoordinates: {
 									strategy: "amount",
 									value: 10,
 								},
 						  }
-						: this.config === "insertCoordinatesGlobe"
+						: this.config?.includes("insertCoordinatesGlobe")
 						? {
 								projection: "globe",
 								insertCoordinates: {
@@ -141,24 +145,27 @@ const example = {
 				),
 				new TerraDrawPolygonMode({
 					validation:
-						this.config === "validationSuccess" ||
-						this.config === "validationFailure"
+						this.config?.includes("validationSuccess") ||
+						this.config?.includes("validationFailure")
 							? (feature) => {
 									return ValidateMaxAreaSquareMeters(
 										feature,
-										this.config === "validationFailure" ? 1000000 : 2000000,
+										this.config?.includes("validationFailure")
+											? 1000000
+											: 2000000,
 									);
 							  }
 							: undefined,
 				}),
 				new TerraDrawRectangleMode(),
 				new TerraDrawCircleMode({
-					projection:
-						this.config === "geodesicCircle" ? "globe" : "web-mercator",
+					projection: this.config?.includes("globeCircle")
+						? "globe"
+						: "web-mercator",
 				}),
 				new TerraDrawFreehandMode(),
 				new TerraDrawRenderMode({
-					modeName: "arbitary",
+					modeName: "arbitrary",
 					styles: {
 						polygonFillColor: "#4357AD",
 						polygonOutlineColor: "#48A9A6",

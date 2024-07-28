@@ -82,13 +82,13 @@ test.describe("linestring mode", () => {
 		{ name: "", config: undefined },
 		{
 			name: " with insert coordinates for web mercator projection",
-			config: "insertCoordinates",
+			config: ["insertCoordinates"],
 		},
 		{
 			name: " with insert coordinates for globe projection",
-			config: "insertCoordinatesGlobe",
+			config: ["insertCoordinatesGlobe"],
 		},
-	] as { name: string; config: TestConfigOptions }[];
+	] as { name: string; config: TestConfigOptions[] }[];
 
 	for (const { name, config } of options) {
 		test(`mode can set and can be used to create a linestring${name}`, async ({
@@ -235,7 +235,7 @@ test.describe("polygon mode", () => {
 	}) => {
 		const mapDiv = await setupMap({
 			page,
-			configQueryParam: "validationFailure",
+			configQueryParam: ["validationFailure"],
 		});
 		await changeMode({ page, mode });
 
@@ -274,7 +274,7 @@ test.describe("polygon mode", () => {
 	}) => {
 		const mapDiv = await setupMap({
 			page,
-			configQueryParam: "validationSuccess",
+			configQueryParam: ["validationSuccess"],
 		});
 		await changeMode({ page, mode });
 
@@ -349,7 +349,7 @@ test.describe("circle mode", () => {
 	test("mode can set and can be used to create a geodesic circle", async ({
 		page,
 	}) => {
-		const mapDiv = await setupMap({ page, configQueryParam: "geodesicCircle" });
+		const mapDiv = await setupMap({ page, configQueryParam: ["globeCircle"] });
 		await changeMode({ page, mode });
 
 		await page.mouse.click(mapDiv.width / 2, mapDiv.height / 2);
@@ -369,9 +369,9 @@ test.describe("select mode", () => {
 		{ name: "in web mercator projection", config: undefined },
 		{
 			name: "in globe projection",
-			config: "globeSelect",
+			config: ["globeSelect"],
 		},
-	] as { name: string; config: TestConfigOptions }[];
+	] as { name: string; config: TestConfigOptions[] }[];
 
 	for (const { name, config } of options) {
 		test(`mode can set and then polygon can be selected and deselected ${name}`, async ({
@@ -472,95 +472,99 @@ test.describe("select mode", () => {
 			// Dragged the coordinate to the left and down slightly
 			await expectGroupPosition({ page, x: 538, y: 308 });
 		});
+
+		test(`selected polygon can have individual coordinates dragged and succeeds when validation succeeds ${name}`, async ({
+			page,
+		}) => {
+			const mapDiv = await setupMap({
+				page,
+				configQueryParam: config
+					? [...config, "validationSuccess"]
+					: ["validationSuccess"],
+			});
+
+			await changeMode({ page, mode: "polygon" });
+
+			// Draw a rectangle
+			const { topLeft } = await drawRectangularPolygon({
+				mapDiv,
+				page,
+				size: "small",
+			});
+
+			// Change to select mode
+			await changeMode({ page, mode });
+
+			// Before drag
+			const x = topLeft.x - 2;
+			const y = topLeft.y - 2;
+			await expectGroupPosition({ page, x, y });
+
+			// Select
+			await page.mouse.click(mapDiv.width / 2, mapDiv.height / 2);
+			// await expectPaths({ page, count: 9 }); // 8 selection points and 1 square
+
+			// Drag
+			await page.mouse.move(topLeft.x, topLeft.y);
+			await page.mouse.down();
+			await page.mouse.move(topLeft.x - 50, topLeft.y - 50, { steps: 30 });
+			await page.mouse.up();
+
+			// Deselect
+			await page.mouse.click(mapDiv.width - 10, mapDiv.height / 2);
+
+			// We are attempting to dragg right tothe top left corner but it is not getting there
+			// because it is capped by the validation. If this was allowed x would be ~90
+			await expectGroupPosition({ page, x: 553, y: 273 });
+		});
+
+		test(`selected polygon can have individual coordinates dragged and fail when validation fails ${name}`, async ({
+			page,
+		}) => {
+			const mapDiv = await setupMap({
+				page,
+				configQueryParam: config
+					? [...config, "validationFailure"]
+					: ["validationFailure"],
+			});
+
+			await changeMode({ page, mode: "polygon" });
+
+			// Draw a rectangle
+			const { topLeft } = await drawRectangularPolygon({
+				mapDiv,
+				page,
+				size: "small",
+			});
+
+			// Change to select mode
+			await changeMode({ page, mode });
+
+			// Before drag
+			const x = topLeft.x - 2;
+			const y = topLeft.y - 2;
+			await expectGroupPosition({ page, x, y });
+
+			// Select
+			await page.mouse.click(mapDiv.width / 2, mapDiv.height / 2);
+			// await expectPaths({ page, count: 9 }); // 8 selection points and 1 square
+
+			// Drag
+			await page.mouse.move(topLeft.x, topLeft.y);
+			await page.mouse.down();
+			await page.mouse.move(0, 0, { steps: 30 });
+			await page.mouse.up();
+
+			// Deselect
+			await page.mouse.click(mapDiv.width - 10, mapDiv.height / 2);
+
+			// We are attempting to dragg right tothe top left corner but it is not getting there
+			// because it is capped by the validation. If this was allowed x would be ~90
+			await expectGroupPosition({ page, x: 563, y: 301 });
+		});
 	}
 
-	test(`selected polygon can have individual coordinates dragged and succeeds when validation succeeds`, async ({
-		page,
-	}) => {
-		const mapDiv = await setupMap({
-			page,
-			configQueryParam: "validationSuccess",
-		});
-
-		await changeMode({ page, mode: "polygon" });
-
-		// Draw a rectangle
-		const { topLeft } = await drawRectangularPolygon({
-			mapDiv,
-			page,
-			size: "small",
-		});
-
-		// Change to select mode
-		await changeMode({ page, mode });
-
-		// Before drag
-		const x = topLeft.x - 2;
-		const y = topLeft.y - 2;
-		await expectGroupPosition({ page, x, y });
-
-		// Select
-		await page.mouse.click(mapDiv.width / 2, mapDiv.height / 2);
-		// await expectPaths({ page, count: 9 }); // 8 selection points and 1 square
-
-		// Drag
-		await page.mouse.move(topLeft.x, topLeft.y);
-		await page.mouse.down();
-		await page.mouse.move(topLeft.x - 50, topLeft.y - 50, { steps: 30 });
-		await page.mouse.up();
-
-		// Deselect
-		await page.mouse.click(mapDiv.width - 10, mapDiv.height / 2);
-
-		// We are attempting to dragg right tothe top left corner but it is not getting there
-		// because it is capped by the validation. If this was allowed x would be ~90
-		await expectGroupPosition({ page, x: 553, y: 273 });
-	});
-
-	test(`selected polygon can have individual coordinates dragged and fail when validation fails`, async ({
-		page,
-	}) => {
-		const mapDiv = await setupMap({
-			page,
-			configQueryParam: "validationFailure",
-		});
-
-		await changeMode({ page, mode: "polygon" });
-
-		// Draw a rectangle
-		const { topLeft } = await drawRectangularPolygon({
-			mapDiv,
-			page,
-			size: "small",
-		});
-
-		// Change to select mode
-		await changeMode({ page, mode });
-
-		// Before drag
-		const x = topLeft.x - 2;
-		const y = topLeft.y - 2;
-		await expectGroupPosition({ page, x, y });
-
-		// Select
-		await page.mouse.click(mapDiv.width / 2, mapDiv.height / 2);
-		// await expectPaths({ page, count: 9 }); // 8 selection points and 1 square
-
-		// Drag
-		await page.mouse.move(topLeft.x, topLeft.y);
-		await page.mouse.down();
-		await page.mouse.move(0, 0, { steps: 30 });
-		await page.mouse.up();
-
-		// Deselect
-		await page.mouse.click(mapDiv.width - 10, mapDiv.height / 2);
-
-		// We are attempting to dragg right tothe top left corner but it is not getting there
-		// because it is capped by the validation. If this was allowed x would be ~90
-		await expectGroupPosition({ page, x: 563, y: 301 });
-	});
-
-	test("selected rectangle has it's shape maintained when coordinates are dragged with resizeable flag", async ({
+	test("selected rectangle has it's shape maintained when coordinates are dragged with resizable flag", async ({
 		page,
 	}) => {
 		const mapDiv = await setupMap({ page });
@@ -595,7 +599,7 @@ test.describe("select mode", () => {
 		await expectGroupPosition({ page, x: 490, y: 408 });
 	});
 
-	test("selected circle can has it's shape maintained from center origin when coordinates are dragged", async ({
+	test("selected circle has it's shape maintained from center origin when coordinates are dragged with resizable flag", async ({
 		page,
 	}) => {
 		const mapDiv = await setupMap({ page });

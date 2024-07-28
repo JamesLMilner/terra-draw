@@ -7,7 +7,7 @@ export type TestConfigOptions =
 	| "validationFailure"
 	| "insertCoordinates"
 	| "insertCoordinatesGlobe"
-	| "geodesicCircle"
+	| "globeCircle"
 	| "globeSelect";
 
 export const setupMap = async ({
@@ -15,7 +15,7 @@ export const setupMap = async ({
 	configQueryParam,
 }: {
 	page: Page;
-	configQueryParam?: TestConfigOptions;
+	configQueryParam?: TestConfigOptions[];
 }): Promise<{
 	x: number;
 	y: number;
@@ -23,7 +23,15 @@ export const setupMap = async ({
 	height: number;
 }> => {
 	if (configQueryParam) {
-		await page.goto(pageUrl + "?config=" + configQueryParam);
+		if (configQueryParam.length > 1) {
+			await page.goto(
+				pageUrl +
+					"?config=" +
+					configQueryParam.map((config) => config).join(","),
+			);
+		} else {
+			await page.goto(pageUrl + "?config=" + configQueryParam);
+		}
 	} else {
 		await page.goto(pageUrl);
 	}

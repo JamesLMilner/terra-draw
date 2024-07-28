@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.1-alpha.72](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.71...v0.0.1-alpha.72) (2024-07-28)
+
+
+### Chore
+
+* fix beta release script to set release-as flag correctly ([#289](https://github.com/JamesLMilner/terra-draw/issues/289)) ([bd27621](https://github.com/JamesLMilner/terra-draw/commit/bd27621cdac8d636eb5fd915fd3bcbd5abc32acc))
+
 ### [0.0.1-alpha.71](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.70...v0.0.1-alpha.71) (2024-07-28)
 
 

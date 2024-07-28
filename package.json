@@ -1,6 +1,6 @@
 {
 	"name": "terra-draw",
-	"version": "0.0.1-alpha.71",
+	"version": "0.0.1-alpha.72",
 	"description": "Frictionless map drawing across mapping provider",
 	"scripts": {
 		"docs": "typedoc",

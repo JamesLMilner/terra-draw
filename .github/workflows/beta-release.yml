@@ -1,4 +1,4 @@
-name: Alpha Release
+name: Beta Release
 
 permissions:
   contents: write
@@ -36,7 +36,7 @@ jobs:
         run: npm run build
 
       - name: Get next version
-        run: echo "NEXT=0.0.1-alpha.$(echo $(npm run release:alpha:next | tail -n 1))" >> $GITHUB_ENV
+        run: echo "NEXT=1.0.0-beta.$(echo $(npm run release:beta:next | tail -n 1))" >> $GITHUB_ENV
 
       - name: Print next version
         run: echo ${{ env.NEXT }}
@@ -50,7 +50,7 @@ jobs:
         run: npm run release -- --prerelease --release-as $(echo ${{ env.NEXT }})
 
       - name: Check changelog is correct
-        run: npm run release:alpha:changelog
+        run: npm run release:beta:changelog
 
       - name: Push upstream
         run: git push origin main

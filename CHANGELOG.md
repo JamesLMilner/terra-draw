@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.1-alpha.70](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.69...v0.0.1-alpha.70) (2024-07-28)
+
+
+### Features
+
+* projection support for select mode ([#285](https://github.com/JamesLMilner/terra-draw/issues/285)) ([ac4bb9d](https://github.com/JamesLMilner/terra-draw/commit/ac4bb9dca863a19f397b54c74b6d3a08b5970df0))
+
+
+### Bug Fixes
+
+* ensure the correct z-index for circle, rectangle, freehand ([#280](https://github.com/JamesLMilner/terra-draw/issues/280)) ([2d8b5df](https://github.com/JamesLMilner/terra-draw/commit/2d8b5df6b4be6da8bcf6ede1b307b8fe8f82e40c))
+
+
+### Chore
+
+* add [Chore] automatically to chore issues created from template ([#279](https://github.com/JamesLMilner/terra-draw/issues/279)) ([6ad29d6](https://github.com/JamesLMilner/terra-draw/commit/6ad29d6f38a08f295463e0201c7aeecbfd7e8567))
+* add script for creating beta release ([#287](https://github.com/JamesLMilner/terra-draw/issues/287)) ([f218a93](https://github.com/JamesLMilner/terra-draw/commit/f218a93febf9cb35a363b4ff7d7080cbce2e9f59))
+* allow configuration of loaded mapping libraries on the development page ([#282](https://github.com/JamesLMilner/terra-draw/issues/282)) ([0dfabaf](https://github.com/JamesLMilner/terra-draw/commit/0dfabaf21759f41c85d89c1ed2a6b59032b03139))
+
 ### [0.0.1-alpha.69](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.68...v0.0.1-alpha.69) (2024-07-06)
 
 

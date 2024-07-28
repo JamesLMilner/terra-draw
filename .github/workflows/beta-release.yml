@@ -47,7 +47,7 @@ jobs:
           git config --global user.name "James Milner"
 
       - name: Release
-        run: npm run release -- --prerelease --release-as $(echo ${{ env.NEXT }})
+        run: npm run release -- --prerelease --release-as ${{ env.NEXT }}
 
       - name: Check changelog is correct
         run: npm run release:beta:changelog

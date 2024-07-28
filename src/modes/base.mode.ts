@@ -4,6 +4,7 @@ import { BehaviorConfig, TerraDrawModeBehavior } from "./base.behavior";
 import {
 	HexColor,
 	OnFinishContext,
+	Projection,
 	TerraDrawAdapterStyling,
 	TerraDrawKeyboardEvent,
 	TerraDrawModeRegisterConfig,
@@ -39,6 +40,7 @@ export type BaseModeOptions<T extends CustomStyling> = {
 	styles?: Partial<T>;
 	pointerDistance?: number;
 	validation?: Validation;
+	projection?: Projection;
 };
 
 export abstract class TerraDrawBaseDrawMode<T extends CustomStyling> {
@@ -74,6 +76,7 @@ export abstract class TerraDrawBaseDrawMode<T extends CustomStyling> {
 	protected project!: TerraDrawModeRegisterConfig["project"];
 	protected setCursor!: TerraDrawModeRegisterConfig["setCursor"];
 	protected registerBehaviors(behaviorConfig: BehaviorConfig): void {}
+	protected projection!: Projection;
 
 	constructor(options?: BaseModeOptions<T>) {
 		this._state = "unregistered";
@@ -82,6 +85,8 @@ export abstract class TerraDrawBaseDrawMode<T extends CustomStyling> {
 		this.pointerDistance = (options && options.pointerDistance) || 40;
 
 		this.validate = options && options.validation;
+
+		this.projection = (options && options.projection) || "web-mercator";
 	}
 
 	type = ModeTypes.Drawing;
@@ -140,6 +145,7 @@ export abstract class TerraDrawBaseDrawMode<T extends CustomStyling> {
 				unproject: this.unproject,
 				pointerDistance: this.pointerDistance,
 				coordinatePrecision: config.coordinatePrecision,
+				projection: this.projection,
 			});
 		} else {
 			throw new Error("Can not register unless mode is unregistered");

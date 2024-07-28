@@ -1,4 +1,4 @@
-import { Project, Unproject } from "../common";
+import { Project, Projection, Unproject } from "../common";
 import { GeoJSONStore } from "../store/store";
 
 export type BehaviorConfig = {
@@ -8,6 +8,7 @@ export type BehaviorConfig = {
 	unproject: Unproject;
 	pointerDistance: number;
 	coordinatePrecision: number;
+	projection: Projection;
 };
 
 export class TerraDrawModeBehavior {
@@ -17,6 +18,7 @@ export class TerraDrawModeBehavior {
 	protected unproject: Unproject;
 	protected pointerDistance: number;
 	protected coordinatePrecision: number;
+	protected projection: Projection;
 
 	constructor({
 		store,
@@ -25,6 +27,7 @@ export class TerraDrawModeBehavior {
 		unproject,
 		pointerDistance,
 		coordinatePrecision,
+		projection,
 	}: BehaviorConfig) {
 		this.store = store;
 		this.mode = mode;
@@ -32,5 +35,6 @@ export class TerraDrawModeBehavior {
 		this.unproject = unproject;
 		this.pointerDistance = pointerDistance;
 		this.coordinatePrecision = coordinatePrecision;
+		this.projection = projection;
 	}
 }

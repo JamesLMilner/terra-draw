@@ -1,23 +1,45 @@
 import { Point, Position } from "geojson";
-import { Project, Unproject } from "../common";
+import { Project, Projection, Unproject } from "../common";
 import { JSONObject } from "../store/store";
-import { midpointCoordinate } from "./midpoint-coordinate";
+import {
+	midpointCoordinate,
+	geodesicMidpointCoordinate,
+} from "./midpoint-coordinate";
 
-export function getMidPointCoordinates(
-	featureCoords: Position[],
-	precision: number,
-	project: Project,
-	unproject: Unproject,
-) {
+export function getMidPointCoordinates({
+	featureCoords,
+	precision,
+	unproject,
+	project,
+	projection,
+}: {
+	featureCoords: Position[];
+	precision: number;
+	project: Project;
+	unproject: Unproject;
+	projection: Projection;
+}) {
 	const midPointCoords: Position[] = [];
 	for (let i = 0; i < featureCoords.length - 1; i++) {
-		const mid = midpointCoordinate(
-			featureCoords[i],
-			featureCoords[i + 1],
-			precision,
-			project,
-			unproject,
-		);
+		let mid;
+		if (projection === "web-mercator") {
+			mid = midpointCoordinate(
+				featureCoords[i],
+				featureCoords[i + 1],
+				precision,
+				project,
+				unproject,
+			);
+		} else if (projection === "globe") {
+			mid = geodesicMidpointCoordinate(
+				featureCoords[i],
+				featureCoords[i + 1],
+				precision,
+			);
+		} else {
+			throw new Error("Invalid projection");
+		}
+
 		midPointCoords.push(mid);
 	}
 	return midPointCoords;
@@ -29,13 +51,15 @@ export function getMidPoints(
 	precision: number,
 	project: Project,
 	unproject: Unproject,
+	projection: Projection,
 ) {
-	return getMidPointCoordinates(
-		selectedCoords,
+	return getMidPointCoordinates({
+		featureCoords: selectedCoords,
 		precision,
 		project,
 		unproject,
-	).map((coord, i) => ({
+		projection,
+	}).map((coord, i) => ({
 		geometry: { type: "Point", coordinates: coord } as Point,
 		properties: properties(i),
 	}));

@@ -5,7 +5,7 @@ import {
 	getMidPoints,
 } from "../../../geometry/get-midpoints";
 import { SelectionPointBehavior } from "./selection-point.behavior";
-import { SELECT_PROPERTIES } from "../../../common";
+import { Projection, SELECT_PROPERTIES } from "../../../common";
 import { FeatureId } from "../../../store/store";
 
 export class MidPointBehavior extends TerraDrawModeBehavior {
@@ -94,6 +94,7 @@ export class MidPointBehavior extends TerraDrawModeBehavior {
 				coordinatePrecision,
 				this.config.project,
 				this.config.unproject,
+				this.projection,
 			),
 		);
 	}
@@ -110,12 +111,13 @@ export class MidPointBehavior extends TerraDrawModeBehavior {
 			return undefined;
 		}
 
-		return getMidPointCoordinates(
-			updatedCoordinates,
-			this.coordinatePrecision,
-			this.config.project,
-			this.config.unproject,
-		).map((updatedMidPointCoord, i) => ({
+		return getMidPointCoordinates({
+			featureCoords: updatedCoordinates,
+			precision: this.coordinatePrecision,
+			project: this.config.project,
+			unproject: this.config.unproject,
+			projection: this.config.projection as Projection,
+		}).map((updatedMidPointCoord, i) => ({
 			id: this._midPoints[i] as string,
 			geometry: {
 				type: "Point",

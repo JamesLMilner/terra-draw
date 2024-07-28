@@ -728,6 +728,12 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 			modeFlags.feature.coordinates &&
 			modeFlags.feature.coordinates.resizable
 		) {
+			if (this.projection === "globe") {
+				throw new Error(
+					"Globe is currently unsupported projection for resizable",
+				);
+			}
+
 			setMapDraggability(false);
 			this.dragCoordinateResizeFeature.drag(
 				event,

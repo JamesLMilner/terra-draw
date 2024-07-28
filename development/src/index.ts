@@ -86,6 +86,7 @@ const addModeChangeHandler = (
 const getModes = () => {
 	return [
 		new TerraDrawSelectMode({
+			projection: "globe",
 			flags: {
 				arbitrary: {
 					feature: {},
@@ -99,7 +100,6 @@ const getModes = () => {
 							midpoints: true,
 							draggable: true,
 							deletable: true,
-							resizable: "center-web-mercator",
 						},
 					},
 				},
@@ -109,6 +109,8 @@ const getModes = () => {
 				linestring: {
 					feature: {
 						draggable: true,
+						rotateable: true,
+						scaleable: true,
 						coordinates: {
 							midpoints: true,
 							draggable: true,
@@ -122,7 +124,7 @@ const getModes = () => {
 						coordinates: {
 							midpoints: false,
 							draggable: true,
-							resizable: "center-fixed-web-mercator",
+							resizable: "center-fixed",
 							deletable: true,
 						},
 					},
@@ -140,7 +142,7 @@ const getModes = () => {
 						coordinates: {
 							midpoints: false,
 							draggable: true,
-							resizable: "center-fixed-web-mercator",
+							resizable: "center-fixed",
 							deletable: true,
 						},
 					},

@@ -12,13 +12,13 @@ import {
 	lngLatToWebMercatorXY,
 	webMercatorXYToLngLat,
 } from "../../../geometry/project/web-mercator";
-import { webMercatorCenter } from "../../../geometry/web-mercator-center";
+import { webMercatorCentroid } from "../../../geometry/web-mercator-centroid";
 
 export type ResizeOptions =
-	| "center-web-mercator"
-	| "opposite-web-mercator"
-	| "center-fixed-web-mercator"
-	| "opposite-fixed-web-mercator";
+	| "center"
+	| "opposite"
+	| "center-fixed"
+	| "opposite-fixed";
 
 type BoundingBoxIndex = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
@@ -203,7 +203,7 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 		const { feature, boundingBox, updatedCoords, selectedCoordinate } =
 			featureData;
 
-		const webMercatorOrigin = webMercatorCenter(feature);
+		const webMercatorOrigin = webMercatorCentroid(feature);
 
 		if (!webMercatorOrigin) {
 			return null;
@@ -240,7 +240,7 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 		const { feature, boundingBox, updatedCoords, selectedCoordinate } =
 			featureData;
 
-		const webMercatorOrigin = webMercatorCenter(feature);
+		const webMercatorOrigin = webMercatorCentroid(feature);
 
 		if (!webMercatorOrigin) {
 			return null;
@@ -661,7 +661,7 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 	/**
 	 * Resizes the feature based on the cursor event
 	 * @param event - cursor event
-	 * @param resizeOption - the resize option, either "center-web-mercator" or "opposite-web-mercator"
+	 * @param resizeOption - the resize option, either "center" or "opposite"
 	 * @returns - true is resize was successful, false otherwise
 	 */
 	public drag(
@@ -680,13 +680,13 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 
 		let updatedCoords: Position[] | null = null;
 
-		if (resizeOption === "center-web-mercator") {
+		if (resizeOption === "center") {
 			updatedCoords = this.centerWebMercatorDrag(event);
-		} else if (resizeOption === "opposite-web-mercator") {
+		} else if (resizeOption === "opposite") {
 			updatedCoords = this.oppositeWebMercatorDrag(event);
-		} else if (resizeOption === "center-fixed-web-mercator") {
+		} else if (resizeOption === "center-fixed") {
 			updatedCoords = this.centerFixedWebMercatorDrag(event);
-		} else if (resizeOption === "opposite-fixed-web-mercator") {
+		} else if (resizeOption === "opposite-fixed") {
 			updatedCoords = this.oppositeFixedWebMercatorDrag(event);
 		}
 

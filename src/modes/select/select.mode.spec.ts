@@ -2449,7 +2449,7 @@ describe("TerraDrawSelectMode", () => {
 			});
 		});
 
-		describe("drag reszing with center-web-mercator", () => {
+		describe("drag reszing with center", () => {
 			it("does trigger drag events if mode is draggable for linestring", () => {
 				setSelectMode({
 					flags: {
@@ -2457,7 +2457,7 @@ describe("TerraDrawSelectMode", () => {
 							feature: {
 								coordinates: {
 									draggable: true,
-									resizable: "center-web-mercator",
+									resizable: "center",
 								},
 							},
 						},
@@ -2589,7 +2589,7 @@ describe("TerraDrawSelectMode", () => {
 							feature: {
 								coordinates: {
 									draggable: true,
-									resizable: "center-web-mercator",
+									resizable: "center",
 								},
 							},
 						},
@@ -3002,7 +3002,7 @@ describe("TerraDrawSelectMode", () => {
 				flags: {
 					polygon: {
 						feature: {
-							coordinates: { resizable: "center-web-mercator" },
+							coordinates: { resizable: "center" },
 						},
 					},
 				},

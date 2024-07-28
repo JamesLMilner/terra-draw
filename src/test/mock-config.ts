@@ -13,5 +13,6 @@ export function getMockModeConfig(mode: string) {
 		setDoubleClickToZoom: jest.fn(),
 		onFinish: jest.fn(),
 		coordinatePrecision: 9,
+		projection: "web-mercator",
 	};
 }

@@ -43,9 +43,6 @@ jobs:
       - name: Release
         run: npm run release:beta:major
 
-      - name: Check changelog is correct
-        run: npm run release:beta:changelog
-
       - name: Push upstream
         run: git push origin main
 

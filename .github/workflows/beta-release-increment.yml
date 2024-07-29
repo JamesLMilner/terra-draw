@@ -1,4 +1,4 @@
-name: Beta Release
+name: Beta Release v1.0.0-beta Increment
 
 permissions:
   contents: write
@@ -35,19 +35,13 @@ jobs:
       - name: Run build
         run: npm run build
 
-      - name: Get next version
-        run: echo "NEXT=1.0.0-beta.$(echo $(npm run release:beta:next | tail -n 1))" >> $GITHUB_ENV
-
-      - name: Print next version
-        run: echo ${{ env.NEXT }}
-
       - name: Set git credentials
         run: |
           git config --global user.email "terradraw@githubactions.com"
           git config --global user.name "James Milner"
 
       - name: Release
-        run: npm run release -- --prerelease --release-as ${{ env.NEXT }}
+        run: npm run release:beta:increment
 
       - name: Check changelog is correct
         run: npm run release:beta:changelog

@@ -5,7 +5,6 @@
 	"scripts": {
 		"docs": "typedoc",
 		"docs:serve": "serve ./docs",
-		"release:beta:major": "standard-version --prerelease beta --release-as major",
 		"release:beta:increment": "standard-version --prerelease beta",
 		"release:beta:changelog": "tsx ./scripts/changelog-valid.ts",
 		"release:beta:next": "tsx ./scripts/next-beta-version.ts",

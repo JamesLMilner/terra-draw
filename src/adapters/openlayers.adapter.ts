@@ -14,9 +14,9 @@ import Fill from "ol/style/Fill";
 import Stroke from "ol/style/Stroke";
 import Style from "ol/style/Style";
 import VectorSource from "ol/source/Vector";
+import { Geometry } from "ol/geom";
 import VectorLayer from "ol/layer/Vector";
 import { fromLonLat, toLonLat } from "ol/proj";
-import Geometry from "ol/geom/Geometry";
 import { BaseAdapterConfig, TerraDrawBaseAdapter } from "./common/base.adapter";
 
 type InjectableOL = {
@@ -52,12 +52,14 @@ export class TerraDrawOpenLayersAdapter extends TerraDrawBaseAdapter {
 
 		const vectorSource = new this._lib.VectorSource({
 			features: [],
-		});
+		}) as unknown as VectorSource<Feature<Geometry>>;
 
-		this._vectorSource = vectorSource;
+		this._vectorSource = vectorSource as unknown as VectorSource<
+			Feature<Geometry>
+		>;
 
 		const vectorLayer = new this._lib.VectorLayer({
-			source: vectorSource,
+			source: vectorSource as unknown as VectorSource<never>,
 			style: (feature) => this.getStyles(feature, this.stylingFunction()),
 		});
 
@@ -70,7 +72,7 @@ export class TerraDrawOpenLayersAdapter extends TerraDrawBaseAdapter {
 	private _map: Map;
 	private _container: HTMLElement;
 	private _projection = "EPSG:3857" as const;
-	private _vectorSource: undefined | VectorSource<Geometry>;
+	private _vectorSource: undefined | VectorSource<Feature<Geometry>>;
 	private _geoJSONReader: undefined | GeoJSON;
 
 	/**
@@ -170,7 +172,7 @@ export class TerraDrawOpenLayersAdapter extends TerraDrawBaseAdapter {
 		if (this._vectorSource && this._geoJSONReader) {
 			const olFeature = this._geoJSONReader.readFeature(feature, {
 				featureProjection: this._projection,
-			});
+			}) as Feature<Geometry>;
 			this._vectorSource.addFeature(olFeature);
 		} else {
 			throw new Error("Vector Source not initalised");

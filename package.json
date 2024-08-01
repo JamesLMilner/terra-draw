@@ -74,7 +74,7 @@
 		"mapbox-gl": "2.13.0",
 		"maplibre-gl": "3.2.0",
 		"microbundle": "0.15.0",
-		"ol": "7.1.0",
+		"ol": "10.0.0",
 		"serve": "14.1.2",
 		"standard-version": "9.5.0",
 		"ts-jest": "29.1.2",

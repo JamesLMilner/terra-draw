@@ -6,7 +6,7 @@ import { MidPointBehavior } from "./midpoint.behavior";
 import { SelectionPointBehavior } from "./selection-point.behavior";
 import { FeatureId, GeoJSONStoreGeometries } from "../../../store/store";
 import { limitPrecision } from "../../../geometry/limit-decimal-precision";
-import { pixelDistance } from "../../../geometry/measure/pixel-distance";
+import { cartesianDistance } from "../../../geometry/measure/pixel-distance";
 import { coordinateIsValid } from "../../../geometry/boolean/is-valid-coordinate";
 import {
 	lngLatToWebMercatorXY,
@@ -296,8 +296,8 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 		}
 
 		let scale =
-			pixelDistance(webMercatorOrigin, webMercatorCursor) /
-			pixelDistance(webMercatorOrigin, webMercatorSelected);
+			cartesianDistance(webMercatorOrigin, webMercatorCursor) /
+			cartesianDistance(webMercatorOrigin, webMercatorSelected);
 
 		if (scale < 0) {
 			scale = this.minimumScale;
@@ -580,7 +580,7 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 		let closestDistance = Infinity;
 
 		for (let i = 0; i < boundingBox.length; i++) {
-			const distance = pixelDistance(
+			const distance = cartesianDistance(
 				{ x: selectedXY.x, y: selectedXY.y },
 				{ x: boundingBox[i][0], y: boundingBox[i][1] },
 			);

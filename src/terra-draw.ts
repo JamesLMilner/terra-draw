@@ -43,7 +43,7 @@ import {
 	StoreChangeHandler,
 } from "./store/store";
 import { BehaviorConfig } from "./modes/base.behavior";
-import { pixelDistance } from "./geometry/measure/pixel-distance";
+import { cartesianDistance } from "./geometry/measure/pixel-distance";
 import { pixelDistanceToLine } from "./geometry/measure/pixel-distance-to-line";
 import { Position } from "geojson";
 import { pointInPolygon } from "./geometry/boolean/point-in-polygon";
@@ -359,7 +359,7 @@ class TerraDraw {
 			if (feature.geometry.type === "Point") {
 				const pointCoordinates = feature.geometry.coordinates;
 				const pointXY = project(pointCoordinates[0], pointCoordinates[1]);
-				const distance = pixelDistance(inputPoint, pointXY);
+				const distance = cartesianDistance(inputPoint, pointXY);
 				return distance < pointerDistance;
 			} else if (feature.geometry.type === "LineString") {
 				const coordinates: Position[] = feature.geometry.coordinates;

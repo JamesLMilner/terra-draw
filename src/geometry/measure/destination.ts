@@ -33,3 +33,22 @@ export function destination(
 
 	return [lng, lat];
 }
+
+// Function to create a destination point in Web Mercator projection
+export function webMercatorDestination(
+	{ x, y }: { x: number; y: number },
+	distance: number,
+	bearing: number,
+): { x: number; y: number } {
+	// Convert origin to Web Mercator
+	const bearingRad = degreesToRadians(bearing);
+
+	// Calculate the destination coordinates
+	const deltaX = distance * Math.cos(bearingRad);
+	const deltaY = distance * Math.sin(bearingRad);
+
+	const newX = x + deltaX;
+	const newY = y + deltaY;
+
+	return { x: newX, y: newY };
+}

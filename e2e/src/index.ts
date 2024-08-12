@@ -12,6 +12,7 @@ import {
 	TerraDrawSelectMode,
 	ValidateMaxAreaSquareMeters,
 } from "../../src/terra-draw";
+import { TerraDrawAngledRectangleMode } from "../../src/modes/angled-rectangle/angled-rectangle.mode";
 
 const example = {
 	lng: -0.118092,
@@ -164,6 +165,7 @@ const example = {
 						: "web-mercator",
 				}),
 				new TerraDrawFreehandMode(),
+				new TerraDrawAngledRectangleMode(),
 				new TerraDrawRenderMode({
 					modeName: "arbitrary",
 					styles: {
@@ -185,25 +187,31 @@ const example = {
 			button: undefined | HTMLButtonElement;
 		};
 
-		["select", "point", "linestring", "polygon", "rectangle", "circle"].forEach(
-			(mode) => {
-				(document.getElementById(mode) as HTMLButtonElement).addEventListener(
-					"click",
-					() => {
-						currentSelected.mode = mode;
-						draw.setMode(currentSelected.mode);
+		[
+			"select",
+			"point",
+			"linestring",
+			"polygon",
+			"rectangle",
+			"circle",
+			"angled-rectangle",
+		].forEach((mode) => {
+			(document.getElementById(mode) as HTMLButtonElement).addEventListener(
+				"click",
+				() => {
+					currentSelected.mode = mode;
+					draw.setMode(currentSelected.mode);
 
-						if (currentSelected.button) {
-							currentSelected.button.style.color = "565656";
-						}
-						currentSelected.button = document.getElementById(
-							mode,
-						) as HTMLButtonElement;
-						currentSelected.button.style.color = "#27ccff";
-					},
-				);
-			},
-		);
+					if (currentSelected.button) {
+						currentSelected.button.style.color = "565656";
+					}
+					currentSelected.button = document.getElementById(
+						mode,
+					) as HTMLButtonElement;
+					currentSelected.button.style.color = "#27ccff";
+				},
+			);
+		});
 
 		(document.getElementById("clear") as HTMLButtonElement).addEventListener(
 			"click",

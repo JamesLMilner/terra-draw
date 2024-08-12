@@ -16,7 +16,6 @@ import {
 import { PixelDistanceBehavior } from "../pixel-distance.behavior";
 import { BehaviorConfig } from "../base.behavior";
 import { coordinatesIdentical } from "../../geometry/coordinates-identical";
-import { ClosingPointsBehavior } from "./behaviors/closing-points.behavior";
 import { getDefaultStyling } from "../../util/styling";
 import { FeatureId, GeoJSONStoreFeatures } from "../../store/store";
 import { ValidatePolygonFeature } from "../../validations/polygon.validation";
@@ -42,10 +41,6 @@ type PolygonStyling = {
 	outlineColor: HexColorStyling;
 	outlineWidth: NumericStyling;
 	fillOpacity: NumericStyling;
-	closingPointWidth: NumericStyling;
-	closingPointColor: HexColorStyling;
-	closingPointOutlineWidth: NumericStyling;
-	closingPointOutlineColor: HexColorStyling;
 };
 
 interface Cursors {
@@ -70,7 +65,6 @@ export class TerraDrawAngledRectangleMode extends TerraDrawBaseDrawMode<PolygonS
 
 	// Behaviors
 	private pixelDistance!: PixelDistanceBehavior;
-	private closingPoints!: ClosingPointsBehavior;
 	private cursors: Required<Cursors>;
 	private mouseMove = false;
 
@@ -106,31 +100,10 @@ export class TerraDrawAngledRectangleMode extends TerraDrawBaseDrawMode<PolygonS
 			return;
 		}
 
-		const currentPolygonCoordinates = this.store.getGeometryCopy<Polygon>(
-			this.currentId,
-		).coordinates[0];
-
-		// We don't want to allow closing if there is not enough
-		// coordinates. We have extra because we insert them on mouse
-		// move
-		if (currentPolygonCoordinates.length < 5) {
-			return;
-		}
-
-		// const updated = this.updatePolygonGeometry(
-		// 	[...currentPolygonCoordinates.slice(0, -2), currentPolygonCoordinates[0]],
-		// 	UpdateTypes.Finish,
-		// );
-
-		// if (!updated) {
-		// 	return;
-		// }
-
 		const finishedId = this.currentId;
 
 		this.currentCoordinate = 0;
 		this.currentId = undefined;
-		this.closingPoints.delete();
 
 		// Go back to started state
 		if (this.state === "drawing") {
@@ -143,8 +116,6 @@ export class TerraDrawAngledRectangleMode extends TerraDrawBaseDrawMode<PolygonS
 	/** @internal */
 	registerBehaviors(config: BehaviorConfig) {
 		this.pixelDistance = new PixelDistanceBehavior(config);
-
-		this.closingPoints = new ClosingPointsBehavior(config, this.pixelDistance);
 	}
 
 	/** @internal */
@@ -260,38 +231,21 @@ export class TerraDrawAngledRectangleMode extends TerraDrawBaseDrawMode<PolygonS
 				[thirdCoordinate.lng, thirdCoordinate.lat],
 				currentPolygonCoordinates[0],
 			];
-		} else {
-			const { isClosing, isPreviousClosing } =
-				this.closingPoints.isClosingPoint(event);
-
-			if (isPreviousClosing || isClosing) {
-				this.setCursor(this.cursors.close);
-
-				updatedCoordinates = [
-					...currentPolygonCoordinates.slice(0, -2),
-					currentPolygonCoordinates[0],
-					currentPolygonCoordinates[0],
-				];
-			} else {
-				updatedCoordinates = [
-					...currentPolygonCoordinates.slice(0, -2),
-					[event.lng, event.lat],
-					currentPolygonCoordinates[0],
-				];
-			}
 		}
 
-		this.updatePolygonGeometry(updatedCoordinates, UpdateTypes.Provisional);
+		updatedCoordinates &&
+			this.updatePolygonGeometry(
+				this.currentId,
+				updatedCoordinates,
+				UpdateTypes.Provisional,
+			);
 	}
 
 	private updatePolygonGeometry(
+		id: FeatureId,
 		coordinates: Polygon["coordinates"][0],
 		updateType: UpdateTypes,
 	) {
-		if (!this.currentId) {
-			return false;
-		}
-
 		const updatedGeometry = {
 			type: "Polygon",
 			coordinates: [coordinates],
@@ -316,9 +270,7 @@ export class TerraDrawAngledRectangleMode extends TerraDrawBaseDrawMode<PolygonS
 			}
 		}
 
-		this.store.updateGeometry([
-			{ id: this.currentId, geometry: updatedGeometry },
-		]);
+		this.store.updateGeometry([{ id, geometry: updatedGeometry }]);
 
 		return true;
 	}
@@ -372,6 +324,7 @@ export class TerraDrawAngledRectangleMode extends TerraDrawBaseDrawMode<PolygonS
 			}
 
 			const updated = this.updatePolygonGeometry(
+				this.currentId,
 				[
 					currentPolygonGeometry.coordinates[0][0],
 					[event.lng, event.lat],
@@ -404,29 +357,19 @@ export class TerraDrawAngledRectangleMode extends TerraDrawBaseDrawMode<PolygonS
 	onKeyDown() {}
 
 	/** @internal */
-	onDragStart() {
-		// We want to allow the default drag
-		// cursor to exist
-		this.setCursor("unset");
-	}
+	onDragStart() {}
 
 	/** @internal */
 	onDrag() {}
 
 	/** @internal */
-	onDragEnd() {
-		// Set it back to crosshair
-		this.setCursor(this.cursors.start);
-	}
+	onDragEnd() {}
 
 	/** @internal */
 	cleanUp() {
 		try {
 			if (this.currentId) {
 				this.store.delete([this.currentId]);
-			}
-			if (this.closingPoints.ids.length) {
-				this.closingPoints.delete();
 			}
 		} catch (error) {}
 		this.currentId = undefined;
@@ -467,33 +410,6 @@ export class TerraDrawAngledRectangleMode extends TerraDrawBaseDrawMode<PolygonS
 				);
 
 				styles.zIndex = 10;
-				return styles;
-			} else if (feature.geometry.type === "Point") {
-				styles.pointWidth = this.getNumericStylingValue(
-					this.styles.closingPointWidth,
-					styles.pointWidth,
-					feature,
-				);
-
-				styles.pointColor = this.getHexColorStylingValue(
-					this.styles.closingPointColor,
-					styles.pointColor,
-					feature,
-				);
-
-				styles.pointOutlineColor = this.getHexColorStylingValue(
-					this.styles.closingPointOutlineColor,
-					styles.pointOutlineColor,
-					feature,
-				);
-
-				styles.pointOutlineWidth = this.getNumericStylingValue(
-					this.styles.closingPointOutlineWidth,
-					2,
-					feature,
-				);
-				styles.zIndex = 30;
-				return styles;
 			}
 		}
 

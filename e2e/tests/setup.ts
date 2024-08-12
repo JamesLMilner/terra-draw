@@ -53,9 +53,26 @@ export const changeMode = async ({
 	mode,
 }: {
 	page: Page;
-	mode: "point" | "polygon" | "linestring" | "select" | "rectangle" | "circle";
+	mode:
+		| "point"
+		| "polygon"
+		| "linestring"
+		| "select"
+		| "rectangle"
+		| "circle"
+		| "angled-rectangle";
 }) => {
-	const modeText = mode.charAt(0).toUpperCase() + mode.slice(1);
+	let modeText = mode.charAt(0).toUpperCase() + mode.slice(1);
+
+	if (mode.includes("-")) {
+		modeText = mode
+			.split("-")
+			.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+			.join(" ");
+	} else {
+		modeText = mode.charAt(0).toUpperCase() + mode.slice(1);
+	}
+
 	const buttons = page.getByTestId("buttons");
 	const button = buttons.getByText(modeText, { exact: true });
 

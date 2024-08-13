@@ -51,6 +51,7 @@ import { createBBoxFromPoint } from "./geometry/shape/create-bbox";
 import { ValidateMinAreaSquareMeters } from "./validations/min-size.validation";
 import { ValidateMaxAreaSquareMeters } from "./validations/max-size.validation";
 import { ValidateNotSelfIntersecting } from "./validations/not-self-intersecting.validation";
+import { TerraDrawAngledRectangleMode } from "./modes/angled-rectangle/angled-rectangle.mode";
 
 type FinishListener = (id: FeatureId, context: OnFinishContext) => void;
 type ChangeListener = (ids: FeatureId[], type: string) => void;
@@ -783,6 +784,8 @@ const TerraDrawExtend = {
 
 export {
 	TerraDraw,
+
+	// Modes
 	TerraDrawSelectMode,
 	TerraDrawPointMode,
 	TerraDrawLineStringMode,
@@ -791,6 +794,9 @@ export {
 	TerraDrawFreehandMode,
 	TerraDrawRenderMode,
 	TerraDrawRectangleMode,
+	TerraDrawAngledRectangleMode,
+
+	// Adapters
 	TerraDrawGoogleMapsAdapter,
 	TerraDrawMapboxGLAdapter,
 	TerraDrawLeafletAdapter,

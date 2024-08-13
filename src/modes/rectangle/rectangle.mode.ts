@@ -209,15 +209,18 @@ export class TerraDrawRectangleMode extends TerraDrawBaseDrawMode<RectanglePolyg
 
 	/** @internal */
 	cleanUp() {
-		if (this.currentRectangleId) {
-			this.store.delete([this.currentRectangleId]);
-		}
+		const cleanUpId = this.currentRectangleId;
 
 		this.center = undefined;
 		this.currentRectangleId = undefined;
 		this.clickCount = 0;
+
 		if (this.state === "drawing") {
 			this.setStarted();
+		}
+
+		if (cleanUpId !== undefined) {
+			this.store.delete([cleanUpId]);
 		}
 	}
 

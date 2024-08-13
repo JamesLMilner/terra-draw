@@ -484,14 +484,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 
 	/** @internal */
 	cleanUp() {
-		try {
-			if (this.currentId) {
-				this.store.delete([this.currentId]);
-			}
-			if (this.closingPointId) {
-				this.store.delete([this.closingPointId]);
-			}
-		} catch (error) {}
+		const cleanUpId = this.currentId;
 
 		this.closingPointId = undefined;
 		this.currentId = undefined;
@@ -499,6 +492,15 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 		if (this.state === "drawing") {
 			this.setStarted();
 		}
+
+		try {
+			if (cleanUpId !== undefined) {
+				this.store.delete([cleanUpId]);
+			}
+			if (this.closingPointId !== undefined) {
+				this.store.delete([this.closingPointId]);
+			}
+		} catch (error) {}
 	}
 
 	/** @internal */

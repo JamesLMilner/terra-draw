@@ -2,6 +2,41 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-beta.1](https://github.com/JamesLMilner/terra-draw/compare/v1.0.0-beta.0...v1.0.0-beta.1) (2024-08-14)
+
+
+### Features
+
+* add angled rectangle mode as built-in mode ([#306](https://github.com/JamesLMilner/terra-draw/issues/306)) ([e11250c](https://github.com/JamesLMilner/terra-draw/commit/e11250cbb14e56c07ca9b7225c11537102987c58))
+
+
+### Bug Fixes
+
+* ensure handling of containerPointToLatLng returning invalid values is handled correctly ([#301](https://github.com/JamesLMilner/terra-draw/issues/301)) ([d22a698](https://github.com/JamesLMilner/terra-draw/commit/d22a69820bb180fca27562a10257db78d677b7b6))
+* remove unnecessary logs from the codebase ([#309](https://github.com/JamesLMilner/terra-draw/issues/309)) ([548f53d](https://github.com/JamesLMilner/terra-draw/commit/548f53d2d8138b63341b8e3de4eaa5f2f715efd5))
+* when clearing ensure ids are reset first before updating store as it may trigger events ([#308](https://github.com/JamesLMilner/terra-draw/issues/308)) ([35e6b4e](https://github.com/JamesLMilner/terra-draw/commit/35e6b4efa9e0426ea57e487dfa0dc41ae8a183f0))
+
+
+### Tests
+
+* add extra unit test to openlayers.adaptor.spec ([#300](https://github.com/JamesLMilner/terra-draw/issues/300)) ([ae30ff8](https://github.com/JamesLMilner/terra-draw/commit/ae30ff84270b209873dabb3cf1439b9d34773739))
+
+
+### Documentation
+
+* add openlayers example to adapters guide ([#297](https://github.com/JamesLMilner/terra-draw/issues/297)) ([b4ca302](https://github.com/JamesLMilner/terra-draw/commit/b4ca3026e2f902283361839aead390010fcd6f7c))
+* Create FUNDING.yml ([#305](https://github.com/JamesLMilner/terra-draw/issues/305)) ([4ad8474](https://github.com/JamesLMilner/terra-draw/commit/4ad84741130fc88ad08f42b8788e82f91bc2a83f))
+* improve guiide to create a watching build ([#294](https://github.com/JamesLMilner/terra-draw/issues/294)) ([eb8d60c](https://github.com/JamesLMilner/terra-draw/commit/eb8d60c88e6b82e83a9f3a2466967b1fdb9bfd20))
+* update Getting Started and Modes guide to say which modes are available in mobile mode ([#296](https://github.com/JamesLMilner/terra-draw/issues/296)) ([582c5c4](https://github.com/JamesLMilner/terra-draw/commit/582c5c4bfe168c276325b8703364465445add775))
+
+
+### Chore
+
+* bump supported version of OpenLayersAdapter to version 10 ([#303](https://github.com/JamesLMilner/terra-draw/issues/303)) ([b434b63](https://github.com/JamesLMilner/terra-draw/commit/b434b63574ee2e4ae66d1a3dbf4a7d5eb9a141d9))
+* fix release script to ensure that beta releases pass changelog check ([#311](https://github.com/JamesLMilner/terra-draw/issues/311)) ([49cfe90](https://github.com/JamesLMilner/terra-draw/commit/49cfe906bf37bdaa8933d9e1ea41e16bd009291d))
+* log out changes in release check script ([#310](https://github.com/JamesLMilner/terra-draw/issues/310)) ([2dad763](https://github.com/JamesLMilner/terra-draw/commit/2dad763895fa8cb0b18d89e86a341dec621facec))
+* update docs to reflect correct beta verison, remove beta major script ([#293](https://github.com/JamesLMilner/terra-draw/issues/293)) ([e54965d](https://github.com/JamesLMilner/terra-draw/commit/e54965d7b8585429e48e69bc9cd2eaef7ed0e5ff))
+
 ## [1.0.0-beta.0](https://github.com/JamesLMilner/terra-draw/compare/v0.0.1-alpha.72...v1.0.0-beta.0) (2024-07-29)
 
 

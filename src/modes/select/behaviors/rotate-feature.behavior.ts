@@ -63,7 +63,6 @@ export class RotateFeatureBehavior extends TerraDrawModeBehavior {
 			}
 
 			const angle = this.lastBearing - bearing;
-			// console.log(bearing);
 
 			transformRotateWebMercator(feature, -angle);
 		} else if (this.config.projection === "globe") {

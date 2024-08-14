@@ -43,7 +43,7 @@ import {
 	StoreChangeHandler,
 } from "./store/store";
 import { BehaviorConfig } from "./modes/base.behavior";
-import { pixelDistance } from "./geometry/measure/pixel-distance";
+import { cartesianDistance } from "./geometry/measure/pixel-distance";
 import { pixelDistanceToLine } from "./geometry/measure/pixel-distance-to-line";
 import { Position } from "geojson";
 import { pointInPolygon } from "./geometry/boolean/point-in-polygon";
@@ -51,6 +51,7 @@ import { createBBoxFromPoint } from "./geometry/shape/create-bbox";
 import { ValidateMinAreaSquareMeters } from "./validations/min-size.validation";
 import { ValidateMaxAreaSquareMeters } from "./validations/max-size.validation";
 import { ValidateNotSelfIntersecting } from "./validations/not-self-intersecting.validation";
+import { TerraDrawAngledRectangleMode } from "./modes/angled-rectangle/angled-rectangle.mode";
 
 type FinishListener = (id: FeatureId, context: OnFinishContext) => void;
 type ChangeListener = (ids: FeatureId[], type: string) => void;
@@ -359,7 +360,7 @@ class TerraDraw {
 			if (feature.geometry.type === "Point") {
 				const pointCoordinates = feature.geometry.coordinates;
 				const pointXY = project(pointCoordinates[0], pointCoordinates[1]);
-				const distance = pixelDistance(inputPoint, pointXY);
+				const distance = cartesianDistance(inputPoint, pointXY);
 				return distance < pointerDistance;
 			} else if (feature.geometry.type === "LineString") {
 				const coordinates: Position[] = feature.geometry.coordinates;
@@ -783,6 +784,8 @@ const TerraDrawExtend = {
 
 export {
 	TerraDraw,
+
+	// Modes
 	TerraDrawSelectMode,
 	TerraDrawPointMode,
 	TerraDrawLineStringMode,
@@ -791,6 +794,9 @@ export {
 	TerraDrawFreehandMode,
 	TerraDrawRenderMode,
 	TerraDrawRectangleMode,
+	TerraDrawAngledRectangleMode,
+
+	// Adapters
 	TerraDrawGoogleMapsAdapter,
 	TerraDrawMapboxGLAdapter,
 	TerraDrawLeafletAdapter,

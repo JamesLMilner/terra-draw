@@ -10,7 +10,7 @@ import {
 	TerraDrawAdapter,
 } from "../../common";
 import { limitPrecision } from "../../geometry/limit-decimal-precision";
-import { pixelDistance } from "../../geometry/measure/pixel-distance";
+import { cartesianDistance } from "../../geometry/measure/pixel-distance";
 import { AdapterListener } from "./adapter-listener";
 
 type BasePointerListener = (event: PointerEvent) => void;
@@ -213,7 +213,7 @@ export abstract class TerraDrawBaseAdapter implements TerraDrawAdapter {
 						// behaviours
 						const modeState = this._currentModeCallbacks.getState();
 
-						const pixelDistanceToCheck = pixelDistance(
+						const pixelDistanceToCheck = cartesianDistance(
 							lastEventXY,
 							currentEventXY,
 						);

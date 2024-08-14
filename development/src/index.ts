@@ -12,6 +12,7 @@ import {
 	TerraDrawSelectMode,
 	TerraDrawFreehandMode,
 	TerraDrawRectangleMode,
+	TerraDrawAngledRectangleMode,
 	TerraDrawMapboxGLAdapter,
 	TerraDrawLeafletAdapter,
 	TerraDrawGoogleMapsAdapter,
@@ -57,6 +58,7 @@ const addModeChangeHandler = (
 		"freehand",
 		"circle",
 		"rectangle",
+		"angled-rectangle",
 	].forEach((mode) => {
 		(document.getElementById(mode) as HTMLButtonElement).addEventListener(
 			"click",
@@ -86,7 +88,7 @@ const addModeChangeHandler = (
 const getModes = () => {
 	return [
 		new TerraDrawSelectMode({
-			projection: "globe",
+			projection: "web-mercator",
 			flags: {
 				arbitrary: {
 					feature: {},
@@ -124,7 +126,7 @@ const getModes = () => {
 						coordinates: {
 							midpoints: false,
 							draggable: true,
-							resizable: "center-fixed",
+							resizable: "center",
 							deletable: true,
 						},
 					},
@@ -181,6 +183,7 @@ const getModes = () => {
 				polygonOutlineWidth: 2,
 			},
 		}),
+		new TerraDrawAngledRectangleMode(),
 	];
 };
 
@@ -353,8 +356,14 @@ const example = {
 
 			draw.start();
 
+			draw.on("change", (e) => {
+				console.log(e);
+				console.log(draw.getSnapshot());
+			});
+
 			addModeChangeHandler(draw, currentSelected);
 		});
+
 		this.initialised.push(Libraries.MapLibre);
 	},
 	[Libraries.OpenLayers]() {

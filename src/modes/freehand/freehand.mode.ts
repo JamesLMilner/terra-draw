@@ -16,7 +16,7 @@ import {
 } from "../base.mode";
 import { getDefaultStyling } from "../../util/styling";
 import { FeatureId, GeoJSONStoreFeatures } from "../../store/store";
-import { pixelDistance } from "../../geometry/measure/pixel-distance";
+import { cartesianDistance } from "../../geometry/measure/pixel-distance";
 import { ValidatePolygonFeature } from "../../validations/polygon.validation";
 
 type TerraDrawFreehandModeKeyEvents = {
@@ -163,14 +163,14 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 		const [previousLng, previousLat] =
 			currentLineGeometry.coordinates[0][previousIndex];
 		const { x, y } = this.project(previousLng, previousLat);
-		const distance = pixelDistance(
+		const distance = cartesianDistance(
 			{ x, y },
 			{ x: event.containerX, y: event.containerY },
 		);
 
 		const [closingLng, closingLat] = currentLineGeometry.coordinates[0][0];
 		const { x: closingX, y: closingY } = this.project(closingLng, closingLat);
-		const closingDistance = pixelDistance(
+		const closingDistance = cartesianDistance(
 			{ x: closingX, y: closingY },
 			{ x: event.containerX, y: event.containerY },
 		);

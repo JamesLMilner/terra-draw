@@ -16,10 +16,10 @@ const version = `[${packageJson.version}]`;
 console.log("Version: ");
 console.log(version);
 
-const changes = changelog.split("### ");
+const changes = changelog.split("## ");
 
-console.log("Changes: ");
-console.log(changes);
+console.log("New Change Log: ");
+console.log(changelog);
 
 if (!changes[1].startsWith(version)) {
 	throw new Error("Latest version is not latest change log title");

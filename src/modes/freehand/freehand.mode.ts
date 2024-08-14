@@ -159,10 +159,9 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 			this.currentId,
 		);
 
+		const previousIndex = currentLineGeometry.coordinates[0].length - 2;
 		const [previousLng, previousLat] =
-			currentLineGeometry.coordinates[0][
-				currentLineGeometry.coordinates[0].length - 2
-			];
+			currentLineGeometry.coordinates[0][previousIndex];
 		const { x, y } = this.project(previousLng, previousLat);
 		const distance = pixelDistance(
 			{ x, y },
@@ -297,20 +296,24 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 
 	/** @internal */
 	cleanUp() {
-		try {
-			if (this.currentId) {
-				this.store.delete([this.currentId]);
-			}
-			if (this.closingPointId) {
-				this.store.delete([this.closingPointId]);
-			}
-		} catch (error) {}
+		const cleanUpId = this.currentId;
+		const cleanUpClosingPointId = this.closingPointId;
+
 		this.closingPointId = undefined;
 		this.currentId = undefined;
 		this.startingClick = false;
 		if (this.state === "drawing") {
 			this.setStarted();
 		}
+
+		try {
+			if (cleanUpId !== undefined) {
+				this.store.delete([cleanUpId]);
+			}
+			if (cleanUpClosingPointId !== undefined) {
+				this.store.delete([cleanUpClosingPointId]);
+			}
+		} catch (error) {}
 	}
 
 	/** @internal */

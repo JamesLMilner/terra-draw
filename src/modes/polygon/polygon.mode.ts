@@ -479,19 +479,22 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 
 	/** @internal */
 	cleanUp() {
-		try {
-			if (this.currentId) {
-				this.store.delete([this.currentId]);
-			}
-			if (this.closingPoints.ids.length) {
-				this.closingPoints.delete();
-			}
-		} catch (error) {}
+		const cleanUpId = this.currentId;
+
 		this.currentId = undefined;
 		this.currentCoordinate = 0;
 		if (this.state === "drawing") {
 			this.setStarted();
 		}
+
+		try {
+			if (cleanUpId !== undefined) {
+				this.store.delete([cleanUpId]);
+			}
+			if (this.closingPoints.ids.length) {
+				this.closingPoints.delete();
+			}
+		} catch (error) {}
 	}
 
 	/** @internal */

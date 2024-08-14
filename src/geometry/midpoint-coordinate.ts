@@ -12,12 +12,8 @@ export function midpointCoordinate(
 	project: Project,
 	unproject: Unproject,
 ) {
-	console.log({ coordinates1, coordinates2 });
-
 	const projectedCoordinateOne = project(coordinates1[0], coordinates1[1]);
 	const projectedCoordinateTwo = project(coordinates2[0], coordinates2[1]);
-
-	console.log({ projectedCoordinateOne, projectedCoordinateTwo });
 
 	const { lng, lat } = unproject(
 		(projectedCoordinateOne.x + projectedCoordinateTwo.x) / 2,

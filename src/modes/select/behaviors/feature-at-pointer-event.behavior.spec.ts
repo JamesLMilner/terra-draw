@@ -7,7 +7,6 @@ import {
 } from "../../../test/create-store-features";
 import { mockBehaviorConfig } from "../../../test/mock-behavior-config";
 import { mockDrawEvent } from "../../../test/mock-mouse-event";
-import { mockBoundingBoxUnproject } from "../../../test/mock-unproject";
 import { ClickBoundingBoxBehavior } from "../../click-bounding-box.behavior";
 import { PixelDistanceBehavior } from "../../pixel-distance.behavior";
 import { FeatureAtPointerEventBehavior } from "./feature-at-pointer-event.behavior";
@@ -25,18 +24,20 @@ describe("FeatureAtPointerEventBehavior", () => {
 	});
 
 	describe("api", () => {
+		let config: ReturnType<typeof mockBehaviorConfig>;
+		let featureAtPointerEventBehavior: FeatureAtPointerEventBehavior;
+
+		beforeEach(() => {
+			config = mockBehaviorConfig("test");
+			featureAtPointerEventBehavior = new FeatureAtPointerEventBehavior(
+				config,
+				new ClickBoundingBoxBehavior(config),
+				new PixelDistanceBehavior(config),
+			);
+		});
+
 		describe("find", () => {
 			it("returns nothing if nothing in store", () => {
-				const config = mockBehaviorConfig("test");
-				const featureAtPointerEventBehavior = new FeatureAtPointerEventBehavior(
-					config,
-					new ClickBoundingBoxBehavior(config),
-					new PixelDistanceBehavior(config),
-				);
-				// Mock the unproject to return a valid set
-				// of bbox coordinates
-				mockBoundingBoxUnproject(config.unproject as jest.Mock);
-
 				const result = featureAtPointerEventBehavior.find(
 					mockDrawEvent(),
 					false,
@@ -48,13 +49,6 @@ describe("FeatureAtPointerEventBehavior", () => {
 			});
 
 			it("ignores selection point", () => {
-				const config = mockBehaviorConfig("test");
-				const featureAtPointerEventBehavior = new FeatureAtPointerEventBehavior(
-					config,
-					new ClickBoundingBoxBehavior(config),
-					new PixelDistanceBehavior(config),
-				);
-
 				config.store.create([
 					{
 						geometry: {
@@ -67,10 +61,6 @@ describe("FeatureAtPointerEventBehavior", () => {
 					},
 				]);
 
-				// Mock the unproject to return a valid set
-				// of bbox coordinates
-				mockBoundingBoxUnproject(config.unproject as jest.Mock);
-
 				const result = featureAtPointerEventBehavior.find(
 					mockDrawEvent(),
 					false,
@@ -82,35 +72,10 @@ describe("FeatureAtPointerEventBehavior", () => {
 				});
 			});
 
-			it("returns clicked feature", () => {
-				const config = mockBehaviorConfig("test");
-				const featureAtPointerEventBehavior = new FeatureAtPointerEventBehavior(
-					config,
-					new ClickBoundingBoxBehavior(config),
-					new PixelDistanceBehavior(config),
-				);
-
-				// Mock the unproject to return a valid set
-				// of bbox coordinates
-				mockBoundingBoxUnproject(config.unproject as jest.Mock);
-
+			it("returns clicked point feature if point, linestring and polygon present", () => {
 				createStorePolygon(config);
 				createStoreLineString(config);
 				createStorePoint(config);
-
-				(config.project as jest.Mock)
-					.mockImplementationOnce(() => ({
-						x: 0,
-						y: 0,
-					}))
-					.mockImplementationOnce(() => ({
-						x: 0,
-						y: 0,
-					}))
-					.mockImplementationOnce(() => ({
-						x: 0,
-						y: 0,
-					}));
 
 				const result = featureAtPointerEventBehavior.find(
 					mockDrawEvent(),
@@ -118,36 +83,94 @@ describe("FeatureAtPointerEventBehavior", () => {
 				);
 
 				expect((result.clickedFeature as GeoJSONStoreFeatures).id).toBeUUID4();
+				expect(result.clickedMidPoint).toBeUndefined();
+				expect(result.clickedFeature?.geometry.type).toBe("Point");
+			});
+
+			it("returns clicked linestring feature if linestring and polygon present", () => {
+				createStorePolygon(config);
+				createStoreLineString(config);
+
+				const result = featureAtPointerEventBehavior.find(
+					mockDrawEvent(),
+					false,
+				);
+
+				expect((result.clickedFeature as GeoJSONStoreFeatures).id).toBeUUID4();
+				expect(result.clickedMidPoint).toBeUndefined();
+				expect(result.clickedFeature?.geometry.type).toBe("LineString");
+			});
+
+			it("returns clicked point feature if point and polygon present", () => {
+				createStorePoint(config);
+				createStorePolygon(config);
+
+				const result = featureAtPointerEventBehavior.find(
+					mockDrawEvent(),
+					false,
+				);
+
+				expect((result.clickedFeature as GeoJSONStoreFeatures).id).toBeUUID4();
+				expect(result.clickedMidPoint).toBeUndefined();
+				expect(result.clickedFeature?.geometry.type).toBe("Point");
+			});
+
+			it("returns clicked point feature if point and linestring present", () => {
+				createStorePoint(config);
+				createStoreLineString(config);
+
+				const result = featureAtPointerEventBehavior.find(
+					mockDrawEvent(),
+					false,
+				);
+
+				expect((result.clickedFeature as GeoJSONStoreFeatures).id).toBeUUID4();
+				expect(result.clickedMidPoint).toBeUndefined();
+				expect(result.clickedFeature?.geometry.type).toBe("Point");
+			});
+
+			it("returns clicked polygon if only polygon present", () => {
+				createStorePolygon(config);
+
+				const result = featureAtPointerEventBehavior.find(
+					mockDrawEvent(),
+					false,
+				);
+
+				expect((result.clickedFeature as GeoJSONStoreFeatures).id).toBeUUID4();
+				expect(result.clickedMidPoint).toBeUndefined();
+				expect(result.clickedFeature?.geometry.type).toBe("Polygon");
+			});
+
+			it("returns clicked linestring if only linestring present", () => {
+				createStoreLineString(config);
+
+				const result = featureAtPointerEventBehavior.find(
+					mockDrawEvent(),
+					false,
+				);
+
+				expect((result.clickedFeature as GeoJSONStoreFeatures).id).toBeUUID4();
+				expect(result.clickedMidPoint).toBeUndefined();
+				expect(result.clickedFeature?.geometry.type).toBe("LineString");
+			});
+
+			it("returns clicked point if only point present", () => {
+				createStorePoint(config);
+
+				const result = featureAtPointerEventBehavior.find(
+					mockDrawEvent(),
+					false,
+				);
+
+				expect((result.clickedFeature as GeoJSONStoreFeatures).id).toBeUUID4();
+				expect(result.clickedMidPoint).toBeUndefined();
+				expect(result.clickedFeature?.geometry.type).toBe("Point");
 			});
 
 			it("returns midpoint", () => {
-				const config = mockBehaviorConfig("test");
-				const featureAtPointerEventBehavior = new FeatureAtPointerEventBehavior(
-					config,
-					new ClickBoundingBoxBehavior(config),
-					new PixelDistanceBehavior(config),
-				);
-
-				// Mock the unproject to return a valid set
-				// of bbox coordinates
-				mockBoundingBoxUnproject(config.unproject as jest.Mock);
-
 				createStorePolygon(config);
 				createStoreMidPoint(config);
-
-				(config.project as jest.Mock)
-					.mockImplementationOnce(() => ({
-						x: 0,
-						y: 0,
-					}))
-					.mockImplementationOnce(() => ({
-						x: 0,
-						y: 0,
-					}))
-					.mockImplementationOnce(() => ({
-						x: 0,
-						y: 0,
-					}));
 
 				const result = featureAtPointerEventBehavior.find(
 					mockDrawEvent(),

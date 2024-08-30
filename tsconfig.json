@@ -14,7 +14,8 @@
 		"entryPoints": ["src/terra-draw.ts"],
 		"exclude": ["src/geometry/**/*.ts", "src/test/**/*.ts", "src/util/**/*.ts"],
 		"out": "docs",
-		"skipErrorChecking": true
+		"skipErrorChecking": true,
+		"sourceLinkExternal": true
 	},
 	"exclude": [
 		"node_modules/",

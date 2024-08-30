@@ -91,6 +91,17 @@ describe("TerraDrawLeafletAdapter", () => {
 			const result = adapter.getLngLatFromEvent(getMockPointerEvent());
 			expect(result).toEqual({ lat: 51.507222, lng: -0.1275 });
 		});
+
+		it("getLngLatFromEvent handles null returns from containerPointToLatLng correctly", () => {
+			// Mock the containerPointToLatLng function
+			map.containerPointToLatLng = jest.fn(() => ({
+				lat: null,
+				lng: -0.1275,
+			})) as unknown as (point: L.PointExpression) => L.LatLng;
+
+			const result = adapter.getLngLatFromEvent(getMockPointerEvent());
+			expect(result).toEqual(null);
+		});
 	});
 
 	describe("setDraggability", () => {

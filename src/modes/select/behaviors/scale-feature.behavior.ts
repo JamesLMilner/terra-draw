@@ -16,7 +16,7 @@ import {
 	lngLatToWebMercatorXY,
 	webMercatorXYToLngLat,
 } from "../../../geometry/project/web-mercator";
-import { pixelDistance } from "../../../geometry/measure/pixel-distance";
+import { cartesianDistance } from "../../../geometry/measure/pixel-distance";
 
 export class ScaleFeatureBehavior extends TerraDrawModeBehavior {
 	constructor(
@@ -59,7 +59,7 @@ export class ScaleFeatureBehavior extends TerraDrawModeBehavior {
 
 		if (this.config.projection === "web-mercator") {
 			const selectedWebMercator = lngLatToWebMercatorXY(event.lng, event.lat);
-			distance = pixelDistance(originWebMercator, selectedWebMercator);
+			distance = cartesianDistance(originWebMercator, selectedWebMercator);
 		} else if (this.config.projection === "globe") {
 			distance = haversineDistanceKilometers(
 				centroid({ type: "Feature", geometry, properties: {} }),

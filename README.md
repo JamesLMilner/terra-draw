@@ -1,4 +1,10 @@
-<img src="./logo.png" alt="Terra Draw Logo" width="400"/>
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="./assets/logo-dark-mode.png">
+  <source media="(prefers-color-scheme: light)" srcset="./assets/logo.png">
+  <img alt="Terra Draw logo" src="./assets/logo.png" width="400px">
+</picture>
+
+<p></p>
 
 ![Terra Draw CI Badge](https://github.com/JamesLMilner/terra-draw/actions/workflows/ci.yml/badge.svg)
 [![npm version](https://badge.fury.io/js/terra-draw.svg)](https://badge.fury.io/js/terra-draw)
@@ -7,14 +13,15 @@ Frictionless map drawing across mapping libraries.
 
 Terra Draw centralizes map drawing logic and provides a host of out-of-the-box drawing modes that work across different JavaScript mapping libraries. It also allows you to bring your own modes!
 
-![An example of drawing geodesic lines using Terra Draw with Leaflet](./readme.gif)
+![An example of drawing geodesic lines using Terra Draw with Leaflet](./assets/readme.gif)
+
 
 ### Library Support
 
 Terra Draw uses the concept of 'adapters' to allow it to work with a host of different mapping libraries. Currently supported are:
 
 - [Leaflet](https://leafletjs.com/) v1
-- [OpenLayers](https://openlayers.org/) v7
+- [OpenLayers](https://openlayers.org/) v10
 - [Mapbox GL JS](https://www.mapbox.com/mapbox-gljs) v2
 - [MapLibre](https://maplibre.org/maplibre-gl-js/docs/) v2/v3
 - [Google Maps JS API](https://developers.google.com/maps/documentation/javascript/overview) v3

@@ -328,6 +328,88 @@ test.describe("rectangle mode", () => {
 	});
 });
 
+test.describe("angled rectangle mode", () => {
+	const mode = "angled-rectangle";
+
+	test("mode can set and can be used to create an angled rectangle (horizontal up)", async ({
+		page,
+	}) => {
+		const mapDiv = await setupMap({ page });
+		await changeMode({ page, mode });
+
+		await page.mouse.click(mapDiv.width / 2, mapDiv.height / 2);
+		await page.mouse.move(mapDiv.width / 3, mapDiv.height / 2, { steps: 30 });
+		await page.mouse.click(mapDiv.width / 3, mapDiv.height / 2);
+		await page.mouse.move(mapDiv.width / 3 + 50, mapDiv.height / 3 + 50, {
+			steps: 30,
+		});
+		await page.mouse.click(mapDiv.width / 3 + 50, mapDiv.height / 3 + 50);
+
+		await expectPaths({ page, count: 1 });
+
+		await expectPathDimensions({ page, width: 217, height: 74 });
+	});
+
+	test("mode can set and can be used to create an angled rectangle (horizontal down)", async ({
+		page,
+	}) => {
+		const mapDiv = await setupMap({ page });
+		await changeMode({ page, mode });
+
+		await page.mouse.click(mapDiv.width / 2, mapDiv.height / 2);
+		await page.mouse.move(mapDiv.width / 3, mapDiv.height / 2, { steps: 30 });
+		await page.mouse.click(mapDiv.width / 3, mapDiv.height / 2);
+		await page.mouse.move(mapDiv.width / 3 + 50, mapDiv.height / 3 + 200, {
+			steps: 30,
+		});
+		await page.mouse.click(mapDiv.width / 3 + 50, mapDiv.height / 3 + 200);
+
+		await expectPaths({ page, count: 1 });
+
+		await expectPathDimensions({ page, width: 217, height: 84 });
+	});
+
+	test("mode can set and can be used to create an angled (diagonal)", async ({
+		page,
+	}) => {
+		const mapDiv = await setupMap({ page });
+		await changeMode({ page, mode });
+
+		await page.mouse.click(mapDiv.width / 2, mapDiv.height / 2);
+		await page.mouse.move(mapDiv.width / 3, mapDiv.height / 3, { steps: 30 });
+		await page.mouse.click(mapDiv.width / 3, mapDiv.height / 3);
+		await page.mouse.move(mapDiv.width / 3 + 150, mapDiv.height / 3 + 150, {
+			steps: 30,
+		});
+		await page.mouse.click(mapDiv.width / 3 + 150, mapDiv.height / 3 + 150);
+
+		await expectPaths({ page, count: 1 });
+
+		await expectPathDimensions({ page, width: 245, height: 174 });
+	});
+
+	test("mode can set and can be used to create an angled (diagonal 2)", async ({
+		page,
+	}) => {
+		const mapDiv = await setupMap({ page });
+		await changeMode({ page, mode });
+
+		await page.mouse.click(mapDiv.width / 1.8, mapDiv.height / 1.8);
+		await page.mouse.move(mapDiv.width / 2.5, mapDiv.height / 1.3, {
+			steps: 30,
+		});
+		await page.mouse.click(mapDiv.width / 2.5, mapDiv.height / 1.3);
+		await page.mouse.move(mapDiv.width / 2.5 + 50, mapDiv.height / 1.3 + 50, {
+			steps: 30,
+		});
+		await page.mouse.click(mapDiv.width / 2.5 + 50, mapDiv.height / 1.3 + 50);
+
+		await expectPaths({ page, count: 1 });
+
+		await expectPathDimensions({ page, width: 246, height: 213 });
+	});
+});
+
 test.describe("circle mode", () => {
 	const mode = "circle";
 

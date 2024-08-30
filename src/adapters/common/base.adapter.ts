@@ -10,7 +10,7 @@ import {
 	TerraDrawAdapter,
 } from "../../common";
 import { limitPrecision } from "../../geometry/limit-decimal-precision";
-import { pixelDistance } from "../../geometry/measure/pixel-distance";
+import { cartesianDistance } from "../../geometry/measure/pixel-distance";
 import { AdapterListener } from "./adapter-listener";
 
 type BasePointerListener = (event: PointerEvent) => void;
@@ -128,9 +128,9 @@ export abstract class TerraDrawBaseAdapter implements TerraDrawAdapter {
 	}
 
 	/**
-	 * Gets the coordinate precision.
+	 * Gets the coordinate precision. The coordinate precision is the number of decimal places in geometry
+	 * coordinates stored in the store.
 	 * @returns {number} The coordinate precision.
-	 * @description The coordinate precision is the number of decimal places. Note that the precision will be overriden by the precision of the TerraDraw Adapter.
 	 */
 	public getCoordinatePrecision() {
 		return this._coordinatePrecision;
@@ -213,7 +213,7 @@ export abstract class TerraDrawBaseAdapter implements TerraDrawAdapter {
 						// behaviours
 						const modeState = this._currentModeCallbacks.getState();
 
-						const pixelDistanceToCheck = pixelDistance(
+						const pixelDistanceToCheck = cartesianDistance(
 							lastEventXY,
 							currentEventXY,
 						);

@@ -13,7 +13,7 @@ import {
 	CustomStyling,
 	TerraDrawBaseDrawMode,
 } from "../base.mode";
-import { pixelDistance } from "../../geometry/measure/pixel-distance";
+import { cartesianDistance } from "../../geometry/measure/pixel-distance";
 import { BehaviorConfig } from "../base.behavior";
 import { ClickBoundingBoxBehavior } from "../click-bounding-box.behavior";
 import { PixelDistanceBehavior } from "../pixel-distance.behavior";
@@ -314,7 +314,10 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 
 		// Determine if the click closes the line and finished drawing
 		const { x, y } = this.project(previousLng, previousLat);
-		const distance = pixelDistance({ x, y }, { x: cursorXY.x, y: cursorXY.y });
+		const distance = cartesianDistance(
+			{ x, y },
+			{ x: cursorXY.x, y: cursorXY.y },
+		);
 		const isClosingClick = distance < this.pointerDistance;
 
 		if (isClosingClick) {
@@ -391,7 +394,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 			const [previousLng, previousLat] =
 				currentCoordinates[currentCoordinates.length - 1];
 			const { x, y } = this.project(previousLng, previousLat);
-			const distance = pixelDistance(
+			const distance = cartesianDistance(
 				{ x, y },
 				{ x: event.containerX, y: event.containerY },
 			);
@@ -484,14 +487,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 
 	/** @internal */
 	cleanUp() {
-		try {
-			if (this.currentId) {
-				this.store.delete([this.currentId]);
-			}
-			if (this.closingPointId) {
-				this.store.delete([this.closingPointId]);
-			}
-		} catch (error) {}
+		const cleanUpId = this.currentId;
 
 		this.closingPointId = undefined;
 		this.currentId = undefined;
@@ -499,6 +495,15 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 		if (this.state === "drawing") {
 			this.setStarted();
 		}
+
+		try {
+			if (cleanUpId !== undefined) {
+				this.store.delete([cleanUpId]);
+			}
+			if (this.closingPointId !== undefined) {
+				this.store.delete([this.closingPointId]);
+			}
+		} catch (error) {}
 	}
 
 	/** @internal */

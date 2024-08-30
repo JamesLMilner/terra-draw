@@ -175,12 +175,22 @@ export class TerraDrawLeafletAdapter extends TerraDrawBaseAdapter {
 		const point = { x, y } as L.Point;
 
 		// If is not valid point we don't want to convert
-		if (isNaN(point.x) || isNaN(point.y)) {
+		if (
+			point.x === null ||
+			isNaN(point.x) ||
+			point.y === null ||
+			isNaN(point.y)
+		) {
 			return null;
 		}
 
 		const latLng = this._map.containerPointToLatLng(point);
-		if (isNaN(latLng.lng) || isNaN(latLng.lat)) {
+		if (
+			latLng.lng === null ||
+			isNaN(latLng.lng) ||
+			latLng.lat === null ||
+			isNaN(latLng.lat)
+		) {
 			return null;
 		}
 

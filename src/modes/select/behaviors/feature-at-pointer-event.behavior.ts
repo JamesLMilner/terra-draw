@@ -18,10 +18,13 @@ export class FeatureAtPointerEventBehavior extends TerraDrawModeBehavior {
 	}
 
 	public find(event: TerraDrawMouseEvent, hasSelection: boolean) {
-		let clickedFeature: GeoJSONStoreFeatures | undefined = undefined;
-		let clickedFeatureDistance = Infinity;
+		let clickedPoint: GeoJSONStoreFeatures | undefined = undefined;
+		let clickedPointDistance = Infinity;
+		let clickedLineString: GeoJSONStoreFeatures | undefined = undefined;
+		let clickedLineStringDistance = Infinity;
 		let clickedMidPoint: GeoJSONStoreFeatures | undefined = undefined;
 		let clickedMidPointDistance = Infinity;
+		let clickedPolygon: GeoJSONStoreFeatures | undefined = undefined;
 
 		const bbox = this.createClickBoundingBox.create(event);
 		const features = this.store.search(bbox as BBoxPolygon);
@@ -59,12 +62,16 @@ export class FeatureAtPointerEventBehavior extends TerraDrawModeBehavior {
 				} else if (
 					!feature.properties[SELECT_PROPERTIES.MID_POINT] &&
 					distance < this.pointerDistance &&
-					distance < clickedFeatureDistance
+					distance < clickedPointDistance
 				) {
-					clickedFeatureDistance = distance;
-					clickedFeature = feature;
+					clickedPointDistance = distance;
+					clickedPoint = feature;
 				}
 			} else if (geometry.type === "LineString") {
+				if (clickedPoint) {
+					continue;
+				}
+
 				for (let i = 0; i < geometry.coordinates.length - 1; i++) {
 					const coord = geometry.coordinates[i];
 					const nextCoord = geometry.coordinates[i + 1];
@@ -76,25 +83,33 @@ export class FeatureAtPointerEventBehavior extends TerraDrawModeBehavior {
 
 					if (
 						distanceToLine < this.pointerDistance &&
-						distanceToLine < clickedFeatureDistance
+						distanceToLine < clickedLineStringDistance
 					) {
-						clickedFeatureDistance = distanceToLine;
-						clickedFeature = feature;
+						clickedLineStringDistance = distanceToLine;
+						clickedLineString = feature;
 					}
 				}
 			} else if (geometry.type === "Polygon") {
+				if (clickedPoint || clickedLineString) {
+					// We already have a clicked feature
+					// so we can ignore the polygon
+					continue;
+				}
+
 				const clickInsidePolygon = pointInPolygon(
 					[event.lng, event.lat],
 					geometry.coordinates,
 				);
 
 				if (clickInsidePolygon) {
-					clickedFeatureDistance = 0;
-					clickedFeature = feature;
+					clickedPolygon = feature;
 				}
 			}
 		}
 
-		return { clickedFeature, clickedMidPoint };
+		return {
+			clickedFeature: clickedPoint || clickedLineString || clickedPolygon,
+			clickedMidPoint,
+		};
 	}
 }

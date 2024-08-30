@@ -128,9 +128,9 @@ export abstract class TerraDrawBaseAdapter implements TerraDrawAdapter {
 	}
 
 	/**
-	 * Gets the coordinate precision.
+	 * Gets the coordinate precision. The coordinate precision is the number of decimal places in geometry
+	 * coordinates stored in the store.
 	 * @returns {number} The coordinate precision.
-	 * @description The coordinate precision is the number of decimal places. Note that the precision will be overriden by the precision of the TerraDraw Adapter.
 	 */
 	public getCoordinatePrecision() {
 		return this._coordinatePrecision;

@@ -4,6 +4,8 @@
   <img alt="Terra Draw logo" src="./assets/logo" width="400px" style="margin-bottom: 20px">
 </picture>
 
+<br/>
+
 ![Terra Draw CI Badge](https://github.com/JamesLMilner/terra-draw/actions/workflows/ci.yml/badge.svg)
 [![npm version](https://badge.fury.io/js/terra-draw.svg)](https://badge.fury.io/js/terra-draw)
 

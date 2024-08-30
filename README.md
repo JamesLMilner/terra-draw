@@ -1,4 +1,8 @@
-<img src="./logo.png" alt="Terra Draw Logo" width="400"/>
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="./assets/logo-dark-mode.png">
+  <source media="(prefers-color-scheme: light)" srcset="./assets/logo.png">
+  <img alt="Terra Draw logo" src="./assets/logo" width="400px">
+</picture>
 
 ![Terra Draw CI Badge](https://github.com/JamesLMilner/terra-draw/actions/workflows/ci.yml/badge.svg)
 [![npm version](https://badge.fury.io/js/terra-draw.svg)](https://badge.fury.io/js/terra-draw)
@@ -7,7 +11,8 @@ Frictionless map drawing across mapping libraries.
 
 Terra Draw centralizes map drawing logic and provides a host of out-of-the-box drawing modes that work across different JavaScript mapping libraries. It also allows you to bring your own modes!
 
-![An example of drawing geodesic lines using Terra Draw with Leaflet](./readme.gif)
+![An example of drawing geodesic lines using Terra Draw with Leaflet](./assets/readme.gif)
+
 
 ### Library Support
 

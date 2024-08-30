@@ -11,9 +11,9 @@ data/
 ROADMAP.md
 common/
 guides/
-logo.png
 readme.gif
 jest.config.ts
 CHANGELOG.md
 scripts/
 scratch/
+assets/

@@ -1,6 +1,10 @@
+/**
+ * @jest-environment jsdom
+ */
 import { TerraDrawLeafletAdapter } from "./leaflet.adapter";
 import { getMockPointerEvent } from "../test/mock-pointer-event";
-import { TerraDrawCallbacks } from "../common";
+import { TerraDrawAdapterStyling, TerraDrawCallbacks } from "../common";
+import { GeoJSONStoreFeatures } from "../terra-draw";
 
 const callbacks = () =>
 	({
@@ -13,6 +17,7 @@ const callbacks = () =>
 		onDrag: jest.fn(),
 		onDragEnd: jest.fn(),
 		onClear: jest.fn(),
+		onReady: jest.fn(),
 	}) as TerraDrawCallbacks;
 
 const createLeafletMap = () => {
@@ -207,6 +212,10 @@ describe("TerraDrawLeafletAdapter", () => {
 	});
 
 	describe("render", () => {
+		beforeEach(() => {
+			jest.restoreAllMocks();
+		});
+
 		it("does nothing if no features are passed", () => {
 			const map = createLeafletMap() as L.Map;
 
@@ -291,51 +300,570 @@ describe("TerraDrawLeafletAdapter", () => {
 			expect(map.addLayer).toHaveBeenCalledTimes(2); // 1 for created 1 for updated
 			expect(map.removeLayer).toHaveBeenCalledTimes(2); // 1 for update 1 for delete
 		});
-	});
 
-	it("clear", () => {
-		const map = createLeafletMap() as L.Map;
+		it("handles pointToLayer", () => {
+			const mockCreateElement = jest.spyOn(document, "createElement");
 
-		// Create the adapter instance with the mocked map
-		const lib = {
-			geoJSON: jest.fn(),
-		} as any;
+			const map = createLeafletMap() as L.Map;
 
-		// Create the adapter instance with the mocked map
-		const adapter = new TerraDrawLeafletAdapter({
-			lib,
-			map,
-			coordinatePrecision: 9,
+			const marker = {};
+
+			// Create the adapter instance with the mocked map
+			const lib = {
+				circleMarker: jest.fn(() => marker),
+				geoJSON: jest.fn(),
+			} as any;
+
+			const adapter = new TerraDrawLeafletAdapter({
+				lib,
+				map,
+				coordinatePrecision: 9,
+			});
+
+			const point = {
+				id: "1",
+				type: "Feature",
+				geometry: {
+					type: "Point",
+					coordinates: [1, 1],
+				},
+				properties: {
+					mode: "point",
+				},
+			} as GeoJSONStoreFeatures;
+
+			const styling = {
+				pointWidth: 2,
+				pointOutlineWidth: 1,
+				pointOutlineColor: "#ffffff",
+				fillOpacity: 0.8,
+				pointColor: "#ffffff",
+				polygonFillColor: "#ffffff",
+				polygonOutlineColor: "#ffffff",
+				polygonFillOpacity: 1,
+				polygonOutlineWidth: 1,
+				lineStringWidth: 1,
+				lineStringColor: "#ffffff",
+				zIndex: 1,
+			} as TerraDrawAdapterStyling;
+
+			adapter.render(
+				{
+					unchanged: [],
+					created: [point],
+					deletedIds: [],
+					updated: [],
+				},
+				{
+					point: () => styling,
+					linestring: () => styling,
+					polygon: () => styling,
+				},
+			);
+
+			expect(lib.geoJSON).toHaveBeenCalledTimes(1);
+			const pointToLayer = lib.geoJSON.mock.calls[0][1].pointToLayer;
+			expect(pointToLayer).toBeDefined();
+			const result = pointToLayer(point);
+			expect(mockCreateElement).toHaveBeenCalledTimes(1);
+			expect(result).toEqual(marker);
 		});
 
-		adapter.render(
-			{
-				unchanged: [],
-				created: [
-					{
-						id: "1",
-						type: "Feature",
-						geometry: {
-							type: "Point",
-							coordinates: [1, 1],
+		it("handles pointToLayer with no properties", () => {
+			const map = createLeafletMap() as L.Map;
+
+			const marker = {};
+
+			// Create the adapter instance with the mocked map
+			const lib = {
+				circleMarker: jest.fn(() => marker),
+				geoJSON: jest.fn(),
+			} as any;
+
+			const adapter = new TerraDrawLeafletAdapter({
+				lib,
+				map,
+				coordinatePrecision: 9,
+			});
+
+			const point = {
+				id: "1",
+				type: "Feature",
+				geometry: {
+					type: "Point",
+					coordinates: [1, 1],
+				},
+			} as GeoJSONStoreFeatures;
+
+			const styling = {
+				pointWidth: 2,
+				pointOutlineWidth: 1,
+				pointOutlineColor: "#ffffff",
+				fillOpacity: 0.8,
+				pointColor: "#ffffff",
+				polygonFillColor: "#ffffff",
+				polygonOutlineColor: "#ffffff",
+				polygonFillOpacity: 1,
+				polygonOutlineWidth: 1,
+				lineStringWidth: 1,
+				lineStringColor: "#ffffff",
+				zIndex: 1,
+			} as TerraDrawAdapterStyling;
+
+			adapter.render(
+				{
+					unchanged: [],
+					created: [point],
+					deletedIds: [],
+					updated: [],
+				},
+				{
+					point: () => styling,
+					linestring: () => styling,
+					polygon: () => styling,
+				},
+			);
+
+			const pointToLayer = lib.geoJSON.mock.calls[0][1].pointToLayer;
+
+			expect(() => pointToLayer(point)).toThrow();
+		});
+
+		it("handles pointToLayer with no mode", () => {
+			const map = createLeafletMap() as L.Map;
+
+			const marker = {};
+
+			// Create the adapter instance with the mocked map
+			const lib = {
+				circleMarker: jest.fn(() => marker),
+				geoJSON: jest.fn(),
+			} as any;
+
+			const adapter = new TerraDrawLeafletAdapter({
+				lib,
+				map,
+				coordinatePrecision: 9,
+			});
+
+			const point = {
+				id: "1",
+				type: "Feature",
+				geometry: {
+					type: "Point",
+					coordinates: [1, 1],
+				},
+				properties: {},
+			} as GeoJSONStoreFeatures;
+
+			const styling = {
+				pointWidth: 2,
+				pointOutlineWidth: 1,
+				pointOutlineColor: "#ffffff",
+				fillOpacity: 0.8,
+				pointColor: "#ffffff",
+				polygonFillColor: "#ffffff",
+				polygonOutlineColor: "#ffffff",
+				polygonFillOpacity: 1,
+				polygonOutlineWidth: 1,
+				lineStringWidth: 1,
+				lineStringColor: "#ffffff",
+				zIndex: 1,
+			} as TerraDrawAdapterStyling;
+
+			adapter.render(
+				{
+					unchanged: [],
+					created: [point],
+					deletedIds: [],
+					updated: [],
+				},
+				{
+					point: () => styling,
+					linestring: () => styling,
+					polygon: () => styling,
+				},
+			);
+			const pointToLayer = lib.geoJSON.mock.calls[0][1].pointToLayer;
+
+			expect(() => pointToLayer(point)).toThrow();
+		});
+
+		it("handles style", () => {
+			const mockCreateElement = jest.spyOn(document, "createElement");
+
+			const map = createLeafletMap() as L.Map;
+
+			const marker = {};
+
+			// Create the adapter instance with the mocked map
+			const lib = {
+				circleMarker: jest.fn(() => marker),
+				geoJSON: jest.fn(),
+			} as any;
+
+			const adapter = new TerraDrawLeafletAdapter({
+				lib,
+				map,
+				coordinatePrecision: 9,
+			});
+
+			const linestring = {
+				id: "2",
+				type: "Feature",
+				geometry: {
+					type: "LineString",
+					coordinates: [
+						[0, 0],
+						[1, 1],
+					],
+				},
+				properties: {
+					mode: "linestring",
+				},
+			} as GeoJSONStoreFeatures;
+
+			const polygon = {
+				id: "3",
+				type: "Feature",
+				geometry: {
+					type: "Polygon",
+					coordinates: [
+						[
+							[0, 0],
+							[0, 1],
+							[1, 1],
+							[1, 0],
+							[0, 0],
+						],
+					],
+				},
+				properties: {
+					mode: "polygon",
+				},
+			} as GeoJSONStoreFeatures;
+
+			const styling = {
+				pointWidth: 2,
+				pointOutlineWidth: 1,
+				pointOutlineColor: "#ffffff",
+				fillOpacity: 0.8,
+				pointColor: "#ffffff",
+				polygonFillColor: "#ffffff",
+				polygonOutlineColor: "#ffffff",
+				polygonFillOpacity: 1,
+				polygonOutlineWidth: 1,
+				lineStringWidth: 1,
+				lineStringColor: "#ffffff",
+				zIndex: 1,
+			} as TerraDrawAdapterStyling;
+
+			adapter.register(callbacks());
+
+			adapter.render(
+				{
+					unchanged: [],
+					created: [linestring, polygon],
+					deletedIds: [],
+					updated: [],
+				},
+				{
+					linestring: () => styling,
+					polygon: () => styling,
+				},
+			);
+
+			const styleLineString = lib.geoJSON.mock.calls[0][1].style;
+			expect(styleLineString).toBeDefined();
+			const styleLineStringResult = styleLineString(linestring);
+			expect(mockCreateElement).toHaveBeenCalledTimes(1);
+			expect(styleLineStringResult).toEqual({
+				color: "#ffffff",
+				interactive: false,
+				pane: "1",
+				weight: 1,
+			});
+
+			const stylePolygon = lib.geoJSON.mock.calls[0][1].style;
+			expect(stylePolygon).toBeDefined();
+			const stylePolygonResult = stylePolygon(polygon);
+			expect(mockCreateElement).toHaveBeenCalledTimes(1);
+			expect(stylePolygonResult).toEqual({
+				color: "#ffffff",
+				fillColor: "#ffffff",
+				fillOpacity: 1,
+				interactive: false,
+				pane: "1",
+				weight: 1,
+				stroke: true,
+			});
+
+			adapter.clear();
+		});
+
+		it("handles style returns empty object for feature without properties", () => {
+			const map = createLeafletMap() as L.Map;
+
+			const marker = {};
+
+			// Create the adapter instance with the mocked map
+			const lib = {
+				circleMarker: jest.fn(() => marker),
+				geoJSON: jest.fn(),
+			} as any;
+
+			const adapter = new TerraDrawLeafletAdapter({
+				lib,
+				map,
+				coordinatePrecision: 9,
+			});
+
+			const linestring = {
+				id: "2",
+				type: "Feature",
+				geometry: {
+					type: "LineString",
+					coordinates: [
+						[0, 0],
+						[1, 1],
+					],
+				},
+			} as GeoJSONStoreFeatures;
+
+			const styling = {
+				pointWidth: 2,
+				pointOutlineWidth: 1,
+				pointOutlineColor: "#ffffff",
+				fillOpacity: 0.8,
+				pointColor: "#ffffff",
+				polygonFillColor: "#ffffff",
+				polygonOutlineColor: "#ffffff",
+				polygonFillOpacity: 1,
+				polygonOutlineWidth: 1,
+				lineStringWidth: 1,
+				lineStringColor: "#ffffff",
+				zIndex: 1,
+			} as TerraDrawAdapterStyling;
+
+			adapter.register(callbacks());
+
+			adapter.render(
+				{
+					unchanged: [],
+					created: [linestring],
+					deletedIds: [],
+					updated: [],
+				},
+				{
+					linestring: () => styling,
+				},
+			);
+
+			const styleLineString = lib.geoJSON.mock.calls[0][1].style;
+
+			expect(styleLineString(linestring)).toEqual({});
+		});
+
+		it("handles style returns empty object for feature geometry type which is unsupported", () => {
+			const map = createLeafletMap() as L.Map;
+
+			const marker = {};
+
+			// Create the adapter instance with the mocked map
+			const lib = {
+				circleMarker: jest.fn(() => marker),
+				geoJSON: jest.fn(),
+			} as any;
+
+			const adapter = new TerraDrawLeafletAdapter({
+				lib,
+				map,
+				coordinatePrecision: 9,
+			});
+
+			const linestring = {
+				id: "2",
+				type: "Feature",
+				geometry: {
+					type: "MultiLineString",
+					coordinates: [
+						[0, 0],
+						[1, 1],
+					],
+				},
+				properties: {
+					mode: "linestring",
+				},
+			} as unknown as GeoJSONStoreFeatures;
+
+			const styling = {
+				pointWidth: 2,
+				pointOutlineWidth: 1,
+				pointOutlineColor: "#ffffff",
+				fillOpacity: 0.8,
+				pointColor: "#ffffff",
+				polygonFillColor: "#ffffff",
+				polygonOutlineColor: "#ffffff",
+				polygonFillOpacity: 1,
+				polygonOutlineWidth: 1,
+				lineStringWidth: 1,
+				lineStringColor: "#ffffff",
+				zIndex: 1,
+			} as TerraDrawAdapterStyling;
+
+			adapter.register(callbacks());
+
+			adapter.render(
+				{
+					unchanged: [],
+					created: [linestring],
+					deletedIds: [],
+					updated: [],
+				},
+				{
+					linestring: () => styling,
+				},
+			);
+
+			const styleLineString = lib.geoJSON.mock.calls[0][1].style;
+
+			expect(styleLineString(linestring)).toEqual({});
+		});
+	});
+
+	describe("clear", () => {
+		it("removes the layers from the map correctl", () => {
+			const map = createLeafletMap() as L.Map;
+
+			// Create the adapter instance with the mocked map
+			const lib = {
+				geoJSON: jest.fn(),
+			} as any;
+
+			// Create the adapter instance with the mocked map
+			const adapter = new TerraDrawLeafletAdapter({
+				lib,
+				map,
+				coordinatePrecision: 9,
+			});
+
+			adapter.register(callbacks());
+
+			adapter.render(
+				{
+					unchanged: [],
+					created: [
+						{
+							id: "1",
+							type: "Feature",
+							geometry: {
+								type: "Point",
+								coordinates: [1, 1],
+							},
+							properties: {
+								mode: "test",
+							},
 						},
-						properties: {
-							mode: "test",
+					],
+					deletedIds: [],
+					updated: [],
+				},
+				{
+					test: () => ({}) as any,
+				},
+			);
+
+			adapter.clear();
+
+			expect(map.removeLayer).toHaveBeenCalledTimes(1);
+		});
+	});
+
+	describe("getCoodinatePrecision", () => {
+		it("returns the default coordinate precision of 9", () => {
+			const adapter = new TerraDrawLeafletAdapter({
+				lib: {} as any,
+				map: createLeafletMap() as L.Map,
+			});
+
+			expect(adapter.getCoordinatePrecision()).toBe(9);
+		});
+
+		it("returns the set coordinate precision of 6", () => {
+			const adapter = new TerraDrawLeafletAdapter({
+				lib: {} as any,
+				map: createLeafletMap() as L.Map,
+				coordinatePrecision: 6,
+			});
+
+			expect(adapter.getCoordinatePrecision()).toBe(6);
+		});
+	});
+
+	describe("register", () => {
+		it("calls onReady call back when complete", () => {
+			const adapter = new TerraDrawLeafletAdapter({
+				lib: {} as any,
+				map: createLeafletMap() as L.Map,
+				coordinatePrecision: 6,
+			});
+
+			const adapterCallbacks = callbacks();
+
+			adapter.register(adapterCallbacks);
+
+			expect(adapterCallbacks.onReady).toHaveBeenCalledTimes(1);
+		});
+	});
+
+	describe("unregister", () => {
+		it("can be called without error", () => {
+			const adapter = new TerraDrawLeafletAdapter({
+				lib: {} as any,
+				map: createLeafletMap() as L.Map,
+			});
+
+			adapter.unregister();
+		});
+
+		it("clears the map when features have been rendered", () => {
+			const map = createLeafletMap() as L.Map;
+			const adapter = new TerraDrawLeafletAdapter({
+				lib: {
+					geoJSON: jest.fn(),
+				} as any,
+				map,
+			});
+
+			adapter.register(callbacks());
+
+			adapter.render(
+				{
+					unchanged: [],
+					created: [
+						{
+							id: "1",
+							type: "Feature",
+							geometry: {
+								type: "Point",
+								coordinates: [1, 1],
+							},
+							properties: {
+								mode: "test",
+							},
 						},
-					},
-				],
-				deletedIds: [],
-				updated: [],
-			},
-			{
-				test: () => ({}) as any,
-			},
-		);
+					],
+					deletedIds: [],
+					updated: [],
+				},
+				{
+					test: () => ({}) as any,
+				},
+			);
 
-		adapter.register(callbacks());
+			adapter.clear();
 
-		adapter.clear();
-
-		expect(map.removeLayer).toHaveBeenCalledTimes(1);
+			expect(map.removeLayer).toHaveBeenCalledTimes(1);
+		});
 	});
 });

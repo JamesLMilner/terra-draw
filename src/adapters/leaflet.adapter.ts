@@ -37,9 +37,8 @@ export class TerraDrawLeafletAdapter extends TerraDrawBaseAdapter {
 	private createPaneStyleSheet(pane: string, zIndex: number) {
 		const baseZIndex = 600;
 		const style = document.createElement("style");
-		style.innerHTML = `.leaflet-${pane}-pane {z-index: ${
-			zIndex + baseZIndex
-		};}`;
+		const paneZIndex = zIndex + baseZIndex;
+		style.innerHTML = `.leaflet-${pane}-pane {z-index: ${paneZIndex}`;
 		document.getElementsByTagName("head")[0].appendChild(style);
 		this._map.createPane(pane);
 		return style;
@@ -172,17 +171,8 @@ export class TerraDrawLeafletAdapter extends TerraDrawBaseAdapter {
 		const { containerX: x, containerY: y } =
 			this.getMapElementXYPosition(event);
 
+		// x and y are guaranteed to be numeric as they come from getBoundingClientRect
 		const point = { x, y } as L.Point;
-
-		// If is not valid point we don't want to convert
-		if (
-			point.x === null ||
-			isNaN(point.x) ||
-			point.y === null ||
-			isNaN(point.y)
-		) {
-			return null;
-		}
 
 		const latLng = this._map.containerPointToLatLng(point);
 		if (

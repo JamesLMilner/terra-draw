@@ -1,7 +1,7 @@
 import { Position } from "geojson";
 import { earthRadius } from "../helpers";
 
-// Based on Turf.js Rhumb Distance module
+// Adapted from @turf/rhumb-distance module
 // https://github.com/Turfjs/turf/blob/master/packages/turf-rhumb-distance/index.ts
 
 export function rhumbDistance(destination: Position, origin: Position): number {

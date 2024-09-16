@@ -1,6 +1,7 @@
 import { Feature, LineString, Polygon, Position } from "geojson";
 
-// Based on turf-bearing: https://github.com/Turfjs/turf/tree/master/packages/turf-centroid
+// Adapter from the @turf/bearing which is MIT Licensed
+// https://github.com/Turfjs/turf/tree/master/packages/turf-centroid
 
 export function centroid(geojson: Feature<Polygon | LineString>): Position {
 	let xSum = 0;

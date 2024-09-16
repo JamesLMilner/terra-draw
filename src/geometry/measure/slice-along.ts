@@ -3,7 +3,7 @@ import { destination } from "./destination";
 import { bearing } from "./bearing";
 import { haversineDistanceKilometers } from "./haversine-distance";
 
-// Based on Turf.js line slice along module
+// Adapted from @turf/line-slice-along module which is MIT licensed
 // https://github.com/Turfjs/turf/blob/master/packages/turf-line-slice-along/index.ts
 
 export function lineSliceAlong(

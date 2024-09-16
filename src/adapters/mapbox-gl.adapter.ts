@@ -80,7 +80,7 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawBaseAdapter {
 		} as FillLayer);
 	}
 
-	private _addFillOutlineLayer(id: string, beneath?: string) {
+	private _addFillOutlineLayer(id: string) {
 		const layer = this._map.addLayer({
 			id: id + "-outline",
 			source: id,
@@ -92,14 +92,10 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawBaseAdapter {
 			},
 		} as LineLayer);
 
-		if (beneath) {
-			this._map.moveLayer(id, beneath);
-		}
-
 		return layer;
 	}
 
-	private _addLineLayer(id: string, beneath?: string) {
+	private _addLineLayer(id: string) {
 		const layer = this._map.addLayer({
 			id,
 			source: id,
@@ -111,14 +107,10 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawBaseAdapter {
 			},
 		} as LineLayer);
 
-		if (beneath) {
-			this._map.moveLayer(id, beneath);
-		}
-
 		return layer;
 	}
 
-	private _addPointLayer(id: string, beneath?: string) {
+	private _addPointLayer(id: string) {
 		const layer = this._map.addLayer({
 			id,
 			source: id,
@@ -131,26 +123,23 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawBaseAdapter {
 				"circle-color": ["get", "pointColor"],
 			},
 		} as CircleLayer);
-		if (beneath) {
-			this._map.moveLayer(id, beneath);
-		}
+
 		return layer;
 	}
 
 	private _addLayer(
 		id: string,
 		featureType: "Point" | "LineString" | "Polygon",
-		beneath?: string,
 	) {
 		if (featureType === "Point") {
-			this._addPointLayer(id, beneath);
+			this._addPointLayer(id);
 		}
 		if (featureType === "LineString") {
-			this._addLineLayer(id, beneath);
+			this._addLineLayer(id);
 		}
 		if (featureType === "Polygon") {
 			this._addFillLayer(id);
-			this._addFillOutlineLayer(id, beneath);
+			this._addFillOutlineLayer(id);
 		}
 	}
 

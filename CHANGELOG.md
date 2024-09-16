@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-beta.2](https://github.com/JamesLMilner/terra-draw/compare/v1.0.0-beta.1...v1.0.0-beta.2) (2024-08-30)
+
+
+### Bug Fixes
+
+* ensure correct order of geometries when selecting (point, linestring, polygon) ([#312](https://github.com/JamesLMilner/terra-draw/issues/312)) ([c0fec75](https://github.com/JamesLMilner/terra-draw/commit/c0fec750ef7cb11a0c9f87141ddcc714acd2012b))
+
+
+### Chore
+
+* add margin to bottom of logo to avoid overcrowding in readme ([#316](https://github.com/JamesLMilner/terra-draw/issues/316)) ([aeece63](https://github.com/JamesLMilner/terra-draw/commit/aeece632e9f1fc7e9fa325374c4654fcf3a07ff9))
+* update to the new Terra Draw logo ([#315](https://github.com/JamesLMilner/terra-draw/issues/315)) ([f56ac8a](https://github.com/JamesLMilner/terra-draw/commit/f56ac8ae5c373016552472b8aa64046fc8f21005))
+* use linebreak under logo as margin does not work on github readme ([#317](https://github.com/JamesLMilner/terra-draw/issues/317)) ([3c94434](https://github.com/JamesLMilner/terra-draw/commit/3c9443454d731885b3aa0b8d4eb378a76cc9b85e))
+
+
+### Documentation
+
+* update CODE_OF_CONDUCT.md email ([#314](https://github.com/JamesLMilner/terra-draw/issues/314)) ([4449de9](https://github.com/JamesLMilner/terra-draw/commit/4449de9838e85dfbda005a35e3df25cf9f679a8f))
+* update the API documentation to open links in a new tab ([#318](https://github.com/JamesLMilner/terra-draw/issues/318)) ([e554b4e](https://github.com/JamesLMilner/terra-draw/commit/e554b4ea1e4ba72e1c83facb71f6e18e6a72d3bb))
+
 ## [1.0.0-beta.1](https://github.com/JamesLMilner/terra-draw/compare/v1.0.0-beta.0...v1.0.0-beta.1) (2024-08-14)
 
 

@@ -1,7 +1,7 @@
 import { Position } from "geojson";
 import { degreesToRadians, radiansToDegrees } from "../helpers";
 
-// Based on Turf.js Rhumb Bearing module
+// Based on Turf.js Rhumb Bearing module which is MIT Licensed
 // https://github.com/Turfjs/turf/blob/master/packages/turf-rhumb-bearing/index.ts
 
 export function rhumbBearing(start: Position, end: Position): number {

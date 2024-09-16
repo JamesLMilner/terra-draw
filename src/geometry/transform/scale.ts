@@ -8,7 +8,8 @@ import {
 	webMercatorXYToLngLat,
 } from "../project/web-mercator";
 
-// Based on turf-transform-scale: https://github.com/Turfjs/turf/tree/master/packages/turf-transform-scale
+// Adapted from the @turf/transform-scale module which is MIT Licensed
+// https://github.com/Turfjs/turf/tree/master/packages/turf-transform-scale
 
 export function transformScale(
 	feature: Feature<Polygon | LineString>,

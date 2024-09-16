@@ -5,6 +5,9 @@ import { haversineDistanceKilometers } from "./measure/haversine-distance";
 import { rhumbBearing } from "./measure/rhumb-bearing";
 import { rhumbDestination } from "./measure/rhumb-destination";
 
+// midpointCoordinate is adapted from the @turf/midpoint which is MIT Licensed
+// https://github.com/Turfjs/turf/tree/master/packages/turf-midpoint
+
 export function midpointCoordinate(
 	coordinates1: Position,
 	coordinates2: Position,

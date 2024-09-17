@@ -53,7 +53,7 @@ export class TerraDrawOpenLayersAdapter extends TerraDrawBaseAdapter {
 		this._lib = config.lib;
 
 		this._geoJSONReader = new this._lib.GeoJSON();
-		this._projection = this._lib.getUserProjection() || "EPSG:4326";
+		this._projection = this._lib.getUserProjection() || "EPSG:3857";
 		this._fromLonLat = this._lib.fromLonLat;
 		this._toLonLat = this._lib.toLonLat;
 

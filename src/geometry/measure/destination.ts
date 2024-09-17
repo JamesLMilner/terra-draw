@@ -5,7 +5,7 @@ import {
 	radiansToDegrees,
 } from "../helpers";
 
-// Based on Turf.js destination module
+// Adapted from @turf/destination module which is MIT Licensed
 // https://github.com/Turfjs/turf/blob/master/packages/turf-desination/index.ts
 
 export function destination(

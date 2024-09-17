@@ -1,7 +1,7 @@
 import { Position } from "geojson";
 import { degreesToRadians, earthRadius } from "../helpers";
 
-// Based on Turf.js Rhumb Destination module
+// Based on @turf/rhumb-destination module which is MIT Licensed
 // https://github.com/Turfjs/turf/blob/master/packages/turf-rhumb-destination/index.ts
 
 export function rhumbDestination(

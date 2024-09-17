@@ -32,7 +32,14 @@ import View from "ol/View";
 import { Circle as CircleStyle, Stroke, Style } from "ol/style";
 import { OSM, Vector as VectorSource } from "ol/source";
 import { Tile as TileLayer, Vector as VectorLayer } from "ol/layer";
-import { fromLonLat, toLonLat, getUserProjection } from "ol/proj";
+import {
+	fromLonLat,
+	toLonLat,
+	getUserProjection,
+	setUserProjection,
+} from "ol/proj";
+import { register, fromEPSGCode } from "ol/proj/proj4";
+import proj4 from "proj4";
 import EsriMap from "@arcgis/core/Map";
 import MapView from "@arcgis/core/views/MapView.js";
 import GraphicsLayer from "@arcgis/core/layers/GraphicsLayer";
@@ -389,6 +396,21 @@ const example = {
 			controls: [],
 		});
 
+		// Set user projection to EPSG:4326
+		// setUserProjection("EPSG:4326")
+
+		// Set user projection to ESRI:102400 (London Survey Grid)
+		// register(proj4);
+		// fromEPSGCode("102400")
+		// 	.then(londonGrid => {
+		// 		setUserProjection(londonGrid)
+		// 	})
+		// 	.catch((_) => console.error("Fail to retrieve projection from epsg.io"))
+		//
+		// map.on('click', (event) => {
+		//   console.log(event.coordinate)
+		// })
+
 		map.once("postrender", () => {
 			const draw = new TerraDraw({
 				adapter: new TerraDrawOpenLayersAdapter({
@@ -411,6 +433,11 @@ const example = {
 				modes: getModes(),
 			});
 			draw.start();
+
+			draw.on("change", (e) => {
+				console.log(e);
+				console.log(draw.getSnapshot());
+			});
 
 			addModeChangeHandler(draw, currentSelected);
 

@@ -24,6 +24,7 @@ import {
 } from "ol/proj";
 import { BaseAdapterConfig, TerraDrawBaseAdapter } from "./common/base.adapter";
 import { Coordinate } from "ol/coordinate";
+import { Pixel } from "ol/pixel";
 
 type InjectableOL = {
 	Circle: typeof CircleGeom;
@@ -262,7 +263,7 @@ export class TerraDrawOpenLayersAdapter extends TerraDrawBaseAdapter {
 	 */
 	public project(lng: number, lat: number) {
 		const [x, y] = this._map.getPixelFromCoordinate(
-			this._fromLonLat([lng, lat], this._projection),
+			this._fromLonLat([lng, lat], this._projection) as Coordinate,
 		);
 		return { x, y };
 	}
@@ -275,7 +276,7 @@ export class TerraDrawOpenLayersAdapter extends TerraDrawBaseAdapter {
 	 */
 	public unproject(x: number, y: number) {
 		const [lng, lat] = this._toLonLat(
-			this._map.getCoordinateFromPixel([x, y]),
+			this._map.getCoordinateFromPixel([x, y]) as Pixel,
 			this._projection,
 		);
 		return { lng, lat };

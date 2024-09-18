@@ -16,12 +16,7 @@ import Style from "ol/style/Style";
 import VectorSource from "ol/source/Vector";
 import { Geometry } from "ol/geom";
 import VectorLayer from "ol/layer/Vector";
-import {
-	toLonLat,
-	fromLonLat,
-	getUserProjection,
-	ProjectionLike,
-} from "ol/proj";
+import { toLonLat, fromLonLat, getUserProjection, Projection } from "ol/proj";
 import { BaseAdapterConfig, TerraDrawBaseAdapter } from "./common/base.adapter";
 import { Coordinate } from "ol/coordinate";
 import { Pixel } from "ol/pixel";
@@ -36,8 +31,6 @@ type InjectableOL = {
 	VectorSource: typeof VectorSource;
 	Stroke: typeof Stroke;
 	getUserProjection: typeof getUserProjection;
-	toLonLat: typeof toLonLat;
-	fromLonLat: typeof fromLonLat;
 };
 
 export class TerraDrawOpenLayersAdapter extends TerraDrawBaseAdapter {
@@ -53,9 +46,8 @@ export class TerraDrawOpenLayersAdapter extends TerraDrawBaseAdapter {
 		this._lib = config.lib;
 
 		this._geoJSONReader = new this._lib.GeoJSON();
-		this._projection = this._lib.getUserProjection() || "EPSG:3857";
-		this._fromLonLat = this._lib.fromLonLat;
-		this._toLonLat = this._lib.toLonLat;
+		this._projection = () =>
+			this._lib.getUserProjection() ?? new Projection({ code: "EPSG:3857" });
 
 		this._container = this._map.getViewport();
 
@@ -83,15 +75,7 @@ export class TerraDrawOpenLayersAdapter extends TerraDrawBaseAdapter {
 	private _lib: InjectableOL;
 	private _map: Map;
 	private _container: HTMLElement;
-	private _projection: ProjectionLike;
-	private _fromLonLat: (
-		coordinate: Coordinate,
-		projection: ProjectionLike,
-	) => Coordinate;
-	private _toLonLat: (
-		coordinate: Coordinate,
-		projection: ProjectionLike,
-	) => Coordinate;
+	private _projection: () => Projection;
 	private _vectorSource: undefined | VectorSource<Feature<Geometry>>;
 	private _geoJSONReader: undefined | GeoJSON;
 
@@ -192,7 +176,7 @@ export class TerraDrawOpenLayersAdapter extends TerraDrawBaseAdapter {
 		if (this._vectorSource && this._geoJSONReader) {
 			const olFeature = this._geoJSONReader.readFeature(feature, {
 				dataProjection: "EPSG:4326",
-				featureProjection: this._projection,
+				featureProjection: this._projection(),
 			}) as Feature<Geometry>;
 			this._vectorSource.addFeature(olFeature);
 		} else {
@@ -263,7 +247,7 @@ export class TerraDrawOpenLayersAdapter extends TerraDrawBaseAdapter {
 	 */
 	public project(lng: number, lat: number) {
 		const [x, y] = this._map.getPixelFromCoordinate(
-			this._fromLonLat([lng, lat], this._projection) as Coordinate,
+			fromLonLat([lng, lat], this._projection()) as Coordinate,
 		);
 		return { x, y };
 	}
@@ -275,9 +259,9 @@ export class TerraDrawOpenLayersAdapter extends TerraDrawBaseAdapter {
 	 * @returns An object with 'lng' and 'lat' properties representing the longitude and latitude coordinates.
 	 */
 	public unproject(x: number, y: number) {
-		const [lng, lat] = this._toLonLat(
+		const [lng, lat] = toLonLat(
 			this._map.getCoordinateFromPixel([x, y]) as Pixel,
-			this._projection,
+			this._projection(),
 		);
 		return { lng, lat };
 	}

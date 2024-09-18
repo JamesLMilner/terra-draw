@@ -8,6 +8,10 @@ jest.mock("ol/style/Circle", () => jest.fn());
 jest.mock("ol/style/Fill", () => jest.fn());
 jest.mock("ol/style/Stroke", () => jest.fn());
 jest.mock("ol/style/Style", () => jest.fn());
+jest.mock("ol/proj", () => ({
+	toLonLat: () => [45, 45],
+	fromLonLat: () => [0, 0],
+}));
 jest.mock("ol/geom/Geometry", () => jest.fn());
 
 const createMockOLMap = () => {
@@ -35,7 +39,6 @@ describe("TerraDrawOpenLayersAdapter", () => {
 					GeoJSON: jest.fn(),
 					VectorSource: jest.fn(),
 					VectorLayer: jest.fn(),
-					toLonLat: jest.fn(),
 					getUserProjection: jest.fn(),
 				} as any,
 				minPixelDragDistance: 1,
@@ -65,7 +68,6 @@ describe("TerraDrawOpenLayersAdapter", () => {
 					GeoJSON: jest.fn(),
 					VectorSource: jest.fn(),
 					VectorLayer: jest.fn(),
-					toLonLat: jest.fn(() => [45, 45]),
 					getUserProjection: jest.fn(() => "EPSG:3857"),
 				} as any,
 			});
@@ -85,8 +87,6 @@ describe("TerraDrawOpenLayersAdapter", () => {
 					GeoJSON: jest.fn(),
 					VectorSource: jest.fn(),
 					VectorLayer: jest.fn(),
-					toLonLat: jest.fn(() => [0, 0]),
-					fromLonLat: jest.fn(() => [0, 0]),
 					getUserProjection: jest.fn(() => "EPSG:3857"),
 				} as any,
 			});
@@ -107,7 +107,6 @@ describe("TerraDrawOpenLayersAdapter", () => {
 					GeoJSON: jest.fn(),
 					VectorSource: jest.fn(),
 					VectorLayer: jest.fn(),
-					toLonLat: jest.fn(() => [45, 45]),
 					getUserProjection: jest.fn(() => "EPSG:3857"),
 				} as any,
 			});

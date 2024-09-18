@@ -423,8 +423,6 @@ const example = {
 						VectorSource,
 						Stroke,
 						CircleStyle,
-						toLonLat,
-						fromLonLat,
 						getUserProjection,
 					},
 					map,

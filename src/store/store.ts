@@ -21,7 +21,7 @@ export type GeoJSONStoreFeatures = Feature<
 	DefinedProperties
 >;
 
-export type StoreChangeEvents = "delete" | "create" | "update" | "styling";
+type StoreChangeEvents = "delete" | "create" | "update" | "styling";
 
 export type StoreChangeHandler = (
 	ids: FeatureId[],
@@ -35,7 +35,7 @@ export type IdStrategy<Id extends FeatureId> = {
 	getId: () => Id;
 };
 
-export type GeoJSONStoreConfig<Id extends FeatureId> = {
+type GeoJSONStoreConfig<Id extends FeatureId> = {
 	idStrategy?: IdStrategy<Id>;
 	tracked?: boolean;
 };

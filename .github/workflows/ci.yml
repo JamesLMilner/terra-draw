@@ -23,6 +23,19 @@ jobs:
       - name: Run linting
         run: npm run lint
 
+  unused:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.x"
+      - name: Install Parent Folder
+        run: npm install
+      - name: Run unused code checking
+        run: npm run unused
+
   build:
     runs-on: ubuntu-latest
     steps:

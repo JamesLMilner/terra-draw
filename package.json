@@ -166,6 +166,10 @@
 		"project": [
 			"src/**/*.ts"
 		],
+		"ignore": [
+			"jest.config.ts",
+			"jest.nocheck.config.ts"
+		],
 		"include": [
 			"files",
 			"types"

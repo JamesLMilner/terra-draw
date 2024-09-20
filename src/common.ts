@@ -49,10 +49,6 @@ export interface TerraDrawKeyboardEvent {
 	preventDefault: () => void;
 }
 
-export type Required<T> = {
-	[P in keyof T]-?: T[P];
-};
-
 export type Cursor = Parameters<SetCursor>[0];
 
 export type SetCursor = (

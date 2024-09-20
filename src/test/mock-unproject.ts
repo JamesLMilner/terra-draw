@@ -1,7 +1,7 @@
 import { Feature, LineString, Polygon, Point } from "geojson";
 import { createPolygon } from "../util/geoms";
 
-export function mockUnproject(
+function mockUnproject(
 	unproject: jest.Mock,
 	feature: Feature<Polygon> | Feature<LineString> | Feature<Point>,
 ) {

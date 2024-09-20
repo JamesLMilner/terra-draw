@@ -10,6 +10,7 @@
 		"release:beta:next": "tsx ./scripts/next-beta-version.ts",
 		"build": "microbundle",
 		"watch": "microbundle --watch --format modern",
+		"unused": "knip",
 		"test": "jest --config jest.config.ts",
 		"test:coverage": "jest --config jest.config.ts --coverage",
 		"test:nocheck": "jest --config jest.nocheck.config.ts",
@@ -70,6 +71,7 @@
 		"husky": "7.0.0",
 		"jest": "29.7.0",
 		"jest-environment-jsdom": "29.7.0",
+		"knip": "^5.30.2",
 		"leaflet": "^1.9.4",
 		"mapbox-gl": "2.13.0",
 		"maplibre-gl": "3.2.0",
@@ -155,5 +157,18 @@
 			}
 		]
 	},
-	"sideEffects": false
+	"sideEffects": false,
+	"knip": {
+		"$schema": "https://unpkg.com/knip@5/schema.json",
+		"entry": [
+			"src/terra-draw.ts"
+		],
+		"project": [
+			"src/**/*.ts"
+		],
+		"include": [
+			"files",
+			"types"
+		]
+	}
 }

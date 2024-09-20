@@ -43,6 +43,8 @@ export interface TerraDrawMouseEvent {
 	heldKeys: string[];
 }
 
+export interface TerraDrawWheelEvent {}
+
 export interface TerraDrawKeyboardEvent {
 	key: string;
 	heldKeys: string[];

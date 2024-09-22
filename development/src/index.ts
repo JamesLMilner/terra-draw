@@ -32,7 +32,7 @@ import View from "ol/View";
 import { Circle as CircleStyle, Stroke, Style } from "ol/style";
 import { OSM, Vector as VectorSource } from "ol/source";
 import { Tile as TileLayer, Vector as VectorLayer } from "ol/layer";
-import { fromLonLat, toLonLat } from "ol/proj";
+import { fromLonLat, getUserProjection } from "ol/proj";
 import EsriMap from "@arcgis/core/Map";
 import MapView from "@arcgis/core/views/MapView.js";
 import GraphicsLayer from "@arcgis/core/layers/GraphicsLayer";
@@ -375,7 +375,6 @@ const example = {
 
 		console.log(lng, lat, zoom);
 		const center = fromLonLat([lng, lat]);
-
 		const map = new Map({
 			layers: [
 				new TileLayer({
@@ -401,8 +400,8 @@ const example = {
 						VectorLayer,
 						VectorSource,
 						Stroke,
-						toLonLat,
 						CircleStyle,
+						getUserProjection,
 					},
 					map,
 					coordinatePrecision: 9,

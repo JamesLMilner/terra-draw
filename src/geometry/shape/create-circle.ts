@@ -10,7 +10,7 @@ import {
 	webMercatorXYToLngLat,
 } from "../project/web-mercator";
 
-// Based on Turf.js Circle module
+// Adapted from the @turf/circle module which is MIT Licensed
 // https://github.com/Turfjs/turf/blob/master/packages/turf-circle/index.ts
 
 function destination(

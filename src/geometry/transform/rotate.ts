@@ -8,7 +8,8 @@ import {
 	webMercatorXYToLngLat,
 } from "../project/web-mercator";
 
-// Based on turf-transform-rotate: https://github.com/Turfjs/turf/tree/master/packages/turf-transform-rotate
+// Adapted on @turf/transform-rotate module which is MIT licensed
+// https://github.com/Turfjs/turf/tree/master/packages/turf-transform-rotate
 
 export function transformRotate(
 	feature: Feature<Polygon | LineString>,

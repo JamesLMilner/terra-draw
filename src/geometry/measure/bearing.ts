@@ -1,6 +1,9 @@
 import { Position } from "geojson";
 import { degreesToRadians, radiansToDegrees } from "../helpers";
 
+// Adapted from the @turf/bearing module which is MIT Licensed
+// https://github.com/Turfjs/turf/tree/master/packages/turf-bearing
+
 export function bearing(start: Position, end: Position): number {
 	const lon1 = degreesToRadians(start[0]);
 	const lon2 = degreesToRadians(end[0]);

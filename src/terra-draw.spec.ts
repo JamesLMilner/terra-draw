@@ -5,7 +5,9 @@ import { TerraDrawSelectMode } from "./modes/select/select.mode";
 import {
 	TerraDraw,
 	TerraDrawGoogleMapsAdapter,
+	TerraDrawLineStringMode,
 	TerraDrawPointMode,
+	TerraDrawPolygonMode,
 } from "./terra-draw";
 
 // Frustratingly required to keep the tests working and avoiding SyntaxError: Cannot use import statement outside a module
@@ -22,9 +24,22 @@ describe("Terra Draw", () => {
 	beforeAll(() => {
 		adapter = new TerraDrawGoogleMapsAdapter({
 			map: {
+				getBounds: () => ({
+					getNorthEast: jest.fn(),
+					getSouthWest: jest.fn(),
+				}),
 				getDiv: () => ({
 					id: "map",
-					querySelector: () => ({ addEventListener: jest.fn() }),
+					querySelector: () => ({
+						addEventListener: jest.fn(),
+						removeEventListener: jest.fn(),
+					}),
+					getBoundingClientRect: jest.fn(() => ({
+						left: 0,
+						right: 0,
+						top: 0,
+						bottom: 0,
+					})),
 				}),
 				setOptions: jest.fn(),
 				data: {
@@ -36,12 +51,22 @@ describe("Terra Draw", () => {
 						forEachProperty: jest.fn(),
 						setGeometry: jest.fn(),
 					})),
+					forEach: jest.fn(),
 				},
 			} as any,
 			lib: {
+				Point: jest.fn(),
 				LatLng: jest.fn(),
+				LatLngBounds: jest.fn(() => ({ contains: jest.fn(() => true) })),
 				OverlayView: jest.fn().mockImplementation(() => ({
 					setMap: jest.fn(),
+					getProjection: jest.fn(() => ({
+						fromContainerPixelToLatLng: jest.fn(() => ({
+							lng: jest.fn(() => 0),
+							lat: jest.fn(() => 0),
+						})),
+						fromLatLngToContainerPixel: jest.fn(() => ({ x: 0, y: 0 })),
+					})),
 				})),
 				Data: {
 					Point: jest.fn().mockImplementation(() => ({})),
@@ -401,6 +426,38 @@ describe("Terra Draw", () => {
 		});
 	});
 
+	describe("clear", () => {
+		it("clears the store", () => {
+			const draw = new TerraDraw({
+				adapter,
+				modes: [new TerraDrawPointMode()],
+			});
+
+			expect(draw.enabled).toBe(false);
+
+			draw.start();
+
+			draw.addFeatures([
+				{
+					type: "Feature",
+					geometry: {
+						type: "Point",
+						coordinates: [0, 0],
+					},
+					properties: {
+						mode: "point",
+					},
+				},
+			]);
+
+			draw.clear();
+
+			const snapshot = draw.getSnapshot();
+
+			expect(snapshot).toHaveLength(0);
+		});
+	});
+
 	describe("enabled", () => {
 		it("returns false if disabled", () => {
 			const draw = new TerraDraw({
@@ -437,6 +494,188 @@ describe("Terra Draw", () => {
 			draw.setMode("point");
 
 			expect(draw.getMode()).toBe("point");
+		});
+	});
+
+	describe("getFeaturesAtLngLat", () => {
+		it("gets features at a given longitude and latitude", () => {
+			const draw = new TerraDraw({
+				adapter,
+				modes: [
+					new TerraDrawPointMode(),
+					new TerraDrawLineStringMode(),
+					new TerraDrawPolygonMode(),
+				],
+			});
+
+			draw.start();
+
+			draw.addFeatures([
+				{
+					type: "Feature",
+					geometry: {
+						type: "Point",
+						coordinates: [0, 0],
+					},
+					properties: {
+						mode: "point",
+					},
+				},
+				{
+					type: "Feature",
+					geometry: {
+						type: "LineString",
+						coordinates: [
+							[0, 0],
+							[1, 1],
+						],
+					},
+					properties: {
+						mode: "linestring",
+					},
+				},
+				{
+					type: "Feature",
+					geometry: {
+						type: "Polygon",
+						coordinates: [
+							[
+								[0, 0],
+								[0, 1],
+								[1, 1],
+								[1, 0],
+								[0, 0],
+							],
+						],
+					},
+					properties: {
+						mode: "polygon",
+					},
+				},
+			]);
+
+			const features = draw.getFeaturesAtLngLat({ lng: 0, lat: 0 });
+
+			expect(features).toHaveLength(3);
+		});
+	});
+
+	describe("getFeaturesAtPointerEvent", () => {
+		it("gets features at a given longitude and latitude", () => {
+			const draw = new TerraDraw({
+				adapter,
+				modes: [new TerraDrawPointMode()],
+			});
+
+			draw.start();
+
+			draw.addFeatures([
+				{
+					type: "Feature",
+					geometry: {
+						type: "Point",
+						coordinates: [0, 0],
+					},
+					properties: {
+						mode: "point",
+					},
+				},
+			]);
+
+			const features = draw.getFeaturesAtPointerEvent({
+				clientX: 100,
+				clientY: 100,
+			} as PointerEvent);
+
+			expect(features).toHaveLength(1);
+		});
+	});
+
+	describe("start and stop", () => {
+		it("start", () => {
+			const draw = new TerraDraw({
+				adapter,
+				modes: [new TerraDrawPointMode()],
+			});
+
+			expect(draw.enabled).toBe(false);
+
+			draw.start();
+			expect(draw.enabled).toBe(true);
+		});
+
+		it("stop", () => {
+			const draw = new TerraDraw({
+				adapter,
+				modes: [new TerraDrawPointMode()],
+			});
+
+			expect(draw.enabled).toBe(false);
+
+			draw.start();
+			expect(draw.enabled).toBe(true);
+
+			draw.stop();
+			expect(draw.enabled).toBe(false);
+		});
+	});
+
+	describe("on", () => {
+		it("it calls on change", async () => {
+			const draw = new TerraDraw({
+				adapter,
+				modes: [new TerraDrawPointMode()],
+			});
+
+			draw.start();
+
+			const callback = jest.fn();
+			draw.on("change", callback);
+
+			draw.addFeatures([
+				{
+					type: "Feature",
+					geometry: {
+						type: "Point",
+						coordinates: [-25.431289673, 34.355907891],
+					},
+					properties: {
+						mode: "point",
+					},
+				},
+			]);
+
+			expect(callback).toHaveBeenCalled();
+		});
+	});
+
+	describe("off", () => {
+		it("it does not call on change once it has been removed", async () => {
+			const draw = new TerraDraw({
+				adapter,
+				modes: [new TerraDrawPointMode()],
+			});
+
+			draw.start();
+
+			const callback = jest.fn();
+			draw.on("change", callback);
+			draw.off("change", callback);
+
+			draw.addFeatures([
+				{
+					type: "Feature",
+					geometry: {
+						type: "Point",
+						coordinates: [-25.431289673, 34.355907891],
+					},
+					properties: {
+						mode: "point",
+					},
+				},
+			]);
+
+			expect(callback).not.toHaveBeenCalled();
 		});
 	});
 });

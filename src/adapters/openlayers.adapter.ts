@@ -5,7 +5,6 @@ import {
 	TerraDrawCallbacks,
 } from "../common";
 import { FeatureId, GeoJSONStoreFeatures } from "../store/store";
-import CircleGeom from "ol/geom/Circle";
 import Feature, { FeatureLike } from "ol/Feature";
 import GeoJSON from "ol/format/GeoJSON";
 import Map from "ol/Map";
@@ -21,12 +20,12 @@ import { BaseAdapterConfig, TerraDrawBaseAdapter } from "./common/base.adapter";
 import { Coordinate } from "ol/coordinate";
 import { Pixel } from "ol/pixel";
 
-type InjectableOL = {
-	Circle: typeof CircleGeom;
+export type InjectableOL = {
+	Fill: typeof Fill;
 	Feature: typeof Feature;
 	GeoJSON: typeof GeoJSON;
 	Style: typeof Style;
-	CircleStyle: typeof Circle;
+	Circle: typeof Circle;
 	VectorLayer: typeof VectorLayer;
 	VectorSource: typeof VectorSource;
 	Stroke: typeof Stroke;
@@ -76,8 +75,8 @@ export class TerraDrawOpenLayersAdapter extends TerraDrawBaseAdapter {
 	private _map: Map;
 	private _container: HTMLElement;
 	private _projection: () => Projection;
-	private _vectorSource: undefined | VectorSource<Feature<Geometry>>;
-	private _geoJSONReader: undefined | GeoJSON;
+	private _vectorSource: VectorSource<Feature<Geometry>>;
+	private _geoJSONReader: GeoJSON;
 
 	/**
 	 * Converts a hexideciaml color to RGB
@@ -92,12 +91,6 @@ export class TerraDrawOpenLayersAdapter extends TerraDrawBaseAdapter {
 		};
 	}
 
-	/**
-	 * Converts a hexideciaml color to RGB
-	 * @param feature
-	 * @param styling
-	 * @returns an object to red green and blue (RGB) color
-	 */
 	private getStyles(feature: FeatureLike, styling: TerraDrawStylingFunction) {
 		const geometry = feature.getGeometry();
 		if (!geometry) {
@@ -114,12 +107,12 @@ export class TerraDrawOpenLayersAdapter extends TerraDrawBaseAdapter {
 					properties,
 				});
 				return new this._lib.Style({
-					image: new Circle({
+					image: new this._lib.Circle({
 						radius: style.pointWidth,
-						fill: new Fill({
+						fill: new this._lib.Fill({
 							color: style.pointColor,
 						}),
-						stroke: new Stroke({
+						stroke: new this._lib.Stroke({
 							color: style.pointOutlineColor,
 							width: style.pointOutlineWidth,
 						}),
@@ -144,17 +137,17 @@ export class TerraDrawOpenLayersAdapter extends TerraDrawBaseAdapter {
 				const properties = feature.getProperties();
 				const style = styling[properties.mode]({
 					type: "Feature",
-					geometry: { type: "LineString", coordinates: [] },
+					geometry: { type: "Polygon", coordinates: [] },
 					properties,
 				});
 				const { r, g, b } = this.hexToRGB(style.polygonFillColor);
 
-				return new Style({
-					stroke: new Stroke({
+				return new this._lib.Style({
+					stroke: new this._lib.Stroke({
 						color: style.polygonOutlineColor,
 						width: style.polygonOutlineWidth,
 					}),
-					fill: new Fill({
+					fill: new this._lib.Fill({
 						color: `rgba(${r},${g},${b},${style.polygonFillOpacity})`,
 					}),
 				});
@@ -173,27 +166,19 @@ export class TerraDrawOpenLayersAdapter extends TerraDrawBaseAdapter {
 	}
 
 	private addFeature(feature: GeoJSONStoreFeatures) {
-		if (this._vectorSource && this._geoJSONReader) {
-			const olFeature = this._geoJSONReader.readFeature(feature, {
-				dataProjection: "EPSG:4326",
-				featureProjection: this._projection(),
-			}) as Feature<Geometry>;
-			this._vectorSource.addFeature(olFeature);
-		} else {
-			throw new Error("Vector Source not initalised");
-		}
+		const olFeature = this._geoJSONReader.readFeature(feature, {
+			dataProjection: "EPSG:4326",
+			featureProjection: this._projection(),
+		}) as Feature<Geometry>;
+		this._vectorSource.addFeature(olFeature);
 	}
 
 	private removeFeature(id: FeatureId) {
-		if (this._vectorSource) {
-			const deleted = this._vectorSource.getFeatureById(id);
-			if (!deleted) {
-				return;
-			}
-			this._vectorSource.removeFeature(deleted);
-		} else {
-			throw new Error("Vector Source not initalised");
+		const deleted = this._vectorSource.getFeatureById(id);
+		if (!deleted) {
+			return;
 		}
+		this._vectorSource.removeFeature(deleted);
 	}
 
 	/**
@@ -298,18 +283,12 @@ export class TerraDrawOpenLayersAdapter extends TerraDrawBaseAdapter {
 	public render(changes: TerraDrawChanges, styling: TerraDrawStylingFunction) {
 		this.stylingFunction = () => styling;
 
-		const source = this._vectorSource;
-
-		if (!source) {
-			throw new Error("Vector Layer source has disappeared");
-		}
-
 		changes.deletedIds.forEach((id) => {
 			this.removeFeature(id);
 		});
 
 		changes.updated.forEach((feature) => {
-			this.removeFeature(feature.id as string);
+			this.removeFeature(feature.id as FeatureId);
 			this.addFeature(feature);
 		});
 

@@ -125,7 +125,7 @@ export class GeoJSONStore<Id extends FeatureId = FeatureId> {
 				// does not throw something more specific itself
 				if (!isValid) {
 					throw new Error(
-						`Feature is not ${id} valid: ${JSON.stringify(feature)}`,
+						`Feature ${id} is not valid: ${JSON.stringify(feature)}`,
 					);
 				}
 			}

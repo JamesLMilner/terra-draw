@@ -13,8 +13,6 @@ import {
 	BaseModeOptions,
 	CustomStyling,
 } from "../base.mode";
-import { PixelDistanceBehavior } from "../pixel-distance.behavior";
-import { BehaviorConfig } from "../base.behavior";
 import { coordinatesIdentical } from "../../geometry/coordinates-identical";
 import { getDefaultStyling } from "../../util/styling";
 import { FeatureId, GeoJSONStoreFeatures } from "../../store/store";
@@ -64,7 +62,6 @@ export class TerraDrawAngledRectangleMode extends TerraDrawBaseDrawMode<PolygonS
 	private keyEvents: TerraDrawPolygonModeKeyEvents;
 
 	// Behaviors
-	private pixelDistance!: PixelDistanceBehavior;
 	private cursors: Required<Cursors>;
 	private mouseMove = false;
 
@@ -111,11 +108,6 @@ export class TerraDrawAngledRectangleMode extends TerraDrawBaseDrawMode<PolygonS
 		}
 
 		this.onFinish(finishedId, { mode: this.mode, action: "draw" });
-	}
-
-	/** @internal */
-	registerBehaviors(config: BehaviorConfig) {
-		this.pixelDistance = new PixelDistanceBehavior(config);
 	}
 
 	/** @internal */

@@ -60,7 +60,8 @@ export const changeMode = async ({
 		| "select"
 		| "rectangle"
 		| "circle"
-		| "angled-rectangle";
+		| "angled-rectangle"
+		| "sector";
 }) => {
 	let modeText = mode.charAt(0).toUpperCase() + mode.slice(1);
 
@@ -83,7 +84,10 @@ export const changeMode = async ({
 	const color = await button.evaluate((el) =>
 		window.getComputedStyle(el).getPropertyValue("color"),
 	);
-	expect(color).toBe("rgb(39, 204, 255)"); // We set hex but it gets computed to rgb
+	expect(
+		color,
+		"Text rgb color should match the expected selected button color",
+	).toBe("rgb(39, 204, 255)"); // We set hex but it gets computed to rgb
 };
 
 export const expectPaths = async ({

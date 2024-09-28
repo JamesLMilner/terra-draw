@@ -53,7 +53,7 @@ test.describe("page setup", () => {
 test.describe("point mode", () => {
 	const mode = "point";
 
-	test("mode can set and can be used to create a point", async ({ page }) => {
+	test("mode can set and used to create a point", async ({ page }) => {
 		const mapDiv = await setupMap({ page });
 		await changeMode({ page, mode });
 		await page.mouse.click(mapDiv.width / 2, mapDiv.height / 2);
@@ -61,9 +61,7 @@ test.describe("point mode", () => {
 		await expectPaths({ page, count: 1 });
 	});
 
-	test("mode can set and can be used to create multiple points", async ({
-		page,
-	}) => {
+	test("mode can set and used to create multiple points", async ({ page }) => {
 		const mapDiv = await setupMap({ page });
 		await changeMode({ page, mode });
 
@@ -91,7 +89,7 @@ test.describe("linestring mode", () => {
 	] as { name: string; config: TestConfigOptions[] }[];
 
 	for (const { name, config } of options) {
-		test(`mode can set and can be used to create a linestring${name}`, async ({
+		test(`mode can set and used to create a linestring${name}`, async ({
 			page,
 		}) => {
 			const mapDiv = await setupMap({ page, configQueryParam: config });
@@ -108,32 +106,7 @@ test.describe("linestring mode", () => {
 			await expectPaths({ page, count: 1 });
 		});
 
-		test(`mode can set and can be used to create a linestring with multiple points${name}`, async ({
-			page,
-		}) => {
-			const mapDiv = await setupMap({ page, configQueryParam: config });
-			await changeMode({ page, mode });
-
-			await page.mouse.move(mapDiv.width / 2, mapDiv.height / 2);
-			await page.mouse.click(mapDiv.width / 2, mapDiv.height / 2);
-			await page.mouse.move(mapDiv.width / 3, mapDiv.height / 3);
-			await page.mouse.click(mapDiv.width / 3, mapDiv.height / 3);
-
-			// Draw coordinate 2
-			await page.mouse.move(mapDiv.width / 3, mapDiv.height / 2);
-			await page.mouse.click(mapDiv.width / 3, mapDiv.height / 2);
-
-			// Draw coordinate 3
-			await page.mouse.move(mapDiv.width / 2, mapDiv.height / 3);
-			await page.mouse.click(mapDiv.width / 2, mapDiv.height / 3);
-
-			// Close
-			await page.mouse.click(mapDiv.width / 2, mapDiv.height / 3);
-
-			await expectPaths({ page, count: 1 });
-		});
-
-		test(`mode can set and can be used to create a linestring with multiple clicked points${name}`, async ({
+		test(`mode can set and used to create a linestring with multiple points${name}`, async ({
 			page,
 		}) => {
 			const mapDiv = await setupMap({ page, configQueryParam: config });
@@ -158,7 +131,32 @@ test.describe("linestring mode", () => {
 			await expectPaths({ page, count: 1 });
 		});
 
-		test(`mode can set and can be used to create multiple linestrings${name}`, async ({
+		test(`mode can set and used to create a linestring with multiple clicked points${name}`, async ({
+			page,
+		}) => {
+			const mapDiv = await setupMap({ page, configQueryParam: config });
+			await changeMode({ page, mode });
+
+			await page.mouse.move(mapDiv.width / 2, mapDiv.height / 2);
+			await page.mouse.click(mapDiv.width / 2, mapDiv.height / 2);
+			await page.mouse.move(mapDiv.width / 3, mapDiv.height / 3);
+			await page.mouse.click(mapDiv.width / 3, mapDiv.height / 3);
+
+			// Draw coordinate 2
+			await page.mouse.move(mapDiv.width / 3, mapDiv.height / 2);
+			await page.mouse.click(mapDiv.width / 3, mapDiv.height / 2);
+
+			// Draw coordinate 3
+			await page.mouse.move(mapDiv.width / 2, mapDiv.height / 3);
+			await page.mouse.click(mapDiv.width / 2, mapDiv.height / 3);
+
+			// Close
+			await page.mouse.click(mapDiv.width / 2, mapDiv.height / 3);
+
+			await expectPaths({ page, count: 1 });
+		});
+
+		test(`mode can set and used to create multiple linestrings${name}`, async ({
 			page,
 		}) => {
 			const mapDiv = await setupMap({ page, configQueryParam: config });
@@ -197,7 +195,7 @@ test.describe("linestring mode", () => {
 test.describe("polygon mode", () => {
 	const mode = "polygon";
 
-	test("mode can set and can be used to create a polygon", async ({ page }) => {
+	test("mode can set and used to create a polygon", async ({ page }) => {
 		const mapDiv = await setupMap({ page });
 		await changeMode({ page, mode });
 
@@ -312,9 +310,7 @@ test.describe("polygon mode", () => {
 test.describe("rectangle mode", () => {
 	const mode = "rectangle";
 
-	test("mode can set and can be used to create a rectangle", async ({
-		page,
-	}) => {
+	test("mode can set and used to create a rectangle", async ({ page }) => {
 		const mapDiv = await setupMap({ page });
 		await changeMode({ page, mode });
 
@@ -331,7 +327,7 @@ test.describe("rectangle mode", () => {
 test.describe("angled rectangle mode", () => {
 	const mode = "angled-rectangle";
 
-	test("mode can set and can be used to create an angled rectangle (horizontal up)", async ({
+	test("mode can set and used to create an angled rectangle (horizontal up)", async ({
 		page,
 	}) => {
 		const mapDiv = await setupMap({ page });
@@ -350,7 +346,7 @@ test.describe("angled rectangle mode", () => {
 		await expectPathDimensions({ page, width: 217, height: 74 });
 	});
 
-	test("mode can set and can be used to create an angled rectangle (horizontal down)", async ({
+	test("mode can set and used to create an angled rectangle (horizontal down)", async ({
 		page,
 	}) => {
 		const mapDiv = await setupMap({ page });
@@ -369,7 +365,7 @@ test.describe("angled rectangle mode", () => {
 		await expectPathDimensions({ page, width: 217, height: 84 });
 	});
 
-	test("mode can set and can be used to create an angled (diagonal)", async ({
+	test("mode can set and used to create an angled (diagonal)", async ({
 		page,
 	}) => {
 		const mapDiv = await setupMap({ page });
@@ -388,7 +384,7 @@ test.describe("angled rectangle mode", () => {
 		await expectPathDimensions({ page, width: 245, height: 174 });
 	});
 
-	test("mode can set and can be used to create an angled (diagonal 2)", async ({
+	test("mode can set and used to create an angled (diagonal 2)", async ({
 		page,
 	}) => {
 		const mapDiv = await setupMap({ page });
@@ -410,10 +406,134 @@ test.describe("angled rectangle mode", () => {
 	});
 });
 
+test.describe("sector mode", () => {
+	const mode = "sector";
+
+	test("mode can set and used to create a sector less than 90 degrees (clockwise)", async ({
+		page,
+	}) => {
+		const mapDiv = await setupMap({ page });
+		await changeMode({ page, mode });
+
+		await page.mouse.click(mapDiv.width / 2, mapDiv.height / 2);
+		await page.mouse.move(mapDiv.width / 3, mapDiv.height / 2, { steps: 30 });
+		await page.mouse.click(mapDiv.width / 3, mapDiv.height / 2);
+		await page.mouse.move(mapDiv.width / 3, mapDiv.height / 3, {
+			steps: 30,
+		});
+		await page.mouse.click(mapDiv.width / 3, mapDiv.height / 3);
+
+		await expectPaths({ page, count: 1 });
+
+		await expectPathDimensions({ page, width: 217, height: 109 });
+	});
+
+	test("mode can set and used to create a sector more than 90 degrees (clockwise)", async ({
+		page,
+	}) => {
+		const mapDiv = await setupMap({ page });
+		await changeMode({ page, mode });
+
+		await page.mouse.click(mapDiv.width / 2, mapDiv.height / 2);
+		await page.mouse.move(mapDiv.width / 3, mapDiv.height / 2, { steps: 30 });
+		await page.mouse.click(mapDiv.width / 3, mapDiv.height / 2);
+		await page.mouse.move(mapDiv.width * 0.75, mapDiv.height / 3, {
+			steps: 30,
+		});
+		await page.mouse.click(mapDiv.width * 0.75, mapDiv.height / 3);
+
+		await expectPaths({ page, count: 1 });
+
+		await expectPathDimensions({ page, width: 417, height: 217 });
+	});
+
+	test("mode can set and used to create a sector more than 180 degrees (clockwise)", async ({
+		page,
+	}) => {
+		const mapDiv = await setupMap({ page });
+		await changeMode({ page, mode });
+
+		await page.mouse.click(mapDiv.width / 2, mapDiv.height / 2);
+		await page.mouse.move(mapDiv.width / 3, mapDiv.height / 2, { steps: 30 });
+		await page.mouse.click(mapDiv.width / 3, mapDiv.height / 2);
+		await page.mouse.move(mapDiv.width * 0.75, mapDiv.height / 3, {
+			steps: 10,
+		});
+		await page.mouse.move(mapDiv.width * 0.4, mapDiv.height / 1.5, {
+			steps: 10,
+		});
+		await page.mouse.click(mapDiv.width * 0.4, mapDiv.height / 1.5);
+
+		await expectPaths({ page, count: 1 });
+
+		await expectPathDimensions({ page, width: 430, height: 430 });
+	});
+
+	test("mode can set and used to create a sector less than 90 degrees (anticlockwise)", async ({
+		page,
+	}) => {
+		const mapDiv = await setupMap({ page });
+		await changeMode({ page, mode });
+
+		await page.mouse.click(mapDiv.width / 2, mapDiv.height / 2);
+		await page.mouse.move(mapDiv.width / 3, mapDiv.height / 2, { steps: 30 });
+		await page.mouse.click(mapDiv.width / 3, mapDiv.height / 2);
+		await page.mouse.move(mapDiv.width * 0.4, mapDiv.height / 1.5, {
+			steps: 30,
+		});
+		await page.mouse.click(mapDiv.width * 0.4, mapDiv.height / 1.5);
+
+		await expectPaths({ page, count: 1 });
+
+		await expectPathDimensions({ page, width: 217, height: 150 });
+	});
+
+	test("mode can set and used to create a sector more than 90 degrees (anticlockwise)", async ({
+		page,
+	}) => {
+		const mapDiv = await setupMap({ page });
+		await changeMode({ page, mode });
+
+		await page.mouse.click(mapDiv.width / 2, mapDiv.height / 2);
+		await page.mouse.move(mapDiv.width / 3, mapDiv.height / 2, { steps: 30 });
+		await page.mouse.click(mapDiv.width / 3, mapDiv.height / 2);
+		await page.mouse.move(mapDiv.width * 0.75, mapDiv.height / 1.5, {
+			steps: 30,
+		});
+		await page.mouse.click(mapDiv.width * 0.75, mapDiv.height / 1.5);
+
+		await expectPaths({ page, count: 1 });
+
+		await expectPathDimensions({ page, width: 417, height: 217 });
+	});
+
+	test("mode can set and used to create a sector more than 180 degrees (anticlockwise)", async ({
+		page,
+	}) => {
+		const mapDiv = await setupMap({ page });
+		await changeMode({ page, mode });
+
+		await page.mouse.click(mapDiv.width / 2, mapDiv.height / 2);
+		await page.mouse.move(mapDiv.width / 3, mapDiv.height / 2, { steps: 30 });
+		await page.mouse.click(mapDiv.width / 3, mapDiv.height / 2);
+		await page.mouse.move(mapDiv.width * 0.75, mapDiv.height / 1.5, {
+			steps: 30,
+		});
+		await page.mouse.move(mapDiv.width * 0.75, mapDiv.height / 3, {
+			steps: 30,
+		});
+		await page.mouse.click(mapDiv.width * 0.75, mapDiv.height / 3);
+
+		await expectPaths({ page, count: 1 });
+
+		await expectPathDimensions({ page, width: 430, height: 292 });
+	});
+});
+
 test.describe("circle mode", () => {
 	const mode = "circle";
 
-	test("mode can set and can be used to create a web mercator circle", async ({
+	test("mode can set and used to create a web mercator circle", async ({
 		page,
 	}) => {
 		const mapDiv = await setupMap({ page });
@@ -428,7 +548,7 @@ test.describe("circle mode", () => {
 		await expectPathDimensions({ page, width: 146, height: 146 });
 	});
 
-	test("mode can set and can be used to create a geodesic circle", async ({
+	test("mode can set and used to create a geodesic circle", async ({
 		page,
 	}) => {
 		const mapDiv = await setupMap({ page, configQueryParam: ["globeCircle"] });

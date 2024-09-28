@@ -44,6 +44,7 @@ import SimpleLineSymbol from "@arcgis/core/symbols/SimpleLineSymbol";
 import Color from "@arcgis/core/Color";
 import SimpleMarkerSymbol from "@arcgis/core/symbols/SimpleMarkerSymbol";
 import { Config, Libraries } from "./config";
+import { TerraDrawSectorMode } from "../../src/modes/sector/sector.mode";
 
 const addModeChangeHandler = (
 	draw: TerraDraw,
@@ -58,6 +59,7 @@ const addModeChangeHandler = (
 		"circle",
 		"rectangle",
 		"angled-rectangle",
+		"sector",
 	].forEach((mode) => {
 		(document.getElementById(mode) as HTMLButtonElement).addEventListener(
 			"click",
@@ -183,14 +185,15 @@ const getModes = () => {
 			},
 		}),
 		new TerraDrawAngledRectangleMode(),
+		new TerraDrawSectorMode(),
 	];
 };
 
 const currentSelected: { button: undefined | HTMLButtonElement; mode: string } =
-{
-	button: undefined,
-	mode: "static",
-};
+	{
+		button: undefined,
+		mode: "static",
+	};
 
 // Used by both Mapbox and MapLibre
 const OSMStyle = {

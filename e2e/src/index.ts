@@ -8,11 +8,12 @@ import {
 	TerraDrawPointMode,
 	TerraDrawPolygonMode,
 	TerraDrawRectangleMode,
+	TerraDrawAngledRectangleMode,
+	TerraDrawSectorMode,
 	TerraDrawRenderMode,
 	TerraDrawSelectMode,
 	ValidateMaxAreaSquareMeters,
 } from "../../src/terra-draw";
-import { TerraDrawAngledRectangleMode } from "../../src/modes/angled-rectangle/angled-rectangle.mode";
 
 const example = {
 	lng: -0.118092,
@@ -166,6 +167,7 @@ const example = {
 				}),
 				new TerraDrawFreehandMode(),
 				new TerraDrawAngledRectangleMode(),
+				new TerraDrawSectorMode(),
 				new TerraDrawRenderMode({
 					modeName: "arbitrary",
 					styles: {
@@ -195,6 +197,7 @@ const example = {
 			"rectangle",
 			"circle",
 			"angled-rectangle",
+			"sector",
 		].forEach((mode) => {
 			(document.getElementById(mode) as HTMLButtonElement).addEventListener(
 				"click",

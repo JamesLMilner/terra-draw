@@ -39,3 +39,7 @@ export function webMercatorBearing(
 
 	return angle;
 }
+
+export function normalizeBearing(bearing: number): number {
+	return (bearing + 360) % 360;
+}

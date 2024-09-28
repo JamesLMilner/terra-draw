@@ -102,7 +102,6 @@ export const transformRotateWebMercator = (
 	if (feature.geometry.type === "Polygon") {
 		feature.geometry.coordinates[0] = rotatedCoordinates;
 	} else {
-		console.log("rotatedCoordinates linestring", rotatedCoordinates);
 		feature.geometry.coordinates = rotatedCoordinates;
 	}
 

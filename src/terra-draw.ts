@@ -52,6 +52,7 @@ import { ValidateMinAreaSquareMeters } from "./validations/min-size.validation";
 import { ValidateMaxAreaSquareMeters } from "./validations/max-size.validation";
 import { ValidateNotSelfIntersecting } from "./validations/not-self-intersecting.validation";
 import { TerraDrawAngledRectangleMode } from "./modes/angled-rectangle/angled-rectangle.mode";
+import { TerraDrawSectorMode } from "./modes/sector/sector.mode";
 
 type FinishListener = (id: FeatureId, context: OnFinishContext) => void;
 type ChangeListener = (ids: FeatureId[], type: string) => void;
@@ -795,6 +796,7 @@ export {
 	TerraDrawRenderMode,
 	TerraDrawRectangleMode,
 	TerraDrawAngledRectangleMode,
+	TerraDrawSectorMode,
 
 	// Adapters
 	TerraDrawGoogleMapsAdapter,

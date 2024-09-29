@@ -2,6 +2,45 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-beta.3](https://github.com/JamesLMilner/terra-draw/compare/v1.0.0-beta.2...v1.0.0-beta.3) (2024-09-29)
+
+
+### Features
+
+* add in new TerraDrawSectorMode for drawing sectors, complete with tests ([#339](https://github.com/JamesLMilner/terra-draw/issues/339)) ([f89f351](https://github.com/JamesLMilner/terra-draw/commit/f89f3513dd8cee0d8da4f613c79bfb6fa113ae54))
+* add/read features by user projection in OpenLayers ([#332](https://github.com/JamesLMilner/terra-draw/issues/332)) ([6168265](https://github.com/JamesLMilner/terra-draw/commit/6168265b4e09b6a88401182fbeb73b09035d25ba)), closes [/github.com/JamesLMilner/terra-draw/pull/332#issuecomment-2356404467](https://github.com/JamesLMilner//github.com/JamesLMilner/terra-draw/pull/332/issues/issuecomment-2356404467)
+
+
+### Bug Fixes
+
+* improved error message for store feature validation ([c76049a](https://github.com/JamesLMilner/terra-draw/commit/c76049a4c516c9c2f8ae9c1ff0c796bcd9c2548a))
+* remove unused code from TerraDrawAngledRectangleMode ([#338](https://github.com/JamesLMilner/terra-draw/issues/338)) ([89383c6](https://github.com/JamesLMilner/terra-draw/commit/89383c6b5e0c52d3ca31e1c1c6a9b79dfb469cee))
+* simplify the render function in TerraDrawMapboxAdapter ([#331](https://github.com/JamesLMilner/terra-draw/issues/331)) ([4b8a95a](https://github.com/JamesLMilner/terra-draw/commit/4b8a95a6488ab6e696a6502ceb34980bedec50ec))
+
+
+### Documentation
+
+* add examples page to the guides ([#320](https://github.com/JamesLMilner/terra-draw/issues/320)) ([03b04e6](https://github.com/JamesLMilner/terra-draw/commit/03b04e6b023e1a303df53c27cb079f1efa62efba))
+* add maplibre-gl-terradraw as an example ([#321](https://github.com/JamesLMilner/terra-draw/issues/321)) ([2f2792d](https://github.com/JamesLMilner/terra-draw/commit/2f2792dc30d4939fd158092db1017f7924919c11))
+* corrected typos in guides ([#298](https://github.com/JamesLMilner/terra-draw/issues/298)) ([60f5277](https://github.com/JamesLMilner/terra-draw/commit/60f5277c049e8f7b16a8f4bb27297108575a2cf9))
+
+
+### Chore
+
+* add unused code export check with knip ([#335](https://github.com/JamesLMilner/terra-draw/issues/335)) ([46c4789](https://github.com/JamesLMilner/terra-draw/commit/46c4789769ba3547903fb0b1be9629d3b96aeec9))
+* clarify turf.js adapted code in code comments in appropriate files ([#334](https://github.com/JamesLMilner/terra-draw/issues/334)) ([fda4c65](https://github.com/JamesLMilner/terra-draw/commit/fda4c651694fb04032234a1608c18363be1c6e62))
+* updated adapter docs ([#330](https://github.com/JamesLMilner/terra-draw/issues/330)) ([b6809e5](https://github.com/JamesLMilner/terra-draw/commit/b6809e5a3490fe0b65289f2abf1519559a48e486))
+* upgrade github actions to the latest versions ([#322](https://github.com/JamesLMilner/terra-draw/issues/322)) ([9770068](https://github.com/JamesLMilner/terra-draw/commit/977006802f8aef3d73c96e9e0436149ff58876fb))
+
+
+### Tests
+
+* add leaflet adapter unit tests ([#327](https://github.com/JamesLMilner/terra-draw/issues/327)) ([c16d056](https://github.com/JamesLMilner/terra-draw/commit/c16d056cae99631c7acd0fd259af92f67fa39392))
+* add Mapbox adapter unit tests ([#328](https://github.com/JamesLMilner/terra-draw/issues/328)) ([ec067c9](https://github.com/JamesLMilner/terra-draw/commit/ec067c9c9246f7c0754855068857e4dad7c364e4))
+* add MapLibre unit tests ([#329](https://github.com/JamesLMilner/terra-draw/issues/329)) ([37cf404](https://github.com/JamesLMilner/terra-draw/commit/37cf404af3ad8539769508c6f2660ada9e3f47f9))
+* add OpenLayers adapter unit tests ([#333](https://github.com/JamesLMilner/terra-draw/issues/333)) ([8436939](https://github.com/JamesLMilner/terra-draw/commit/84369398c55f786e491851180e4a5bc9f122da27))
+* improve unit test coverage for terra-draw.ts and set unit test coverage threshold to 80% ([#336](https://github.com/JamesLMilner/terra-draw/issues/336)) ([6ec784e](https://github.com/JamesLMilner/terra-draw/commit/6ec784e664df86256db1647b7c07d8044899221a))
+
 ## [1.0.0-beta.2](https://github.com/JamesLMilner/terra-draw/compare/v1.0.0-beta.1...v1.0.0-beta.2) (2024-08-30)
 
 

@@ -814,7 +814,7 @@ describe("TerraDrawLineStringMode", () => {
 			}).not.toThrowError();
 		});
 
-		it("cleans up correctly if drawing has started", () => {
+		it("cleans up correctly if drawing has started and there is no closing point", () => {
 			lineStringMode.onClick({
 				lng: 0,
 				lat: 0,
@@ -825,6 +825,42 @@ describe("TerraDrawLineStringMode", () => {
 			});
 
 			expect(store.copyAll().length).toBe(1);
+
+			lineStringMode.cleanUp();
+
+			// Removes the LineString that was being created
+			expect(store.copyAll().length).toBe(0);
+		});
+
+		it("cleans up correctly if drawing has started and there is a closing point", () => {
+			lineStringMode.onClick({
+				lng: 0,
+				lat: 0,
+				containerX: 0,
+				containerY: 0,
+				button: "left",
+				heldKeys: [],
+			});
+
+			lineStringMode.onMouseMove({
+				lng: 1,
+				lat: 1,
+				containerX: 0,
+				containerY: 0,
+				button: "left",
+				heldKeys: [],
+			});
+
+			lineStringMode.onClick({
+				lng: 1,
+				lat: 1,
+				containerX: 0,
+				containerY: 0,
+				button: "left",
+				heldKeys: [],
+			});
+
+			expect(store.copyAll().length).toBe(2);
 
 			lineStringMode.cleanUp();
 

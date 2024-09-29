@@ -488,6 +488,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 	/** @internal */
 	cleanUp() {
 		const cleanUpId = this.currentId;
+		const cleanupClosingPointId = this.closingPointId;
 
 		this.closingPointId = undefined;
 		this.currentId = undefined;
@@ -500,8 +501,8 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 			if (cleanUpId !== undefined) {
 				this.store.delete([cleanUpId]);
 			}
-			if (this.closingPointId !== undefined) {
-				this.store.delete([this.closingPointId]);
+			if (cleanupClosingPointId !== undefined) {
+				this.store.delete([cleanupClosingPointId]);
 			}
 		} catch (error) {}
 	}

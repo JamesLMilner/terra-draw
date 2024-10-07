@@ -13,7 +13,6 @@ import {
 	BaseModeOptions,
 	CustomStyling,
 } from "../base.mode";
-// import { coordinatesIdentical } from "../../geometry/coordinates-identical";
 import { getDefaultStyling } from "../../util/styling";
 import { FeatureId, GeoJSONStoreFeatures } from "../../store/store";
 import { ValidatePolygonFeature } from "../../validations/polygon.validation";
@@ -29,10 +28,6 @@ import {
 import { cartesianDistance } from "../../geometry/measure/pixel-distance";
 import { isClockwiseWebMercator } from "../../geometry/clockwise";
 import { limitPrecision } from "../../geometry/limit-decimal-precision";
-import { determineHalfPlane } from "../../geometry/determine-halfplane";
-// import { getMidPointCoordinates } from "../../geometry/get-midpoints";
-// import { midpointCoordinate } from "../../geometry/midpoint-coordinate";
-// import { midpointCoordinate } from "../../geometry/midpoint-coordinate";
 
 type TerraDrawSectorModeKeyEvents = {
 	cancel?: KeyboardEvent["key"] | null;
@@ -68,8 +63,7 @@ export class TerraDrawSensorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 	private currentInitialArcId: FeatureId | undefined;
 	private currentStartingPointId: FeatureId | undefined;
 	private keyEvents: TerraDrawSectorModeKeyEvents;
-	private innerDirection: "clockwise" | "anticlockwise" | undefined;
-	private outerDirection: "clockwise" | "anticlockwise" | undefined;
+	private direction: "clockwise" | "anticlockwise" | undefined;
 	private arcPoints: number;
 
 	// Behaviors
@@ -126,8 +120,7 @@ export class TerraDrawSensorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 		this.currentStartingPointId = undefined;
 		this.currentInitialArcId = undefined;
 		this.currentId = undefined;
-		this.innerDirection = undefined;
-		this.outerDirection = undefined;
+		this.direction = undefined;
 
 		// Go back to started state
 		if (this.state === "drawing") {
@@ -165,10 +158,6 @@ export class TerraDrawSensorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 			return;
 		}
 
-		// let updatedCoordinates: Position[] | undefined;
-
-		// console.log('this.currentCoordinate', this.currentCoordinate);
-
 		if (this.currentCoordinate === 2) {
 			const currentPolygonCoordinates = this.store.getGeometryCopy<LineString>(
 				this.currentInitialArcId,
@@ -197,13 +186,13 @@ export class TerraDrawSensorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 
 			// We want to determine the direction of the sector, whether
 			// it is clockwise or anticlockwise
-			if (this.innerDirection === undefined) {
+			if (this.direction === undefined) {
 				const clockwise = isClockwiseWebMercator(
 					webMercatorCenter,
 					webMercatorArcCoordOne,
 					webMercatorArcCoordTwo,
 				);
-				this.innerDirection = clockwise ? "clockwise" : "anticlockwise";
+				this.direction = clockwise ? "clockwise" : "anticlockwise";
 			}
 
 			// Calculate bearings for the second and third points in Web Mercator
@@ -226,7 +215,7 @@ export class TerraDrawSensorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 
 			// Calculate the delta bearing based on the direction
 			let deltaBearing;
-			if (this.innerDirection === "anticlockwise") {
+			if (this.direction === "anticlockwise") {
 				deltaBearing = normalizedEnd - normalizedStart;
 				if (deltaBearing < 0) {
 					deltaBearing += 360; // Adjust for wrap-around
@@ -239,7 +228,7 @@ export class TerraDrawSensorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 			}
 
 			const bearingStep =
-				((this.innerDirection === "anticlockwise" ? 1 : -1) * deltaBearing) /
+				((this.direction === "anticlockwise" ? 1 : -1) * deltaBearing) /
 				numberOfPoints;
 
 			// Add all the arc points
@@ -271,14 +260,11 @@ export class TerraDrawSensorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 				UpdateTypes.Provisional,
 			);
 		} else if (this.currentCoordinate === 3) {
-			console.log("this.currentCoordinate", this.currentCoordinate);
 			const coordinates = this.store.getGeometryCopy<LineString>(
 				this.currentInitialArcId,
 			).coordinates;
 
 			if (coordinates.length < 2) {
-				// TODO: This should not happen, but we should handle it
-				console.error("this should not happen?");
 				return;
 			}
 
@@ -288,7 +274,6 @@ export class TerraDrawSensorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 
 			const firstCoord = coordinates[0];
 			const lastCoord = coordinates[coordinates.length - 1];
-			const midpoint = coordinates[Math.floor(this.arcPoints / 2)];
 
 			const webMercatorCursor = lngLatToWebMercatorXY(event.lng, event.lat);
 			const webMercatorCoordOne = lngLatToWebMercatorXY(
@@ -299,40 +284,16 @@ export class TerraDrawSensorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 				lastCoord[0],
 				lastCoord[1],
 			);
-			const webMercatorMidpoint = lngLatToWebMercatorXY(
-				midpoint[0],
-				midpoint[1],
-			);
+
 			const webMercatorCenter = lngLatToWebMercatorXY(center[0], center[1]);
 
 			const innerRadius = cartesianDistance(
 				webMercatorCenter,
 				webMercatorCoordOne,
 			);
+
 			const outerRadius = cartesianDistance(
 				webMercatorCenter,
-				webMercatorCursor,
-			);
-
-			// Determine which side of the line the cursor is on
-			const side = determineHalfPlane(
-				webMercatorCursor,
-				webMercatorCoordTwo,
-				webMercatorCoordOne,
-			);
-
-			console.log({ side, outerDirection: this.outerDirection });
-
-			if (
-				outerRadius < innerRadius ||
-				(side === "right" && this.outerDirection === "anticlockwise") ||
-				(side === "left" && this.outerDirection === "clockwise")
-			) {
-				return;
-			}
-
-			const distance = cartesianDistance(
-				webMercatorMidpoint,
 				webMercatorCursor,
 			);
 
@@ -341,68 +302,58 @@ export class TerraDrawSensorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 				webMercatorCursor,
 			);
 
-			console.log({ fullDistance, distance, innerRadius, outerRadius });
-
-			const bearing = webMercatorBearing(
+			const cursorBearing = webMercatorBearing(
 				webMercatorCenter,
-				webMercatorCoordOne,
+				webMercatorCursor,
 			);
-			const nextCoord = webMercatorDestination(
-				webMercatorCoordOne,
-				distance,
-				bearing,
-			);
-
-			const bearingTwo = webMercatorBearing(
-				webMercatorCenter,
-				webMercatorCoordTwo,
-			);
-			const finalCoord = webMercatorDestination(
-				webMercatorCoordTwo,
-				distance,
-				bearingTwo,
-			);
-
-			// We want to determine the direction of the sector, whether
-			// it is clockwise or anticlockwise
-			if (this.outerDirection === undefined) {
-				const clockwise = isClockwiseWebMercator(
-					webMercatorCenter,
-					nextCoord,
-					finalCoord,
-				);
-				this.outerDirection = clockwise ? "clockwise" : "anticlockwise";
-			}
-
-			// Calculate bearings for the second and third points in Web Mercator
-			const startBearing = webMercatorBearing(webMercatorCenter, nextCoord);
-			const endBearing = webMercatorBearing(webMercatorCenter, finalCoord);
 
 			// Generate points along the arc in Web Mercator
 			const numberOfPoints = this.arcPoints; // Number of points to approximate the arc
+
+			const startBearing = webMercatorBearing(
+				webMercatorCenter,
+				webMercatorCoordOne,
+			);
+			const endBearing = webMercatorBearing(
+				webMercatorCenter,
+				webMercatorCoordTwo,
+			);
 
 			// Corrected version to calculate deltaBearing
 			const normalizedStart = normalizeBearing(startBearing);
 			const normalizedEnd = normalizeBearing(endBearing);
 
+			const normalizedCursor = normalizeBearing(cursorBearing);
+
 			// Calculate the delta bearing based on the direction
-			let deltaBearing;
-			if (this.outerDirection === "anticlockwise") {
-				deltaBearing = normalizedEnd - normalizedStart;
-				if (deltaBearing < 0) {
-					deltaBearing += 360; // Adjust for wrap-around
-				}
-			} else {
-				deltaBearing = normalizedStart - normalizedEnd;
-				if (deltaBearing < 0) {
-					deltaBearing += 360; // Adjust for wrap-around
-				}
+			const deltaBearing = this.getDeltaBearing(
+				this.direction as any,
+				normalizedStart,
+				normalizedEnd,
+			);
+
+			const hasLessThanZeroSize = outerRadius < innerRadius;
+
+			// This shouldn't happen but we protect against it incase as we can't calculate if the cursor
+			// is in the sector otherwise
+			if (!this.direction) {
+				return;
 			}
 
-			console.log({ deltaBearing });
+			const isInSector = this.inSector({
+				normalizedCursor,
+				normalizedStart,
+				normalizedEnd,
+				direction: this.direction,
+			});
+
+			// If it's not a valid cursor movement then we don't update
+			if (hasLessThanZeroSize || isInSector) {
+				return;
+			}
 
 			const bearingStep =
-				((this.outerDirection === "anticlockwise" ? 1 : -1) * deltaBearing) /
+				((this.direction === "anticlockwise" ? 1 : -1) * deltaBearing) /
 				numberOfPoints;
 
 			// Add all the arc points
@@ -428,14 +379,15 @@ export class TerraDrawSensorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 					finalArc.push(nextCoord);
 				}
 			}
-
 			finalArc.reverse();
 
 			coordinates.push(...finalArc);
 
-			// coordinates.push([lng, lat]);
+			// Close the polygon
 			coordinates.push(coordinates[0]);
 
+			// If the polygon doesn't exist, create it
+			// else update the existing geometry
 			if (!this.currentId) {
 				[this.currentId] = this.store.create([
 					{
@@ -605,8 +557,7 @@ export class TerraDrawSensorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 			}
 		} catch (error) {}
 		this.currentStartingPointId = undefined;
-		this.innerDirection = undefined;
-		this.outerDirection = undefined;
+		this.direction = undefined;
 		this.currentId = undefined;
 		this.currentCoordinate = 0;
 		if (this.state === "drawing") {
@@ -667,6 +618,70 @@ export class TerraDrawSensorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 			);
 		} else {
 			return false;
+		}
+	}
+
+	private getDeltaBearing(
+		direction: "anticlockwise" | "clockwise",
+		normalizedStart: number,
+		normalizedEnd: number,
+	) {
+		let deltaBearing;
+		if (direction === "anticlockwise") {
+			deltaBearing = normalizedEnd - normalizedStart;
+			if (deltaBearing < 0) {
+				deltaBearing += 360; // Adjust for wrap-around
+			}
+		} else {
+			deltaBearing = normalizedStart - normalizedEnd;
+			if (deltaBearing < 0) {
+				deltaBearing += 360; // Adjust for wrap-around
+			}
+		}
+		return deltaBearing;
+	}
+
+	private inSector({
+		normalizedCursor,
+		normalizedStart,
+		normalizedEnd,
+		direction,
+	}: {
+		normalizedCursor: number;
+		normalizedStart: number;
+		normalizedEnd: number;
+		direction: "clockwise" | "anticlockwise";
+	}) {
+		if (direction === "clockwise") {
+			// Handle clockwise direction
+			if (normalizedStart <= normalizedEnd) {
+				// Standard case (no wrap-around)
+				return (
+					normalizedCursor >= normalizedStart &&
+					normalizedCursor <= normalizedEnd
+				);
+			} else {
+				// Handle wrap-around across 360 degrees
+				return (
+					normalizedCursor >= normalizedStart ||
+					normalizedCursor <= normalizedEnd
+				);
+			}
+		} else {
+			// Handle anticlockwise direction
+			if (normalizedStart >= normalizedEnd) {
+				// Standard case (no wrap-around)
+				return (
+					normalizedCursor <= normalizedStart &&
+					normalizedCursor >= normalizedEnd
+				);
+			} else {
+				// Handle wrap-around across 360 degrees
+				return (
+					normalizedCursor <= normalizedStart ||
+					normalizedCursor >= normalizedEnd
+				);
+			}
 		}
 	}
 }

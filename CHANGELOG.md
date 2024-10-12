@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-beta.5](https://github.com/JamesLMilner/terra-draw/compare/v1.0.0-beta.4...v1.0.0-beta.5) (2024-10-12)
+
+
+### Bug Fixes
+
+* ensure TerraDrawSensorMode line arc can be styled correctly ([#346](https://github.com/JamesLMilner/terra-draw/issues/346)) ([1639015](https://github.com/JamesLMilner/terra-draw/commit/1639015dddf2200b5dae23136244504d994bd654))
+* provide smoother transition of sensor depth when cursor goes into inner radius ([#347](https://github.com/JamesLMilner/terra-draw/issues/347)) ([1255432](https://github.com/JamesLMilner/terra-draw/commit/12554329eda50942f817575d72982f25501a57e1))
+
+
+### Documentation
+
+* update docs to include TerraDrawSensorMode ([#348](https://github.com/JamesLMilner/terra-draw/issues/348)) ([e886bc6](https://github.com/JamesLMilner/terra-draw/commit/e886bc68bda7f2f178a2e6741d882ee874d6d401))
+
 ## [1.0.0-beta.4](https://github.com/JamesLMilner/terra-draw/compare/v1.0.0-beta.3...v1.0.0-beta.4) (2024-10-12)
 
 

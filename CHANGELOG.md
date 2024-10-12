@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-beta.4](https://github.com/JamesLMilner/terra-draw/compare/v1.0.0-beta.3...v1.0.0-beta.4) (2024-10-12)
+
+
+### Features
+
+* add in new TerraDrawSensorMode for drawing sensors, complete with tests  ([#344](https://github.com/JamesLMilner/terra-draw/issues/344)) ([a211343](https://github.com/JamesLMilner/terra-draw/commit/a21134358eae70488dc96bd058336a2fc83d41c3))
+
+
+### Bug Fixes
+
+* remove closing point correctly ([#341](https://github.com/JamesLMilner/terra-draw/issues/341)) ([83fb81f](https://github.com/JamesLMilner/terra-draw/commit/83fb81fb6f79a9b6ba906747646a24fc76167cf7))
+
+
+### Chore
+
+* small tidy up in tests and docs for sector mode ([#345](https://github.com/JamesLMilner/terra-draw/issues/345)) ([603fe1b](https://github.com/JamesLMilner/terra-draw/commit/603fe1b220d09701d67adcfe273944af04d6094e))
+
 ## [1.0.0-beta.3](https://github.com/JamesLMilner/terra-draw/compare/v1.0.0-beta.2...v1.0.0-beta.3) (2024-09-29)
 
 

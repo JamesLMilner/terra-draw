@@ -829,6 +829,28 @@ describe("TerraDrawSensorMode", () => {
 			});
 		});
 
+		it("returns the correct styles for polygon", () => {
+			const sensorMode = new TerraDrawSensorMode({
+				styles: {
+					fillColor: "#ffffff",
+					outlineColor: "#111111",
+					outlineWidth: 2,
+					fillOpacity: 0.5,
+				},
+			});
+
+			expect(
+				sensorMode.styleFeature({
+					type: "Feature",
+					geometry: { type: "LineString", coordinates: [] },
+					properties: { mode: "sensor" },
+				}),
+			).toMatchObject({
+				lineStringColor: "#111111",
+				lineStringWidth: 2,
+			});
+		});
+
 		it("returns the correct styles for point", () => {
 			const sensorMode = new TerraDrawSensorMode({
 				styles: {

@@ -598,6 +598,20 @@ export class TerraDrawSensorMode extends TerraDrawBaseDrawMode<SensorPolygonStyl
 				);
 
 				styles.zIndex = 10;
+			} else if (feature.geometry.type === "LineString") {
+				styles.lineStringColor = this.getHexColorStylingValue(
+					this.styles.outlineColor,
+					styles.polygonOutlineColor,
+					feature,
+				);
+
+				styles.lineStringWidth = this.getNumericStylingValue(
+					this.styles.outlineWidth,
+					styles.polygonOutlineWidth,
+					feature,
+				);
+
+				styles.zIndex = 10;
 			} else if (feature.geometry.type === "Point") {
 				styles.pointColor = this.getHexColorStylingValue(
 					this.styles.centerPointColor,

@@ -61,7 +61,8 @@ export const changeMode = async ({
 		| "rectangle"
 		| "circle"
 		| "angled-rectangle"
-		| "sector";
+		| "sector"
+		| "sensor";
 }) => {
 	let modeText = mode.charAt(0).toUpperCase() + mode.slice(1);
 
@@ -103,7 +104,10 @@ export const expectPaths = async ({
 		await page.waitForSelector(selector);
 		expect(await page.locator(selector).count()).toBe(count);
 	} else {
-		await expect(await page.locator(selector).count()).toBe(0);
+		await expect(
+			await page.locator(selector).count(),
+			`locator count should be greater than 0 for selector ${selector}`,
+		).toBe(0);
 	}
 };
 
@@ -111,14 +115,16 @@ export const expectPathDimensions = async ({
 	page,
 	width,
 	height,
+	item = 0,
 }: {
 	page: Page;
 	width: number;
 	height: number;
+	item?: number;
 }) => {
 	const selector = "svg > g > path";
 
-	const boundingBox = await page.locator(selector).boundingBox();
+	const boundingBox = await page.locator(selector).nth(item).boundingBox();
 
 	expect(boundingBox?.width).toBe(width);
 	expect(boundingBox?.height).toBe(height);

@@ -12,11 +12,11 @@ export const Config = {
 	// and the development page will respond accordingly. This is useful if you just want to
 	// test one map at a time, or you're on a low powered machine.
 	libraries: [
-		// Libraries.Leaflet,
+		Libraries.Leaflet,
 		Libraries.MapLibre,
-		// Libraries.Mapbox,
-		// Libraries.Google,
-		// Libraries.OpenLayers,
-		// Libraries.ArcGIS,
+		Libraries.Mapbox,
+		Libraries.Google,
+		Libraries.OpenLayers,
+		Libraries.ArcGIS,
 	] as const,
 };

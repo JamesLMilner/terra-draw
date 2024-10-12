@@ -1,17 +1,16 @@
-import { Position } from "geojson";
 import { GeoJSONStore } from "../../store/store";
 import { getMockModeConfig } from "../../test/mock-config";
-import { TerraDrawSectorMode } from "./sector.mode";
+import { TerraDrawSensorMode } from "./sensor.mode";
 
-describe("TerraDrawSectorMode", () => {
+describe("TerraDrawSensorMode", () => {
 	describe("constructor", () => {
 		it("constructs with no options", () => {
-			const sectorMode = new TerraDrawSectorMode();
-			expect(sectorMode.mode).toBe("sector");
+			const sensorMode = new TerraDrawSensorMode();
+			expect(sensorMode.mode).toBe("sensor");
 		});
 
 		it("constructs with options", () => {
-			const sectorMode = new TerraDrawSectorMode({
+			const sensorMode = new TerraDrawSensorMode({
 				styles: { fillColor: "#ffffff" },
 				pointerDistance: 40,
 				keyEvents: {
@@ -23,18 +22,18 @@ describe("TerraDrawSectorMode", () => {
 					close: "pointer",
 				},
 			});
-			expect(sectorMode.styles).toStrictEqual({
+			expect(sensorMode.styles).toStrictEqual({
 				fillColor: "#ffffff",
 			});
 		});
 
 		it("constructs with null key events", () => {
-			new TerraDrawSectorMode({
+			new TerraDrawSensorMode({
 				styles: { fillColor: "#ffffff" },
 				keyEvents: null,
 			});
 
-			new TerraDrawSectorMode({
+			new TerraDrawSensorMode({
 				styles: { fillColor: "#ffffff" },
 				keyEvents: { cancel: null, finish: null },
 			});
@@ -43,96 +42,96 @@ describe("TerraDrawSectorMode", () => {
 
 	describe("lifecycle", () => {
 		it("registers correctly", () => {
-			const sectorMode = new TerraDrawSectorMode();
-			expect(sectorMode.state).toBe("unregistered");
-			sectorMode.register(getMockModeConfig(sectorMode.mode));
-			expect(sectorMode.state).toBe("registered");
+			const sensorMode = new TerraDrawSensorMode();
+			expect(sensorMode.state).toBe("unregistered");
+			sensorMode.register(getMockModeConfig(sensorMode.mode));
+			expect(sensorMode.state).toBe("registered");
 		});
 
 		it("setting state directly throws error", () => {
-			const sectorMode = new TerraDrawSectorMode();
+			const sensorMode = new TerraDrawSensorMode();
 
 			expect(() => {
-				sectorMode.state = "started";
+				sensorMode.state = "started";
 			}).toThrow();
 		});
 
 		it("stopping before not registering throws error", () => {
-			const sectorMode = new TerraDrawSectorMode();
+			const sensorMode = new TerraDrawSensorMode();
 
 			expect(() => {
-				sectorMode.stop();
+				sensorMode.stop();
 			}).toThrow();
 		});
 
 		it("starting before not registering throws error", () => {
-			const sectorMode = new TerraDrawSectorMode();
+			const sensorMode = new TerraDrawSensorMode();
 
 			expect(() => {
-				sectorMode.start();
+				sensorMode.start();
 			}).toThrow();
 		});
 
 		it("starting before not registering throws error", () => {
-			const sectorMode = new TerraDrawSectorMode();
+			const sensorMode = new TerraDrawSensorMode();
 
 			expect(() => {
-				sectorMode.start();
+				sensorMode.start();
 			}).toThrow();
 		});
 
 		it("registering multiple times throws an error", () => {
-			const sectorMode = new TerraDrawSectorMode();
+			const sensorMode = new TerraDrawSensorMode();
 
 			expect(() => {
-				sectorMode.register(getMockModeConfig(sectorMode.mode));
-				sectorMode.register(getMockModeConfig(sectorMode.mode));
+				sensorMode.register(getMockModeConfig(sensorMode.mode));
+				sensorMode.register(getMockModeConfig(sensorMode.mode));
 			}).toThrow();
 		});
 
 		it("can start correctly", () => {
-			const sectorMode = new TerraDrawSectorMode();
+			const sensorMode = new TerraDrawSensorMode();
 
-			sectorMode.register(getMockModeConfig(sectorMode.mode));
-			sectorMode.start();
+			sensorMode.register(getMockModeConfig(sensorMode.mode));
+			sensorMode.start();
 
-			expect(sectorMode.state).toBe("started");
+			expect(sensorMode.state).toBe("started");
 		});
 
 		it("can stop correctly", () => {
-			const sectorMode = new TerraDrawSectorMode();
+			const sensorMode = new TerraDrawSensorMode();
 
-			sectorMode.register(getMockModeConfig(sectorMode.mode));
-			sectorMode.start();
-			sectorMode.stop();
+			sensorMode.register(getMockModeConfig(sensorMode.mode));
+			sensorMode.start();
+			sensorMode.stop();
 
-			expect(sectorMode.state).toBe("stopped");
+			expect(sensorMode.state).toBe("stopped");
 		});
 	});
 
 	describe("onMouseMove", () => {
-		let sectorMode: TerraDrawSectorMode;
+		let sensorMode: TerraDrawSensorMode;
 		let store: GeoJSONStore;
 		let onChange: jest.Mock;
 
 		beforeEach(() => {
 			store = new GeoJSONStore();
-			sectorMode = new TerraDrawSectorMode({
+			sensorMode = new TerraDrawSensorMode({
 				validation: () => {
 					return true;
 				},
 			});
-			const mockConfig = getMockModeConfig(sectorMode.mode);
+			const mockConfig = getMockModeConfig(sensorMode.mode);
 
 			store = mockConfig.store;
 			onChange = mockConfig.onChange;
 
-			sectorMode.register(mockConfig);
-			sectorMode.start();
+			sensorMode.register(mockConfig);
+			sensorMode.start();
 		});
 
 		it("does nothing if no clicks have occurred ", () => {
-			sectorMode.onMouseMove({
+			sensorMode.onMouseMove({
 				lng: 0,
 				lat: 0,
 				containerX: 0,
@@ -144,8 +143,8 @@ describe("TerraDrawSectorMode", () => {
 			expect(onChange).not.toHaveBeenCalled();
 		});
 
-		it("updates the coordinate to the mouse position after first click", () => {
-			sectorMode.onClick({
+		it("updates the initial point coordinate to the mouse position after first click", () => {
+			sensorMode.onClick({
 				lng: 0,
 				lat: 0,
 				containerX: 0,
@@ -154,7 +153,7 @@ describe("TerraDrawSectorMode", () => {
 				heldKeys: [],
 			});
 
-			sectorMode.onMouseMove({
+			sensorMode.onMouseMove({
 				lng: 1,
 				lat: 1,
 				containerX: 0,
@@ -163,109 +162,83 @@ describe("TerraDrawSectorMode", () => {
 				heldKeys: [],
 			});
 
-			expect(onChange).toHaveBeenCalledTimes(2);
+			expect(onChange).toHaveBeenCalledTimes(1);
 
 			const features = store.copyAll();
 			expect(features.length).toBe(1);
 
-			expect(features[0].geometry.coordinates).toStrictEqual([
-				[
-					[0, 0],
-					[1, 1],
-					[1, 0.999999], // Small offset to keep Mapbox GL happy
-					[0, 0],
-				],
-			]);
+			expect(features[0].geometry.type).toStrictEqual("Point");
+			expect(features[0].geometry.coordinates).toStrictEqual([0, 0]);
 		});
 
-		it.each([
-			["clockwise", 2],
-			["anticlockwise", -1],
-		])(
-			`updates the coordinate to the mouse position after second click (%s)`,
-			(_, coordinate) => {
-				sectorMode.onClick({
-					lng: 0,
-					lat: 0,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+		it("updates the linestring coordinate to the mouse position after second click and mouse move", () => {
+			sensorMode.onClick({
+				lng: 0,
+				lat: 0,
+				containerX: 0,
+				containerY: 0,
+				button: "left",
+				heldKeys: [],
+			});
 
-				sectorMode.onMouseMove({
-					lng: 1,
-					lat: 1,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+			sensorMode.onMouseMove({
+				lng: 1,
+				lat: 1,
+				containerX: 0,
+				containerY: 0,
+				button: "left",
+				heldKeys: [],
+			});
 
-				sectorMode.onClick({
-					lng: 1,
-					lat: 1,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+			sensorMode.onClick({
+				lng: 1,
+				lat: 1,
+				containerX: 0,
+				containerY: 0,
+				button: "left",
+				heldKeys: [],
+			});
 
-				sectorMode.onMouseMove({
-					lng: coordinate,
-					lat: coordinate,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+			sensorMode.onMouseMove({
+				lng: 2,
+				lat: 2,
+				containerX: 0,
+				containerY: 0,
+				button: "left",
+				heldKeys: [],
+			});
 
-				expect(onChange).toHaveBeenCalledTimes(4);
+			expect(onChange).toHaveBeenCalledTimes(3);
 
-				const features = store.copyAll();
-				expect(features.length).toBe(1);
+			const features = store.copyAll();
+			expect(features.length).toBe(2);
 
-				// 64 + 4 = 68
-				// We lose one coordinate because after coordinate limitation it is identical
-				expect(features[0].geometry.coordinates[0]).toHaveLength(67);
+			expect(features[0].geometry.type).toStrictEqual("Point");
+			expect(features[0].geometry.coordinates).toStrictEqual([0, 0]);
 
-				const duplicates = new Set();
-				for (
-					let i = 1;
-					i < (features[0].geometry.coordinates[0] as Position[]).length - 1;
-					i++
-				) {
-					const coordinate = (
-						features[0].geometry.coordinates[0] as Position[]
-					)[i];
-					const key = `${coordinate[0]}-${coordinate[1]}`;
-					if (duplicates.has(key)) {
-						throw new Error("Duplicate coordinate found: " + key);
-					}
-					duplicates.add(key);
-				}
-			},
-		);
+			expect(features[1].geometry.type).toStrictEqual("LineString");
+			expect(features[1].geometry.coordinates).toHaveLength(65);
+		});
 	});
 
 	describe("onClick", () => {
-		let sectorMode: TerraDrawSectorMode;
+		let sensorMode: TerraDrawSensorMode;
 		let store: GeoJSONStore;
 
 		describe("with successful validation", () => {
 			beforeEach(() => {
-				sectorMode = new TerraDrawSectorMode({
+				sensorMode = new TerraDrawSensorMode({
 					validation: () => true,
 				});
-				const mockConfig = getMockModeConfig(sectorMode.mode);
+				const mockConfig = getMockModeConfig(sensorMode.mode);
 
 				store = mockConfig.store;
-				sectorMode.register(mockConfig);
-				sectorMode.start();
+				sensorMode.register(mockConfig);
+				sensorMode.start();
 			});
 
-			it("can create a sector", () => {
-				sectorMode.onClick({
+			it("fails to create sensor if the final point is not within sector", () => {
+				sensorMode.onClick({
 					lng: 0,
 					lat: 0,
 					containerX: 0,
@@ -274,7 +247,7 @@ describe("TerraDrawSectorMode", () => {
 					heldKeys: [],
 				});
 
-				sectorMode.onMouseMove({
+				sensorMode.onMouseMove({
 					lng: 1,
 					lat: 1,
 					containerX: 0,
@@ -283,7 +256,7 @@ describe("TerraDrawSectorMode", () => {
 					heldKeys: [],
 				});
 
-				sectorMode.onClick({
+				sensorMode.onClick({
 					lng: 1,
 					lat: 1,
 					containerX: 0,
@@ -292,7 +265,7 @@ describe("TerraDrawSectorMode", () => {
 					heldKeys: [],
 				});
 
-				sectorMode.onMouseMove({
+				sensorMode.onMouseMove({
 					lng: 2,
 					lat: 2,
 					containerX: 0,
@@ -301,7 +274,7 @@ describe("TerraDrawSectorMode", () => {
 					heldKeys: [],
 				});
 
-				sectorMode.onClick({
+				sensorMode.onClick({
 					lng: 2,
 					lat: 2,
 					containerX: 0,
@@ -310,38 +283,178 @@ describe("TerraDrawSectorMode", () => {
 					heldKeys: [],
 				});
 
-				let features = store.copyAll();
-				expect(features.length).toBe(1);
-
-				// Create a new sector polygon
-				sectorMode.onClick({
-					lng: 0,
-					lat: 0,
+				sensorMode.onMouseMove({
+					lng: 3,
+					lat: 3,
 					containerX: 0,
 					containerY: 0,
 					button: "left",
 					heldKeys: [],
 				});
 
-				features = store.copyAll();
+				const features = store.copyAll();
+
 				expect(features.length).toBe(2);
+			});
+
+			it("fails to create sensor if the final point is not within sector (clockwise)", () => {
+				sensorMode.onClick({
+					lng: 0,
+					lat: 0,
+					containerX: 0,
+					containerY: 0,
+					button: "left",
+					heldKeys: [],
+				});
+
+				sensorMode.onMouseMove({
+					lng: -1,
+					lat: -1,
+					containerX: 0,
+					containerY: 0,
+					button: "left",
+					heldKeys: [],
+				});
+
+				sensorMode.onClick({
+					lng: -1,
+					lat: -1,
+					containerX: 0,
+					containerY: 0,
+					button: "left",
+					heldKeys: [],
+				});
+
+				sensorMode.onMouseMove({
+					lng: 2,
+					lat: 2,
+					containerX: 0,
+					containerY: 0,
+					button: "left",
+					heldKeys: [],
+				});
+
+				sensorMode.onClick({
+					lng: 2,
+					lat: 2,
+					containerX: 0,
+					containerY: 0,
+					button: "left",
+					heldKeys: [],
+				});
+
+				sensorMode.onMouseMove({
+					lng: -1,
+					lat: -1,
+					containerX: 0,
+					containerY: 0,
+					button: "left",
+					heldKeys: [],
+				});
+
+				const features = store.copyAll();
+
+				expect(features.length).toBe(2);
+			});
+
+			it("successfully creates a sensor", () => {
+				sensorMode.onClick({
+					lng: 0,
+					lat: 0,
+					containerX: 0,
+					containerY: 0,
+					button: "left",
+					heldKeys: [],
+				});
+
+				sensorMode.onMouseMove({
+					lng: 1,
+					lat: 1,
+					containerX: 0,
+					containerY: 0,
+					button: "left",
+					heldKeys: [],
+				});
+
+				sensorMode.onClick({
+					lng: 1,
+					lat: 1,
+					containerX: 0,
+					containerY: 0,
+					button: "left",
+					heldKeys: [],
+				});
+
+				sensorMode.onMouseMove({
+					lng: 2,
+					lat: 2,
+					containerX: 0,
+					containerY: 0,
+					button: "left",
+					heldKeys: [],
+				});
+
+				sensorMode.onClick({
+					lng: 2,
+					lat: 2,
+					containerX: 0,
+					containerY: 0,
+					button: "left",
+					heldKeys: [],
+				});
+
+				sensorMode.onMouseMove({
+					lng: 1.5,
+					lat: 1.5,
+					containerX: 0,
+					containerY: 0,
+					button: "left",
+					heldKeys: [],
+				});
+
+				// Move again to ensure the update path works
+				sensorMode.onMouseMove({
+					lng: 1.5,
+					lat: 1.5,
+					containerX: 0,
+					containerY: 0,
+					button: "left",
+					heldKeys: [],
+				});
+
+				const features = store.copyAll();
+
+				expect(features.length).toBe(3);
+
+				sensorMode.onClick({
+					lng: 1.5,
+					lat: 1.5,
+					containerX: 0,
+					containerY: 0,
+					button: "left",
+					heldKeys: [],
+				});
+
+				const featuresAfterFinalClick = store.copyAll();
+
+				expect(featuresAfterFinalClick.length).toBe(1);
 			});
 		});
 
-		describe("with unsuccessful validation", () => {
+		describe("with non successful validation", () => {
 			beforeEach(() => {
-				sectorMode = new TerraDrawSectorMode({
+				sensorMode = new TerraDrawSensorMode({
 					validation: () => false,
 				});
-				const mockConfig = getMockModeConfig(sectorMode.mode);
+				const mockConfig = getMockModeConfig(sensorMode.mode);
 
 				store = mockConfig.store;
-				sectorMode.register(mockConfig);
-				sectorMode.start();
+				sensorMode.register(mockConfig);
+				sensorMode.start();
 			});
 
-			it("fails to create a sector when validation returns false", () => {
-				sectorMode.onClick({
+			it("fails to create a sensor", () => {
+				sensorMode.onClick({
 					lng: 0,
 					lat: 0,
 					containerX: 0,
@@ -350,7 +463,7 @@ describe("TerraDrawSectorMode", () => {
 					heldKeys: [],
 				});
 
-				sectorMode.onMouseMove({
+				sensorMode.onMouseMove({
 					lng: 1,
 					lat: 1,
 					containerX: 0,
@@ -359,7 +472,7 @@ describe("TerraDrawSectorMode", () => {
 					heldKeys: [],
 				});
 
-				sectorMode.onClick({
+				sensorMode.onClick({
 					lng: 1,
 					lat: 1,
 					containerX: 0,
@@ -368,7 +481,7 @@ describe("TerraDrawSectorMode", () => {
 					heldKeys: [],
 				});
 
-				sectorMode.onMouseMove({
+				sensorMode.onMouseMove({
 					lng: 2,
 					lat: 2,
 					containerX: 0,
@@ -377,7 +490,7 @@ describe("TerraDrawSectorMode", () => {
 					heldKeys: [],
 				});
 
-				sectorMode.onClick({
+				sensorMode.onClick({
 					lng: 2,
 					lat: 2,
 					containerX: 0,
@@ -386,46 +499,66 @@ describe("TerraDrawSectorMode", () => {
 					heldKeys: [],
 				});
 
-				let features = store.copyAll();
-				expect(features.length).toBe(1);
-
-				// Create a new sector polygon
-				sectorMode.onClick({
-					lng: 0,
-					lat: 0,
+				sensorMode.onMouseMove({
+					lng: 1.5,
+					lat: 1.5,
 					containerX: 0,
 					containerY: 0,
 					button: "left",
 					heldKeys: [],
 				});
 
-				features = store.copyAll();
-				expect(features.length).toBe(1);
+				// Move again to ensure the update path works
+				sensorMode.onMouseMove({
+					lng: 1.5,
+					lat: 1.5,
+					containerX: 0,
+					containerY: 0,
+					button: "left",
+					heldKeys: [],
+				});
+
+				const features = store.copyAll();
+
+				expect(features.length).toBe(3);
+
+				sensorMode.onClick({
+					lng: 1.5,
+					lat: 1.5,
+					containerX: 0,
+					containerY: 0,
+					button: "left",
+					heldKeys: [],
+				});
+
+				const featuresAfterFinalClick = store.copyAll();
+
+				expect(featuresAfterFinalClick.length).toBe(1);
 			});
 		});
 	});
 
 	describe("onKeyUp", () => {
-		let rectangleMode: TerraDrawSectorMode;
+		let sensorMode: TerraDrawSensorMode;
 		let store: GeoJSONStore;
 		let onChange: jest.Mock;
 		let onFinish: jest.Mock;
 
 		it("does nothing if on finish key press is pressed while not drawing", () => {
-			rectangleMode = new TerraDrawSectorMode();
-			const mockConfig = getMockModeConfig(rectangleMode.mode);
+			sensorMode = new TerraDrawSensorMode();
+			const mockConfig = getMockModeConfig(sensorMode.mode);
 			store = new GeoJSONStore();
 			store = mockConfig.store;
 			onChange = mockConfig.onChange;
 			onFinish = mockConfig.onFinish;
 
-			rectangleMode.register(mockConfig);
-			rectangleMode.start();
+			sensorMode.register(mockConfig);
+			sensorMode.start();
 
 			let features = store.copyAll();
 			expect(features.length).toBe(0);
 
-			rectangleMode.onKeyUp({
+			sensorMode.onKeyUp({
 				key: "Enter",
 				preventDefault: jest.fn(),
 				heldKeys: [],
@@ -435,18 +568,18 @@ describe("TerraDrawSectorMode", () => {
 			expect(features.length).toBe(0);
 		});
 
-		it("cancels drawing sector on cancel key press", () => {
-			rectangleMode = new TerraDrawSectorMode();
-			const mockConfig = getMockModeConfig(rectangleMode.mode);
+		it("cancels drawing sensor on cancel key press", () => {
+			sensorMode = new TerraDrawSensorMode();
+			const mockConfig = getMockModeConfig(sensorMode.mode);
 			store = new GeoJSONStore();
 			store = mockConfig.store;
 			onChange = mockConfig.onChange;
 			onFinish = mockConfig.onFinish;
 
-			rectangleMode.register(mockConfig);
-			rectangleMode.start();
+			sensorMode.register(mockConfig);
+			sensorMode.start();
 
-			rectangleMode.onClick({
+			sensorMode.onClick({
 				lng: 0,
 				lat: 0,
 				containerX: 0,
@@ -458,7 +591,7 @@ describe("TerraDrawSectorMode", () => {
 			let features = store.copyAll();
 			expect(features.length).toBe(1);
 
-			rectangleMode.onKeyUp({
+			sensorMode.onKeyUp({
 				key: "Escape",
 				preventDefault: jest.fn(),
 				heldKeys: [],
@@ -468,18 +601,8 @@ describe("TerraDrawSectorMode", () => {
 			expect(features.length).toBe(0);
 		});
 
-		it("finishes drawing sector on finish key press", () => {
-			rectangleMode = new TerraDrawSectorMode();
-			const mockConfig = getMockModeConfig(rectangleMode.mode);
-			store = new GeoJSONStore();
-			store = mockConfig.store;
-			onChange = mockConfig.onChange;
-			onFinish = mockConfig.onFinish;
-
-			rectangleMode.register(mockConfig);
-			rectangleMode.start();
-
-			rectangleMode.onClick({
+		it("successfully creates a sensor on enter key press on final part of drawing", () => {
+			sensorMode.onClick({
 				lng: 0,
 				lat: 0,
 				containerX: 0,
@@ -488,44 +611,77 @@ describe("TerraDrawSectorMode", () => {
 				heldKeys: [],
 			});
 
-			let features = store.copyAll();
-			expect(features.length).toBe(1);
+			sensorMode.onMouseMove({
+				lng: 1,
+				lat: 1,
+				containerX: 0,
+				containerY: 0,
+				button: "left",
+				heldKeys: [],
+			});
 
-			rectangleMode.onKeyUp({
+			sensorMode.onClick({
+				lng: 1,
+				lat: 1,
+				containerX: 0,
+				containerY: 0,
+				button: "left",
+				heldKeys: [],
+			});
+
+			sensorMode.onMouseMove({
+				lng: 2,
+				lat: 2,
+				containerX: 0,
+				containerY: 0,
+				button: "left",
+				heldKeys: [],
+			});
+
+			sensorMode.onClick({
+				lng: 2,
+				lat: 2,
+				containerX: 0,
+				containerY: 0,
+				button: "left",
+				heldKeys: [],
+			});
+
+			sensorMode.onMouseMove({
+				lng: 1.5,
+				lat: 1.5,
+				containerX: 0,
+				containerY: 0,
+				button: "left",
+				heldKeys: [],
+			});
+
+			const features = store.copyAll();
+
+			expect(features.length).toBe(3);
+
+			sensorMode.onKeyUp({
 				key: "Enter",
 				preventDefault: jest.fn(),
 				heldKeys: [],
 			});
 
-			rectangleMode.onClick({
-				lng: 0,
-				lat: 0,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			const featuresAfterFinalClick = store.copyAll();
 
-			features = store.copyAll();
-			// Two as the rectangle has been closed via enter
-			expect(features.length).toBe(2);
-
-			expect(onChange).toHaveBeenCalledTimes(2);
-			expect(onChange).toHaveBeenCalledWith([expect.any(String)], "create");
-			expect(onFinish).toHaveBeenCalledTimes(1);
+			expect(featuresAfterFinalClick.length).toBe(1);
 		});
 
 		it("does not finish on key press when keyEvents null", () => {
-			rectangleMode = new TerraDrawSectorMode({ keyEvents: null });
-			const mockConfig = getMockModeConfig(rectangleMode.mode);
+			sensorMode = new TerraDrawSensorMode({ keyEvents: null });
+			const mockConfig = getMockModeConfig(sensorMode.mode);
 			store = new GeoJSONStore();
 			store = mockConfig.store;
 			onChange = mockConfig.onChange;
 			onFinish = mockConfig.onFinish;
-			rectangleMode.register(mockConfig);
-			rectangleMode.start();
+			sensorMode.register(mockConfig);
+			sensorMode.start();
 
-			rectangleMode.onClick({
+			sensorMode.onClick({
 				lng: 0,
 				lat: 0,
 				containerX: 0,
@@ -537,7 +693,7 @@ describe("TerraDrawSectorMode", () => {
 			let features = store.copyAll();
 			expect(features.length).toBe(1);
 
-			rectangleMode.onKeyUp({
+			sensorMode.onKeyUp({
 				key: "Enter",
 				preventDefault: jest.fn(),
 				heldKeys: [],
@@ -556,13 +712,13 @@ describe("TerraDrawSectorMode", () => {
 
 	describe("validateFeature", () => {
 		it("returns true for valid rectangle feature with validation that returns true", () => {
-			const rectangleMode = new TerraDrawSectorMode({
+			const sensorMode = new TerraDrawSensorMode({
 				validation: () => true,
 			});
-			rectangleMode.register(getMockModeConfig("sector"));
+			sensorMode.register(getMockModeConfig("sensor"));
 
 			expect(
-				rectangleMode.validateFeature({
+				sensorMode.validateFeature({
 					id: "5c582a42-c3a7-4bfc-b686-6036f311df3c",
 					geometry: {
 						type: "Polygon",
@@ -592,7 +748,7 @@ describe("TerraDrawSectorMode", () => {
 						],
 					},
 					properties: {
-						mode: "sector",
+						mode: "sensor",
 						createdAt: 1685655516297,
 						updatedAt: 1685655518118,
 					},
@@ -601,15 +757,15 @@ describe("TerraDrawSectorMode", () => {
 		});
 
 		it("returns false for valid rectangle feature but with validation that returns false", () => {
-			const rectangleMode = new TerraDrawSectorMode({
+			const sensorMode = new TerraDrawSensorMode({
 				validation: () => {
 					return false;
 				},
 			});
-			rectangleMode.register(getMockModeConfig("sector"));
+			sensorMode.register(getMockModeConfig("sensor"));
 
 			expect(
-				rectangleMode.validateFeature({
+				sensorMode.validateFeature({
 					id: "5c582a42-c3a7-4bfc-b686-6036f311df3c",
 					geometry: {
 						type: "Polygon",
@@ -639,7 +795,7 @@ describe("TerraDrawSectorMode", () => {
 						],
 					},
 					properties: {
-						mode: "sector",
+						mode: "sensor",
 						createdAt: 1685655516297,
 						updatedAt: 1685655518118,
 					},
@@ -650,7 +806,7 @@ describe("TerraDrawSectorMode", () => {
 
 	describe("styleFeature", () => {
 		it("returns the correct styles for polygon", () => {
-			const rectangleMode = new TerraDrawSectorMode({
+			const sensorMode = new TerraDrawSensorMode({
 				styles: {
 					fillColor: "#ffffff",
 					outlineColor: "#111111",
@@ -660,10 +816,10 @@ describe("TerraDrawSectorMode", () => {
 			});
 
 			expect(
-				rectangleMode.styleFeature({
+				sensorMode.styleFeature({
 					type: "Feature",
 					geometry: { type: "Polygon", coordinates: [] },
-					properties: { mode: "sector" },
+					properties: { mode: "sensor" },
 				}),
 			).toMatchObject({
 				polygonFillColor: "#ffffff",
@@ -673,8 +829,35 @@ describe("TerraDrawSectorMode", () => {
 			});
 		});
 
+		it("returns the correct styles for point", () => {
+			const sensorMode = new TerraDrawSensorMode({
+				styles: {
+					centerPointColor: "#222222",
+					centerPointOutlineColor: "#333333",
+					centerPointWidth: 2,
+					centerPointOutlineWidth: 1,
+					outlineColor: "#111111",
+					outlineWidth: 2,
+					fillOpacity: 0.5,
+				},
+			});
+
+			expect(
+				sensorMode.styleFeature({
+					type: "Feature",
+					geometry: { type: "Point", coordinates: [] },
+					properties: { mode: "sensor" },
+				}),
+			).toMatchObject({
+				pointColor: "#222222",
+				pointOutlineColor: "#333333",
+				pointWidth: 2,
+				pointOutlineWidth: 1,
+			});
+		});
+
 		it("returns the correct styles for polygon using function", () => {
-			const rectangleMode = new TerraDrawSectorMode({
+			const sensorMode = new TerraDrawSensorMode({
 				styles: {
 					fillColor: () => "#ffffff",
 					outlineColor: () => "#111111",
@@ -684,10 +867,10 @@ describe("TerraDrawSectorMode", () => {
 			});
 
 			expect(
-				rectangleMode.styleFeature({
+				sensorMode.styleFeature({
 					type: "Feature",
 					geometry: { type: "Polygon", coordinates: [] },
-					properties: { mode: "sector" },
+					properties: { mode: "sensor" },
 				}),
 			).toMatchObject({
 				polygonFillColor: "#ffffff",

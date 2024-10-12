@@ -361,11 +361,6 @@ const example = {
 
 			draw.start();
 
-			// draw.on("change", (e) => {
-			// 	console.log(e);
-			// 	console.log(draw.getSnapshot());
-			// });
-
 			addModeChangeHandler(draw, currentSelected);
 		});
 

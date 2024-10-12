@@ -29,13 +29,16 @@ import { cartesianDistance } from "../../geometry/measure/pixel-distance";
 import { isClockwiseWebMercator } from "../../geometry/clockwise";
 import { limitPrecision } from "../../geometry/limit-decimal-precision";
 
-type TerraDrawSectorModeKeyEvents = {
+type TerraDrawSensorModeKeyEvents = {
 	cancel?: KeyboardEvent["key"] | null;
 	finish?: KeyboardEvent["key"] | null;
 };
 
-type SectorPolygonStyling = {
-	centerColor: HexColorStyling;
+type SensorPolygonStyling = {
+	centerPointColor: HexColorStyling;
+	centerPointWidth: NumericStyling;
+	centerPointOutlineColor: HexColorStyling;
+	centerPointOutlineWidth: NumericStyling;
 	fillColor: HexColorStyling;
 	outlineColor: HexColorStyling;
 	outlineWidth: NumericStyling;
@@ -47,22 +50,22 @@ interface Cursors {
 	close?: Cursor;
 }
 
-interface TerraDrawSectorModeOptions<T extends CustomStyling>
+interface TerraDrawSensorModeOptions<T extends CustomStyling>
 	extends BaseModeOptions<T> {
 	arcPoints?: number;
 	pointerDistance?: number;
-	keyEvents?: TerraDrawSectorModeKeyEvents | null;
+	keyEvents?: TerraDrawSensorModeKeyEvents | null;
 	cursors?: Cursors;
 }
 
-export class TerraDrawSensorMode extends TerraDrawBaseDrawMode<SectorPolygonStyling> {
+export class TerraDrawSensorMode extends TerraDrawBaseDrawMode<SensorPolygonStyling> {
 	mode = "sensor";
 
 	private currentCoordinate = 0;
 	private currentId: FeatureId | undefined;
 	private currentInitialArcId: FeatureId | undefined;
 	private currentStartingPointId: FeatureId | undefined;
-	private keyEvents: TerraDrawSectorModeKeyEvents;
+	private keyEvents: TerraDrawSensorModeKeyEvents;
 	private direction: "clockwise" | "anticlockwise" | undefined;
 	private arcPoints: number;
 
@@ -70,7 +73,7 @@ export class TerraDrawSensorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 	private cursors: Required<Cursors>;
 	private mouseMove = false;
 
-	constructor(options?: TerraDrawSectorModeOptions<SectorPolygonStyling>) {
+	constructor(options?: TerraDrawSensorModeOptions<SensorPolygonStyling>) {
 		super(options);
 
 		const defaultCursors = {
@@ -268,6 +271,12 @@ export class TerraDrawSensorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 				return;
 			}
 
+			// This shouldn't happen but we protect against it incase as we can't calculate if the cursor
+			// is in the sector otherwise
+			if (!this.direction) {
+				return;
+			}
+
 			const center = this.store.getGeometryCopy<Point>(
 				this.currentStartingPointId,
 			).coordinates;
@@ -297,18 +306,17 @@ export class TerraDrawSensorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 				webMercatorCursor,
 			);
 
-			const fullDistance = cartesianDistance(
-				webMercatorCenter,
-				webMercatorCursor,
-			);
+			const hasLessThanZeroSize = outerRadius < innerRadius;
+
+			// We don't need to continue if the users cursor is not in front of the arc
+			if (hasLessThanZeroSize) {
+				return;
+			}
 
 			const cursorBearing = webMercatorBearing(
 				webMercatorCenter,
 				webMercatorCursor,
 			);
-
-			// Generate points along the arc in Web Mercator
-			const numberOfPoints = this.arcPoints; // Number of points to approximate the arc
 
 			const startBearing = webMercatorBearing(
 				webMercatorCenter,
@@ -319,28 +327,11 @@ export class TerraDrawSensorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 				webMercatorCoordTwo,
 			);
 
-			// Corrected version to calculate deltaBearing
 			const normalizedStart = normalizeBearing(startBearing);
 			const normalizedEnd = normalizeBearing(endBearing);
-
 			const normalizedCursor = normalizeBearing(cursorBearing);
 
-			// Calculate the delta bearing based on the direction
-			const deltaBearing = this.getDeltaBearing(
-				this.direction as any,
-				normalizedStart,
-				normalizedEnd,
-			);
-
-			const hasLessThanZeroSize = outerRadius < innerRadius;
-
-			// This shouldn't happen but we protect against it incase as we can't calculate if the cursor
-			// is in the sector otherwise
-			if (!this.direction) {
-				return;
-			}
-
-			const isInSector = this.inSector({
+			const notInSector = this.notInSector({
 				normalizedCursor,
 				normalizedStart,
 				normalizedEnd,
@@ -348,13 +339,25 @@ export class TerraDrawSensorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 			});
 
 			// If it's not a valid cursor movement then we don't update
-			if (hasLessThanZeroSize || isInSector) {
+			if (notInSector) {
 				return;
 			}
 
-			const bearingStep =
-				((this.direction === "anticlockwise" ? 1 : -1) * deltaBearing) /
-				numberOfPoints;
+			// Calculate the delta bearing based on the direction
+			const deltaBearing = this.getDeltaBearing(
+				this.direction,
+				normalizedStart,
+				normalizedEnd,
+			);
+
+			// Number of points to approximate the arc
+			const numberOfPoints = this.arcPoints;
+
+			// Calculate bearing step
+			const multiplier = this.direction === "anticlockwise" ? 1 : -1;
+			const bearingStep = (multiplier * deltaBearing) / numberOfPoints;
+
+			const radius = cartesianDistance(webMercatorCenter, webMercatorCursor);
 
 			// Add all the arc points
 			const finalArc = [];
@@ -362,7 +365,7 @@ export class TerraDrawSensorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 				const currentBearing = normalizedStart + i * bearingStep;
 				const pointOnArc = webMercatorDestination(
 					webMercatorCenter,
-					fullDistance,
+					radius,
 					currentBearing,
 				);
 				const { lng, lat } = webMercatorXYToLngLat(pointOnArc.x, pointOnArc.y);
@@ -376,10 +379,9 @@ export class TerraDrawSensorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 					nextCoord[0] !== coordinates[coordinates.length - 1][0] &&
 					nextCoord[1] !== coordinates[coordinates.length - 1][1];
 				if (notIdentical) {
-					finalArc.push(nextCoord);
+					finalArc.unshift(nextCoord);
 				}
 			}
-			finalArc.reverse();
 
 			coordinates.push(...finalArc);
 
@@ -598,8 +600,26 @@ export class TerraDrawSensorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 				styles.zIndex = 10;
 			} else if (feature.geometry.type === "Point") {
 				styles.pointColor = this.getHexColorStylingValue(
-					this.styles.centerColor,
+					this.styles.centerPointColor,
 					styles.pointColor,
+					feature,
+				);
+
+				styles.pointWidth = this.getNumericStylingValue(
+					this.styles.centerPointWidth,
+					styles.pointWidth,
+					feature,
+				);
+
+				styles.pointOutlineColor = this.getHexColorStylingValue(
+					this.styles.centerPointOutlineColor,
+					styles.pointOutlineColor,
+					feature,
+				);
+
+				styles.pointOutlineWidth = this.getNumericStylingValue(
+					this.styles.centerPointOutlineWidth,
+					styles.pointOutlineWidth,
 					feature,
 				);
 
@@ -641,7 +661,7 @@ export class TerraDrawSensorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 		return deltaBearing;
 	}
 
-	private inSector({
+	private notInSector({
 		normalizedCursor,
 		normalizedStart,
 		normalizedEnd,

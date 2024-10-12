@@ -308,10 +308,10 @@ export class TerraDrawSensorMode extends TerraDrawBaseDrawMode<SensorPolygonStyl
 
 			const hasLessThanZeroSize = outerRadius < innerRadius;
 
-			// We don't need to continue if the users cursor is not in front of the arc
-			if (hasLessThanZeroSize) {
-				return;
-			}
+			// If the cursor is inside the inner radius, the depth of the sensor is always 0
+			const radiusCalculationPosition = hasLessThanZeroSize
+				? webMercatorCoordOne
+				: webMercatorCursor;
 
 			const cursorBearing = webMercatorBearing(
 				webMercatorCenter,
@@ -357,7 +357,10 @@ export class TerraDrawSensorMode extends TerraDrawBaseDrawMode<SensorPolygonStyl
 			const multiplier = this.direction === "anticlockwise" ? 1 : -1;
 			const bearingStep = (multiplier * deltaBearing) / numberOfPoints;
 
-			const radius = cartesianDistance(webMercatorCenter, webMercatorCursor);
+			const radius = cartesianDistance(
+				webMercatorCenter,
+				radiusCalculationPosition,
+			);
 
 			// Add all the arc points
 			const finalArc = [];

@@ -406,26 +406,26 @@ describe("TerraDrawSectorMode", () => {
 	});
 
 	describe("onKeyUp", () => {
-		let rectangleMode: TerraDrawSectorMode;
+		let sectorMode: TerraDrawSectorMode;
 		let store: GeoJSONStore;
 		let onChange: jest.Mock;
 		let onFinish: jest.Mock;
 
 		it("does nothing if on finish key press is pressed while not drawing", () => {
-			rectangleMode = new TerraDrawSectorMode();
-			const mockConfig = getMockModeConfig(rectangleMode.mode);
+			sectorMode = new TerraDrawSectorMode();
+			const mockConfig = getMockModeConfig(sectorMode.mode);
 			store = new GeoJSONStore();
 			store = mockConfig.store;
 			onChange = mockConfig.onChange;
 			onFinish = mockConfig.onFinish;
 
-			rectangleMode.register(mockConfig);
-			rectangleMode.start();
+			sectorMode.register(mockConfig);
+			sectorMode.start();
 
 			let features = store.copyAll();
 			expect(features.length).toBe(0);
 
-			rectangleMode.onKeyUp({
+			sectorMode.onKeyUp({
 				key: "Enter",
 				preventDefault: jest.fn(),
 				heldKeys: [],
@@ -436,17 +436,17 @@ describe("TerraDrawSectorMode", () => {
 		});
 
 		it("cancels drawing sector on cancel key press", () => {
-			rectangleMode = new TerraDrawSectorMode();
-			const mockConfig = getMockModeConfig(rectangleMode.mode);
+			sectorMode = new TerraDrawSectorMode();
+			const mockConfig = getMockModeConfig(sectorMode.mode);
 			store = new GeoJSONStore();
 			store = mockConfig.store;
 			onChange = mockConfig.onChange;
 			onFinish = mockConfig.onFinish;
 
-			rectangleMode.register(mockConfig);
-			rectangleMode.start();
+			sectorMode.register(mockConfig);
+			sectorMode.start();
 
-			rectangleMode.onClick({
+			sectorMode.onClick({
 				lng: 0,
 				lat: 0,
 				containerX: 0,
@@ -458,7 +458,7 @@ describe("TerraDrawSectorMode", () => {
 			let features = store.copyAll();
 			expect(features.length).toBe(1);
 
-			rectangleMode.onKeyUp({
+			sectorMode.onKeyUp({
 				key: "Escape",
 				preventDefault: jest.fn(),
 				heldKeys: [],
@@ -469,17 +469,17 @@ describe("TerraDrawSectorMode", () => {
 		});
 
 		it("finishes drawing sector on finish key press", () => {
-			rectangleMode = new TerraDrawSectorMode();
-			const mockConfig = getMockModeConfig(rectangleMode.mode);
+			sectorMode = new TerraDrawSectorMode();
+			const mockConfig = getMockModeConfig(sectorMode.mode);
 			store = new GeoJSONStore();
 			store = mockConfig.store;
 			onChange = mockConfig.onChange;
 			onFinish = mockConfig.onFinish;
 
-			rectangleMode.register(mockConfig);
-			rectangleMode.start();
+			sectorMode.register(mockConfig);
+			sectorMode.start();
 
-			rectangleMode.onClick({
+			sectorMode.onClick({
 				lng: 0,
 				lat: 0,
 				containerX: 0,
@@ -491,13 +491,13 @@ describe("TerraDrawSectorMode", () => {
 			let features = store.copyAll();
 			expect(features.length).toBe(1);
 
-			rectangleMode.onKeyUp({
+			sectorMode.onKeyUp({
 				key: "Enter",
 				preventDefault: jest.fn(),
 				heldKeys: [],
 			});
 
-			rectangleMode.onClick({
+			sectorMode.onClick({
 				lng: 0,
 				lat: 0,
 				containerX: 0,
@@ -507,7 +507,7 @@ describe("TerraDrawSectorMode", () => {
 			});
 
 			features = store.copyAll();
-			// Two as the rectangle has been closed via enter
+			// Two as the sector has been closed via enter
 			expect(features.length).toBe(2);
 
 			expect(onChange).toHaveBeenCalledTimes(2);
@@ -516,16 +516,16 @@ describe("TerraDrawSectorMode", () => {
 		});
 
 		it("does not finish on key press when keyEvents null", () => {
-			rectangleMode = new TerraDrawSectorMode({ keyEvents: null });
-			const mockConfig = getMockModeConfig(rectangleMode.mode);
+			sectorMode = new TerraDrawSectorMode({ keyEvents: null });
+			const mockConfig = getMockModeConfig(sectorMode.mode);
 			store = new GeoJSONStore();
 			store = mockConfig.store;
 			onChange = mockConfig.onChange;
 			onFinish = mockConfig.onFinish;
-			rectangleMode.register(mockConfig);
-			rectangleMode.start();
+			sectorMode.register(mockConfig);
+			sectorMode.start();
 
-			rectangleMode.onClick({
+			sectorMode.onClick({
 				lng: 0,
 				lat: 0,
 				containerX: 0,
@@ -537,7 +537,7 @@ describe("TerraDrawSectorMode", () => {
 			let features = store.copyAll();
 			expect(features.length).toBe(1);
 
-			rectangleMode.onKeyUp({
+			sectorMode.onKeyUp({
 				key: "Enter",
 				preventDefault: jest.fn(),
 				heldKeys: [],
@@ -545,7 +545,7 @@ describe("TerraDrawSectorMode", () => {
 
 			features = store.copyAll();
 
-			// Only one as the click will close the rectangle
+			// Only one as the click will close the sector
 			expect(features.length).toBe(1);
 
 			expect(onChange).toHaveBeenCalledTimes(1);
@@ -555,14 +555,14 @@ describe("TerraDrawSectorMode", () => {
 	});
 
 	describe("validateFeature", () => {
-		it("returns true for valid rectangle feature with validation that returns true", () => {
-			const rectangleMode = new TerraDrawSectorMode({
+		it("returns true for valid sector feature with validation that returns true", () => {
+			const sectorMode = new TerraDrawSectorMode({
 				validation: () => true,
 			});
-			rectangleMode.register(getMockModeConfig("sector"));
+			sectorMode.register(getMockModeConfig("sector"));
 
 			expect(
-				rectangleMode.validateFeature({
+				sectorMode.validateFeature({
 					id: "5c582a42-c3a7-4bfc-b686-6036f311df3c",
 					geometry: {
 						type: "Polygon",
@@ -600,16 +600,16 @@ describe("TerraDrawSectorMode", () => {
 			).toBe(true);
 		});
 
-		it("returns false for valid rectangle feature but with validation that returns false", () => {
-			const rectangleMode = new TerraDrawSectorMode({
+		it("returns false for valid sector feature but with validation that returns false", () => {
+			const sectorMode = new TerraDrawSectorMode({
 				validation: () => {
 					return false;
 				},
 			});
-			rectangleMode.register(getMockModeConfig("sector"));
+			sectorMode.register(getMockModeConfig("sector"));
 
 			expect(
-				rectangleMode.validateFeature({
+				sectorMode.validateFeature({
 					id: "5c582a42-c3a7-4bfc-b686-6036f311df3c",
 					geometry: {
 						type: "Polygon",
@@ -650,7 +650,7 @@ describe("TerraDrawSectorMode", () => {
 
 	describe("styleFeature", () => {
 		it("returns the correct styles for polygon", () => {
-			const rectangleMode = new TerraDrawSectorMode({
+			const sectorMode = new TerraDrawSectorMode({
 				styles: {
 					fillColor: "#ffffff",
 					outlineColor: "#111111",
@@ -660,7 +660,7 @@ describe("TerraDrawSectorMode", () => {
 			});
 
 			expect(
-				rectangleMode.styleFeature({
+				sectorMode.styleFeature({
 					type: "Feature",
 					geometry: { type: "Polygon", coordinates: [] },
 					properties: { mode: "sector" },
@@ -674,7 +674,7 @@ describe("TerraDrawSectorMode", () => {
 		});
 
 		it("returns the correct styles for polygon using function", () => {
-			const rectangleMode = new TerraDrawSectorMode({
+			const sectorMode = new TerraDrawSectorMode({
 				styles: {
 					fillColor: () => "#ffffff",
 					outlineColor: () => "#111111",
@@ -684,7 +684,7 @@ describe("TerraDrawSectorMode", () => {
 			});
 
 			expect(
-				rectangleMode.styleFeature({
+				sectorMode.styleFeature({
 					type: "Feature",
 					geometry: { type: "Polygon", coordinates: [] },
 					properties: { mode: "sector" },

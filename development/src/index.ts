@@ -45,6 +45,7 @@ import Color from "@arcgis/core/Color";
 import SimpleMarkerSymbol from "@arcgis/core/symbols/SimpleMarkerSymbol";
 import { Config, Libraries } from "./config";
 import { TerraDrawSectorMode } from "../../src/modes/sector/sector.mode";
+import { TerraDrawSensorMode } from "../../src/modes/sensor/sensor.mode";
 
 const addModeChangeHandler = (
 	draw: TerraDraw,
@@ -60,6 +61,7 @@ const addModeChangeHandler = (
 		"rectangle",
 		"angled-rectangle",
 		"sector",
+		"sensor",
 	].forEach((mode) => {
 		(document.getElementById(mode) as HTMLButtonElement).addEventListener(
 			"click",
@@ -185,7 +187,8 @@ const getModes = () => {
 			},
 		}),
 		new TerraDrawAngledRectangleMode(),
-		new TerraDrawSectorMode(),
+		new TerraDrawSectorMode({}),
+		new TerraDrawSensorMode(),
 	];
 };
 
@@ -357,11 +360,6 @@ const example = {
 			});
 
 			draw.start();
-
-			draw.on("change", (e) => {
-				console.log(e);
-				console.log(draw.getSnapshot());
-			});
 
 			addModeChangeHandler(draw, currentSelected);
 		});

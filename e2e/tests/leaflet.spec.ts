@@ -530,6 +530,187 @@ test.describe("sector mode", () => {
 	});
 });
 
+test.describe("sensor mode", () => {
+	const mode = "sensor";
+
+	test("mode can set and creates center point on first click", async ({
+		page,
+	}) => {
+		const mapDiv = await setupMap({ page });
+		await changeMode({ page, mode });
+
+		await page.mouse.click(mapDiv.width / 2, mapDiv.height / 2);
+
+		await expectPaths({ page, count: 1 });
+
+		await expectPathDimensions({ page, width: 12, height: 12 });
+	});
+
+	test("mode can set and but won't close if the mouse goes behind the initial arc", async ({
+		page,
+	}) => {
+		const mapDiv = await setupMap({ page });
+		await changeMode({ page, mode });
+
+		await page.mouse.click(mapDiv.width / 2, mapDiv.height / 2);
+		await page.mouse.move(mapDiv.width / 3, mapDiv.height / 2, { steps: 30 });
+		await page.mouse.click(mapDiv.width / 3, mapDiv.height / 2);
+		await page.mouse.move(mapDiv.width / 3, mapDiv.height / 3, { steps: 30 });
+		await page.mouse.click(mapDiv.width / 3, mapDiv.height / 3);
+
+		// The cursor is now behind the initial arc and so wont close the sensor
+		await page.mouse.move(mapDiv.width / 1, mapDiv.height / 3, { steps: 30 });
+		await page.mouse.click(mapDiv.width / 1, mapDiv.height / 3);
+
+		// We expect the count to be 2 because the sensor polygon is not finished
+		// and we are left with the center point and the arc line
+		await expectPaths({ page, count: 2 });
+
+		await expectPathDimensions({ page, width: 12, height: 12, item: 0 });
+		await expectPathDimensions({ page, width: 31, height: 109, item: 1 });
+	});
+
+	test("mode can set and used to create a sensor less than 90 degrees (clockwise)", async ({
+		page,
+	}) => {
+		const mapDiv = await setupMap({ page });
+		await changeMode({ page, mode });
+
+		await page.mouse.click(mapDiv.width / 2, mapDiv.height / 2);
+		await page.mouse.move(mapDiv.width / 3, mapDiv.height / 2, { steps: 30 });
+		await page.mouse.click(mapDiv.width / 3, mapDiv.height / 2);
+		await page.mouse.move(mapDiv.width / 3, mapDiv.height / 3, { steps: 30 });
+		await page.mouse.click(mapDiv.width / 3, mapDiv.height / 3);
+
+		// Finalise the sensor polygon
+		await page.mouse.move(mapDiv.width / 5, mapDiv.height / 3, { steps: 30 });
+		await page.mouse.click(mapDiv.width / 5, mapDiv.height / 3);
+
+		await expectPaths({ page, count: 1 });
+
+		await expectPathDimensions({ page, width: 220, height: 201 });
+	});
+
+	test("mode can set and used to create a sensor more than 90 degrees (clockwise)", async ({
+		page,
+	}) => {
+		const mapDiv = await setupMap({ page });
+		await changeMode({ page, mode });
+
+		await page.mouse.click(mapDiv.width / 2, mapDiv.height / 2);
+		await page.mouse.move(mapDiv.width / 3, mapDiv.height / 2, { steps: 30 });
+		await page.mouse.click(mapDiv.width / 3, mapDiv.height / 2);
+		await page.mouse.move(mapDiv.width * 0.75, mapDiv.height / 2.5, {
+			steps: 30,
+		});
+		await page.mouse.click(mapDiv.width * 0.75, mapDiv.height / 2.5);
+
+		// Finalise the sensor polygon
+		await page.mouse.move(mapDiv.width * 0.75, mapDiv.height / 5, {
+			steps: 30,
+		});
+		await page.mouse.click(mapDiv.width * 0.75, mapDiv.height / 5);
+
+		await expectPathDimensions({ page, width: 767, height: 390 });
+	});
+
+	test("mode can set and used to create a sensor more than 180 degrees (clockwise)", async ({
+		page,
+	}) => {
+		const mapDiv = await setupMap({ page });
+		await changeMode({ page, mode });
+
+		await page.mouse.click(mapDiv.width / 2, mapDiv.height / 2);
+		await page.mouse.move(mapDiv.width / 3, mapDiv.height / 2, { steps: 30 });
+		await page.mouse.click(mapDiv.width / 3, mapDiv.height / 2);
+		await page.mouse.move(mapDiv.width * 0.75, mapDiv.height / 3, {
+			steps: 10,
+		});
+		await page.mouse.move(mapDiv.width * 0.4, mapDiv.height / 1.5, {
+			steps: 10,
+		});
+		await page.mouse.click(mapDiv.width * 0.4, mapDiv.height / 1.5);
+
+		// Finalise the sensor polygon
+		await page.mouse.move(mapDiv.width * 0.4, mapDiv.height / 1.25);
+		await page.mouse.click(mapDiv.width * 0.4, mapDiv.height / 1.25);
+
+		await expectPaths({ page, count: 1 });
+
+		await expectPathDimensions({ page, width: 506, height: 506 });
+	});
+
+	test("mode can set and used to create a sensor less than 90 degrees (anticlockwise)", async ({
+		page,
+	}) => {
+		const mapDiv = await setupMap({ page });
+		await changeMode({ page, mode });
+
+		await page.mouse.click(mapDiv.width / 2, mapDiv.height / 2);
+		await page.mouse.move(mapDiv.width / 3, mapDiv.height / 2, { steps: 30 });
+		await page.mouse.click(mapDiv.width / 3, mapDiv.height / 2);
+		await page.mouse.move(mapDiv.width * 0.4, mapDiv.height / 1.5, {
+			steps: 30,
+		});
+		await page.mouse.click(mapDiv.width * 0.4, mapDiv.height / 1.5);
+
+		// Finalise the sensor polygon
+		await page.mouse.move(mapDiv.width * 0.3, mapDiv.height / 1.25);
+		await page.mouse.click(mapDiv.width * 0.3, mapDiv.height / 1.25);
+
+		await expectPaths({ page, count: 1 });
+
+		await expectPathDimensions({ page, width: 183, height: 233 });
+	});
+
+	test("mode can set and used to create a sensor more than 90 degrees (anticlockwise)", async ({
+		page,
+	}) => {
+		const mapDiv = await setupMap({ page });
+		await changeMode({ page, mode });
+
+		await page.mouse.click(mapDiv.width / 2, mapDiv.height / 2);
+		await page.mouse.move(mapDiv.width / 3, mapDiv.height / 2, { steps: 30 });
+		await page.mouse.click(mapDiv.width / 3, mapDiv.height / 2);
+		await page.mouse.move(mapDiv.width * 0.75, mapDiv.height / 1.5, {
+			steps: 30,
+		});
+		await page.mouse.click(mapDiv.width * 0.75, mapDiv.height / 1.5);
+
+		// Finalise the sensor polygon
+		await page.mouse.move(mapDiv.width * 0.75, mapDiv.height / 1.3);
+		await page.mouse.click(mapDiv.width * 0.75, mapDiv.height / 1.3);
+
+		await expectPathDimensions({ page, width: 728, height: 378 });
+	});
+
+	test("mode can set and used to create a sensor more than 180 degrees (anticlockwise)", async ({
+		page,
+	}) => {
+		const mapDiv = await setupMap({ page });
+		await changeMode({ page, mode });
+
+		await page.mouse.click(mapDiv.width / 2, mapDiv.height / 2);
+		await page.mouse.move(mapDiv.width / 3, mapDiv.height / 2, { steps: 30 });
+		await page.mouse.click(mapDiv.width / 3, mapDiv.height / 2);
+		await page.mouse.move(mapDiv.width * 0.75, mapDiv.height / 1.5, {
+			steps: 30,
+		});
+		await page.mouse.move(mapDiv.width * 0.75, mapDiv.height / 3, {
+			steps: 30,
+		});
+		await page.mouse.click(mapDiv.width * 0.75, mapDiv.height / 3);
+
+		// Finalise the sensor polygon
+		await page.mouse.move(mapDiv.width * 0.8, mapDiv.height / 3, { steps: 30 });
+		await page.mouse.click(mapDiv.width * 0.8, mapDiv.height / 3);
+
+		await expectPaths({ page, count: 1 });
+
+		await expectPathDimensions({ page, width: 808, height: 547 });
+	});
+});
+
 test.describe("circle mode", () => {
 	const mode = "circle";
 

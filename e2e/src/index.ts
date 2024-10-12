@@ -10,6 +10,7 @@ import {
 	TerraDrawRectangleMode,
 	TerraDrawAngledRectangleMode,
 	TerraDrawSectorMode,
+	TerraDrawSensorMode,
 	TerraDrawRenderMode,
 	TerraDrawSelectMode,
 	ValidateMaxAreaSquareMeters,
@@ -168,6 +169,7 @@ const example = {
 				new TerraDrawFreehandMode(),
 				new TerraDrawAngledRectangleMode(),
 				new TerraDrawSectorMode(),
+				new TerraDrawSensorMode(),
 				new TerraDrawRenderMode({
 					modeName: "arbitrary",
 					styles: {
@@ -198,6 +200,7 @@ const example = {
 			"circle",
 			"angled-rectangle",
 			"sector",
+			"sensor",
 		].forEach((mode) => {
 			(document.getElementById(mode) as HTMLButtonElement).addEventListener(
 				"click",

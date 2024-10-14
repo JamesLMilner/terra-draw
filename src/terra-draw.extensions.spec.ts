@@ -7,7 +7,6 @@
  * of the library.
  */
 
-import { exp } from "protomaps-leaflet";
 import { CustomStyling } from "./modes/base.mode";
 import {
 	GeoJSONStoreFeatures,

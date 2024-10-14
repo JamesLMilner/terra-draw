@@ -19,7 +19,6 @@ import {
 	SELECT_PROPERTIES,
 	OnFinishContext,
 } from "./common";
-import { TerraDrawBaseAdapter } from "./adapters/common/base.adapter";
 import {
 	ModeTypes,
 	TerraDrawBaseDrawMode,
@@ -54,6 +53,7 @@ import { ValidateNotSelfIntersecting } from "./validations/not-self-intersecting
 import { TerraDrawAngledRectangleMode } from "./modes/angled-rectangle/angled-rectangle.mode";
 import { TerraDrawSectorMode } from "./modes/sector/sector.mode";
 import { TerraDrawSensorMode } from "./modes/sensor/sensor.mode";
+import * as TerraDrawExtend from "./extend";
 
 type FinishListener = (id: FeatureId, context: OnFinishContext) => void;
 type ChangeListener = (ids: FeatureId[], type: string) => void;
@@ -776,14 +776,6 @@ class TerraDraw {
 	}
 }
 
-// This object allows 3rd party developers to
-// extend these abstract classes and create there
-// own modes and adapters
-const TerraDrawExtend = {
-	TerraDrawBaseDrawMode,
-	TerraDrawBaseAdapter,
-};
-
 export {
 	TerraDraw,
 
@@ -807,9 +799,9 @@ export {
 	TerraDrawMapLibreGLAdapter,
 	TerraDrawOpenLayersAdapter,
 	TerraDrawArcGISMapsSDKAdapter,
-	TerraDrawExtend,
 
 	// Types that are required for 3rd party developers to extend
+	TerraDrawExtend,
 
 	// TerraDrawBaseMode
 	BehaviorConfig,

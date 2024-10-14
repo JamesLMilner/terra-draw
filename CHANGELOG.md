@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-beta.6](https://github.com/JamesLMilner/terra-draw/compare/v1.0.0-beta.5...v1.0.0-beta.6) (2024-10-14)
+
+
+### Bug Fixes
+
+* improve the extension object to make it easier to extend Terra Draw base adapters and modes ([#349](https://github.com/JamesLMilner/terra-draw/issues/349)) ([e8a189d](https://github.com/JamesLMilner/terra-draw/commit/e8a189d4a22e0302f3c0f8918d4debb1c7681976))
+
 ## [1.0.0-beta.5](https://github.com/JamesLMilner/terra-draw/compare/v1.0.0-beta.4...v1.0.0-beta.5) (2024-10-12)
 
 

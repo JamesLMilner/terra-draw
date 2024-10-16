@@ -9,7 +9,6 @@ data/
 .husky/
 .github/
 ROADMAP.md
-common/
 guides/
 readme.gif
 jest.config.ts

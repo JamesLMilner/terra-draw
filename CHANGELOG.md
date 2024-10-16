@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-beta.7](https://github.com/JamesLMilner/terra-draw/compare/v1.0.0-beta.6...v1.0.0-beta.7) (2024-10-16)
+
+
+### Bug Fixes
+
+* ensure that common folder files are published so types are not missing ([#351](https://github.com/JamesLMilner/terra-draw/issues/351)) ([aa180dd](https://github.com/JamesLMilner/terra-draw/commit/aa180dddf9e16104241205d3eed21cc8860cf5db))
+
 ## [1.0.0-beta.6](https://github.com/JamesLMilner/terra-draw/compare/v1.0.0-beta.5...v1.0.0-beta.6) (2024-10-14)
 
 

@@ -5,8 +5,8 @@ import {
 	createStorePoint,
 	createStorePolygon,
 } from "../../../test/create-store-features";
-import { mockBehaviorConfig } from "../../../test/mock-behavior-config";
-import { mockDrawEvent } from "../../../test/mock-mouse-event";
+import { MockBehaviorConfig } from "../../../test/mock-behavior-config";
+import { MockCursorEvent } from "../../../test/mock-cursor-event";
 import { ClickBoundingBoxBehavior } from "../../click-bounding-box.behavior";
 import { PixelDistanceBehavior } from "../../pixel-distance.behavior";
 import { FeatureAtPointerEventBehavior } from "./feature-at-pointer-event.behavior";
@@ -14,7 +14,7 @@ import { FeatureAtPointerEventBehavior } from "./feature-at-pointer-event.behavi
 describe("FeatureAtPointerEventBehavior", () => {
 	describe("constructor", () => {
 		it("constructs", () => {
-			const config = mockBehaviorConfig("test");
+			const config = MockBehaviorConfig("test");
 			new FeatureAtPointerEventBehavior(
 				config,
 				new ClickBoundingBoxBehavior(config),
@@ -24,11 +24,11 @@ describe("FeatureAtPointerEventBehavior", () => {
 	});
 
 	describe("api", () => {
-		let config: ReturnType<typeof mockBehaviorConfig>;
+		let config: ReturnType<typeof MockBehaviorConfig>;
 		let featureAtPointerEventBehavior: FeatureAtPointerEventBehavior;
 
 		beforeEach(() => {
-			config = mockBehaviorConfig("test");
+			config = MockBehaviorConfig("test");
 			featureAtPointerEventBehavior = new FeatureAtPointerEventBehavior(
 				config,
 				new ClickBoundingBoxBehavior(config),
@@ -39,7 +39,7 @@ describe("FeatureAtPointerEventBehavior", () => {
 		describe("find", () => {
 			it("returns nothing if nothing in store", () => {
 				const result = featureAtPointerEventBehavior.find(
-					mockDrawEvent(),
+					MockCursorEvent({ lng: 0, lat: 0 }),
 					false,
 				);
 				expect(result).toStrictEqual({
@@ -62,7 +62,7 @@ describe("FeatureAtPointerEventBehavior", () => {
 				]);
 
 				const result = featureAtPointerEventBehavior.find(
-					mockDrawEvent(),
+					MockCursorEvent({ lng: 0, lat: 0 }),
 					false,
 				);
 
@@ -78,7 +78,7 @@ describe("FeatureAtPointerEventBehavior", () => {
 				createStorePoint(config);
 
 				const result = featureAtPointerEventBehavior.find(
-					mockDrawEvent(),
+					MockCursorEvent({ lng: 0, lat: 0 }),
 					false,
 				);
 
@@ -92,7 +92,7 @@ describe("FeatureAtPointerEventBehavior", () => {
 				createStoreLineString(config);
 
 				const result = featureAtPointerEventBehavior.find(
-					mockDrawEvent(),
+					MockCursorEvent({ lng: 0, lat: 0 }),
 					false,
 				);
 
@@ -106,7 +106,7 @@ describe("FeatureAtPointerEventBehavior", () => {
 				createStorePolygon(config);
 
 				const result = featureAtPointerEventBehavior.find(
-					mockDrawEvent(),
+					MockCursorEvent({ lng: 0, lat: 0 }),
 					false,
 				);
 
@@ -120,7 +120,7 @@ describe("FeatureAtPointerEventBehavior", () => {
 				createStoreLineString(config);
 
 				const result = featureAtPointerEventBehavior.find(
-					mockDrawEvent(),
+					MockCursorEvent({ lng: 0, lat: 0 }),
 					false,
 				);
 
@@ -133,7 +133,7 @@ describe("FeatureAtPointerEventBehavior", () => {
 				createStorePolygon(config);
 
 				const result = featureAtPointerEventBehavior.find(
-					mockDrawEvent(),
+					MockCursorEvent({ lng: 0, lat: 0 }),
 					false,
 				);
 
@@ -146,7 +146,7 @@ describe("FeatureAtPointerEventBehavior", () => {
 				createStoreLineString(config);
 
 				const result = featureAtPointerEventBehavior.find(
-					mockDrawEvent(),
+					MockCursorEvent({ lng: 0, lat: 0 }),
 					false,
 				);
 
@@ -159,7 +159,7 @@ describe("FeatureAtPointerEventBehavior", () => {
 				createStorePoint(config);
 
 				const result = featureAtPointerEventBehavior.find(
-					mockDrawEvent(),
+					MockCursorEvent({ lng: 0, lat: 0 }),
 					false,
 				);
 
@@ -173,7 +173,7 @@ describe("FeatureAtPointerEventBehavior", () => {
 				createStoreMidPoint(config);
 
 				const result = featureAtPointerEventBehavior.find(
-					mockDrawEvent(),
+					MockCursorEvent({ lng: 0, lat: 0 }),
 					true,
 				);
 

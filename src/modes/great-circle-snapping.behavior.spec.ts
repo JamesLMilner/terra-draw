@@ -1,8 +1,6 @@
 import { createStoreLineString } from "../test/create-store-features";
-import { mockBehaviorConfig } from "../test/mock-behavior-config";
-import { mockDrawEvent } from "../test/mock-mouse-event";
-import { mockProject } from "../test/mock-project";
-import { mockBoundingBoxUnproject } from "../test/mock-unproject";
+import { MockBehaviorConfig } from "../test/mock-behavior-config";
+import { MockCursorEvent } from "../test/mock-cursor-event";
 import { BehaviorConfig } from "./base.behavior";
 import { ClickBoundingBoxBehavior } from "./click-bounding-box.behavior";
 import { GreatCircleSnappingBehavior } from "./great-circle-snapping.behavior";
@@ -11,7 +9,7 @@ import { PixelDistanceBehavior } from "./pixel-distance.behavior";
 describe("GreatCircleSnappingBehavior", () => {
 	describe("constructor", () => {
 		it("constructs", () => {
-			const config = mockBehaviorConfig("test");
+			const config = MockBehaviorConfig("test");
 			new GreatCircleSnappingBehavior(
 				config,
 				new PixelDistanceBehavior(config),
@@ -25,7 +23,7 @@ describe("GreatCircleSnappingBehavior", () => {
 		let snappingBehavior: GreatCircleSnappingBehavior;
 
 		beforeEach(() => {
-			config = mockBehaviorConfig("test");
+			config = MockBehaviorConfig("test");
 			snappingBehavior = new GreatCircleSnappingBehavior(
 				config,
 				new PixelDistanceBehavior(config),
@@ -35,12 +33,8 @@ describe("GreatCircleSnappingBehavior", () => {
 
 		describe("getSnappableCoordinate", () => {
 			it("returns undefined if not snappable", () => {
-				// Mock the unproject to return a valid set
-				// of bbox coordinates
-				mockBoundingBoxUnproject(config.unproject as jest.Mock);
-
 				const snappedCoord = snappingBehavior.getSnappableCoordinate(
-					mockDrawEvent(),
+					MockCursorEvent({ lng: 0, lat: 0 }),
 					"mockId",
 				);
 
@@ -52,20 +46,19 @@ describe("GreatCircleSnappingBehavior", () => {
 				// creating an existing polygon
 				createStoreLineString(config);
 
-				// Mock the unproject to return a valid set
-				// of bbox coordinates
-				mockBoundingBoxUnproject(config.unproject as jest.Mock);
-
-				// Pixel distance will project each point to check the distance
-				// for snapping
-				mockProject(config.project as jest.Mock);
-
 				const snappedCoord = snappingBehavior.getSnappableCoordinate(
-					mockDrawEvent(),
+					MockCursorEvent({ lng: 0, lat: 0 }),
 					"currentId",
 				);
 
-				expect(snappedCoord).toStrictEqual([0, 1]);
+				expect(snappedCoord).toStrictEqual([0, 0]);
+
+				const snappedCoordTwo = snappingBehavior.getSnappableCoordinate(
+					MockCursorEvent({ lng: 0, lat: 1 }),
+					"currentId",
+				);
+
+				expect(snappedCoordTwo).toStrictEqual([0, 1]);
 			});
 		});
 	});

@@ -13,8 +13,8 @@ describe("Geometry", () => {
 							type: "Point",
 							coordinates: [17.138671875, 25.799891182088334],
 						},
-					} as any);
-				}).toThrowError();
+					} as unknown as Feature<Polygon>); // Force the compiler to accept the point as a polygon
+				}).toThrow();
 			});
 		});
 

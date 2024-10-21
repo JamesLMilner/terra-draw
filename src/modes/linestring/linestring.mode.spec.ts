@@ -1,7 +1,9 @@
 import { GeoJSONStore } from "../../store/store";
-import { getMockModeConfig } from "../../test/mock-config";
+import { MockModeConfig } from "../../test/mock-mode-config";
+import { MockCursorEvent } from "../../test/mock-cursor-event";
 import { ValidateNotSelfIntersecting } from "../../validations/not-self-intersecting.validation";
 import { TerraDrawLineStringMode } from "./linestring.mode";
+import { MockKeyboardEvent } from "../../test/mock-keyboard-event";
 
 describe("TerraDrawLineStringMode", () => {
 	describe("constructor", () => {
@@ -38,7 +40,7 @@ describe("TerraDrawLineStringMode", () => {
 		it("registers correctly", () => {
 			const lineStringMode = new TerraDrawLineStringMode();
 			expect(lineStringMode.state).toBe("unregistered");
-			lineStringMode.register(getMockModeConfig(lineStringMode.mode));
+			lineStringMode.register(MockModeConfig(lineStringMode.mode));
 			expect(lineStringMode.state).toBe("registered");
 		});
 
@@ -47,7 +49,7 @@ describe("TerraDrawLineStringMode", () => {
 
 			expect(() => {
 				lineStringMode.state = "started";
-			}).toThrowError();
+			}).toThrow();
 		});
 
 		it("stopping before not registering throws error", () => {
@@ -55,7 +57,7 @@ describe("TerraDrawLineStringMode", () => {
 
 			expect(() => {
 				lineStringMode.stop();
-			}).toThrowError();
+			}).toThrow();
 		});
 
 		it("starting before not registering throws error", () => {
@@ -63,7 +65,7 @@ describe("TerraDrawLineStringMode", () => {
 
 			expect(() => {
 				lineStringMode.start();
-			}).toThrowError();
+			}).toThrow();
 		});
 
 		it("starting before not registering throws error", () => {
@@ -71,22 +73,22 @@ describe("TerraDrawLineStringMode", () => {
 
 			expect(() => {
 				lineStringMode.start();
-			}).toThrowError();
+			}).toThrow();
 		});
 
 		it("registering multiple times throws an error", () => {
 			const lineStringMode = new TerraDrawLineStringMode();
 
 			expect(() => {
-				lineStringMode.register(getMockModeConfig(lineStringMode.mode));
-				lineStringMode.register(getMockModeConfig(lineStringMode.mode));
-			}).toThrowError();
+				lineStringMode.register(MockModeConfig(lineStringMode.mode));
+				lineStringMode.register(MockModeConfig(lineStringMode.mode));
+			}).toThrow();
 		});
 
 		it("can start correctly", () => {
 			const lineStringMode = new TerraDrawLineStringMode();
 
-			lineStringMode.register(getMockModeConfig(lineStringMode.mode));
+			lineStringMode.register(MockModeConfig(lineStringMode.mode));
 			lineStringMode.start();
 
 			expect(lineStringMode.state).toBe("started");
@@ -95,7 +97,7 @@ describe("TerraDrawLineStringMode", () => {
 		it("can stop correctly", () => {
 			const lineStringMode = new TerraDrawLineStringMode();
 
-			lineStringMode.register(getMockModeConfig(lineStringMode.mode));
+			lineStringMode.register(MockModeConfig(lineStringMode.mode));
 			lineStringMode.start();
 			lineStringMode.stop();
 
@@ -110,7 +112,7 @@ describe("TerraDrawLineStringMode", () => {
 
 		beforeEach(() => {
 			lineStringMode = new TerraDrawLineStringMode();
-			const mockConfig = getMockModeConfig(lineStringMode.mode);
+			const mockConfig = MockModeConfig(lineStringMode.mode);
 			onChange = mockConfig.onChange;
 			store = mockConfig.store;
 
@@ -119,36 +121,15 @@ describe("TerraDrawLineStringMode", () => {
 		});
 
 		it("does nothing if no clicks have occurred ", () => {
-			lineStringMode.onMouseMove({
-				lng: 0,
-				lat: 0,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			lineStringMode.onMouseMove(MockCursorEvent({ lng: 0, lat: 0 }));
 
 			expect(onChange).not.toHaveBeenCalled();
 		});
 
 		it("updates the coordinate to the mouse position if a coordinate has been created", () => {
-			lineStringMode.onClick({
-				lng: 0,
-				lat: 0,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			lineStringMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
-			lineStringMode.onMouseMove({
-				lng: 1,
-				lat: 1,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			lineStringMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
 
 			expect(onChange).toHaveBeenCalledTimes(2);
 
@@ -166,27 +147,19 @@ describe("TerraDrawLineStringMode", () => {
 		let lineStringMode: TerraDrawLineStringMode;
 		let onChange: jest.Mock;
 		let store: GeoJSONStore;
-		let project: jest.Mock;
 
 		beforeEach(() => {
 			lineStringMode = new TerraDrawLineStringMode();
-			const mockConfig = getMockModeConfig(lineStringMode.mode);
+			const mockConfig = MockModeConfig(lineStringMode.mode);
 			onChange = mockConfig.onChange;
 			store = mockConfig.store;
-			project = mockConfig.project;
+
 			lineStringMode.register(mockConfig);
 			lineStringMode.start();
 		});
 
 		it("creates two identical coordinates on click", () => {
-			lineStringMode.onClick({
-				lng: 0,
-				lat: 0,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			lineStringMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
 			expect(onChange).toHaveBeenCalledTimes(1);
 
@@ -200,32 +173,11 @@ describe("TerraDrawLineStringMode", () => {
 		});
 
 		it("creates two additional identical coordinates on second click", () => {
-			lineStringMode.onClick({
-				lng: 0,
-				lat: 0,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			lineStringMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
-			lineStringMode.onMouseMove({
-				lng: 1,
-				lat: 1,
-				containerX: 1,
-				containerY: 1,
-				button: "left",
-				heldKeys: [],
-			});
+			lineStringMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
 
-			lineStringMode.onClick({
-				lng: 1,
-				lat: 1,
-				containerX: 1,
-				containerY: 1,
-				button: "left",
-				heldKeys: [],
-			});
+			lineStringMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
 
 			expect(onChange).toHaveBeenCalledTimes(4);
 
@@ -242,37 +194,11 @@ describe("TerraDrawLineStringMode", () => {
 		});
 
 		it("finishes the line on the the third click", () => {
-			project.mockReturnValueOnce({ x: 50, y: 50 });
-			project.mockReturnValueOnce({ x: 50, y: 50 });
-			project.mockReturnValueOnce({ x: 100, y: 100 });
-			project.mockReturnValueOnce({ x: 100, y: 100 });
+			lineStringMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
-			lineStringMode.onClick({
-				lng: 0,
-				lat: 0,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			lineStringMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
 
-			lineStringMode.onMouseMove({
-				lng: 1,
-				lat: 1,
-				containerX: 50,
-				containerY: 50,
-				button: "left",
-				heldKeys: [],
-			});
-
-			lineStringMode.onClick({
-				lng: 1,
-				lat: 1,
-				containerX: 50,
-				containerY: 50,
-				button: "left",
-				heldKeys: [],
-			});
+			lineStringMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
 
 			let features = store.copyAll();
 
@@ -287,34 +213,13 @@ describe("TerraDrawLineStringMode", () => {
 
 			expect(features[1].geometry.coordinates).toStrictEqual([1, 1]);
 
-			lineStringMode.onMouseMove({
-				lng: 2,
-				lat: 2,
-				containerX: 100,
-				containerY: 100,
-				button: "left",
-				heldKeys: [],
-			});
+			lineStringMode.onMouseMove(MockCursorEvent({ lng: 2, lat: 2 }));
 
-			lineStringMode.onClick({
-				lng: 2,
-				lat: 2,
-				containerX: 100,
-				containerY: 100,
-				button: "left",
-				heldKeys: [],
-			});
+			lineStringMode.onClick(MockCursorEvent({ lng: 2, lat: 2 }));
 
 			expect(onChange).not.toHaveBeenCalledWith([expect.any(String)], "delete");
 
-			lineStringMode.onClick({
-				lng: 2,
-				lat: 2,
-				containerX: 100,
-				containerY: 100,
-				button: "left",
-				heldKeys: [],
-			});
+			lineStringMode.onClick(MockCursorEvent({ lng: 2, lat: 2 }));
 
 			expect(onChange).toHaveBeenCalledTimes(9);
 
@@ -335,6 +240,73 @@ describe("TerraDrawLineStringMode", () => {
 		});
 
 		describe("validations", () => {
+			it("does create a line if it has intersections and no validation provided", () => {
+				lineStringMode = new TerraDrawLineStringMode();
+
+				const mockConfig = MockModeConfig(lineStringMode.mode);
+				onChange = mockConfig.onChange;
+				store = mockConfig.store;
+
+				lineStringMode.register(mockConfig);
+				lineStringMode.start();
+
+				lineStringMode.onClick(
+					MockCursorEvent({
+						lng: 6.50390625,
+						lat: 32.99023555965106,
+					}),
+				);
+
+				lineStringMode.onMouseMove(
+					MockCursorEvent({
+						lng: -9.931640625,
+						lat: 5.090944175033399,
+					}),
+				);
+
+				lineStringMode.onClick(
+					MockCursorEvent({
+						lng: -9.931640625,
+						lat: 5.090944175033399,
+					}),
+				);
+
+				lineStringMode.onMouseMove(
+					MockCursorEvent({
+						lng: 19.86328125,
+						lat: 2.0210651187669897,
+					}),
+				);
+
+				lineStringMode.onClick(
+					MockCursorEvent({
+						lng: 19.86328125,
+						lat: 2.0210651187669897,
+					}),
+				);
+
+				// This point is causing self intersection
+				lineStringMode.onMouseMove(
+					MockCursorEvent({
+						lng: -8.173828125,
+						lat: 24.367113562651262,
+					}),
+				);
+
+				expect(onChange).toHaveBeenCalledTimes(7);
+
+				lineStringMode.onClick(
+					MockCursorEvent({
+						lng: -8.173828125,
+						lat: 24.367113562651262,
+					}),
+				);
+
+				// Update geometry IS called because
+				// we are not validating for self intersections
+				expect(onChange).toHaveBeenCalledTimes(8);
+			});
+
 			it("does not create a line if it has intersections and validate returns false", () => {
 				lineStringMode = new TerraDrawLineStringMode({
 					validation: (feature, { updateType }) => {
@@ -345,85 +317,64 @@ describe("TerraDrawLineStringMode", () => {
 					},
 				});
 
-				const mockConfig = getMockModeConfig(lineStringMode.mode);
+				const mockConfig = MockModeConfig(lineStringMode.mode);
 				onChange = mockConfig.onChange;
 				store = mockConfig.store;
-				project = mockConfig.project;
+
 				lineStringMode.register(mockConfig);
 				lineStringMode.start();
 
-				// We don't want there to be a closing click, so we
-				// make the distances between points huge (much large than 40 pixels)
-				project.mockImplementation((lng, lat) => ({
-					x: lng * 1000,
-					y: lat * 1000,
-				}));
+				lineStringMode.onClick(
+					MockCursorEvent({
+						lng: 6.50390625,
+						lat: 32.99023555965106,
+					}),
+				);
 
-				lineStringMode.onClick({
-					lng: 6.50390625,
-					lat: 32.99023555965106,
-					containerX: 6.50390625,
-					containerY: 32.99023555965106,
-					button: "left",
-					heldKeys: [],
-				});
+				lineStringMode.onMouseMove(
+					MockCursorEvent({
+						lng: -9.931640625,
+						lat: 5.090944175033399,
+					}),
+				);
 
-				lineStringMode.onMouseMove({
-					lng: -9.931640625,
-					lat: 5.090944175033399,
-					containerX: -9.931640625,
-					containerY: 5.090944175033399,
-					button: "left",
-					heldKeys: [],
-				});
+				lineStringMode.onClick(
+					MockCursorEvent({
+						lng: -9.931640625,
+						lat: 5.090944175033399,
+					}),
+				);
 
-				lineStringMode.onClick({
-					lng: -9.931640625,
-					lat: 5.090944175033399,
-					containerX: -9.931640625,
-					containerY: 5.090944175033399,
-					button: "left",
-					heldKeys: [],
-				});
+				lineStringMode.onMouseMove(
+					MockCursorEvent({
+						lng: 19.86328125,
+						lat: 2.0210651187669897,
+					}),
+				);
 
-				lineStringMode.onMouseMove({
-					lng: 19.86328125,
-					lat: 2.0210651187669897,
-					containerX: 19.86328125,
-					containerY: 2.0210651187669897,
-					button: "left",
-					heldKeys: [],
-				});
-
-				lineStringMode.onClick({
-					lng: 19.86328125,
-					lat: 2.0210651187669897,
-					containerX: 19.86328125,
-					containerY: 2.0210651187669897,
-					button: "left",
-					heldKeys: [],
-				});
+				lineStringMode.onClick(
+					MockCursorEvent({
+						lng: 19.86328125,
+						lat: 2.0210651187669897,
+					}),
+				);
 
 				// This point is causing self intersection
-				lineStringMode.onMouseMove({
-					lng: -8.173828125,
-					lat: 24.367113562651262,
-					containerX: -8.173828125,
-					containerY: 24.367113562651262,
-					button: "left",
-					heldKeys: [],
-				});
+				lineStringMode.onMouseMove(
+					MockCursorEvent({
+						lng: -8.173828125,
+						lat: 24.367113562651262,
+					}),
+				);
 
 				expect(onChange).toHaveBeenCalledTimes(7);
 
-				lineStringMode.onClick({
-					lng: -8.173828125,
-					lat: 24.367113562651262,
-					containerX: -8.173828125,
-					containerY: 24.367113562651262,
-					button: "left",
-					heldKeys: [],
-				});
+				lineStringMode.onClick(
+					MockCursorEvent({
+						lng: -8.173828125,
+						lat: 24.367113562651262,
+					}),
+				);
 
 				// Update geometry is NOT called because
 				// there is a self intersection
@@ -440,44 +391,18 @@ describe("TerraDrawLineStringMode", () => {
 					},
 				});
 
-				const mockConfig = getMockModeConfig(lineStringMode.mode);
+				const mockConfig = MockModeConfig(lineStringMode.mode);
 				onChange = mockConfig.onChange;
 				store = mockConfig.store;
-				project = mockConfig.project;
+
 				lineStringMode.register(mockConfig);
 				lineStringMode.start();
 
-				project.mockReturnValueOnce({ x: 50, y: 50 });
-				project.mockReturnValueOnce({ x: 50, y: 50 });
-				project.mockReturnValueOnce({ x: 100, y: 100 });
-				project.mockReturnValueOnce({ x: 100, y: 100 });
+				lineStringMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
-				lineStringMode.onClick({
-					lng: 0,
-					lat: 0,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				lineStringMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
 
-				lineStringMode.onMouseMove({
-					lng: 1,
-					lat: 1,
-					containerX: 50,
-					containerY: 50,
-					button: "left",
-					heldKeys: [],
-				});
-
-				lineStringMode.onClick({
-					lng: 1,
-					lat: 1,
-					containerX: 50,
-					containerY: 50,
-					button: "left",
-					heldKeys: [],
-				});
+				lineStringMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
 
 				let features = store.copyAll();
 
@@ -492,37 +417,16 @@ describe("TerraDrawLineStringMode", () => {
 
 				expect(features[1].geometry.coordinates).toStrictEqual([1, 1]);
 
-				lineStringMode.onMouseMove({
-					lng: 2,
-					lat: 2,
-					containerX: 100,
-					containerY: 100,
-					button: "left",
-					heldKeys: [],
-				});
+				lineStringMode.onMouseMove(MockCursorEvent({ lng: 2, lat: 2 }));
 
-				lineStringMode.onClick({
-					lng: 2,
-					lat: 2,
-					containerX: 100,
-					containerY: 100,
-					button: "left",
-					heldKeys: [],
-				});
+				lineStringMode.onClick(MockCursorEvent({ lng: 2, lat: 2 }));
 
 				expect(onChange).not.toHaveBeenCalledWith(
 					[expect.any(String)],
 					"delete",
 				);
 
-				lineStringMode.onClick({
-					lng: 2,
-					lat: 2,
-					containerX: 100,
-					containerY: 100,
-					button: "left",
-					heldKeys: [],
-				});
+				lineStringMode.onClick(MockCursorEvent({ lng: 2, lat: 2 }));
 
 				expect(onChange).toHaveBeenCalledTimes(9);
 
@@ -549,46 +453,29 @@ describe("TerraDrawLineStringMode", () => {
 		let onChange: jest.Mock;
 		let onFinish: jest.Mock;
 		let store: GeoJSONStore;
-		let project: jest.Mock;
 
 		beforeEach(() => {
 			lineStringMode = new TerraDrawLineStringMode();
-			const mockConfig = getMockModeConfig(lineStringMode.mode);
+			const mockConfig = MockModeConfig(lineStringMode.mode);
 			onChange = mockConfig.onChange;
 			onFinish = mockConfig.onFinish;
 			store = mockConfig.store;
-			project = mockConfig.project;
 			lineStringMode.register(mockConfig);
 			lineStringMode.start();
 		});
 
 		describe("cancel", () => {
 			it("does nothing when no line is present", () => {
-				lineStringMode.onKeyUp({
-					key: "Escape",
-					preventDefault: jest.fn(),
-					heldKeys: [],
-				});
+				lineStringMode.onKeyUp(MockKeyboardEvent({ key: "Escape" }));
 			});
 
 			it("deletes the line when currently editing", () => {
-				lineStringMode.onClick({
-					lng: 0,
-					lat: 0,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				lineStringMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
 				let features = store.copyAll();
 				expect(features.length).toBe(1);
 
-				lineStringMode.onKeyUp({
-					key: "Escape",
-					preventDefault: jest.fn(),
-					heldKeys: [],
-				});
+				lineStringMode.onKeyUp(MockKeyboardEvent({ key: "Escape" }));
 
 				features = store.copyAll();
 				expect(features.length).toBe(0);
@@ -597,37 +484,11 @@ describe("TerraDrawLineStringMode", () => {
 
 		describe("finish", () => {
 			it("finishes the line on finish key press", () => {
-				project.mockReturnValueOnce({ x: 50, y: 50 });
-				project.mockReturnValueOnce({ x: 50, y: 50 });
-				project.mockReturnValueOnce({ x: 100, y: 100 });
-				project.mockReturnValueOnce({ x: 100, y: 100 });
+				lineStringMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
-				lineStringMode.onClick({
-					lng: 0,
-					lat: 0,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				lineStringMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
 
-				lineStringMode.onMouseMove({
-					lng: 1,
-					lat: 1,
-					containerX: 50,
-					containerY: 50,
-					button: "left",
-					heldKeys: [],
-				});
-
-				lineStringMode.onClick({
-					lng: 1,
-					lat: 1,
-					containerX: 50,
-					containerY: 50,
-					button: "left",
-					heldKeys: [],
-				});
+				lineStringMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
 
 				let features = store.copyAll();
 
@@ -642,34 +503,16 @@ describe("TerraDrawLineStringMode", () => {
 
 				expect(features[1].geometry.coordinates).toStrictEqual([1, 1]);
 
-				lineStringMode.onMouseMove({
-					lng: 2,
-					lat: 2,
-					containerX: 100,
-					containerY: 100,
-					button: "left",
-					heldKeys: [],
-				});
+				lineStringMode.onMouseMove(MockCursorEvent({ lng: 2, lat: 2 }));
 
-				lineStringMode.onClick({
-					lng: 2,
-					lat: 2,
-					containerX: 100,
-					containerY: 100,
-					button: "left",
-					heldKeys: [],
-				});
+				lineStringMode.onClick(MockCursorEvent({ lng: 2, lat: 2 }));
 
 				expect(onChange).not.toHaveBeenCalledWith(
 					[expect.any(String)],
 					"delete",
 				);
 
-				lineStringMode.onKeyUp({
-					key: "Enter",
-					preventDefault: jest.fn(),
-					heldKeys: [],
-				});
+				lineStringMode.onKeyUp(MockKeyboardEvent({ key: "Enter" }));
 
 				expect(onChange).toHaveBeenCalledTimes(8);
 
@@ -697,44 +540,18 @@ describe("TerraDrawLineStringMode", () => {
 
 			it("does not finish linestring when finish is set to null", () => {
 				lineStringMode = new TerraDrawLineStringMode({ keyEvents: null });
-				const mockConfig = getMockModeConfig(lineStringMode.mode);
+				const mockConfig = MockModeConfig(lineStringMode.mode);
 				onChange = mockConfig.onChange;
 				store = mockConfig.store;
-				project = mockConfig.project;
+
 				lineStringMode.register(mockConfig);
 				lineStringMode.start();
 
-				project.mockReturnValueOnce({ x: 50, y: 50 });
-				project.mockReturnValueOnce({ x: 50, y: 50 });
-				project.mockReturnValueOnce({ x: 100, y: 100 });
-				project.mockReturnValueOnce({ x: 100, y: 100 });
+				lineStringMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
-				lineStringMode.onClick({
-					lng: 0,
-					lat: 0,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				lineStringMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
 
-				lineStringMode.onMouseMove({
-					lng: 1,
-					lat: 1,
-					containerX: 50,
-					containerY: 50,
-					button: "left",
-					heldKeys: [],
-				});
-
-				lineStringMode.onClick({
-					lng: 1,
-					lat: 1,
-					containerX: 50,
-					containerY: 50,
-					button: "left",
-					heldKeys: [],
-				});
+				lineStringMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
 
 				let features = store.copyAll();
 
@@ -749,34 +566,16 @@ describe("TerraDrawLineStringMode", () => {
 
 				expect(features[1].geometry.coordinates).toStrictEqual([1, 1]);
 
-				lineStringMode.onMouseMove({
-					lng: 2,
-					lat: 2,
-					containerX: 100,
-					containerY: 100,
-					button: "left",
-					heldKeys: [],
-				});
+				lineStringMode.onMouseMove(MockCursorEvent({ lng: 2, lat: 2 }));
 
-				lineStringMode.onClick({
-					lng: 2,
-					lat: 2,
-					containerX: 100,
-					containerY: 100,
-					button: "left",
-					heldKeys: [],
-				});
+				lineStringMode.onClick(MockCursorEvent({ lng: 2, lat: 2 }));
 
 				expect(onChange).not.toHaveBeenCalledWith(
 					[expect.any(String)],
 					"delete",
 				);
 
-				lineStringMode.onKeyUp({
-					key: "Enter",
-					preventDefault: jest.fn(),
-					heldKeys: [],
-				});
+				lineStringMode.onKeyUp(MockKeyboardEvent({ key: "Escape" }));
 
 				expect(onChange).toHaveBeenCalledTimes(6);
 
@@ -802,7 +601,7 @@ describe("TerraDrawLineStringMode", () => {
 
 		beforeEach(() => {
 			lineStringMode = new TerraDrawLineStringMode();
-			const mockConfig = getMockModeConfig(lineStringMode.mode);
+			const mockConfig = MockModeConfig(lineStringMode.mode);
 			store = mockConfig.store;
 			lineStringMode.register(mockConfig);
 			lineStringMode.start();
@@ -811,18 +610,11 @@ describe("TerraDrawLineStringMode", () => {
 		it("does not throw error if feature has not been created ", () => {
 			expect(() => {
 				lineStringMode.cleanUp();
-			}).not.toThrowError();
+			}).not.toThrow();
 		});
 
 		it("cleans up correctly if drawing has started and there is no closing point", () => {
-			lineStringMode.onClick({
-				lng: 0,
-				lat: 0,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			lineStringMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
 			expect(store.copyAll().length).toBe(1);
 
@@ -833,32 +625,11 @@ describe("TerraDrawLineStringMode", () => {
 		});
 
 		it("cleans up correctly if drawing has started and there is a closing point", () => {
-			lineStringMode.onClick({
-				lng: 0,
-				lat: 0,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			lineStringMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
-			lineStringMode.onMouseMove({
-				lng: 1,
-				lat: 1,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			lineStringMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
 
-			lineStringMode.onClick({
-				lng: 1,
-				lat: 1,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			lineStringMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
 
 			expect(store.copyAll().length).toBe(2);
 
@@ -875,7 +646,7 @@ describe("TerraDrawLineStringMode", () => {
 
 			expect(() => {
 				lineStringMode.onDrag();
-			}).not.toThrowError();
+			}).not.toThrow();
 		});
 	});
 
@@ -885,7 +656,7 @@ describe("TerraDrawLineStringMode", () => {
 
 			expect(() => {
 				lineStringMode.onDragStart();
-			}).not.toThrowError();
+			}).not.toThrow();
 		});
 	});
 
@@ -895,31 +666,31 @@ describe("TerraDrawLineStringMode", () => {
 
 			expect(() => {
 				lineStringMode.onDragEnd();
-			}).not.toThrowError();
+			}).not.toThrow();
 		});
 	});
 
 	describe("styling", () => {
 		it("gets", () => {
 			const lineStringMode = new TerraDrawLineStringMode();
-			lineStringMode.register(getMockModeConfig(lineStringMode.mode));
+			lineStringMode.register(MockModeConfig(lineStringMode.mode));
 			expect(lineStringMode.styles).toStrictEqual({});
 		});
 
 		it("set fails if non valid styling", () => {
 			const lineStringMode = new TerraDrawLineStringMode();
-			lineStringMode.register(getMockModeConfig(lineStringMode.mode));
+			lineStringMode.register(MockModeConfig(lineStringMode.mode));
 
 			expect(() => {
 				(lineStringMode.styles as unknown) = "test";
-			}).toThrowError();
+			}).toThrow();
 
 			expect(lineStringMode.styles).toStrictEqual({});
 		});
 
 		it("sets", () => {
 			const lineStringMode = new TerraDrawLineStringMode();
-			lineStringMode.register(getMockModeConfig(lineStringMode.mode));
+			lineStringMode.register(MockModeConfig(lineStringMode.mode));
 
 			lineStringMode.styles = {
 				lineStringColor: "#ffffff",
@@ -1040,7 +811,7 @@ describe("TerraDrawLineStringMode", () => {
 					lineStringColor: "#ffffff",
 				},
 			});
-			lineStringMode.register(getMockModeConfig("linestring"));
+			lineStringMode.register(MockModeConfig("linestring"));
 
 			expect(
 				lineStringMode.validateFeature({
@@ -1065,7 +836,7 @@ describe("TerraDrawLineStringMode", () => {
 					lineStringColor: "#ffffff",
 				},
 			});
-			lineStringMode.register(getMockModeConfig("linestring"));
+			lineStringMode.register(MockModeConfig("linestring"));
 
 			expect(
 				lineStringMode.validateFeature({
@@ -1096,7 +867,7 @@ describe("TerraDrawLineStringMode", () => {
 					lineStringColor: "#ffffff",
 				},
 			});
-			lineStringMode.register(getMockModeConfig("linestring"));
+			lineStringMode.register(MockModeConfig("linestring"));
 
 			expect(
 				lineStringMode.validateFeature({

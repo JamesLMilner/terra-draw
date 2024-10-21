@@ -1,6 +1,8 @@
 import { GeoJSONStore } from "../../store/store";
-import { getMockModeConfig } from "../../test/mock-config";
+import { MockModeConfig } from "../../test/mock-mode-config";
+import { MockCursorEvent } from "../../test/mock-cursor-event";
 import { TerraDrawRectangleMode } from "./rectangle.mode";
+import { MockKeyboardEvent } from "../../test/mock-keyboard-event";
 
 describe("TerraDrawRectangleMode", () => {
 	describe("constructor", () => {
@@ -40,7 +42,7 @@ describe("TerraDrawRectangleMode", () => {
 		it("registers correctly", () => {
 			const rectangleMode = new TerraDrawRectangleMode();
 			expect(rectangleMode.state).toBe("unregistered");
-			rectangleMode.register(getMockModeConfig(rectangleMode.mode));
+			rectangleMode.register(MockModeConfig(rectangleMode.mode));
 			expect(rectangleMode.state).toBe("registered");
 		});
 
@@ -49,7 +51,7 @@ describe("TerraDrawRectangleMode", () => {
 
 			expect(() => {
 				rectangleMode.state = "started";
-			}).toThrowError();
+			}).toThrow();
 		});
 
 		it("stopping before not registering throws error", () => {
@@ -57,7 +59,7 @@ describe("TerraDrawRectangleMode", () => {
 
 			expect(() => {
 				rectangleMode.stop();
-			}).toThrowError();
+			}).toThrow();
 		});
 
 		it("starting before not registering throws error", () => {
@@ -65,7 +67,7 @@ describe("TerraDrawRectangleMode", () => {
 
 			expect(() => {
 				rectangleMode.start();
-			}).toThrowError();
+			}).toThrow();
 		});
 
 		it("starting before not registering throws error", () => {
@@ -73,22 +75,22 @@ describe("TerraDrawRectangleMode", () => {
 
 			expect(() => {
 				rectangleMode.start();
-			}).toThrowError();
+			}).toThrow();
 		});
 
 		it("registering multiple times throws an error", () => {
 			const rectangleMode = new TerraDrawRectangleMode();
 
 			expect(() => {
-				rectangleMode.register(getMockModeConfig(rectangleMode.mode));
-				rectangleMode.register(getMockModeConfig(rectangleMode.mode));
-			}).toThrowError();
+				rectangleMode.register(MockModeConfig(rectangleMode.mode));
+				rectangleMode.register(MockModeConfig(rectangleMode.mode));
+			}).toThrow();
 		});
 
 		it("can start correctly", () => {
 			const rectangleMode = new TerraDrawRectangleMode();
 
-			rectangleMode.register(getMockModeConfig(rectangleMode.mode));
+			rectangleMode.register(MockModeConfig(rectangleMode.mode));
 			rectangleMode.start();
 
 			expect(rectangleMode.state).toBe("started");
@@ -97,7 +99,7 @@ describe("TerraDrawRectangleMode", () => {
 		it("can stop correctly", () => {
 			const rectangleMode = new TerraDrawRectangleMode();
 
-			rectangleMode.register(getMockModeConfig(rectangleMode.mode));
+			rectangleMode.register(MockModeConfig(rectangleMode.mode));
 			rectangleMode.start();
 			rectangleMode.stop();
 
@@ -119,20 +121,13 @@ describe("TerraDrawRectangleMode", () => {
 
 		it("throws an error if not registered", () => {
 			expect(() => {
-				rectangleMode.onClick({
-					lng: 0,
-					lat: 0,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
-			}).toThrowError();
+				rectangleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			}).toThrow();
 		});
 
 		describe("registered", () => {
 			beforeEach(() => {
-				const mockConfig = getMockModeConfig(rectangleMode.mode);
+				const mockConfig = MockModeConfig(rectangleMode.mode);
 
 				store = mockConfig.store;
 				onChange = mockConfig.onChange;
@@ -142,40 +137,19 @@ describe("TerraDrawRectangleMode", () => {
 				rectangleMode.start();
 			});
 			it("adds a rectangle to store if registered", () => {
-				rectangleMode.onClick({
-					lng: 0,
-					lat: 0,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				rectangleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
 				expect(onChange).toHaveBeenCalledTimes(1);
 				expect(onChange).toHaveBeenCalledWith([expect.any(String)], "create");
 			});
 
 			it("finishes drawing rectangle on second click", () => {
-				rectangleMode.onClick({
-					lng: 0,
-					lat: 0,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				rectangleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
 				let features = store.copyAll();
 				expect(features.length).toBe(1);
 
-				rectangleMode.onClick({
-					lng: 0,
-					lat: 0,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				rectangleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
 				features = store.copyAll();
 				expect(features.length).toBe(1);
@@ -199,7 +173,7 @@ describe("TerraDrawRectangleMode", () => {
 
 		it("finishes drawing rectangle on finish key press", () => {
 			rectangleMode = new TerraDrawRectangleMode();
-			const mockConfig = getMockModeConfig(rectangleMode.mode);
+			const mockConfig = MockModeConfig(rectangleMode.mode);
 			store = new GeoJSONStore();
 			store = mockConfig.store;
 			onChange = mockConfig.onChange;
@@ -208,32 +182,14 @@ describe("TerraDrawRectangleMode", () => {
 			rectangleMode.register(mockConfig);
 			rectangleMode.start();
 
-			rectangleMode.onClick({
-				lng: 0,
-				lat: 0,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			rectangleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
 			let features = store.copyAll();
 			expect(features.length).toBe(1);
 
-			rectangleMode.onKeyUp({
-				key: "Enter",
-				preventDefault: jest.fn(),
-				heldKeys: [],
-			});
+			rectangleMode.onKeyUp(MockKeyboardEvent({ key: "Enter" }));
 
-			rectangleMode.onClick({
-				lng: 0,
-				lat: 0,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			rectangleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
 			features = store.copyAll();
 			// Two as the rectangle has been closed via enter
@@ -246,7 +202,7 @@ describe("TerraDrawRectangleMode", () => {
 
 		it("does not finish on key press when keyEvents null", () => {
 			rectangleMode = new TerraDrawRectangleMode({ keyEvents: null });
-			const mockConfig = getMockModeConfig(rectangleMode.mode);
+			const mockConfig = MockModeConfig(rectangleMode.mode);
 			store = new GeoJSONStore();
 			store = mockConfig.store;
 			onChange = mockConfig.onChange;
@@ -254,23 +210,12 @@ describe("TerraDrawRectangleMode", () => {
 			rectangleMode.register(mockConfig);
 			rectangleMode.start();
 
-			rectangleMode.onClick({
-				lng: 0,
-				lat: 0,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			rectangleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
 			let features = store.copyAll();
 			expect(features.length).toBe(1);
 
-			rectangleMode.onKeyUp({
-				key: "Enter",
-				preventDefault: jest.fn(),
-				heldKeys: [],
-			});
+			rectangleMode.onKeyUp(MockKeyboardEvent({ key: "Enter" }));
 
 			features = store.copyAll();
 
@@ -291,7 +236,7 @@ describe("TerraDrawRectangleMode", () => {
 		beforeEach(() => {
 			rectangleMode = new TerraDrawRectangleMode();
 
-			const mockConfig = getMockModeConfig(rectangleMode.mode);
+			const mockConfig = MockModeConfig(rectangleMode.mode);
 
 			store = mockConfig.store;
 			onChange = mockConfig.onChange;
@@ -301,14 +246,7 @@ describe("TerraDrawRectangleMode", () => {
 		});
 
 		it("updates the rectangle size", () => {
-			rectangleMode.onClick({
-				lng: 0,
-				lat: 0,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			rectangleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
 			expect(onChange).toHaveBeenCalledTimes(1);
 			expect(onChange).toHaveBeenNthCalledWith(
@@ -319,14 +257,7 @@ describe("TerraDrawRectangleMode", () => {
 
 			const feature = store.copyAll()[0];
 
-			rectangleMode.onMouseMove({
-				lng: 1,
-				lat: 1,
-				containerX: 1,
-				containerY: 1,
-				button: "left",
-				heldKeys: [],
-			});
+			rectangleMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
 			expect(onChange).toHaveBeenCalledTimes(2);
 			expect(onChange).toHaveBeenNthCalledWith(
 				2,
@@ -350,7 +281,7 @@ describe("TerraDrawRectangleMode", () => {
 		beforeEach(() => {
 			rectangleMode = new TerraDrawRectangleMode();
 
-			const mockConfig = getMockModeConfig(rectangleMode.mode);
+			const mockConfig = MockModeConfig(rectangleMode.mode);
 
 			onChange = mockConfig.onChange;
 
@@ -364,14 +295,7 @@ describe("TerraDrawRectangleMode", () => {
 		});
 
 		it("does delete if a rectangle has been created", () => {
-			rectangleMode.onClick({
-				lng: 0,
-				lat: 0,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			rectangleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
 			rectangleMode.cleanUp();
 
@@ -392,7 +316,7 @@ describe("TerraDrawRectangleMode", () => {
 			jest.resetAllMocks();
 			rectangleMode = new TerraDrawRectangleMode();
 
-			const mockConfig = getMockModeConfig(rectangleMode.mode);
+			const mockConfig = MockModeConfig(rectangleMode.mode);
 			store = mockConfig.store;
 			rectangleMode.register(mockConfig);
 			rectangleMode.start();
@@ -400,31 +324,16 @@ describe("TerraDrawRectangleMode", () => {
 
 		describe("cancel", () => {
 			it("does nothing when no rectangle is present", () => {
-				rectangleMode.onKeyUp({
-					key: "Escape",
-					preventDefault: jest.fn(),
-					heldKeys: [],
-				});
+				rectangleMode.onKeyUp(MockKeyboardEvent({ key: "Escape" }));
 			});
 
 			it("deletes the rectangle when currently editing", () => {
-				rectangleMode.onClick({
-					lng: 0,
-					lat: 0,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				rectangleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
 				let features = store.copyAll();
 				expect(features.length).toBe(1);
 
-				rectangleMode.onKeyUp({
-					key: "Escape",
-					preventDefault: jest.fn(),
-					heldKeys: [],
-				});
+				rectangleMode.onKeyUp(MockKeyboardEvent({ key: "Escape" }));
 
 				features = store.copyAll();
 				expect(features.length).toBe(0);
@@ -438,7 +347,7 @@ describe("TerraDrawRectangleMode", () => {
 
 			expect(() => {
 				rectangleMode.onDrag();
-			}).not.toThrowError();
+			}).not.toThrow();
 		});
 	});
 
@@ -448,7 +357,7 @@ describe("TerraDrawRectangleMode", () => {
 
 			expect(() => {
 				rectangleMode.onDragStart();
-			}).not.toThrowError();
+			}).not.toThrow();
 		});
 	});
 
@@ -458,7 +367,7 @@ describe("TerraDrawRectangleMode", () => {
 
 			expect(() => {
 				rectangleMode.onDragEnd();
-			}).not.toThrowError();
+			}).not.toThrow();
 		});
 	});
 
@@ -522,7 +431,7 @@ describe("TerraDrawRectangleMode", () => {
 					fillOpacity: 0.5,
 				},
 			});
-			rectangleMode.register(getMockModeConfig("rectangle"));
+			rectangleMode.register(MockModeConfig("rectangle"));
 
 			expect(
 				rectangleMode.validateFeature({
@@ -550,7 +459,7 @@ describe("TerraDrawRectangleMode", () => {
 					fillOpacity: 0.5,
 				},
 			});
-			rectangleMode.register(getMockModeConfig("rectangle"));
+			rectangleMode.register(MockModeConfig("rectangle"));
 
 			expect(
 				rectangleMode.validateFeature({
@@ -582,7 +491,7 @@ describe("TerraDrawRectangleMode", () => {
 					return true;
 				},
 			});
-			rectangleMode.register(getMockModeConfig("rectangle"));
+			rectangleMode.register(MockModeConfig("rectangle"));
 
 			expect(
 				rectangleMode.validateFeature({
@@ -614,7 +523,7 @@ describe("TerraDrawRectangleMode", () => {
 					return false;
 				},
 			});
-			rectangleMode.register(getMockModeConfig("rectangle"));
+			rectangleMode.register(MockModeConfig("rectangle"));
 
 			expect(
 				rectangleMode.validateFeature({

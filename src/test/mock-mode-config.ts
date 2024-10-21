@@ -1,6 +1,6 @@
 import { GeoJSONStore } from "../store/store";
 
-export function getMockModeConfig(mode: string) {
+export function MockModeConfig(mode: string) {
 	return {
 		mode,
 		store: new GeoJSONStore(),
@@ -8,8 +8,8 @@ export function getMockModeConfig(mode: string) {
 		onChange: jest.fn(),
 		onSelect: jest.fn(),
 		onDeselect: jest.fn(),
-		project: jest.fn((lng, lat) => ({ x: lng, y: lat })),
-		unproject: jest.fn((x, y) => ({ lng: x, lat: y })),
+		project: jest.fn((lng, lat) => ({ x: lng * 40, y: lat * 40 })),
+		unproject: jest.fn((x, y) => ({ lng: x / 40, lat: y / 40 })),
 		setDoubleClickToZoom: jest.fn(),
 		onFinish: jest.fn(),
 		coordinatePrecision: 9,

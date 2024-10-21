@@ -3,13 +3,13 @@
  */
 import { TerraDrawAdapterStyling } from "../common";
 import { GeoJSONStoreFeatures } from "../store/store";
-import { createMockCallbacks } from "../test/mock-callbacks";
+import { MockCallbacks } from "../test/mock-callbacks";
 import {
-	createMockLineString,
-	createMockPoint,
-	createMockPolygonSquare,
+	MockLineString,
+	MockPoint,
+	MockPolygonSquare,
 } from "../test/mock-features";
-import { getMockPointerEvent } from "../test/mock-pointer-event";
+import { MockPointerEvent } from "../test/mock-pointer-event";
 import { TerraDrawGoogleMapsAdapter } from "./google-maps.adapter";
 
 const createMockGoogleMap = (overrides?: Partial<google.maps.Map>) => {
@@ -109,7 +109,7 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 					minPixelDragDistanceDrawing: 8,
 					coordinatePrecision: 9,
 				});
-			}).toThrowError();
+			}).toThrow();
 		});
 	});
 
@@ -138,7 +138,7 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 				map: mockMap,
 			});
 
-			const callbackMock = createMockCallbacks();
+			const callbackMock = MockCallbacks();
 			adapter.register(callbackMock);
 
 			expect(div.addEventListener).toHaveBeenCalledTimes(6);
@@ -209,7 +209,7 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 				map: mockMap,
 			});
 
-			adapter.register(createMockCallbacks());
+			adapter.register(MockCallbacks());
 
 			expect(removeListenerMock).not.toHaveBeenCalled();
 
@@ -237,9 +237,9 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 				map: mapMock,
 			});
 
-			adapter.register(createMockCallbacks());
+			adapter.register(MockCallbacks());
 
-			expect(adapter.getLngLatFromEvent(getMockPointerEvent())).toBeNull();
+			expect(adapter.getLngLatFromEvent(MockPointerEvent())).toBeNull();
 			expect(mapMock.getBounds).toHaveBeenCalled();
 		});
 
@@ -278,9 +278,9 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 				map: mapMock,
 			});
 
-			adapter.register(createMockCallbacks());
+			adapter.register(MockCallbacks());
 
-			expect(adapter.getLngLatFromEvent(getMockPointerEvent())).toBeNull();
+			expect(adapter.getLngLatFromEvent(MockPointerEvent())).toBeNull();
 			expect(getProjectionMock).toHaveBeenCalled();
 		});
 
@@ -327,9 +327,9 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 				map: mapMock,
 			});
 
-			adapter.register(createMockCallbacks());
+			adapter.register(MockCallbacks());
 
-			const lngLatFromEvent = adapter.getLngLatFromEvent(getMockPointerEvent());
+			const lngLatFromEvent = adapter.getLngLatFromEvent(MockPointerEvent());
 			expect(lngLatFromEvent?.lng).toEqual(testLng);
 			expect(lngLatFromEvent?.lat).toEqual(testLat);
 		});
@@ -354,7 +354,7 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 
 			expect(() => {
 				adapter.project(-1, -2);
-			}).toThrowError("cannot get overlay");
+			}).toThrow("cannot get overlay");
 
 			expect(mapMock.getBounds).not.toHaveBeenCalled();
 		});
@@ -375,11 +375,11 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 				map: mapMock,
 			});
 
-			adapter.register(createMockCallbacks());
+			adapter.register(MockCallbacks());
 
 			expect(() => {
 				adapter.project(-1, -2);
-			}).toThrowError("cannot get bounds");
+			}).toThrow("cannot get bounds");
 
 			expect(mapMock.getBounds).toHaveBeenCalled();
 		});
@@ -402,11 +402,11 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 				map: mapMock,
 			});
 
-			adapter.register(createMockCallbacks());
+			adapter.register(MockCallbacks());
 
 			expect(() => {
 				adapter.project(testLng, testLat);
-			}).toThrowError();
+			}).toThrow();
 
 			expect(getProjectionMock).toHaveBeenCalledTimes(1);
 		});
@@ -432,11 +432,11 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 				map: mapMock,
 			});
 
-			adapter.register(createMockCallbacks());
+			adapter.register(MockCallbacks());
 
 			expect(() => {
 				adapter.project(testLng, testLat);
-			}).toThrowError();
+			}).toThrow();
 
 			expect(getProjectionMock).toHaveBeenCalledTimes(1);
 			expect(fromLatLngToContainerPixelMock).toHaveBeenCalledTimes(1);
@@ -465,7 +465,7 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 				map: mapMock,
 			});
 
-			adapter.register(createMockCallbacks());
+			adapter.register(MockCallbacks());
 
 			const projected = adapter.project(testLng, testLat);
 
@@ -493,7 +493,7 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 
 			expect(() => {
 				adapter.unproject(50, 80);
-			}).toThrowError();
+			}).toThrow();
 
 			expect(getProjectionMock).not.toHaveBeenCalled();
 		});
@@ -512,11 +512,11 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 				map: createMockGoogleMap(),
 			});
 
-			adapter.register(createMockCallbacks());
+			adapter.register(MockCallbacks());
 
 			expect(() => {
 				adapter.unproject(-1, -2);
-			}).toThrowError();
+			}).toThrow();
 
 			expect(getProjectionMock).toHaveBeenCalled();
 		});
@@ -541,7 +541,7 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 				map: createMockGoogleMap(),
 			});
 
-			adapter.register(createMockCallbacks());
+			adapter.register(MockCallbacks());
 
 			const unprojected = adapter.unproject(50, 80);
 			expect(getProjectionMock).toHaveBeenCalledTimes(1);
@@ -660,7 +660,7 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 
 	describe("render", () => {
 		it("rejects updates to invalid features", () => {
-			const p1 = createMockPoint("point-1") as GeoJSONStoreFeatures;
+			const p1 = MockPoint("point-1") as GeoJSONStoreFeatures;
 			const mockMap = createMockGoogleMap({
 				data: {
 					addListener: () => {},
@@ -690,7 +690,7 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 				mockStyleDraw,
 			);
 
-			const p2 = createMockPoint("point-2") as GeoJSONStoreFeatures;
+			const p2 = MockPoint("point-2") as GeoJSONStoreFeatures;
 			p2.id = undefined;
 
 			expect(() => {
@@ -703,11 +703,11 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 					},
 					mockStyleDraw,
 				);
-			}).toThrowError();
+			}).toThrow();
 		});
 
 		it("rejects updates to unrecognized/out-of-sync features", () => {
-			const p1 = createMockPoint("point-1") as GeoJSONStoreFeatures;
+			const p1 = MockPoint("point-1") as GeoJSONStoreFeatures;
 			Object.assign(p1, { forEachProperty: () => {} });
 			Object.assign(p1, { setProperty: () => {} });
 			Object.assign(p1, { setGeometry: jest.fn() });
@@ -748,7 +748,7 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 			);
 
 			// Not present in map copy of state, will cause to throw
-			const p2 = createMockPoint("point-2") as GeoJSONStoreFeatures;
+			const p2 = MockPoint("point-2") as GeoJSONStoreFeatures;
 
 			expect(() => {
 				adapter.render(
@@ -760,21 +760,21 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 					},
 					mockStyleDraw,
 				);
-			}).toThrowError();
+			}).toThrow();
 
 			expect(getFeatureByIdMock).toHaveBeenCalledTimes(2);
 		});
 
 		describe("Point", () => {
 			it("adds and deletes features", () => {
-				const p1 = createMockPoint("point-1") as GeoJSONStoreFeatures;
-				const p2 = createMockPoint("point-2", 2, 4) as GeoJSONStoreFeatures;
+				const p1 = MockPoint("point-1") as GeoJSONStoreFeatures;
+				const p2 = MockPoint("point-2", 2, 4) as GeoJSONStoreFeatures;
 
 				verifyAddingAndDeletingFeature(p1, p2);
 			});
 
 			it("applies styles to added feature", () => {
-				const feature = createMockPoint("point-1") as GeoJSONStoreFeatures;
+				const feature = MockPoint("point-1") as GeoJSONStoreFeatures;
 				Object.assign(feature, {
 					getGeometry: jest.fn(() => ({
 						getType: () => "Point",
@@ -802,32 +802,26 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 			});
 
 			it("adds features on successive renders", () => {
-				const p1 = createMockPoint("point-1") as GeoJSONStoreFeatures;
+				const p1 = MockPoint("point-1") as GeoJSONStoreFeatures;
 				verifyAddingFeatureSecondRender(p1);
 			});
 
 			it("updates features on successive renders", () => {
-				const p1 = createMockPoint("point-1") as GeoJSONStoreFeatures;
+				const p1 = MockPoint("point-1") as GeoJSONStoreFeatures;
 				verifyUpdatesFeature(p1);
 			});
 		});
 
 		describe("LineString", () => {
 			it("adds and deletes features", () => {
-				const p1 = createMockLineString(
-					"line-string-1",
-				) as GeoJSONStoreFeatures;
-				const p2 = createMockLineString(
-					"line-string-2",
-				) as GeoJSONStoreFeatures;
+				const p1 = MockLineString("line-string-1") as GeoJSONStoreFeatures;
+				const p2 = MockLineString("line-string-2") as GeoJSONStoreFeatures;
 
 				verifyAddingAndDeletingFeature(p1, p2);
 			});
 
 			it("applies styles to added feature", () => {
-				const feature = createMockLineString(
-					"line-string-1",
-				) as GeoJSONStoreFeatures;
+				const feature = MockLineString("line-string-1") as GeoJSONStoreFeatures;
 				Object.assign(feature, {
 					getGeometry: jest.fn(() => ({
 						getType: () => "LineString",
@@ -851,36 +845,26 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 			});
 
 			it("adds features on successive renders", () => {
-				const p1 = createMockLineString(
-					"line-string-1",
-				) as GeoJSONStoreFeatures;
+				const p1 = MockLineString("line-string-1") as GeoJSONStoreFeatures;
 				verifyAddingFeatureSecondRender(p1);
 			});
 
 			it("updates features on successive renders", () => {
-				const p1 = createMockLineString(
-					"line-string-1",
-				) as GeoJSONStoreFeatures;
+				const p1 = MockLineString("line-string-1") as GeoJSONStoreFeatures;
 				verifyUpdatesFeature(p1);
 			});
 		});
 
 		describe("Polygon", () => {
 			it("adds and deletes features", () => {
-				const sq1 = createMockPolygonSquare("square-1") as GeoJSONStoreFeatures;
-				const sq2 = createMockPolygonSquare(
-					"square-2",
-					2,
-					4,
-				) as GeoJSONStoreFeatures;
+				const sq1 = MockPolygonSquare("square-1") as GeoJSONStoreFeatures;
+				const sq2 = MockPolygonSquare("square-2", 2, 4) as GeoJSONStoreFeatures;
 
 				verifyAddingAndDeletingFeature(sq1, sq2);
 			});
 
 			it("applies styles to added feature", () => {
-				const feature = createMockPolygonSquare(
-					"square-1",
-				) as GeoJSONStoreFeatures;
+				const feature = MockPolygonSquare("square-1") as GeoJSONStoreFeatures;
 				Object.assign(feature, {
 					getGeometry: jest.fn(() => ({
 						getType: () => "Polygon",
@@ -906,12 +890,12 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 			});
 
 			it("adds features on successive renders", () => {
-				const sq1 = createMockPolygonSquare("square-1") as GeoJSONStoreFeatures;
+				const sq1 = MockPolygonSquare("square-1") as GeoJSONStoreFeatures;
 				verifyAddingFeatureSecondRender(sq1);
 			});
 
 			it("updates features on successive renders", () => {
-				const sq1 = createMockPolygonSquare("square-1") as GeoJSONStoreFeatures;
+				const sq1 = MockPolygonSquare("square-1") as GeoJSONStoreFeatures;
 				verifyUpdatesFeature(sq1);
 			});
 		});

@@ -1,7 +1,8 @@
-import { Project } from "../../common";
 import { GeoJSONStore } from "../../store/store";
-import { getMockModeConfig } from "../../test/mock-config";
+import { MockModeConfig } from "../../test/mock-mode-config";
+import { MockCursorEvent } from "../../test/mock-cursor-event";
 import { TerraDrawFreehandMode } from "./freehand.mode";
+import { MockKeyboardEvent } from "../../test/mock-keyboard-event";
 
 describe("TerraDrawFreehandMode", () => {
 	describe("constructor", () => {
@@ -42,7 +43,7 @@ describe("TerraDrawFreehandMode", () => {
 		it("registers correctly", () => {
 			const freehandMode = new TerraDrawFreehandMode();
 			expect(freehandMode.state).toBe("unregistered");
-			freehandMode.register(getMockModeConfig(freehandMode.mode));
+			freehandMode.register(MockModeConfig(freehandMode.mode));
 			expect(freehandMode.state).toBe("registered");
 		});
 
@@ -51,7 +52,7 @@ describe("TerraDrawFreehandMode", () => {
 
 			expect(() => {
 				freehandMode.state = "started";
-			}).toThrowError();
+			}).toThrow();
 		});
 
 		it("stopping before not registering throws error", () => {
@@ -59,7 +60,7 @@ describe("TerraDrawFreehandMode", () => {
 
 			expect(() => {
 				freehandMode.stop();
-			}).toThrowError();
+			}).toThrow();
 		});
 
 		it("starting before not registering throws error", () => {
@@ -67,7 +68,7 @@ describe("TerraDrawFreehandMode", () => {
 
 			expect(() => {
 				freehandMode.start();
-			}).toThrowError();
+			}).toThrow();
 		});
 
 		it("starting before not registering throws error", () => {
@@ -75,22 +76,22 @@ describe("TerraDrawFreehandMode", () => {
 
 			expect(() => {
 				freehandMode.start();
-			}).toThrowError();
+			}).toThrow();
 		});
 
 		it("registering multiple times throws an error", () => {
 			const freehandMode = new TerraDrawFreehandMode();
 
 			expect(() => {
-				freehandMode.register(getMockModeConfig(freehandMode.mode));
-				freehandMode.register(getMockModeConfig(freehandMode.mode));
-			}).toThrowError();
+				freehandMode.register(MockModeConfig(freehandMode.mode));
+				freehandMode.register(MockModeConfig(freehandMode.mode));
+			}).toThrow();
 		});
 
 		it("can start correctly", () => {
 			const freehandMode = new TerraDrawFreehandMode();
 
-			freehandMode.register(getMockModeConfig(freehandMode.mode));
+			freehandMode.register(MockModeConfig(freehandMode.mode));
 			freehandMode.start();
 
 			expect(freehandMode.state).toBe("started");
@@ -99,7 +100,7 @@ describe("TerraDrawFreehandMode", () => {
 		it("can stop correctly", () => {
 			const freehandMode = new TerraDrawFreehandMode();
 
-			freehandMode.register(getMockModeConfig(freehandMode.mode));
+			freehandMode.register(MockModeConfig(freehandMode.mode));
 			freehandMode.start();
 			freehandMode.stop();
 
@@ -120,20 +121,13 @@ describe("TerraDrawFreehandMode", () => {
 
 		it("throws an error if not registered", () => {
 			expect(() => {
-				freehandMode.onClick({
-					lng: 0,
-					lat: 0,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
-			}).toThrowError();
+				freehandMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			}).toThrow();
 		});
 
 		describe("registered", () => {
 			beforeEach(() => {
-				const mockConfig = getMockModeConfig(freehandMode.mode);
+				const mockConfig = MockModeConfig(freehandMode.mode);
 				onChange = mockConfig.onChange;
 				store = mockConfig.store;
 				freehandMode.register(mockConfig);
@@ -141,14 +135,7 @@ describe("TerraDrawFreehandMode", () => {
 			});
 
 			it("adds a polygon and closing point to store if registered", () => {
-				freehandMode.onClick({
-					lng: 0,
-					lat: 0,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				freehandMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
 				expect(onChange).toHaveBeenCalledTimes(1);
 				expect(onChange).toHaveBeenCalledWith(
@@ -158,26 +145,12 @@ describe("TerraDrawFreehandMode", () => {
 			});
 
 			it("finishes drawing polygon on second click", () => {
-				freehandMode.onClick({
-					lng: 0,
-					lat: 0,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				freehandMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
 				let features = store.copyAll();
 				expect(features.length).toBe(2);
 
-				freehandMode.onClick({
-					lng: 0,
-					lat: 0,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				freehandMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
 				// No more closing coordinate so we drop to 1 feature
 				features = store.copyAll();
@@ -201,7 +174,7 @@ describe("TerraDrawFreehandMode", () => {
 				});
 				store = new GeoJSONStore();
 
-				const mockConfig = getMockModeConfig(freehandMode.mode);
+				const mockConfig = MockModeConfig(freehandMode.mode);
 				onChange = mockConfig.onChange;
 				onFinish = mockConfig.onFinish;
 				store = mockConfig.store;
@@ -212,26 +185,12 @@ describe("TerraDrawFreehandMode", () => {
 			it("does not finish drawing polygon on second click because validate returns false", () => {
 				valid = false;
 
-				freehandMode.onClick({
-					lng: 0,
-					lat: 0,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				freehandMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
 				let features = store.copyAll();
 				expect(features.length).toBe(2);
 
-				freehandMode.onClick({
-					lng: 0,
-					lat: 0,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				freehandMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
 				// Closing cooridnate should still exist
 				features = store.copyAll();
@@ -244,26 +203,12 @@ describe("TerraDrawFreehandMode", () => {
 			it("does finish drawing polygon on second click because validate returns true", () => {
 				valid = true;
 
-				freehandMode.onClick({
-					lng: 0,
-					lat: 0,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				freehandMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
 				let features = store.copyAll();
 				expect(features.length).toBe(2);
 
-				freehandMode.onClick({
-					lng: 0,
-					lat: 0,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				freehandMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
 				// Closing cooridnate should be removed
 				features = store.copyAll();
@@ -283,28 +228,19 @@ describe("TerraDrawFreehandMode", () => {
 		let freehandMode: TerraDrawFreehandMode;
 		let store: GeoJSONStore;
 		let onChange: jest.Mock;
-		let project: Project;
 
 		beforeEach(() => {
 			freehandMode = new TerraDrawFreehandMode();
 
-			const mockConfig = getMockModeConfig(freehandMode.mode);
+			const mockConfig = MockModeConfig(freehandMode.mode);
 			store = mockConfig.store;
 			onChange = mockConfig.onChange;
-			project = mockConfig.project;
 			freehandMode.register(mockConfig);
 			freehandMode.start();
 		});
 
 		it("updates the freehand polygon when the mouse cursor has moved a minimum amount", () => {
-			freehandMode.onClick({
-				lng: 0,
-				lat: 0,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			freehandMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
 			expect(onChange).toHaveBeenCalledTimes(1);
 			expect(onChange).toHaveBeenNthCalledWith(
@@ -315,25 +251,13 @@ describe("TerraDrawFreehandMode", () => {
 
 			const feature = store.copyAll()[0];
 
-			for (let i = 0; i < 5; i++) {
-				(project as jest.Mock).mockReturnValueOnce({
-					x: i * 20 - 20,
-					y: i * 20 - 20,
-				});
-
-				(project as jest.Mock).mockReturnValueOnce({
-					x: 1000,
-					y: 1000,
-				});
-
-				freehandMode.onMouseMove({
-					lng: i,
-					lat: i,
-					containerX: i * 20,
-					containerY: i * 20,
-					button: "left",
-					heldKeys: [],
-				});
+			for (let i = 1; i < 6; i++) {
+				freehandMode.onMouseMove(
+					MockCursorEvent({
+						lng: i,
+						lat: i,
+					}),
+				);
 			}
 
 			expect(onChange).toHaveBeenCalledTimes(6);
@@ -347,14 +271,7 @@ describe("TerraDrawFreehandMode", () => {
 		});
 
 		it("does nothing if no first click", () => {
-			freehandMode.onMouseMove({
-				lng: 1,
-				lat: 1,
-				containerX: 1,
-				containerY: 1,
-				button: "left",
-				heldKeys: [],
-			});
+			freehandMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
 
 			expect(onChange).toHaveBeenCalledTimes(0);
 		});
@@ -366,7 +283,7 @@ describe("TerraDrawFreehandMode", () => {
 
 		beforeEach(() => {
 			freehandMode = new TerraDrawFreehandMode();
-			const mockConfig = getMockModeConfig(freehandMode.mode);
+			const mockConfig = MockModeConfig(freehandMode.mode);
 			onChange = mockConfig.onChange;
 			freehandMode.register(mockConfig);
 			freehandMode.start();
@@ -378,14 +295,7 @@ describe("TerraDrawFreehandMode", () => {
 		});
 
 		it("does delete if a freehand has been created", () => {
-			freehandMode.onClick({
-				lng: 0,
-				lat: 0,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			freehandMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
 			freehandMode.cleanUp();
 
@@ -409,7 +319,7 @@ describe("TerraDrawFreehandMode", () => {
 
 			freehandMode = new TerraDrawFreehandMode();
 
-			const mockConfig = getMockModeConfig(freehandMode.mode);
+			const mockConfig = MockModeConfig(freehandMode.mode);
 			store = mockConfig.store;
 			onChange = mockConfig.onChange;
 			onFinish = mockConfig.onFinish;
@@ -419,31 +329,16 @@ describe("TerraDrawFreehandMode", () => {
 
 		describe("cancel", () => {
 			it("does nothing when no freehand is present", () => {
-				freehandMode.onKeyUp({
-					key: "Escape",
-					heldKeys: [],
-					preventDefault: jest.fn(),
-				});
+				freehandMode.onKeyUp(MockKeyboardEvent({ key: "Escape" }));
 			});
 
 			it("deletes the freehand when currently editing", () => {
-				freehandMode.onClick({
-					lng: 0,
-					lat: 0,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				freehandMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
 				let features = store.copyAll();
 				expect(features.length).toBe(2);
 
-				freehandMode.onKeyUp({
-					key: "Escape",
-					heldKeys: [],
-					preventDefault: jest.fn(),
-				});
+				freehandMode.onKeyUp(MockKeyboardEvent({ key: "Escape" }));
 
 				features = store.copyAll();
 				expect(features.length).toBe(0);
@@ -452,29 +347,18 @@ describe("TerraDrawFreehandMode", () => {
 			it("does not delete the freehand when currently editing if cancel is null", () => {
 				freehandMode = new TerraDrawFreehandMode({ keyEvents: null });
 
-				const mockConfig = getMockModeConfig(freehandMode.mode);
+				const mockConfig = MockModeConfig(freehandMode.mode);
 				store = mockConfig.store;
 				onChange = mockConfig.onChange;
 				freehandMode.register(mockConfig);
 				freehandMode.start();
 
-				freehandMode.onClick({
-					lng: 0,
-					lat: 0,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				freehandMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
 				let features = store.copyAll();
 				expect(features.length).toBe(2);
 
-				freehandMode.onKeyUp({
-					key: "Escape",
-					heldKeys: [],
-					preventDefault: jest.fn(),
-				});
+				freehandMode.onKeyUp(MockKeyboardEvent({ key: "Escape" }));
 
 				features = store.copyAll();
 				expect(features.length).toBe(2);
@@ -483,23 +367,12 @@ describe("TerraDrawFreehandMode", () => {
 
 		describe("finish", () => {
 			it("finishes drawing polygon on finish key press", () => {
-				freehandMode.onClick({
-					lng: 0,
-					lat: 0,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				freehandMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
 				let features = store.copyAll();
 				expect(features.length).toBe(2);
 
-				freehandMode.onKeyUp({
-					key: "Enter",
-					heldKeys: [],
-					preventDefault: jest.fn(),
-				});
+				freehandMode.onKeyUp(MockKeyboardEvent({ key: "Enter" }));
 
 				features = store.copyAll();
 				expect(features.length).toBe(1);
@@ -530,7 +403,7 @@ describe("TerraDrawFreehandMode", () => {
 
 			expect(() => {
 				freehandMode.onDrag();
-			}).not.toThrowError();
+			}).not.toThrow();
 		});
 	});
 
@@ -540,7 +413,7 @@ describe("TerraDrawFreehandMode", () => {
 
 			expect(() => {
 				freehandMode.onDragStart();
-			}).not.toThrowError();
+			}).not.toThrow();
 		});
 	});
 
@@ -550,7 +423,7 @@ describe("TerraDrawFreehandMode", () => {
 
 			expect(() => {
 				freehandMode.onDragEnd();
-			}).not.toThrowError();
+			}).not.toThrow();
 		});
 	});
 
@@ -638,7 +511,7 @@ describe("TerraDrawFreehandMode", () => {
 					closingPointOutlineColor: "#111111",
 				},
 			});
-			freehandMode.register(getMockModeConfig("freehand"));
+			freehandMode.register(MockModeConfig("freehand"));
 
 			expect(
 				freehandMode.validateFeature({
@@ -666,7 +539,7 @@ describe("TerraDrawFreehandMode", () => {
 					closingPointOutlineColor: "#111111",
 				},
 			});
-			freehandMode.register(getMockModeConfig("freehand"));
+			freehandMode.register(MockModeConfig("freehand"));
 
 			expect(
 				freehandMode.validateFeature({
@@ -712,7 +585,7 @@ describe("TerraDrawFreehandMode", () => {
 					closingPointOutlineColor: "#111111",
 				},
 			});
-			freehandMode.register(getMockModeConfig("freehand"));
+			freehandMode.register(MockModeConfig("freehand"));
 
 			expect(
 				freehandMode.validateFeature({

@@ -1,5 +1,6 @@
 import { GeoJSONStore } from "../../store/store";
-import { getMockModeConfig } from "../../test/mock-config";
+import { MockModeConfig } from "../../test/mock-mode-config";
+import { MockCursorEvent } from "../../test/mock-cursor-event";
 import { TerraDrawCircleMode } from "./circle.mode";
 
 describe("TerraDrawCircleMode", () => {
@@ -46,7 +47,7 @@ describe("TerraDrawCircleMode", () => {
 		it("registers correctly", () => {
 			const circleMode = new TerraDrawCircleMode();
 			expect(circleMode.state).toBe("unregistered");
-			circleMode.register(getMockModeConfig(circleMode.mode));
+			circleMode.register(MockModeConfig(circleMode.mode));
 			expect(circleMode.state).toBe("registered");
 		});
 
@@ -55,7 +56,7 @@ describe("TerraDrawCircleMode", () => {
 
 			expect(() => {
 				circleMode.state = "started";
-			}).toThrowError();
+			}).toThrow();
 		});
 
 		it("stopping before not registering throws error", () => {
@@ -63,7 +64,7 @@ describe("TerraDrawCircleMode", () => {
 
 			expect(() => {
 				circleMode.stop();
-			}).toThrowError();
+			}).toThrow();
 		});
 
 		it("starting before not registering throws error", () => {
@@ -71,7 +72,7 @@ describe("TerraDrawCircleMode", () => {
 
 			expect(() => {
 				circleMode.start();
-			}).toThrowError();
+			}).toThrow();
 		});
 
 		it("starting before not registering throws error", () => {
@@ -79,22 +80,22 @@ describe("TerraDrawCircleMode", () => {
 
 			expect(() => {
 				circleMode.start();
-			}).toThrowError();
+			}).toThrow();
 		});
 
 		it("registering multiple times throws an error", () => {
 			const circleMode = new TerraDrawCircleMode();
 
 			expect(() => {
-				circleMode.register(getMockModeConfig(circleMode.mode));
-				circleMode.register(getMockModeConfig(circleMode.mode));
-			}).toThrowError();
+				circleMode.register(MockModeConfig(circleMode.mode));
+				circleMode.register(MockModeConfig(circleMode.mode));
+			}).toThrow();
 		});
 
 		it("can start correctly", () => {
 			const circleMode = new TerraDrawCircleMode();
 
-			circleMode.register(getMockModeConfig(circleMode.mode));
+			circleMode.register(MockModeConfig(circleMode.mode));
 			circleMode.start();
 
 			expect(circleMode.state).toBe("started");
@@ -103,7 +104,7 @@ describe("TerraDrawCircleMode", () => {
 		it("can stop correctly", () => {
 			const circleMode = new TerraDrawCircleMode();
 
-			circleMode.register(getMockModeConfig(circleMode.mode));
+			circleMode.register(MockModeConfig(circleMode.mode));
 			circleMode.start();
 			circleMode.stop();
 
@@ -125,21 +126,14 @@ describe("TerraDrawCircleMode", () => {
 
 		it("throws an error if not registered", () => {
 			expect(() => {
-				circleMode.onClick({
-					lng: 0,
-					lat: 0,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
-			}).toThrowError();
+				circleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			}).toThrow();
 		});
 
 		describe("registered", () => {
 			describe("default startingRadiusKilometers", () => {
 				beforeEach(() => {
-					const mockConfig = getMockModeConfig(circleMode.mode);
+					const mockConfig = MockModeConfig(circleMode.mode);
 
 					store = mockConfig.store;
 					onChange = mockConfig.onChange;
@@ -150,40 +144,19 @@ describe("TerraDrawCircleMode", () => {
 				});
 
 				it("adds a circle to store if registered", () => {
-					circleMode.onClick({
-						lng: 0,
-						lat: 0,
-						containerX: 0,
-						containerY: 0,
-						button: "left",
-						heldKeys: [],
-					});
+					circleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
 					expect(onChange).toHaveBeenCalledTimes(1);
 					expect(onChange).toHaveBeenCalledWith([expect.any(String)], "create");
 				});
 
 				it("finishes drawing circle on second click", () => {
-					circleMode.onClick({
-						lng: 0,
-						lat: 0,
-						containerX: 0,
-						containerY: 0,
-						button: "left",
-						heldKeys: [],
-					});
+					circleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
 					let features = store.copyAll();
 					expect(features.length).toBe(1);
 
-					circleMode.onClick({
-						lng: 0,
-						lat: 0,
-						containerX: 0,
-						containerY: 0,
-						button: "left",
-						heldKeys: [],
-					});
+					circleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
 					features = store.copyAll();
 					expect(features.length).toBe(1);
@@ -200,7 +173,7 @@ describe("TerraDrawCircleMode", () => {
 					circleMode = new TerraDrawCircleMode({
 						startingRadiusKilometers: 1000,
 					});
-					const mockConfig = getMockModeConfig(circleMode.mode);
+					const mockConfig = MockModeConfig(circleMode.mode);
 
 					store = mockConfig.store;
 					onChange = mockConfig.onChange;
@@ -211,14 +184,7 @@ describe("TerraDrawCircleMode", () => {
 				});
 
 				it("adds a circle to store if registered with the minimum radius", () => {
-					circleMode.onClick({
-						lng: 0,
-						lat: 0,
-						containerX: 0,
-						containerY: 0,
-						button: "left",
-						heldKeys: [],
-					});
+					circleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
 					expect(onChange).toHaveBeenCalledTimes(1);
 					expect(onChange).toHaveBeenCalledWith([expect.any(String)], "create");
@@ -235,7 +201,7 @@ describe("TerraDrawCircleMode", () => {
 					circleMode = new TerraDrawCircleMode({
 						validation: () => valid,
 					});
-					const mockConfig = getMockModeConfig(circleMode.mode);
+					const mockConfig = MockModeConfig(circleMode.mode);
 
 					store = mockConfig.store;
 					onChange = mockConfig.onChange;
@@ -248,26 +214,12 @@ describe("TerraDrawCircleMode", () => {
 				it("does not finish drawing circle on second click if validation returns false", () => {
 					valid = false;
 
-					circleMode.onClick({
-						lng: 0,
-						lat: 0,
-						containerX: 0,
-						containerY: 0,
-						button: "left",
-						heldKeys: [],
-					});
+					circleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
 					let features = store.copyAll();
 					expect(features.length).toBe(1);
 
-					circleMode.onClick({
-						lng: 0,
-						lat: 0,
-						containerX: 0,
-						containerY: 0,
-						button: "left",
-						heldKeys: [],
-					});
+					circleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
 					features = store.copyAll();
 					expect(features.length).toBe(1);
@@ -281,26 +233,12 @@ describe("TerraDrawCircleMode", () => {
 				it("does finish drawing circle on second click if validation returns true", () => {
 					valid = true;
 
-					circleMode.onClick({
-						lng: 0,
-						lat: 0,
-						containerX: 0,
-						containerY: 0,
-						button: "left",
-						heldKeys: [],
-					});
+					circleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
 					let features = store.copyAll();
 					expect(features.length).toBe(1);
 
-					circleMode.onClick({
-						lng: 0,
-						lat: 0,
-						containerX: 0,
-						containerY: 0,
-						button: "left",
-						heldKeys: [],
-					});
+					circleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
 					features = store.copyAll();
 					expect(features.length).toBe(1);
@@ -326,7 +264,7 @@ describe("TerraDrawCircleMode", () => {
 		beforeEach(() => {
 			circleMode = new TerraDrawCircleMode();
 
-			const mockConfig = getMockModeConfig(circleMode.mode);
+			const mockConfig = MockModeConfig(circleMode.mode);
 			store = new GeoJSONStore();
 			store = mockConfig.store;
 			onChange = mockConfig.onChange;
@@ -337,14 +275,7 @@ describe("TerraDrawCircleMode", () => {
 		});
 
 		it("finishes drawing circle on finish key press", () => {
-			circleMode.onClick({
-				lng: 0,
-				lat: 0,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			circleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
 			let features = store.copyAll();
 			expect(features.length).toBe(1);
@@ -376,7 +307,7 @@ describe("TerraDrawCircleMode", () => {
 		beforeEach(() => {
 			circleMode = new TerraDrawCircleMode();
 
-			const mockConfig = getMockModeConfig(circleMode.mode);
+			const mockConfig = MockModeConfig(circleMode.mode);
 
 			store = mockConfig.store;
 			onChange = mockConfig.onChange;
@@ -386,14 +317,7 @@ describe("TerraDrawCircleMode", () => {
 		});
 
 		it("updates the circle size", () => {
-			circleMode.onClick({
-				lng: 0,
-				lat: 0,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			circleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
 			expect(onChange).toHaveBeenCalledTimes(1);
 			expect(onChange).toHaveBeenNthCalledWith(
@@ -404,14 +328,7 @@ describe("TerraDrawCircleMode", () => {
 
 			const feature = store.copyAll()[0];
 
-			circleMode.onMouseMove({
-				lng: 1,
-				lat: 1,
-				containerX: 1,
-				containerY: 1,
-				button: "left",
-				heldKeys: [],
-			});
+			circleMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
 			expect(onChange).toHaveBeenCalledTimes(3);
 			expect(onChange).toHaveBeenNthCalledWith(
 				2,
@@ -435,7 +352,7 @@ describe("TerraDrawCircleMode", () => {
 		beforeEach(() => {
 			circleMode = new TerraDrawCircleMode();
 
-			const mockConfig = getMockModeConfig(circleMode.mode);
+			const mockConfig = MockModeConfig(circleMode.mode);
 
 			onChange = mockConfig.onChange;
 
@@ -449,14 +366,7 @@ describe("TerraDrawCircleMode", () => {
 		});
 
 		it("does delete if a circle has been created", () => {
-			circleMode.onClick({
-				lng: 0,
-				lat: 0,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			circleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
 			circleMode.cleanUp();
 
@@ -477,7 +387,7 @@ describe("TerraDrawCircleMode", () => {
 			jest.resetAllMocks();
 			circleMode = new TerraDrawCircleMode();
 
-			const mockConfig = getMockModeConfig(circleMode.mode);
+			const mockConfig = MockModeConfig(circleMode.mode);
 			store = mockConfig.store;
 			circleMode.register(mockConfig);
 			circleMode.start();
@@ -493,14 +403,7 @@ describe("TerraDrawCircleMode", () => {
 			});
 
 			it("deletes the circle when currently editing", () => {
-				circleMode.onClick({
-					lng: 0,
-					lat: 0,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				circleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
 				let features = store.copyAll();
 				expect(features.length).toBe(1);
@@ -519,19 +422,12 @@ describe("TerraDrawCircleMode", () => {
 				jest.resetAllMocks();
 				circleMode = new TerraDrawCircleMode({ keyEvents: null });
 
-				const mockConfig = getMockModeConfig(circleMode.mode);
+				const mockConfig = MockModeConfig(circleMode.mode);
 				store = mockConfig.store;
 				circleMode.register(mockConfig);
 				circleMode.start();
 
-				circleMode.onClick({
-					lng: 0,
-					lat: 0,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				circleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
 				let features = store.copyAll();
 				expect(features.length).toBe(1);
@@ -554,7 +450,7 @@ describe("TerraDrawCircleMode", () => {
 
 			expect(() => {
 				circleMode.onDrag();
-			}).not.toThrowError();
+			}).not.toThrow();
 		});
 	});
 
@@ -564,7 +460,7 @@ describe("TerraDrawCircleMode", () => {
 
 			expect(() => {
 				circleMode.onDragStart();
-			}).not.toThrowError();
+			}).not.toThrow();
 		});
 	});
 
@@ -574,7 +470,7 @@ describe("TerraDrawCircleMode", () => {
 
 			expect(() => {
 				circleMode.onDragEnd();
-			}).not.toThrowError();
+			}).not.toThrow();
 		});
 	});
 
@@ -638,7 +534,7 @@ describe("TerraDrawCircleMode", () => {
 					fillOpacity: 0.5,
 				},
 			});
-			circleMode.register(getMockModeConfig("circle"));
+			circleMode.register(MockModeConfig("circle"));
 
 			expect(
 				circleMode.validateFeature({
@@ -666,7 +562,7 @@ describe("TerraDrawCircleMode", () => {
 					fillOpacity: 0.5,
 				},
 			});
-			circleMode.register(getMockModeConfig("circle"));
+			circleMode.register(MockModeConfig("circle"));
 
 			expect(
 				circleMode.validateFeature({
@@ -765,7 +661,7 @@ describe("TerraDrawCircleMode", () => {
 					fillOpacity: 0.5,
 				},
 			});
-			circleMode.register(getMockModeConfig("circle"));
+			circleMode.register(MockModeConfig("circle"));
 
 			expect(
 				circleMode.validateFeature({

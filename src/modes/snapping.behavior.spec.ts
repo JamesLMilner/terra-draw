@@ -1,8 +1,6 @@
 import { createStorePolygon } from "../test/create-store-features";
-import { mockBehaviorConfig } from "../test/mock-behavior-config";
-import { mockDrawEvent } from "../test/mock-mouse-event";
-import { mockProject } from "../test/mock-project";
-import { mockBoundingBoxUnproject } from "../test/mock-unproject";
+import { MockBehaviorConfig } from "../test/mock-behavior-config";
+import { MockCursorEvent } from "../test/mock-cursor-event";
 import { BehaviorConfig } from "./base.behavior";
 import { ClickBoundingBoxBehavior } from "./click-bounding-box.behavior";
 import { PixelDistanceBehavior } from "./pixel-distance.behavior";
@@ -11,7 +9,7 @@ import { SnappingBehavior } from "./snapping.behavior";
 describe("SnappingBehavior", () => {
 	describe("constructor", () => {
 		it("constructs", () => {
-			const config = mockBehaviorConfig("test");
+			const config = MockBehaviorConfig("test");
 			new SnappingBehavior(
 				config,
 				new PixelDistanceBehavior(config),
@@ -25,7 +23,7 @@ describe("SnappingBehavior", () => {
 		let snappingBehavior: SnappingBehavior;
 
 		beforeEach(() => {
-			config = mockBehaviorConfig("test");
+			config = MockBehaviorConfig("test");
 			snappingBehavior = new SnappingBehavior(
 				config,
 				new PixelDistanceBehavior(config),
@@ -35,12 +33,8 @@ describe("SnappingBehavior", () => {
 
 		describe("getSnappablePolygonCoord", () => {
 			it("returns undefined if not snappable", () => {
-				// Mock the unproject to return a valid set
-				// of bbox coordinates
-				mockBoundingBoxUnproject(config.unproject as jest.Mock);
-
 				const snappedCoord = snappingBehavior.getSnappableCoordinate(
-					mockDrawEvent(),
+					MockCursorEvent({ lng: 0, lat: 0 }),
 					"mockId",
 				);
 
@@ -52,16 +46,8 @@ describe("SnappingBehavior", () => {
 				// creating an existing polygon
 				createStorePolygon(config);
 
-				// Mock the unproject to return a valid set
-				// of bbox coordinates
-				mockBoundingBoxUnproject(config.unproject as jest.Mock);
-
-				// Pixel distance will project each point to check the distance
-				// for snapping
-				mockProject(config.project as jest.Mock);
-
 				const snappedCoord = snappingBehavior.getSnappableCoordinate(
-					mockDrawEvent(),
+					MockCursorEvent({ lng: 0, lat: 0 }),
 					"currentId",
 				);
 

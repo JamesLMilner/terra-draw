@@ -1,8 +1,8 @@
 /**
  * @jest-environment jsdom
  */
-import { createMockCallbacks } from "../test/mock-callbacks";
-import { getMockPointerEvent } from "../test/mock-pointer-event";
+import { MockCallbacks } from "../test/mock-callbacks";
+import { MockPointerEvent } from "../test/mock-pointer-event";
 import { TerraDrawMapboxGLAdapter } from "./mapbox-gl.adapter";
 
 const createMapboxGLMap = () => {
@@ -96,7 +96,7 @@ describe("TerraDrawMapboxGLAdapter", () => {
 				lng: -0.1275,
 			})) as unknown as (point: mapboxgl.PointLike) => mapboxgl.LngLat;
 
-			const result = adapter.getLngLatFromEvent(getMockPointerEvent());
+			const result = adapter.getLngLatFromEvent(MockPointerEvent());
 			expect(result).toEqual({ lat: 51.507222, lng: -0.1275 });
 		});
 	});
@@ -205,7 +205,7 @@ describe("TerraDrawMapboxGLAdapter", () => {
 				map: map as mapboxgl.Map,
 			});
 
-			adapter.register(createMockCallbacks());
+			adapter.register(MockCallbacks());
 
 			adapter.render(
 				{
@@ -240,7 +240,7 @@ describe("TerraDrawMapboxGLAdapter", () => {
 				map: map as mapboxgl.Map,
 			});
 
-			adapter.register(createMockCallbacks());
+			adapter.register(MockCallbacks());
 
 			adapter.render(
 				{
@@ -270,7 +270,7 @@ describe("TerraDrawMapboxGLAdapter", () => {
 				map: map as mapboxgl.Map,
 			});
 
-			adapter.register(createMockCallbacks());
+			adapter.register(MockCallbacks());
 
 			adapter.render(
 				{
@@ -386,7 +386,7 @@ describe("TerraDrawMapboxGLAdapter", () => {
 				map: map as mapboxgl.Map,
 			});
 
-			adapter.register(createMockCallbacks());
+			adapter.register(MockCallbacks());
 
 			expect(adapter.getCoordinatePrecision()).toBe(9);
 		});
@@ -398,7 +398,7 @@ describe("TerraDrawMapboxGLAdapter", () => {
 				coordinatePrecision: 6,
 			});
 
-			adapter.register(createMockCallbacks());
+			adapter.register(MockCallbacks());
 
 			expect(adapter.getCoordinatePrecision()).toBe(6);
 		});
@@ -413,7 +413,7 @@ describe("TerraDrawMapboxGLAdapter", () => {
 				map: map as mapboxgl.Map,
 			});
 
-			adapter.register(createMockCallbacks());
+			adapter.register(MockCallbacks());
 
 			adapter.render(
 				{

@@ -1,7 +1,9 @@
 import { Position } from "geojson";
 import { GeoJSONStore } from "../../store/store";
-import { getMockModeConfig } from "../../test/mock-config";
+import { MockModeConfig } from "../../test/mock-mode-config";
 import { TerraDrawSectorMode } from "./sector.mode";
+import { MockCursorEvent } from "../../test/mock-cursor-event";
+import { MockKeyboardEvent } from "../../test/mock-keyboard-event";
 
 describe("TerraDrawSectorMode", () => {
 	describe("constructor", () => {
@@ -45,7 +47,7 @@ describe("TerraDrawSectorMode", () => {
 		it("registers correctly", () => {
 			const sectorMode = new TerraDrawSectorMode();
 			expect(sectorMode.state).toBe("unregistered");
-			sectorMode.register(getMockModeConfig(sectorMode.mode));
+			sectorMode.register(MockModeConfig(sectorMode.mode));
 			expect(sectorMode.state).toBe("registered");
 		});
 
@@ -85,15 +87,15 @@ describe("TerraDrawSectorMode", () => {
 			const sectorMode = new TerraDrawSectorMode();
 
 			expect(() => {
-				sectorMode.register(getMockModeConfig(sectorMode.mode));
-				sectorMode.register(getMockModeConfig(sectorMode.mode));
+				sectorMode.register(MockModeConfig(sectorMode.mode));
+				sectorMode.register(MockModeConfig(sectorMode.mode));
 			}).toThrow();
 		});
 
 		it("can start correctly", () => {
 			const sectorMode = new TerraDrawSectorMode();
 
-			sectorMode.register(getMockModeConfig(sectorMode.mode));
+			sectorMode.register(MockModeConfig(sectorMode.mode));
 			sectorMode.start();
 
 			expect(sectorMode.state).toBe("started");
@@ -102,7 +104,7 @@ describe("TerraDrawSectorMode", () => {
 		it("can stop correctly", () => {
 			const sectorMode = new TerraDrawSectorMode();
 
-			sectorMode.register(getMockModeConfig(sectorMode.mode));
+			sectorMode.register(MockModeConfig(sectorMode.mode));
 			sectorMode.start();
 			sectorMode.stop();
 
@@ -122,7 +124,7 @@ describe("TerraDrawSectorMode", () => {
 					return true;
 				},
 			});
-			const mockConfig = getMockModeConfig(sectorMode.mode);
+			const mockConfig = MockModeConfig(sectorMode.mode);
 
 			store = mockConfig.store;
 			onChange = mockConfig.onChange;
@@ -132,36 +134,15 @@ describe("TerraDrawSectorMode", () => {
 		});
 
 		it("does nothing if no clicks have occurred ", () => {
-			sectorMode.onMouseMove({
-				lng: 0,
-				lat: 0,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			sectorMode.onMouseMove(MockCursorEvent({ lng: 0, lat: 0 }));
 
 			expect(onChange).not.toHaveBeenCalled();
 		});
 
 		it("updates the coordinate to the mouse position after first click", () => {
-			sectorMode.onClick({
-				lng: 0,
-				lat: 0,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			sectorMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
-			sectorMode.onMouseMove({
-				lng: 1,
-				lat: 1,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			sectorMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
 
 			expect(onChange).toHaveBeenCalledTimes(2);
 
@@ -178,47 +159,16 @@ describe("TerraDrawSectorMode", () => {
 			]);
 		});
 
-		it.each([
-			["clockwise", 2],
-			["anticlockwise", -1],
-		])(
+		it.each([["clockwise"], ["anticlockwise"]])(
 			`updates the coordinate to the mouse position after second click (%s)`,
-			(_, coordinate) => {
-				sectorMode.onClick({
-					lng: 0,
-					lat: 0,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+			() => {
+				sectorMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
-				sectorMode.onMouseMove({
-					lng: 1,
-					lat: 1,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				sectorMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
 
-				sectorMode.onClick({
-					lng: 1,
-					lat: 1,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				sectorMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
 
-				sectorMode.onMouseMove({
-					lng: coordinate,
-					lat: coordinate,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				sectorMode.onMouseMove(MockCursorEvent({ lng: 0, lat: 0 }));
 
 				expect(onChange).toHaveBeenCalledTimes(4);
 
@@ -257,7 +207,7 @@ describe("TerraDrawSectorMode", () => {
 				sectorMode = new TerraDrawSectorMode({
 					validation: () => true,
 				});
-				const mockConfig = getMockModeConfig(sectorMode.mode);
+				const mockConfig = MockModeConfig(sectorMode.mode);
 
 				store = mockConfig.store;
 				sectorMode.register(mockConfig);
@@ -265,63 +215,21 @@ describe("TerraDrawSectorMode", () => {
 			});
 
 			it("can create a sector", () => {
-				sectorMode.onClick({
-					lng: 0,
-					lat: 0,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				sectorMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
-				sectorMode.onMouseMove({
-					lng: 1,
-					lat: 1,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				sectorMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
 
-				sectorMode.onClick({
-					lng: 1,
-					lat: 1,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				sectorMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
 
-				sectorMode.onMouseMove({
-					lng: 2,
-					lat: 2,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				sectorMode.onMouseMove(MockCursorEvent({ lng: 2, lat: 2 }));
 
-				sectorMode.onClick({
-					lng: 2,
-					lat: 2,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				sectorMode.onClick(MockCursorEvent({ lng: 2, lat: 2 }));
 
 				let features = store.copyAll();
 				expect(features.length).toBe(1);
 
 				// Create a new sector polygon
-				sectorMode.onClick({
-					lng: 0,
-					lat: 0,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				sectorMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
 				features = store.copyAll();
 				expect(features.length).toBe(2);
@@ -333,7 +241,7 @@ describe("TerraDrawSectorMode", () => {
 				sectorMode = new TerraDrawSectorMode({
 					validation: () => false,
 				});
-				const mockConfig = getMockModeConfig(sectorMode.mode);
+				const mockConfig = MockModeConfig(sectorMode.mode);
 
 				store = mockConfig.store;
 				sectorMode.register(mockConfig);
@@ -341,63 +249,21 @@ describe("TerraDrawSectorMode", () => {
 			});
 
 			it("fails to create a sector when validation returns false", () => {
-				sectorMode.onClick({
-					lng: 0,
-					lat: 0,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				sectorMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
-				sectorMode.onMouseMove({
-					lng: 1,
-					lat: 1,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				sectorMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
 
-				sectorMode.onClick({
-					lng: 1,
-					lat: 1,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				sectorMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
 
-				sectorMode.onMouseMove({
-					lng: 2,
-					lat: 2,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				sectorMode.onMouseMove(MockCursorEvent({ lng: 2, lat: 2 }));
 
-				sectorMode.onClick({
-					lng: 2,
-					lat: 2,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				sectorMode.onClick(MockCursorEvent({ lng: 2, lat: 2 }));
 
 				let features = store.copyAll();
 				expect(features.length).toBe(1);
 
 				// Create a new sector polygon
-				sectorMode.onClick({
-					lng: 0,
-					lat: 0,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				sectorMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
 				features = store.copyAll();
 				expect(features.length).toBe(1);
@@ -413,7 +279,7 @@ describe("TerraDrawSectorMode", () => {
 
 		it("does nothing if on finish key press is pressed while not drawing", () => {
 			sectorMode = new TerraDrawSectorMode();
-			const mockConfig = getMockModeConfig(sectorMode.mode);
+			const mockConfig = MockModeConfig(sectorMode.mode);
 			store = new GeoJSONStore();
 			store = mockConfig.store;
 			onChange = mockConfig.onChange;
@@ -425,11 +291,7 @@ describe("TerraDrawSectorMode", () => {
 			let features = store.copyAll();
 			expect(features.length).toBe(0);
 
-			sectorMode.onKeyUp({
-				key: "Enter",
-				preventDefault: jest.fn(),
-				heldKeys: [],
-			});
+			sectorMode.onKeyUp(MockKeyboardEvent({ key: "Enter" }));
 
 			features = store.copyAll();
 			expect(features.length).toBe(0);
@@ -437,7 +299,7 @@ describe("TerraDrawSectorMode", () => {
 
 		it("cancels drawing sector on cancel key press", () => {
 			sectorMode = new TerraDrawSectorMode();
-			const mockConfig = getMockModeConfig(sectorMode.mode);
+			const mockConfig = MockModeConfig(sectorMode.mode);
 			store = new GeoJSONStore();
 			store = mockConfig.store;
 			onChange = mockConfig.onChange;
@@ -446,23 +308,12 @@ describe("TerraDrawSectorMode", () => {
 			sectorMode.register(mockConfig);
 			sectorMode.start();
 
-			sectorMode.onClick({
-				lng: 0,
-				lat: 0,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			sectorMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
 			let features = store.copyAll();
 			expect(features.length).toBe(1);
 
-			sectorMode.onKeyUp({
-				key: "Escape",
-				preventDefault: jest.fn(),
-				heldKeys: [],
-			});
+			sectorMode.onKeyUp(MockKeyboardEvent({ key: "Escape" }));
 
 			features = store.copyAll();
 			expect(features.length).toBe(0);
@@ -470,7 +321,7 @@ describe("TerraDrawSectorMode", () => {
 
 		it("finishes drawing sector on finish key press", () => {
 			sectorMode = new TerraDrawSectorMode();
-			const mockConfig = getMockModeConfig(sectorMode.mode);
+			const mockConfig = MockModeConfig(sectorMode.mode);
 			store = new GeoJSONStore();
 			store = mockConfig.store;
 			onChange = mockConfig.onChange;
@@ -479,32 +330,14 @@ describe("TerraDrawSectorMode", () => {
 			sectorMode.register(mockConfig);
 			sectorMode.start();
 
-			sectorMode.onClick({
-				lng: 0,
-				lat: 0,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			sectorMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
 			let features = store.copyAll();
 			expect(features.length).toBe(1);
 
-			sectorMode.onKeyUp({
-				key: "Enter",
-				preventDefault: jest.fn(),
-				heldKeys: [],
-			});
+			sectorMode.onKeyUp(MockKeyboardEvent({ key: "Enter" }));
 
-			sectorMode.onClick({
-				lng: 0,
-				lat: 0,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			sectorMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
 			features = store.copyAll();
 			// Two as the sector has been closed via enter
@@ -517,7 +350,7 @@ describe("TerraDrawSectorMode", () => {
 
 		it("does not finish on key press when keyEvents null", () => {
 			sectorMode = new TerraDrawSectorMode({ keyEvents: null });
-			const mockConfig = getMockModeConfig(sectorMode.mode);
+			const mockConfig = MockModeConfig(sectorMode.mode);
 			store = new GeoJSONStore();
 			store = mockConfig.store;
 			onChange = mockConfig.onChange;
@@ -525,23 +358,12 @@ describe("TerraDrawSectorMode", () => {
 			sectorMode.register(mockConfig);
 			sectorMode.start();
 
-			sectorMode.onClick({
-				lng: 0,
-				lat: 0,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			sectorMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
 			let features = store.copyAll();
 			expect(features.length).toBe(1);
 
-			sectorMode.onKeyUp({
-				key: "Enter",
-				preventDefault: jest.fn(),
-				heldKeys: [],
-			});
+			sectorMode.onKeyUp(MockKeyboardEvent({ key: "Escape" }));
 
 			features = store.copyAll();
 
@@ -559,7 +381,7 @@ describe("TerraDrawSectorMode", () => {
 			const sectorMode = new TerraDrawSectorMode({
 				validation: () => true,
 			});
-			sectorMode.register(getMockModeConfig("sector"));
+			sectorMode.register(MockModeConfig("sector"));
 
 			expect(
 				sectorMode.validateFeature({
@@ -606,7 +428,7 @@ describe("TerraDrawSectorMode", () => {
 					return false;
 				},
 			});
-			sectorMode.register(getMockModeConfig("sector"));
+			sectorMode.register(MockModeConfig("sector"));
 
 			expect(
 				sectorMode.validateFeature({

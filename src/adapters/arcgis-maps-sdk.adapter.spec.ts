@@ -1,11 +1,11 @@
 import { TerraDrawArcGISMapsSDKAdapter } from "./arcgis-maps-sdk.adapter";
 import MapView from "@arcgis/core/views/MapView.js";
-import { getMockPointerEvent } from "../test/mock-pointer-event";
+import { MockPointerEvent } from "../test/mock-pointer-event";
 import Point from "@arcgis/core/geometry/Point";
 import { TerraDrawAdapterStyling } from "../common";
 import Color from "@arcgis/core/Color";
 import MapViewScreenPoint = __esri.MapViewScreenPoint;
-import { createMockCallbacks } from "../test/mock-callbacks";
+import { MockCallbacks } from "../test/mock-callbacks";
 
 jest.mock("@arcgis/core/views/MapView", () => jest.fn());
 jest.mock("@arcgis/core/geometry/Point");
@@ -89,7 +89,7 @@ describe("TerraDrawArcGISMapsSDKAdapter", () => {
 
 			expect(adapter).toBeDefined();
 
-			adapter.register(createMockCallbacks());
+			adapter.register(MockCallbacks());
 
 			expect(mockMapView.on).toHaveBeenCalledTimes(2);
 			expect(mockMapView.on).toHaveBeenNthCalledWith(
@@ -118,7 +118,7 @@ describe("TerraDrawArcGISMapsSDKAdapter", () => {
 
 			expect(adapter).toBeDefined();
 
-			adapter.register(createMockCallbacks());
+			adapter.register(MockCallbacks());
 			adapter.unregister();
 			expect(removeAll).toHaveBeenCalledTimes(1);
 			expect(remove).toHaveBeenCalledTimes(2);
@@ -142,7 +142,7 @@ describe("TerraDrawArcGISMapsSDKAdapter", () => {
 				longitude: -0.1275,
 			})) as unknown as (point: MapViewScreenPoint | MouseEvent) => Point;
 
-			const result = adapter.getLngLatFromEvent(getMockPointerEvent());
+			const result = adapter.getLngLatFromEvent(MockPointerEvent());
 			expect(result).toEqual({ lat: 51.507222, lng: -0.1275 });
 		});
 	});

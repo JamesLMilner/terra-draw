@@ -168,7 +168,7 @@ describe("Terra Draw", () => {
 						},
 					},
 				]);
-			}).toThrowError();
+			}).toThrow();
 		});
 
 		it("does not allow features with incorrect id strategy to be added", () => {
@@ -204,7 +204,7 @@ describe("Terra Draw", () => {
 						},
 					},
 				]);
-			}).toThrowError();
+			}).toThrow();
 		});
 	});
 
@@ -321,7 +321,7 @@ describe("Terra Draw", () => {
 
 			expect(() => {
 				draw.selectFeature("f8e5a38d-ecfa-4294-8461-d9cff0e0d7f8");
-			}).toThrowError("No select mode defined in instance");
+			}).toThrow("No select mode defined in instance");
 		});
 
 		it("returns false if there is no feature with a given id", () => {
@@ -375,7 +375,7 @@ describe("Terra Draw", () => {
 
 			expect(() => {
 				draw.deselectFeature("f8e5a38d-ecfa-4294-8461-d9cff0e0d7f8");
-			}).toThrowError("No select mode defined in instance");
+			}).toThrow("No select mode defined in instance");
 		});
 
 		it("returns false if there is no feature with a given id", () => {

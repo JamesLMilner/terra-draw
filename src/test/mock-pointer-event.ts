@@ -1,4 +1,4 @@
-export const getMockPointerEvent = () =>
+export const MockPointerEvent = () =>
 	({
 		bubbles: true,
 		cancelable: true,

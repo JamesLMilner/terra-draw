@@ -2,7 +2,7 @@ import {
 	createStoreLineString,
 	createStorePolygon,
 } from "../../../test/create-store-features";
-import { mockBehaviorConfig } from "../../../test/mock-behavior-config";
+import { MockBehaviorConfig } from "../../../test/mock-behavior-config";
 import { BehaviorConfig } from "../../base.behavior";
 import { MidPointBehavior } from "./midpoint.behavior";
 import { SelectionPointBehavior } from "./selection-point.behavior";
@@ -13,21 +13,7 @@ describe("MidPointBehavior", () => {
 
 	beforeEach(() => {
 		jest.resetAllMocks();
-		config = mockBehaviorConfig("test");
-
-		(config.project as jest.Mock).mockImplementation(
-			(lng: number, lat: number) => ({
-				x: lng * 100,
-				y: lat * 100,
-			}),
-		);
-
-		(config.unproject as jest.Mock).mockImplementation(
-			(x: number, y: number) => ({
-				lng: x / 100,
-				lat: y / 100,
-			}),
-		);
+		config = MockBehaviorConfig("test");
 	});
 
 	describe("constructor", () => {
@@ -75,7 +61,7 @@ describe("MidPointBehavior", () => {
 						"e3ccd3b9-afb1-4f0b-91d8-22a768d5f284",
 						coordinatePrecision,
 					);
-				}).toThrowError();
+				}).toThrow();
 			});
 
 			it("create", () => {

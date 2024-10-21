@@ -1,19 +1,19 @@
 import { coordinateIsValid } from "../geometry/boolean/is-valid-coordinate";
 import { coordinatesIdentical } from "../geometry/coordinates-identical";
 import { haversineDistanceKilometers } from "../geometry/measure/haversine-distance";
-import { mockBehaviorConfig } from "../test/mock-behavior-config";
+import { MockBehaviorConfig } from "../test/mock-behavior-config";
 import { InsertCoordinatesBehavior } from "./insert-coordinates.behavior";
 
 describe("InsertCoordinatesBehavior", () => {
 	describe("constructor", () => {
 		it("constructs", () => {
-			new InsertCoordinatesBehavior(mockBehaviorConfig("test"));
+			new InsertCoordinatesBehavior(MockBehaviorConfig("test"));
 		});
 	});
 
 	describe("api", () => {
 		it("generateInsertionCoordinates", () => {
-			const config = mockBehaviorConfig("test");
+			const config = MockBehaviorConfig("test");
 
 			const insertPointBehavior = new InsertCoordinatesBehavior(config);
 
@@ -83,7 +83,7 @@ describe("InsertCoordinatesBehavior", () => {
 		});
 
 		it("generateInsertionGeodesicCoordinates", () => {
-			const config = mockBehaviorConfig("test");
+			const config = MockBehaviorConfig("test");
 
 			const insertPointBehavior = new InsertCoordinatesBehavior(config);
 

@@ -2,7 +2,7 @@
  * @jest-environment jsdom
  */
 import { TerraDrawLeafletAdapter } from "./leaflet.adapter";
-import { getMockPointerEvent } from "../test/mock-pointer-event";
+import { MockPointerEvent } from "../test/mock-pointer-event";
 import { TerraDrawAdapterStyling, TerraDrawCallbacks } from "../common";
 import { GeoJSONStoreFeatures } from "../terra-draw";
 
@@ -93,7 +93,7 @@ describe("TerraDrawLeafletAdapter", () => {
 				lng: -0.1275,
 			})) as unknown as (point: L.PointExpression) => L.LatLng;
 
-			const result = adapter.getLngLatFromEvent(getMockPointerEvent());
+			const result = adapter.getLngLatFromEvent(MockPointerEvent());
 			expect(result).toEqual({ lat: 51.507222, lng: -0.1275 });
 		});
 
@@ -104,7 +104,7 @@ describe("TerraDrawLeafletAdapter", () => {
 				lng: -0.1275,
 			})) as unknown as (point: L.PointExpression) => L.LatLng;
 
-			const result = adapter.getLngLatFromEvent(getMockPointerEvent());
+			const result = adapter.getLngLatFromEvent(MockPointerEvent());
 			expect(result).toEqual(null);
 		});
 	});

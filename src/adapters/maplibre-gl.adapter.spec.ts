@@ -1,8 +1,8 @@
 /**
  * @jest-environment jsdom
  */
-import { createMockCallbacks } from "../test/mock-callbacks";
-import { getMockPointerEvent } from "../test/mock-pointer-event";
+import { MockCallbacks } from "../test/mock-callbacks";
+import { MockPointerEvent } from "../test/mock-pointer-event";
 import { TerraDrawMapLibreGLAdapter } from "./maplibre-gl.adapter";
 import * as maplibregl from "maplibre-gl";
 
@@ -97,7 +97,7 @@ describe("TerraDrawMapLibreGLAdapter", () => {
 				lng: -0.1275,
 			})) as unknown as (point: maplibregl.PointLike) => maplibregl.LngLat;
 
-			const result = adapter.getLngLatFromEvent(getMockPointerEvent());
+			const result = adapter.getLngLatFromEvent(MockPointerEvent());
 			expect(result).toEqual({ lat: 51.507222, lng: -0.1275 });
 		});
 	});
@@ -206,7 +206,7 @@ describe("TerraDrawMapLibreGLAdapter", () => {
 				map: map as maplibregl.Map,
 			});
 
-			adapter.register(createMockCallbacks());
+			adapter.register(MockCallbacks());
 
 			adapter.render(
 				{
@@ -241,7 +241,7 @@ describe("TerraDrawMapLibreGLAdapter", () => {
 				map: map as maplibregl.Map,
 			});
 
-			adapter.register(createMockCallbacks());
+			adapter.register(MockCallbacks());
 
 			adapter.render(
 				{
@@ -271,7 +271,7 @@ describe("TerraDrawMapLibreGLAdapter", () => {
 				map: map as maplibregl.Map,
 			});
 
-			adapter.register(createMockCallbacks());
+			adapter.register(MockCallbacks());
 
 			adapter.render(
 				{
@@ -387,7 +387,7 @@ describe("TerraDrawMapLibreGLAdapter", () => {
 				map: map as maplibregl.Map,
 			});
 
-			adapter.register(createMockCallbacks());
+			adapter.register(MockCallbacks());
 
 			expect(adapter.getCoordinatePrecision()).toBe(9);
 		});
@@ -399,7 +399,7 @@ describe("TerraDrawMapLibreGLAdapter", () => {
 				coordinatePrecision: 6,
 			});
 
-			adapter.register(createMockCallbacks());
+			adapter.register(MockCallbacks());
 
 			expect(adapter.getCoordinatePrecision()).toBe(6);
 		});
@@ -414,7 +414,7 @@ describe("TerraDrawMapLibreGLAdapter", () => {
 				map: map as maplibregl.Map,
 			});
 
-			adapter.register(createMockCallbacks());
+			adapter.register(MockCallbacks());
 
 			adapter.render(
 				{

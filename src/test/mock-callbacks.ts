@@ -1,6 +1,6 @@
 import { TerraDrawCallbacks } from "../common";
 
-export const createMockCallbacks = (
+export const MockCallbacks = (
 	overrides?: Partial<TerraDrawCallbacks>,
 ): TerraDrawCallbacks => ({
 	getState: jest.fn(),

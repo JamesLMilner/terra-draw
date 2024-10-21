@@ -1,33 +1,27 @@
-import { Project } from "../common";
-import { mockBehaviorConfig } from "../test/mock-behavior-config";
-import { mockDrawEvent } from "../test/mock-mouse-event";
+import { MockBehaviorConfig } from "../test/mock-behavior-config";
+import { MockCursorEvent } from "../test/mock-cursor-event";
 import { PixelDistanceBehavior } from "./pixel-distance.behavior";
 
 describe("PixelDistanceBehavior", () => {
 	describe("constructor", () => {
 		it("constructs", () => {
-			new PixelDistanceBehavior(mockBehaviorConfig("test"));
+			new PixelDistanceBehavior(MockBehaviorConfig("test"));
 		});
 	});
 
 	describe("api", () => {
 		it("measure", () => {
-			const config = mockBehaviorConfig("test");
+			const config = MockBehaviorConfig("test");
 
-			// Mock the unproject to return a valid set
-			// of bbox coordinates
-			(config.project as jest.Mock<ReturnType<Project>>).mockImplementationOnce(
-				() => ({
-					x: 0,
-					y: 1,
-				}),
+			const pixelDistanceBehavior = new PixelDistanceBehavior(config);
+
+			const distance = pixelDistanceBehavior.measure(
+				MockCursorEvent({ lng: 0, lat: 0 }),
+				[0, 1],
 			);
 
-			const pxielDistanceBehavior = new PixelDistanceBehavior(config);
-
-			const distance = pxielDistanceBehavior.measure(mockDrawEvent(), [0, 1]);
-
-			expect(distance).toStrictEqual(1);
+			// The mockBehaviorConfig function returns project/unproject methods that work on 40 pixel increments
+			expect(distance).toStrictEqual(40);
 		});
 	});
 });

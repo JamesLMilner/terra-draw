@@ -1,7 +1,7 @@
 import {
-	createMockLineString,
-	createMockPoint,
-	createMockPolygonSquare,
+	MockLineString,
+	MockPoint,
+	MockPolygonSquare,
 } from "../../test/mock-features";
 import { GeoJSONStoreFeatures } from "../store";
 import { SpatialIndex } from "./spatial-index";
@@ -20,16 +20,16 @@ describe("Spatial Index", () => {
 	describe("load", () => {
 		it("loads features in without throwing", () => {
 			const spatialIndex = new SpatialIndex();
-			spatialIndex.load([createMockPolygonSquare() as GeoJSONStoreFeatures]);
+			spatialIndex.load([MockPolygonSquare() as GeoJSONStoreFeatures]);
 		});
 		it("throws error loading features with the same id", () => {
 			const spatialIndex = new SpatialIndex();
 			expect(() => {
 				spatialIndex.load([
-					createMockPolygonSquare("1") as GeoJSONStoreFeatures,
-					createMockPolygonSquare("1") as GeoJSONStoreFeatures,
+					MockPolygonSquare("1") as GeoJSONStoreFeatures,
+					MockPolygonSquare("1") as GeoJSONStoreFeatures,
 				]);
-			}).toThrowError();
+			}).toThrow();
 		});
 
 		it("can build with many features in without throwing", () => {
@@ -37,7 +37,7 @@ describe("Spatial Index", () => {
 
 			const polygons = [];
 			for (let i = 0; i < 1000; i++) {
-				polygons.push(createMockPolygonSquare(String(i), i, i + 1));
+				polygons.push(MockPolygonSquare(String(i), i, i + 1));
 			}
 
 			spatialIndex.load(polygons as GeoJSONStoreFeatures[]);
@@ -48,14 +48,14 @@ describe("Spatial Index", () => {
 
 			const polygons = [];
 			for (let i = 0; i < 10; i++) {
-				polygons.push(createMockPolygonSquare(String(i + "A"), i, i + 1));
+				polygons.push(MockPolygonSquare(String(i + "A"), i, i + 1));
 			}
 
 			spatialIndex.load(polygons as GeoJSONStoreFeatures[]);
 
 			const polygonsTwo = [];
 			for (let i = 0; i < 10; i++) {
-				polygonsTwo.push(createMockPolygonSquare(String(i + "B"), i, i + 1));
+				polygonsTwo.push(MockPolygonSquare(String(i + "B"), i, i + 1));
 			}
 
 			spatialIndex.load(polygonsTwo as GeoJSONStoreFeatures[]);
@@ -66,14 +66,14 @@ describe("Spatial Index", () => {
 
 			const polygons = [];
 			for (let i = 0; i < 10; i++) {
-				polygons.push(createMockPolygonSquare(String(i + "A"), i, i + 1));
+				polygons.push(MockPolygonSquare(String(i + "A"), i, i + 1));
 			}
 
 			spatialIndex.load(polygons as GeoJSONStoreFeatures[]);
 
 			const polygonsTwo = [];
 			for (let i = 0; i < 100; i++) {
-				polygonsTwo.push(createMockPolygonSquare(String(i + "B"), i, i + 1));
+				polygonsTwo.push(MockPolygonSquare(String(i + "B"), i, i + 1));
 			}
 
 			spatialIndex.load(polygonsTwo as GeoJSONStoreFeatures[]);
@@ -83,9 +83,9 @@ describe("Spatial Index", () => {
 	describe("insert", () => {
 		it("does not throw", () => {
 			const spatialIndex = new SpatialIndex();
-			spatialIndex.insert(createMockPoint("1") as GeoJSONStoreFeatures);
-			spatialIndex.insert(createMockPolygonSquare("2") as GeoJSONStoreFeatures);
-			spatialIndex.insert(createMockLineString("3") as GeoJSONStoreFeatures);
+			spatialIndex.insert(MockPoint("1") as GeoJSONStoreFeatures);
+			spatialIndex.insert(MockPolygonSquare("2") as GeoJSONStoreFeatures);
+			spatialIndex.insert(MockLineString("3") as GeoJSONStoreFeatures);
 		});
 
 		it("throws for unhandled geometries", () => {
@@ -95,18 +95,16 @@ describe("Spatial Index", () => {
 					type: "Feature",
 					geometry: { type: "MultiPolygon", coordinates: [] },
 				} as any);
-			}).toThrowError();
+			}).toThrow();
 		});
 
 		it("throws for duplicate ids", () => {
 			const spatialIndex = new SpatialIndex();
 
 			expect(() => {
-				spatialIndex.insert(createMockPoint("1") as GeoJSONStoreFeatures);
-				spatialIndex.insert(
-					createMockPolygonSquare("1") as GeoJSONStoreFeatures,
-				);
-			}).toThrowError();
+				spatialIndex.insert(MockPoint("1") as GeoJSONStoreFeatures);
+				spatialIndex.insert(MockPolygonSquare("1") as GeoJSONStoreFeatures);
+			}).toThrow();
 		});
 
 		// TODO: Name this test properly
@@ -114,14 +112,14 @@ describe("Spatial Index", () => {
 			const spatialIndex = new SpatialIndex();
 			for (let i = 0; i < 100; i++) {
 				spatialIndex.insert(
-					createMockPolygonSquare(String(i), 0, 1) as GeoJSONStoreFeatures,
+					MockPolygonSquare(String(i), 0, 1) as GeoJSONStoreFeatures,
 				);
 			}
 			spatialIndex.insert(
-				createMockPolygonSquare(String(101), 0, 2) as GeoJSONStoreFeatures,
+				MockPolygonSquare(String(101), 0, 2) as GeoJSONStoreFeatures,
 			);
 			spatialIndex.insert(
-				createMockPolygonSquare(String(102), 0, 1) as GeoJSONStoreFeatures,
+				MockPolygonSquare(String(102), 0, 1) as GeoJSONStoreFeatures,
 			);
 		});
 
@@ -129,7 +127,7 @@ describe("Spatial Index", () => {
 			const spatialIndex = new SpatialIndex();
 			for (let i = 1; i < 6; i += 0.5) {
 				spatialIndex.insert(
-					createMockPoint(
+					MockPoint(
 						String(i),
 						Math.sqrt(i / 1000) * 90,
 						Math.sqrt(i / 1000) * -90,
@@ -144,18 +142,14 @@ describe("Spatial Index", () => {
 			const spatialIndex = new SpatialIndex();
 
 			expect(() => {
-				spatialIndex.update(createMockPolygonSquare() as GeoJSONStoreFeatures);
-			}).toThrowError();
+				spatialIndex.update(MockPolygonSquare() as GeoJSONStoreFeatures);
+			}).toThrow();
 		});
 
 		it("does not throw if inserted already", () => {
 			const spatialIndex = new SpatialIndex();
-			spatialIndex.insert(
-				createMockPolygonSquare("1", 0, 1) as GeoJSONStoreFeatures,
-			);
-			spatialIndex.update(
-				createMockPolygonSquare("1", 0, 2) as GeoJSONStoreFeatures,
-			);
+			spatialIndex.insert(MockPolygonSquare("1", 0, 1) as GeoJSONStoreFeatures);
+			spatialIndex.update(MockPolygonSquare("1", 0, 2) as GeoJSONStoreFeatures);
 		});
 	});
 
@@ -164,12 +158,12 @@ describe("Spatial Index", () => {
 			const spatialIndex = new SpatialIndex();
 			expect(() => {
 				spatialIndex.remove("1");
-			}).toThrowError();
+			}).toThrow();
 		});
 
 		it("does not throw if inserted already", () => {
 			const spatialIndex = new SpatialIndex();
-			spatialIndex.insert(createMockPolygonSquare("1") as GeoJSONStoreFeatures);
+			spatialIndex.insert(MockPolygonSquare("1") as GeoJSONStoreFeatures);
 			spatialIndex.remove("1");
 		});
 	});
@@ -182,7 +176,7 @@ describe("Spatial Index", () => {
 
 		it("does not throw with inserted feature", () => {
 			const spatialIndex = new SpatialIndex();
-			spatialIndex.insert(createMockPolygonSquare() as GeoJSONStoreFeatures);
+			spatialIndex.insert(MockPolygonSquare() as GeoJSONStoreFeatures);
 
 			spatialIndex.clear();
 		});
@@ -192,12 +186,10 @@ describe("Spatial Index", () => {
 		it("returns true for colliding objects", () => {
 			const spatialIndex = new SpatialIndex();
 
-			spatialIndex.insert(
-				createMockPolygonSquare("1", 0, 1) as GeoJSONStoreFeatures,
-			);
+			spatialIndex.insert(MockPolygonSquare("1", 0, 1) as GeoJSONStoreFeatures);
 			expect(
 				spatialIndex.collides(
-					createMockPolygonSquare("2", 0, 2) as GeoJSONStoreFeatures,
+					MockPolygonSquare("2", 0, 2) as GeoJSONStoreFeatures,
 				),
 			).toBe(true);
 		});
@@ -205,12 +197,10 @@ describe("Spatial Index", () => {
 		it("returns false for non colliding objects", () => {
 			const spatialIndex = new SpatialIndex();
 
-			spatialIndex.insert(
-				createMockPolygonSquare("1", 0, 1) as GeoJSONStoreFeatures,
-			);
+			spatialIndex.insert(MockPolygonSquare("1", 0, 1) as GeoJSONStoreFeatures);
 			expect(
 				spatialIndex.collides(
-					createMockPolygonSquare("2", 2, 3) as GeoJSONStoreFeatures,
+					MockPolygonSquare("2", 2, 3) as GeoJSONStoreFeatures,
 				),
 			).toBe(false);
 		});
@@ -218,12 +208,10 @@ describe("Spatial Index", () => {
 		it("returns false for non colliding objects outside of current tree", () => {
 			const spatialIndex = new SpatialIndex();
 
-			spatialIndex.insert(
-				createMockPolygonSquare("1", 0, 1) as GeoJSONStoreFeatures,
-			);
+			spatialIndex.insert(MockPolygonSquare("1", 0, 1) as GeoJSONStoreFeatures);
 			expect(
 				spatialIndex.collides(
-					createMockPolygonSquare("2", 45, 90) as GeoJSONStoreFeatures,
+					MockPolygonSquare("2", 45, 90) as GeoJSONStoreFeatures,
 				),
 			).toBe(false);
 		});
@@ -233,12 +221,10 @@ describe("Spatial Index", () => {
 		it("returns the intersecting feature id", () => {
 			const spatialIndex = new SpatialIndex();
 
-			spatialIndex.insert(
-				createMockPolygonSquare("1", 0, 1) as GeoJSONStoreFeatures,
-			);
+			spatialIndex.insert(MockPolygonSquare("1", 0, 1) as GeoJSONStoreFeatures);
 			expect(
 				spatialIndex.search(
-					createMockPolygonSquare("2", 0, 2) as GeoJSONStoreFeatures,
+					MockPolygonSquare("2", 0, 2) as GeoJSONStoreFeatures,
 				),
 			).toStrictEqual(["1"]);
 		});
@@ -246,12 +232,10 @@ describe("Spatial Index", () => {
 		it("returns empty array for non intersecting feature", () => {
 			const spatialIndex = new SpatialIndex();
 
-			spatialIndex.insert(
-				createMockPolygonSquare("1", 0, 1) as GeoJSONStoreFeatures,
-			);
+			spatialIndex.insert(MockPolygonSquare("1", 0, 1) as GeoJSONStoreFeatures);
 			expect(
 				spatialIndex.search(
-					createMockPolygonSquare("2", 2, 3) as GeoJSONStoreFeatures,
+					MockPolygonSquare("2", 2, 3) as GeoJSONStoreFeatures,
 				),
 			).toStrictEqual([]);
 		});
@@ -260,18 +244,18 @@ describe("Spatial Index", () => {
 			const spatialIndex = new SpatialIndex();
 
 			spatialIndex.insert(
-				createMockPolygonSquare("1", 0.2, 0.8) as GeoJSONStoreFeatures,
+				MockPolygonSquare("1", 0.2, 0.8) as GeoJSONStoreFeatures,
 			);
 			spatialIndex.insert(
-				createMockPolygonSquare("2", 0.3, 0.7) as GeoJSONStoreFeatures,
+				MockPolygonSquare("2", 0.3, 0.7) as GeoJSONStoreFeatures,
 			);
 			spatialIndex.insert(
-				createMockPolygonSquare("3", 0.4, 0.6) as GeoJSONStoreFeatures,
+				MockPolygonSquare("3", 0.4, 0.6) as GeoJSONStoreFeatures,
 			);
 
 			expect(
 				spatialIndex.search(
-					createMockPolygonSquare("4", 0, 1) as GeoJSONStoreFeatures,
+					MockPolygonSquare("4", 0, 1) as GeoJSONStoreFeatures,
 				),
 			).toStrictEqual(["1", "2", "3"]);
 		});
@@ -283,27 +267,23 @@ describe("Spatial Index", () => {
 
 			const polygons = [];
 			for (let i = -90; i < 90; i += 1) {
-				polygons.push(createMockPolygonSquare(String(i + "A"), i, i + 1));
+				polygons.push(MockPolygonSquare(String(i + "A"), i, i + 1));
 			}
 
 			spatialIndex.load(polygons as GeoJSONStoreFeatures[]);
 
 			for (let i = -90; i < 90; i += 1) {
 				spatialIndex.insert(
-					createMockPolygonSquare(
-						String(i + "B"),
-						i,
-						i + 1,
-					) as GeoJSONStoreFeatures,
+					MockPolygonSquare(String(i + "B"), i, i + 1) as GeoJSONStoreFeatures,
 				);
 			}
 
 			for (let i = -90; i < 90; i += 1) {
 				spatialIndex.search(
-					createMockPolygonSquare("4", i, i + 1) as GeoJSONStoreFeatures,
+					MockPolygonSquare("4", i, i + 1) as GeoJSONStoreFeatures,
 				);
 				spatialIndex.collides(
-					createMockPolygonSquare("4", i + 0.5, i + 1) as GeoJSONStoreFeatures,
+					MockPolygonSquare("4", i + 0.5, i + 1) as GeoJSONStoreFeatures,
 				);
 				spatialIndex.remove(String(i + "B"));
 				spatialIndex.remove(String(i + "A"));

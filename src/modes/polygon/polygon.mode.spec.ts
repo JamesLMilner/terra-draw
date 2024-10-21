@@ -1,9 +1,10 @@
-import { TerraDrawMouseEvent } from "../../common";
+import { Validation } from "../../common";
 import { GeoJSONStore } from "../../store/store";
-import { getMockModeConfig } from "../../test/mock-config";
-import { mockDrawEvent } from "../../test/mock-mouse-event";
+import { MockModeConfig } from "../../test/mock-mode-config";
+import { MockCursorEvent } from "../../test/mock-cursor-event";
 import { ValidateNotSelfIntersecting } from "../../validations/not-self-intersecting.validation";
 import { TerraDrawPolygonMode } from "./polygon.mode";
+import { MockKeyboardEvent } from "../../test/mock-keyboard-event";
 
 describe("TerraDrawPolygonMode", () => {
 	describe("constructor", () => {
@@ -43,7 +44,7 @@ describe("TerraDrawPolygonMode", () => {
 		it("registers correctly", () => {
 			const polygonMode = new TerraDrawPolygonMode();
 			expect(polygonMode.state).toBe("unregistered");
-			polygonMode.register(getMockModeConfig(polygonMode.mode));
+			polygonMode.register(MockModeConfig(polygonMode.mode));
 			expect(polygonMode.state).toBe("registered");
 		});
 
@@ -52,7 +53,7 @@ describe("TerraDrawPolygonMode", () => {
 
 			expect(() => {
 				polygonMode.state = "started";
-			}).toThrowError();
+			}).toThrow();
 		});
 
 		it("stopping before not registering throws error", () => {
@@ -60,7 +61,7 @@ describe("TerraDrawPolygonMode", () => {
 
 			expect(() => {
 				polygonMode.stop();
-			}).toThrowError();
+			}).toThrow();
 		});
 
 		it("starting before not registering throws error", () => {
@@ -68,7 +69,7 @@ describe("TerraDrawPolygonMode", () => {
 
 			expect(() => {
 				polygonMode.start();
-			}).toThrowError();
+			}).toThrow();
 		});
 
 		it("starting before not registering throws error", () => {
@@ -76,22 +77,22 @@ describe("TerraDrawPolygonMode", () => {
 
 			expect(() => {
 				polygonMode.start();
-			}).toThrowError();
+			}).toThrow();
 		});
 
 		it("registering multiple times throws an error", () => {
 			const polygonMode = new TerraDrawPolygonMode();
 
 			expect(() => {
-				polygonMode.register(getMockModeConfig(polygonMode.mode));
-				polygonMode.register(getMockModeConfig(polygonMode.mode));
-			}).toThrowError();
+				polygonMode.register(MockModeConfig(polygonMode.mode));
+				polygonMode.register(MockModeConfig(polygonMode.mode));
+			}).toThrow();
 		});
 
 		it("can start correctly", () => {
 			const polygonMode = new TerraDrawPolygonMode();
 
-			polygonMode.register(getMockModeConfig(polygonMode.mode));
+			polygonMode.register(MockModeConfig(polygonMode.mode));
 			polygonMode.start();
 
 			expect(polygonMode.state).toBe("started");
@@ -100,7 +101,7 @@ describe("TerraDrawPolygonMode", () => {
 		it("can stop correctly", () => {
 			const polygonMode = new TerraDrawPolygonMode();
 
-			polygonMode.register(getMockModeConfig(polygonMode.mode));
+			polygonMode.register(MockModeConfig(polygonMode.mode));
 			polygonMode.start();
 			polygonMode.stop();
 
@@ -111,53 +112,29 @@ describe("TerraDrawPolygonMode", () => {
 	describe("onMouseMove", () => {
 		let polygonMode: TerraDrawPolygonMode;
 		let store: GeoJSONStore;
-		let project: jest.Mock;
 		let onChange: jest.Mock;
 
 		beforeEach(() => {
 			store = new GeoJSONStore();
 			polygonMode = new TerraDrawPolygonMode();
-			const mockConfig = getMockModeConfig(polygonMode.mode);
+			const mockConfig = MockModeConfig(polygonMode.mode);
 
 			store = mockConfig.store;
 			onChange = mockConfig.onChange;
-			project = mockConfig.project;
-
 			polygonMode.register(mockConfig);
 			polygonMode.start();
 		});
 
 		it("does nothing if no clicks have occurred ", () => {
-			polygonMode.onMouseMove({
-				lng: 0,
-				lat: 0,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			polygonMode.onMouseMove(MockCursorEvent({ lng: 0, lat: 0 }));
 
 			expect(onChange).not.toHaveBeenCalled();
 		});
 
 		it("updates the coordinate to the mouse position after first click", () => {
-			polygonMode.onClick({
-				lng: 0,
-				lat: 0,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
-			polygonMode.onMouseMove({
-				lng: 1,
-				lat: 1,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			polygonMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
 
 			expect(onChange).toHaveBeenCalledTimes(2);
 
@@ -175,41 +152,13 @@ describe("TerraDrawPolygonMode", () => {
 		});
 
 		it("updates the coordinate to the mouse position after second click", () => {
-			polygonMode.onClick({
-				lng: 0,
-				lat: 0,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
-			polygonMode.onMouseMove({
-				lng: 1,
-				lat: 1,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			polygonMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
 
-			polygonMode.onClick({
-				lng: 1,
-				lat: 1,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			polygonMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
 
-			polygonMode.onMouseMove({
-				lng: 2,
-				lat: 2,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			polygonMode.onMouseMove(MockCursorEvent({ lng: 2, lat: 2 }));
 
 			expect(onChange).toHaveBeenCalledTimes(4);
 
@@ -227,63 +176,18 @@ describe("TerraDrawPolygonMode", () => {
 		});
 
 		it("updates the coordinate to the mouse position after third click", () => {
-			polygonMode.onClick({
-				lng: 0,
-				lat: 0,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
-			polygonMode.onMouseMove({
-				lng: 1,
-				lat: 1,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			polygonMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
 
-			polygonMode.onClick({
-				lng: 1,
-				lat: 1,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			polygonMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
 
-			polygonMode.onMouseMove({
-				lng: 2,
-				lat: 2,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			polygonMode.onMouseMove(MockCursorEvent({ lng: 2, lat: 2 }));
 
-			polygonMode.onClick({
-				lng: 2,
-				lat: 2,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			polygonMode.onClick(MockCursorEvent({ lng: 2, lat: 2 }));
 
 			// Snapping branch
-			project.mockReturnValueOnce({ x: 0, y: 0 });
-			project.mockReturnValueOnce({ x: 0, y: 0 });
-
-			polygonMode.onMouseMove({
-				lng: 3,
-				lat: 3,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			polygonMode.onMouseMove(MockCursorEvent({ lng: 2.5, lat: 2.5 }));
 
 			expect(onChange).toHaveBeenCalledTimes(7);
 
@@ -303,17 +207,7 @@ describe("TerraDrawPolygonMode", () => {
 			]);
 
 			// No snapping branch
-			project.mockReturnValueOnce({ x: 0, y: 0 });
-			project.mockReturnValueOnce({ x: 0, y: 0 });
-
-			polygonMode.onMouseMove({
-				lng: 4,
-				lat: 4,
-				containerX: 41,
-				containerY: 41,
-				button: "left",
-				heldKeys: [],
-			});
+			polygonMode.onMouseMove(MockCursorEvent({ lng: 4, lat: 4 }));
 
 			features = store.copyAll();
 
@@ -332,140 +226,45 @@ describe("TerraDrawPolygonMode", () => {
 	describe("onClick", () => {
 		let polygonMode: TerraDrawPolygonMode;
 		let store: GeoJSONStore;
-		let project: jest.Mock;
-		let unproject: jest.Mock;
 
-		const mockClickBoundingBox = (
-			bbox: [
-				[number, number],
-				[number, number],
-				[number, number],
-				[number, number],
-			] = [
-				[0, 0],
-				[0, 0],
-				[0, 0],
-				[0, 0],
-			],
-		) => {
-			unproject
-				.mockReturnValueOnce({ lng: bbox[0][0], lat: bbox[0][1] })
-				.mockReturnValueOnce({ lng: bbox[1][0], lat: bbox[1][1] })
-				.mockReturnValueOnce({ lng: bbox[2][0], lat: bbox[2][1] })
-				.mockReturnValueOnce({ lng: bbox[3][0], lat: bbox[3][1] })
-				.mockReturnValueOnce({ lng: bbox[0][0], lat: bbox[0][1] });
+		const validation: Validation = (feature, { updateType }) => {
+			if (updateType === "finish" || updateType === "commit") {
+				return ValidateNotSelfIntersecting(feature);
+			}
+			return true;
 		};
 
 		beforeEach(() => {
 			polygonMode = new TerraDrawPolygonMode();
-			const mockConfig = getMockModeConfig(polygonMode.mode);
+			const mockConfig = MockModeConfig(polygonMode.mode);
 
 			store = mockConfig.store;
-			project = mockConfig.project;
-			unproject = mockConfig.project;
 			polygonMode.register(mockConfig);
 			polygonMode.start();
 		});
 
 		it("can create a polygon", () => {
-			mockClickBoundingBox();
+			polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
-			polygonMode.onClick({
-				lng: 0,
-				lat: 0,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			polygonMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
 
-			polygonMode.onMouseMove({
-				lng: 1,
-				lat: 1,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			polygonMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
 
-			polygonMode.onClick({
-				lng: 1,
-				lat: 1,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			polygonMode.onMouseMove(MockCursorEvent({ lng: 2, lat: 2 }));
 
-			polygonMode.onMouseMove({
-				lng: 2,
-				lat: 2,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			polygonMode.onClick(MockCursorEvent({ lng: 2, lat: 2 }));
 
-			polygonMode.onClick({
-				lng: 2,
-				lat: 2,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			polygonMode.onMouseMove(MockCursorEvent({ lng: 3, lat: 3 }));
 
-			// closingPoints
-			project.mockReturnValueOnce({ x: 0, y: 0 });
-			project.mockReturnValueOnce({ x: 0, y: 0 });
+			polygonMode.onClick(MockCursorEvent({ lng: 3, lat: 3 }));
 
-			polygonMode.onMouseMove({
-				lng: 3,
-				lat: 3,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
-
-			// closingPoints
-			project.mockReturnValueOnce({ x: 0, y: 0 });
-			project.mockReturnValueOnce({ x: 0, y: 0 });
-
-			polygonMode.onClick({
-				lng: 3,
-				lat: 3,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
-
-			// closingPoints
-			project.mockReturnValueOnce({ x: 0, y: 0 });
-			project.mockReturnValueOnce({ x: 0, y: 0 });
-
-			polygonMode.onClick({
-				lng: 3,
-				lat: 3,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			polygonMode.onClick(MockCursorEvent({ lng: 3, lat: 3 }));
 
 			let features = store.copyAll();
 			expect(features.length).toBe(1);
 
 			// Create a new polygon
-			polygonMode.onClick({
-				lng: 0,
-				lat: 0,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
 			features = store.copyAll();
 			expect(features.length).toBe(2);
@@ -473,170 +272,47 @@ describe("TerraDrawPolygonMode", () => {
 
 		it("can create a polygon with snapping enabled", () => {
 			polygonMode = new TerraDrawPolygonMode({ snapping: true });
-			const mockConfig = getMockModeConfig(polygonMode.mode);
+			const mockConfig = MockModeConfig(polygonMode.mode);
 			store = mockConfig.store;
-			project = mockConfig.project;
-			unproject = mockConfig.unproject;
 			polygonMode.register(mockConfig);
 			polygonMode.start();
 
-			mockClickBoundingBox();
-			polygonMode.onClick({
-				lng: 0,
-				lat: 0,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
-			mockClickBoundingBox();
-			polygonMode.onMouseMove({
-				lng: 1,
-				lat: 1,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			polygonMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
 
-			mockClickBoundingBox();
-			polygonMode.onClick({
-				lng: 1,
-				lat: 1,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			polygonMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
 
-			mockClickBoundingBox();
-			polygonMode.onMouseMove({
-				lng: 2,
-				lat: 2,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			polygonMode.onMouseMove(MockCursorEvent({ lng: 2, lat: 2 }));
 
-			mockClickBoundingBox();
-			polygonMode.onClick({
-				lng: 2,
-				lat: 2,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			polygonMode.onClick(MockCursorEvent({ lng: 2, lat: 2 }));
 
-			mockClickBoundingBox();
-			project.mockReturnValueOnce({ x: 0, y: 0 });
-			project.mockReturnValueOnce({ x: 0, y: 0 });
+			polygonMode.onMouseMove(MockCursorEvent({ lng: 2.5, lat: 2.5 }));
 
-			polygonMode.onMouseMove({
-				lng: 3,
-				lat: 3,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
-
-			project.mockReturnValueOnce({ x: 0, y: 0 });
-			project.mockReturnValueOnce({ x: 0, y: 0 });
-
-			mockClickBoundingBox();
-			polygonMode.onClick({
-				lng: 3,
-				lat: 3,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			polygonMode.onClick(MockCursorEvent({ lng: 2.5, lat: 2.5 }));
 
 			let features = store.copyAll();
 			expect(features.length).toBe(1);
 
-			mockClickBoundingBox();
-			project
-				.mockReturnValueOnce({ x: 0, y: 0 })
-				.mockReturnValueOnce({ x: 0, y: 0 })
-				.mockReturnValueOnce({ x: 0, y: 0 })
-				.mockReturnValueOnce({ x: 0, y: 0 });
-
 			// Create a new polygon
-			polygonMode.onClick({
-				lng: 0,
-				lat: 0,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
 			features = store.copyAll();
 			expect(features.length).toBe(2);
 		});
 
 		it("can update polygon past 3 coordinates", () => {
-			polygonMode.onClick({
-				lng: 0,
-				lat: 0,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
-			polygonMode.onMouseMove({
-				lng: 1,
-				lat: 1,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			polygonMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
 
-			polygonMode.onClick({
-				lng: 1,
-				lat: 1,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			polygonMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
 
-			polygonMode.onMouseMove({
-				lng: 2,
-				lat: 2,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			polygonMode.onMouseMove(MockCursorEvent({ lng: 2, lat: 2 }));
 
-			polygonMode.onClick({
-				lng: 2,
-				lat: 2,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			polygonMode.onClick(MockCursorEvent({ lng: 2, lat: 2 }));
 
-			project.mockReturnValueOnce({ x: 100, y: 100 });
-			project.mockReturnValueOnce({ x: 150, y: 150 });
-
-			polygonMode.onMouseMove({
-				lng: 3,
-				lat: 3,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			polygonMode.onMouseMove(MockCursorEvent({ lng: 3, lat: 3 }));
 
 			// 1 times for the polygon
 			// 2 times for the closing points
@@ -652,17 +328,7 @@ describe("TerraDrawPolygonMode", () => {
 				],
 			]);
 
-			project.mockReturnValueOnce({ x: 100, y: 100 });
-			project.mockReturnValueOnce({ x: 150, y: 150 });
-
-			polygonMode.onClick({
-				lng: 3,
-				lat: 3,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			polygonMode.onClick(MockCursorEvent({ lng: 3, lat: 3 }));
 
 			// 1 times for the polygon
 			// 2 times for the closing points
@@ -679,29 +345,9 @@ describe("TerraDrawPolygonMode", () => {
 				],
 			]);
 
-			project.mockReturnValueOnce({ x: 100, y: 100 });
-			project.mockReturnValueOnce({ x: 150, y: 150 });
+			polygonMode.onMouseMove(MockCursorEvent({ lng: 4, lat: 4 }));
 
-			polygonMode.onMouseMove({
-				lng: 4,
-				lat: 4,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
-
-			project.mockReturnValueOnce({ x: 100, y: 100 });
-			project.mockReturnValueOnce({ x: 150, y: 150 });
-
-			polygonMode.onClick({
-				lng: 4,
-				lat: 4,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			polygonMode.onClick(MockCursorEvent({ lng: 4, lat: 4 }));
 
 			// 1 times for the polygon
 			// 2 times for the closing points
@@ -718,24 +364,9 @@ describe("TerraDrawPolygonMode", () => {
 					[0, 0],
 				],
 			]);
-
-			// Fake onMouseMove
-			project.mockReturnValueOnce({ x: 0, y: 0 });
-			project.mockReturnValueOnce({ x: 50, y: 50 });
-
-			// Actual click
-			project.mockReturnValueOnce({ x: 0, y: 0 });
-			project.mockReturnValueOnce({ x: 50, y: 50 });
 
 			// Close off the polygon
-			polygonMode.onClick({
-				lng: 4,
-				lat: 4,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			polygonMode.onClick(MockCursorEvent({ lng: 4, lat: 4 }));
 
 			// No closing points as polygon is closed
 			features = store.copyAll();
@@ -754,21 +385,16 @@ describe("TerraDrawPolygonMode", () => {
 
 		it("it early returns early if a duplicate coordinate is provided", () => {
 			polygonMode = new TerraDrawPolygonMode();
-			const mockConfig = getMockModeConfig(polygonMode.mode);
+			const mockConfig = MockModeConfig(polygonMode.mode);
 
 			store = mockConfig.store;
-			project = mockConfig.project;
-
 			polygonMode.register(mockConfig);
 			polygonMode.start();
 
 			jest.spyOn(store, "updateGeometry");
 			jest.spyOn(store, "create");
 
-			const firstPoint = mockDrawEvent({
-				lng: 1,
-				lat: 1,
-			});
+			const firstPoint = MockCursorEvent({ lng: 1, lat: 1 });
 			polygonMode.onMouseMove(firstPoint);
 			polygonMode.onClick(firstPoint);
 
@@ -784,10 +410,7 @@ describe("TerraDrawPolygonMode", () => {
 			polygonMode.onClick(firstPoint);
 			expect(store.updateGeometry).toHaveBeenCalledTimes(1);
 
-			const secondPoint = mockDrawEvent({
-				lng: 2,
-				lat: 2,
-			});
+			const secondPoint = MockCursorEvent({ lng: 2, lat: 2 });
 			polygonMode.onMouseMove(secondPoint);
 			expect(store.updateGeometry).toHaveBeenCalledTimes(2);
 
@@ -800,103 +423,83 @@ describe("TerraDrawPolygonMode", () => {
 			expect(store.updateGeometry).toHaveBeenCalledTimes(4);
 
 			// Again nothing happens because the coordinate is identical
-
 			polygonMode.onClick(secondPoint);
 			expect(store.updateGeometry).toHaveBeenCalledTimes(4);
 
-			const thirdPoint = mockDrawEvent({
-				lng: 3,
-				lat: 3,
-			});
+			const thirdPoint = MockCursorEvent({ lng: 3, lat: 3 });
 
 			polygonMode.onMouseMove(thirdPoint);
 			expect(store.updateGeometry).toHaveBeenCalledTimes(5);
 
 			// This now updates because the coordinate is different
-
 			polygonMode.onClick(thirdPoint);
 			expect(store.updateGeometry).toHaveBeenCalledTimes(6);
-
-			// We have to mock project in the final block
-			project.mockReturnValueOnce({ x: 0, y: 0 });
-			project.mockReturnValueOnce({ x: 0, y: 0 });
 
 			polygonMode.onMouseMove(thirdPoint);
 			expect(store.updateGeometry).toHaveBeenCalledTimes(7);
 
-			// We have to mock project in the final block
-			project.mockReturnValueOnce({ x: 100, y: 100 });
-			project.mockReturnValueOnce({ x: 100, y: 100 });
-
 			polygonMode.onClick(thirdPoint);
-			expect(store.updateGeometry).toHaveBeenCalledTimes(7);
+			expect(store.updateGeometry).toHaveBeenCalledTimes(8);
+
+			// Polygon is now closed
+			expect(store.updateGeometry).toHaveBeenNthCalledWith(8, [
+				{
+					geometry: {
+						coordinates: [
+							[
+								[1, 1],
+								[2, 2],
+								[3, 3],
+								[1, 1],
+							],
+						],
+						type: "Polygon",
+					},
+					id: expect.any(String),
+				},
+			]);
 		});
 
 		describe("validate", () => {
 			it("does not create a polygon if it has intersections and there is a validation that returns false", () => {
 				polygonMode = new TerraDrawPolygonMode({
-					validation: (feature, { updateType }) => {
-						if (updateType === "finish" || updateType === "commit") {
-							return ValidateNotSelfIntersecting(feature);
-						}
-						return true;
-					},
+					validation: validation,
 				});
-				const mockConfig = getMockModeConfig(polygonMode.mode);
+				const mockConfig = MockModeConfig(polygonMode.mode);
 
 				store = mockConfig.store;
-				project = mockConfig.project;
 
 				polygonMode.register(mockConfig);
 				polygonMode.start();
 
-				const coordOneEvent = {
+				const coordOneEvent = MockCursorEvent({
 					lng: 11.162109375,
 					lat: 23.322080011,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				} as TerraDrawMouseEvent;
+				});
 				polygonMode.onClick(coordOneEvent);
 
-				const coordTwoEvent = {
+				const coordTwoEvent = MockCursorEvent({
 					lng: -21.884765625,
 					lat: -8.928487062,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				} as TerraDrawMouseEvent;
+				});
 				polygonMode.onMouseMove(coordTwoEvent);
 				polygonMode.onClick(coordTwoEvent);
 
-				const coordThreeEvent = {
+				const coordThreeEvent = MockCursorEvent({
 					lng: 26.894531249,
 					lat: -20.468189222,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				} as TerraDrawMouseEvent;
+				});
 				polygonMode.onMouseMove(coordThreeEvent);
 				polygonMode.onClick(coordThreeEvent);
 
 				// Overlapping point
-				const coordFourEvent = {
+				const coordFourEvent = MockCursorEvent({
 					lng: -13.974609375,
 					lat: 22.187404991,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				} as TerraDrawMouseEvent;
-				project.mockReturnValueOnce({ x: 100, y: 100 });
-				project.mockReturnValueOnce({ x: 100, y: 100 });
+				});
+
 				polygonMode.onMouseMove(coordFourEvent);
 
-				project.mockReturnValueOnce({ x: 100, y: 100 });
-				project.mockReturnValueOnce({ x: 100, y: 100 });
 				polygonMode.onClick(coordFourEvent);
 
 				let features = store.copyAll();
@@ -914,21 +517,13 @@ describe("TerraDrawPolygonMode", () => {
 					],
 				]);
 
-				const closingCoordEvent = {
-					...coordOneEvent,
-				};
-				project.mockReturnValueOnce({ x: 0, y: 0 });
-				project.mockReturnValueOnce({ x: 0, y: 0 });
+				const closingCoordEvent = { ...coordOneEvent };
 				polygonMode.onMouseMove(closingCoordEvent);
-
-				project.mockReturnValueOnce({ x: 0, y: 0 });
-				project.mockReturnValueOnce({ x: 0, y: 0 });
 				polygonMode.onClick(closingCoordEvent);
 
 				// No closing points as feature is closed
 				features = store.copyAll();
 				expect(features.length).toBe(1);
-				expect(project).toHaveBeenCalledTimes(8);
 
 				// The overlapping coordinate is not included
 				expect(features[0].geometry.coordinates).toStrictEqual([
@@ -950,97 +545,33 @@ describe("TerraDrawPolygonMode", () => {
 						return true;
 					},
 				});
-				const mockConfig = getMockModeConfig(polygonMode.mode);
+				const mockConfig = MockModeConfig(polygonMode.mode);
 
 				store = mockConfig.store;
-				project = mockConfig.project;
 
 				polygonMode.register(mockConfig);
 				polygonMode.start();
 
-				polygonMode.onClick({
-					lng: 0,
-					lat: 0,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
-				polygonMode.onMouseMove({
-					lng: 0,
-					lat: 1,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				polygonMode.onMouseMove(MockCursorEvent({ lng: 0, lat: 1 }));
 
-				polygonMode.onClick({
-					lng: 0,
-					lat: 1,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 1 }));
 
-				polygonMode.onMouseMove({
-					lng: 1,
-					lat: 1,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				polygonMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
 
-				polygonMode.onClick({
-					lng: 1,
-					lat: 1,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				polygonMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
 
-				// Close the polygon
-				project.mockReturnValueOnce({ x: 0, y: 0 });
-				project.mockReturnValueOnce({ x: 0, y: 0 });
+				polygonMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
 
-				polygonMode.onMouseMove({
-					lng: 1,
-					lat: 1,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
-
-				project.mockReturnValueOnce({ x: 0, y: 0 });
-				project.mockReturnValueOnce({ x: 0, y: 0 });
-
-				polygonMode.onClick({
-					lng: 1,
-					lat: 1,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				polygonMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
 
 				let features = store.copyAll();
 
 				expect(features.length).toBe(1);
 
 				// Create a new polygon
-				polygonMode.onClick({
-					lng: 0,
-					lat: 0,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
 				features = store.copyAll();
 				expect(features.length).toBe(2);
@@ -1052,37 +583,12 @@ describe("TerraDrawPolygonMode", () => {
 		let polygonMode: TerraDrawPolygonMode;
 		let store: GeoJSONStore;
 		let onFinish: jest.Mock;
-		let project: jest.Mock;
-		let unproject: jest.Mock;
-
-		const mockClickBoundingBox = (
-			bbox: [
-				[number, number],
-				[number, number],
-				[number, number],
-				[number, number],
-			] = [
-				[0, 0],
-				[0, 0],
-				[0, 0],
-				[0, 0],
-			],
-		) => {
-			unproject
-				.mockReturnValueOnce({ lng: bbox[0][0], lat: bbox[0][1] })
-				.mockReturnValueOnce({ lng: bbox[1][0], lat: bbox[1][1] })
-				.mockReturnValueOnce({ lng: bbox[2][0], lat: bbox[2][1] })
-				.mockReturnValueOnce({ lng: bbox[3][0], lat: bbox[3][1] })
-				.mockReturnValueOnce({ lng: bbox[0][0], lat: bbox[0][1] });
-		};
 
 		beforeEach(() => {
 			polygonMode = new TerraDrawPolygonMode();
-			const mockConfig = getMockModeConfig(polygonMode.mode);
+			const mockConfig = MockModeConfig(polygonMode.mode);
 
 			store = mockConfig.store;
-			project = mockConfig.project;
-			unproject = mockConfig.project;
 			onFinish = mockConfig.onFinish;
 			polygonMode.register(mockConfig);
 			polygonMode.start();
@@ -1090,31 +596,16 @@ describe("TerraDrawPolygonMode", () => {
 
 		describe("cancel", () => {
 			it("does nothing when no line is present", () => {
-				polygonMode.onKeyUp({
-					key: "Escape",
-					preventDefault: jest.fn(),
-					heldKeys: [],
-				});
+				polygonMode.onKeyUp(MockKeyboardEvent({ key: "Escape" }));
 			});
 
 			it("deletes the line when currently editing", () => {
-				polygonMode.onClick({
-					lng: 0,
-					lat: 0,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
 				let features = store.copyAll();
 				expect(features.length).toBe(1);
 
-				polygonMode.onKeyUp({
-					key: "Escape",
-					preventDefault: jest.fn(),
-					heldKeys: [],
-				});
+				polygonMode.onKeyUp(MockKeyboardEvent({ key: "Escape" }));
 
 				features = store.copyAll();
 				expect(features.length).toBe(0);
@@ -1122,31 +613,18 @@ describe("TerraDrawPolygonMode", () => {
 
 			it("does not delete the line when cancel is set to null", () => {
 				polygonMode = new TerraDrawPolygonMode({ keyEvents: { cancel: null } });
-				const mockConfig = getMockModeConfig(polygonMode.mode);
+				const mockConfig = MockModeConfig(polygonMode.mode);
 
 				store = mockConfig.store;
-				project = mockConfig.project;
-				unproject = mockConfig.project;
 				polygonMode.register(mockConfig);
 				polygonMode.start();
 
-				polygonMode.onClick({
-					lng: 0,
-					lat: 0,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
 				let features = store.copyAll();
 				expect(features.length).toBe(1);
 
-				polygonMode.onKeyUp({
-					key: "Escape",
-					preventDefault: jest.fn(),
-					heldKeys: [],
-				});
+				polygonMode.onKeyUp(MockKeyboardEvent({ key: "Escape" }));
 
 				features = store.copyAll();
 				expect(features.length).toBe(1);
@@ -1155,101 +633,27 @@ describe("TerraDrawPolygonMode", () => {
 
 		describe("finish", () => {
 			it("can create a polygon", () => {
-				mockClickBoundingBox();
+				polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
-				polygonMode.onClick({
-					lng: 0,
-					lat: 0,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				polygonMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
 
-				polygonMode.onMouseMove({
-					lng: 1,
-					lat: 1,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				polygonMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
 
-				polygonMode.onClick({
-					lng: 1,
-					lat: 1,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				polygonMode.onMouseMove(MockCursorEvent({ lng: 2, lat: 2 }));
 
-				polygonMode.onMouseMove({
-					lng: 2,
-					lat: 2,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				polygonMode.onClick(MockCursorEvent({ lng: 2, lat: 2 }));
 
-				polygonMode.onClick({
-					lng: 2,
-					lat: 2,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				polygonMode.onMouseMove(MockCursorEvent({ lng: 3, lat: 3 }));
 
-				// closingPoints
-				project.mockReturnValueOnce({ x: 0, y: 0 });
-				project.mockReturnValueOnce({ x: 0, y: 0 });
+				polygonMode.onClick(MockCursorEvent({ lng: 3, lat: 3 }));
 
-				polygonMode.onMouseMove({
-					lng: 3,
-					lat: 3,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
-
-				// closingPoints
-				project.mockReturnValueOnce({ x: 0, y: 0 });
-				project.mockReturnValueOnce({ x: 0, y: 0 });
-
-				polygonMode.onClick({
-					lng: 3,
-					lat: 3,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
-
-				// closingPoints
-				project.mockReturnValueOnce({ x: 0, y: 0 });
-				project.mockReturnValueOnce({ x: 0, y: 0 });
-
-				polygonMode.onClick({
-					lng: 3,
-					lat: 3,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				polygonMode.onClick(MockCursorEvent({ lng: 3, lat: 3 }));
 
 				let features = store.copyAll();
 				expect(features.length).toBe(1);
 
 				// Finish drawing the polygon
-				polygonMode.onKeyUp({
-					key: "Enter",
-					preventDefault: jest.fn(),
-					heldKeys: [],
-				});
+				polygonMode.onKeyUp(MockKeyboardEvent({ key: "Escape" }));
 
 				expect(onFinish).toHaveBeenCalledTimes(1);
 				expect(onFinish).toHaveBeenNthCalledWith(1, expect.any(String), {
@@ -1258,14 +662,7 @@ describe("TerraDrawPolygonMode", () => {
 				});
 
 				// Creates a new polygon
-				polygonMode.onClick({
-					lng: 4,
-					lat: 4,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				polygonMode.onClick(MockCursorEvent({ lng: 4, lat: 4 }));
 
 				features = store.copyAll();
 				expect(features.length).toBe(2);
@@ -1274,92 +671,27 @@ describe("TerraDrawPolygonMode", () => {
 
 		it("does not finish drawing polygon when finish is null", () => {
 			polygonMode = new TerraDrawPolygonMode({ keyEvents: { finish: null } });
-			const mockConfig = getMockModeConfig(polygonMode.mode);
+			const mockConfig = MockModeConfig(polygonMode.mode);
 
 			store = mockConfig.store;
-			project = mockConfig.project;
-			unproject = mockConfig.project;
 			polygonMode.register(mockConfig);
 			polygonMode.start();
 
-			mockClickBoundingBox();
+			polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
-			polygonMode.onClick({
-				lng: 0,
-				lat: 0,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			polygonMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
 
-			polygonMode.onMouseMove({
-				lng: 1,
-				lat: 1,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			polygonMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
 
-			polygonMode.onClick({
-				lng: 1,
-				lat: 1,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			polygonMode.onMouseMove(MockCursorEvent({ lng: 2, lat: 2 }));
 
-			polygonMode.onMouseMove({
-				lng: 2,
-				lat: 2,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			polygonMode.onClick(MockCursorEvent({ lng: 2, lat: 2 }));
 
-			polygonMode.onClick({
-				lng: 2,
-				lat: 2,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			polygonMode.onMouseMove(MockCursorEvent({ lng: 3, lat: 3 }));
 
-			// closingPoints
-			project.mockReturnValueOnce({ x: 0, y: 0 });
-			project.mockReturnValueOnce({ x: 0, y: 0 });
+			polygonMode.onClick(MockCursorEvent({ lng: 3, lat: 3 }));
 
-			polygonMode.onMouseMove({
-				lng: 3,
-				lat: 3,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
-
-			// closingPoints
-			project.mockReturnValueOnce({ x: 0, y: 0 });
-			project.mockReturnValueOnce({ x: 0, y: 0 });
-
-			polygonMode.onClick({
-				lng: 3,
-				lat: 3,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
-
-			polygonMode.onKeyUp({
-				key: "Enter",
-				preventDefault: jest.fn(),
-				heldKeys: [],
-			});
+			polygonMode.onKeyUp(MockKeyboardEvent({ key: "Enter" }));
 
 			expect(onFinish).not.toHaveBeenCalled();
 
@@ -1380,7 +712,7 @@ describe("cleanUp", () => {
 		jest.resetAllMocks();
 		polygonMode = new TerraDrawPolygonMode();
 
-		const mockConfig = getMockModeConfig(polygonMode.mode);
+		const mockConfig = MockModeConfig(polygonMode.mode);
 		store = mockConfig.store;
 
 		polygonMode.register(mockConfig);
@@ -1390,18 +722,11 @@ describe("cleanUp", () => {
 	it("does not throw error if feature has not been created ", () => {
 		expect(() => {
 			polygonMode.cleanUp();
-		}).not.toThrowError();
+		}).not.toThrow();
 	});
 
 	it("cleans up correctly if drawing has started", () => {
-		polygonMode.onClick({
-			lng: 0,
-			lat: 0,
-			containerX: 0,
-			containerY: 0,
-			button: "left",
-			heldKeys: [],
-		});
+		polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
 		expect(store.copyAll().length).toBe(1);
 
@@ -1415,57 +740,57 @@ describe("cleanUp", () => {
 describe("onDrag", () => {
 	it("does nothing", () => {
 		const polygonMode = new TerraDrawPolygonMode();
-		polygonMode.register(getMockModeConfig(polygonMode.mode));
+		polygonMode.register(MockModeConfig(polygonMode.mode));
 
 		expect(() => {
 			polygonMode.onDrag();
-		}).not.toThrowError();
+		}).not.toThrow();
 	});
 });
 
 describe("onDragStart", () => {
 	it("does nothing", () => {
 		const polygonMode = new TerraDrawPolygonMode();
-		polygonMode.register(getMockModeConfig(polygonMode.mode));
+		polygonMode.register(MockModeConfig(polygonMode.mode));
 
 		expect(() => {
 			polygonMode.onDragStart();
-		}).not.toThrowError();
+		}).not.toThrow();
 	});
 });
 
 describe("onDragEnd", () => {
 	it("does nothing", () => {
 		const polygonMode = new TerraDrawPolygonMode();
-		polygonMode.register(getMockModeConfig(polygonMode.mode));
+		polygonMode.register(MockModeConfig(polygonMode.mode));
 
 		expect(() => {
 			polygonMode.onDragEnd();
-		}).not.toThrowError();
+		}).not.toThrow();
 	});
 });
 
 describe("styling", () => {
 	it("gets", () => {
 		const polygonMode = new TerraDrawPolygonMode();
-		polygonMode.register(getMockModeConfig(polygonMode.mode));
+		polygonMode.register(MockModeConfig(polygonMode.mode));
 		expect(polygonMode.styles).toStrictEqual({});
 	});
 
 	it("set fails if non valid styling", () => {
 		const polygonMode = new TerraDrawPolygonMode();
-		polygonMode.register(getMockModeConfig(polygonMode.mode));
+		polygonMode.register(MockModeConfig(polygonMode.mode));
 
 		expect(() => {
 			(polygonMode.styles as unknown) = "test";
-		}).toThrowError();
+		}).toThrow();
 
 		expect(polygonMode.styles).toStrictEqual({});
 	});
 
 	it("sets", () => {
 		const polygonMode = new TerraDrawPolygonMode();
-		polygonMode.register(getMockModeConfig(polygonMode.mode));
+		polygonMode.register(MockModeConfig(polygonMode.mode));
 
 		polygonMode.styles = {
 			closingPointColor: "#ffffff",
@@ -1573,7 +898,7 @@ describe("validateFeature", () => {
 				fillOpacity: 0.5,
 			},
 		});
-		polygonMode.register(getMockModeConfig("polygon"));
+		polygonMode.register(MockModeConfig("polygon"));
 
 		expect(
 			polygonMode.validateFeature({
@@ -1601,7 +926,7 @@ describe("validateFeature", () => {
 				fillOpacity: 0.5,
 			},
 		});
-		polygonMode.register(getMockModeConfig("polygon"));
+		polygonMode.register(MockModeConfig("polygon"));
 
 		expect(
 			polygonMode.validateFeature({
@@ -1632,7 +957,7 @@ describe("validateFeature", () => {
 		const polygonMode = new TerraDrawPolygonMode({
 			validation: () => false,
 		});
-		polygonMode.register(getMockModeConfig("polygon"));
+		polygonMode.register(MockModeConfig("polygon"));
 
 		expect(
 			polygonMode.validateFeature({

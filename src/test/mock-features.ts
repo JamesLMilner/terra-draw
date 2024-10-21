@@ -16,7 +16,7 @@ function createMockFeature<T extends Polygon | LineString | Point>(
 	};
 }
 
-export function createMockPolygonSquare(
+export function MockPolygonSquare(
 	id?: string,
 	squareStart?: number,
 	squareEnd?: number,
@@ -44,7 +44,7 @@ export function createMockPolygonSquare(
 	});
 }
 
-export function createMockPoint(
+export function MockPoint(
 	id?: string,
 	lng?: number,
 	lat?: number,
@@ -55,7 +55,7 @@ export function createMockPoint(
 	});
 }
 
-export function createMockLineString(id?: string): Feature<LineString> {
+export function MockLineString(id?: string): Feature<LineString> {
 	return createMockFeature(id || mockUUID, {
 		type: "LineString",
 		coordinates: [

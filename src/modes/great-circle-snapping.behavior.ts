@@ -52,16 +52,20 @@ export class GreatCircleSnappingBehavior extends TerraDrawModeBehavior {
 
 			// Get the start coordinate
 			const start = coordinates[0];
-			const dist = this.pixelDistance.measure(event, start);
-			if (dist < closest.minDist && dist < this.pointerDistance) {
+			const startDist = this.pixelDistance.measure(event, start);
+
+			if (startDist < closest.minDist && startDist < this.pointerDistance) {
 				closest.coord = start;
+				closest.minDist = startDist;
 			}
 
 			// Get the final coordinate
 			const end = coordinates[coordinates.length - 1];
 			const endDist = this.pixelDistance.measure(event, end);
+
 			if (endDist < closest.minDist && endDist < this.pointerDistance) {
 				closest.coord = end;
+				closest.minDist = endDist;
 			}
 		});
 

@@ -1,6 +1,6 @@
 import { createStorePolygon } from "../../../test/create-store-features";
-import { mockBehaviorConfig } from "../../../test/mock-behavior-config";
-import { mockDrawEvent } from "../../../test/mock-mouse-event";
+import { MockBehaviorConfig } from "../../../test/mock-behavior-config";
+import { MockCursorEvent } from "../../../test/mock-cursor-event";
 import { BehaviorConfig } from "../../base.behavior";
 import { ClickBoundingBoxBehavior } from "../../click-bounding-box.behavior";
 import { PixelDistanceBehavior } from "../../pixel-distance.behavior";
@@ -12,7 +12,7 @@ import { SelectionPointBehavior } from "./selection-point.behavior";
 describe("DragFeatureBehavior", () => {
 	describe("constructor", () => {
 		it("constructs", () => {
-			const config = mockBehaviorConfig("test");
+			const config = MockBehaviorConfig("test");
 			const selectionPointBehavior = new SelectionPointBehavior(config);
 			const featureAtPointerEventBehavior = new FeatureAtPointerEventBehavior(
 				config,
@@ -38,7 +38,7 @@ describe("DragFeatureBehavior", () => {
 		let dragFeatureBehavior: DragFeatureBehavior;
 
 		beforeEach(() => {
-			config = mockBehaviorConfig("test");
+			config = MockBehaviorConfig("test");
 			const selectionPointBehavior = new SelectionPointBehavior(config);
 			const featureAtPointerEventBehavior = new FeatureAtPointerEventBehavior(
 				config,
@@ -65,16 +65,7 @@ describe("DragFeatureBehavior", () => {
 				jest.spyOn(config.store, "updateGeometry");
 				jest.spyOn(config.store, "getGeometryCopy");
 
-				// Mock the unproject to return a valid set
-				// of bbox coordinates
-				(config.unproject as jest.Mock)
-					.mockImplementationOnce(() => ({ lng: 0, lat: 1 }))
-					.mockImplementationOnce(() => ({ lng: 1, lat: 1 }))
-					.mockImplementationOnce(() => ({ lng: 1, lat: 0 }))
-					.mockImplementationOnce(() => ({ lng: 0, lat: 0 }))
-					.mockImplementationOnce(() => ({ lng: 0, lat: 1 }));
-
-				const event = mockDrawEvent(mockDrawEvent({ lat: 0.5, lng: 0.5 }));
+				const event = MockCursorEvent({ lat: 0.5, lng: 0.5 });
 				const canDrag = dragFeatureBehavior.canDrag(event, id);
 
 				expect(canDrag).toBe(true);
@@ -86,16 +77,7 @@ describe("DragFeatureBehavior", () => {
 				jest.spyOn(config.store, "updateGeometry");
 				jest.spyOn(config.store, "getGeometryCopy");
 
-				// Mock the unproject to return a valid set
-				// of bbox coordinates
-				(config.unproject as jest.Mock)
-					.mockImplementationOnce(() => ({ lng: 0, lat: 1 }))
-					.mockImplementationOnce(() => ({ lng: 1, lat: 1 }))
-					.mockImplementationOnce(() => ({ lng: 1, lat: 0 }))
-					.mockImplementationOnce(() => ({ lng: 0, lat: 0 }))
-					.mockImplementationOnce(() => ({ lng: 0, lat: 1 }));
-
-				const event = mockDrawEvent(mockDrawEvent({ lat: 89, lng: 89 }));
+				const event = MockCursorEvent({ lat: 89, lng: 89 });
 				const canDrag = dragFeatureBehavior.canDrag(event, id);
 
 				expect(canDrag).toBe(false);
@@ -104,7 +86,7 @@ describe("DragFeatureBehavior", () => {
 
 		describe("drag", () => {
 			it("returns early if no position is set", () => {
-				const event = mockDrawEvent({ lat: 0.5, lng: 0.5 });
+				const event = MockCursorEvent({ lat: 0.5, lng: 0.5 });
 
 				jest.spyOn(config.store, "updateGeometry");
 				jest.spyOn(config.store, "getGeometryCopy");
@@ -117,23 +99,14 @@ describe("DragFeatureBehavior", () => {
 
 			it("updates the polygon to the dragged position", () => {
 				const id = createStorePolygon(config);
-				const event = mockDrawEvent({ lat: 0.5, lng: 0.5 });
+				const event = MockCursorEvent({ lat: 0.5, lng: 0.5 });
 
 				dragFeatureBehavior.startDragging(event, id);
 
 				jest.spyOn(config.store, "updateGeometry");
 				jest.spyOn(config.store, "getGeometryCopy");
 
-				// Mock the unproject to return a valid set
-				// of bbox coordinates
-				(config.unproject as jest.Mock)
-					.mockImplementationOnce(() => ({ lng: 0, lat: 1 }))
-					.mockImplementationOnce(() => ({ lng: 1, lat: 1 }))
-					.mockImplementationOnce(() => ({ lng: 1, lat: 0 }))
-					.mockImplementationOnce(() => ({ lng: 0, lat: 0 }))
-					.mockImplementationOnce(() => ({ lng: 0, lat: 1 }));
-
-				dragFeatureBehavior.drag(mockDrawEvent());
+				dragFeatureBehavior.drag(MockCursorEvent({ lng: 0, lat: 0 }));
 
 				expect(config.store.getGeometryCopy).toHaveBeenCalledTimes(1);
 				expect(config.store.updateGeometry).toHaveBeenCalledTimes(1);
@@ -141,23 +114,17 @@ describe("DragFeatureBehavior", () => {
 
 			it("validation returning false does not update the polygon to the dragged position", () => {
 				const id = createStorePolygon(config);
-				const event = mockDrawEvent({ lat: 0.5, lng: 0.5 });
+				const event = MockCursorEvent({ lat: 0.5, lng: 0.5 });
 
 				dragFeatureBehavior.startDragging(event, id);
 
 				jest.spyOn(config.store, "updateGeometry");
 				jest.spyOn(config.store, "getGeometryCopy");
 
-				// Mock the unproject to return a valid set
-				// of bbox coordinates
-				(config.unproject as jest.Mock)
-					.mockImplementationOnce(() => ({ lng: 0, lat: 1 }))
-					.mockImplementationOnce(() => ({ lng: 1, lat: 1 }))
-					.mockImplementationOnce(() => ({ lng: 1, lat: 0 }))
-					.mockImplementationOnce(() => ({ lng: 0, lat: 0 }))
-					.mockImplementationOnce(() => ({ lng: 0, lat: 1 }));
-
-				dragFeatureBehavior.drag(mockDrawEvent(), () => false);
+				dragFeatureBehavior.drag(
+					MockCursorEvent({ lng: 0, lat: 0 }),
+					() => false,
+				);
 
 				expect(config.store.getGeometryCopy).toHaveBeenCalledTimes(1);
 				expect(config.store.updateGeometry).toHaveBeenCalledTimes(0);
@@ -165,23 +132,17 @@ describe("DragFeatureBehavior", () => {
 
 			it("validation returning true does update the polygon to the dragged position", () => {
 				const id = createStorePolygon(config);
-				const event = mockDrawEvent({ lat: 0.5, lng: 0.5 });
+				const event = MockCursorEvent({ lat: 0.5, lng: 0.5 });
 
 				dragFeatureBehavior.startDragging(event, id);
 
 				jest.spyOn(config.store, "updateGeometry");
 				jest.spyOn(config.store, "getGeometryCopy");
 
-				// Mock the unproject to return a valid set
-				// of bbox coordinates
-				(config.unproject as jest.Mock)
-					.mockImplementationOnce(() => ({ lng: 0, lat: 1 }))
-					.mockImplementationOnce(() => ({ lng: 1, lat: 1 }))
-					.mockImplementationOnce(() => ({ lng: 1, lat: 0 }))
-					.mockImplementationOnce(() => ({ lng: 0, lat: 0 }))
-					.mockImplementationOnce(() => ({ lng: 0, lat: 1 }));
-
-				dragFeatureBehavior.drag(mockDrawEvent(), () => true);
+				dragFeatureBehavior.drag(
+					MockCursorEvent({ lng: 0, lat: 0 }),
+					() => true,
+				);
 
 				expect(config.store.getGeometryCopy).toHaveBeenCalledTimes(1);
 				expect(config.store.updateGeometry).toHaveBeenCalledTimes(1);

@@ -1,6 +1,8 @@
 import { GeoJSONStore } from "../../store/store";
-import { getMockModeConfig } from "../../test/mock-config";
+import { MockModeConfig } from "../../test/mock-mode-config";
+import { MockCursorEvent } from "../../test/mock-cursor-event";
 import { TerraDrawSensorMode } from "./sensor.mode";
+import { MockKeyboardEvent } from "../../test/mock-keyboard-event";
 
 describe("TerraDrawSensorMode", () => {
 	describe("constructor", () => {
@@ -44,7 +46,7 @@ describe("TerraDrawSensorMode", () => {
 		it("registers correctly", () => {
 			const sensorMode = new TerraDrawSensorMode();
 			expect(sensorMode.state).toBe("unregistered");
-			sensorMode.register(getMockModeConfig(sensorMode.mode));
+			sensorMode.register(MockModeConfig(sensorMode.mode));
 			expect(sensorMode.state).toBe("registered");
 		});
 
@@ -84,15 +86,15 @@ describe("TerraDrawSensorMode", () => {
 			const sensorMode = new TerraDrawSensorMode();
 
 			expect(() => {
-				sensorMode.register(getMockModeConfig(sensorMode.mode));
-				sensorMode.register(getMockModeConfig(sensorMode.mode));
+				sensorMode.register(MockModeConfig(sensorMode.mode));
+				sensorMode.register(MockModeConfig(sensorMode.mode));
 			}).toThrow();
 		});
 
 		it("can start correctly", () => {
 			const sensorMode = new TerraDrawSensorMode();
 
-			sensorMode.register(getMockModeConfig(sensorMode.mode));
+			sensorMode.register(MockModeConfig(sensorMode.mode));
 			sensorMode.start();
 
 			expect(sensorMode.state).toBe("started");
@@ -101,7 +103,7 @@ describe("TerraDrawSensorMode", () => {
 		it("can stop correctly", () => {
 			const sensorMode = new TerraDrawSensorMode();
 
-			sensorMode.register(getMockModeConfig(sensorMode.mode));
+			sensorMode.register(MockModeConfig(sensorMode.mode));
 			sensorMode.start();
 			sensorMode.stop();
 
@@ -121,7 +123,7 @@ describe("TerraDrawSensorMode", () => {
 					return true;
 				},
 			});
-			const mockConfig = getMockModeConfig(sensorMode.mode);
+			const mockConfig = MockModeConfig(sensorMode.mode);
 
 			store = mockConfig.store;
 			onChange = mockConfig.onChange;
@@ -131,36 +133,15 @@ describe("TerraDrawSensorMode", () => {
 		});
 
 		it("does nothing if no clicks have occurred ", () => {
-			sensorMode.onMouseMove({
-				lng: 0,
-				lat: 0,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			sensorMode.onMouseMove(MockCursorEvent({ lng: 0, lat: 0 }));
 
 			expect(onChange).not.toHaveBeenCalled();
 		});
 
 		it("updates the initial point coordinate to the mouse position after first click", () => {
-			sensorMode.onClick({
-				lng: 0,
-				lat: 0,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			sensorMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
-			sensorMode.onMouseMove({
-				lng: 1,
-				lat: 1,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			sensorMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
 
 			expect(onChange).toHaveBeenCalledTimes(1);
 
@@ -172,41 +153,13 @@ describe("TerraDrawSensorMode", () => {
 		});
 
 		it("updates the linestring coordinate to the mouse position after second click and mouse move", () => {
-			sensorMode.onClick({
-				lng: 0,
-				lat: 0,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			sensorMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
-			sensorMode.onMouseMove({
-				lng: 1,
-				lat: 1,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			sensorMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
 
-			sensorMode.onClick({
-				lng: 1,
-				lat: 1,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			sensorMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
 
-			sensorMode.onMouseMove({
-				lng: 2,
-				lat: 2,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			sensorMode.onMouseMove(MockCursorEvent({ lng: 2, lat: 2 }));
 
 			expect(onChange).toHaveBeenCalledTimes(3);
 
@@ -230,7 +183,7 @@ describe("TerraDrawSensorMode", () => {
 				sensorMode = new TerraDrawSensorMode({
 					validation: () => true,
 				});
-				const mockConfig = getMockModeConfig(sensorMode.mode);
+				const mockConfig = MockModeConfig(sensorMode.mode);
 
 				store = mockConfig.store;
 				sensorMode.register(mockConfig);
@@ -238,59 +191,17 @@ describe("TerraDrawSensorMode", () => {
 			});
 
 			it("fails to create sensor if the final point is not within sector", () => {
-				sensorMode.onClick({
-					lng: 0,
-					lat: 0,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				sensorMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
-				sensorMode.onMouseMove({
-					lng: 1,
-					lat: 1,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				sensorMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
 
-				sensorMode.onClick({
-					lng: 1,
-					lat: 1,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				sensorMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
 
-				sensorMode.onMouseMove({
-					lng: 2,
-					lat: 2,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				sensorMode.onMouseMove(MockCursorEvent({ lng: 2, lat: 2 }));
 
-				sensorMode.onClick({
-					lng: 2,
-					lat: 2,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				sensorMode.onClick(MockCursorEvent({ lng: 2, lat: 2 }));
 
-				sensorMode.onMouseMove({
-					lng: 3,
-					lat: 3,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				sensorMode.onMouseMove(MockCursorEvent({ lng: 3, lat: 3 }));
 
 				const features = store.copyAll();
 
@@ -298,59 +209,17 @@ describe("TerraDrawSensorMode", () => {
 			});
 
 			it("fails to create sensor if the final point is not within sector (clockwise)", () => {
-				sensorMode.onClick({
-					lng: 0,
-					lat: 0,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				sensorMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
-				sensorMode.onMouseMove({
-					lng: -1,
-					lat: -1,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				sensorMode.onMouseMove(MockCursorEvent({ lng: -1, lat: -1 }));
 
-				sensorMode.onClick({
-					lng: -1,
-					lat: -1,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				sensorMode.onClick(MockCursorEvent({ lng: -1, lat: -1 }));
 
-				sensorMode.onMouseMove({
-					lng: 2,
-					lat: 2,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				sensorMode.onMouseMove(MockCursorEvent({ lng: 2, lat: 2 }));
 
-				sensorMode.onClick({
-					lng: 2,
-					lat: 2,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				sensorMode.onClick(MockCursorEvent({ lng: 2, lat: 2 }));
 
-				sensorMode.onMouseMove({
-					lng: -1,
-					lat: -1,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				sensorMode.onMouseMove(MockCursorEvent({ lng: -1, lat: -1 }));
 
 				const features = store.copyAll();
 
@@ -358,82 +227,26 @@ describe("TerraDrawSensorMode", () => {
 			});
 
 			it("successfully creates a sensor", () => {
-				sensorMode.onClick({
-					lng: 0,
-					lat: 0,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				sensorMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
-				sensorMode.onMouseMove({
-					lng: 1,
-					lat: 1,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				sensorMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
 
-				sensorMode.onClick({
-					lng: 1,
-					lat: 1,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				sensorMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
 
-				sensorMode.onMouseMove({
-					lng: 2,
-					lat: 2,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				sensorMode.onMouseMove(MockCursorEvent({ lng: 2, lat: 2 }));
 
-				sensorMode.onClick({
-					lng: 2,
-					lat: 2,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				sensorMode.onClick(MockCursorEvent({ lng: 2, lat: 2 }));
 
-				sensorMode.onMouseMove({
-					lng: 1.5,
-					lat: 1.5,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				sensorMode.onMouseMove(MockCursorEvent({ lng: 1.5, lat: 1.5 }));
 
 				// Move again to ensure the update path works
-				sensorMode.onMouseMove({
-					lng: 1.5,
-					lat: 1.5,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				sensorMode.onMouseMove(MockCursorEvent({ lng: 1.5, lat: 1.5 }));
 
 				const features = store.copyAll();
 
 				expect(features.length).toBe(3);
 
-				sensorMode.onClick({
-					lng: 1.5,
-					lat: 1.5,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				sensorMode.onClick(MockCursorEvent({ lng: 1.5, lat: 1.5 }));
 
 				const featuresAfterFinalClick = store.copyAll();
 
@@ -446,7 +259,7 @@ describe("TerraDrawSensorMode", () => {
 				sensorMode = new TerraDrawSensorMode({
 					validation: () => false,
 				});
-				const mockConfig = getMockModeConfig(sensorMode.mode);
+				const mockConfig = MockModeConfig(sensorMode.mode);
 
 				store = mockConfig.store;
 				sensorMode.register(mockConfig);
@@ -454,82 +267,26 @@ describe("TerraDrawSensorMode", () => {
 			});
 
 			it("fails to create a sensor", () => {
-				sensorMode.onClick({
-					lng: 0,
-					lat: 0,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				sensorMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
-				sensorMode.onMouseMove({
-					lng: 1,
-					lat: 1,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				sensorMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
 
-				sensorMode.onClick({
-					lng: 1,
-					lat: 1,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				sensorMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
 
-				sensorMode.onMouseMove({
-					lng: 2,
-					lat: 2,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				sensorMode.onMouseMove(MockCursorEvent({ lng: 2, lat: 2 }));
 
-				sensorMode.onClick({
-					lng: 2,
-					lat: 2,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				sensorMode.onClick(MockCursorEvent({ lng: 2, lat: 2 }));
 
-				sensorMode.onMouseMove({
-					lng: 1.5,
-					lat: 1.5,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				sensorMode.onMouseMove(MockCursorEvent({ lng: 1.5, lat: 1.5 }));
 
 				// Move again to ensure the update path works
-				sensorMode.onMouseMove({
-					lng: 1.5,
-					lat: 1.5,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				sensorMode.onMouseMove(MockCursorEvent({ lng: 1.5, lat: 1.5 }));
 
 				const features = store.copyAll();
 
 				expect(features.length).toBe(3);
 
-				sensorMode.onClick({
-					lng: 1.5,
-					lat: 1.5,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				sensorMode.onClick(MockCursorEvent({ lng: 1.5, lat: 1.5 }));
 
 				const featuresAfterFinalClick = store.copyAll();
 
@@ -546,7 +303,7 @@ describe("TerraDrawSensorMode", () => {
 
 		it("does nothing if on finish key press is pressed while not drawing", () => {
 			sensorMode = new TerraDrawSensorMode();
-			const mockConfig = getMockModeConfig(sensorMode.mode);
+			const mockConfig = MockModeConfig(sensorMode.mode);
 			store = new GeoJSONStore();
 			store = mockConfig.store;
 			onChange = mockConfig.onChange;
@@ -558,11 +315,7 @@ describe("TerraDrawSensorMode", () => {
 			let features = store.copyAll();
 			expect(features.length).toBe(0);
 
-			sensorMode.onKeyUp({
-				key: "Enter",
-				preventDefault: jest.fn(),
-				heldKeys: [],
-			});
+			sensorMode.onKeyUp(MockKeyboardEvent({ key: "Enter" }));
 
 			features = store.copyAll();
 			expect(features.length).toBe(0);
@@ -570,7 +323,7 @@ describe("TerraDrawSensorMode", () => {
 
 		it("cancels drawing sensor on cancel key press", () => {
 			sensorMode = new TerraDrawSensorMode();
-			const mockConfig = getMockModeConfig(sensorMode.mode);
+			const mockConfig = MockModeConfig(sensorMode.mode);
 			store = new GeoJSONStore();
 			store = mockConfig.store;
 			onChange = mockConfig.onChange;
@@ -579,92 +332,35 @@ describe("TerraDrawSensorMode", () => {
 			sensorMode.register(mockConfig);
 			sensorMode.start();
 
-			sensorMode.onClick({
-				lng: 0,
-				lat: 0,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			sensorMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
 			let features = store.copyAll();
 			expect(features.length).toBe(1);
 
-			sensorMode.onKeyUp({
-				key: "Escape",
-				preventDefault: jest.fn(),
-				heldKeys: [],
-			});
+			sensorMode.onKeyUp(MockKeyboardEvent({ key: "Escape" }));
 
 			features = store.copyAll();
 			expect(features.length).toBe(0);
 		});
 
 		it("successfully creates a sensor on enter key press on final part of drawing", () => {
-			sensorMode.onClick({
-				lng: 0,
-				lat: 0,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			sensorMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
-			sensorMode.onMouseMove({
-				lng: 1,
-				lat: 1,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			sensorMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
 
-			sensorMode.onClick({
-				lng: 1,
-				lat: 1,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			sensorMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
 
-			sensorMode.onMouseMove({
-				lng: 2,
-				lat: 2,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			sensorMode.onMouseMove(MockCursorEvent({ lng: 2, lat: 2 }));
 
-			sensorMode.onClick({
-				lng: 2,
-				lat: 2,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			sensorMode.onClick(MockCursorEvent({ lng: 2, lat: 2 }));
 
-			sensorMode.onMouseMove({
-				lng: 1.5,
-				lat: 1.5,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			sensorMode.onMouseMove(MockCursorEvent({ lng: 1.5, lat: 1.5 }));
 
 			const features = store.copyAll();
 
 			expect(features.length).toBe(3);
 
-			sensorMode.onKeyUp({
-				key: "Enter",
-				preventDefault: jest.fn(),
-				heldKeys: [],
-			});
+			sensorMode.onKeyUp(MockKeyboardEvent({ key: "Enter" }));
 
 			const featuresAfterFinalClick = store.copyAll();
 
@@ -673,7 +369,7 @@ describe("TerraDrawSensorMode", () => {
 
 		it("does not finish on key press when keyEvents null", () => {
 			sensorMode = new TerraDrawSensorMode({ keyEvents: null });
-			const mockConfig = getMockModeConfig(sensorMode.mode);
+			const mockConfig = MockModeConfig(sensorMode.mode);
 			store = new GeoJSONStore();
 			store = mockConfig.store;
 			onChange = mockConfig.onChange;
@@ -681,23 +377,12 @@ describe("TerraDrawSensorMode", () => {
 			sensorMode.register(mockConfig);
 			sensorMode.start();
 
-			sensorMode.onClick({
-				lng: 0,
-				lat: 0,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			sensorMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
 			let features = store.copyAll();
 			expect(features.length).toBe(1);
 
-			sensorMode.onKeyUp({
-				key: "Enter",
-				preventDefault: jest.fn(),
-				heldKeys: [],
-			});
+			sensorMode.onKeyUp(MockKeyboardEvent({ key: "Enter" }));
 
 			features = store.copyAll();
 
@@ -715,7 +400,7 @@ describe("TerraDrawSensorMode", () => {
 			const sensorMode = new TerraDrawSensorMode({
 				validation: () => true,
 			});
-			sensorMode.register(getMockModeConfig("sensor"));
+			sensorMode.register(MockModeConfig("sensor"));
 
 			expect(
 				sensorMode.validateFeature({
@@ -762,7 +447,7 @@ describe("TerraDrawSensorMode", () => {
 					return false;
 				},
 			});
-			sensorMode.register(getMockModeConfig("sensor"));
+			sensorMode.register(MockModeConfig("sensor"));
 
 			expect(
 				sensorMode.validateFeature({

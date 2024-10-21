@@ -3,14 +3,13 @@ import {
 	createStorePoint,
 	createStorePolygon,
 } from "../../../test/create-store-features";
-import { mockBehaviorConfig } from "../../../test/mock-behavior-config";
-import { mockDrawEvent } from "../../../test/mock-mouse-event";
+import { MockBehaviorConfig } from "../../../test/mock-behavior-config";
 import { BehaviorConfig } from "../../base.behavior";
 import { PixelDistanceBehavior } from "../../pixel-distance.behavior";
 import { DragCoordinateBehavior } from "./drag-coordinate.behavior";
 import { MidPointBehavior } from "./midpoint.behavior";
 import { SelectionPointBehavior } from "./selection-point.behavior";
-import { TerraDrawMouseEvent } from "../../../common";
+import { MockCursorEvent } from "../../../test/mock-cursor-event";
 
 describe("DragCoordinateBehavior", () => {
 	const createLineString = (
@@ -37,7 +36,7 @@ describe("DragCoordinateBehavior", () => {
 
 	describe("constructor", () => {
 		it("constructs", () => {
-			const config = mockBehaviorConfig("test");
+			const config = MockBehaviorConfig("test");
 			const selectionPointBehavior = new SelectionPointBehavior(config);
 			new DragCoordinateBehavior(
 				config,
@@ -53,7 +52,7 @@ describe("DragCoordinateBehavior", () => {
 		let dragCoordinateBehavior: DragCoordinateBehavior;
 
 		beforeEach(() => {
-			config = mockBehaviorConfig("test");
+			config = MockBehaviorConfig("test");
 			const selectionPointBehavior = new SelectionPointBehavior(config);
 			const pixelDistanceBehavior = new PixelDistanceBehavior(config);
 			const midpointBehavior = new MidPointBehavior(
@@ -75,7 +74,7 @@ describe("DragCoordinateBehavior", () => {
 				jest.spyOn(config.store, "updateGeometry");
 
 				const index = dragCoordinateBehavior.getDraggableIndex(
-					mockDrawEvent(),
+					MockCursorEvent({ lng: 0, lat: 0 }),
 					id,
 				);
 				expect(index).toBe(-1);
@@ -85,15 +84,8 @@ describe("DragCoordinateBehavior", () => {
 				const id = createStorePolygon(config);
 				jest.spyOn(config.store, "updateGeometry");
 
-				(config.project as jest.Mock)
-					.mockReturnValueOnce({ x: 200, y: 200 })
-					.mockReturnValueOnce({ x: 200, y: 300 })
-					.mockReturnValueOnce({ x: 300, y: 300 })
-					.mockReturnValueOnce({ x: 300, y: 200 })
-					.mockReturnValueOnce({ x: 200, y: 200 });
-
 				const index = dragCoordinateBehavior.getDraggableIndex(
-					mockDrawEvent(),
+					MockCursorEvent({ lng: 100, lat: 100 }),
 					id,
 				);
 				expect(index).toBe(-1);
@@ -103,15 +95,9 @@ describe("DragCoordinateBehavior", () => {
 				const id = createStorePolygon(config);
 				jest.spyOn(config.store, "updateGeometry");
 
-				(config.project as jest.Mock)
-					.mockReturnValueOnce({ x: 0, y: 0 })
-					.mockReturnValueOnce({ x: 0, y: 1 })
-					.mockReturnValueOnce({ x: 1, y: 1 })
-					.mockReturnValueOnce({ x: 1, y: 0 })
-					.mockReturnValueOnce({ x: 0, y: 0 });
-
 				const index = dragCoordinateBehavior.getDraggableIndex(
-					mockDrawEvent(),
+					MockCursorEvent({ lng: 0, lat: 0 }),
+
 					id,
 				);
 				expect(index).toBe(0);
@@ -121,12 +107,9 @@ describe("DragCoordinateBehavior", () => {
 				const id = createLineString(config);
 				jest.spyOn(config.store, "updateGeometry");
 
-				(config.project as jest.Mock)
-					.mockReturnValueOnce({ x: 0, y: 0 })
-					.mockReturnValueOnce({ x: 0, y: 1 });
-
 				const index = dragCoordinateBehavior.getDraggableIndex(
-					mockDrawEvent(),
+					MockCursorEvent({ lng: 0, lat: 0 }),
+
 					id,
 				);
 				expect(index).toBe(0);
@@ -137,7 +120,7 @@ describe("DragCoordinateBehavior", () => {
 			it("returns early if nothing is being dragged", () => {
 				jest.spyOn(config.store, "updateGeometry");
 
-				dragCoordinateBehavior.drag(mockDrawEvent(), true);
+				dragCoordinateBehavior.drag(MockCursorEvent({ lng: 0, lat: 0 }), true);
 
 				expect(config.store.updateGeometry).toHaveBeenCalledTimes(0);
 			});
@@ -146,7 +129,7 @@ describe("DragCoordinateBehavior", () => {
 				createStorePoint(config);
 				jest.spyOn(config.store, "updateGeometry");
 
-				dragCoordinateBehavior.drag(mockDrawEvent(), true);
+				dragCoordinateBehavior.drag(MockCursorEvent({ lng: 0, lat: 0 }), true);
 
 				expect(config.store.updateGeometry).toHaveBeenCalledTimes(0);
 			});
@@ -158,14 +141,11 @@ describe("DragCoordinateBehavior", () => {
 
 				jest.spyOn(config.store, "updateGeometry");
 
-				(config.project as jest.Mock)
-					.mockReturnValueOnce({ x: 0, y: 0 })
-					.mockReturnValueOnce({ x: 0, y: 1 })
-					.mockReturnValueOnce({ x: 1, y: 1 })
-					.mockReturnValueOnce({ x: 1, y: 0 })
-					.mockReturnValueOnce({ x: 0, y: 0 });
-
-				dragCoordinateBehavior.drag(mockDrawEvent(), true, () => false);
+				dragCoordinateBehavior.drag(
+					MockCursorEvent({ lng: 0, lat: 0 }),
+					true,
+					() => false,
+				);
 
 				expect(config.store.updateGeometry).toHaveBeenCalledTimes(0);
 			});
@@ -177,14 +157,11 @@ describe("DragCoordinateBehavior", () => {
 
 				jest.spyOn(config.store, "updateGeometry");
 
-				(config.project as jest.Mock)
-					.mockReturnValueOnce({ x: 0, y: 0 })
-					.mockReturnValueOnce({ x: 0, y: 1 })
-					.mockReturnValueOnce({ x: 1, y: 1 })
-					.mockReturnValueOnce({ x: 1, y: 0 })
-					.mockReturnValueOnce({ x: 0, y: 0 });
-
-				dragCoordinateBehavior.drag(mockDrawEvent(), true, () => true);
+				dragCoordinateBehavior.drag(
+					MockCursorEvent({ lng: 0, lat: 0 }),
+					true,
+					() => true,
+				);
 
 				expect(config.store.updateGeometry).toHaveBeenCalledTimes(1);
 			});
@@ -196,14 +173,7 @@ describe("DragCoordinateBehavior", () => {
 
 				jest.spyOn(config.store, "updateGeometry");
 
-				(config.project as jest.Mock)
-					.mockReturnValueOnce({ x: 0, y: 0 })
-					.mockReturnValueOnce({ x: 0, y: 1 })
-					.mockReturnValueOnce({ x: 1, y: 1 })
-					.mockReturnValueOnce({ x: 1, y: 0 })
-					.mockReturnValueOnce({ x: 0, y: 0 });
-
-				dragCoordinateBehavior.drag(mockDrawEvent(), true);
+				dragCoordinateBehavior.drag(MockCursorEvent({ lng: 0, lat: 0 }), true);
 
 				expect(config.store.updateGeometry).toHaveBeenCalledTimes(1);
 			});
@@ -214,11 +184,7 @@ describe("DragCoordinateBehavior", () => {
 
 				dragCoordinateBehavior.startDragging(id, 0);
 
-				(config.project as jest.Mock)
-					.mockReturnValueOnce({ x: 0, y: 0 })
-					.mockReturnValueOnce({ x: 0, y: 1 });
-
-				dragCoordinateBehavior.drag(mockDrawEvent(), true);
+				dragCoordinateBehavior.drag(MockCursorEvent({ lng: 0, lat: 0 }), true);
 
 				expect(config.store.updateGeometry).toHaveBeenCalledTimes(1);
 			});
@@ -238,18 +204,10 @@ describe("DragCoordinateBehavior", () => {
 
 				jest.spyOn(config.store, "updateGeometry");
 
-				(config.project as jest.Mock)
-					.mockReturnValueOnce({ x: 0, y: 1 })
-					.mockReturnValueOnce({ x: 50, y: 2 })
-					.mockReturnValueOnce({ x: 100, y: 2 })
-					.mockReturnValueOnce({ x: 150, y: 1 })
-					.mockReturnValueOnce({ x: 0, y: 1 });
-
-				const mde = mockDrawEvent({
-					lng: 100,
-					lat: 0,
-				} as Partial<TerraDrawMouseEvent>);
-				dragCoordinateBehavior.drag(mde, false);
+				dragCoordinateBehavior.drag(
+					MockCursorEvent({ lng: 100, lat: 0 }),
+					false,
+				);
 				expect(config.store.updateGeometry).toHaveBeenCalledTimes(0);
 			});
 
@@ -265,17 +223,10 @@ describe("DragCoordinateBehavior", () => {
 
 				dragCoordinateBehavior.startDragging(id, 2);
 
-				(config.project as jest.Mock)
-					.mockReturnValueOnce({ x: 0, y: 1 })
-					.mockReturnValueOnce({ x: 50, y: 2 })
-					.mockReturnValueOnce({ x: 100, y: 2 })
-					.mockReturnValueOnce({ x: 150, y: 1 })
-					.mockReturnValueOnce({ x: 0, y: 1 });
-				const mde = mockDrawEvent({
-					lng: 100,
-					lat: 0,
-				} as Partial<TerraDrawMouseEvent>);
-				dragCoordinateBehavior.drag(mde, false);
+				dragCoordinateBehavior.drag(
+					MockCursorEvent({ lng: 100, lat: 0 }),
+					false,
+				);
 				expect(config.store.updateGeometry).toHaveBeenCalledTimes(0);
 			});
 		});

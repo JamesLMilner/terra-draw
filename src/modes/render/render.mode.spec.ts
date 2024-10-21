@@ -1,10 +1,10 @@
 import { HexColor } from "../../common";
-import { mockBehaviorConfig } from "../../test/mock-behavior-config";
-import { getMockModeConfig } from "../../test/mock-config";
+import { MockBehaviorConfig } from "../../test/mock-behavior-config";
+import { MockModeConfig } from "../../test/mock-mode-config";
 import {
-	createMockLineString,
-	createMockPoint,
-	createMockPolygonSquare,
+	MockLineString,
+	MockPoint,
+	MockPolygonSquare,
 } from "../../test/mock-features";
 import { getDefaultStyling } from "../../util/styling";
 import { TerraDrawRenderMode } from "./render.mode";
@@ -26,7 +26,7 @@ describe("TerraDrawRenderMode", () => {
 		it("registers correctly", () => {
 			const renderMode = new TerraDrawRenderMode(options);
 			expect(renderMode.state).toBe("unregistered");
-			renderMode.register(getMockModeConfig(renderMode.mode));
+			renderMode.register(MockModeConfig(renderMode.mode));
 			expect(renderMode.state).toBe("registered");
 		});
 
@@ -35,7 +35,7 @@ describe("TerraDrawRenderMode", () => {
 
 			expect(() => {
 				renderMode.state = "started";
-			}).toThrowError();
+			}).toThrow();
 		});
 
 		it("stopping before not registering throws error", () => {
@@ -43,7 +43,7 @@ describe("TerraDrawRenderMode", () => {
 
 			expect(() => {
 				renderMode.stop();
-			}).toThrowError();
+			}).toThrow();
 		});
 
 		it("starting before not registering throws error", () => {
@@ -51,7 +51,7 @@ describe("TerraDrawRenderMode", () => {
 
 			expect(() => {
 				renderMode.start();
-			}).toThrowError();
+			}).toThrow();
 		});
 
 		it("starting before not registering throws error", () => {
@@ -59,22 +59,22 @@ describe("TerraDrawRenderMode", () => {
 
 			expect(() => {
 				renderMode.start();
-			}).toThrowError();
+			}).toThrow();
 		});
 
 		it("registering multiple times throws an error", () => {
 			const renderMode = new TerraDrawRenderMode(options);
 
 			expect(() => {
-				renderMode.register(getMockModeConfig(renderMode.mode));
-				renderMode.register(getMockModeConfig(renderMode.mode));
-			}).toThrowError();
+				renderMode.register(MockModeConfig(renderMode.mode));
+				renderMode.register(MockModeConfig(renderMode.mode));
+			}).toThrow();
 		});
 
 		it("can start correctly", () => {
 			const renderMode = new TerraDrawRenderMode(options);
 
-			renderMode.register(getMockModeConfig(renderMode.mode));
+			renderMode.register(MockModeConfig(renderMode.mode));
 			renderMode.start();
 
 			expect(renderMode.state).toBe("started");
@@ -83,7 +83,7 @@ describe("TerraDrawRenderMode", () => {
 		it("can stop correctly", () => {
 			const renderMode = new TerraDrawRenderMode(options);
 
-			renderMode.register(getMockModeConfig(renderMode.mode));
+			renderMode.register(MockModeConfig(renderMode.mode));
 			renderMode.start();
 			renderMode.stop();
 
@@ -94,7 +94,7 @@ describe("TerraDrawRenderMode", () => {
 	describe("registerBehaviors", () => {
 		it("changes the mode name when registerBehaviors called", () => {
 			const renderMode = new TerraDrawRenderMode(options);
-			const config = mockBehaviorConfig("test");
+			const config = MockBehaviorConfig("test");
 			renderMode.registerBehaviors(config);
 			expect(renderMode.mode).toBe("test");
 		});
@@ -106,7 +106,7 @@ describe("TerraDrawRenderMode", () => {
 
 			expect(() => {
 				renderMode.onClick();
-			}).not.toThrowError();
+			}).not.toThrow();
 		});
 	});
 
@@ -116,7 +116,7 @@ describe("TerraDrawRenderMode", () => {
 
 			expect(() => {
 				renderMode.onKeyUp();
-			}).not.toThrowError();
+			}).not.toThrow();
 		});
 	});
 
@@ -125,7 +125,7 @@ describe("TerraDrawRenderMode", () => {
 			const renderMode = new TerraDrawRenderMode(options);
 			expect(() => {
 				renderMode.onKeyDown();
-			}).not.toThrowError();
+			}).not.toThrow();
 		});
 	});
 
@@ -135,7 +135,7 @@ describe("TerraDrawRenderMode", () => {
 
 			expect(() => {
 				renderMode.onMouseMove();
-			}).not.toThrowError();
+			}).not.toThrow();
 		});
 	});
 
@@ -145,7 +145,7 @@ describe("TerraDrawRenderMode", () => {
 
 			expect(() => {
 				renderMode.onDrag();
-			}).not.toThrowError();
+			}).not.toThrow();
 		});
 	});
 
@@ -155,7 +155,7 @@ describe("TerraDrawRenderMode", () => {
 
 			expect(() => {
 				renderMode.onDragStart();
-			}).not.toThrowError();
+			}).not.toThrow();
 		});
 	});
 
@@ -165,7 +165,7 @@ describe("TerraDrawRenderMode", () => {
 
 			expect(() => {
 				renderMode.onDragEnd();
-			}).not.toThrowError();
+			}).not.toThrow();
 		});
 	});
 
@@ -238,23 +238,23 @@ describe("TerraDrawRenderMode", () => {
 	describe("validateFeature", () => {
 		it("validates points", () => {
 			const renderMode = new TerraDrawRenderMode(options);
-			renderMode.register(getMockModeConfig("arbitary"));
+			renderMode.register(MockModeConfig("arbitary"));
 
-			expect(renderMode.validateFeature(createMockPoint())).toBe(true);
+			expect(renderMode.validateFeature(MockPoint())).toBe(true);
 		});
 
 		it("validates linestrings", () => {
 			const renderMode = new TerraDrawRenderMode(options);
-			renderMode.register(getMockModeConfig("arbitary"));
+			renderMode.register(MockModeConfig("arbitary"));
 
-			expect(renderMode.validateFeature(createMockLineString())).toBe(true);
+			expect(renderMode.validateFeature(MockLineString())).toBe(true);
 		});
 
 		it("validates polygons", () => {
 			const renderMode = new TerraDrawRenderMode(options);
-			renderMode.register(getMockModeConfig("arbitary"));
+			renderMode.register(MockModeConfig("arbitary"));
 
-			expect(renderMode.validateFeature(createMockPolygonSquare())).toBe(true);
+			expect(renderMode.validateFeature(MockPolygonSquare())).toBe(true);
 		});
 	});
 });

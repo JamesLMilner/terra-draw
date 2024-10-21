@@ -2,9 +2,9 @@ import { InjectableOL, TerraDrawOpenLayersAdapter } from "./openlayers.adapter";
 import Map from "ol/Map";
 import { Pixel } from "ol/pixel";
 import { Coordinate } from "ol/coordinate";
-import { getMockPointerEvent } from "../test/mock-pointer-event";
+import { MockPointerEvent } from "../test/mock-pointer-event";
 import VectorLayer from "ol/layer/Vector";
-import { createMockCallbacks } from "../test/mock-callbacks";
+import { MockCallbacks } from "../test/mock-callbacks";
 import { TerraDrawAdapterStyling } from "../common";
 
 jest.mock("ol/style/Circle", () => jest.fn());
@@ -242,7 +242,7 @@ describe("TerraDrawOpenLayersAdapter", () => {
 			// Mock the getCoordinateFromPixel function
 			map.getCoordinateFromPixel = jest.fn(() => [0, 0]);
 
-			const result = adapter.getLngLatFromEvent(getMockPointerEvent());
+			const result = adapter.getLngLatFromEvent(MockPointerEvent());
 			expect(result).toEqual({ lat: 0, lng: 0 });
 		});
 
@@ -252,7 +252,7 @@ describe("TerraDrawOpenLayersAdapter", () => {
 				throw new Error();
 			});
 
-			const result = adapter.getLngLatFromEvent(getMockPointerEvent());
+			const result = adapter.getLngLatFromEvent(MockPointerEvent());
 			expect(result).toEqual(null);
 		});
 	});
@@ -728,7 +728,7 @@ describe("TerraDrawOpenLayersAdapter", () => {
 				} as unknown as InjectableOL,
 			});
 
-			adapter.register(createMockCallbacks());
+			adapter.register(MockCallbacks());
 		});
 
 		it("removes layers correctly", () => {
@@ -812,7 +812,7 @@ describe("TerraDrawOpenLayersAdapter", () => {
 				} as unknown as InjectableOL,
 			});
 
-			const adapterCallbacks = createMockCallbacks();
+			const adapterCallbacks = MockCallbacks();
 			adapter.register(adapterCallbacks);
 
 			expect(adapterCallbacks.onReady).toHaveBeenCalledTimes(1);
@@ -839,11 +839,11 @@ describe("TerraDrawOpenLayersAdapter", () => {
 				} as unknown as InjectableOL,
 			});
 
-			adapter.register(createMockCallbacks());
+			adapter.register(MockCallbacks());
 		});
 
 		it("performs clear on unregister", () => {
-			adapter.register(createMockCallbacks());
+			adapter.register(MockCallbacks());
 			adapter.unregister();
 
 			expect(clear).toHaveBeenCalledTimes(1);

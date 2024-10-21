@@ -86,7 +86,7 @@ describe("GeoJSONStore", () => {
 
 			expect(() => {
 				store.getGeometryCopy(ids[0]);
-			}).toThrowError();
+			}).toThrow();
 		});
 
 		it("throws error if feature does not exist", () => {
@@ -94,7 +94,7 @@ describe("GeoJSONStore", () => {
 
 			expect(() => {
 				store.delete(["non-existant-id"]);
-			}).toThrowError();
+			}).toThrow();
 		});
 	});
 
@@ -129,7 +129,7 @@ describe("GeoJSONStore", () => {
 
 			expect(() => {
 				store.getGeometryCopy(ids[0]);
-			}).toThrowError();
+			}).toThrow();
 		});
 	});
 
@@ -152,7 +152,7 @@ describe("GeoJSONStore", () => {
 
 			expect(() => {
 				store.getGeometryCopy("non-existant-id");
-			}).toThrowError();
+			}).toThrow();
 		});
 	});
 
@@ -216,7 +216,7 @@ describe("GeoJSONStore", () => {
 
 			expect(() => {
 				store.getPropertiesCopy("non-existant-id");
-			}).toThrowError();
+			}).toThrow();
 		});
 	});
 
@@ -251,7 +251,7 @@ describe("GeoJSONStore", () => {
 						},
 					},
 				]);
-			}).toThrowError();
+			}).toThrow();
 		});
 	});
 
@@ -279,7 +279,7 @@ describe("GeoJSONStore", () => {
 				store.updateProperty([
 					{ id: "non-existant-id", property: "test", value: 1 },
 				]);
-			}).toThrowError();
+			}).toThrow();
 		});
 	});
 
@@ -316,7 +316,7 @@ describe("GeoJSONStore", () => {
 			store.delete([id]);
 
 			// No longer exists so should throw errors
-			expect(() => store.getGeometryCopy(id)).toThrowError();
+			expect(() => store.getGeometryCopy(id)).toThrow();
 			expect(() =>
 				store.updateGeometry([
 					{
@@ -324,7 +324,7 @@ describe("GeoJSONStore", () => {
 						geometry: { type: "Point", coordinates: [1, 1] },
 					},
 				]),
-			).toThrowError();
+			).toThrow();
 		});
 	});
 
@@ -401,7 +401,7 @@ describe("GeoJSONStore", () => {
 						);
 					},
 				);
-			}).toThrowError();
+			}).toThrow();
 		});
 
 		it("errors if feature createdAt is not valid numeric timestamps", () => {
@@ -418,7 +418,7 @@ describe("GeoJSONStore", () => {
 						geometry: { type: "Point", coordinates: [0, 0] },
 					},
 				]);
-			}).toThrowError(StoreValidationErrors.InvalidTrackedProperties);
+			}).toThrow(StoreValidationErrors.InvalidTrackedProperties);
 		});
 
 		it("errors if feature createdAt is not valid numeric timestamps", () => {
@@ -436,7 +436,7 @@ describe("GeoJSONStore", () => {
 						geometry: { type: "Point", coordinates: [0, 0] },
 					},
 				]);
-			}).toThrowError(StoreValidationErrors.InvalidTrackedProperties);
+			}).toThrow(StoreValidationErrors.InvalidTrackedProperties);
 		});
 	});
 

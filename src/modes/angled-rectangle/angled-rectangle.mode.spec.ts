@@ -1,5 +1,6 @@
 import { GeoJSONStore } from "../../store/store";
-import { getMockModeConfig } from "../../test/mock-config";
+import { MockModeConfig } from "../../test/mock-mode-config";
+import { MockCursorEvent } from "../../test/mock-cursor-event";
 import { TerraDrawAngledRectangleMode } from "./angled-rectangle.mode";
 
 describe("TerraDrawAngledRectangleMode", () => {
@@ -44,7 +45,7 @@ describe("TerraDrawAngledRectangleMode", () => {
 		it("registers correctly", () => {
 			const angledRectangleMode = new TerraDrawAngledRectangleMode();
 			expect(angledRectangleMode.state).toBe("unregistered");
-			angledRectangleMode.register(getMockModeConfig(angledRectangleMode.mode));
+			angledRectangleMode.register(MockModeConfig(angledRectangleMode.mode));
 			expect(angledRectangleMode.state).toBe("registered");
 		});
 
@@ -84,19 +85,15 @@ describe("TerraDrawAngledRectangleMode", () => {
 			const angledRectangleMode = new TerraDrawAngledRectangleMode();
 
 			expect(() => {
-				angledRectangleMode.register(
-					getMockModeConfig(angledRectangleMode.mode),
-				);
-				angledRectangleMode.register(
-					getMockModeConfig(angledRectangleMode.mode),
-				);
+				angledRectangleMode.register(MockModeConfig(angledRectangleMode.mode));
+				angledRectangleMode.register(MockModeConfig(angledRectangleMode.mode));
 			}).toThrow();
 		});
 
 		it("can start correctly", () => {
 			const angledRectangleMode = new TerraDrawAngledRectangleMode();
 
-			angledRectangleMode.register(getMockModeConfig(angledRectangleMode.mode));
+			angledRectangleMode.register(MockModeConfig(angledRectangleMode.mode));
 			angledRectangleMode.start();
 
 			expect(angledRectangleMode.state).toBe("started");
@@ -105,7 +102,7 @@ describe("TerraDrawAngledRectangleMode", () => {
 		it("can stop correctly", () => {
 			const angledRectangleMode = new TerraDrawAngledRectangleMode();
 
-			angledRectangleMode.register(getMockModeConfig(angledRectangleMode.mode));
+			angledRectangleMode.register(MockModeConfig(angledRectangleMode.mode));
 			angledRectangleMode.start();
 			angledRectangleMode.stop();
 
@@ -125,7 +122,7 @@ describe("TerraDrawAngledRectangleMode", () => {
 					return true;
 				},
 			});
-			const mockConfig = getMockModeConfig(angledRectangleMode.mode);
+			const mockConfig = MockModeConfig(angledRectangleMode.mode);
 
 			store = mockConfig.store;
 			onChange = mockConfig.onChange;
@@ -135,36 +132,15 @@ describe("TerraDrawAngledRectangleMode", () => {
 		});
 
 		it("does nothing if no clicks have occurred ", () => {
-			angledRectangleMode.onMouseMove({
-				lng: 0,
-				lat: 0,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			angledRectangleMode.onMouseMove(MockCursorEvent({ lng: 0, lat: 0 }));
 
 			expect(onChange).not.toHaveBeenCalled();
 		});
 
 		it("updates the coordinate to the mouse position after first click", () => {
-			angledRectangleMode.onClick({
-				lng: 0,
-				lat: 0,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			angledRectangleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
-			angledRectangleMode.onMouseMove({
-				lng: 1,
-				lat: 1,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			angledRectangleMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
 
 			expect(onChange).toHaveBeenCalledTimes(2);
 
@@ -182,41 +158,13 @@ describe("TerraDrawAngledRectangleMode", () => {
 		});
 
 		it("updates the coordinate to the mouse position after second click", () => {
-			angledRectangleMode.onClick({
-				lng: 0,
-				lat: 0,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			angledRectangleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
-			angledRectangleMode.onMouseMove({
-				lng: 1,
-				lat: 1,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			angledRectangleMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
 
-			angledRectangleMode.onClick({
-				lng: 1,
-				lat: 1,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			angledRectangleMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
 
-			angledRectangleMode.onMouseMove({
-				lng: 2,
-				lat: 2,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			angledRectangleMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 0 }));
 
 			expect(onChange).toHaveBeenCalledTimes(4);
 
@@ -227,8 +175,8 @@ describe("TerraDrawAngledRectangleMode", () => {
 				[
 					[0, 0],
 					[1, 1],
-					[0.999809548845192, 1.0001904124747523],
-					[-0.00019045115480796916, 0.00019044148544254127],
+					[1.5000158660846816, 0.5000539452154588],
+					[0.5000158660846818, -0.4999841341367969],
 					[0, 0],
 				],
 			]);
@@ -244,7 +192,7 @@ describe("TerraDrawAngledRectangleMode", () => {
 				angledRectangleMode = new TerraDrawAngledRectangleMode({
 					validation: () => true,
 				});
-				const mockConfig = getMockModeConfig(angledRectangleMode.mode);
+				const mockConfig = MockModeConfig(angledRectangleMode.mode);
 
 				store = mockConfig.store;
 				angledRectangleMode.register(mockConfig);
@@ -252,63 +200,21 @@ describe("TerraDrawAngledRectangleMode", () => {
 			});
 
 			it("can create a angled rectangle", () => {
-				angledRectangleMode.onClick({
-					lng: 0,
-					lat: 0,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				angledRectangleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
-				angledRectangleMode.onMouseMove({
-					lng: 1,
-					lat: 1,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				angledRectangleMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
 
-				angledRectangleMode.onClick({
-					lng: 1,
-					lat: 1,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				angledRectangleMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
 
-				angledRectangleMode.onMouseMove({
-					lng: 2,
-					lat: 2,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				angledRectangleMode.onMouseMove(MockCursorEvent({ lng: 2, lat: 2 }));
 
-				angledRectangleMode.onClick({
-					lng: 2,
-					lat: 2,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				angledRectangleMode.onClick(MockCursorEvent({ lng: 2, lat: 2 }));
 
 				let features = store.copyAll();
 				expect(features.length).toBe(1);
 
 				// Create a new angled rectangle polygon
-				angledRectangleMode.onClick({
-					lng: 0,
-					lat: 0,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				angledRectangleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
 				features = store.copyAll();
 				expect(features.length).toBe(2);
@@ -320,7 +226,7 @@ describe("TerraDrawAngledRectangleMode", () => {
 				angledRectangleMode = new TerraDrawAngledRectangleMode({
 					validation: () => false,
 				});
-				const mockConfig = getMockModeConfig(angledRectangleMode.mode);
+				const mockConfig = MockModeConfig(angledRectangleMode.mode);
 
 				store = mockConfig.store;
 				angledRectangleMode.register(mockConfig);
@@ -328,63 +234,21 @@ describe("TerraDrawAngledRectangleMode", () => {
 			});
 
 			it("fails to create a angled rectangle when validation returns false", () => {
-				angledRectangleMode.onClick({
-					lng: 0,
-					lat: 0,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				angledRectangleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
-				angledRectangleMode.onMouseMove({
-					lng: 1,
-					lat: 1,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				angledRectangleMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
 
-				angledRectangleMode.onClick({
-					lng: 1,
-					lat: 1,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				angledRectangleMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
 
-				angledRectangleMode.onMouseMove({
-					lng: 2,
-					lat: 2,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				angledRectangleMode.onMouseMove(MockCursorEvent({ lng: 2, lat: 2 }));
 
-				angledRectangleMode.onClick({
-					lng: 2,
-					lat: 2,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				angledRectangleMode.onClick(MockCursorEvent({ lng: 2, lat: 2 }));
 
 				let features = store.copyAll();
 				expect(features.length).toBe(1);
 
 				// Create a new angled rectangle polygon
-				angledRectangleMode.onClick({
-					lng: 0,
-					lat: 0,
-					containerX: 0,
-					containerY: 0,
-					button: "left",
-					heldKeys: [],
-				});
+				angledRectangleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
 				features = store.copyAll();
 				expect(features.length).toBe(1);
@@ -400,7 +264,7 @@ describe("TerraDrawAngledRectangleMode", () => {
 
 		it("does nothing if on finish key press is pressed while not drawing", () => {
 			rectangleMode = new TerraDrawAngledRectangleMode();
-			const mockConfig = getMockModeConfig(rectangleMode.mode);
+			const mockConfig = MockModeConfig(rectangleMode.mode);
 			store = new GeoJSONStore();
 			store = mockConfig.store;
 			onChange = mockConfig.onChange;
@@ -424,7 +288,7 @@ describe("TerraDrawAngledRectangleMode", () => {
 
 		it("cancels drawing angled rectangle on cancel key press", () => {
 			rectangleMode = new TerraDrawAngledRectangleMode();
-			const mockConfig = getMockModeConfig(rectangleMode.mode);
+			const mockConfig = MockModeConfig(rectangleMode.mode);
 			store = new GeoJSONStore();
 			store = mockConfig.store;
 			onChange = mockConfig.onChange;
@@ -433,14 +297,7 @@ describe("TerraDrawAngledRectangleMode", () => {
 			rectangleMode.register(mockConfig);
 			rectangleMode.start();
 
-			rectangleMode.onClick({
-				lng: 0,
-				lat: 0,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			rectangleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
 			let features = store.copyAll();
 			expect(features.length).toBe(1);
@@ -457,7 +314,7 @@ describe("TerraDrawAngledRectangleMode", () => {
 
 		it("finishes drawing angled rectangle on finish key press", () => {
 			rectangleMode = new TerraDrawAngledRectangleMode();
-			const mockConfig = getMockModeConfig(rectangleMode.mode);
+			const mockConfig = MockModeConfig(rectangleMode.mode);
 			store = new GeoJSONStore();
 			store = mockConfig.store;
 			onChange = mockConfig.onChange;
@@ -466,14 +323,7 @@ describe("TerraDrawAngledRectangleMode", () => {
 			rectangleMode.register(mockConfig);
 			rectangleMode.start();
 
-			rectangleMode.onClick({
-				lng: 0,
-				lat: 0,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			rectangleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
 			let features = store.copyAll();
 			expect(features.length).toBe(1);
@@ -484,14 +334,7 @@ describe("TerraDrawAngledRectangleMode", () => {
 				heldKeys: [],
 			});
 
-			rectangleMode.onClick({
-				lng: 0,
-				lat: 0,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			rectangleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
 			features = store.copyAll();
 			// Two as the rectangle has been closed via enter
@@ -504,7 +347,7 @@ describe("TerraDrawAngledRectangleMode", () => {
 
 		it("does not finish on key press when keyEvents null", () => {
 			rectangleMode = new TerraDrawAngledRectangleMode({ keyEvents: null });
-			const mockConfig = getMockModeConfig(rectangleMode.mode);
+			const mockConfig = MockModeConfig(rectangleMode.mode);
 			store = new GeoJSONStore();
 			store = mockConfig.store;
 			onChange = mockConfig.onChange;
@@ -512,14 +355,7 @@ describe("TerraDrawAngledRectangleMode", () => {
 			rectangleMode.register(mockConfig);
 			rectangleMode.start();
 
-			rectangleMode.onClick({
-				lng: 0,
-				lat: 0,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-			});
+			rectangleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
 			let features = store.copyAll();
 			expect(features.length).toBe(1);
@@ -546,7 +382,7 @@ describe("TerraDrawAngledRectangleMode", () => {
 			const rectangleMode = new TerraDrawAngledRectangleMode({
 				validation: () => true,
 			});
-			rectangleMode.register(getMockModeConfig("angled-rectangle"));
+			rectangleMode.register(MockModeConfig("angled-rectangle"));
 
 			expect(
 				rectangleMode.validateFeature({
@@ -578,7 +414,7 @@ describe("TerraDrawAngledRectangleMode", () => {
 					return false;
 				},
 			});
-			rectangleMode.register(getMockModeConfig("angled-rectangle"));
+			rectangleMode.register(MockModeConfig("angled-rectangle"));
 
 			expect(
 				rectangleMode.validateFeature({

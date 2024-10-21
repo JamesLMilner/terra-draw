@@ -1,17 +1,17 @@
-import { mockBehaviorConfig } from "../../../test/mock-behavior-config";
+import { MockBehaviorConfig } from "../../../test/mock-behavior-config";
 import { SelectionPointBehavior } from "./selection-point.behavior";
 
 describe("SelectionPointBehavior", () => {
 	describe("constructor", () => {
 		it("constructs", () => {
-			new SelectionPointBehavior(mockBehaviorConfig("test"));
+			new SelectionPointBehavior(MockBehaviorConfig("test"));
 		});
 	});
 
 	describe("api", () => {
 		it("get ids", () => {
 			const selectionPointBehavior = new SelectionPointBehavior(
-				mockBehaviorConfig("test"),
+				MockBehaviorConfig("test"),
 			);
 
 			expect(selectionPointBehavior.ids).toStrictEqual([]);
@@ -19,7 +19,7 @@ describe("SelectionPointBehavior", () => {
 
 		it("set ids fails", () => {
 			const selectionPointBehavior = new SelectionPointBehavior(
-				mockBehaviorConfig("test"),
+				MockBehaviorConfig("test"),
 			);
 
 			selectionPointBehavior.ids = ["test"];
@@ -29,7 +29,7 @@ describe("SelectionPointBehavior", () => {
 
 		it("create - for polygon", () => {
 			const selectionPointBehavior = new SelectionPointBehavior(
-				mockBehaviorConfig("test"),
+				MockBehaviorConfig("test"),
 			);
 
 			selectionPointBehavior.create(
@@ -47,7 +47,7 @@ describe("SelectionPointBehavior", () => {
 
 		it("delete", () => {
 			const selectionPointBehavior = new SelectionPointBehavior(
-				mockBehaviorConfig("test"),
+				MockBehaviorConfig("test"),
 			);
 
 			selectionPointBehavior.create(
@@ -69,7 +69,7 @@ describe("SelectionPointBehavior", () => {
 
 		describe("getUpdated", () => {
 			it("should return empty array if trying to get updated coordinates when non exist", () => {
-				const config = mockBehaviorConfig("test");
+				const config = MockBehaviorConfig("test");
 
 				const selectionPointBehavior = new SelectionPointBehavior(config);
 
@@ -84,7 +84,7 @@ describe("SelectionPointBehavior", () => {
 			});
 
 			it("should get updated coordinates if lengths match", () => {
-				const config = mockBehaviorConfig("test");
+				const config = MockBehaviorConfig("test");
 
 				const selectionPointBehavior = new SelectionPointBehavior(config);
 
@@ -122,7 +122,7 @@ describe("SelectionPointBehavior", () => {
 
 		describe("getOneUpdated", () => {
 			it("should return undefined if trying to get updated coordinates when non exist", () => {
-				const config = mockBehaviorConfig("test");
+				const config = MockBehaviorConfig("test");
 
 				const selectionPointBehavior = new SelectionPointBehavior(config);
 
@@ -131,7 +131,7 @@ describe("SelectionPointBehavior", () => {
 			});
 
 			it("should get updated coordinates index exists", () => {
-				const config = mockBehaviorConfig("test");
+				const config = MockBehaviorConfig("test");
 
 				const selectionPointBehavior = new SelectionPointBehavior(config);
 

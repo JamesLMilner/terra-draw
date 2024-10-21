@@ -1,4 +1,4 @@
-import { getMockModeConfig } from "../../test/mock-config";
+import { MockModeConfig } from "../../test/mock-mode-config";
 import { TerraDrawStaticMode } from "./static.mode";
 
 describe("TerraDrawStaticMode", () => {
@@ -14,8 +14,8 @@ describe("TerraDrawStaticMode", () => {
 			const staticMode = new TerraDrawStaticMode();
 
 			expect(() => {
-				staticMode.register(getMockModeConfig(staticMode.mode));
-			}).not.toThrowError();
+				staticMode.register(MockModeConfig(staticMode.mode));
+			}).not.toThrow();
 		});
 	});
 
@@ -25,7 +25,7 @@ describe("TerraDrawStaticMode", () => {
 
 			expect(() => {
 				staticMode.start();
-			}).not.toThrowError();
+			}).not.toThrow();
 		});
 	});
 
@@ -35,7 +35,7 @@ describe("TerraDrawStaticMode", () => {
 
 			expect(() => {
 				staticMode.stop();
-			}).not.toThrowError();
+			}).not.toThrow();
 		});
 	});
 
@@ -45,7 +45,7 @@ describe("TerraDrawStaticMode", () => {
 
 			expect(() => {
 				staticMode.onClick();
-			}).not.toThrowError();
+			}).not.toThrow();
 		});
 	});
 
@@ -55,7 +55,7 @@ describe("TerraDrawStaticMode", () => {
 
 			expect(() => {
 				staticMode.onKeyUp();
-			}).not.toThrowError();
+			}).not.toThrow();
 		});
 	});
 
@@ -65,7 +65,7 @@ describe("TerraDrawStaticMode", () => {
 
 			expect(() => {
 				staticMode.onKeyDown();
-			}).not.toThrowError();
+			}).not.toThrow();
 		});
 	});
 
@@ -75,7 +75,7 @@ describe("TerraDrawStaticMode", () => {
 
 			expect(() => {
 				staticMode.onMouseMove();
-			}).not.toThrowError();
+			}).not.toThrow();
 		});
 	});
 
@@ -85,7 +85,7 @@ describe("TerraDrawStaticMode", () => {
 
 			expect(() => {
 				staticMode.onDrag();
-			}).not.toThrowError();
+			}).not.toThrow();
 		});
 	});
 
@@ -95,7 +95,7 @@ describe("TerraDrawStaticMode", () => {
 
 			expect(() => {
 				staticMode.onDragStart();
-			}).not.toThrowError();
+			}).not.toThrow();
 		});
 	});
 
@@ -105,7 +105,7 @@ describe("TerraDrawStaticMode", () => {
 
 			expect(() => {
 				staticMode.onDragEnd();
-			}).not.toThrowError();
+			}).not.toThrow();
 		});
 	});
 
@@ -124,7 +124,7 @@ describe("TerraDrawStaticMode", () => {
 
 			expect(() => {
 				staticMode.cleanUp();
-			}).not.toThrowError();
+			}).not.toThrow();
 		});
 	});
 });

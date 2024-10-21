@@ -2,9 +2,9 @@
 
 /**
  * For this specific test suite we should only ever import from the Terra Draw
- * public API, and not from the internal implementation details. This is to ensure that
- * a developer can write a custom adapter exclusively from the publicly exposed base classes and tpyes
- * of the library.
+ * public API, and not from the internal library code. This is to ensure that
+ * a developer can write a custom adapter exclusively from the publicly exposed base
+ * classes and types of the library.
  */
 
 import { CustomStyling } from "./modes/base.mode";

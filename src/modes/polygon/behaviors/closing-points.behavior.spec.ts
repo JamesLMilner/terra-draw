@@ -1,5 +1,5 @@
-import { mockBehaviorConfig } from "../../../test/mock-behavior-config";
-import { mockDrawEvent } from "../../../test/mock-mouse-event";
+import { MockBehaviorConfig } from "../../../test/mock-behavior-config";
+import { MockCursorEvent } from "../../../test/mock-cursor-event";
 import { BehaviorConfig } from "../../base.behavior";
 import { PixelDistanceBehavior } from "../../pixel-distance.behavior";
 import { ClosingPointsBehavior } from "./closing-points.behavior";
@@ -7,7 +7,7 @@ import { ClosingPointsBehavior } from "./closing-points.behavior";
 describe("ClosingPointsBehavior", () => {
 	describe("constructor", () => {
 		it("constructs", () => {
-			const config = mockBehaviorConfig("test");
+			const config = MockBehaviorConfig("test");
 			new ClosingPointsBehavior(config, new PixelDistanceBehavior(config));
 		});
 	});
@@ -17,7 +17,7 @@ describe("ClosingPointsBehavior", () => {
 		let config: BehaviorConfig;
 
 		beforeEach(() => {
-			config = mockBehaviorConfig("test");
+			config = MockBehaviorConfig("test");
 			startEndPointBehavior = new ClosingPointsBehavior(
 				config,
 				new PixelDistanceBehavior(config),
@@ -46,7 +46,7 @@ describe("ClosingPointsBehavior", () => {
 						],
 						"polygon",
 					);
-				}).toThrowError();
+				}).toThrow();
 			});
 
 			it("creates correctly when enough coordinates are present", () => {
@@ -89,7 +89,7 @@ describe("ClosingPointsBehavior", () => {
 						],
 						"polygon",
 					);
-				}).toThrowError();
+				}).toThrow();
 			});
 		});
 
@@ -128,7 +128,7 @@ describe("ClosingPointsBehavior", () => {
 						[1, 0],
 						[0, 0],
 					]);
-				}).toThrowError();
+				}).toThrow();
 			});
 
 			it("updates geometries correctly", () => {
@@ -160,8 +160,6 @@ describe("ClosingPointsBehavior", () => {
 
 		describe("isClosingPoint", () => {
 			it("returns isClosing as true when in vicinity of closing point", () => {
-				jest.spyOn(config, "project");
-
 				startEndPointBehavior.create(
 					[
 						[0, 0],
@@ -173,28 +171,16 @@ describe("ClosingPointsBehavior", () => {
 					"polygon",
 				);
 
-				(config.project as jest.Mock).mockReturnValueOnce({
-					x: 0,
-					y: 0,
-				});
-
-				(config.project as jest.Mock).mockReturnValueOnce({
-					x: 50,
-					y: 50,
-				});
-
 				const { isClosing, isPreviousClosing } =
 					startEndPointBehavior.isClosingPoint(
-						mockDrawEvent({ containerX: 0, containerY: 0 }),
+						MockCursorEvent({ lng: 0, lat: 0 }),
 					);
 
 				expect(isClosing).toBe(true);
 				expect(isPreviousClosing).toBe(false);
 			});
 
-			it("returns isPreviousClosing as true when in vicinity of closing point", () => {
-				jest.spyOn(config, "project");
-
+			it("returns isPreviousClosing as true when in vicinity of previous closing point", () => {
 				startEndPointBehavior.create(
 					[
 						[0, 0],
@@ -206,28 +192,16 @@ describe("ClosingPointsBehavior", () => {
 					"polygon",
 				);
 
-				(config.project as jest.Mock).mockReturnValueOnce({
-					x: 50,
-					y: 50,
-				});
-
-				(config.project as jest.Mock).mockReturnValueOnce({
-					x: 0,
-					y: 0,
-				});
-
 				const { isClosing, isPreviousClosing } =
 					startEndPointBehavior.isClosingPoint(
-						mockDrawEvent({ containerX: 0, containerY: 0 }),
+						MockCursorEvent({ lng: 1, lat: 0 }),
 					);
 
 				expect(isClosing).toBe(false);
 				expect(isPreviousClosing).toBe(true);
 			});
 
-			it("returns both as false when in vicinity of closing point", () => {
-				jest.spyOn(config, "project");
-
+			it("returns both as false when not in vicinity of either closing point", () => {
 				startEndPointBehavior.create(
 					[
 						[0, 0],
@@ -239,19 +213,9 @@ describe("ClosingPointsBehavior", () => {
 					"polygon",
 				);
 
-				(config.project as jest.Mock).mockReturnValueOnce({
-					x: 50,
-					y: 50,
-				});
-
-				(config.project as jest.Mock).mockReturnValueOnce({
-					x: 100,
-					y: 100,
-				});
-
 				const { isClosing, isPreviousClosing } =
 					startEndPointBehavior.isClosingPoint(
-						mockDrawEvent({ containerX: 0, containerY: 0 }),
+						MockCursorEvent({ lng: 10, lat: 10 }),
 					);
 
 				expect(isClosing).toBe(false);

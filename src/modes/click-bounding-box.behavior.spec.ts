@@ -1,48 +1,33 @@
-import { mockBehaviorConfig } from "../test/mock-behavior-config";
-import { mockDrawEvent } from "../test/mock-mouse-event";
+import { MockBehaviorConfig } from "../test/mock-behavior-config";
+import { MockCursorEvent } from "../test/mock-cursor-event";
 import { ClickBoundingBoxBehavior } from "./click-bounding-box.behavior";
 
 describe("ClickBoundingBoxBehavior", () => {
 	describe("constructor", () => {
 		it("constructs", () => {
-			new ClickBoundingBoxBehavior(mockBehaviorConfig("test"));
+			new ClickBoundingBoxBehavior(MockBehaviorConfig("test"));
 		});
 	});
 
 	describe("api", () => {
 		it("create", () => {
-			const config = mockBehaviorConfig("test");
-
-			// Mock the unproject to return a valid set
-			// of bbox coordinates
-			(config.unproject as jest.Mock)
-				.mockImplementationOnce(() => ({ lng: 0, lat: 1 }))
-				.mockImplementationOnce(() => ({ lng: 1, lat: 1 }))
-				.mockImplementationOnce(() => ({ lng: 1, lat: 0 }))
-				.mockImplementationOnce(() => ({ lng: 0, lat: 0 }))
-				.mockImplementationOnce(() => ({ lng: 0, lat: 1 }));
+			const config = MockBehaviorConfig("test");
 
 			const clickBoundingBoxBehavior = new ClickBoundingBoxBehavior(config);
 
-			const bbox = clickBoundingBoxBehavior.create(mockDrawEvent());
-
-			// Ensure unproject is called correctly with screen space square
-			expect(config.unproject).toHaveBeenCalledTimes(5);
-			expect(config.unproject).toHaveBeenNthCalledWith(1, -20, -20);
-			expect(config.unproject).toHaveBeenNthCalledWith(2, 20, -20);
-			expect(config.unproject).toHaveBeenNthCalledWith(3, 20, 20);
-			expect(config.unproject).toHaveBeenNthCalledWith(4, -20, 20);
-			expect(config.unproject).toHaveBeenNthCalledWith(5, -20, -20);
+			const bbox = clickBoundingBoxBehavior.create(
+				MockCursorEvent({ lng: 1, lat: 1 }),
+			);
 
 			expect(bbox).toStrictEqual({
 				geometry: {
 					coordinates: [
 						[
-							[0, 1],
-							[1, 1],
-							[1, 0],
-							[0, 0],
-							[0, 1],
+							[0.5, 0.5],
+							[1.5, 0.5],
+							[1.5, 1.5],
+							[0.5, 1.5],
+							[0.5, 0.5],
 						],
 					],
 					type: "Polygon",

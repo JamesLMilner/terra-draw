@@ -380,6 +380,17 @@ const example = {
 				new TileLayer({
 					source: new OSM(),
 				}),
+				// If you want to experiment with multiple layers uncomment this
+				// new VectorLayer({
+				// 	background: '#1a2b39',
+				// 	source: new VectorSource({
+				// 		url: 'https://openlayers.org/data/vector/ecoregions.json',
+				// 		format: new GeoJSON(),
+				// 	}),
+				// 	style: {
+				// 		'fill-color': ['string', ['get', 'COLOR'], '#eee'],
+				// 	},
+				// })
 			],
 			target: this.generateId(Libraries.OpenLayers),
 			view: new View({
@@ -389,7 +400,8 @@ const example = {
 			controls: [],
 		});
 
-		map.once("postrender", () => {
+		// All layers must be rendered before we can start drawing
+		map.once("rendercomplete", () => {
 			const draw = new TerraDraw({
 				adapter: new TerraDrawOpenLayersAdapter({
 					lib: {

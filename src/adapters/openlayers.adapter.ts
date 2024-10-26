@@ -37,6 +37,7 @@ export class TerraDrawOpenLayersAdapter extends TerraDrawBaseAdapter {
 		config: {
 			map: Map;
 			lib: InjectableOL;
+			zIndex?: number;
 		} & BaseAdapterConfig,
 	) {
 		super(config);
@@ -64,6 +65,7 @@ export class TerraDrawOpenLayersAdapter extends TerraDrawBaseAdapter {
 		const vectorLayer = new this._lib.VectorLayer({
 			source: vectorSource as unknown as VectorSource<never>,
 			style: (feature) => this.getStyles(feature, this.stylingFunction()),
+			zIndex: config.zIndex ?? 100000,
 		});
 
 		this._map.addLayer(vectorLayer);
@@ -182,6 +184,31 @@ export class TerraDrawOpenLayersAdapter extends TerraDrawBaseAdapter {
 	}
 
 	/**
+	 * Sorts an array of DOM elements based on their order in the document, from earliest to latest.
+	 * @param elements - An array of `HTMLElement` objects to be sorted.
+	 * @returns A new array of `HTMLElement` objects sorted by their document order.
+	 */
+	private sortElementsByDOMOrder(elements: HTMLElement[]) {
+		// Sort the elements based on their DOM position
+		return elements.sort((a, b) => {
+			const position = a.compareDocumentPosition(b);
+
+			// If a comes before b in the DOM
+			if (position & Node.DOCUMENT_POSITION_FOLLOWING) {
+				return -1;
+			}
+
+			// If a comes after b in the DOM
+			if (position & Node.DOCUMENT_POSITION_PRECEDING) {
+				return 1;
+			}
+
+			// If they are the same element
+			return 0;
+		});
+	}
+
+	/**
 	 * Returns the longitude and latitude coordinates from a given PointerEvent on the map.
 	 * @param event The PointerEvent or MouseEvent  containing the screen coordinates of the pointer.
 	 * @returns An object with 'lng' and 'lat' properties representing the longitude and latitude, or null if the conversion is not possible.
@@ -201,15 +228,16 @@ export class TerraDrawOpenLayersAdapter extends TerraDrawBaseAdapter {
 	 * @returns The HTMLElement representing the map container.
 	 */
 	public getMapEventElement() {
-		const canvases = this._container.querySelectorAll("canvas");
+		// Each VectorLayer has a canvas element that is used to render the features, it orders
+		// these in the order they are added to the map. The last canvas is the one that is on top
+		// so we need to add the event listeners to this canvas so that the events are captured.
+		const canvases = Array.from(this._container.querySelectorAll("canvas"));
+		const sortedCanvases = this.sortElementsByDOMOrder(
+			canvases,
+		) as HTMLCanvasElement[];
+		const topCanvas = sortedCanvases[sortedCanvases.length - 1];
 
-		if (canvases.length > 1) {
-			throw Error(
-				"Terra Draw currently only supports 1 canvas with OpenLayers",
-			);
-		}
-
-		return canvases[0];
+		return topCanvas;
 	}
 
 	/**
@@ -311,8 +339,71 @@ export class TerraDrawOpenLayersAdapter extends TerraDrawBaseAdapter {
 		}
 	}
 
+	private registeredLayerHandlers:
+		| undefined
+		| { addLayers: () => void; removeLayers: () => void };
+
 	public register(callbacks: TerraDrawCallbacks) {
 		super.register(callbacks);
+
+		// We need to handle the complex case in OpenLayers where adding and removing layers
+		// can change the canvas ordering preventing the event listeners from working correctly
+		if (!this.registeredLayerHandlers) {
+			const layerGroup = this._map.getLayerGroup();
+			const layers = layerGroup.getLayers();
+
+			const removeListeners = () => {
+				this._listeners.forEach((listener) => {
+					listener.unregister();
+				});
+			};
+
+			const addListeners = () => {
+				this._listeners = this.getAdapterListeners();
+
+				this._listeners.forEach((listener) => {
+					listener.register();
+				});
+			};
+
+			this.registeredLayerHandlers = {
+				addLayers: () => {
+					removeListeners();
+					this._map.once("rendercomplete", () => {
+						if (this._currentModeCallbacks) {
+							addListeners();
+						}
+					});
+				},
+				removeLayers: () => {
+					removeListeners();
+					this._map.once("rendercomplete", () => {
+						if (this._currentModeCallbacks) {
+							addListeners();
+						}
+					});
+				},
+			};
+
+			layers.on("add", () => {
+				removeListeners();
+				this._map.once("rendercomplete", () => {
+					if (this._currentModeCallbacks) {
+						addListeners();
+					}
+				});
+			});
+
+			layers.on("remove", () => {
+				removeListeners();
+				this._map.once("rendercomplete", () => {
+					if (this._currentModeCallbacks) {
+						addListeners();
+					}
+				});
+			});
+		}
+
 		this._currentModeCallbacks &&
 			this._currentModeCallbacks.onReady &&
 			this._currentModeCallbacks.onReady();
@@ -323,7 +414,18 @@ export class TerraDrawOpenLayersAdapter extends TerraDrawBaseAdapter {
 	}
 
 	public unregister(): void {
-		// TODO: It seems this shouldn't be necessary as extends BaseAdapter which as this method
+		if (this.registeredLayerHandlers) {
+			const layerGroup = this._map.getLayerGroup();
+			if (layerGroup) {
+				const layers = layerGroup.getLayers();
+
+				if (layers) {
+					layers.un("add", this.registeredLayerHandlers.addLayers);
+					layers.un("remove", this.registeredLayerHandlers.removeLayers);
+				}
+			}
+		}
+
 		return super.unregister();
 	}
 }

@@ -1,3 +1,6 @@
+/**
+ * @jest-environment jsdom
+ */
 import { InjectableOL, TerraDrawOpenLayersAdapter } from "./openlayers.adapter";
 import Map from "ol/Map";
 import { Pixel } from "ol/pixel";
@@ -35,14 +38,20 @@ const createMockOLMap = (multipleCanvases?: boolean) => {
 			},
 			addEventListener: jest.fn(),
 			removeEventListener: jest.fn(),
+			compareDocumentPosition: jest
+				.fn()
+				.mockImplementationOnce(() => 2)
+				.mockImplementationOnce(() => 4),
 		},
 	];
 
 	if (multipleCanvases) {
 		canvases.push({ ...canvases[0] });
+		canvases.push({ ...canvases[0] });
 	}
 
 	return {
+		once: jest.fn((_, callback) => callback()),
 		getCoordinateFromPixel: jest.fn(() => [0, 0] as Pixel),
 		getPixelFromCoordinate: jest.fn(() => [0, 0] as Coordinate),
 		getViewport: jest.fn(() => ({
@@ -50,6 +59,12 @@ const createMockOLMap = (multipleCanvases?: boolean) => {
 			querySelectorAll: jest.fn(() => canvases),
 		})),
 		addLayer: jest.fn(),
+		getLayerGroup: jest.fn(() => ({
+			getLayers: jest.fn(() => ({
+				on: jest.fn((_, cb) => cb()),
+				un: jest.fn((_, cb) => cb()),
+			})),
+		})),
 		getInteractions: jest.fn(() => [new DragPan(), new DoubleClickZoom()]),
 	} as unknown as Map;
 };
@@ -273,7 +288,7 @@ describe("TerraDrawOpenLayersAdapter", () => {
 			expect(result.getBoundingClientRect).toBeDefined();
 		});
 
-		it("throws error if there are multiple canvases", () => {
+		it("returns the map element correctly when there are multiple canvases", () => {
 			const adapter = new TerraDrawOpenLayersAdapter({
 				map: createMockOLMap(true) as Map,
 				lib: {
@@ -284,9 +299,8 @@ describe("TerraDrawOpenLayersAdapter", () => {
 				} as unknown as InjectableOL,
 			});
 
-			expect(() => adapter.getMapEventElement()).toThrow(
-				"Terra Draw currently only supports 1 canvas with OpenLayers",
-			);
+			const result = adapter.getMapEventElement();
+			expect(result.getBoundingClientRect).toBeDefined();
 		});
 	});
 
@@ -843,7 +857,6 @@ describe("TerraDrawOpenLayersAdapter", () => {
 		});
 
 		it("performs clear on unregister", () => {
-			adapter.register(MockCallbacks());
 			adapter.unregister();
 
 			expect(clear).toHaveBeenCalledTimes(1);

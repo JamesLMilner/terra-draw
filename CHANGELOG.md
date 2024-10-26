@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-beta.8](https://github.com/JamesLMilner/terra-draw/compare/v1.0.0-beta.7...v1.0.0-beta.8) (2024-10-26)
+
+
+### Bug Fixes
+
+* handle multiple layers in TerraDrawOpenLayersAdapter ([#358](https://github.com/JamesLMilner/terra-draw/issues/358)) ([6903e4e](https://github.com/JamesLMilner/terra-draw/commit/6903e4e503f807146d9077363d67df0349c74def))
+
+
+### Tests
+
+* massively reduce LoC and complexity by simplifying approach to project/unproject in test files ([#356](https://github.com/JamesLMilner/terra-draw/issues/356)) ([b40f970](https://github.com/JamesLMilner/terra-draw/commit/b40f970451d8df3bae825132c11d6a8239a9d345))
+
 ## [1.0.0-beta.7](https://github.com/JamesLMilner/terra-draw/compare/v1.0.0-beta.6...v1.0.0-beta.7) (2024-10-16)
 
 

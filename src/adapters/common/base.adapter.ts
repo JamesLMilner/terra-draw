@@ -136,7 +136,7 @@ export abstract class TerraDrawBaseAdapter implements TerraDrawAdapter {
 		return this._coordinatePrecision;
 	}
 
-	private getAdapterListeners() {
+	protected getAdapterListeners() {
 		return [
 			new AdapterListener<BasePointerListener>({
 				name: "pointerdown",

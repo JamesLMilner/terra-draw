@@ -1,7 +1,10 @@
 import { BehaviorConfig } from "../modes/base.behavior";
 import { GeoJSONStore } from "../store/store";
 
-export const MockBehaviorConfig = (mode: string) =>
+export const MockBehaviorConfig = (
+	mode: string,
+	projection?: "web-mercator" | "globe",
+) =>
 	({
 		store: new GeoJSONStore(),
 		mode,
@@ -9,5 +12,5 @@ export const MockBehaviorConfig = (mode: string) =>
 		unproject: jest.fn((x, y) => ({ lng: x / 40, lat: y / 40 })),
 		pointerDistance: 40,
 		coordinatePrecision: 9,
-		projection: "web-mercator",
+		projection: projection ? projection : "web-mercator",
 	}) as BehaviorConfig;

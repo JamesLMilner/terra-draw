@@ -33,12 +33,15 @@ describe("DragFeatureBehavior", () => {
 		});
 	});
 
-	describe("api", () => {
+	describe.each(["web-mercator", "globe"])("api", (projection) => {
 		let config: BehaviorConfig;
 		let dragFeatureBehavior: DragFeatureBehavior;
 
 		beforeEach(() => {
-			config = MockBehaviorConfig("test");
+			config = MockBehaviorConfig(
+				"test",
+				projection as "web-mercator" | "globe",
+			);
 			const selectionPointBehavior = new SelectionPointBehavior(config);
 			const featureAtPointerEventBehavior = new FeatureAtPointerEventBehavior(
 				config,
@@ -110,6 +113,22 @@ describe("DragFeatureBehavior", () => {
 
 				expect(config.store.getGeometryCopy).toHaveBeenCalledTimes(1);
 				expect(config.store.updateGeometry).toHaveBeenCalledTimes(1);
+
+				expect(config.store.updateGeometry).not.toHaveBeenCalledWith({
+					id,
+					geometry: {
+						type: "Polygon",
+						coordinates: [
+							[
+								[0, 0],
+								[0, 1],
+								[1, 1],
+								[1, 0],
+								[0, 0],
+							],
+						],
+					},
+				});
 			});
 
 			it("validation returning false does not update the polygon to the dragged position", () => {

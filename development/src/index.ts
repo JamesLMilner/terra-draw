@@ -1,8 +1,3 @@
-import mapboxgl from "mapbox-gl";
-import maplibregl from "maplibre-gl";
-import * as L from "leaflet";
-import { Loader } from "@googlemaps/js-api-loader";
-
 import {
 	TerraDraw,
 	TerraDrawPointMode,
@@ -13,25 +8,42 @@ import {
 	TerraDrawFreehandMode,
 	TerraDrawRectangleMode,
 	TerraDrawAngledRectangleMode,
+	TerraDrawRenderMode,
+	TerraDrawSensorMode,
+	TerraDrawSectorMode,
 	TerraDrawMapboxGLAdapter,
 	TerraDrawLeafletAdapter,
 	TerraDrawGoogleMapsAdapter,
 	TerraDrawMapLibreGLAdapter,
 	TerraDrawArcGISMapsSDKAdapter,
+	TerraDrawOpenLayersAdapter,
 	ValidateMinAreaSquareMeters,
+	ValidateNotSelfIntersecting,
 } from "../../src/terra-draw";
-import { TerraDrawRenderMode } from "../../src/modes/render/render.mode";
-import { ValidateNotSelfIntersecting } from "../../src/validations/not-self-intersecting.validation";
 
+// Mapbox
+import mapboxgl from "mapbox-gl";
+
+// MapLibre
+import maplibregl from "maplibre-gl";
+
+// Leaflet
+import * as L from "leaflet";
+
+// Google Maps
+import { Loader } from "@googlemaps/js-api-loader";
+
+// OpenLayers
 import Feature from "ol/Feature";
 import GeoJSON from "ol/format/GeoJSON";
 import Map from "ol/Map";
-import { TerraDrawOpenLayersAdapter } from "../../src/adapters/openlayers.adapter";
 import View from "ol/View";
 import { Circle, Fill, Stroke, Style } from "ol/style";
 import { OSM, Vector as VectorSource } from "ol/source";
 import { Tile as TileLayer, Vector as VectorLayer } from "ol/layer";
 import { fromLonLat, getUserProjection } from "ol/proj";
+
+// ArcGIS
 import EsriMap from "@arcgis/core/Map";
 import MapView from "@arcgis/core/views/MapView.js";
 import GraphicsLayer from "@arcgis/core/layers/GraphicsLayer";
@@ -43,9 +55,9 @@ import SimpleFillSymbol from "@arcgis/core/symbols/SimpleFillSymbol";
 import SimpleLineSymbol from "@arcgis/core/symbols/SimpleLineSymbol";
 import Color from "@arcgis/core/Color";
 import SimpleMarkerSymbol from "@arcgis/core/symbols/SimpleMarkerSymbol";
+
+// Development Environment configuration
 import { Config, Libraries } from "./config";
-import { TerraDrawSectorMode } from "../../src/modes/sector/sector.mode";
-import { TerraDrawSensorMode } from "../../src/modes/sensor/sensor.mode";
 
 const addModeChangeHandler = (
 	draw: TerraDraw,

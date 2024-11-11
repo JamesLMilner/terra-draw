@@ -6,11 +6,15 @@ import { SelectionPointBehavior } from "./selection-point.behavior";
 import { MidPointBehavior } from "./midpoint.behavior";
 import { limitPrecision } from "../../../geometry/limit-decimal-precision";
 import { FeatureId } from "../../../store/store";
+import {
+	lngLatToWebMercatorXY,
+	webMercatorXYToLngLat,
+} from "../../../geometry/project/web-mercator";
 
 export class DragFeatureBehavior extends TerraDrawModeBehavior {
 	constructor(
 		readonly config: BehaviorConfig,
-		private readonly featuresAtMouseEvent: FeatureAtPointerEventBehavior,
+		private readonly featuresAtCursorEvent: FeatureAtPointerEventBehavior,
 		private readonly selectionPoints: SelectionPointBehavior,
 		private readonly midPoints: MidPointBehavior,
 	) {
@@ -36,7 +40,7 @@ export class DragFeatureBehavior extends TerraDrawModeBehavior {
 	}
 
 	canDrag(event: TerraDrawMouseEvent, selectedId: FeatureId) {
-		const { clickedFeature } = this.featuresAtMouseEvent.find(event, true);
+		const { clickedFeature } = this.featuresAtCursorEvent.find(event, true);
 
 		// If the cursor is not over the selected
 		// feature then we don't want to drag
@@ -53,7 +57,7 @@ export class DragFeatureBehavior extends TerraDrawModeBehavior {
 		}
 
 		const geometry = this.store.getGeometryCopy(this.draggedFeatureId);
-		const mouseCoord = [event.lng, event.lat];
+		const cursorCoord = [event.lng, event.lat];
 
 		// Update the geometry of the dragged feature
 		if (geometry.type === "Polygon" || geometry.type === "LineString") {
@@ -75,19 +79,53 @@ export class DragFeatureBehavior extends TerraDrawModeBehavior {
 
 			for (let i = 0; i < upToCoord; i++) {
 				const coordinate = updatedCoords[i];
-				const delta = [
-					this.dragPosition[0] - mouseCoord[0],
-					this.dragPosition[1] - mouseCoord[1],
-				];
+
+				let updatedLng: number;
+				let updatedLat: number;
+
+				if (this.config.projection === "web-mercator") {
+					const webMercatorDragPosition = lngLatToWebMercatorXY(
+						this.dragPosition[0],
+						this.dragPosition[1],
+					);
+					const webMercatorCursorCoord = lngLatToWebMercatorXY(
+						cursorCoord[0],
+						cursorCoord[1],
+					);
+					const webMercatorCoordinate = lngLatToWebMercatorXY(
+						coordinate[0],
+						coordinate[1],
+					);
+
+					const delta = {
+						x: webMercatorDragPosition.x - webMercatorCursorCoord.x,
+						y: webMercatorDragPosition.y - webMercatorCursorCoord.y,
+					};
+
+					const updatedX = webMercatorCoordinate.x - delta.x;
+					const updatedY = webMercatorCoordinate.y - delta.y;
+
+					const { lng, lat } = webMercatorXYToLngLat(updatedX, updatedY);
+
+					updatedLng = lng;
+					updatedLat = lat;
+				} else {
+					const delta = [
+						this.dragPosition[0] - cursorCoord[0],
+						this.dragPosition[1] - cursorCoord[1],
+					];
+					updatedLng = coordinate[0] - delta[0];
+					updatedLat = coordinate[1] - delta[1];
+				}
 
 				// Keep precision limited when calculating new coordinates
-				const updatedLng = limitPrecision(
-					coordinate[0] - delta[0],
+				updatedLng = limitPrecision(
+					updatedLng,
 					this.config.coordinatePrecision,
 				);
 
-				const updatedLat = limitPrecision(
-					coordinate[1] - delta[1],
+				updatedLat = limitPrecision(
+					updatedLat,
 					this.config.coordinatePrecision,
 				);
 
@@ -152,14 +190,14 @@ export class DragFeatureBehavior extends TerraDrawModeBehavior {
 
 			// Update mid point positions
 		} else if (geometry.type === "Point") {
-			// For mouse points we can simply move it
+			// For cursor points we can simply move it
 			// to the dragged position
 			this.store.updateGeometry([
 				{
 					id: this.draggedFeatureId,
 					geometry: {
 						type: "Point",
-						coordinates: mouseCoord,
+						coordinates: cursorCoord,
 					},
 				},
 			]);

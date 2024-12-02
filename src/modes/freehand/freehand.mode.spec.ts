@@ -142,6 +142,12 @@ describe("TerraDrawFreehandMode", () => {
 					[expect.any(String), expect.any(String)],
 					"create",
 				);
+
+				const features = store.copyAll();
+				expect(features.length).toBe(2);
+				expect(features[0].geometry.type).toBe("Polygon");
+				expect(features[1].geometry.type).toBe("Point");
+				expect(features[1].properties.closingPoint).toBe(true);
 			});
 
 			it("finishes drawing polygon on second click", () => {

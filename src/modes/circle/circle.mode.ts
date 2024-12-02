@@ -54,6 +54,7 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 	private keyEvents: TerraDrawCircleModeKeyEvents;
 	private cursors: Required<Cursors>;
 	private startingRadiusKilometers = 0.00001;
+	private cursorMovedAfterInitialCursorDown = false;
 
 	/**
 	 * Create a new circle mode instance
@@ -123,6 +124,7 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 			}
 		}
 
+		this.cursorMovedAfterInitialCursorDown = false;
 		this.center = undefined;
 		this.currentCircleId = undefined;
 		this.clickCount = 0;
@@ -169,12 +171,14 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 			]);
 			this.currentCircleId = createdId;
 			this.clickCount++;
+			this.cursorMovedAfterInitialCursorDown = false;
 			this.setDrawing();
 		} else {
 			if (
 				this.clickCount === 1 &&
 				this.center &&
-				this.currentCircleId !== undefined
+				this.currentCircleId !== undefined &&
+				this.cursorMovedAfterInitialCursorDown
 			) {
 				this.updateCircle(event);
 			}
@@ -186,6 +190,7 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 
 	/** @internal */
 	onMouseMove(event: TerraDrawMouseEvent) {
+		this.cursorMovedAfterInitialCursorDown = true;
 		this.updateCircle(event);
 	}
 

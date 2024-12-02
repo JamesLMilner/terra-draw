@@ -150,7 +150,7 @@ describe("TerraDrawCircleMode", () => {
 					expect(onChange).toHaveBeenCalledWith([expect.any(String)], "create");
 				});
 
-				it("finishes drawing circle on second click", () => {
+				it("finishes drawing circle on second click with no cursor movement", () => {
 					circleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
 					let features = store.copyAll();
@@ -161,7 +161,27 @@ describe("TerraDrawCircleMode", () => {
 					features = store.copyAll();
 					expect(features.length).toBe(1);
 
-					expect(onChange).toHaveBeenCalledTimes(3);
+					// We don't expect any changes if there is no cursor movement
+					expect(onChange).toHaveBeenCalledTimes(1);
+					expect(onChange).toHaveBeenCalledWith([expect.any(String)], "create");
+
+					expect(onFinish).toHaveBeenCalledTimes(1);
+				});
+
+				it("finishes drawing circle on second click with cursor movement", () => {
+					circleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+					let features = store.copyAll();
+					expect(features.length).toBe(1);
+
+					circleMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
+
+					circleMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
+
+					features = store.copyAll();
+					expect(features.length).toBe(1);
+
+					expect(onChange).toHaveBeenCalledTimes(5);
 					expect(onChange).toHaveBeenCalledWith([expect.any(String)], "create");
 
 					expect(onFinish).toHaveBeenCalledTimes(1);
@@ -230,7 +250,7 @@ describe("TerraDrawCircleMode", () => {
 					expect(onFinish).toHaveBeenCalledTimes(0);
 				});
 
-				it("does finish drawing circle on second click if validation returns true", () => {
+				it("does finish drawing circle on second click if validation returns true with no cursor movement", () => {
 					valid = true;
 
 					circleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
@@ -243,7 +263,7 @@ describe("TerraDrawCircleMode", () => {
 					features = store.copyAll();
 					expect(features.length).toBe(1);
 
-					expect(onChange).toHaveBeenCalledTimes(3);
+					expect(onChange).toHaveBeenCalledTimes(1);
 					expect(onChange).toHaveBeenCalledWith([expect.any(String)], "create");
 					expect(onFinish).toHaveBeenCalledTimes(1);
 					expect(onFinish).toHaveBeenNthCalledWith(1, expect.any(String), {

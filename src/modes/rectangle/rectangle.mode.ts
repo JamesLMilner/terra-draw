@@ -132,8 +132,9 @@ export class TerraDrawRectangleMode extends TerraDrawBaseDrawMode<RectanglePolyg
 			this.setStarted();
 		}
 
-		finishedId &&
+		if (finishedId !== undefined) {
 			this.onFinish(finishedId, { mode: this.mode, action: "draw" });
+		}
 	}
 
 	/** @internal */

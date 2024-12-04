@@ -124,7 +124,9 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 			}
 		}
 
-		this.closingPointId && this.store.delete([this.closingPointId]);
+		if (this.closingPointId) {
+			this.store.delete([this.closingPointId]);
+		}
 		this.startingClick = false;
 		this.currentId = undefined;
 		this.closingPointId = undefined;

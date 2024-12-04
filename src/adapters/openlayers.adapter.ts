@@ -404,9 +404,9 @@ export class TerraDrawOpenLayersAdapter extends TerraDrawBaseAdapter {
 			});
 		}
 
-		this._currentModeCallbacks &&
-			this._currentModeCallbacks.onReady &&
+		if (this._currentModeCallbacks?.onReady) {
 			this._currentModeCallbacks.onReady();
+		}
 	}
 
 	public getCoordinatePrecision(): number {

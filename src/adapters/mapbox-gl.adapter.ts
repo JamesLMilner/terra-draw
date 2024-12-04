@@ -358,7 +358,9 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawBaseAdapter {
 				this._rendered = true;
 
 				// Ensure selection/mid points are rendered on top
-				pointId && this._map.moveLayer(pointId);
+				if (pointId) {
+					this._map.moveLayer(pointId);
+				}
 			} else {
 				// If deletion occurred we always have to update all layers
 				// as we don't know the type (TODO: perhaps we could pass that back?)
@@ -397,7 +399,9 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawBaseAdapter {
 				// defined layers outside of Terra Draw which is perhaps unideal
 
 				// Ensure selection/mid points are rendered on top
-				pointId && this._map.moveLayer(pointId);
+				if (pointId) {
+					this._map.moveLayer(pointId);
+				}
 			}
 
 			// Reset changed ids
@@ -436,8 +440,8 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawBaseAdapter {
 
 	public register(callbacks: TerraDrawCallbacks) {
 		super.register(callbacks);
-		this._currentModeCallbacks &&
-			this._currentModeCallbacks.onReady &&
+		if (this._currentModeCallbacks?.onReady) {
 			this._currentModeCallbacks.onReady();
+		}
 	}
 }

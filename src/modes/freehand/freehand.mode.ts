@@ -6,6 +6,7 @@ import {
 	NumericStyling,
 	Cursor,
 	UpdateTypes,
+	POLYGON_PROPERTIES,
 } from "../../common";
 import { Polygon } from "geojson";
 
@@ -258,7 +259,10 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 						type: "Point",
 						coordinates: [event.lng, event.lat],
 					},
-					properties: { mode: this.mode },
+					properties: {
+						mode: this.mode,
+						[POLYGON_PROPERTIES.CLOSING_POINT]: true,
+					},
 				},
 			]);
 

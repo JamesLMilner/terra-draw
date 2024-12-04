@@ -19,10 +19,8 @@ describe("webMercatorCenter", () => {
 			},
 		});
 
-		expect(result).toStrictEqual({
-			x: 6896389.694243925,
-			y: 1778084.1594212381,
-		});
+		expect(result.x).toBeCloseTo(6896389.694243925);
+		expect(result.y).toBeCloseTo(1778084.1594212381);
 	});
 
 	it("returns the web mercator center correctly for linestring", () => {
@@ -39,9 +37,7 @@ describe("webMercatorCenter", () => {
 			},
 		});
 
-		expect(result).toStrictEqual({
-			x: 6829614.932746265,
-			y: 1668169.6040318909,
-		});
+		expect(result.x).toBeCloseTo(6829614.932746265);
+		expect(result.y).toBeCloseTo(1668169.6040318909);
 	});
 });

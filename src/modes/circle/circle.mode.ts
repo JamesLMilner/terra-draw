@@ -230,7 +230,7 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 			if (cleanUpId !== undefined) {
 				this.store.delete([cleanUpId]);
 			}
-		} catch (error) {}
+		} catch {}
 	}
 
 	/** @internal */

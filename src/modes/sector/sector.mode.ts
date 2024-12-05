@@ -257,12 +257,13 @@ export class TerraDrawSectorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 			updatedCoordinates = [...coordinates];
 		}
 
-		updatedCoordinates &&
+		if (updatedCoordinates) {
 			this.updatePolygonGeometry(
 				this.currentId,
 				updatedCoordinates,
 				UpdateTypes.Provisional,
 			);
+		}
 	}
 
 	private updatePolygonGeometry(

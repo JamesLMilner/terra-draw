@@ -13,7 +13,7 @@ import GraphicsLayer from "@arcgis/core/layers/GraphicsLayer";
 import Graphic from "@arcgis/core/Graphic";
 import SimpleMarkerSymbol from "@arcgis/core/symbols/SimpleMarkerSymbol";
 import { GeoJSONStoreFeatures } from "../store/store";
-import Symbol from "@arcgis/core/symbols/Symbol";
+import { Symbol as ArcGISSymbol } from "@arcgis/core/symbols";
 import SimpleLineSymbol from "@arcgis/core/symbols/SimpleLineSymbol";
 import SimpleFillSymbol from "@arcgis/core/symbols/SimpleFillSymbol";
 import Color from "@arcgis/core/Color";
@@ -76,9 +76,9 @@ export class TerraDrawArcGISMapsSDKAdapter extends TerraDrawBaseAdapter {
 			}
 		});
 
-		this._currentModeCallbacks &&
-			this._currentModeCallbacks.onReady &&
+		if (this._currentModeCallbacks?.onReady) {
 			this._currentModeCallbacks.onReady();
+		}
 	}
 
 	public unregister() {
@@ -210,7 +210,7 @@ export class TerraDrawArcGISMapsSDKAdapter extends TerraDrawBaseAdapter {
 		const { coordinates, type } = feature.geometry;
 		const style = styling[feature.properties.mode as string](feature);
 
-		let symbol: Symbol | undefined = undefined; // eslint-disable-line @typescript-eslint/ban-types
+		let symbol: ArcGISSymbol | undefined = undefined;
 		let geometry: Geometry | undefined = undefined;
 
 		switch (type) {

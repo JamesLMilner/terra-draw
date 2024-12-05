@@ -69,9 +69,9 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawBaseAdapter {
 		// method is called, which is why we need to use the 'ready'
 		// listener with the Google Maps adapter
 		this._overlay.onAdd = () => {
-			this._currentModeCallbacks &&
-				this._currentModeCallbacks.onReady &&
+			if (this._currentModeCallbacks?.onReady) {
 				this._currentModeCallbacks.onReady();
+			}
 		};
 		this._overlay.setMap(this._map);
 

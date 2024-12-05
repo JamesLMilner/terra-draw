@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-
 import { BehaviorConfig, TerraDrawModeBehavior } from "./base.behavior";
 import {
 	HexColor,

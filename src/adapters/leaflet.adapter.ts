@@ -302,9 +302,9 @@ export class TerraDrawLeafletAdapter extends TerraDrawBaseAdapter {
 	public register(callbacks: TerraDrawCallbacks) {
 		super.register(callbacks);
 
-		this._currentModeCallbacks &&
-			this._currentModeCallbacks.onReady &&
+		if (this._currentModeCallbacks?.onReady) {
 			this._currentModeCallbacks.onReady();
+		}
 	}
 
 	public getCoordinatePrecision(): number {

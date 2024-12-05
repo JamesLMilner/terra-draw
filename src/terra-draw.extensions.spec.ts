@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-
 /**
  * For this specific test suite we should only ever import from the Terra Draw
  * public API, and not from the internal library code. This is to ensure that

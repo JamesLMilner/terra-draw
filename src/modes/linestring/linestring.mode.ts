@@ -133,7 +133,9 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 		const finishedId = this.currentId;
 
 		// Reset the state back to starting state
-		this.closingPointId && this.store.delete([this.closingPointId]);
+		if (this.closingPointId) {
+			this.store.delete([this.closingPointId]);
+		}
 		this.currentCoordinate = 0;
 		this.currentId = undefined;
 		this.closingPointId = undefined;

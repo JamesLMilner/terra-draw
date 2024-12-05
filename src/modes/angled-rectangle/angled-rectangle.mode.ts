@@ -225,12 +225,13 @@ export class TerraDrawAngledRectangleMode extends TerraDrawBaseDrawMode<PolygonS
 			];
 		}
 
-		updatedCoordinates &&
+		if (updatedCoordinates) {
 			this.updatePolygonGeometry(
 				this.currentId,
 				updatedCoordinates,
 				UpdateTypes.Provisional,
 			);
+		}
 	}
 
 	private updatePolygonGeometry(

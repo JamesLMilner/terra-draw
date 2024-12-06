@@ -45,6 +45,8 @@ interface TerraDrawFreehandModeOptions<T extends CustomStyling>
 	extends BaseModeOptions<T> {
 	minDistance?: number;
 	preventPointsNearClose?: boolean;
+	autoClose?: boolean;
+	autoCloseTimeout?: number;
 	keyEvents?: TerraDrawFreehandModeKeyEvents | null;
 	cursors?: Cursors;
 }
@@ -59,6 +61,10 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 	private keyEvents: TerraDrawFreehandModeKeyEvents;
 	private cursors: Required<Cursors>;
 	private preventPointsNearClose: boolean;
+	private autoClose: boolean;
+	private autoCloseTimeout = 500;
+	private hasLeftStartingPoint = false;
+	private preventNewFeature = false;
 
 	constructor(options?: TerraDrawFreehandModeOptions<FreehandPolygonStyling>) {
 		super(options);
@@ -76,6 +82,14 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 
 		this.preventPointsNearClose =
 			(options && options.preventPointsNearClose) || true;
+
+		if (options && options.autoCloseTimeout && !options.autoClose) {
+			throw new Error("autoCloseTimeout is set, but autoClose is not enabled");
+		}
+
+		this.autoClose = (options && options.autoClose) || false;
+
+		this.autoCloseTimeout = (options && options.autoCloseTimeout) || 500;
 
 		this.minDistance = (options && options.minDistance) || 20;
 
@@ -130,6 +144,7 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 		this.startingClick = false;
 		this.currentId = undefined;
 		this.closingPointId = undefined;
+		this.hasLeftStartingPoint = false;
 		// Go back to started state
 		if (this.state === "drawing") {
 			this.setStarted();
@@ -179,6 +194,19 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 		);
 
 		if (closingDistance < this.pointerDistance) {
+			// We only want to close the polygon if the users cursor has left the
+			// region of the starting point
+			if (this.autoClose && this.hasLeftStartingPoint) {
+				// If we have an autoCloseTimeout, we want to prevent new features
+				// being created by accidental clicks for a short period of time
+				this.preventNewFeature = true;
+				setTimeout(() => {
+					this.preventNewFeature = false;
+				}, this.autoCloseTimeout);
+
+				this.close();
+			}
+
 			this.setCursor(this.cursors.close);
 
 			// We want to prohibit drawing new points at or around the closing
@@ -187,6 +215,7 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 				return;
 			}
 		} else {
+			this.hasLeftStartingPoint = true;
 			this.setCursor(this.cursors.start);
 		}
 
@@ -240,6 +269,10 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 
 	/** @internal */
 	onClick(event: TerraDrawMouseEvent) {
+		if (this.preventNewFeature) {
+			return;
+		}
+
 		if (this.startingClick === false) {
 			const [createdId, closingPointId] = this.store.create([
 				{

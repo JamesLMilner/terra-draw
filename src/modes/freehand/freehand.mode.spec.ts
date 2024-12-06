@@ -234,6 +234,7 @@ describe("TerraDrawFreehandMode", () => {
 		let freehandMode: TerraDrawFreehandMode;
 		let store: GeoJSONStore;
 		let onChange: jest.Mock;
+		let onFinish: jest.Mock;
 
 		beforeEach(() => {
 			freehandMode = new TerraDrawFreehandMode();
@@ -241,6 +242,7 @@ describe("TerraDrawFreehandMode", () => {
 			const mockConfig = MockModeConfig(freehandMode.mode);
 			store = mockConfig.store;
 			onChange = mockConfig.onChange;
+			onFinish = mockConfig.onFinish;
 			freehandMode.register(mockConfig);
 			freehandMode.start();
 		});
@@ -280,6 +282,209 @@ describe("TerraDrawFreehandMode", () => {
 			freehandMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
 
 			expect(onChange).toHaveBeenCalledTimes(0);
+		});
+
+		describe("autoClose", () => {
+			it("can close the polygon if autoClose is enabled and the cursor comes back to the starting point", () => {
+				freehandMode = new TerraDrawFreehandMode({ autoClose: true });
+
+				const mockConfig = MockModeConfig(freehandMode.mode);
+				store = mockConfig.store;
+				onChange = mockConfig.onChange;
+				onFinish = mockConfig.onFinish;
+				freehandMode.register(mockConfig);
+				freehandMode.start();
+
+				freehandMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+				expect(onChange).toHaveBeenCalledTimes(1);
+				expect(onChange).toHaveBeenNthCalledWith(
+					1,
+					[expect.any(String), expect.any(String)],
+					"create",
+				);
+
+				const feature = store.copyAll()[0];
+
+				freehandMode.onMouseMove(
+					MockCursorEvent({
+						lng: 0,
+						lat: 0,
+					}),
+				);
+
+				freehandMode.onMouseMove(
+					MockCursorEvent({
+						lng: 1,
+						lat: 0,
+					}),
+				);
+
+				freehandMode.onMouseMove(
+					MockCursorEvent({
+						lng: 1,
+						lat: 1,
+					}),
+				);
+
+				freehandMode.onMouseMove(
+					MockCursorEvent({
+						lng: 0,
+						lat: 0,
+					}),
+				);
+
+				expect(onChange).toHaveBeenCalledTimes(4);
+
+				expect(onFinish).toHaveBeenCalledTimes(1);
+
+				const updatedFeature = store.copyAll()[0];
+
+				expect(feature.id).toBe(updatedFeature.id);
+				expect(feature.geometry.coordinates).not.toStrictEqual(
+					updatedFeature.geometry.coordinates,
+				);
+			});
+
+			it("prevents accidental clicks creating a new polygon", () => {
+				freehandMode = new TerraDrawFreehandMode({ autoClose: true });
+
+				const mockConfig = MockModeConfig(freehandMode.mode);
+				store = mockConfig.store;
+				onChange = mockConfig.onChange;
+				onFinish = mockConfig.onFinish;
+				freehandMode.register(mockConfig);
+				freehandMode.start();
+
+				freehandMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+				expect(onChange).toHaveBeenCalledTimes(1);
+				expect(onChange).toHaveBeenNthCalledWith(
+					1,
+					[expect.any(String), expect.any(String)],
+					"create",
+				);
+
+				const feature = store.copyAll()[0];
+
+				freehandMode.onMouseMove(
+					MockCursorEvent({
+						lng: 0,
+						lat: 0,
+					}),
+				);
+
+				freehandMode.onMouseMove(
+					MockCursorEvent({
+						lng: 1,
+						lat: 0,
+					}),
+				);
+
+				freehandMode.onMouseMove(
+					MockCursorEvent({
+						lng: 1,
+						lat: 1,
+					}),
+				);
+
+				freehandMode.onMouseMove(
+					MockCursorEvent({
+						lng: 0,
+						lat: 0,
+					}),
+				);
+
+				expect(onChange).toHaveBeenCalledTimes(4);
+
+				expect(onFinish).toHaveBeenCalledTimes(1);
+
+				freehandMode.onClick(
+					MockCursorEvent({
+						lng: 0,
+						lat: 0,
+					}),
+				);
+
+				expect(onChange).toHaveBeenCalledTimes(4);
+
+				const updatedFeature = store.copyAll()[0];
+
+				expect(feature.id).toBe(updatedFeature.id);
+				expect(feature.geometry.coordinates).not.toStrictEqual(
+					updatedFeature.geometry.coordinates,
+				);
+			});
+		});
+	});
+
+	describe("onMouseMove - autoClose", () => {
+		let freehandMode: TerraDrawFreehandMode;
+		let store: GeoJSONStore;
+		let onChange: jest.Mock;
+		let onFinish: jest.Mock;
+
+		beforeEach(() => {
+			freehandMode = new TerraDrawFreehandMode({ autoClose: true });
+
+			const mockConfig = MockModeConfig(freehandMode.mode);
+			store = mockConfig.store;
+			onChange = mockConfig.onChange;
+			onFinish = mockConfig.onFinish;
+			freehandMode.register(mockConfig);
+			freehandMode.start();
+		});
+
+		it("can close the polygon if autoClose is enabled and the cursor comes back to the starting point", () => {
+			freehandMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+			expect(onChange).toHaveBeenCalledTimes(1);
+			expect(onChange).toHaveBeenNthCalledWith(
+				1,
+				[expect.any(String), expect.any(String)],
+				"create",
+			);
+
+			const feature = store.copyAll()[0];
+
+			freehandMode.onMouseMove(
+				MockCursorEvent({
+					lng: 0,
+					lat: 0,
+				}),
+			);
+
+			freehandMode.onMouseMove(
+				MockCursorEvent({
+					lng: 1,
+					lat: 0,
+				}),
+			);
+
+			freehandMode.onMouseMove(
+				MockCursorEvent({
+					lng: 1,
+					lat: 1,
+				}),
+			);
+
+			freehandMode.onMouseMove(
+				MockCursorEvent({
+					lng: 0,
+					lat: 0,
+				}),
+			);
+
+			expect(onChange).toHaveBeenCalledTimes(4);
+
+			expect(onFinish).toHaveBeenCalledTimes(1);
+
+			const updatedFeature = store.copyAll()[0];
+
+			expect(feature.id).toBe(updatedFeature.id);
+			expect(feature.geometry.coordinates).not.toStrictEqual(
+				updatedFeature.geometry.coordinates,
+			);
 		});
 	});
 

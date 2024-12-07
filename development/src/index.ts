@@ -189,7 +189,11 @@ const getModes = () => {
 		}),
 		new TerraDrawRectangleMode(),
 		new TerraDrawCircleMode(),
-		new TerraDrawFreehandMode(),
+		new TerraDrawFreehandMode({
+			autoClose: true,
+			minDistance: 10,
+			pointerDistance: 10,
+		}),
 		new TerraDrawRenderMode({
 			modeName: "arbitrary",
 			styles: {

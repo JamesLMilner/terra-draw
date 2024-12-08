@@ -2,7 +2,7 @@ import {
 	TerraDrawBaseAdapter,
 	BaseAdapterConfig,
 } from "./adapters/common/base.adapter";
-import { HexColorStyling, NumericStyling } from "./common";
+import { HexColorStyling, NumericStyling, TerraDrawCallbacks } from "./common";
 import { BaseModeOptions, TerraDrawBaseDrawMode } from "./modes/base.mode";
 
 // This object allows 3rd party developers to
@@ -15,4 +15,5 @@ export {
 	NumericStyling,
 	HexColorStyling,
 	BaseModeOptions,
+	TerraDrawCallbacks,
 };

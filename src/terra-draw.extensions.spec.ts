@@ -160,6 +160,10 @@ class TerraDrawTestAdapter extends TerraDrawBaseAdapter {
 	public render(_1: TerraDrawChanges, _2: TerraDrawStylingFunction): void {
 		// pass
 	}
+
+	public register(_: TerraDrawExtend.TerraDrawCallbacks): void {
+		// pass
+	}
 }
 
 /**

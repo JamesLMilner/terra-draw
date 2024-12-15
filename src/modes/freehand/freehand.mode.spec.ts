@@ -175,7 +175,7 @@ describe("TerraDrawFreehandMode", () => {
 			beforeEach(() => {
 				freehandMode = new TerraDrawFreehandMode({
 					validation: () => {
-						return valid;
+						return { valid };
 					},
 				});
 				store = new GeoJSONStore();
@@ -738,7 +738,10 @@ describe("TerraDrawFreehandMode", () => {
 						updatedAt: 1685568435434,
 					},
 				}),
-			).toBe(false);
+			).toEqual({
+				valid: false,
+				reason: "Feature mode property does not match the mode being added to",
+			});
 		});
 
 		it("returns true for valid freehand feature", () => {
@@ -781,13 +784,15 @@ describe("TerraDrawFreehandMode", () => {
 						updatedAt: 1685569593386,
 					},
 				}),
-			).toBe(true);
+			).toEqual({
+				valid: true,
+			});
 		});
 
 		it("returns false for valid freehand feature but the validate function returns false", () => {
 			const freehandMode = new TerraDrawFreehandMode({
 				validation: () => {
-					return false;
+					return { valid: false };
 				},
 				styles: {
 					closingPointColor: "#ffffff",
@@ -827,7 +832,9 @@ describe("TerraDrawFreehandMode", () => {
 						updatedAt: 1685569593386,
 					},
 				}),
-			).toBe(false);
+			).toEqual({
+				valid: false,
+			});
 		});
 	});
 });

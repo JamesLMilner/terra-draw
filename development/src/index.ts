@@ -150,10 +150,17 @@ const getModes = () => {
 					feature: {
 						validation: (feature) => {
 							if (feature.geometry.type !== "Polygon") {
-								return false;
+								return {
+									valid: false,
+									reason: "Feature is not a valid Polygon feature",
+								};
 							}
 
-							return ValidateMinAreaSquareMeters(feature, 1000);
+							const result = ValidateMinAreaSquareMeters(feature, 1000);
+							return {
+								valid: result,
+								reason: result ? undefined : "Area too small",
+							};
 						},
 						draggable: true,
 						coordinates: {
@@ -182,9 +189,13 @@ const getModes = () => {
 			snapping: true,
 			validation: (feature, { updateType }) => {
 				if (updateType === "finish" || updateType === "commit") {
-					return ValidateNotSelfIntersecting(feature);
+					const valid = ValidateNotSelfIntersecting(feature);
+					return {
+						valid,
+						reason: valid ? undefined : "Polygon must not self-intersect",
+					};
 				}
-				return true;
+				return { valid: true };
 			},
 		}),
 		new TerraDrawRectangleMode(),

@@ -8,11 +8,16 @@ import {
 	Cursor,
 	UpdateTypes,
 } from "../../common";
-import { FeatureId, GeoJSONStoreFeatures } from "../../store/store";
+import {
+	FeatureId,
+	GeoJSONStoreFeatures,
+	StoreValidation,
+} from "../../store/store";
 import { getDefaultStyling } from "../../util/styling";
 import {
 	BaseModeOptions,
 	CustomStyling,
+	ModeMismatchValidationFailure,
 	TerraDrawBaseDrawMode,
 } from "../base.mode";
 import { ValidateNonIntersectingPolygonFeature } from "../../validations/polygon.validation";
@@ -108,7 +113,7 @@ export class TerraDrawRectangleMode extends TerraDrawBaseDrawMode<RectanglePolyg
 					},
 				);
 
-				if (!valid) {
+				if (!valid.valid) {
 					return;
 				}
 			}
@@ -266,14 +271,15 @@ export class TerraDrawRectangleMode extends TerraDrawBaseDrawMode<RectanglePolyg
 		return styles;
 	}
 
-	validateFeature(feature: unknown): feature is GeoJSONStoreFeatures {
-		if (super.validateFeature(feature)) {
-			return (
-				feature.properties.mode === this.mode &&
-				ValidateNonIntersectingPolygonFeature(feature, this.coordinatePrecision)
-			);
-		} else {
-			return false;
-		}
+	validateFeature(feature: unknown): StoreValidation {
+		return this.validateModeFeature(
+			feature,
+			(baseValidatedFeature) =>
+				ValidateNonIntersectingPolygonFeature(
+					baseValidatedFeature,
+					this.coordinatePrecision,
+				),
+			"Feature is not a valid simple Polygon feature",
+		);
 	}
 }

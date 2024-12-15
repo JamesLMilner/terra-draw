@@ -121,7 +121,7 @@ describe("TerraDrawSectorMode", () => {
 			store = new GeoJSONStore();
 			sectorMode = new TerraDrawSectorMode({
 				validation: () => {
-					return true;
+					return { valid: true };
 				},
 			});
 			const mockConfig = MockModeConfig(sectorMode.mode);
@@ -205,7 +205,9 @@ describe("TerraDrawSectorMode", () => {
 		describe("with successful validation", () => {
 			beforeEach(() => {
 				sectorMode = new TerraDrawSectorMode({
-					validation: () => true,
+					validation: () => {
+						return { valid: true };
+					},
 				});
 				const mockConfig = MockModeConfig(sectorMode.mode);
 
@@ -239,7 +241,9 @@ describe("TerraDrawSectorMode", () => {
 		describe("with unsuccessful validation", () => {
 			beforeEach(() => {
 				sectorMode = new TerraDrawSectorMode({
-					validation: () => false,
+					validation: () => {
+						return { valid: false };
+					},
 				});
 				const mockConfig = MockModeConfig(sectorMode.mode);
 
@@ -379,53 +383,8 @@ describe("TerraDrawSectorMode", () => {
 	describe("validateFeature", () => {
 		it("returns true for valid sector feature with validation that returns true", () => {
 			const sectorMode = new TerraDrawSectorMode({
-				validation: () => true,
-			});
-			sectorMode.register(MockModeConfig("sector"));
-
-			expect(
-				sectorMode.validateFeature({
-					id: "5c582a42-c3a7-4bfc-b686-6036f311df3c",
-					geometry: {
-						type: "Polygon",
-						coordinates: [
-							[
-								[-0.096802636, 51.500464739],
-								[-0.109590068, 51.510206381],
-								[-0.109590068, 51.510206381],
-								[-0.11416909, 51.50689961],
-								[-0.116656509, 51.502817579],
-								[-0.116752741, 51.498451789],
-								[-0.114446197, 51.494328048],
-								[-0.110014675, 51.490943142],
-								[-0.103991904, 51.48870495],
-								[-0.097103263, 51.487883219],
-								[-0.090178415, 51.488576994],
-								[-0.084051383, 51.490702652],
-								[-0.079460103, 51.494004006],
-								[-0.076957545, 51.498083239],
-								[-0.076845116, 51.502448914],
-								[-0.079136357, 51.506575225],
-								[-0.083555311, 51.509965331],
-								[-0.089569764, 51.512211129],
-								[-0.096455339, 51.513042321],
-								[-0.096802636, 51.500464739],
-							],
-						],
-					},
-					properties: {
-						mode: "sector",
-						createdAt: 1685655516297,
-						updatedAt: 1685655518118,
-					},
-				}),
-			).toBe(true);
-		});
-
-		it("returns false for valid sector feature but with validation that returns false", () => {
-			const sectorMode = new TerraDrawSectorMode({
 				validation: () => {
-					return false;
+					return { valid: true };
 				},
 			});
 			sectorMode.register(MockModeConfig("sector"));
@@ -466,7 +425,58 @@ describe("TerraDrawSectorMode", () => {
 						updatedAt: 1685655518118,
 					},
 				}),
-			).toBe(false);
+			).toEqual({
+				valid: true,
+			});
+		});
+
+		it("returns false for valid sector feature but with validation that returns false", () => {
+			const sectorMode = new TerraDrawSectorMode({
+				validation: () => {
+					return { valid: true };
+				},
+			});
+			sectorMode.register(MockModeConfig("sector"));
+
+			expect(
+				sectorMode.validateFeature({
+					id: "5c582a42-c3a7-4bfc-b686-6036f311df3c",
+					geometry: {
+						type: "Polygon",
+						coordinates: [
+							[
+								[-0.096802636, 51.500464739],
+								[-0.109590068, 51.510206381],
+								[-0.109590068, 51.510206381],
+								[-0.11416909, 51.50689961],
+								[-0.116656509, 51.502817579],
+								[-0.116752741, 51.498451789],
+								[-0.114446197, 51.494328048],
+								[-0.110014675, 51.490943142],
+								[-0.103991904, 51.48870495],
+								[-0.097103263, 51.487883219],
+								[-0.090178415, 51.488576994],
+								[-0.084051383, 51.490702652],
+								[-0.079460103, 51.494004006],
+								[-0.076957545, 51.498083239],
+								[-0.076845116, 51.502448914],
+								[-0.079136357, 51.506575225],
+								[-0.083555311, 51.509965331],
+								[-0.089569764, 51.512211129],
+								[-0.096455339, 51.513042321],
+								[-0.096802636, 51.500464739],
+							],
+						],
+					},
+					properties: {
+						mode: "sector",
+						createdAt: 1685655516297,
+						updatedAt: 1685655518118,
+					},
+				}),
+			).toEqual({
+				valid: true,
+			});
 		});
 	});
 

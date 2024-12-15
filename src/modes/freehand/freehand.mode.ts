@@ -16,7 +16,11 @@ import {
 	TerraDrawBaseDrawMode,
 } from "../base.mode";
 import { getDefaultStyling } from "../../util/styling";
-import { FeatureId, GeoJSONStoreFeatures } from "../../store/store";
+import {
+	FeatureId,
+	GeoJSONStoreFeatures,
+	StoreValidation,
+} from "../../store/store";
 import { cartesianDistance } from "../../geometry/measure/pixel-distance";
 import { ValidatePolygonFeature } from "../../validations/polygon.validation";
 
@@ -133,7 +137,7 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 				},
 			);
 
-			if (!valid) {
+			if (!valid.valid) {
 				return;
 			}
 		}
@@ -254,7 +258,7 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 				},
 			);
 
-			if (!valid) {
+			if (!valid.valid) {
 				return;
 			}
 		}
@@ -428,14 +432,12 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 		return styles;
 	}
 
-	validateFeature(feature: unknown): feature is GeoJSONStoreFeatures {
-		if (super.validateFeature(feature)) {
-			return (
-				feature.properties.mode === this.mode &&
-				ValidatePolygonFeature(feature, this.coordinatePrecision)
-			);
-		} else {
-			return false;
-		}
+	validateFeature(feature: unknown): StoreValidation {
+		return this.validateModeFeature(
+			feature,
+			(baseValidatedFeature) =>
+				ValidatePolygonFeature(baseValidatedFeature, this.coordinatePrecision),
+			"Feature is not a valid Polygon feature",
+		);
 	}
 }

@@ -6,11 +6,12 @@ import {
 	Cursor,
 	UpdateTypes,
 } from "../../common";
-import { GeoJSONStoreFeatures } from "../../store/store";
+import { GeoJSONStoreFeatures, StoreValidation } from "../../store/store";
 import { getDefaultStyling } from "../../util/styling";
 import {
 	BaseModeOptions,
 	CustomStyling,
+	ModeMismatchValidationFailure,
 	TerraDrawBaseDrawMode,
 } from "../base.mode";
 import { ValidatePointFeature } from "../../validations/point.validation";
@@ -91,7 +92,7 @@ export class TerraDrawPointMode extends TerraDrawBaseDrawMode<PointModeStyling> 
 				},
 			);
 
-			if (!valid) {
+			if (!valid.valid) {
 				return;
 			}
 		}
@@ -162,14 +163,12 @@ export class TerraDrawPointMode extends TerraDrawBaseDrawMode<PointModeStyling> 
 		return styles;
 	}
 
-	validateFeature(feature: unknown): feature is GeoJSONStoreFeatures {
-		if (super.validateFeature(feature)) {
-			return (
-				feature.properties.mode === this.mode &&
-				ValidatePointFeature(feature, this.coordinatePrecision)
-			);
-		} else {
-			return false;
-		}
+	validateFeature(feature: unknown): StoreValidation {
+		return this.validateModeFeature(
+			feature,
+			(baseValidatedFeature) =>
+				ValidatePointFeature(baseValidatedFeature, this.coordinatePrecision),
+			"Feature is not a valid Point feature",
+		);
 	}
 }

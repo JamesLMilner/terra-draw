@@ -144,13 +144,13 @@ describe("DragCoordinateBehavior", () => {
 				dragCoordinateBehavior.drag(
 					MockCursorEvent({ lng: 0, lat: 0 }),
 					true,
-					() => false,
+					() => ({ valid: false }),
 				);
 
 				expect(config.store.updateGeometry).toHaveBeenCalledTimes(0);
 			});
 
-			it("validation returning false means updates are not called", () => {
+			it("validation returning true means updates are called", () => {
 				const id = createStorePolygon(config);
 
 				dragCoordinateBehavior.startDragging(id, 0);
@@ -160,7 +160,7 @@ describe("DragCoordinateBehavior", () => {
 				dragCoordinateBehavior.drag(
 					MockCursorEvent({ lng: 0, lat: 0 }),
 					true,
-					() => true,
+					() => ({ valid: true }),
 				);
 
 				expect(config.store.updateGeometry).toHaveBeenCalledTimes(1);

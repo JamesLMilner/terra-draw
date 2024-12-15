@@ -140,10 +140,9 @@ describe("DragFeatureBehavior", () => {
 				jest.spyOn(config.store, "updateGeometry");
 				jest.spyOn(config.store, "getGeometryCopy");
 
-				dragFeatureBehavior.drag(
-					MockCursorEvent({ lng: 0, lat: 0 }),
-					() => false,
-				);
+				dragFeatureBehavior.drag(MockCursorEvent({ lng: 0, lat: 0 }), () => ({
+					valid: false,
+				}));
 
 				expect(config.store.getGeometryCopy).toHaveBeenCalledTimes(1);
 				expect(config.store.updateGeometry).toHaveBeenCalledTimes(0);
@@ -158,10 +157,9 @@ describe("DragFeatureBehavior", () => {
 				jest.spyOn(config.store, "updateGeometry");
 				jest.spyOn(config.store, "getGeometryCopy");
 
-				dragFeatureBehavior.drag(
-					MockCursorEvent({ lng: 0, lat: 0 }),
-					() => true,
-				);
+				dragFeatureBehavior.drag(MockCursorEvent({ lng: 0, lat: 0 }), () => ({
+					valid: true,
+				}));
 
 				expect(config.store.getGeometryCopy).toHaveBeenCalledTimes(1);
 				expect(config.store.updateGeometry).toHaveBeenCalledTimes(1);

@@ -447,7 +447,10 @@ describe("TerraDrawRectangleMode", () => {
 						updatedAt: 1685568435434,
 					},
 				}),
-			).toBe(false);
+			).toEqual({
+				reason: "Feature mode property does not match the mode being added to",
+				valid: false,
+			});
 		});
 
 		it("returns false for self intersecting polygon feature", () => {
@@ -482,13 +485,16 @@ describe("TerraDrawRectangleMode", () => {
 						updatedAt: 1685655518118,
 					},
 				}),
-			).toBe(false);
+			).toEqual({
+				valid: false,
+				reason: "Feature is not a valid simple Polygon feature",
+			});
 		});
 
 		it("returns true for valid rectangle feature with validation that returns true", () => {
 			const rectangleMode = new TerraDrawRectangleMode({
 				validation: () => {
-					return true;
+					return { valid: true };
 				},
 			});
 			rectangleMode.register(MockModeConfig("rectangle"));
@@ -514,13 +520,15 @@ describe("TerraDrawRectangleMode", () => {
 						updatedAt: 1685655518118,
 					},
 				}),
-			).toBe(true);
+			).toEqual({
+				valid: true,
+			});
 		});
 
 		it("returns false for valid rectangle feature but with validation that returns false", () => {
 			const rectangleMode = new TerraDrawRectangleMode({
 				validation: () => {
-					return false;
+					return { valid: false };
 				},
 			});
 			rectangleMode.register(MockModeConfig("rectangle"));
@@ -546,7 +554,9 @@ describe("TerraDrawRectangleMode", () => {
 						updatedAt: 1685655518118,
 					},
 				}),
-			).toBe(false);
+			).toEqual({
+				valid: false,
+			});
 		});
 	});
 });

@@ -21,6 +21,12 @@ export type GeoJSONStoreFeatures = Feature<
 	DefinedProperties
 >;
 
+export type StoreValidation = {
+	id?: FeatureId;
+	valid: boolean;
+	reason?: string;
+};
+
 type StoreChangeEvents = "delete" | "create" | "update" | "styling";
 
 export type StoreChangeHandler = (
@@ -84,62 +90,90 @@ export class GeoJSONStore<Id extends FeatureId = FeatureId> {
 
 	load(
 		data: GeoJSONStoreFeatures[],
-		featureValidation?: (feature: unknown, tracked?: boolean) => boolean,
-	) {
+		featureValidation?: (
+			feature: unknown,
+			tracked?: boolean,
+		) => StoreValidation,
+	): StoreValidation[] {
 		if (data.length === 0) {
-			return;
+			return [];
 		}
 
 		// We don't want to update the original data
-		const clonedData = this.clone(data);
+		let clonedData = this.clone(data);
 
-		// We try to be a bit forgiving here as many users
-		// may not set a feature id as UUID or createdAt/updatedAt
-		clonedData.forEach((feature) => {
+		const changes: FeatureId[] = []; // The list of changes that we will trigger to onChange
+		const validations: StoreValidation[] = []; // The list of validations that we will return
+
+		// We filter out the features that are not valid and do not add them to the store
+		clonedData = clonedData.filter((feature) => {
 			if (feature.id === undefined || feature.id === null) {
 				feature.id = this.idStrategy.getId();
+			}
+
+			const id = feature.id as FeatureId;
+			if (featureValidation) {
+				const validation = featureValidation(feature);
+
+				// Generic error handling if the featureValidation function
+				// does not throw something more specific itself
+				if (!validation.valid) {
+					validations.push({ id, valid: false, reason: validation.reason });
+					return false;
+				}
 			}
 
 			if (this.tracked) {
 				if (!feature.properties.createdAt) {
 					feature.properties.createdAt = +new Date();
 				} else {
-					isValidTimestamp(feature.properties.createdAt);
+					const valid = isValidTimestamp(feature.properties.createdAt);
+					if (!valid) {
+						validations.push({
+							id: feature.id as FeatureId,
+							valid: false,
+							reason: "createdAt is not a valid numeric timestamp",
+						});
+						return false;
+					}
 				}
 
 				if (!feature.properties.updatedAt) {
 					feature.properties.updatedAt = +new Date();
 				} else {
-					isValidTimestamp(feature.properties.updatedAt);
-				}
-			}
-		});
-
-		const changes: FeatureId[] = [];
-		clonedData.forEach((feature) => {
-			const id = feature.id as FeatureId;
-			if (featureValidation) {
-				const isValid = featureValidation(feature);
-
-				// Generic error handling if the featureValidation function
-				// does not throw something more specific itself
-				if (!isValid) {
-					throw new Error(
-						`Feature ${id} is not valid: ${JSON.stringify(feature)}`,
-					);
+					const valid = isValidTimestamp(feature.properties.updatedAt);
+					if (!valid) {
+						validations.push({
+							id: feature.id as FeatureId,
+							valid: false,
+							reason: "updatedAt is not a valid numeric timestamp",
+						});
+						return false;
+					}
 				}
 			}
 
 			// We have to be sure that the feature does not already exist with this ID
 			if (this.has(id)) {
-				throw new Error(`Feature already exists with this id: ${id}`);
+				validations.push({
+					id,
+					valid: false,
+					reason: `Feature already exists with this id: ${id}`,
+				});
+				return false;
 			}
 
 			this.store[id] = feature;
 			changes.push(id);
+
+			validations.push({ id, valid: true });
+
+			return true;
 		});
 		this.spatialIndex.load(clonedData);
 		this._onChange(changes, "create");
+
+		return validations;
 	}
 
 	search(

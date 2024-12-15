@@ -120,7 +120,7 @@ describe("TerraDrawPointMode", () => {
 			it("does not create the point if validation returns false", () => {
 				const pointMode = new TerraDrawPointMode({
 					validation: (feature) => {
-						return (feature.geometry as Point).coordinates[0] > 45;
+						return { valid: (feature.geometry as Point).coordinates[0] > 45 };
 					},
 				});
 
@@ -140,7 +140,7 @@ describe("TerraDrawPointMode", () => {
 			it("does create the point if validation returns true", () => {
 				const pointMode = new TerraDrawPointMode({
 					validation: (feature) => {
-						return (feature.geometry as Point).coordinates[0] > 45;
+						return { valid: (feature.geometry as Point).coordinates[0] > 45 };
 					},
 				});
 
@@ -325,7 +325,10 @@ describe("TerraDrawPointMode", () => {
 						updatedAt: 1685654950609,
 					},
 				}),
-			).toBe(false);
+			).toEqual({
+				reason: "Feature mode property does not match the mode being added to",
+				valid: false,
+			});
 		});
 
 		it("returns true for valid point feature", () => {
@@ -351,12 +354,14 @@ describe("TerraDrawPointMode", () => {
 						updatedAt: 1685654950609,
 					},
 				}),
-			).toBe(true);
+			).toEqual({
+				valid: true,
+			});
 		});
 
 		it("returns false for valid point feature but validate function returns false", () => {
 			const pointMode = new TerraDrawPointMode({
-				validation: () => false,
+				validation: () => ({ valid: false }),
 				styles: {
 					pointColor: "#ffffff",
 				},
@@ -378,7 +383,9 @@ describe("TerraDrawPointMode", () => {
 						updatedAt: 1685654950609,
 					},
 				}),
-			).toBe(false);
+			).toEqual({
+				valid: false,
+			});
 		});
 	});
 });

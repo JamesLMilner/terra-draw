@@ -12,10 +12,18 @@ import {
 	TerraDrawBaseDrawMode,
 	BaseModeOptions,
 	CustomStyling,
+	ModeMismatchValidationFailure,
 } from "../base.mode";
 import { getDefaultStyling } from "../../util/styling";
-import { FeatureId, GeoJSONStoreFeatures } from "../../store/store";
-import { ValidatePolygonFeature } from "../../validations/polygon.validation";
+import {
+	FeatureId,
+	GeoJSONStoreFeatures,
+	StoreValidation,
+} from "../../store/store";
+import {
+	ValidateNonIntersectingPolygonFeature,
+	ValidatePolygonFeature,
+} from "../../validations/polygon.validation";
 import { webMercatorDestination } from "../../geometry/measure/destination";
 import {
 	normalizeBearing,
@@ -424,7 +432,7 @@ export class TerraDrawSensorMode extends TerraDrawBaseDrawMode<SensorPolygonStyl
 		} as LineString;
 
 		if (this.validate) {
-			const valid = this.validate(
+			const validationResult = this.validate(
 				{
 					type: "Feature",
 					geometry: updatedGeometry,
@@ -437,7 +445,7 @@ export class TerraDrawSensorMode extends TerraDrawBaseDrawMode<SensorPolygonStyl
 				},
 			);
 
-			if (!valid) {
+			if (!validationResult.valid) {
 				return false;
 			}
 		}
@@ -458,7 +466,7 @@ export class TerraDrawSensorMode extends TerraDrawBaseDrawMode<SensorPolygonStyl
 		} as Polygon;
 
 		if (this.validate) {
-			const valid = this.validate(
+			const validationResult = this.validate(
 				{
 					type: "Feature",
 					geometry: updatedGeometry,
@@ -471,7 +479,7 @@ export class TerraDrawSensorMode extends TerraDrawBaseDrawMode<SensorPolygonStyl
 				},
 			);
 
-			if (!valid) {
+			if (!validationResult.valid) {
 				return false;
 			}
 		}
@@ -647,15 +655,16 @@ export class TerraDrawSensorMode extends TerraDrawBaseDrawMode<SensorPolygonStyl
 		return styles;
 	}
 
-	validateFeature(feature: unknown): feature is GeoJSONStoreFeatures {
-		if (super.validateFeature(feature)) {
-			return (
-				feature.properties.mode === this.mode &&
-				ValidatePolygonFeature(feature, this.coordinatePrecision)
-			);
-		} else {
-			return false;
-		}
+	validateFeature(feature: unknown): StoreValidation {
+		return this.validateModeFeature(
+			feature,
+			(baseValidatedFeature) =>
+				ValidateNonIntersectingPolygonFeature(
+					baseValidatedFeature,
+					this.coordinatePrecision,
+				),
+			"Feature is not a valid simple Polygon feature",
+		);
 	}
 
 	private getDeltaBearing(

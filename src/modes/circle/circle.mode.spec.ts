@@ -219,7 +219,7 @@ describe("TerraDrawCircleMode", () => {
 
 				beforeEach(() => {
 					circleMode = new TerraDrawCircleMode({
-						validation: () => valid,
+						validation: () => ({ valid }),
 					});
 					const mockConfig = MockModeConfig(circleMode.mode);
 
@@ -570,7 +570,10 @@ describe("TerraDrawCircleMode", () => {
 						updatedAt: 1685568435434,
 					},
 				}),
-			).toBe(false);
+			).toEqual({
+				reason: "Feature is not a valid simple Polygon feature",
+				valid: false,
+			});
 		});
 
 		it("returns true for valid circle feature", () => {
@@ -666,13 +669,15 @@ describe("TerraDrawCircleMode", () => {
 						updatedAt: 1685568435434,
 					},
 				}),
-			).toBe(true);
+			).toEqual({
+				valid: true,
+			});
 		});
 
 		it("returns false for valid circle feature but with validation that returns false", () => {
 			const circleMode = new TerraDrawCircleMode({
 				validation: () => {
-					return false;
+					return { valid: false };
 				},
 				styles: {
 					fillColor: "#ffffff",
@@ -765,7 +770,9 @@ describe("TerraDrawCircleMode", () => {
 						updatedAt: 1685568435434,
 					},
 				}),
-			).toBe(false);
+			).toEqual({
+				valid: false,
+			});
 		});
 	});
 });

@@ -174,7 +174,7 @@ export class DragFeatureBehavior extends TerraDrawModeBehavior {
 					},
 				);
 
-				if (!valid) {
+				if (!valid.valid) {
 					return false;
 				}
 			}

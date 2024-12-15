@@ -34,11 +34,18 @@ export enum ModeTypes {
 	Render = "render",
 }
 
+type BaseValidationResult = { valid: boolean; reason?: string };
+
 export type BaseModeOptions<T extends CustomStyling> = {
 	styles?: Partial<T>;
 	pointerDistance?: number;
 	validation?: Validation;
 	projection?: Projection;
+};
+
+export const ModeMismatchValidationFailure = {
+	valid: false,
+	reason: "Feature mode property does not match the mode being added to",
 };
 
 export abstract class TerraDrawBaseDrawMode<T extends CustomStyling> {
@@ -150,7 +157,11 @@ export abstract class TerraDrawBaseDrawMode<T extends CustomStyling> {
 		}
 	}
 
-	validateFeature(feature: unknown): feature is GeoJSONStoreFeatures {
+	validateFeature(feature: unknown): BaseValidationResult {
+		return this.performFeatureValidation(feature);
+	}
+
+	private performFeatureValidation(feature: unknown): BaseValidationResult {
 		if (this._state === "unregistered") {
 			throw new Error("Mode must be registered");
 		}
@@ -162,15 +173,50 @@ export abstract class TerraDrawBaseDrawMode<T extends CustomStyling> {
 
 		// We also want tp validate based on any specific valdiations passed in
 		if (this.validate) {
-			return this.validate(feature as GeoJSONStoreFeatures, {
+			const validation = this.validate(feature as GeoJSONStoreFeatures, {
 				project: this.project,
 				unproject: this.unproject,
 				coordinatePrecision: this.coordinatePrecision,
 				updateType: UpdateTypes.Provisional,
 			});
+
+			return {
+				// validatedFeature: feature as GeoJSONStoreFeatures,
+				valid: validStoreFeature.valid && validation.valid,
+				reason: validation.reason,
+			};
 		}
 
-		return validStoreFeature;
+		return {
+			// validatedFeature: feature as GeoJSONStoreFeatures,
+			valid: validStoreFeature.valid,
+			reason: validStoreFeature.reason,
+		};
+	}
+
+	protected validateModeFeature(
+		feature: unknown,
+		modeValidationFn: (feature: GeoJSONStoreFeatures) => boolean,
+		defaultError: string,
+	): BaseValidationResult {
+		const validation = this.performFeatureValidation(feature);
+		if (validation.valid) {
+			const validatedFeature = feature as GeoJSONStoreFeatures;
+			const matches = validatedFeature.properties.mode === this.mode;
+			if (!matches) {
+				return ModeMismatchValidationFailure;
+			}
+			const modeValidation = modeValidationFn(validatedFeature);
+			return {
+				valid: modeValidation,
+				reason: modeValidation ? undefined : defaultError,
+			};
+		}
+
+		return {
+			valid: false,
+			reason: validation.reason,
+		};
 	}
 
 	abstract start(): void;

@@ -150,7 +150,7 @@ describe("DragCoordinateResizeBehavior", () => {
 						MockCursorEvent({ lng: 0, lat: 0 }),
 						"center",
 						() => {
-							return false;
+							return { valid: false };
 						},
 					);
 

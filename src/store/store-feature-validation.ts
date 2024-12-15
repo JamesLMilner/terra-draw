@@ -25,6 +25,19 @@ function isObject(
 	);
 }
 
+export function hasModeProperty(
+	feature: unknown,
+): feature is { properties: { mode: string } } {
+	return Boolean(
+		feature &&
+			typeof feature === "object" &&
+			"properties" in feature &&
+			typeof feature.properties === "object" &&
+			feature.properties !== null &&
+			"mode" in feature.properties,
+	);
+}
+
 function dateIsValid(timestamp: unknown): boolean {
 	return (
 		typeof timestamp === "number" &&
@@ -34,7 +47,7 @@ function dateIsValid(timestamp: unknown): boolean {
 
 export function isValidTimestamp(timestamp: unknown): boolean {
 	if (!dateIsValid(timestamp)) {
-		throw new Error(StoreValidationErrors.InvalidTrackedProperties);
+		return false;
 	}
 
 	return true;
@@ -43,7 +56,10 @@ export function isValidTimestamp(timestamp: unknown): boolean {
 export function isValidStoreFeature(
 	feature: unknown,
 	isValidId: IdStrategy<FeatureId>["isValidId"],
-): feature is GeoJSONStoreFeatures {
+): {
+	valid: boolean;
+	reason?: string;
+} {
 	let error;
 	if (!isObject(feature)) {
 		error = StoreValidationErrors.FeatureIsNotObject;
@@ -68,12 +84,12 @@ export function isValidStoreFeature(
 		!feature.properties.mode ||
 		typeof feature.properties.mode !== "string"
 	) {
-		throw new Error(StoreValidationErrors.InvalidModeProperty);
+		return { valid: false, reason: StoreValidationErrors.InvalidModeProperty };
 	}
 
 	if (error) {
-		throw new Error(error);
+		return { valid: false, reason: error };
 	}
 
-	return true;
+	return { valid: true };
 }

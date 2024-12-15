@@ -85,7 +85,7 @@ describe("Terra Draw", () => {
 
 			draw.start();
 
-			draw.addFeatures([
+			const result = draw.addFeatures([
 				{
 					type: "Feature",
 					geometry: {
@@ -98,6 +98,8 @@ describe("Terra Draw", () => {
 				},
 			]);
 
+			expect(result[0].valid).toBe(true);
+			expect(typeof result[0].id).toBe("string");
 			const snapshot = draw.getSnapshot();
 			expect(typeof snapshot[0].id).toBe("string");
 			expect(snapshot[0].id).toHaveLength(36);
@@ -117,7 +119,7 @@ describe("Terra Draw", () => {
 
 			draw.start();
 
-			draw.addFeatures([
+			const result = draw.addFeatures([
 				{
 					type: "Feature",
 					geometry: {
@@ -130,12 +132,15 @@ describe("Terra Draw", () => {
 				},
 			]);
 
+			expect(result[0].valid).toBe(true);
+			expect(result[0].id).toBe(1);
+
 			const snapshot = draw.getSnapshot();
 			expect(typeof snapshot[0].id).toBe("number");
 			expect(snapshot[0].id).toBe(1);
 		});
 
-		it("does not allow features with same id to be added twice ", () => {
+		it("returns invalid feature when a duplicate feature id is added", () => {
 			const draw = new TerraDraw({
 				adapter: adapter,
 				modes: [new TerraDrawPointMode()],
@@ -143,7 +148,7 @@ describe("Terra Draw", () => {
 
 			draw.start();
 
-			expect(() => {
+			expect(
 				draw.addFeatures([
 					{
 						id: "e90e54ea-0a63-407e-b433-08717009d9f6",
@@ -167,11 +172,22 @@ describe("Terra Draw", () => {
 							mode: "point",
 						},
 					},
-				]);
-			}).toThrow();
+				]),
+			).toEqual([
+				{
+					id: "e90e54ea-0a63-407e-b433-08717009d9f6",
+					valid: true,
+				},
+				{
+					id: "e90e54ea-0a63-407e-b433-08717009d9f6",
+					reason:
+						"Feature already exists with this id: e90e54ea-0a63-407e-b433-08717009d9f6",
+					valid: false,
+				},
+			]);
 		});
 
-		it("does not allow features with incorrect id strategy to be added", () => {
+		it("returns invalid feature when an incorrect id strategy is used", () => {
 			const draw = new TerraDraw({
 				adapter: adapter,
 				modes: [new TerraDrawPointMode()],
@@ -179,7 +195,7 @@ describe("Terra Draw", () => {
 
 			draw.start();
 
-			expect(() => {
+			expect(
 				draw.addFeatures([
 					{
 						id: 1,
@@ -203,8 +219,64 @@ describe("Terra Draw", () => {
 							mode: "point",
 						},
 					},
-				]);
-			}).toThrow();
+				]),
+			).toEqual([
+				{
+					id: 1,
+					reason: "Feature must match the id strategy (default is UUID4)",
+					valid: false,
+				},
+				{
+					id: 2,
+					reason: "Feature must match the id strategy (default is UUID4)",
+					valid: false,
+				},
+			]);
+		});
+
+		it("returns invalid feature when the modes do not match any instantiated modes", () => {
+			const draw = new TerraDraw({
+				adapter: adapter,
+				modes: [new TerraDrawPolygonMode()],
+			});
+
+			draw.start();
+
+			expect(
+				draw.addFeatures([
+					{
+						type: "Feature",
+						geometry: {
+							type: "Point",
+							coordinates: [-25.431289673, 34.355907891],
+						},
+						properties: {
+							mode: "point",
+						},
+					},
+					{
+						type: "Feature",
+						geometry: {
+							type: "Point",
+							coordinates: [-26.431289673, 34.355907891],
+						},
+						properties: {
+							mode: "rectangle",
+						},
+					},
+				]),
+			).toEqual([
+				{
+					id: expect.any(String),
+					reason: "point mode is not in the list of instantiated modes",
+					valid: false,
+				},
+				{
+					id: expect.any(String),
+					reason: "rectangle mode is not in the list of instantiated modes",
+					valid: false,
+				},
+			]);
 		});
 	});
 

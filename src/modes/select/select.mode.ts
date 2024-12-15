@@ -180,9 +180,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 			for (const mode in options.flags) {
 				const feature = options.flags[mode].feature;
 				if (feature && feature.validation) {
-					this.validations[mode] = feature.validation as (
-						feature: GeoJSONStoreFeatures,
-					) => boolean;
+					this.validations[mode] = feature.validation;
 				}
 			}
 		}
@@ -383,7 +381,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 					updateType: UpdateTypes.Commit,
 				},
 			);
-			if (!valid) {
+			if (!valid.valid) {
 				return;
 			}
 		}

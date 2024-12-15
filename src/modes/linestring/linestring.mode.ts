@@ -11,6 +11,7 @@ import { LineString, Point, Position } from "geojson";
 import {
 	BaseModeOptions,
 	CustomStyling,
+	ModeMismatchValidationFailure,
 	TerraDrawBaseDrawMode,
 } from "../base.mode";
 import { cartesianDistance } from "../../geometry/measure/pixel-distance";
@@ -23,10 +24,12 @@ import {
 	FeatureId,
 	GeoJSONStoreFeatures,
 	GeoJSONStoreGeometries,
+	StoreValidation,
 } from "../../store/store";
 import { InsertCoordinatesBehavior } from "../insert-coordinates.behavior";
 import { haversineDistanceKilometers } from "../../geometry/measure/haversine-distance";
 import { coordinatesIdentical } from "../../geometry/coordinates-identical";
+import { ValidateLineStringFeature } from "../../validations/linestring.validation";
 
 type TerraDrawLineStringModeKeyEvents = {
 	cancel: KeyboardEvent["key"] | null;
@@ -162,7 +165,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 		const updatedGeometry = { type: "LineString", coordinates } as LineString;
 
 		if (this.validate) {
-			const valid = this.validate(
+			const validationResult = this.validate(
 				{
 					type: "Feature",
 					geometry: updatedGeometry,
@@ -175,7 +178,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 				},
 			);
 
-			if (!valid) {
+			if (!validationResult.valid) {
 				return;
 			}
 		}
@@ -570,15 +573,15 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 		return styles;
 	}
 
-	validateFeature(feature: unknown): feature is GeoJSONStoreFeatures {
-		if (super.validateFeature(feature)) {
-			return (
-				feature.geometry.type === "LineString" &&
-				feature.properties.mode === this.mode &&
-				feature.geometry.coordinates.length >= 2
-			);
-		} else {
-			return false;
-		}
+	validateFeature(feature: unknown): StoreValidation {
+		return this.validateModeFeature(
+			feature,
+			(baseValidatedFeature) =>
+				ValidateLineStringFeature(
+					baseValidatedFeature,
+					this.coordinatePrecision,
+				),
+			"Feature is not a valid LineString feature",
+		);
 	}
 }

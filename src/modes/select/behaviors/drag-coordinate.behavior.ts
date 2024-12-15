@@ -170,7 +170,7 @@ export class DragCoordinateBehavior extends TerraDrawModeBehavior {
 				},
 			);
 
-			if (!valid) {
+			if (!valid.valid) {
 				return false;
 			}
 		}

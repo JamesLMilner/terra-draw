@@ -8,59 +8,71 @@ import {
 describe("isValidStoreFeature", () => {
 	const isValidId = defaultIdStrategy.isValidId;
 
-	it("throws on data with non object feature", () => {
-		expect(() => isValidStoreFeature(undefined, isValidId)).toThrow(
-			StoreValidationErrors.FeatureIsNotObject,
-		);
-		expect(() => isValidStoreFeature(null, isValidId)).toThrow(
-			StoreValidationErrors.FeatureIsNotObject,
-		);
+	it("returns valid false with reason on data with non object feature", () => {
+		expect(isValidStoreFeature(undefined, isValidId)).toEqual({
+			reason: StoreValidationErrors.FeatureIsNotObject,
+			valid: false,
+		});
+		expect(isValidStoreFeature(null, isValidId)).toEqual({
+			reason: StoreValidationErrors.FeatureIsNotObject,
+			valid: false,
+		});
 	});
 
-	it("throws on data with no id", () => {
-		expect(() => isValidStoreFeature({ id: undefined }, isValidId)).toThrow(
-			StoreValidationErrors.FeatureHasNoId,
-		);
-		expect(() => isValidStoreFeature({ id: null }, isValidId)).toThrow(
-			StoreValidationErrors.FeatureHasNoId,
-		);
+	it("returns valid false with reason on data with no id", () => {
+		expect(isValidStoreFeature({ id: undefined }, isValidId)).toEqual({
+			reason: StoreValidationErrors.FeatureHasNoId,
+			valid: false,
+		});
+		expect(isValidStoreFeature({ id: null }, isValidId)).toEqual({
+			reason: StoreValidationErrors.FeatureHasNoId,
+			valid: false,
+		});
 	});
 
-	it("throws on data with non string id", () => {
-		expect(() => isValidStoreFeature({ id: 1 }, isValidId)).toThrow(
-			StoreValidationErrors.FeatureIdIsNotValid,
-		);
+	it("returns valid false with reason on data with non string id", () => {
+		expect(isValidStoreFeature({ id: 1 }, isValidId)).toEqual({
+			reason: StoreValidationErrors.FeatureIdIsNotValid,
+			valid: false,
+		});
 	});
 
-	it("throws on data with non uuid4 id", () => {
-		expect(() => isValidStoreFeature({ id: "1" }, isValidId)).toThrow(
-			StoreValidationErrors.FeatureIdIsNotValid,
-		);
+	it("returns valid false with reason on data with non uuid4 id", () => {
+		expect(isValidStoreFeature({ id: "1" }, isValidId)).toEqual({
+			reason: StoreValidationErrors.FeatureIdIsNotValid,
+			valid: false,
+		});
 	});
 
-	it("throws on data with no geometry", () => {
-		expect(() =>
+	it("returns valid false with reason on data with no geometry", () => {
+		expect(
 			isValidStoreFeature(
 				{ id: "e3ccd3b9-afb1-4f0b-91d8-22a768d5f284" },
 				isValidId,
 			),
-		).toThrow(StoreValidationErrors.FeatureHasNoGeometry);
+		).toEqual({
+			reason: StoreValidationErrors.FeatureHasNoGeometry,
+			valid: false,
+		});
 	});
 
-	it("throws on data with no properties", () => {
-		expect(() => {
+	it("returns valid false with reason on data with no properties", () => {
+		expect(
 			isValidStoreFeature(
 				{
 					id: "e3ccd3b9-afb1-4f0b-91d8-22a768d5f284",
 					geometry: {},
-				} as any,
+				} as unknown,
 				isValidId,
-			);
-		}).toThrow(StoreValidationErrors.FeatureHasNoProperties);
+			),
+		).toEqual({
+			reason: StoreValidationErrors.FeatureHasNoProperties,
+			valid: false,
+		});
 	});
 
-	it("throws on data with non Point, LineString, Polygon geometry type", () => {
-		expect(() => {
+	it("returns valid false with reason on data with non Point, LineString, Polygon geometry type", () => {
+		expect(
 			isValidStoreFeature(
 				{
 					id: "e3ccd3b9-afb1-4f0b-91d8-22a768d5f284",
@@ -68,14 +80,17 @@ describe("isValidStoreFeature", () => {
 						type: "MultiLineString",
 					},
 					properties: {},
-				} as any,
+				} as unknown,
 				isValidId,
-			);
-		}).toThrow(StoreValidationErrors.FeatureGeometryNotSupported);
+			),
+		).toEqual({
+			reason: StoreValidationErrors.FeatureGeometryNotSupported,
+			valid: false,
+		});
 	});
 
-	it("throws on data with supported geometry with non array coordinate property", () => {
-		expect(() => {
+	it("returns valid false with reason on data with supported geometry with non array coordinate property", () => {
+		expect(
 			isValidStoreFeature(
 				{
 					id: "e3ccd3b9-afb1-4f0b-91d8-22a768d5f284",
@@ -84,14 +99,17 @@ describe("isValidStoreFeature", () => {
 						coordinates: "[]",
 					},
 					properties: {},
-				},
+				} as unknown,
 				isValidId,
-			);
-		}).toThrow(StoreValidationErrors.FeatureCoordinatesNotAnArray);
+			),
+		).toEqual({
+			reason: StoreValidationErrors.FeatureCoordinatesNotAnArray,
+			valid: false,
+		});
 	});
 
-	it("throws if mode is not provided as a string", () => {
-		expect(() =>
+	it("returns valid false with reason if mode is not provided as a string", () => {
+		expect(
 			isValidStoreFeature(
 				{
 					id: "e3ccd3b9-afb1-4f0b-91d8-22a768d5f284",
@@ -103,11 +121,14 @@ describe("isValidStoreFeature", () => {
 				},
 				isValidId,
 			),
-		).toThrow(StoreValidationErrors.InvalidModeProperty);
+		).toEqual({
+			reason: StoreValidationErrors.InvalidModeProperty,
+			valid: false,
+		});
 	});
 
 	it("does not throw if mode is provide as a string", () => {
-		expect(() =>
+		expect(
 			isValidStoreFeature(
 				{
 					id: "e3ccd3b9-afb1-4f0b-91d8-22a768d5f284",
@@ -119,16 +140,16 @@ describe("isValidStoreFeature", () => {
 				},
 				isValidId,
 			),
-		).not.toThrow();
+		).toEqual({
+			valid: true,
+		});
 	});
 
-	it("throws if tracked is explicitly true and tracked properties are not provided", () => {
-		expect(() => isValidTimestamp(undefined)).toThrow(
-			StoreValidationErrors.InvalidTrackedProperties,
-		);
+	it("returns valid false with reason if tracked is explicitly true and tracked properties are not provided", () => {
+		expect(isValidTimestamp(undefined)).toEqual(false);
 	});
 
 	it("does not throw if tracked is true and tracked properties are provided", () => {
-		expect(() => isValidTimestamp(+new Date())).not.toThrow();
+		expect(isValidTimestamp(+new Date())).toEqual(true);
 	});
 });

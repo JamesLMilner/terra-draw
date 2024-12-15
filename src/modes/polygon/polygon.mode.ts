@@ -12,6 +12,7 @@ import {
 	TerraDrawBaseDrawMode,
 	BaseModeOptions,
 	CustomStyling,
+	ModeMismatchValidationFailure,
 } from "../base.mode";
 import { PixelDistanceBehavior } from "../pixel-distance.behavior";
 import { ClickBoundingBoxBehavior } from "../click-bounding-box.behavior";
@@ -21,7 +22,11 @@ import { SnappingBehavior } from "../snapping.behavior";
 import { coordinatesIdentical } from "../../geometry/coordinates-identical";
 import { ClosingPointsBehavior } from "./behaviors/closing-points.behavior";
 import { getDefaultStyling } from "../../util/styling";
-import { FeatureId, GeoJSONStoreFeatures } from "../../store/store";
+import {
+	FeatureId,
+	GeoJSONStoreFeatures,
+	StoreValidation,
+} from "../../store/store";
 import { ValidatePolygonFeature } from "../../validations/polygon.validation";
 
 type TerraDrawPolygonModeKeyEvents = {
@@ -255,7 +260,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 				},
 			);
 
-			if (!valid) {
+			if (!valid.valid) {
 				return false;
 			}
 		}
@@ -561,14 +566,12 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 		return styles;
 	}
 
-	validateFeature(feature: unknown): feature is GeoJSONStoreFeatures {
-		if (super.validateFeature(feature)) {
-			return (
-				feature.properties.mode === this.mode &&
-				ValidatePolygonFeature(feature, this.coordinatePrecision)
-			);
-		} else {
-			return false;
-		}
+	validateFeature(feature: unknown): StoreValidation {
+		return this.validateModeFeature(
+			feature,
+			(baseValidatedFeature) =>
+				ValidatePolygonFeature(baseValidatedFeature, this.coordinatePrecision),
+			"Feature is not a valid Polygon feature",
+		);
 	}
 }

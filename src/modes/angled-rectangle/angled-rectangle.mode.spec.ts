@@ -119,7 +119,7 @@ describe("TerraDrawAngledRectangleMode", () => {
 			store = new GeoJSONStore();
 			angledRectangleMode = new TerraDrawAngledRectangleMode({
 				validation: () => {
-					return true;
+					return { valid: true };
 				},
 			});
 			const mockConfig = MockModeConfig(angledRectangleMode.mode);
@@ -190,7 +190,7 @@ describe("TerraDrawAngledRectangleMode", () => {
 		describe("with successful validation", () => {
 			beforeEach(() => {
 				angledRectangleMode = new TerraDrawAngledRectangleMode({
-					validation: () => true,
+					validation: () => ({ valid: true }),
 				});
 				const mockConfig = MockModeConfig(angledRectangleMode.mode);
 
@@ -224,7 +224,7 @@ describe("TerraDrawAngledRectangleMode", () => {
 		describe("with unsuccessful validation", () => {
 			beforeEach(() => {
 				angledRectangleMode = new TerraDrawAngledRectangleMode({
-					validation: () => false,
+					validation: () => ({ valid: false, reason: "Test" }),
 				});
 				const mockConfig = MockModeConfig(angledRectangleMode.mode);
 
@@ -380,7 +380,7 @@ describe("TerraDrawAngledRectangleMode", () => {
 	describe("validateFeature", () => {
 		it("returns true for valid rectangle feature with validation that returns true", () => {
 			const rectangleMode = new TerraDrawAngledRectangleMode({
-				validation: () => true,
+				validation: () => ({ valid: true }),
 			});
 			rectangleMode.register(MockModeConfig("angled-rectangle"));
 
@@ -405,14 +405,14 @@ describe("TerraDrawAngledRectangleMode", () => {
 						updatedAt: 1685655518118,
 					},
 				}),
-			).toBe(true);
+			).toEqual({
+				valid: true,
+			});
 		});
 
 		it("returns false for valid rectangle feature but with validation that returns false", () => {
 			const rectangleMode = new TerraDrawAngledRectangleMode({
-				validation: () => {
-					return false;
-				},
+				validation: () => ({ valid: false, reason: "Test" }),
 			});
 			rectangleMode.register(MockModeConfig("angled-rectangle"));
 
@@ -437,7 +437,10 @@ describe("TerraDrawAngledRectangleMode", () => {
 						updatedAt: 1685655518118,
 					},
 				}),
-			).toBe(false);
+			).toEqual({
+				reason: "Test",
+				valid: false,
+			});
 		});
 	});
 

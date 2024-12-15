@@ -103,7 +103,10 @@ type ValidationContext = Pick<
 export type Validation = (
 	feature: GeoJSONStoreFeatures,
 	context: ValidationContext,
-) => boolean;
+) => {
+	valid: boolean;
+	reason?: string;
+};
 
 export type TerraDrawModeState =
 	| "unregistered"

@@ -229,9 +229,13 @@ describe("TerraDrawPolygonMode", () => {
 
 		const validation: Validation = (feature, { updateType }) => {
 			if (updateType === "finish" || updateType === "commit") {
-				return ValidateNotSelfIntersecting(feature);
+				const validation = ValidateNotSelfIntersecting(feature);
+				return {
+					valid: validation,
+					reason: validation ? undefined : "Self intersecting",
+				};
 			}
-			return true;
+			return { valid: true };
 		};
 
 		beforeEach(() => {
@@ -540,9 +544,13 @@ describe("TerraDrawPolygonMode", () => {
 				polygonMode = new TerraDrawPolygonMode({
 					validation: (feature, { updateType }) => {
 						if (updateType === "finish" || updateType === "commit") {
-							return ValidateNotSelfIntersecting(feature);
+							const validation = ValidateNotSelfIntersecting(feature);
+							return {
+								valid: validation,
+								reason: validation ? undefined : "Self intersecting",
+							};
 						}
-						return true;
+						return { valid: true };
 					},
 				});
 				const mockConfig = MockModeConfig(polygonMode.mode);
@@ -914,7 +922,10 @@ describe("validateFeature", () => {
 					updatedAt: 1685568435434,
 				},
 			}),
-		).toBe(false);
+		).toEqual({
+			valid: false,
+			reason: "Feature mode property does not match the mode being added to",
+		});
 	});
 
 	it("returns true for valid polygon feature", () => {
@@ -950,12 +961,15 @@ describe("validateFeature", () => {
 					updatedAt: 1685655518118,
 				},
 			}),
-		).toBe(true);
+		).toEqual({
+			reason: undefined,
+			valid: true,
+		});
 	});
 
 	it("returns false for valid polygon feature but validate function returns false", () => {
 		const polygonMode = new TerraDrawPolygonMode({
-			validation: () => false,
+			validation: () => ({ valid: false }),
 		});
 		polygonMode.register(MockModeConfig("polygon"));
 
@@ -981,6 +995,9 @@ describe("validateFeature", () => {
 					updatedAt: 1685655518118,
 				},
 			}),
-		).toBe(false);
+		).toEqual({
+			reason: undefined,
+			valid: false,
+		});
 	});
 });

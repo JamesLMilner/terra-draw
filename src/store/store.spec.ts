@@ -383,60 +383,79 @@ describe("GeoJSONStore", () => {
 		it("errors if feature does not pass validation", () => {
 			const store = new GeoJSONStore({ tracked: false });
 
-			expect(() => {
-				store.load(
-					[
-						{
-							type: "Feature",
-							properties: {},
-							geometry: { type: "Point", coordinates: [0, 0] },
-						},
-					],
-					(feature) => {
-						return Boolean(
-							feature &&
-								typeof feature === "object" &&
-								"type" in feature &&
-								feature.type === "Polygon",
-						);
+			const result = store.load(
+				[
+					{
+						type: "Feature",
+						properties: {},
+						geometry: { type: "Point", coordinates: [0, 0] },
 					},
-				);
-			}).toThrow();
+				],
+				(feature) => ({
+					valid: Boolean(
+						feature &&
+							typeof feature === "object" &&
+							"type" in feature &&
+							feature.type === "Polygon",
+					),
+					reason: "Test",
+				}),
+			);
+
+			expect(result).toStrictEqual([
+				{
+					id: expect.any(String),
+					reason: expect.any(String),
+					valid: false,
+				},
+			]);
 		});
 
 		it("errors if feature createdAt is not valid numeric timestamps", () => {
 			const store = new GeoJSONStore({ tracked: true });
 
-			expect(() => {
-				store.load([
-					{
-						type: "Feature",
-						properties: {
-							mode: "point",
-							createdAt: new Date().toISOString(),
-						},
-						geometry: { type: "Point", coordinates: [0, 0] },
+			const result = store.load([
+				{
+					type: "Feature",
+					properties: {
+						mode: "point",
+						createdAt: new Date().toISOString(),
 					},
-				]);
-			}).toThrow(StoreValidationErrors.InvalidTrackedProperties);
+					geometry: { type: "Point", coordinates: [0, 0] },
+				},
+			]);
+
+			return expect(result).toStrictEqual([
+				{
+					id: expect.any(String),
+					reason: "createdAt is not a valid numeric timestamp",
+					valid: false,
+				},
+			]);
 		});
 
 		it("errors if feature createdAt is not valid numeric timestamps", () => {
 			const store = new GeoJSONStore({ tracked: true });
 
-			expect(() => {
-				store.load([
-					{
-						type: "Feature",
-						properties: {
-							mode: "point",
-							createdAt: +new Date(),
-							updatedAt: new Date().toISOString(),
-						},
-						geometry: { type: "Point", coordinates: [0, 0] },
+			const result = store.load([
+				{
+					type: "Feature",
+					properties: {
+						mode: "point",
+						createdAt: +new Date(),
+						updatedAt: new Date().toISOString(),
 					},
-				]);
-			}).toThrow(StoreValidationErrors.InvalidTrackedProperties);
+					geometry: { type: "Point", coordinates: [0, 0] },
+				},
+			]);
+
+			expect(result).toStrictEqual([
+				{
+					id: expect.any(String),
+					reason: "updatedAt is not a valid numeric timestamp",
+					valid: false,
+				},
+			]);
 		});
 	});
 

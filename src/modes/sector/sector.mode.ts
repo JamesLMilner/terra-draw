@@ -12,11 +12,19 @@ import {
 	TerraDrawBaseDrawMode,
 	BaseModeOptions,
 	CustomStyling,
+	ModeMismatchValidationFailure,
 } from "../base.mode";
 import { coordinatesIdentical } from "../../geometry/coordinates-identical";
 import { getDefaultStyling } from "../../util/styling";
-import { FeatureId, GeoJSONStoreFeatures } from "../../store/store";
-import { ValidatePolygonFeature } from "../../validations/polygon.validation";
+import {
+	FeatureId,
+	GeoJSONStoreFeatures,
+	StoreValidation,
+} from "../../store/store";
+import {
+	ValidateNonIntersectingPolygonFeature,
+	ValidatePolygonFeature,
+} from "../../validations/polygon.validation";
 import { webMercatorDestination } from "../../geometry/measure/destination";
 import {
 	normalizeBearing,
@@ -290,7 +298,7 @@ export class TerraDrawSectorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 				},
 			);
 
-			if (!valid) {
+			if (!valid.valid) {
 				return false;
 			}
 		}
@@ -442,14 +450,15 @@ export class TerraDrawSectorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 		return styles;
 	}
 
-	validateFeature(feature: unknown): feature is GeoJSONStoreFeatures {
-		if (super.validateFeature(feature)) {
-			return (
-				feature.properties.mode === this.mode &&
-				ValidatePolygonFeature(feature, this.coordinatePrecision)
-			);
-		} else {
-			return false;
-		}
+	validateFeature(feature: unknown): StoreValidation {
+		return this.validateModeFeature(
+			feature,
+			(baseValidatedFeature) =>
+				ValidateNonIntersectingPolygonFeature(
+					baseValidatedFeature,
+					this.coordinatePrecision,
+				),
+			"Feature is not a valid simple Polygon feature",
+		);
 	}
 }

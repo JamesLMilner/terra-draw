@@ -15,6 +15,7 @@ import { GeoJSONStoreFeatures } from "../../terra-draw";
 import { ValidatePointFeature } from "../../validations/point.validation";
 import { ValidatePolygonFeature } from "../../validations/polygon.validation";
 import { ValidateLineStringFeature } from "../../validations/linestring.validation";
+import { StoreValidation } from "../../store/store";
 
 type RenderModeStyling = {
 	pointColor: HexColorStyling;
@@ -152,12 +153,24 @@ export class TerraDrawRenderMode extends TerraDrawBaseDrawMode<RenderModeStyling
 		};
 	}
 
-	validateFeature(feature: unknown): feature is GeoJSONStoreFeatures {
-		return (
-			super.validateFeature(feature) &&
-			(ValidatePointFeature(feature, this.coordinatePrecision) ||
-				ValidatePolygonFeature(feature, this.coordinatePrecision) ||
-				ValidateLineStringFeature(feature, this.coordinatePrecision))
-		);
+	validateFeature(feature: unknown): StoreValidation {
+		const validationResult = super.validateFeature(feature);
+		if (validationResult.valid) {
+			const validatedFeature = feature as GeoJSONStoreFeatures;
+
+			const featureValidation =
+				ValidatePointFeature(validatedFeature, this.coordinatePrecision) ||
+				ValidatePolygonFeature(validatedFeature, this.coordinatePrecision) ||
+				ValidateLineStringFeature(validatedFeature, this.coordinatePrecision);
+
+			return {
+				valid: featureValidation,
+				reason: featureValidation
+					? undefined
+					: "Feature is not a valid Point, Polygon or LineString feature",
+			};
+		}
+
+		return validationResult;
 	}
 }

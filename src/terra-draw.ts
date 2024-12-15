@@ -40,6 +40,7 @@ import {
 	GeoJSONStoreFeatures,
 	IdStrategy,
 	StoreChangeHandler,
+	StoreValidation,
 } from "./store/store";
 import { BehaviorConfig } from "./modes/base.behavior";
 import { cartesianDistance } from "./geometry/measure/pixel-distance";
@@ -54,6 +55,7 @@ import { TerraDrawAngledRectangleMode } from "./modes/angled-rectangle/angled-re
 import { TerraDrawSectorMode } from "./modes/sector/sector.mode";
 import { TerraDrawSensorMode } from "./modes/sensor/sensor.mode";
 import * as TerraDrawExtend from "./extend";
+import { hasModeProperty } from "./store/store-feature-validation";
 
 type FinishListener = (id: FeatureId, context: OnFinishContext) => void;
 type ChangeListener = (ids: FeatureId[], type: string) => void;
@@ -581,49 +583,58 @@ class TerraDraw {
 	}
 
 	/**
-	 * A method for adding features to the store. This method will validate the features.
-	 * Features must match one of the modes enabled in the instance.
-	 * @param mode
-	 * @param features
-	 * @returns
+	 * A method for adding features to the store. This method will validate the features
+	 * returning an array of validation results. Features must match one of the modes enabled
+	 * in the instance.
+	 * @param features - an array of GeoJSON features
+	 * @returns an array of validation results
 	 *
 	 * @beta
 	 */
-	addFeatures(features: GeoJSONStoreFeatures[]) {
+	addFeatures(features: GeoJSONStoreFeatures[]): StoreValidation[] {
 		this.checkEnabled();
 
 		if (features.length === 0) {
-			return;
+			return [];
 		}
 
-		this._store.load(features, (feature) => {
-			const hasModeProperty = Boolean(
-				feature &&
-					typeof feature === "object" &&
-					"properties" in feature &&
-					typeof feature.properties === "object" &&
-					feature.properties !== null &&
-					"mode" in feature.properties,
-			);
-
-			if (hasModeProperty) {
-				const modeToAddTo =
-					this._modes[
-						(feature as { properties: { mode: string } }).properties.mode
-					];
+		return this._store.load(features, (feature) => {
+			// If the feature has a mode property, we use that to validate the feature
+			if (hasModeProperty(feature)) {
+				const featureMode = feature.properties.mode;
+				const modeToAddTo = this._modes[featureMode];
 
 				// if the mode does not exist, we return false
 				if (!modeToAddTo) {
-					return false;
+					return {
+						id: (feature as { id?: FeatureId }).id,
+						valid: false,
+						reason: `${featureMode} mode is not in the list of instantiated modes`,
+					};
 				}
 
 				// use the inbuilt validation of the mode
 				const validation = modeToAddTo.validateFeature.bind(modeToAddTo);
-				return validation(feature);
+				const validationResult = validation(feature);
+				const valid = validationResult.valid;
+				const reason = validationResult.reason
+					? validationResult.reason
+					: !validationResult.valid
+					? "Feature is invalid"
+					: undefined;
+				return {
+					id: (feature as { id?: FeatureId }).id,
+					valid,
+					reason,
+				};
 			}
 
 			// If the feature does not have a mode property, we return false
-			return false;
+			return {
+				id: (feature as { id?: FeatureId }).id,
+				valid: false,
+				reason: "Mode property does not exist",
+			};
 		});
 	}
 

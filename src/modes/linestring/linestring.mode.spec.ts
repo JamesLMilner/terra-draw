@@ -311,9 +311,9 @@ describe("TerraDrawLineStringMode", () => {
 				lineStringMode = new TerraDrawLineStringMode({
 					validation: (feature, { updateType }) => {
 						if (updateType === "finish" || updateType === "commit") {
-							return ValidateNotSelfIntersecting(feature);
+							return { valid: ValidateNotSelfIntersecting(feature) };
 						}
-						return true;
+						return { valid: true };
 					},
 				});
 
@@ -385,9 +385,9 @@ describe("TerraDrawLineStringMode", () => {
 				lineStringMode = new TerraDrawLineStringMode({
 					validation: (feature, { updateType }) => {
 						if (updateType === "finish" || updateType === "commit") {
-							return ValidateNotSelfIntersecting(feature);
+							return { valid: ValidateNotSelfIntersecting(feature) };
 						}
-						return true;
+						return { valid: true };
 					},
 				});
 
@@ -827,7 +827,10 @@ describe("TerraDrawLineStringMode", () => {
 						updatedAt: 1685654950609,
 					},
 				}),
-			).toBe(false);
+			).toEqual({
+				reason: "Feature is not a valid LineString feature",
+				valid: false,
+			});
 		});
 
 		it("returns true for valid linestring feature", () => {
@@ -855,13 +858,15 @@ describe("TerraDrawLineStringMode", () => {
 						updatedAt: 1685654950609,
 					},
 				}),
-			).toBe(true);
+			).toEqual({
+				valid: true,
+			});
 		});
 
 		it("returns false for valid linestring feature with validate function that returns false", () => {
 			const lineStringMode = new TerraDrawLineStringMode({
 				validation: () => {
-					return false;
+					return { valid: false };
 				},
 				styles: {
 					lineStringColor: "#ffffff",
@@ -886,7 +891,9 @@ describe("TerraDrawLineStringMode", () => {
 						updatedAt: 1685654950609,
 					},
 				}),
-			).toBe(false);
+			).toEqual({
+				valid: false,
+			});
 		});
 	});
 });

@@ -732,7 +732,7 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 					updateType: UpdateTypes.Provisional,
 				},
 			);
-			if (!valid) {
+			if (!valid.valid) {
 				return false;
 			}
 		}

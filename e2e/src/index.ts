@@ -71,12 +71,16 @@ const example = {
 									this.config?.includes("validationSuccess") ||
 									this.config?.includes("validationFailure")
 										? (feature) => {
-												return ValidateMaxAreaSquareMeters(
+												const result = ValidateMaxAreaSquareMeters(
 													feature,
 													this.config?.includes("validationFailure")
 														? 1000000
 														: 2000000,
 												);
+												return {
+													valid: result,
+													reason: result ? undefined : "Area too large",
+												};
 										  }
 										: undefined,
 								draggable: true,
@@ -151,12 +155,16 @@ const example = {
 						this.config?.includes("validationSuccess") ||
 						this.config?.includes("validationFailure")
 							? (feature) => {
-									return ValidateMaxAreaSquareMeters(
+									const result = ValidateMaxAreaSquareMeters(
 										feature,
 										this.config?.includes("validationFailure")
 											? 1000000
 											: 2000000,
 									);
+									return {
+										valid: result,
+										reason: "Area too large",
+									};
 							  }
 							: undefined,
 				}),

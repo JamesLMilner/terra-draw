@@ -240,21 +240,25 @@ describe("TerraDrawRenderMode", () => {
 			const renderMode = new TerraDrawRenderMode(options);
 			renderMode.register(MockModeConfig("arbitary"));
 
-			expect(renderMode.validateFeature(MockPoint())).toBe(true);
+			expect(renderMode.validateFeature(MockPoint())).toEqual({ valid: true });
 		});
 
 		it("validates linestrings", () => {
 			const renderMode = new TerraDrawRenderMode(options);
 			renderMode.register(MockModeConfig("arbitary"));
 
-			expect(renderMode.validateFeature(MockLineString())).toBe(true);
+			expect(renderMode.validateFeature(MockLineString())).toEqual({
+				valid: true,
+			});
 		});
 
 		it("validates polygons", () => {
 			const renderMode = new TerraDrawRenderMode(options);
 			renderMode.register(MockModeConfig("arbitary"));
 
-			expect(renderMode.validateFeature(MockPolygonSquare())).toBe(true);
+			expect(renderMode.validateFeature(MockPolygonSquare())).toEqual({
+				valid: true,
+			});
 		});
 	});
 });

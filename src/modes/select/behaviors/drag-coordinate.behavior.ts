@@ -155,7 +155,7 @@ export class DragCoordinateBehavior extends TerraDrawModeBehavior {
 		}
 
 		if (validateFeature) {
-			const valid = validateFeature(
+			const validationResult = validateFeature(
 				{
 					type: "Feature",
 					id: this.draggedCoordinate.id,
@@ -170,7 +170,7 @@ export class DragCoordinateBehavior extends TerraDrawModeBehavior {
 				},
 			);
 
-			if (!valid.valid) {
+			if (!validationResult.valid) {
 				return false;
 			}
 		}

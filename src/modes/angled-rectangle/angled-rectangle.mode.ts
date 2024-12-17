@@ -12,7 +12,6 @@ import {
 	TerraDrawBaseDrawMode,
 	BaseModeOptions,
 	CustomStyling,
-	ModeMismatchValidationFailure,
 } from "../base.mode";
 import { coordinatesIdentical } from "../../geometry/coordinates-identical";
 import { getDefaultStyling } from "../../util/styling";
@@ -21,10 +20,7 @@ import {
 	GeoJSONStoreFeatures,
 	StoreValidation,
 } from "../../store/store";
-import {
-	ValidateNonIntersectingPolygonFeature,
-	ValidatePolygonFeature,
-} from "../../validations/polygon.validation";
+import { ValidateNonIntersectingPolygonFeature } from "../../validations/polygon.validation";
 import { webMercatorDestination } from "../../geometry/measure/destination";
 import { webMercatorBearing } from "../../geometry/measure/bearing";
 import { midpointCoordinate } from "../../geometry/midpoint-coordinate";
@@ -253,7 +249,7 @@ export class TerraDrawAngledRectangleMode extends TerraDrawBaseDrawMode<PolygonS
 		} as Polygon;
 
 		if (this.validate) {
-			const valid = this.validate(
+			const validationResult = this.validate(
 				{
 					type: "Feature",
 					geometry: updatedGeometry,
@@ -266,7 +262,7 @@ export class TerraDrawAngledRectangleMode extends TerraDrawBaseDrawMode<PolygonS
 				},
 			);
 
-			if (!valid.valid) {
+			if (!validationResult.valid) {
 				return false;
 			}
 		}
@@ -418,14 +414,11 @@ export class TerraDrawAngledRectangleMode extends TerraDrawBaseDrawMode<PolygonS
 	}
 
 	validateFeature(feature: unknown): StoreValidation {
-		return this.validateModeFeature(
-			feature,
-			(baseValidatedFeature) =>
-				ValidateNonIntersectingPolygonFeature(
-					baseValidatedFeature,
-					this.coordinatePrecision,
-				),
-			"Feature is not a valid simple Polygon feature",
+		return this.validateModeFeature(feature, (baseValidatedFeature) =>
+			ValidateNonIntersectingPolygonFeature(
+				baseValidatedFeature,
+				this.coordinatePrecision,
+			),
 		);
 	}
 }

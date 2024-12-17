@@ -158,16 +158,21 @@ export class TerraDrawRenderMode extends TerraDrawBaseDrawMode<RenderModeStyling
 		if (validationResult.valid) {
 			const validatedFeature = feature as GeoJSONStoreFeatures;
 
-			const featureValidation =
-				ValidatePointFeature(validatedFeature, this.coordinatePrecision) ||
-				ValidatePolygonFeature(validatedFeature, this.coordinatePrecision) ||
-				ValidateLineStringFeature(validatedFeature, this.coordinatePrecision);
+			const featureIsValid =
+				ValidatePointFeature(validatedFeature, this.coordinatePrecision)
+					.valid ||
+				ValidatePolygonFeature(validatedFeature, this.coordinatePrecision)
+					.valid ||
+				ValidateLineStringFeature(validatedFeature, this.coordinatePrecision)
+					.valid;
+
+			if (featureIsValid) {
+				return { valid: true };
+			}
 
 			return {
-				valid: featureValidation,
-				reason: featureValidation
-					? undefined
-					: "Feature is not a valid Point, Polygon or LineString feature",
+				valid: featureIsValid,
+				reason: "Feature is not a valid Point, Polygon or LineString feature",
 			};
 		}
 

@@ -11,7 +11,6 @@ import { getDefaultStyling } from "../../util/styling";
 import {
 	BaseModeOptions,
 	CustomStyling,
-	ModeMismatchValidationFailure,
 	TerraDrawBaseDrawMode,
 } from "../base.mode";
 import { ValidatePointFeature } from "../../validations/point.validation";
@@ -78,7 +77,7 @@ export class TerraDrawPointMode extends TerraDrawBaseDrawMode<PointModeStyling> 
 		const properties = { mode: this.mode };
 
 		if (this.validate) {
-			const valid = this.validate(
+			const validationResult = this.validate(
 				{
 					type: "Feature",
 					geometry,
@@ -92,7 +91,7 @@ export class TerraDrawPointMode extends TerraDrawBaseDrawMode<PointModeStyling> 
 				},
 			);
 
-			if (!valid.valid) {
+			if (!validationResult.valid) {
 				return;
 			}
 		}
@@ -164,11 +163,8 @@ export class TerraDrawPointMode extends TerraDrawBaseDrawMode<PointModeStyling> 
 	}
 
 	validateFeature(feature: unknown): StoreValidation {
-		return this.validateModeFeature(
-			feature,
-			(baseValidatedFeature) =>
-				ValidatePointFeature(baseValidatedFeature, this.coordinatePrecision),
-			"Feature is not a valid Point feature",
+		return this.validateModeFeature(feature, (baseValidatedFeature) =>
+			ValidatePointFeature(baseValidatedFeature, this.coordinatePrecision),
 		);
 	}
 }

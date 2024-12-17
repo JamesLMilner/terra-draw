@@ -149,18 +149,7 @@ const getModes = () => {
 				circle: {
 					feature: {
 						validation: (feature) => {
-							if (feature.geometry.type !== "Polygon") {
-								return {
-									valid: false,
-									reason: "Feature is not a valid Polygon feature",
-								};
-							}
-
-							const result = ValidateMinAreaSquareMeters(feature, 1000);
-							return {
-								valid: result,
-								reason: result ? undefined : "Area too small",
-							};
+							return ValidateMinAreaSquareMeters(feature, 1000);
 						},
 						draggable: true,
 						coordinates: {
@@ -189,11 +178,7 @@ const getModes = () => {
 			snapping: true,
 			validation: (feature, { updateType }) => {
 				if (updateType === "finish" || updateType === "commit") {
-					const valid = ValidateNotSelfIntersecting(feature);
-					return {
-						valid,
-						reason: valid ? undefined : "Polygon must not self-intersect",
-					};
+					return ValidateNotSelfIntersecting(feature);
 				}
 				return { valid: true };
 			},

@@ -100,7 +100,7 @@ export class TerraDrawRectangleMode extends TerraDrawBaseDrawMode<RectanglePolyg
 			} as Polygon;
 
 			if (this.validate) {
-				const valid = this.validate(
+				const validationResult = this.validate(
 					{
 						id: this.currentRectangleId,
 						geometry: newGeometry,
@@ -113,7 +113,7 @@ export class TerraDrawRectangleMode extends TerraDrawBaseDrawMode<RectanglePolyg
 					},
 				);
 
-				if (!valid.valid) {
+				if (!validationResult.valid) {
 					return;
 				}
 			}
@@ -272,14 +272,11 @@ export class TerraDrawRectangleMode extends TerraDrawBaseDrawMode<RectanglePolyg
 	}
 
 	validateFeature(feature: unknown): StoreValidation {
-		return this.validateModeFeature(
-			feature,
-			(baseValidatedFeature) =>
-				ValidateNonIntersectingPolygonFeature(
-					baseValidatedFeature,
-					this.coordinatePrecision,
-				),
-			"Feature is not a valid simple Polygon feature",
+		return this.validateModeFeature(feature, (baseValidatedFeature) =>
+			ValidateNonIntersectingPolygonFeature(
+				baseValidatedFeature,
+				this.coordinatePrecision,
+			),
 		);
 	}
 }

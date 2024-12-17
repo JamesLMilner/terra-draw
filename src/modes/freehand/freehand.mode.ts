@@ -122,7 +122,7 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 		if (this.validate && finishedId) {
 			const currentGeometry = this.store.getGeometryCopy<Polygon>(finishedId);
 
-			const valid = this.validate(
+			const validationResult = this.validate(
 				{
 					type: "Feature",
 					id: finishedId,
@@ -137,7 +137,7 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 				},
 			);
 
-			if (!valid.valid) {
+			if (!validationResult.valid) {
 				return;
 			}
 		}
@@ -243,7 +243,7 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 		} as Polygon;
 
 		if (this.validate) {
-			const valid = this.validate(
+			const validationResult = this.validate(
 				{
 					type: "Feature",
 					id: this.currentId,
@@ -258,7 +258,7 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 				},
 			);
 
-			if (!valid.valid) {
+			if (!validationResult.valid) {
 				return;
 			}
 		}
@@ -433,11 +433,8 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 	}
 
 	validateFeature(feature: unknown): StoreValidation {
-		return this.validateModeFeature(
-			feature,
-			(baseValidatedFeature) =>
-				ValidatePolygonFeature(baseValidatedFeature, this.coordinatePrecision),
-			"Feature is not a valid Polygon feature",
+		return this.validateModeFeature(feature, (baseValidatedFeature) =>
+			ValidatePolygonFeature(baseValidatedFeature, this.coordinatePrecision),
 		);
 	}
 }

@@ -247,7 +247,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 		} as Polygon;
 
 		if (this.validate) {
-			const valid = this.validate(
+			const validationResult = this.validate(
 				{
 					type: "Feature",
 					geometry: updatedGeometry,
@@ -260,7 +260,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 				},
 			);
 
-			if (!valid.valid) {
+			if (!validationResult.valid) {
 				return false;
 			}
 		}
@@ -567,11 +567,8 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 	}
 
 	validateFeature(feature: unknown): StoreValidation {
-		return this.validateModeFeature(
-			feature,
-			(baseValidatedFeature) =>
-				ValidatePolygonFeature(baseValidatedFeature, this.coordinatePrecision),
-			"Feature is not a valid Polygon feature",
+		return this.validateModeFeature(feature, (baseValidatedFeature) =>
+			ValidatePolygonFeature(baseValidatedFeature, this.coordinatePrecision),
 		);
 	}
 }

@@ -14,7 +14,7 @@ describe("ValidateLineStringFeature", () => {
 				],
 			},
 		} as Feature<LineString, Record<string, any>>;
-		expect(ValidateLineStringFeature(validFeature, 9)).toBe(true);
+		expect(ValidateLineStringFeature(validFeature, 9)).toEqual({ valid: true });
 	});
 
 	it("returns false for a non-LineString feature", () => {
@@ -30,7 +30,10 @@ describe("ValidateLineStringFeature", () => {
 				],
 			},
 		} as any;
-		expect(ValidateLineStringFeature(nonLineStringFeature, 9)).toBe(false);
+		expect(ValidateLineStringFeature(nonLineStringFeature, 9)).toEqual({
+			valid: false,
+			reason: "Feature is not a LineString",
+		});
 	});
 
 	it("returns false for a LineString feature with less than 2 coordinates", () => {
@@ -42,7 +45,10 @@ describe("ValidateLineStringFeature", () => {
 				coordinates: [[45, 90]],
 			},
 		} as Feature<LineString, Record<string, any>>;
-		expect(ValidateLineStringFeature(lessCoordinatesFeature, 9)).toBe(false);
+		expect(ValidateLineStringFeature(lessCoordinatesFeature, 9)).toEqual({
+			valid: false,
+			reason: "Feature has less than 2 coordinates",
+		});
 	});
 
 	it("returns false for a LineString feature with incorrect coordinate precision", () => {
@@ -57,6 +63,9 @@ describe("ValidateLineStringFeature", () => {
 				],
 			},
 		} as Feature<LineString, Record<string, any>>;
-		expect(ValidateLineStringFeature(validFeature, 2)).toBe(false);
+		expect(ValidateLineStringFeature(validFeature, 2)).toEqual({
+			valid: false,
+			reason: "Feature has invalid coordinates",
+		});
 	});
 });

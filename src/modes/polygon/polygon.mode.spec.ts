@@ -229,11 +229,7 @@ describe("TerraDrawPolygonMode", () => {
 
 		const validation: Validation = (feature, { updateType }) => {
 			if (updateType === "finish" || updateType === "commit") {
-				const validation = ValidateNotSelfIntersecting(feature);
-				return {
-					valid: validation,
-					reason: validation ? undefined : "Self intersecting",
-				};
+				return ValidateNotSelfIntersecting(feature);
 			}
 			return { valid: true };
 		};
@@ -544,11 +540,7 @@ describe("TerraDrawPolygonMode", () => {
 				polygonMode = new TerraDrawPolygonMode({
 					validation: (feature, { updateType }) => {
 						if (updateType === "finish" || updateType === "commit") {
-							const validation = ValidateNotSelfIntersecting(feature);
-							return {
-								valid: validation,
-								reason: validation ? undefined : "Self intersecting",
-							};
+							return ValidateNotSelfIntersecting(feature);
 						}
 						return { valid: true };
 					},

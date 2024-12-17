@@ -34,8 +34,6 @@ export enum ModeTypes {
 	Render = "render",
 }
 
-type BaseValidationResult = { valid: boolean; reason?: string };
-
 export type BaseModeOptions<T extends CustomStyling> = {
 	styles?: Partial<T>;
 	pointerDistance?: number;
@@ -157,11 +155,11 @@ export abstract class TerraDrawBaseDrawMode<T extends CustomStyling> {
 		}
 	}
 
-	validateFeature(feature: unknown): BaseValidationResult {
+	validateFeature(feature: unknown): ReturnType<Validation> {
 		return this.performFeatureValidation(feature);
 	}
 
-	private performFeatureValidation(feature: unknown): BaseValidationResult {
+	private performFeatureValidation(feature: unknown): ReturnType<Validation> {
 		if (this._state === "unregistered") {
 			throw new Error("Mode must be registered");
 		}
@@ -196,9 +194,8 @@ export abstract class TerraDrawBaseDrawMode<T extends CustomStyling> {
 
 	protected validateModeFeature(
 		feature: unknown,
-		modeValidationFn: (feature: GeoJSONStoreFeatures) => boolean,
-		defaultError: string,
-	): BaseValidationResult {
+		modeValidationFn: (feature: GeoJSONStoreFeatures) => ReturnType<Validation>,
+	): ReturnType<Validation> {
 		const validation = this.performFeatureValidation(feature);
 		if (validation.valid) {
 			const validatedFeature = feature as GeoJSONStoreFeatures;
@@ -207,10 +204,7 @@ export abstract class TerraDrawBaseDrawMode<T extends CustomStyling> {
 				return ModeMismatchValidationFailure;
 			}
 			const modeValidation = modeValidationFn(validatedFeature);
-			return {
-				valid: modeValidation,
-				reason: modeValidation ? undefined : defaultError,
-			};
+			return modeValidation;
 		}
 
 		return {

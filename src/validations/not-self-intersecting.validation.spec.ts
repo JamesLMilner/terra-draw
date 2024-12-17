@@ -21,10 +21,11 @@ describe("ValidateNotSelfIntersecting", () => {
 			},
 		} as GeoJSONStoreFeatures;
 
-		// Act
 		const result = ValidateNotSelfIntersecting(feature);
-		// Assert
-		expect(result).toBe(false);
+		expect(result).toEqual({
+			valid: false,
+			reason: "Feature intersects itself",
+		});
 	});
 
 	it("it should return true if polygon does not self intersects", () => {
@@ -44,9 +45,7 @@ describe("ValidateNotSelfIntersecting", () => {
 			} as Polygon,
 		} as GeoJSONStoreFeatures;
 
-		// Act
 		const result = ValidateNotSelfIntersecting(feature);
-		// Assert
-		expect(result).toBe(true);
+		expect(result).toEqual({ valid: true });
 	});
 });

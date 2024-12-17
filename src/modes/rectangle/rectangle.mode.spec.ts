@@ -487,7 +487,7 @@ describe("TerraDrawRectangleMode", () => {
 				}),
 			).toEqual({
 				valid: false,
-				reason: "Feature is not a valid simple Polygon feature",
+				reason: "Feature has holes",
 			});
 		});
 

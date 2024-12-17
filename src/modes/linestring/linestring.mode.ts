@@ -11,7 +11,6 @@ import { LineString, Point, Position } from "geojson";
 import {
 	BaseModeOptions,
 	CustomStyling,
-	ModeMismatchValidationFailure,
 	TerraDrawBaseDrawMode,
 } from "../base.mode";
 import { cartesianDistance } from "../../geometry/measure/pixel-distance";
@@ -574,14 +573,8 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 	}
 
 	validateFeature(feature: unknown): StoreValidation {
-		return this.validateModeFeature(
-			feature,
-			(baseValidatedFeature) =>
-				ValidateLineStringFeature(
-					baseValidatedFeature,
-					this.coordinatePrecision,
-				),
-			"Feature is not a valid LineString feature",
+		return this.validateModeFeature(feature, (baseValidatedFeature) =>
+			ValidateLineStringFeature(baseValidatedFeature, this.coordinatePrecision),
 		);
 	}
 }

@@ -718,7 +718,7 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 		} as GeoJSONStoreGeometries;
 
 		if (validateFeature) {
-			const valid = validateFeature(
+			const validationResult = validateFeature(
 				{
 					id: this.draggedCoordinate.id,
 					type: "Feature",
@@ -732,7 +732,7 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 					updateType: UpdateTypes.Provisional,
 				},
 			);
-			if (!valid.valid) {
+			if (!validationResult.valid) {
 				return false;
 			}
 		}

@@ -21,7 +21,7 @@ describe("isValidPolygonFeature", () => {
 				],
 			},
 		} as Feature<Polygon, Record<string, any>>;
-		expect(ValidatePolygonFeature(validFeature, 9)).toBe(true);
+		expect(ValidatePolygonFeature(validFeature, 9)).toEqual({ valid: true });
 	});
 
 	it("returns false for non-Polygon feature", () => {
@@ -33,7 +33,10 @@ describe("isValidPolygonFeature", () => {
 				coordinates: [[45, 90]],
 			},
 		} as any;
-		expect(ValidatePolygonFeature(nonPolygonFeature, 9)).toBe(false);
+		expect(ValidatePolygonFeature(nonPolygonFeature, 9)).toEqual({
+			valid: false,
+			reason: "Feature is not a Polygon",
+		});
 	});
 
 	it("returns false for Polygon feature with more than one coordinates array", () => {
@@ -58,7 +61,10 @@ describe("isValidPolygonFeature", () => {
 				],
 			},
 		} as Feature<Polygon, Record<string, any>>;
-		expect(ValidatePolygonFeature(multiCoordinatesFeature, 9)).toBe(false);
+		expect(ValidatePolygonFeature(multiCoordinatesFeature, 9)).toEqual({
+			valid: false,
+			reason: "Feature has holes",
+		});
 	});
 
 	it("returns false for Polygon feature with less than 4 coordinates in array", () => {
@@ -76,7 +82,10 @@ describe("isValidPolygonFeature", () => {
 				],
 			},
 		} as Feature<Polygon, Record<string, any>>;
-		expect(ValidatePolygonFeature(lessCoordinatesFeature, 9)).toBe(false);
+		expect(ValidatePolygonFeature(lessCoordinatesFeature, 9)).toEqual({
+			valid: false,
+			reason: "Feature has less than 4 coordinates",
+		});
 	});
 
 	it("returns false for Polygon feature where first and last coordinates do not match", () => {
@@ -95,9 +104,10 @@ describe("isValidPolygonFeature", () => {
 				],
 			},
 		} as Feature<Polygon, Record<string, any>>;
-		expect(ValidatePolygonFeature(nonMatchingCoordinatesFeature, 9)).toBe(
-			false,
-		);
+		expect(ValidatePolygonFeature(nonMatchingCoordinatesFeature, 9)).toEqual({
+			valid: false,
+			reason: "Feature coordinates are not closed",
+		});
 	});
 
 	it("returns false Polygon with excessive coordinate precision", () => {
@@ -116,7 +126,10 @@ describe("isValidPolygonFeature", () => {
 				],
 			},
 		} as Feature<Polygon, Record<string, any>>;
-		expect(ValidatePolygonFeature(validFeature, 9)).toBe(false);
+		expect(ValidatePolygonFeature(validFeature, 9)).toEqual({
+			valid: false,
+			reason: "Feature has invalid coordinates",
+		});
 	});
 });
 
@@ -137,7 +150,9 @@ describe("isValidNonIntersectingPolygonFeature", () => {
 				],
 			},
 		} as Feature<Polygon, Record<string, any>>;
-		expect(ValidateNonIntersectingPolygonFeature(validFeature, 9)).toBe(true);
+		expect(ValidateNonIntersectingPolygonFeature(validFeature, 9)).toEqual({
+			valid: true,
+		});
 	});
 
 	it("returns false for a self intersecting Polygon feature", () => {
@@ -158,6 +173,9 @@ describe("isValidNonIntersectingPolygonFeature", () => {
 				],
 			},
 		} as Feature<Polygon, Record<string, any>>;
-		expect(ValidateNonIntersectingPolygonFeature(validFeature, 9)).toBe(false);
+		expect(ValidateNonIntersectingPolygonFeature(validFeature, 9)).toEqual({
+			valid: false,
+			reason: "Feature intersects itself",
+		});
 	});
 });

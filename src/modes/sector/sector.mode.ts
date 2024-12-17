@@ -21,10 +21,7 @@ import {
 	GeoJSONStoreFeatures,
 	StoreValidation,
 } from "../../store/store";
-import {
-	ValidateNonIntersectingPolygonFeature,
-	ValidatePolygonFeature,
-} from "../../validations/polygon.validation";
+import { ValidateNonIntersectingPolygonFeature } from "../../validations/polygon.validation";
 import { webMercatorDestination } from "../../geometry/measure/destination";
 import {
 	normalizeBearing,
@@ -285,7 +282,7 @@ export class TerraDrawSectorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 		} as Polygon;
 
 		if (this.validate) {
-			const valid = this.validate(
+			const validationResult = this.validate(
 				{
 					type: "Feature",
 					geometry: updatedGeometry,
@@ -298,7 +295,7 @@ export class TerraDrawSectorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 				},
 			);
 
-			if (!valid.valid) {
+			if (!validationResult.valid) {
 				return false;
 			}
 		}
@@ -451,14 +448,11 @@ export class TerraDrawSectorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 	}
 
 	validateFeature(feature: unknown): StoreValidation {
-		return this.validateModeFeature(
-			feature,
-			(baseValidatedFeature) =>
-				ValidateNonIntersectingPolygonFeature(
-					baseValidatedFeature,
-					this.coordinatePrecision,
-				),
-			"Feature is not a valid simple Polygon feature",
+		return this.validateModeFeature(feature, (baseValidatedFeature) =>
+			ValidateNonIntersectingPolygonFeature(
+				baseValidatedFeature,
+				this.coordinatePrecision,
+			),
 		);
 	}
 }

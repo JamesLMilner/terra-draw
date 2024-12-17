@@ -311,7 +311,7 @@ describe("TerraDrawLineStringMode", () => {
 				lineStringMode = new TerraDrawLineStringMode({
 					validation: (feature, { updateType }) => {
 						if (updateType === "finish" || updateType === "commit") {
-							return { valid: ValidateNotSelfIntersecting(feature) };
+							return ValidateNotSelfIntersecting(feature);
 						}
 						return { valid: true };
 					},
@@ -385,7 +385,7 @@ describe("TerraDrawLineStringMode", () => {
 				lineStringMode = new TerraDrawLineStringMode({
 					validation: (feature, { updateType }) => {
 						if (updateType === "finish" || updateType === "commit") {
-							return { valid: ValidateNotSelfIntersecting(feature) };
+							return ValidateNotSelfIntersecting(feature);
 						}
 						return { valid: true };
 					},
@@ -828,7 +828,7 @@ describe("TerraDrawLineStringMode", () => {
 					},
 				}),
 			).toEqual({
-				reason: "Feature is not a valid LineString feature",
+				reason: "Feature has less than 2 coordinates",
 				valid: false,
 			});
 		});

@@ -2,6 +2,7 @@ import { Feature, Point, Polygon, LineString } from "geojson";
 import { uuid4 } from "../util/id";
 import { SpatialIndex } from "./spatial-index/spatial-index";
 import { isValidTimestamp } from "./store-feature-validation";
+import { Validation } from "../common";
 
 type JSON = string | number | boolean | null | JSONArray | JSONObject;
 
@@ -23,9 +24,7 @@ export type GeoJSONStoreFeatures = Feature<
 
 export type StoreValidation = {
 	id?: FeatureId;
-	valid: boolean;
-	reason?: string;
-};
+} & ReturnType<Validation>;
 
 type StoreChangeEvents = "delete" | "create" | "update" | "styling";
 

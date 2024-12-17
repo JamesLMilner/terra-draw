@@ -571,7 +571,7 @@ describe("TerraDrawCircleMode", () => {
 					},
 				}),
 			).toEqual({
-				reason: "Feature is not a valid simple Polygon feature",
+				reason: "Feature has less than 4 coordinates",
 				valid: false,
 			});
 		});

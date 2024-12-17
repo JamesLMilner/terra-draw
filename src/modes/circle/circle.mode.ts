@@ -20,7 +20,6 @@ import { getDefaultStyling } from "../../util/styling";
 import {
 	BaseModeOptions,
 	CustomStyling,
-	ModeMismatchValidationFailure,
 	TerraDrawBaseDrawMode,
 } from "../base.mode";
 import { ValidateNonIntersectingPolygonFeature } from "../../validations/polygon.validation";
@@ -280,14 +279,11 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 	}
 
 	validateFeature(feature: unknown): StoreValidation {
-		return this.validateModeFeature(
-			feature,
-			(baseValidatedFeature) =>
-				ValidateNonIntersectingPolygonFeature(
-					baseValidatedFeature,
-					this.coordinatePrecision,
-				),
-			"Feature is not a valid simple Polygon feature",
+		return this.validateModeFeature(feature, (baseValidatedFeature) =>
+			ValidateNonIntersectingPolygonFeature(
+				baseValidatedFeature,
+				this.coordinatePrecision,
+			),
 		);
 	}
 

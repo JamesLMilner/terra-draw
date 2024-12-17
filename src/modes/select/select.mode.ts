@@ -367,7 +367,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 
 		// Validate the new geometry
 		if (validation) {
-			const valid = validation(
+			const validationResult = validation(
 				{
 					id: featureId,
 					type: "Feature",
@@ -381,7 +381,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 					updateType: UpdateTypes.Commit,
 				},
 			);
-			if (!valid.valid) {
+			if (!validationResult.valid) {
 				return;
 			}
 		}

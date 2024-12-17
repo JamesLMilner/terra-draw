@@ -1,4 +1,5 @@
-import { FeatureId, GeoJSONStoreFeatures, IdStrategy } from "./store";
+import { Validation } from "../common";
+import { FeatureId, IdStrategy } from "./store";
 
 export const StoreValidationErrors = {
 	FeatureHasNoId: "Feature has no id",
@@ -56,10 +57,7 @@ export function isValidTimestamp(timestamp: unknown): boolean {
 export function isValidStoreFeature(
 	feature: unknown,
 	isValidId: IdStrategy<FeatureId>["isValidId"],
-): {
-	valid: boolean;
-	reason?: string;
-} {
+): ReturnType<Validation> {
 	let error;
 	if (!isObject(feature)) {
 		error = StoreValidationErrors.FeatureIsNotObject;

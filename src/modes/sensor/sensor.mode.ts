@@ -12,7 +12,6 @@ import {
 	TerraDrawBaseDrawMode,
 	BaseModeOptions,
 	CustomStyling,
-	ModeMismatchValidationFailure,
 } from "../base.mode";
 import { getDefaultStyling } from "../../util/styling";
 import {
@@ -20,10 +19,7 @@ import {
 	GeoJSONStoreFeatures,
 	StoreValidation,
 } from "../../store/store";
-import {
-	ValidateNonIntersectingPolygonFeature,
-	ValidatePolygonFeature,
-} from "../../validations/polygon.validation";
+import { ValidateNonIntersectingPolygonFeature } from "../../validations/polygon.validation";
 import { webMercatorDestination } from "../../geometry/measure/destination";
 import {
 	normalizeBearing,
@@ -656,14 +652,11 @@ export class TerraDrawSensorMode extends TerraDrawBaseDrawMode<SensorPolygonStyl
 	}
 
 	validateFeature(feature: unknown): StoreValidation {
-		return this.validateModeFeature(
-			feature,
-			(baseValidatedFeature) =>
-				ValidateNonIntersectingPolygonFeature(
-					baseValidatedFeature,
-					this.coordinatePrecision,
-				),
-			"Feature is not a valid simple Polygon feature",
+		return this.validateModeFeature(feature, (baseValidatedFeature) =>
+			ValidateNonIntersectingPolygonFeature(
+				baseValidatedFeature,
+				this.coordinatePrecision,
+			),
 		);
 	}
 

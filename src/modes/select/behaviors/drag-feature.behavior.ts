@@ -159,7 +159,7 @@ export class DragFeatureBehavior extends TerraDrawModeBehavior {
 			const updatedMidPoints = this.midPoints.getUpdated(updatedCoords) || [];
 
 			if (validateFeature) {
-				const valid = validateFeature(
+				const validationResult = validateFeature(
 					{
 						type: "Feature",
 						id: this.draggedFeatureId,
@@ -174,7 +174,7 @@ export class DragFeatureBehavior extends TerraDrawModeBehavior {
 					},
 				);
 
-				if (!valid.valid) {
+				if (!validationResult.valid) {
 					return false;
 				}
 			}

@@ -11,7 +11,7 @@ describe("isValidPoint", () => {
 				coordinates: [45, 90],
 			},
 		} as Feature<Point, Record<string, any>>;
-		expect(ValidatePointFeature(validPoint, 2)).toBe(true);
+		expect(ValidatePointFeature(validPoint, 2)).toEqual({ valid: true });
 	});
 
 	it("returns false for a non-Point feature", () => {
@@ -26,7 +26,10 @@ describe("isValidPoint", () => {
 				],
 			},
 		} as any;
-		expect(ValidatePointFeature(nonPointFeature, 2)).toBe(false);
+		expect(ValidatePointFeature(nonPointFeature, 2)).toEqual({
+			valid: false,
+			reason: "Feature is not a Point",
+		});
 	});
 
 	it("returns false for a Point with incorrect coordinate precision", () => {
@@ -38,6 +41,9 @@ describe("isValidPoint", () => {
 				coordinates: [45.123, 90.123],
 			},
 		} as Feature<Point, Record<string, any>>;
-		expect(ValidatePointFeature(invalidPoint, 2)).toBe(false);
+		expect(ValidatePointFeature(invalidPoint, 2)).toEqual({
+			valid: false,
+			reason: "Feature has invalid coordinates",
+		});
 	});
 });

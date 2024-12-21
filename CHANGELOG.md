@@ -2,6 +2,41 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-beta.9](https://github.com/JamesLMilner/terra-draw/compare/v1.0.0-beta.8...v1.0.0-beta.9) (2024-12-21)
+
+
+### Features
+
+* allow freehand features to be automatically closed with the autoClose option ([#377](https://github.com/JamesLMilner/terra-draw/issues/377)) ([2ebe71f](https://github.com/JamesLMilner/terra-draw/commit/2ebe71fdd16a4784619cfa47ca476fd97260dd0c))
+* expose the validation failure reasons for developers to check against ([#382](https://github.com/JamesLMilner/terra-draw/issues/382)) ([c9e7711](https://github.com/JamesLMilner/terra-draw/commit/c9e7711752872758ad2df4d679b3e4847d428fa5))
+* no longer throw error on validation failures in addFeatures and return validation status ([#380](https://github.com/JamesLMilner/terra-draw/issues/380)) ([7dc2160](https://github.com/JamesLMilner/terra-draw/commit/7dc2160a4258426e35afd6d013f014c7d4135ecc))
+* normalise validations across the codebase so that they return valid and reason properties ([#381](https://github.com/JamesLMilner/terra-draw/issues/381)) ([775315f](https://github.com/JamesLMilner/terra-draw/commit/775315fe4d2d2292189537f509016c9076c4f204))
+
+
+### Bug Fixes
+
+* create circle with minimum starting radius if there is no cursor movement ([#370](https://github.com/JamesLMilner/terra-draw/issues/370)) ([0d47e32](https://github.com/JamesLMilner/terra-draw/commit/0d47e32824e1af27cabec63c7027efc18064a435))
+* ensure that closingPoint property exists on closingPoint of freehand mode ([#373](https://github.com/JamesLMilner/terra-draw/issues/373)) ([f5c5953](https://github.com/JamesLMilner/terra-draw/commit/f5c59534d84ee07ab2039c3039184a32b15dc250))
+* ensure that features are dragged in the projection set in TerraDrawSelectMode ([#360](https://github.com/JamesLMilner/terra-draw/issues/360)) ([e9e8fc6](https://github.com/JamesLMilner/terra-draw/commit/e9e8fc681a1edf02c85f05312fb33d9628be186e))
+* export TerraDrawCallbacks for custom adapters ([#378](https://github.com/JamesLMilner/terra-draw/issues/378)) ([e1b475f](https://github.com/JamesLMilner/terra-draw/commit/e1b475f9d12012bc4a8c95563eb588641efbd170))
+
+
+### Documentation
+
+* improve adapter docs to include ArcGIS example ([#362](https://github.com/JamesLMilner/terra-draw/issues/362)) ([8e9f266](https://github.com/JamesLMilner/terra-draw/commit/8e9f266f4e314d6d97fa767e9a244d71a05f13e2))
+
+
+### Tests
+
+* fix floating point issues on web-mercator-centroid.spec.ts ([#375](https://github.com/JamesLMilner/terra-draw/issues/375)) ([3465007](https://github.com/JamesLMilner/terra-draw/commit/3465007e12d76016acec7f91c2f3ffd1ed1f7da1))
+
+
+### Chore
+
+* move GitHub actions and guidance to Node.js version 22 (current LTS) ([#371](https://github.com/JamesLMilner/terra-draw/issues/371)) ([8520e24](https://github.com/JamesLMilner/terra-draw/commit/8520e246d2366aa06326ea51f760722f7c332073))
+* update TypeScript to 5.6 ([#366](https://github.com/JamesLMilner/terra-draw/issues/366)) ([544eb66](https://github.com/JamesLMilner/terra-draw/commit/544eb66ab6e0914b8c1c222fff1260937f01f135))
+* upgrade prettier to version 9 ([#376](https://github.com/JamesLMilner/terra-draw/issues/376)) ([93436bb](https://github.com/JamesLMilner/terra-draw/commit/93436bb9e75374a9d10cd5803933691383c5c018))
+
 ## [1.0.0-beta.8](https://github.com/JamesLMilner/terra-draw/compare/v1.0.0-beta.7...v1.0.0-beta.8) (2024-10-26)
 
 

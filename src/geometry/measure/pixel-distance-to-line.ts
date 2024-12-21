@@ -1,18 +1,20 @@
+import { CartesianPoint } from "../../common";
+
 export const pixelDistanceToLine = (
-	point: { x: number; y: number },
-	linePointOne: { x: number; y: number },
-	linePointTwo: { x: number; y: number },
+	point: CartesianPoint,
+	linePointOne: CartesianPoint,
+	linePointTwo: CartesianPoint,
 ) => {
 	const square = (x: number) => {
 		return x * x;
 	};
-	const dist2 = (v: { x: number; y: number }, w: { x: number; y: number }) => {
+	const dist2 = (v: CartesianPoint, w: CartesianPoint) => {
 		return square(v.x - w.x) + square(v.y - w.y);
 	};
 	const distToSegmentSquared = (
-		p: { x: number; y: number },
-		v: { x: number; y: number },
-		w: { x: number; y: number },
+		p: CartesianPoint,
+		v: CartesianPoint,
+		w: CartesianPoint,
 	) => {
 		const l2 = dist2(v, w);
 

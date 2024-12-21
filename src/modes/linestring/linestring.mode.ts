@@ -6,6 +6,7 @@ import {
 	NumericStyling,
 	Cursor,
 	UpdateTypes,
+	CartesianPoint,
 } from "../../common";
 import { LineString, Point, Position } from "geojson";
 import {
@@ -17,7 +18,7 @@ import { cartesianDistance } from "../../geometry/measure/pixel-distance";
 import { BehaviorConfig } from "../base.behavior";
 import { ClickBoundingBoxBehavior } from "../click-bounding-box.behavior";
 import { PixelDistanceBehavior } from "../pixel-distance.behavior";
-import { SnappingBehavior } from "../snapping.behavior";
+import { CoordinateSnappingBehavior } from "../coordinate-snapping.behavior";
 import { getDefaultStyling } from "../../util/styling";
 import {
 	FeatureId,
@@ -56,7 +57,9 @@ interface InertCoordinates {
 
 interface TerraDrawLineStringModeOptions<T extends CustomStyling>
 	extends BaseModeOptions<T> {
-	snapping?: boolean;
+	snapping?: {
+		toCoordinate?: boolean;
+	};
 	pointerDistance?: number;
 	keyEvents?: TerraDrawLineStringModeKeyEvents | null;
 	cursors?: Cursors;
@@ -70,14 +73,14 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 	private currentId: FeatureId | undefined;
 	private closingPointId: FeatureId | undefined;
 	private keyEvents: TerraDrawLineStringModeKeyEvents;
-	private snappingEnabled: boolean;
+	private snappingEnabled: { toCoordinate?: boolean } | undefined;
 	private cursors: Required<Cursors>;
 	private mouseMove = false;
 	private insertCoordinates: InertCoordinates | undefined;
 	private lastCommitedCoordinates: Position[] | undefined;
 
 	// Behaviors
-	private snapping!: SnappingBehavior;
+	private coordinateSnapping!: CoordinateSnappingBehavior;
 	private insertPoint!: InsertCoordinatesBehavior;
 
 	constructor(options?: TerraDrawLineStringModeOptions<LineStringStyling>) {
@@ -95,7 +98,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 		}
 
 		this.snappingEnabled =
-			options && options.snapping !== undefined ? options.snapping : false;
+			options && options.snapping ? options.snapping : undefined;
 
 		// We want to have some defaults, but also allow key bindings
 		// to be explicitly turned off
@@ -298,10 +301,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 		this.currentCoordinate++;
 	}
 
-	private updateToLine(
-		updatedCoord: Position,
-		cursorXY: { x: number; y: number },
-	) {
+	private updateToLine(updatedCoord: Position, cursorXY: CartesianPoint) {
 		if (!this.currentId) {
 			return;
 		}
@@ -348,7 +348,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 
 	/** @internal */
 	registerBehaviors(config: BehaviorConfig) {
-		this.snapping = new SnappingBehavior(
+		this.coordinateSnapping = new CoordinateSnappingBehavior(
 			config,
 			new PixelDistanceBehavior(config),
 			new ClickBoundingBoxBehavior(config),
@@ -389,7 +389,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 
 		const snappedCoord =
 			this.snappingEnabled &&
-			this.snapping.getSnappableCoordinate(event, this.currentId);
+			this.coordinateSnapping.getSnappableCoordinate(event, this.currentId);
 		const updatedCoord = snappedCoord ? snappedCoord : [event.lng, event.lat];
 
 		// We want to ensure that when we are hovering over
@@ -448,17 +448,26 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 		}
 		this.mouseMove = false;
 
-		const snappedCoord =
-			this.currentId &&
-			this.snappingEnabled &&
-			this.snapping.getSnappableCoordinate(event, this.currentId);
-		const updatedCoord = snappedCoord ? snappedCoord : [event.lng, event.lat];
-
 		if (this.currentCoordinate === 0) {
+			const snappedCoord =
+				this.snappingEnabled &&
+				this.coordinateSnapping.getSnappableCoordinateFirstClick(event);
+			const updatedCoord = snappedCoord ? snappedCoord : [event.lng, event.lat];
+
 			this.createLine(updatedCoord);
 		} else if (this.currentCoordinate === 1 && this.currentId) {
+			const snappedCoord =
+				this.snappingEnabled &&
+				this.coordinateSnapping.getSnappableCoordinate(event, this.currentId);
+			const updatedCoord = snappedCoord ? snappedCoord : [event.lng, event.lat];
+
 			this.firstUpdateToLine(updatedCoord);
 		} else if (this.currentId) {
+			const snappedCoord =
+				this.snappingEnabled &&
+				this.coordinateSnapping.getSnappableCoordinate(event, this.currentId);
+			const updatedCoord = snappedCoord ? snappedCoord : [event.lng, event.lat];
+
 			this.updateToLine(updatedCoord, {
 				x: event.containerX,
 				y: event.containerY,

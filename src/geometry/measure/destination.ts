@@ -4,6 +4,7 @@ import {
 	lengthToRadians,
 	radiansToDegrees,
 } from "../helpers";
+import { CartesianPoint } from "../../common";
 
 // Adapted from @turf/destination module which is MIT Licensed
 // https://github.com/Turfjs/turf/blob/master/packages/turf-desination/index.ts
@@ -36,10 +37,10 @@ export function destination(
 
 // Function to create a destination point in Web Mercator projection
 export function webMercatorDestination(
-	{ x, y }: { x: number; y: number },
+	{ x, y }: CartesianPoint,
 	distance: number,
 	bearing: number,
-): { x: number; y: number } {
+): CartesianPoint {
 	// Convert origin to Web Mercator
 	const bearingRad = degreesToRadians(bearing);
 

@@ -1,5 +1,6 @@
 import { Position } from "geojson";
 import { degreesToRadians, radiansToDegrees } from "../helpers";
+import { CartesianPoint } from "../../common";
 
 // Adapted from the @turf/bearing module which is MIT Licensed
 // https://github.com/Turfjs/turf/tree/master/packages/turf-bearing
@@ -18,8 +19,8 @@ export function bearing(start: Position, end: Position): number {
 }
 
 export function webMercatorBearing(
-	{ x: x1, y: y1 }: { x: number; y: number },
-	{ x: x2, y: y2 }: { x: number; y: number },
+	{ x: x1, y: y1 }: CartesianPoint,
+	{ x: x2, y: y2 }: CartesianPoint,
 ): number {
 	const deltaX = x2 - x1;
 	const deltaY = y2 - y1;

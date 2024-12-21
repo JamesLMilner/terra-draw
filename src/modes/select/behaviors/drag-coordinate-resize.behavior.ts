@@ -1,4 +1,9 @@
-import { TerraDrawMouseEvent, UpdateTypes, Validation } from "../../../common";
+import {
+	CartesianPoint,
+	TerraDrawMouseEvent,
+	UpdateTypes,
+	Validation,
+} from "../../../common";
 import { BehaviorConfig, TerraDrawModeBehavior } from "../../base.behavior";
 import { LineString, Polygon, Position, Point, Feature } from "geojson";
 import { PixelDistanceBehavior } from "../../pixel-distance.behavior";
@@ -278,9 +283,9 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 	}: {
 		closestBBoxIndex: BoundingBoxIndex;
 		updatedCoords: Position[];
-		webMercatorCursor: { x: number; y: number };
-		webMercatorSelected: { x: number; y: number };
-		webMercatorOrigin: { x: number; y: number };
+		webMercatorCursor: CartesianPoint;
+		webMercatorSelected: CartesianPoint;
+		webMercatorOrigin: CartesianPoint;
 	}) {
 		const cursorDistanceX = webMercatorOrigin.x - webMercatorCursor.x;
 		const cursorDistanceY = webMercatorOrigin.y - webMercatorCursor.y;
@@ -393,9 +398,9 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 	}: {
 		closestBBoxIndex: BoundingBoxIndex;
 		updatedCoords: Position[];
-		webMercatorCursor: { x: number; y: number };
-		webMercatorSelected: { x: number; y: number };
-		webMercatorOrigin: { x: number; y: number };
+		webMercatorCursor: CartesianPoint;
+		webMercatorSelected: CartesianPoint;
+		webMercatorOrigin: CartesianPoint;
 	}) {
 		const cursorDistanceX = webMercatorOrigin.x - webMercatorCursor.x;
 		const cursorDistanceY = webMercatorOrigin.y - webMercatorCursor.y;
@@ -574,7 +579,7 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 
 	private getIndexesWebMercator(
 		boundingBox: BoundingBox,
-		selectedXY: { x: number; y: number },
+		selectedXY: CartesianPoint,
 	) {
 		let closestIndex: BoundingBoxIndex | undefined;
 		let closestDistance = Infinity;

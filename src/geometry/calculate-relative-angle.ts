@@ -1,3 +1,4 @@
+import { CartesianPoint } from "../common";
 import { webMercatorBearing } from "./measure/bearing";
 
 /**
@@ -8,9 +9,9 @@ import { webMercatorBearing } from "./measure/bearing";
  * @returns The relative angle between the two lines
  */
 export function calculateRelativeAngle(
-	A: { x: number; y: number },
-	B: { x: number; y: number },
-	C: { x: number; y: number },
+	A: CartesianPoint,
+	B: CartesianPoint,
+	C: CartesianPoint,
 ): number {
 	const bearingAB = webMercatorBearing(A, B); // Bearing from A to B
 	const bearingBC = webMercatorBearing(B, C); // Bearing from B to C

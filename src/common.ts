@@ -29,6 +29,8 @@ export interface TerraDrawAdapterStyling {
 	zIndex: number;
 }
 
+export type CartesianPoint = { x: number; y: number };
+
 // Neither buttons nor touch/pen contact changed since last event	-1
 // Mouse move with no buttons pressed, Pen moved while hovering with no buttons pressed	—
 // Left Mouse, Touch Contact, Pen contact	0
@@ -62,7 +64,7 @@ export type SetCursor = (
 		| "move",
 ) => void;
 
-export type Project = (lng: number, lat: number) => { x: number; y: number };
+export type Project = (lng: number, lat: number) => CartesianPoint;
 export type Unproject = (x: number, y: number) => { lat: number; lng: number };
 export type GetLngLatFromEvent = (event: PointerEvent | MouseEvent) => {
 	lng: number;

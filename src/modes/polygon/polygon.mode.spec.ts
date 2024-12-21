@@ -271,7 +271,11 @@ describe("TerraDrawPolygonMode", () => {
 		});
 
 		it("can create a polygon with snapping enabled", () => {
-			polygonMode = new TerraDrawPolygonMode({ snapping: true });
+			polygonMode = new TerraDrawPolygonMode({
+				snapping: {
+					toCoordinate: true,
+				},
+			});
 			const mockConfig = MockModeConfig(polygonMode.mode);
 			store = mockConfig.store;
 			polygonMode.register(mockConfig);

@@ -2,6 +2,11 @@ import { Validation } from "../common";
 import { GeoJSONStoreFeatures } from "../terra-draw";
 import { coordinateIsValid } from "./../geometry/boolean/is-valid-coordinate";
 
+export const ValidationReasonFeatureIsNotALineString =
+	"Feature is not a LineString";
+export const ValidationReasonFeatureHasLessThanTwoCoordinates =
+	"Feature has less than 2 coordinates";
+
 export function ValidateLineStringFeature(
 	feature: GeoJSONStoreFeatures,
 	coordinatePrecision: number,
@@ -9,14 +14,14 @@ export function ValidateLineStringFeature(
 	if (feature.geometry.type !== "LineString") {
 		return {
 			valid: false,
-			reason: "Feature is not a LineString",
+			reason: ValidationReasonFeatureIsNotALineString,
 		};
 	}
 
 	if (feature.geometry.coordinates.length < 2) {
 		return {
 			valid: false,
-			reason: "Feature has less than 2 coordinates",
+			reason: ValidationReasonFeatureHasLessThanTwoCoordinates,
 		};
 	}
 

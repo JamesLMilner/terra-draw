@@ -17,7 +17,6 @@ import { getDefaultStyling } from "../../util/styling";
 import {
 	BaseModeOptions,
 	CustomStyling,
-	ModeMismatchValidationFailure,
 	TerraDrawBaseDrawMode,
 } from "../base.mode";
 import { ValidateNonIntersectingPolygonFeature } from "../../validations/polygon.validation";

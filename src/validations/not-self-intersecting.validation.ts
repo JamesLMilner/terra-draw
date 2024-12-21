@@ -3,6 +3,11 @@ import { selfIntersects } from "../geometry/boolean/self-intersects";
 import { GeoJSONStoreFeatures } from "../terra-draw";
 import { Validation } from "../common";
 
+export const ValidationReasonFeatureNotPolygonOrLineString =
+	"Feature is not a Polygon or LineString";
+export const ValidationReasonFeatureSelfIntersects =
+	"Feature intersects itself";
+
 export const ValidateNotSelfIntersecting = (
 	feature: GeoJSONStoreFeatures,
 ): ReturnType<Validation> => {
@@ -12,7 +17,7 @@ export const ValidateNotSelfIntersecting = (
 	) {
 		return {
 			valid: false,
-			reason: "Feature is not a Polygon or LineString",
+			reason: ValidationReasonFeatureNotPolygonOrLineString,
 		};
 	}
 
@@ -23,7 +28,7 @@ export const ValidateNotSelfIntersecting = (
 	if (hasSelfIntersections) {
 		return {
 			valid: false,
-			reason: "Feature intersects itself",
+			reason: ValidationReasonFeatureSelfIntersects,
 		};
 	}
 

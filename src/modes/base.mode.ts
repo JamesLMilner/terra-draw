@@ -18,6 +18,7 @@ import {
 	StoreChangeHandler,
 } from "../store/store";
 import { isValidStoreFeature } from "../store/store-feature-validation";
+import { ValidationReasonModeMismatch } from "../validations/common-validations";
 
 export type CustomStyling = Record<
 	string,
@@ -39,11 +40,6 @@ export type BaseModeOptions<T extends CustomStyling> = {
 	pointerDistance?: number;
 	validation?: Validation;
 	projection?: Projection;
-};
-
-export const ModeMismatchValidationFailure = {
-	valid: false,
-	reason: "Feature mode property does not match the mode being added to",
 };
 
 export abstract class TerraDrawBaseDrawMode<T extends CustomStyling> {
@@ -201,7 +197,10 @@ export abstract class TerraDrawBaseDrawMode<T extends CustomStyling> {
 			const validatedFeature = feature as GeoJSONStoreFeatures;
 			const matches = validatedFeature.properties.mode === this.mode;
 			if (!matches) {
-				return ModeMismatchValidationFailure;
+				return {
+					valid: false,
+					reason: ValidationReasonModeMismatch,
+				};
 			}
 			const modeValidation = modeValidationFn(validatedFeature);
 			return modeValidation;

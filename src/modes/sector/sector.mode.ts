@@ -12,7 +12,6 @@ import {
 	TerraDrawBaseDrawMode,
 	BaseModeOptions,
 	CustomStyling,
-	ModeMismatchValidationFailure,
 } from "../base.mode";
 import { coordinatesIdentical } from "../../geometry/coordinates-identical";
 import { getDefaultStyling } from "../../util/styling";

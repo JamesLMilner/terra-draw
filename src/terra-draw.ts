@@ -56,6 +56,7 @@ import { TerraDrawSectorMode } from "./modes/sector/sector.mode";
 import { TerraDrawSensorMode } from "./modes/sensor/sensor.mode";
 import * as TerraDrawExtend from "./extend";
 import { hasModeProperty } from "./store/store-feature-validation";
+import { ValidationReasons } from "./validation-reasons";
 
 type FinishListener = (id: FeatureId, context: OnFinishContext) => void;
 type ChangeListener = (ids: FeatureId[], type: string) => void;
@@ -834,4 +835,5 @@ export {
 	ValidateMinAreaSquareMeters,
 	ValidateMaxAreaSquareMeters,
 	ValidateNotSelfIntersecting,
+	ValidationReasons,
 };

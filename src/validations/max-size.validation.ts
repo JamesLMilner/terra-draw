@@ -1,6 +1,10 @@
 import { Validation } from "../common";
 import { polygonAreaSquareMeters } from "../geometry/measure/area";
 import { GeoJSONStoreFeatures } from "../terra-draw";
+import { ValidationReasonFeatureNotPolygon } from "./common-validations";
+
+export const ValidationMaxAreaSquareMetersReason =
+	"Feature is larger than the maximum area";
 
 export const ValidateMaxAreaSquareMeters = (
 	feature: GeoJSONStoreFeatures,
@@ -9,7 +13,7 @@ export const ValidateMaxAreaSquareMeters = (
 	if (feature.geometry.type !== "Polygon") {
 		return {
 			valid: false,
-			reason: "Feature is not a Polygon",
+			reason: ValidationReasonFeatureNotPolygon,
 		};
 	}
 
@@ -18,7 +22,7 @@ export const ValidateMaxAreaSquareMeters = (
 	if (size > maxSize) {
 		return {
 			valid: false,
-			reason: "Feature is larger than the maximum area",
+			reason: ValidationMaxAreaSquareMetersReason,
 		};
 	}
 

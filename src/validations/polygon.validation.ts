@@ -4,12 +4,14 @@ import { selfIntersects } from "../geometry/boolean/self-intersects";
 import { coordinateIsValid } from "./../geometry/boolean/is-valid-coordinate";
 import { Validation } from "../common";
 
-function coordinatesMatch(coordinateOne: Position, coordinateTwo: Position) {
-	return (
-		coordinateOne[0] === coordinateTwo[0] &&
-		coordinateOne[1] === coordinateTwo[1]
-	);
-}
+export const ValidationReasonFeatureNotPolygon = "Feature is not a Polygon";
+export const ValidationReasonFeatureHasHoles = "Feature has holes";
+export const ValidationReasonFeatureLessThanFourCoordinates =
+	"Feature has less than 4 coordinates";
+export const ValidationReasonFeatureHasInvalidCoordinates =
+	"Feature has invalid coordinates";
+export const ValidationReasonFeatureCoordinatesNotClosed =
+	"Feature coordinates are not closed";
 
 export function ValidatePolygonFeature(
 	feature: GeoJSONStoreFeatures,
@@ -18,21 +20,21 @@ export function ValidatePolygonFeature(
 	if (feature.geometry.type !== "Polygon") {
 		return {
 			valid: false,
-			reason: "Feature is not a Polygon",
+			reason: ValidationReasonFeatureNotPolygon,
 		};
 	}
 
 	if (feature.geometry.coordinates.length !== 1) {
 		return {
 			valid: false,
-			reason: "Feature has holes",
+			reason: ValidationReasonFeatureHasHoles,
 		};
 	}
 
 	if (feature.geometry.coordinates[0].length < 4) {
 		return {
 			valid: false,
-			reason: "Feature has less than 4 coordinates",
+			reason: ValidationReasonFeatureLessThanFourCoordinates,
 		};
 	}
 
@@ -43,7 +45,7 @@ export function ValidatePolygonFeature(
 	) {
 		return {
 			valid: false,
-			reason: "Feature has invalid coordinates",
+			reason: ValidationReasonFeatureHasInvalidCoordinates,
 		};
 	}
 
@@ -57,7 +59,7 @@ export function ValidatePolygonFeature(
 	) {
 		return {
 			valid: false,
-			reason: "Feature coordinates are not closed",
+			reason: ValidationReasonFeatureCoordinatesNotClosed,
 		};
 	}
 
@@ -85,4 +87,17 @@ export function ValidateNonIntersectingPolygonFeature(
 	}
 
 	return { valid: true };
+}
+
+/**
+ * Check if two coordinates are identical
+ * @param coordinateOne - coordinate to compare
+ * @param coordinateTwo - coordinate to compare with
+ * @returns boolean
+ */
+function coordinatesMatch(coordinateOne: Position, coordinateTwo: Position) {
+	return (
+		coordinateOne[0] === coordinateTwo[0] &&
+		coordinateOne[1] === coordinateTwo[1]
+	);
 }

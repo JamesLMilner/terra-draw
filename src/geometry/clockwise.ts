@@ -1,7 +1,9 @@
+import { CartesianPoint } from "../common";
+
 export function isClockwiseWebMercator(
-	center: { x: number; y: number },
-	secondCoord: { x: number; y: number },
-	thirdCoord: { x: number; y: number },
+	center: CartesianPoint,
+	secondCoord: CartesianPoint,
+	thirdCoord: CartesianPoint,
 ): boolean {
 	// Calculate the vectors
 	const vector1 = { x: secondCoord.x - center.x, y: secondCoord.y - center.y };

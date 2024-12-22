@@ -7,6 +7,7 @@ import {
 	lngLatToWebMercatorXY,
 	webMercatorXYToLngLat,
 } from "../project/web-mercator";
+import { CartesianPoint } from "../../common";
 
 // Adapted on @turf/transform-rotate module which is MIT licensed
 // https://github.com/Turfjs/turf/tree/master/packages/turf-transform-rotate
@@ -69,7 +70,7 @@ export const transformRotateWebMercator = (
 
 	// Find centroid of the polygon in Web Mercator
 	const centroid = webMercatorCoords.reduce(
-		(acc: { x: number; y: number }, coord: { x: number; y: number }) => ({
+		(acc: CartesianPoint, coord: CartesianPoint) => ({
 			x: acc.x + coord.x,
 			y: acc.y + coord.y,
 		}),

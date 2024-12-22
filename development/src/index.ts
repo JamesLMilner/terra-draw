@@ -169,13 +169,19 @@ const getModes = () => {
 		}),
 		new TerraDrawPointMode(),
 		new TerraDrawLineStringMode({
-			insertCoordinates: {
-				strategy: "amount",
-				value: 10,
+			snapping: {
+				toCoordinate: true,
 			},
+			// insertCoordinates: {
+			// 	strategy: "amount",
+			// 	value: 10,
+			// },
 		}),
 		new TerraDrawPolygonMode({
-			snapping: true,
+			snapping: {
+				toLine: true,
+				toCoordinate: true,
+			},
 			validation: (feature, { updateType }) => {
 				if (updateType === "finish" || updateType === "commit") {
 					return ValidateNotSelfIntersecting(feature);

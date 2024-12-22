@@ -52,7 +52,6 @@ interface Cursors {
 
 interface TerraDrawPolygonModeOptions<T extends CustomStyling>
 	extends BaseModeOptions<T> {
-	snapping?: boolean;
 	pointerDistance?: number;
 	keyEvents?: TerraDrawPolygonModeKeyEvents | null;
 	cursors?: Cursors;

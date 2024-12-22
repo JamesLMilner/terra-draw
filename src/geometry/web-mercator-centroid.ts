@@ -1,5 +1,6 @@
 import { Feature, LineString, Polygon, Position } from "geojson";
 import { lngLatToWebMercatorXY } from "./project/web-mercator";
+import { CartesianPoint } from "../common";
 
 /**
  * Calculates the centroid of a GeoJSON Polygon or LineString in Web Mercator
@@ -25,10 +26,9 @@ export function webMercatorCentroid(feature: Feature<Polygon | LineString>) {
 	}
 }
 
-function calculatePolygonCentroid(webMercatorCoordinates: Position[]): {
-	x: number;
-	y: number;
-} {
+function calculatePolygonCentroid(
+	webMercatorCoordinates: Position[],
+): CartesianPoint {
 	let area = 0;
 	let centroidX = 0;
 	let centroidY = 0;
@@ -52,10 +52,7 @@ function calculatePolygonCentroid(webMercatorCoordinates: Position[]): {
 	return { x: centroidX, y: centroidY };
 }
 
-function calculateLineStringMidpoint(lineString: Position[]): {
-	x: number;
-	y: number;
-} {
+function calculateLineStringMidpoint(lineString: Position[]): CartesianPoint {
 	const n = lineString.length;
 	let totalX = 0;
 	let totalY = 0;

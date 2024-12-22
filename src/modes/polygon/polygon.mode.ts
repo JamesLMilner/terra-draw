@@ -7,7 +7,7 @@ import {
 	Cursor,
 	UpdateTypes,
 } from "../../common";
-import { Polygon } from "geojson";
+import { Polygon, Position } from "geojson";
 import {
 	TerraDrawBaseDrawMode,
 	BaseModeOptions,
@@ -17,7 +17,6 @@ import { PixelDistanceBehavior } from "../pixel-distance.behavior";
 import { ClickBoundingBoxBehavior } from "../click-bounding-box.behavior";
 import { BehaviorConfig } from "../base.behavior";
 import { createPolygon } from "../../util/geoms";
-import { SnappingBehavior } from "../snapping.behavior";
 import { coordinatesIdentical } from "../../geometry/coordinates-identical";
 import { ClosingPointsBehavior } from "./behaviors/closing-points.behavior";
 import { getDefaultStyling } from "../../util/styling";
@@ -27,6 +26,8 @@ import {
 	StoreValidation,
 } from "../../store/store";
 import { ValidatePolygonFeature } from "../../validations/polygon.validation";
+import { LineSnappingBehavior } from "../line-snapping.behavior";
+import { CoordinateSnappingBehavior } from "../coordinate-snapping.behavior";
 
 type TerraDrawPolygonModeKeyEvents = {
 	cancel?: KeyboardEvent["key"] | null;
@@ -51,7 +52,10 @@ interface Cursors {
 
 interface TerraDrawPolygonModeOptions<T extends CustomStyling>
 	extends BaseModeOptions<T> {
-	snapping?: boolean;
+	snapping?: {
+		toLine?: boolean;
+		toCoordinate?: boolean;
+	};
 	pointerDistance?: number;
 	keyEvents?: TerraDrawPolygonModeKeyEvents | null;
 	cursors?: Cursors;
@@ -63,10 +67,16 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 	private currentCoordinate = 0;
 	private currentId: FeatureId | undefined;
 	private keyEvents: TerraDrawPolygonModeKeyEvents;
-	private snappingEnabled: boolean;
+	private snappingEnabled:
+		| {
+				toLine?: boolean;
+				toCoordinate?: boolean;
+		  }
+		| undefined;
 
 	// Behaviors
-	private snapping!: SnappingBehavior;
+	private lineSnapping!: LineSnappingBehavior;
+	private coordinateSnapping!: CoordinateSnappingBehavior;
 	private pixelDistance!: PixelDistanceBehavior;
 	private closingPoints!: ClosingPointsBehavior;
 	private cursors: Required<Cursors>;
@@ -87,7 +97,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 		}
 
 		this.snappingEnabled =
-			options && options.snapping !== undefined ? options.snapping : false;
+			options && options.snapping ? options.snapping : undefined;
 
 		// We want to have some defaults, but also allow key bindings
 		// to be explicitly turned off
@@ -143,11 +153,17 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 
 	/** @internal */
 	registerBehaviors(config: BehaviorConfig) {
+		const boundingBox = new ClickBoundingBoxBehavior(config);
 		this.pixelDistance = new PixelDistanceBehavior(config);
-		this.snapping = new SnappingBehavior(
+		this.lineSnapping = new LineSnappingBehavior(
 			config,
 			this.pixelDistance,
-			new ClickBoundingBoxBehavior(config),
+			boundingBox,
+		);
+		this.coordinateSnapping = new CoordinateSnappingBehavior(
+			config,
+			this.pixelDistance,
+			boundingBox,
 		);
 		this.closingPoints = new ClosingPointsBehavior(config, this.pixelDistance);
 	}
@@ -174,9 +190,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 			return;
 		}
 
-		const closestCoord = this.snappingEnabled
-			? this.snapping.getSnappableCoordinate(event, this.currentId)
-			: undefined;
+		const closestCoord = this.snapCoordinate(event);
 
 		const currentPolygonCoordinates = this.store.getGeometryCopy<Polygon>(
 			this.currentId,
@@ -271,6 +285,38 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 		return true;
 	}
 
+	private snapCoordinate(event: TerraDrawMouseEvent): undefined | Position {
+		let snappedCoordinated: Position | undefined = undefined;
+
+		if (this.snappingEnabled?.toLine) {
+			if (this.currentId) {
+				snappedCoordinated = this.lineSnapping.getSnappableCoordinate(
+					event,
+					this.currentId,
+				);
+			} else {
+				snappedCoordinated =
+					this.lineSnapping.getSnappableCoordinateFirstClick(event);
+			}
+		}
+
+		if (this.snappingEnabled?.toCoordinate) {
+			if (this.currentId) {
+				snappedCoordinated =
+					this.coordinateSnapping.getSnappableCoordinate(
+						event,
+						this.currentId,
+					) || snappedCoordinated;
+			} else {
+				snappedCoordinated =
+					this.coordinateSnapping.getSnappableCoordinateFirstClick(event) ||
+					snappedCoordinated;
+			}
+		}
+
+		return snappedCoordinated;
+	}
+
 	/** @internal */
 	onClick(event: TerraDrawMouseEvent) {
 		// We want pointer devices (mobile/tablet) to have
@@ -283,9 +329,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 		this.mouseMove = false;
 
 		if (this.currentCoordinate === 0) {
-			const closestCoord = this.snappingEnabled
-				? this.snapping.getSnappableCoordinateFirstClick(event)
-				: undefined;
+			const closestCoord = this.snapCoordinate(event);
 
 			if (closestCoord) {
 				event.lng = closestCoord[0];
@@ -314,9 +358,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 			// Ensure the state is updated to reflect drawing has started
 			this.setDrawing();
 		} else if (this.currentCoordinate === 1 && this.currentId) {
-			const closestCoord = this.snappingEnabled
-				? this.snapping.getSnappableCoordinate(event, this.currentId)
-				: undefined;
+			const closestCoord = this.snapCoordinate(event);
 
 			if (closestCoord) {
 				event.lng = closestCoord[0];
@@ -353,9 +395,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 
 			this.currentCoordinate++;
 		} else if (this.currentCoordinate === 2 && this.currentId) {
-			const closestCoord = this.snappingEnabled
-				? this.snapping.getSnappableCoordinate(event, this.currentId)
-				: undefined;
+			const closestCoord = this.snapCoordinate(event);
 
 			if (closestCoord) {
 				event.lng = closestCoord[0];
@@ -397,9 +437,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 
 			this.currentCoordinate++;
 		} else if (this.currentId) {
-			const closestCoord = this.snappingEnabled
-				? this.snapping.getSnappableCoordinate(event, this.currentId)
-				: undefined;
+			const closestCoord = this.snapCoordinate(event);
 
 			const currentPolygonCoordinates = this.store.getGeometryCopy<Polygon>(
 				this.currentId,

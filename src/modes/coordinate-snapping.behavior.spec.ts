@@ -4,13 +4,13 @@ import { MockCursorEvent } from "../test/mock-cursor-event";
 import { BehaviorConfig } from "./base.behavior";
 import { ClickBoundingBoxBehavior } from "./click-bounding-box.behavior";
 import { PixelDistanceBehavior } from "./pixel-distance.behavior";
-import { SnappingBehavior } from "./snapping.behavior";
+import { CoordinateSnappingBehavior } from "./coordinate-snapping.behavior";
 
-describe("SnappingBehavior", () => {
+describe("CoordinateSnappingBehavior", () => {
 	describe("constructor", () => {
 		it("constructs", () => {
 			const config = MockBehaviorConfig("test");
-			new SnappingBehavior(
+			new CoordinateSnappingBehavior(
 				config,
 				new PixelDistanceBehavior(config),
 				new ClickBoundingBoxBehavior(config),
@@ -20,20 +20,20 @@ describe("SnappingBehavior", () => {
 
 	describe("api", () => {
 		let config: BehaviorConfig;
-		let snappingBehavior: SnappingBehavior;
+		let coordinateSnappingBehavior: CoordinateSnappingBehavior;
 
 		beforeEach(() => {
 			config = MockBehaviorConfig("test");
-			snappingBehavior = new SnappingBehavior(
+			coordinateSnappingBehavior = new CoordinateSnappingBehavior(
 				config,
 				new PixelDistanceBehavior(config),
 				new ClickBoundingBoxBehavior(config),
 			);
 		});
 
-		describe("getSnappablePolygonCoord", () => {
+		describe("getSnappableCoordinate", () => {
 			it("returns undefined if not snappable", () => {
-				const snappedCoord = snappingBehavior.getSnappableCoordinate(
+				const snappedCoord = coordinateSnappingBehavior.getSnappableCoordinate(
 					MockCursorEvent({ lng: 0, lat: 0 }),
 					"mockId",
 				);
@@ -46,7 +46,7 @@ describe("SnappingBehavior", () => {
 				// creating an existing polygon
 				createStorePolygon(config);
 
-				const snappedCoord = snappingBehavior.getSnappableCoordinate(
+				const snappedCoord = coordinateSnappingBehavior.getSnappableCoordinate(
 					MockCursorEvent({ lng: 0, lat: 0 }),
 					"currentId",
 				);

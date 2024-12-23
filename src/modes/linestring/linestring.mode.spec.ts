@@ -146,12 +146,14 @@ describe("TerraDrawLineStringMode", () => {
 	describe("onClick", () => {
 		let lineStringMode: TerraDrawLineStringMode;
 		let onChange: jest.Mock;
+		let onFinish: jest.Mock;
 		let store: GeoJSONStore;
 
 		beforeEach(() => {
 			lineStringMode = new TerraDrawLineStringMode();
 			const mockConfig = MockModeConfig(lineStringMode.mode);
 			onChange = mockConfig.onChange;
+			onFinish = mockConfig.onFinish;
 			store = mockConfig.store;
 
 			lineStringMode.register(mockConfig);
@@ -229,6 +231,8 @@ describe("TerraDrawLineStringMode", () => {
 				"delete",
 			);
 
+			expect(onFinish).toHaveBeenCalledTimes(1);
+
 			features = store.copyAll();
 			expect(features.length).toBe(1);
 
@@ -237,6 +241,101 @@ describe("TerraDrawLineStringMode", () => {
 				[1, 1],
 				[2, 2],
 			]);
+		});
+
+		it("finishes the line on the the third click with snapping toCoordinate enabled", () => {
+			lineStringMode = new TerraDrawLineStringMode({
+				snapping: { toCoordinate: true },
+			});
+			const mockConfig = MockModeConfig(lineStringMode.mode);
+			onChange = mockConfig.onChange;
+			onFinish = mockConfig.onFinish;
+			store = mockConfig.store;
+
+			lineStringMode.register(mockConfig);
+			lineStringMode.start();
+
+			lineStringMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+			lineStringMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
+
+			lineStringMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
+
+			let features = store.copyAll();
+
+			// Drawn LineString and Closing point
+			expect(features.length).toBe(2);
+
+			expect(features[0].geometry.coordinates).toStrictEqual([
+				[0, 0],
+				[1, 1],
+				[1, 1],
+			]);
+
+			expect(features[1].geometry.coordinates).toStrictEqual([1, 1]);
+
+			lineStringMode.onMouseMove(MockCursorEvent({ lng: 2, lat: 2 }));
+
+			lineStringMode.onClick(MockCursorEvent({ lng: 2, lat: 2 }));
+
+			expect(onChange).not.toHaveBeenCalledWith([expect.any(String)], "delete");
+
+			lineStringMode.onClick(MockCursorEvent({ lng: 2, lat: 2 }));
+
+			expect(onChange).toHaveBeenCalledTimes(9);
+
+			expect(onChange).toHaveBeenNthCalledWith(
+				9,
+				[expect.any(String)],
+				"delete",
+			);
+
+			expect(onFinish).toHaveBeenCalledTimes(1);
+
+			features = store.copyAll();
+			expect(features.length).toBe(1);
+
+			expect(features[0].geometry.coordinates).toStrictEqual([
+				[0, 0],
+				[1, 1],
+				[2, 2],
+			]);
+		});
+
+		it("can snap from existing line once finished with snapping toCoordinate enabled", () => {
+			lineStringMode = new TerraDrawLineStringMode({
+				snapping: { toCoordinate: true },
+			});
+			const mockConfig = MockModeConfig(lineStringMode.mode);
+			onChange = mockConfig.onChange;
+			onFinish = mockConfig.onFinish;
+			store = mockConfig.store;
+
+			lineStringMode.register(mockConfig);
+			lineStringMode.start();
+
+			lineStringMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+			lineStringMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
+
+			lineStringMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
+
+			lineStringMode.onMouseMove(MockCursorEvent({ lng: 2, lat: 2 }));
+
+			lineStringMode.onClick(MockCursorEvent({ lng: 2, lat: 2 }));
+
+			lineStringMode.onClick(MockCursorEvent({ lng: 2, lat: 2 }));
+
+			expect(onFinish).toHaveBeenCalledTimes(1);
+
+			lineStringMode.onMouseMove(MockCursorEvent({ lng: 2.1, lat: 2.1 }));
+
+			const features = store.copyAll();
+			expect(features.length).toBe(2);
+
+			expect(features[1].geometry.type).toBe("Point");
+			expect(features[1].properties.snappingPoint).toBe(true);
+			expect(features[1].geometry.coordinates).toStrictEqual([2, 2]);
 		});
 
 		describe("validations", () => {
@@ -703,7 +802,7 @@ describe("TerraDrawLineStringMode", () => {
 	});
 
 	describe("styleFeature", () => {
-		it("returns the correct styles for point", () => {
+		it("returns the correct styles for closing point", () => {
 			const lineStringMode = new TerraDrawLineStringMode({
 				styles: {
 					lineStringColor: "#ffffff",
@@ -719,7 +818,33 @@ describe("TerraDrawLineStringMode", () => {
 				lineStringMode.styleFeature({
 					type: "Feature",
 					geometry: { type: "Point", coordinates: [] },
-					properties: { mode: "linestring" },
+					properties: { mode: "linestring", closingPoint: true },
+				}),
+			).toMatchObject({
+				pointColor: "#111111",
+				pointWidth: 3,
+				pointOutlineColor: "#222222",
+				pointOutlineWidth: 2,
+			});
+		});
+
+		it("returns the correct styles for snapping point", () => {
+			const lineStringMode = new TerraDrawLineStringMode({
+				styles: {
+					lineStringColor: "#ffffff",
+					lineStringWidth: 4,
+					snappingPointColor: "#111111",
+					snappingPointWidth: 3,
+					snappingPointOutlineColor: "#222222",
+					snappingPointOutlineWidth: 2,
+				},
+			});
+
+			expect(
+				lineStringMode.styleFeature({
+					type: "Feature",
+					geometry: { type: "Point", coordinates: [] },
+					properties: { mode: "linestring", snappingPoint: true },
 				}),
 			).toMatchObject({
 				pointColor: "#111111",
@@ -745,7 +870,7 @@ describe("TerraDrawLineStringMode", () => {
 				lineStringMode.styleFeature({
 					type: "Feature",
 					geometry: { type: "Point", coordinates: [] },
-					properties: { mode: "linestring" },
+					properties: { mode: "linestring", closingPoint: true },
 				}),
 			).toMatchObject({
 				pointColor: "#111111",

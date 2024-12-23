@@ -189,6 +189,45 @@ test.describe("linestring mode", () => {
 			// Two lines
 			await expectPaths({ page, count: 2 });
 		});
+
+		test(`mode can set with snapping enabled used to create multiple linestrings${name}`, async ({
+			page,
+		}) => {
+			const mapDiv = await setupMap({
+				page,
+				configQueryParam: config
+					? [...config, "snappingCoordinate"]
+					: undefined,
+			});
+			await changeMode({ page, mode });
+
+			// First line
+			await page.mouse.move(mapDiv.width / 2, mapDiv.height / 2);
+			await page.mouse.click(mapDiv.width / 2, mapDiv.height / 2);
+			await page.mouse.move(mapDiv.width / 3, mapDiv.height / 3);
+			await page.mouse.click(mapDiv.width / 3, mapDiv.height / 3);
+
+			// One point + one line
+			await expectPaths({ page, count: 2 });
+
+			// Close first line
+			await page.mouse.click(mapDiv.width / 3, mapDiv.height / 3);
+
+			// One line
+			await expectPaths({ page, count: 1 });
+
+			// Second line
+			await page.mouse.move(mapDiv.width / 3, mapDiv.height / 3);
+
+			// Should see snapping point
+			await expectPaths({ page, count: 2 });
+
+			await page.mouse.click(mapDiv.width / 3, mapDiv.height / 3);
+			await page.mouse.move(mapDiv.width / 4, mapDiv.height / 4);
+
+			// Snapping point disappears but the second line is created so it is still 2
+			await expectPaths({ page, count: 2 });
+		});
 	}
 });
 
@@ -304,6 +343,60 @@ test.describe("polygon mode", () => {
 		// Square will fail, as triangle will be 705665 square meters, but square will be
 		// over the limit of 1000000 square meters.
 		await expectPaths({ page, count: 1 });
+	});
+
+	test("mode can set and used to create a polygon with snapping enabled", async ({
+		page,
+	}) => {
+		const mapDiv = await setupMap({
+			page,
+			configQueryParam: ["snappingCoordinate"],
+		});
+		await changeMode({ page, mode });
+
+		// The length of the square sides in pixels
+		const sideLength = 100;
+
+		// Calculating the half of the side length
+		const halfLength = sideLength / 2;
+
+		// Coordinates of the center
+		const centerX = mapDiv.width / 2;
+		const centerY = mapDiv.height / 2;
+
+		// Coordinates of the four corners of the square
+		const topLeft = { x: centerX - halfLength, y: centerY - halfLength };
+		const topRight = { x: centerX + halfLength, y: centerY - halfLength };
+		const bottomLeft = { x: centerX - halfLength, y: centerY + halfLength };
+		const bottomRight = { x: centerX + halfLength, y: centerY + halfLength };
+
+		// Perform clicks at each corner
+		await page.mouse.click(topLeft.x, topLeft.y);
+		await page.mouse.click(topRight.x, topRight.y);
+		await page.mouse.click(bottomRight.x, bottomRight.y);
+		await page.mouse.click(bottomLeft.x, bottomLeft.y);
+
+		// Close the square
+		await page.mouse.click(bottomLeft.x, bottomLeft.y);
+
+		// One point + one line
+		await expectPaths({ page, count: 1 });
+
+		// Let's create a new polygon attached to the square, snapping to it
+		await page.mouse.click(bottomLeft.x, bottomLeft.y);
+		await page.mouse.click(bottomRight.x, bottomRight.y);
+		await page.mouse.click(bottomRight.x, bottomRight.y + 50);
+
+		await expectPaths({ page, count: 4 });
+
+		await page.mouse.click(bottomRight.x, bottomRight.y + 50);
+
+		await expectPaths({ page, count: 2 });
+
+		// Go to another corner and it should snap with a point appearing
+		await page.mouse.click(topLeft.x, topLeft.y);
+
+		await expectPaths({ page, count: 3 });
 	});
 });
 

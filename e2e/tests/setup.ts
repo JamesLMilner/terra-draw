@@ -8,7 +8,8 @@ export type TestConfigOptions =
 	| "insertCoordinates"
 	| "insertCoordinatesGlobe"
 	| "globeCircle"
-	| "globeSelect";
+	| "globeSelect"
+	| "snappingCoordinate";
 
 export const setupMap = async ({
 	page,

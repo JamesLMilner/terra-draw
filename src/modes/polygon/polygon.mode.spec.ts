@@ -863,7 +863,7 @@ describe("styleFeature", () => {
 		});
 	});
 
-	it("returns the correct styles for point", () => {
+	it("returns the correct styles for closing point", () => {
 		const polygonMode = new TerraDrawPolygonMode({
 			styles: {
 				fillColor: "#ffffff",
@@ -881,7 +881,35 @@ describe("styleFeature", () => {
 			polygonMode.styleFeature({
 				type: "Feature",
 				geometry: { type: "Point", coordinates: [] },
-				properties: { mode: "polygon" },
+				properties: { mode: "polygon", closingPoint: true },
+			}),
+		).toMatchObject({
+			pointWidth: 2,
+			pointColor: "#dddddd",
+			pointOutlineColor: "#222222",
+			pointOutlineWidth: 1,
+		});
+	});
+
+	it("returns the correct styles for snapping point", () => {
+		const polygonMode = new TerraDrawPolygonMode({
+			styles: {
+				fillColor: "#ffffff",
+				outlineColor: "#111111",
+				outlineWidth: 2,
+				fillOpacity: 0.5,
+				snappingPointWidth: 2,
+				snappingPointColor: "#dddddd",
+				snappingPointOutlineWidth: 1,
+				snappingPointOutlineColor: "#222222",
+			},
+		});
+
+		expect(
+			polygonMode.styleFeature({
+				type: "Feature",
+				geometry: { type: "Point", coordinates: [] },
+				properties: { mode: "polygon", snappingPoint: true },
 			}),
 		).toMatchObject({
 			pointWidth: 2,

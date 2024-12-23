@@ -128,8 +128,11 @@ const example = {
 					},
 				}),
 				new TerraDrawPointMode(),
-				new TerraDrawLineStringMode(
-					this.config?.includes("insertCoordinates")
+				new TerraDrawLineStringMode({
+					snapping: {
+						toCoordinate: this.config?.includes("snappingCoordinate"),
+					},
+					...(this.config?.includes("insertCoordinates")
 						? {
 								insertCoordinates: {
 									strategy: "amount",
@@ -144,8 +147,8 @@ const example = {
 									value: 10,
 								},
 						  }
-						: undefined,
-				),
+						: undefined),
+				}),
 				new TerraDrawPolygonMode({
 					validation:
 						this.config?.includes("validationSuccess") ||
@@ -159,6 +162,9 @@ const example = {
 									);
 							  }
 							: undefined,
+					snapping: {
+						toCoordinate: this.config?.includes("snappingCoordinate"),
+					},
 				}),
 				new TerraDrawRectangleMode(),
 				new TerraDrawCircleMode({

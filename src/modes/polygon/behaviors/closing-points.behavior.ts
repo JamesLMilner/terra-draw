@@ -1,6 +1,6 @@
 import { Point, Position } from "geojson";
 import { BehaviorConfig, TerraDrawModeBehavior } from "../../base.behavior";
-import { POLYGON_PROPERTIES, TerraDrawMouseEvent } from "../../../common";
+import { COMMON_PROPERTIES, TerraDrawMouseEvent } from "../../../common";
 import { PixelDistanceBehavior } from "../../pixel-distance.behavior";
 
 export class ClosingPointsBehavior extends TerraDrawModeBehavior {
@@ -38,7 +38,7 @@ export class ClosingPointsBehavior extends TerraDrawModeBehavior {
 					} as Point,
 					properties: {
 						mode,
-						[POLYGON_PROPERTIES.CLOSING_POINT]: true,
+						[COMMON_PROPERTIES.CLOSING_POINT]: true,
 					},
 				},
 				// Final coordinate
@@ -49,7 +49,7 @@ export class ClosingPointsBehavior extends TerraDrawModeBehavior {
 					} as Point,
 					properties: {
 						mode,
-						[POLYGON_PROPERTIES.CLOSING_POINT]: true,
+						[COMMON_PROPERTIES.CLOSING_POINT]: true,
 					},
 				},
 			],

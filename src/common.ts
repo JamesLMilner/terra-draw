@@ -171,6 +171,7 @@ export const SELECT_PROPERTIES = {
 	SELECTION_POINT: "selectionPoint",
 } as const;
 
-export const POLYGON_PROPERTIES = {
+export const COMMON_PROPERTIES = {
 	CLOSING_POINT: "closingPoint",
+	SNAPPING_POINT: "snappingPoint",
 };

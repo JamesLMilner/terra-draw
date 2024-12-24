@@ -7,6 +7,7 @@ import {
 	Cursor,
 	UpdateTypes,
 	CartesianPoint,
+	COMMON_PROPERTIES,
 } from "../../common";
 import { LineString, Point, Position } from "geojson";
 import {
@@ -43,6 +44,10 @@ type LineStringStyling = {
 	closingPointWidth: NumericStyling;
 	closingPointOutlineColor: HexColorStyling;
 	closingPointOutlineWidth: NumericStyling;
+	snappingPointColor: HexColorStyling;
+	snappingPointWidth: NumericStyling;
+	snappingPointOutlineColor: HexColorStyling;
+	snappingPointOutlineWidth: NumericStyling;
 };
 
 interface Cursors {
@@ -78,6 +83,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 	private mouseMove = false;
 	private insertCoordinates: InertCoordinates | undefined;
 	private lastCommitedCoordinates: Position[] | undefined;
+	private snappedPointId: FeatureId | undefined;
 
 	// Behaviors
 	private coordinateSnapping!: CoordinateSnappingBehavior;
@@ -118,6 +124,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 	}
 
 	private close() {
+		console.log("close", this.currentCoordinate);
 		if (this.currentId === undefined) {
 			return;
 		}
@@ -141,9 +148,15 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 		if (this.closingPointId) {
 			this.store.delete([this.closingPointId]);
 		}
+
+		if (this.snappedPointId) {
+			this.store.delete([this.snappedPointId]);
+		}
+
 		this.currentCoordinate = 0;
 		this.currentId = undefined;
 		this.closingPointId = undefined;
+		this.snappedPointId = undefined;
 		this.lastCommitedCoordinates = undefined;
 
 		// Go back to started state
@@ -151,6 +164,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 			this.setStarted();
 		}
 
+		console.log("onFinish");
 		// Ensure that any listeners are triggered with the main created geometry
 		this.onFinish(finishedId, { mode: this.mode, action: "draw" });
 	}
@@ -375,9 +389,56 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 		this.mouseMove = true;
 		this.setCursor(this.cursors.start);
 
+		let snappedCoordinate: Position | undefined;
+		if (this.snappingEnabled) {
+			snappedCoordinate = this.currentId
+				? this.coordinateSnapping.getSnappableCoordinate(event, this.currentId)
+				: this.coordinateSnapping.getSnappableCoordinateFirstClick(event);
+		}
+
+		if (snappedCoordinate) {
+			if (this.snappedPointId) {
+				this.store.updateGeometry([
+					{
+						id: this.snappedPointId,
+						geometry: {
+							type: "Point",
+							coordinates: snappedCoordinate,
+						},
+					},
+				]);
+			} else {
+				const [snappedPointId] = this.store.create([
+					{
+						geometry: {
+							type: "Point",
+							coordinates: snappedCoordinate,
+						},
+						properties: {
+							mode: this.mode,
+							[COMMON_PROPERTIES.SNAPPING_POINT]: true,
+						},
+					},
+				]);
+
+				this.snappedPointId = snappedPointId;
+			}
+
+			event.lng = snappedCoordinate[0];
+			event.lat = snappedCoordinate[1];
+		} else if (this.snappedPointId) {
+			this.store.delete([this.snappedPointId]);
+			this.snappedPointId = undefined;
+		}
+
+		const updatedCoord = snappedCoordinate
+			? snappedCoordinate
+			: [event.lng, event.lat];
+
 		if (this.currentId === undefined || this.currentCoordinate === 0) {
 			return;
 		}
+
 		const currentLineGeometry = this.store.getGeometryCopy<LineString>(
 			this.currentId,
 		);
@@ -386,11 +447,6 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 
 		// Remove the 'live' point that changes on mouse move
 		currentCoordinates.pop();
-
-		const snappedCoord =
-			this.snappingEnabled &&
-			this.coordinateSnapping.getSnappableCoordinate(event, this.currentId);
-		const updatedCoord = snappedCoord ? snappedCoord : [event.lng, event.lat];
 
 		// We want to ensure that when we are hovering over
 		// the closing point that the pointer cursor is shown
@@ -448,6 +504,12 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 		}
 		this.mouseMove = false;
 
+		// Reset the snapping point
+		if (this.snappedPointId) {
+			this.store.delete([this.snappedPointId]);
+			this.snappedPointId = undefined;
+		}
+
 		if (this.currentCoordinate === 0) {
 			const snappedCoord =
 				this.snappingEnabled &&
@@ -502,8 +564,10 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 	cleanUp() {
 		const cleanUpId = this.currentId;
 		const cleanupClosingPointId = this.closingPointId;
+		const snappedPointId = this.snappedPointId;
 
 		this.closingPointId = undefined;
+		this.snappedPointId = undefined;
 		this.currentId = undefined;
 		this.currentCoordinate = 0;
 		if (this.state === "drawing") {
@@ -513,6 +577,9 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 		try {
 			if (cleanUpId !== undefined) {
 				this.store.delete([cleanUpId]);
+			}
+			if (snappedPointId !== undefined) {
+				this.store.delete([snappedPointId]);
 			}
 			if (cleanupClosingPointId !== undefined) {
 				this.store.delete([cleanupClosingPointId]);
@@ -549,26 +616,37 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 			feature.geometry.type === "Point" &&
 			feature.properties.mode === this.mode
 		) {
+			const isClosingPoint =
+				feature.properties[COMMON_PROPERTIES.CLOSING_POINT];
+
 			styles.pointColor = this.getHexColorStylingValue(
-				this.styles.closingPointColor,
+				isClosingPoint
+					? this.styles.closingPointColor
+					: this.styles.snappingPointColor,
 				styles.pointColor,
 				feature,
 			);
 
 			styles.pointWidth = this.getNumericStylingValue(
-				this.styles.closingPointWidth,
+				isClosingPoint
+					? this.styles.closingPointWidth
+					: this.styles.snappingPointWidth,
 				styles.pointWidth,
 				feature,
 			);
 
 			styles.pointOutlineColor = this.getHexColorStylingValue(
-				this.styles.closingPointOutlineColor,
+				isClosingPoint
+					? this.styles.closingPointOutlineColor
+					: this.styles.snappingPointOutlineColor,
 				"#ffffff",
 				feature,
 			);
 
 			styles.pointOutlineWidth = this.getNumericStylingValue(
-				this.styles.closingPointOutlineWidth,
+				isClosingPoint
+					? this.styles.closingPointOutlineWidth
+					: this.styles.snappingPointOutlineWidth,
 				2,
 				feature,
 			);

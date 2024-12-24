@@ -178,6 +178,7 @@ const getModes = () => {
 			// },
 		}),
 		new TerraDrawPolygonMode({
+			pointerDistance: 20,
 			snapping: {
 				toLine: true,
 				toCoordinate: true,
@@ -187,6 +188,9 @@ const getModes = () => {
 					return ValidateNotSelfIntersecting(feature);
 				}
 				return { valid: true };
+			},
+			styles: {
+				snappingPointColor: "#3fc8e0",
 			},
 		}),
 		new TerraDrawRectangleMode(),

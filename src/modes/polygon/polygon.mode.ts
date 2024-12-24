@@ -6,6 +6,7 @@ import {
 	NumericStyling,
 	Cursor,
 	UpdateTypes,
+	COMMON_PROPERTIES,
 } from "../../common";
 import { Polygon, Position } from "geojson";
 import {
@@ -43,6 +44,10 @@ type PolygonStyling = {
 	closingPointColor: HexColorStyling;
 	closingPointOutlineWidth: NumericStyling;
 	closingPointOutlineColor: HexColorStyling;
+	snappingPointWidth: NumericStyling;
+	snappingPointColor: HexColorStyling;
+	snappingPointOutlineWidth: NumericStyling;
+	snappingPointOutlineColor: HexColorStyling;
 };
 
 interface Cursors {
@@ -73,6 +78,8 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 				toCoordinate?: boolean;
 		  }
 		| undefined;
+
+	private snappedPointId: FeatureId | undefined;
 
 	// Behaviors
 	private lineSnapping!: LineSnappingBehavior;
@@ -139,8 +146,13 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 
 		const finishedId = this.currentId;
 
+		if (this.snappedPointId) {
+			this.store.delete([this.snappedPointId]);
+		}
+
 		this.currentCoordinate = 0;
 		this.currentId = undefined;
+		this.snappedPointId = undefined;
 		this.closingPoints.delete();
 
 		// Go back to started state
@@ -186,20 +198,50 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 		this.mouseMove = true;
 		this.setCursor(this.cursors.start);
 
+		const snappedCoordinate = this.snapCoordinate(event);
+
+		if (snappedCoordinate) {
+			if (this.snappedPointId) {
+				this.store.updateGeometry([
+					{
+						id: this.snappedPointId,
+						geometry: {
+							type: "Point",
+							coordinates: snappedCoordinate,
+						},
+					},
+				]);
+			} else {
+				const [snappedPointId] = this.store.create([
+					{
+						geometry: {
+							type: "Point",
+							coordinates: snappedCoordinate,
+						},
+						properties: {
+							mode: this.mode,
+							[COMMON_PROPERTIES.SNAPPING_POINT]: true,
+						},
+					},
+				]);
+
+				this.snappedPointId = snappedPointId;
+			}
+
+			event.lng = snappedCoordinate[0];
+			event.lat = snappedCoordinate[1];
+		} else if (this.snappedPointId) {
+			this.store.delete([this.snappedPointId]);
+			this.snappedPointId = undefined;
+		}
+
 		if (this.currentId === undefined || this.currentCoordinate === 0) {
 			return;
 		}
 
-		const closestCoord = this.snapCoordinate(event);
-
 		const currentPolygonCoordinates = this.store.getGeometryCopy<Polygon>(
 			this.currentId,
 		).coordinates[0];
-
-		if (closestCoord) {
-			event.lng = closestCoord[0];
-			event.lat = closestCoord[1];
-		}
 
 		let updatedCoordinates;
 
@@ -227,6 +269,11 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 				this.closingPoints.isClosingPoint(event);
 
 			if (isPreviousClosing || isClosing) {
+				if (this.snappedPointId) {
+					this.store.delete([this.snappedPointId]);
+					this.snappedPointId = undefined;
+				}
+
 				this.setCursor(this.cursors.close);
 
 				updatedCoordinates = [
@@ -286,35 +333,42 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 	}
 
 	private snapCoordinate(event: TerraDrawMouseEvent): undefined | Position {
-		let snappedCoordinated: Position | undefined = undefined;
+		let snappedCoordinate: Position | undefined = undefined;
 
 		if (this.snappingEnabled?.toLine) {
+			let snapped: Position | undefined;
 			if (this.currentId) {
-				snappedCoordinated = this.lineSnapping.getSnappableCoordinate(
+				snapped = this.lineSnapping.getSnappableCoordinate(
 					event,
 					this.currentId,
 				);
 			} else {
-				snappedCoordinated =
-					this.lineSnapping.getSnappableCoordinateFirstClick(event);
+				snapped = this.lineSnapping.getSnappableCoordinateFirstClick(event);
+			}
+
+			if (snapped) {
+				snappedCoordinate = snapped;
 			}
 		}
 
 		if (this.snappingEnabled?.toCoordinate) {
+			let snapped: Position | undefined = undefined;
 			if (this.currentId) {
-				snappedCoordinated =
-					this.coordinateSnapping.getSnappableCoordinate(
-						event,
-						this.currentId,
-					) || snappedCoordinated;
+				snapped = this.coordinateSnapping.getSnappableCoordinate(
+					event,
+					this.currentId,
+				);
 			} else {
-				snappedCoordinated =
-					this.coordinateSnapping.getSnappableCoordinateFirstClick(event) ||
-					snappedCoordinated;
+				snapped =
+					this.coordinateSnapping.getSnappableCoordinateFirstClick(event);
+			}
+
+			if (snapped) {
+				snappedCoordinate = snapped;
 			}
 		}
 
-		return snappedCoordinated;
+		return snappedCoordinate;
 	}
 
 	/** @internal */
@@ -328,12 +382,18 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 		}
 		this.mouseMove = false;
 
-		if (this.currentCoordinate === 0) {
-			const closestCoord = this.snapCoordinate(event);
+		// Reset the snapping point
+		if (this.snappedPointId) {
+			this.store.delete([this.snappedPointId]);
+			this.snappedPointId = undefined;
+		}
 
-			if (closestCoord) {
-				event.lng = closestCoord[0];
-				event.lat = closestCoord[1];
+		if (this.currentCoordinate === 0) {
+			const snappedCoordinate = this.snapCoordinate(event);
+
+			if (snappedCoordinate) {
+				event.lng = snappedCoordinate[0];
+				event.lat = snappedCoordinate[1];
 			}
 
 			const [newId] = this.store.create([
@@ -358,11 +418,11 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 			// Ensure the state is updated to reflect drawing has started
 			this.setDrawing();
 		} else if (this.currentCoordinate === 1 && this.currentId) {
-			const closestCoord = this.snapCoordinate(event);
+			const snappedCoordinate = this.snapCoordinate(event);
 
-			if (closestCoord) {
-				event.lng = closestCoord[0];
-				event.lat = closestCoord[1];
+			if (snappedCoordinate) {
+				event.lng = snappedCoordinate[0];
+				event.lat = snappedCoordinate[1];
 			}
 
 			const currentPolygonGeometry = this.store.getGeometryCopy<Polygon>(
@@ -395,11 +455,11 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 
 			this.currentCoordinate++;
 		} else if (this.currentCoordinate === 2 && this.currentId) {
-			const closestCoord = this.snapCoordinate(event);
+			const snappedCoordinate = this.snapCoordinate(event);
 
-			if (closestCoord) {
-				event.lng = closestCoord[0];
-				event.lat = closestCoord[1];
+			if (snappedCoordinate) {
+				event.lng = snappedCoordinate[0];
+				event.lat = snappedCoordinate[1];
 			}
 
 			const currentPolygonCoordinates = this.store.getGeometryCopy<Polygon>(
@@ -437,8 +497,6 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 
 			this.currentCoordinate++;
 		} else if (this.currentId) {
-			const closestCoord = this.snapCoordinate(event);
-
 			const currentPolygonCoordinates = this.store.getGeometryCopy<Polygon>(
 				this.currentId,
 			).coordinates[0];
@@ -449,9 +507,11 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 			if (isPreviousClosing || isClosing) {
 				this.close();
 			} else {
-				if (closestCoord) {
-					event.lng = closestCoord[0];
-					event.lat = closestCoord[1];
+				const snappedCoordinate = this.snapCoordinate(event);
+
+				if (snappedCoordinate) {
+					event.lng = snappedCoordinate[0];
+					event.lat = snappedCoordinate[1];
 				}
 
 				const previousCoordinate =
@@ -522,8 +582,10 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 	/** @internal */
 	cleanUp() {
 		const cleanUpId = this.currentId;
+		const snappedPointId = this.snappedPointId;
 
 		this.currentId = undefined;
+		this.snappedPointId = undefined;
 		this.currentCoordinate = 0;
 		if (this.state === "drawing") {
 			this.setStarted();
@@ -532,6 +594,9 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 		try {
 			if (cleanUpId !== undefined) {
 				this.store.delete([cleanUpId]);
+			}
+			if (snappedPointId !== undefined) {
+				this.store.delete([snappedPointId]);
 			}
 			if (this.closingPoints.ids.length) {
 				this.closingPoints.delete();
@@ -572,26 +637,47 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 				styles.zIndex = 10;
 				return styles;
 			} else if (feature.geometry.type === "Point") {
+				const closingPoint =
+					feature.properties[COMMON_PROPERTIES.CLOSING_POINT];
+				const snappingPoint =
+					feature.properties[COMMON_PROPERTIES.SNAPPING_POINT];
+
 				styles.pointWidth = this.getNumericStylingValue(
-					this.styles.closingPointWidth,
+					closingPoint
+						? this.styles.closingPointWidth
+						: snappingPoint
+						? this.styles.snappingPointWidth
+						: styles.pointWidth,
 					styles.pointWidth,
 					feature,
 				);
 
 				styles.pointColor = this.getHexColorStylingValue(
-					this.styles.closingPointColor,
+					closingPoint
+						? this.styles.closingPointColor
+						: snappingPoint
+						? this.styles.snappingPointColor
+						: styles.pointColor,
 					styles.pointColor,
 					feature,
 				);
 
 				styles.pointOutlineColor = this.getHexColorStylingValue(
-					this.styles.closingPointOutlineColor,
+					closingPoint
+						? this.styles.closingPointOutlineColor
+						: snappingPoint
+						? this.styles.snappingPointOutlineColor
+						: styles.pointOutlineColor,
 					styles.pointOutlineColor,
 					feature,
 				);
 
 				styles.pointOutlineWidth = this.getNumericStylingValue(
-					this.styles.closingPointOutlineWidth,
+					closingPoint
+						? this.styles.closingPointOutlineWidth
+						: snappingPoint
+						? this.styles.snappingPointOutlineWidth
+						: 2,
 					2,
 					feature,
 				);

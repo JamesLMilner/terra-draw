@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-beta.10](https://github.com/JamesLMilner/terra-draw/compare/v1.0.0-beta.9...v1.0.0-beta.10) (2024-12-24)
+
+
+### Features
+
+* provide snapping to line as well as feature coordinates for polygon mode ([#384](https://github.com/JamesLMilner/terra-draw/issues/384)) ([4b61c82](https://github.com/JamesLMilner/terra-draw/commit/4b61c823c29280602f8eba85fe5c4ad9eefe0053))
+* visualise snapping point and allow it to be styled ([#385](https://github.com/JamesLMilner/terra-draw/issues/385)) ([5d80719](https://github.com/JamesLMilner/terra-draw/commit/5d80719fdbb124fc8aa80ac2a9aa9133680222fe))
+
+
+### Chore
+
+* remove unused great-circle-snapping.behavior.ts and test file which was unused ([#383](https://github.com/JamesLMilner/terra-draw/issues/383)) ([ef197f8](https://github.com/JamesLMilner/terra-draw/commit/ef197f80fe76e91d07fec120c25d7e3d7ed18ef9))
+
 ## [1.0.0-beta.9](https://github.com/JamesLMilner/terra-draw/compare/v1.0.0-beta.8...v1.0.0-beta.9) (2024-12-21)
 
 

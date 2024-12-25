@@ -338,6 +338,54 @@ describe("TerraDrawLineStringMode", () => {
 			expect(features[1].geometry.coordinates).toStrictEqual([2, 2]);
 		});
 
+		it("can snap from existing line once finished with snapping toCustom enabled", () => {
+			const coordinates = [
+				[5, 5],
+				[5, 5],
+				[5, 10],
+				[5, 10],
+				[10, 10],
+			];
+
+			lineStringMode = new TerraDrawLineStringMode({
+				snapping: {
+					toCustom: () => {
+						return coordinates.shift();
+					},
+				},
+			});
+
+			const mockConfig = MockModeConfig(lineStringMode.mode);
+			onChange = mockConfig.onChange;
+			onFinish = mockConfig.onFinish;
+			store = mockConfig.store;
+
+			lineStringMode.register(mockConfig);
+			lineStringMode.start();
+
+			lineStringMode.onMouseMove(MockCursorEvent({ lng: 0, lat: 0 }));
+			lineStringMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+			lineStringMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
+			lineStringMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
+
+			lineStringMode.onMouseMove(MockCursorEvent({ lng: 2, lat: 2 }));
+			lineStringMode.onClick(MockCursorEvent({ lng: 2, lat: 2 }));
+
+			lineStringMode.onClick(MockCursorEvent({ lng: 2, lat: 2 }));
+
+			expect(onFinish).toHaveBeenCalledTimes(1);
+			const features = store.copyAll();
+
+			expect(features.length).toBe(1);
+
+			expect(features[0].geometry.coordinates).toStrictEqual([
+				[5, 5],
+				[5, 10],
+				[10, 10],
+			]);
+		});
+
 		describe("validations", () => {
 			it("does create a line if it has intersections and no validation provided", () => {
 				lineStringMode = new TerraDrawLineStringMode();

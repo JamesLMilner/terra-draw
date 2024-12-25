@@ -180,8 +180,8 @@ const getModes = () => {
 		new TerraDrawPolygonMode({
 			pointerDistance: 20,
 			snapping: {
-				toLine: true,
-				toCoordinate: true,
+				toLine: false,
+				toCoordinate: false,
 			},
 			validation: (feature, { updateType }) => {
 				if (updateType === "finish" || updateType === "commit") {

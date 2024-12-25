@@ -270,7 +270,7 @@ describe("TerraDrawPolygonMode", () => {
 			expect(features.length).toBe(2);
 		});
 
-		it("can create a polygon with snapping enabled", () => {
+		it("can create a polygon with toCoordinate snapping enabled", () => {
 			polygonMode = new TerraDrawPolygonMode({
 				snapping: {
 					toCoordinate: true,
@@ -303,6 +303,65 @@ describe("TerraDrawPolygonMode", () => {
 
 			features = store.copyAll();
 			expect(features.length).toBe(2);
+		});
+
+		it("can create a polygon with toCustom snapping enabled", () => {
+			// Make the function return a set of arbitrary coordinates
+			const coordinates = [
+				[5, 5],
+				[5, 5],
+				[5, 10],
+				[5, 10],
+				[10, 10],
+				[10, 10],
+				[10, 5],
+				[10, 5],
+				[5, 5],
+				[5, 5],
+			];
+			polygonMode = new TerraDrawPolygonMode({
+				snapping: {
+					toCustom: () => {
+						const coordinate = coordinates.shift();
+						return coordinate;
+					},
+				},
+			});
+			const mockConfig = MockModeConfig(polygonMode.mode);
+			store = mockConfig.store;
+			polygonMode.register(mockConfig);
+			polygonMode.start();
+
+			polygonMode.onMouseMove(MockCursorEvent({ lng: 0, lat: 0 }));
+
+			polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+			polygonMode.onMouseMove(MockCursorEvent({ lng: 0, lat: 1 }));
+
+			polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 1 }));
+
+			polygonMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
+
+			polygonMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
+
+			polygonMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 0 }));
+
+			polygonMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
+
+			// You can't close a polygon with a snapping click, so we need to do it manually
+			polygonMode.onClick(MockCursorEvent({ lng: 5, lat: 5 }));
+
+			let features = store.copyAll();
+			expect(features.length).toBe(1);
+			expect(features[0].geometry.coordinates).toStrictEqual([
+				[
+					[5, 5],
+					[5, 10],
+					[10, 10],
+					[10, 5],
+					[5, 5],
+				],
+			]);
 		});
 
 		it("can update polygon past 3 coordinates", () => {

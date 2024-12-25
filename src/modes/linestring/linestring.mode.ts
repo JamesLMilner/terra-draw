@@ -124,7 +124,6 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 	}
 
 	private close() {
-		console.log("close", this.currentCoordinate);
 		if (this.currentId === undefined) {
 			return;
 		}
@@ -164,7 +163,6 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 			this.setStarted();
 		}
 
-		console.log("onFinish");
 		// Ensure that any listeners are triggered with the main created geometry
 		this.onFinish(finishedId, { mode: this.mode, action: "draw" });
 	}

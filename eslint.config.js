@@ -26,6 +26,7 @@ export default [
 		rules: {
 			"@typescript-eslint/no-empty-function": "warn",
 			"@typescript-eslint/no-explicit-any": "warn",
+			"no-console": process.env.CI ? "error" : "warn",
 		},
 	},
 ];

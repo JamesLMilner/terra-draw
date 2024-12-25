@@ -193,11 +193,13 @@ test.describe("linestring mode", () => {
 		test(`mode can set with snapping enabled used to create multiple linestrings${name}`, async ({
 			page,
 		}) => {
+			const configQueryParam: TestConfigOptions[] = config
+				? [...config, "snappingCoordinate"]
+				: ["snappingCoordinate"];
+
 			const mapDiv = await setupMap({
 				page,
-				configQueryParam: config
-					? [...config, "snappingCoordinate"]
-					: undefined,
+				configQueryParam,
 			});
 			await changeMode({ page, mode });
 

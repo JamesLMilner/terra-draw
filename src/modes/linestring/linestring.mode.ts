@@ -60,11 +60,14 @@ interface InertCoordinates {
 	value: number;
 }
 
+interface Snapping {
+	toCoordinate?: boolean;
+	toCustom?: (event: TerraDrawMouseEvent) => Position | undefined;
+}
+
 interface TerraDrawLineStringModeOptions<T extends CustomStyling>
 	extends BaseModeOptions<T> {
-	snapping?: {
-		toCoordinate?: boolean;
-	};
+	snapping?: Snapping;
 	pointerDistance?: number;
 	keyEvents?: TerraDrawLineStringModeKeyEvents | null;
 	cursors?: Cursors;
@@ -78,7 +81,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 	private currentId: FeatureId | undefined;
 	private closingPointId: FeatureId | undefined;
 	private keyEvents: TerraDrawLineStringModeKeyEvents;
-	private snappingEnabled: { toCoordinate?: boolean } | undefined;
+	private snapping: Snapping | undefined;
 	private cursors: Required<Cursors>;
 	private mouseMove = false;
 	private insertCoordinates: InertCoordinates | undefined;
@@ -103,8 +106,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 			this.cursors = defaultCursors;
 		}
 
-		this.snappingEnabled =
-			options && options.snapping ? options.snapping : undefined;
+		this.snapping = options && options.snapping ? options.snapping : undefined;
 
 		// We want to have some defaults, but also allow key bindings
 		// to be explicitly turned off
@@ -387,12 +389,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 		this.mouseMove = true;
 		this.setCursor(this.cursors.start);
 
-		let snappedCoordinate: Position | undefined;
-		if (this.snappingEnabled) {
-			snappedCoordinate = this.currentId
-				? this.coordinateSnapping.getSnappableCoordinate(event, this.currentId)
-				: this.coordinateSnapping.getSnappableCoordinateFirstClick(event);
-		}
+		const snappedCoordinate = this.snapCoordinate(event);
 
 		if (snappedCoordinate) {
 			if (this.snappedPointId) {
@@ -508,27 +505,17 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 			this.snappedPointId = undefined;
 		}
 
+		const snappedCoordinate = this.snapCoordinate(event);
+		const updatedCoordinate = snappedCoordinate
+			? snappedCoordinate
+			: [event.lng, event.lat];
+
 		if (this.currentCoordinate === 0) {
-			const snappedCoord =
-				this.snappingEnabled &&
-				this.coordinateSnapping.getSnappableCoordinateFirstClick(event);
-			const updatedCoord = snappedCoord ? snappedCoord : [event.lng, event.lat];
-
-			this.createLine(updatedCoord);
+			this.createLine(updatedCoordinate);
 		} else if (this.currentCoordinate === 1 && this.currentId) {
-			const snappedCoord =
-				this.snappingEnabled &&
-				this.coordinateSnapping.getSnappableCoordinate(event, this.currentId);
-			const updatedCoord = snappedCoord ? snappedCoord : [event.lng, event.lat];
-
-			this.firstUpdateToLine(updatedCoord);
+			this.firstUpdateToLine(updatedCoordinate);
 		} else if (this.currentId) {
-			const snappedCoord =
-				this.snappingEnabled &&
-				this.coordinateSnapping.getSnappableCoordinate(event, this.currentId);
-			const updatedCoord = snappedCoord ? snappedCoord : [event.lng, event.lat];
-
-			this.updateToLine(updatedCoord, {
+			this.updateToLine(updatedCoordinate, {
 				x: event.containerX,
 				y: event.containerY,
 			});
@@ -661,5 +648,27 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 		return this.validateModeFeature(feature, (baseValidatedFeature) =>
 			ValidateLineStringFeature(baseValidatedFeature, this.coordinatePrecision),
 		);
+	}
+
+	private snapCoordinate(event: TerraDrawMouseEvent) {
+		let snappedCoordinate: Position | undefined;
+
+		if (this.snapping?.toCoordinate) {
+			if (this.currentId) {
+				snappedCoordinate = this.coordinateSnapping.getSnappableCoordinate(
+					event,
+					this.currentId,
+				);
+			} else {
+				snappedCoordinate =
+					this.coordinateSnapping.getSnappableCoordinateFirstClick(event);
+			}
+		}
+
+		if (this.snapping?.toCustom) {
+			snappedCoordinate = this.snapping.toCustom(event);
+		}
+
+		return snappedCoordinate;
 	}
 }

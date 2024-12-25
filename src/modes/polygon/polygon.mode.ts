@@ -55,12 +55,15 @@ interface Cursors {
 	close?: Cursor;
 }
 
+interface Snapping {
+	toLine?: boolean;
+	toCoordinate?: boolean;
+	toCustom?: (event: TerraDrawMouseEvent) => Position | undefined;
+}
+
 interface TerraDrawPolygonModeOptions<T extends CustomStyling>
 	extends BaseModeOptions<T> {
-	snapping?: {
-		toLine?: boolean;
-		toCoordinate?: boolean;
-	};
+	snapping?: Snapping;
 	pointerDistance?: number;
 	keyEvents?: TerraDrawPolygonModeKeyEvents | null;
 	cursors?: Cursors;
@@ -72,12 +75,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 	private currentCoordinate = 0;
 	private currentId: FeatureId | undefined;
 	private keyEvents: TerraDrawPolygonModeKeyEvents;
-	private snappingEnabled:
-		| {
-				toLine?: boolean;
-				toCoordinate?: boolean;
-		  }
-		| undefined;
+	private snapping: Snapping | undefined;
 
 	private snappedPointId: FeatureId | undefined;
 
@@ -103,8 +101,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 			this.cursors = defaultCursors;
 		}
 
-		this.snappingEnabled =
-			options && options.snapping ? options.snapping : undefined;
+		this.snapping = options && options.snapping ? options.snapping : undefined;
 
 		// We want to have some defaults, but also allow key bindings
 		// to be explicitly turned off
@@ -335,7 +332,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 	private snapCoordinate(event: TerraDrawMouseEvent): undefined | Position {
 		let snappedCoordinate: Position | undefined = undefined;
 
-		if (this.snappingEnabled?.toLine) {
+		if (this.snapping?.toLine) {
 			let snapped: Position | undefined;
 			if (this.currentId) {
 				snapped = this.lineSnapping.getSnappableCoordinate(
@@ -351,7 +348,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 			}
 		}
 
-		if (this.snappingEnabled?.toCoordinate) {
+		if (this.snapping?.toCoordinate) {
 			let snapped: Position | undefined = undefined;
 			if (this.currentId) {
 				snapped = this.coordinateSnapping.getSnappableCoordinate(
@@ -366,6 +363,10 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 			if (snapped) {
 				snappedCoordinate = snapped;
 			}
+		}
+
+		if (this.snapping?.toCustom) {
+			snappedCoordinate = this.snapping.toCustom(event);
 		}
 
 		return snappedCoordinate;

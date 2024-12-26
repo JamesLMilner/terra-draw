@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0-beta.11](https://github.com/JamesLMilner/terra-draw/compare/v1.0.0-beta.10...v1.0.0-beta.11) (2024-12-26)
+
+
+### Features
+
+* allow snapping to custom positions with toCustom snapping option ([#388](https://github.com/JamesLMilner/terra-draw/issues/388)) ([78a8b3a](https://github.com/JamesLMilner/terra-draw/commit/78a8b3a4599dbe025a46658cacdda12dbf9a6f68))
+
+
+### Chore
+
+* lint error in CI if console is called ([#389](https://github.com/JamesLMilner/terra-draw/issues/389)) ([9d6fa3e](https://github.com/JamesLMilner/terra-draw/commit/9d6fa3efb49399fc81e90a54e5422e712fd0c772))
+
 ## [1.0.0-beta.10](https://github.com/JamesLMilner/terra-draw/compare/v1.0.0-beta.9...v1.0.0-beta.10) (2024-12-24)
 
 

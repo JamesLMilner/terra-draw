@@ -57,6 +57,7 @@ import { TerraDrawSensorMode } from "./modes/sensor/sensor.mode";
 import * as TerraDrawExtend from "./extend";
 import { hasModeProperty } from "./store/store-feature-validation";
 import { ValidationReasons } from "./validation-reasons";
+import type { BaseAdapterConfig } from "./adapters/common/base.adapter";
 
 type FinishListener = (id: FeatureId, context: OnFinishContext) => void;
 type ChangeListener = (ids: FeatureId[], type: string) => void;
@@ -830,6 +831,7 @@ export {
 	Unproject,
 	SetCursor,
 	GetLngLatFromEvent,
+	type BaseAdapterConfig,
 
 	// Validations
 	ValidateMinAreaSquareMeters,

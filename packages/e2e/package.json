@@ -1,0 +1,32 @@
+{
+	"name": "terra-draw-e2e",
+	"version": "0.0.1",
+	"private": true,
+	"description": "The E2E test suite for Terra Draw",
+	"main": "index.ts",
+	"scripts": {
+		"build": "webpack",
+		"serve": "webpack serve",
+		"test": "playwright test --workers=1",
+		"test:help": "playwright test --help",
+		"test:ui": "playwright test --ui --headed"
+	},
+	"author": "James Milner",
+	"license": "MIT",
+	"dependencies": {
+		"leaflet": "1.9.4",
+		"terra-draw": "1.0.0-beta.12",
+		"terra-draw-leaflet-adapter": "1.0.0-beta.12"
+	},
+	"devDependencies": {
+		"@playwright/test": "^1.49.1",
+		"@types/jest": "29.5.12",
+		"@types/node": "20.10.5",
+		"dotenv-webpack": "8.0.0",
+		"ts-loader": "9.5.1",
+		"typescript": "5.6.3",
+		"webpack": "5.73.0",
+		"webpack-cli": "4.10.0",
+		"webpack-dev-server": "4.11.1"
+	}
+}

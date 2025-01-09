@@ -1,0 +1,50 @@
+{
+	"name": "terra-draw-mapbox-gl-adapter",
+	"version": "1.0.0-beta.12",
+	"description": "Terra Draw Adapter for Mapbox GL JS",
+	"peerDependencies": {
+		"terra-draw": "^1.0.0-beta.12",
+		"mapbox-gl": "^3.9.2"
+	},
+	"scripts": {
+		"release": "commit-and-tag-version .versionrc.cjs",
+		"release:dryrun": "commit-and-tag-version .versionrc.cjs -t terra-draw-google-mapbox-gl-adapter@ --dry-run",
+		"build": "microbundle",
+		"watch": "microbundle --watch --format modern",
+		"unused": "knip",
+		"test": "jest --config jest.config.ts",
+		"test:coverage": "jest --config jest.config.ts --coverage",
+		"test:nocheck": "jest --config jest.nocheck.config.ts",
+		"test:nocheck:coverage": "jest --config jest.nocheck.config.ts --coverage",
+		"lint": "eslint src/",
+		"lint:quiet": "eslint --quiet src/",
+		"lint:fix": "eslint --fix src/",
+		"lint:fix:quiet": "eslint --fix --quiet src/",
+		"format": "prettier --ignore-path .gitignore --write \"**/*.+(js|ts|json)\"",
+		"format:quiet": "prettier --ignore-path .gitignore --write \"**/*.+(js|ts|json)\" --log-level=silent"
+	},
+	"type": "module",
+	"source": "src/terra-draw-mapbox-gl-adapter.ts",
+	"exports": {
+		"types": "./dist/terra-draw-mapbox-gl-adapter.d.ts",
+		"require": "./dist/terra-draw-mapbox-gl-adapter.cjs",
+		"default": "./dist/terra-draw-mapbox-gl-adapter.modern.js"
+	},
+	"types": "./dist/terra-draw-mapbox-gl-adapter.d.ts",
+	"main": "./dist/terra-draw-mapbox-gl-adapter.cjs",
+	"module": "./dist/terra-draw-mapbox-gl-adapter.module.js",
+	"unpkg": "./dist/terra-draw-mapbox-gl-adapter.umd.js",
+	"author": "James Milner",
+	"license": "MIT",
+	"repository": "JamesLMilner/terra-draw",
+	"keywords": [
+		"map",
+		"drawing",
+		"draw",
+		"map drawing",
+		"geometry",
+		"mapbox",
+		"mapboxgl"
+	],
+	"sideEffects": false
+}

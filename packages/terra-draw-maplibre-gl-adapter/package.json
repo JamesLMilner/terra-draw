@@ -3,7 +3,7 @@
 	"version": "1.0.0-beta.12",
 	"description": "Terra Draw Adapter for Maplibre GL JS",
 	"peerDependencies": {
-		"terra-draw": "^1.0.0-beta.12",
+		"terra-draw": "^1.0.0",
 		"maplibre-gl": ">=4"
 	},
 	"scripts": {

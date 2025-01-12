@@ -3,7 +3,7 @@
 	"version": "1.0.0",
 	"description": "Frictionless map drawing across mapping provider",
 	"scripts": {
-		"release": "commit-and-tag-version .versionrc.cjs",
+		"release": "commit-and-tag-version .versionrc.cjs -t terra-draw@",
 		"release:dryrun": "commit-and-tag-version .versionrc.cjs -t terra-draw@ --dry-run",
 		"build": "microbundle",
 		"watch": "microbundle --watch --format modern",

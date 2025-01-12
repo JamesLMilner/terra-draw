@@ -1,13 +1,13 @@
 {
 	"name": "terra-draw-arcgis-adapter",
-	"version": "1.0.0-beta.12",
+	"version": "1.0.0",
 	"description": "Terra Draw Adapter for ArcGIS API for JavaScript",
 	"peerDependencies": {
 		"terra-draw": "^1.0.0",
 		"@arcgis/core": "^4.31.6"
 	},
 	"scripts": {
-		"release": "commit-and-tag-version .versionrc.cjs",
+		"release": "commit-and-tag-version .versionrc.cjs -t terra-draw-arcgis-adapter@",
 		"release:dryrun": "commit-and-tag-version .versionrc.cjs -t terra-draw-arcgis-adapter@ --dry-run",
 		"build": "microbundle",
 		"watch": "microbundle --watch --format modern",

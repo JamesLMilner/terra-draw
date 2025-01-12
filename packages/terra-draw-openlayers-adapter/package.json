@@ -1,14 +1,14 @@
 {
 	"name": "terra-draw-openlayers-adapter",
-	"version": "1.0.0-beta.12",
+	"version": "1.0.0",
 	"description": "Terra Draw Adapter to OpenLayers",
 	"peerDependencies": {
 		"terra-draw": "1.0.0",
 		"ol": "^10.3.1"
 	},
 	"scripts": {
-		"release": "commit-and-tag-version .versionrc.cjs",
-		"release:dryrun": "commit-and-tag-version .versionrc.cjs -t terra-draw-google-openlayers-adapter@ --dry-run",
+		"release": "commit-and-tag-version .versionrc.cjs -t terra-draw-openlayers-adapter@",
+		"release:dryrun": "commit-and-tag-version .versionrc.cjs -t terra-draw-openlayers-adapter@ --dry-run",
 		"build": "microbundle",
 		"watch": "microbundle --watch --format modern",
 		"unused": "knip",

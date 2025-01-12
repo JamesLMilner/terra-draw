@@ -1,13 +1,13 @@
 {
 	"name": "terra-draw-leaflet-adapter",
-	"version": "1.0.0-beta.12",
+	"version": "1.0.0",
 	"description": "Terra Draw Adapter for Leaflet.js",
 	"peerDependencies": {
 		"terra-draw": "^1.0.0",
 		"leaflet": "^1.9.4"
 	},
 	"scripts": {
-		"release": "commit-and-tag-version .versionrc.cjs",
+		"release": "commit-and-tag-version .versionrc.cjs -t terra-draw-leaflet-adapter@",
 		"release:dryrun": "commit-and-tag-version .versionrc.cjs -t terra-draw-leaflet-adapter@ --dry-run",
 		"build": "microbundle",
 		"watch": "microbundle --watch --format modern",

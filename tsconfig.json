@@ -1,28 +1,49 @@
 {
-	"compilerOptions": {
-		"outDir": "./dist/",
-		"strict": true,
-		"module": "es6",
-		"target": "es6",
-		"jsx": "react",
-		"sourceMap": true,
-		"allowJs": true,
-		"moduleResolution": "node",
-		"allowSyntheticDefaultImports": true
-	},
+	"extends": "./tsconfig.base.json",
+	"files": [],
+	"references": [
+		{
+			"path": "./packages/terra-draw"
+		},
+		{
+			"path": "./packages/terra-draw-arcgis-adapter"
+		},
+		{
+			"path": "./packages/terra-draw-google-maps-adapter"
+		},
+		{
+			"path": "./packages/terra-draw-leaflet-adapter"
+		},
+		{
+			"path": "./packages/terra-draw-mapbox-gl-adapter"
+		},
+		{
+			"path": "./packages/terra-draw-maplibre-gl-adapter"
+		},
+		{
+			"path": "./packages/terra-draw-openlayers-adapter"
+		}
+	],
 	"typedocOptions": {
-		"entryPoints": ["src/terra-draw.ts"],
-		"exclude": ["src/geometry/**/*.ts", "src/test/**/*.ts", "src/util/**/*.ts"],
+		"entryPoints": [
+			"packages/terra-draw/src/terra-draw.ts",
+			"packages/terra-draw-arcgis-adapter/src/terra-draw-arcgis-adapter.ts",
+			"packages/terra-draw-google-maps-adapter/src/terra-draw-google-maps-adapter.ts",
+			"packages/terra-draw-leaflet-adapter/src/terra-draw-leaflet-adapter.ts",
+			"packages/terra-draw-mapbox-gl-adapter/src/terra-draw-mapbox-gl-adapter.ts",
+			"packages/terra-draw-maplibre-gl-adapter/src/terra-draw-maplibre-gl-adapter.ts",
+			"packages/terra-draw-openlayers-adapter/src/terra-draw-openlayers-adapter.ts"
+		],
+		"excludeExternals": true,
+		"exclude": [
+			"packages/development/",
+			"packages/e2e",
+			"packages/terra-draw/src/geometry/**/*.ts",
+			"packages/terra-draw/src/test/**/*.ts",
+			"packages/terra-draw/src/util/**/*.ts"
+		],
 		"out": "docs",
 		"skipErrorChecking": true,
 		"sourceLinkExternal": true
-	},
-	"exclude": [
-		"node_modules/",
-		"guides/",
-		"docs/",
-		"dist/",
-		"development/dist",
-		"development/node_modules"
-	]
+	}
 }

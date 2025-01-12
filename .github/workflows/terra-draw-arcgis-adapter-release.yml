@@ -1,0 +1,55 @@
+name: terra-draw-arcgis-adapter Release
+
+permissions:
+  contents: write
+
+on: workflow_dispatch
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.TERRA_DRAW_PAT }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22.x"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Install
+        run: npm ci
+
+      - name: Update Docs
+        run: npm run docs
+
+      - name: Run terra-draw build
+        working-directory: ./packages/terra-draw
+        run: npm run build
+
+      - name: Run build
+        working-directory: ./packages/terra-draw-arcgis-adapter
+        run: npm run build
+
+      - name: Set git credentials
+        run: |
+          git config --global user.email "terradraw@githubactions.com"
+          git config --global user.name "James Milner"
+
+      - name: Release
+        working-directory: ./packages/terra-draw-arcgis-adapter
+        run: npm run release
+
+      - name: Push upstream
+        run: git push origin main
+
+      - name: Push tags upstream
+        run: git push origin main --tags
+
+      - run: npm publish
+        working-directory: ./packages/terra-draw-arcgis-adapter
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

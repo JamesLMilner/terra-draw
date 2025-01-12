@@ -48,8 +48,20 @@ jobs:
         run: npm install
       - name: Ensure no package-lock.json changes
         run: git diff --exit-code
-      - name: Build
-        run: npm run build
+      - name: Build terra-draw
+        run: cd packages/terra-draw && npm run build
+      - name: Build terra-draw-arcgis-adapter
+        run: cd packages/terra-draw-arcgis-adapter && npm run build
+      - name: Build terra-draw-google-maps-adapter
+        run: cd packages/terra-draw-google-maps-adapter && npm run build
+      - name: Build terra-draw-leaflet-adapter
+        run: cd packages/terra-draw-leaflet-adapter && npm run build
+      - name: Build terra-draw-mapbox-gl-adapter
+        run: cd packages/terra-draw-mapbox-gl-adapter && npm run build
+      - name: Build terra-draw-maplibre-gl-adapter
+        run: cd packages/terra-draw-maplibre-gl-adapter && npm run build
+      - name: Build terra-draw-openlayers-adapter
+        run: cd packages/terra-draw-openlayers-adapter && npm run build
 
   unit-tests:
     runs-on: ubuntu-latest
@@ -61,6 +73,8 @@ jobs:
           node-version: "22.x"
       - name: Install Parent Folder
         run: npm install
+      - name: Build terra-draw
+        run: cd packages/terra-draw && npm run build
       - name: Test
         run: npm run test
         env:
@@ -76,10 +90,14 @@ jobs:
         node-version: "22.x"
     - name: Install parent directory
       run: npm install
+    - name: Build terra-draw
+      run: cd packages/terra-draw && npm run build
+    - name: Build terra-draw-leaflet-adapter
+      run: cd packages/terra-draw-leaflet-adapter && npm run build
     - name: Get installed Playwright version
       id: playwright-version
-      working-directory: ./e2e
-      run: echo "PLAYWRIGHT_VERSION=$(node -e "console.log(require('./package-lock.json').dependencies['@playwright/test'].version)")" >> $GITHUB_ENV
+      working-directory: ./packages/e2e
+      run: echo "PLAYWRIGHT_VERSION=$(node -e "console.log(require('./package-lock.json').packages[''].devDependencies['@playwright/test'])")" >> $GITHUB_ENV
     - name: Cache playwright binaries
       uses: actions/cache@v4
       id: playwright-cache
@@ -88,14 +106,14 @@ jobs:
           ~/.cache/ms-playwright
         key: ${{ runner.os }}-playwright-${{ env.PLAYWRIGHT_VERSION }}
     - name: Install e2e test
-      working-directory: ./e2e
+      working-directory: ./packages/e2e
       run: npm install
     - run: npx playwright install --with-deps
-      working-directory: ./e2e
+      working-directory: ./packages/e2e
       if: steps.playwright-cache.outputs.cache-hit != 'true'
     - run: npx playwright install-deps
-      working-directory: ./e2e
+      working-directory: ./packages/e2e
       if: steps.playwright-cache.outputs.cache-hit != 'true'
     - name: Run Playwright tests
-      working-directory: ./e2e
+      working-directory: ./packages/e2e
       run: npm run test

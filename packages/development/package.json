@@ -1,0 +1,31 @@
+{
+	"name": "terra-draw-development",
+	"version": "0.0.1",
+	"private": true,
+	"description": "An example of how to use Terra Draw with different drawing libraries",
+	"main": "index.ts",
+	"scripts": {
+		"build": "webpack",
+		"serve": "webpack serve"
+	},
+	"author": "James Milner",
+	"license": "MIT",
+	"dependencies": {
+		"terra-draw": "1.0.0",
+		"leaflet": "1.9.4",
+		"maplibre-gl": "3.6.2",
+		"@arcgis/core": "4.31.6",
+		"mapbox-gl": "3.9.2",
+		"ol": "10.3.1",
+		"google-maps": "4.1.0",
+		"@googlemaps/js-api-loader": "1.14.3",
+		"@types/leaflet": "1.9.15"
+	},
+	"devDependencies": {
+		"dotenv-webpack": "8.0.0",
+		"typescript": "5.6.3",
+		"webpack": "5.73.0",
+		"webpack-cli": "4.10.0",
+		"webpack-dev-server": "4.11.1"
+	}
+}

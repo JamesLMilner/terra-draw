@@ -1,0 +1,52 @@
+{
+	"name": "terra-draw-google-maps-adapter",
+	"version": "1.0.0",
+	"description": "Terra Draw Adapter for Google Maps JavaScript API",
+	"peerDependencies": {
+		"terra-draw": "^1.0.0",
+		"@googlemaps/js-api-loader": "^1.14.3"
+	},
+	"devDependencies": {
+		"@types/google.maps": "^3.49.2"
+	},
+	"scripts": {
+		"release": "commit-and-tag-version .versionrc.cjs -t terra-draw-google-maps-adapter@",
+		"release:dryrun": "commit-and-tag-version .versionrc.cjs -t terra-draw-google-maps-adapter@ --dry-run",
+		"build": "microbundle",
+		"watch": "microbundle --watch --format modern",
+		"unused": "knip",
+		"test": "jest --config jest.config.ts",
+		"test:coverage": "jest --config jest.config.ts --coverage",
+		"test:nocheck": "jest --config jest.nocheck.config.ts",
+		"test:nocheck:coverage": "jest --config jest.nocheck.config.ts --coverage",
+		"lint": "eslint src/",
+		"lint:quiet": "eslint --quiet src/",
+		"lint:fix": "eslint --fix src/",
+		"lint:fix:quiet": "eslint --fix --quiet src/",
+		"format": "prettier --ignore-path .gitignore --write \"**/*.+(js|ts|json)\"",
+		"format:quiet": "prettier --ignore-path .gitignore --write \"**/*.+(js|ts|json)\" --log-level=silent"
+	},
+	"type": "module",
+	"source": "src/terra-draw-google-maps-adapter.ts",
+	"exports": {
+		"types": "./dist/terra-draw-google-maps-adapter.d.ts",
+		"require": "./dist/terra-draw-google-maps-adapter.cjs",
+		"default": "./dist/terra-draw-google-maps-adapter.modern.js"
+	},
+	"types": "./dist/terra-draw-google-maps-adapter.d.ts",
+	"main": "./dist/terra-draw-google-maps-adapter.cjs",
+	"module": "./dist/terra-draw-google-maps-adapter.module.js",
+	"unpkg": "./dist/terra-draw-google-maps-adapter.umd.js",
+	"author": "James Milner",
+	"license": "MIT",
+	"repository": "JamesLMilner/terra-draw",
+	"keywords": [
+		"map",
+		"drawing",
+		"draw",
+		"map drawing",
+		"geometry",
+		"google maps"
+	],
+	"sideEffects": false
+}

@@ -155,10 +155,10 @@ window.translations = {
 					return e === t.Set.complete
 						? t.Set.complete
 						: e === t.Set.empty
-						? this
-						: new t.Set(
-								Object.keys(this.elements).concat(Object.keys(e.elements)),
-						  );
+							? this
+							: new t.Set(
+									Object.keys(this.elements).concat(Object.keys(e.elements)),
+								);
 				}),
 				(t.idf = function (e, n) {
 					var r = 0;
@@ -356,8 +356,8 @@ window.translations = {
 							a < l
 								? (u += 2)
 								: a > l
-								? (d += 2)
-								: a == l && ((n += r[u + 1] * i[d + 1]), (u += 2), (d += 2));
+									? (d += 2)
+									: a == l && ((n += r[u + 1] * i[d + 1]), (u += 2), (d += 2));
 					return n;
 				}),
 				(t.Vector.prototype.similarity = function (e) {
@@ -467,8 +467,8 @@ window.translations = {
 									x.test(c)
 										? (c = c + "e")
 										: O.test(c)
-										? ((h = w), (c = c.replace(h, "")))
-										: M.test(c) && (c = c + "e"));
+											? ((h = w), (c = c.replace(h, "")))
+											: M.test(c) && (c = c + "e"));
 						}
 						if (((h = A), h.test(c))) {
 							var E = h.exec(c);
@@ -813,8 +813,8 @@ window.translations = {
 									p in r.output.edges
 										? ((f = r.output.edges[p]), (f.final = f.final || L))
 										: ((f = new t.TokenSet()),
-										  (f.final = L),
-										  (r.output.edges[p] = f)),
+											(f.final = L),
+											(r.output.edges[p] = f)),
 										i.push({ qNode: g, output: f, node: b });
 								}
 							}
@@ -1178,7 +1178,7 @@ window.translations = {
 								_;
 							i[f] === void 0
 								? ((w = t.idf(this.invertedIndex[f], this.documentCount)),
-								  (i[f] = w))
+									(i[f] = w))
 								: (w = i[f]),
 								(k =
 									(w * ((this._k1 + 1) * y)) /
@@ -1248,7 +1248,7 @@ window.translations = {
 									? (this.metadata[i][a][d] = e.metadata[i][a][d])
 									: (this.metadata[i][a][d] = this.metadata[i][a][d].concat(
 											e.metadata[i][a][d],
-									  ));
+										));
 							}
 						}
 					}
@@ -1638,8 +1638,8 @@ window.translations = {
 					typeof define == "function" && define.amd
 						? define(n)
 						: typeof ae == "object"
-						? (le.exports = n())
-						: (e.lunr = n());
+							? (le.exports = n())
+							: (e.lunr = n());
 				})(this, function () {
 					return t;
 				});
@@ -1824,8 +1824,8 @@ window.translations = {
 				i.key == "Enter"
 					? Be(e, t)
 					: i.key == "ArrowUp"
-					? (de(e, n, -1), i.preventDefault())
-					: i.key === "ArrowDown" && (de(e, n, 1), i.preventDefault());
+						? (de(e, n, -1), i.preventDefault())
+						: i.key === "ArrowDown" && (de(e, n, 1), i.preventDefault());
 			}),
 			document.body.addEventListener("keypress", (i) => {
 				i.altKey ||
@@ -2148,7 +2148,12 @@ window.translations = {
 				t.kind &&
 					(r.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" class="tsd-kind-icon"><use href="#icon-${t.kind}"></use></svg>`),
 				(r.appendChild(document.createElement("span")).textContent = t.text);
-		} else e.appendChild(document.createElement("span")).textContent = t.text;
+		} else {
+			let r = e.appendChild(document.createElement("span"));
+			(r.innerHTML =
+				'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" class="tsd-kind-icon"><use href="#icon-folder"></use></svg>'),
+				(r.appendChild(document.createElement("span")).textContent = t.text);
+		}
 	}
 	G(X, "a[data-toggle]");
 	G(Z, ".tsd-accordion");

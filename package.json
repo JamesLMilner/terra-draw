@@ -1,84 +1,49 @@
 {
-	"name": "terra-draw",
-	"version": "1.0.0-beta.11",
-	"description": "Frictionless map drawing across mapping provider",
+	"name": "terra-draw-monorepo",
+	"version": "1.0.0",
+	"description": "The monorepo for all core Terra Draw packages",
+	"private": true,
+	"workspaces": [
+		"packages/*"
+	],
 	"scripts": {
 		"docs": "typedoc",
 		"docs:serve": "serve ./docs",
-		"release:beta:increment": "standard-version --prerelease beta",
-		"release:beta:changelog": "tsx ./scripts/changelog-valid.ts",
-		"release:beta:next": "tsx ./scripts/next-beta-version.ts",
-		"build": "microbundle",
-		"watch": "microbundle --watch --format modern",
+		"prepare": "husky install",
 		"unused": "knip",
+		"lint": "eslint --config eslint.config.mjs",
+		"lint:quiet": "eslint --quiet --config eslint.config.mjs",
+		"lint:fix": "eslint --fix --config eslint.config.mjs",
+		"lint:fix:quiet": "eslint --fix --quiet --config eslint.config.mjs",
+		"format": "prettier --ignore-path .gitignore --write \"**/*.+(js|ts|json)\"",
+		"format:quiet": "prettier --ignore-path .gitignore --write \"**/*.+(js|ts|json)\" --log-level=silent",
 		"test": "jest --config jest.config.ts",
 		"test:coverage": "jest --config jest.config.ts --coverage",
 		"test:nocheck": "jest --config jest.nocheck.config.ts",
-		"test:nocheck:coverage": "jest --config jest.nocheck.config.ts --coverage",
-		"lint": "eslint src/",
-		"lint:quiet": "eslint --quiet src/",
-		"lint:fix": "eslint --fix src/",
-		"lint:fix:quiet": "eslint --fix --quiet src/",
-		"format": "prettier --ignore-path .gitignore --write \"**/*.+(js|ts|json)\"",
-		"format:quiet": "prettier --ignore-path .gitignore --write \"**/*.+(js|ts|json)\" --log-level=silent",
-		"prepare": "husky install"
+		"test:nocheck:coverage": "jest --config jest.nocheck.config.ts --coverage"
 	},
-	"type": "module",
-	"source": "src/terra-draw.ts",
-	"exports": {
-		"types": "./dist/terra-draw.d.ts",
-		"require": "./dist/terra-draw.cjs",
-		"default": "./dist/terra-draw.modern.js"
-	},
-	"types": "./dist/terra-draw.d.ts",
-	"main": "./dist/terra-draw.cjs",
-	"module": "./dist/terra-draw.module.js",
-	"unpkg": "./dist/terra-draw.umd.js",
-	"author": "James Milner",
-	"license": "MIT",
 	"repository": "JamesLMilner/terra-draw",
-	"keywords": [
-		"map",
-		"drawing",
-		"draw",
-		"map drawing",
-		"geometry",
-		"leaflet",
-		"leafletjs",
-		"mapbox",
-		"mapboxgl",
-		"google maps",
-		"openlayers",
-		"maplibre"
-	],
 	"devDependencies": {
-		"@arcgis/core": "4.27.6",
 		"@commitlint/cli": "17.1.2",
 		"@commitlint/config-conventional": "17.1.0",
-		"@googlemaps/js-api-loader": "1.14.3",
+		"@eslint/json": "^0.9.0",
+		"@eslint/markdown": "^6.2.1",
 		"@swc/jest": "0.2.36",
 		"@types/geojson": "7946.0.8",
-		"@types/google.maps": "3.49.2",
 		"@types/jest": "29.5.12",
-		"@types/leaflet": "1.9.12",
-		"@types/mapbox-gl": "2.7.3",
 		"@types/rbush": "3.0.0",
 		"@typescript-eslint/eslint-plugin": "8.17.0",
 		"@typescript-eslint/parser": "8.17.0",
-		"eslint": "9.1.0",
+		"commit-and-tag-version": "^12.5.0",
+		"eslint": "9.17.0",
 		"eslint-config-prettier": "9.1.0",
 		"eslint-plugin-prettier": "5.2.1",
 		"husky": "7.0.0",
 		"jest": "29.7.0",
 		"jest-environment-jsdom": "29.7.0",
 		"knip": "^5.30.2",
-		"leaflet": "^1.9.4",
-		"mapbox-gl": "2.13.0",
-		"maplibre-gl": "3.2.0",
 		"microbundle": "0.15.0",
-		"ol": "10.0.0",
-		"serve": "14.1.2",
-		"standard-version": "9.5.0",
+		"serve": "^14.2.4",
 		"ts-jest": "29.1.2",
 		"ts-loader": "9.5.1",
 		"tsx": "4.7.2",
@@ -88,69 +53,56 @@
 	"commitlint": {
 		"extends": [
 			"@commitlint/config-conventional"
-		]
+		],
+		"rules": {
+			"scope-empty": [
+				2,
+				"never"
+			],
+			"scope-enum": [
+				2,
+				"always",
+				[
+					"terra-draw",
+					"terra-draw-arcgis-adapter",
+					"terra-draw-google-maps-adapter",
+					"terra-draw-leaflet-adapter",
+					"terra-draw-mapbox-gl-adapter",
+					"terra-draw-maplibre-gl-adapter",
+					"terra-draw-openlayers-adapter"
+				]
+			]
+		}
 	},
 	"prettier": {
 		"printWidth": 80,
 		"semi": true,
 		"useTabs": true
 	},
-	"standard-version": {
-		"types": [
-			{
-				"type": "feat",
-				"section": "Features"
-			},
-			{
-				"type": "fix",
-				"section": "Bug Fixes"
-			},
-			{
-				"type": "docs",
-				"section": "Documentation"
-			},
-			{
-				"type": "style",
-				"section": "Styling"
-			},
-			{
-				"type": "refactor",
-				"section": "Refactors"
-			},
-			{
-				"type": "perf",
-				"section": "Performance"
-			},
-			{
-				"type": "test",
-				"section": "Tests"
-			},
-			{
-				"type": "build",
-				"section": "Build System"
-			},
-			{
-				"type": "ci",
-				"section": "CI"
-			},
-			{
-				"type": "chore",
-				"section": "Chore"
-			},
-			{
-				"type": "revert",
-				"section": "Reverts"
-			}
-		]
-	},
-	"sideEffects": false,
 	"knip": {
 		"$schema": "https://unpkg.com/knip@5/schema.json",
 		"entry": [
-			"src/terra-draw.ts"
+			"packages/terra-draw/src/terra-draw.ts",
+			"packages/terra-draw-arcgis-adapter/src/terra-draw-arcgis-adapter.ts",
+			"packages/terra-draw-google-maps-adapter/src/terra-draw-google-maps-adapter.ts",
+			"packages/terra-draw-leaflet-adapter/src/terra-draw-leaflet-adapter.ts",
+			"packages/terra-draw-mapbox-gl-adapter/src/terra-draw-mapbox-gl-adapter.ts",
+			"packages/terra-draw-maplibre-gl-adapter/src/terra-draw-maplibre-gl-adapter.ts",
+			"packages/terra-draw-openlayers-adapter/src/terra-draw-openlayers-adapter.ts"
 		],
 		"project": [
-			"src/**/*.ts"
+			"packages/terra-draw/src/**/*.ts",
+			"packages/terra-draw-arcgis-adapter/src/**/*.ts",
+			"packages/terra-draw-google-maps-adapter/src/**/*.ts",
+			"packages/terra-draw-leaflet-adapter/src/**/*.ts",
+			"packages/terra-draw-mapbox-gl-adapter/src/**/*.ts",
+			"packages/terra-draw-maplibre-gl-adapter/src/**/*.ts",
+			"packages/terra-draw-openlayers-adapter/src/**/*.ts"
+		],
+		"ignore": [
+			"**/jest.config.ts",
+			"**/jest.nocheck.config.ts",
+			"**/.versionrc.cjs"
 		],
 		"include": [
 			"files",

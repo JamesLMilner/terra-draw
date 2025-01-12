@@ -1,0 +1,45 @@
+name: terra-draw-mapbox-gl-adapter Dry-run Release 
+
+permissions:
+  contents: write
+
+on: workflow_dispatch
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.TERRA_DRAW_PAT }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22.x"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Install
+        run: npm ci
+
+      - name: Update Docs
+        run: npm run docs
+
+      - name: Run terra-draw build
+        working-directory: ./packages/terra-draw
+        run: npm run build
+
+      - name: Run build
+        working-directory: ./packages/terra-draw-mapbox-gl-adapter
+        run: npm run build
+
+      - name: Set git credentials
+        run: |
+          git config --global user.email "terradraw@githubactions.com"
+          git config --global user.name "James Milner"
+
+      - name: Release
+        working-directory: ./packages/terra-draw-mapbox-gl-adapter
+        run: npm run release:dryrun
+ 

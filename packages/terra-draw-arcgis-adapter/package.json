@@ -1,6 +1,6 @@
 {
 	"name": "terra-draw-arcgis-adapter",
-	"version": "1.0.0-beta.12",
+	"version": "1.0.0",
 	"description": "Terra Draw Adapter for ArcGIS API for JavaScript",
 	"peerDependencies": {
 		"terra-draw": "^1.0.0",

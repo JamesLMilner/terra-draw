@@ -16,5 +16,5 @@ module.exports = (packageName, packageJsonPath, changelogPath) => ({
 		},
 	},
 	changelogFile: changelogPath,
-	releaseCommitMessageFormat: `chore(${packageName}): {{currentTag}}`,
+	releaseCommitMessageFormat: `chore(${packageName}): release version {{currentTag}}`,
 });

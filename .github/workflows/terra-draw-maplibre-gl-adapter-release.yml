@@ -1,4 +1,4 @@
-name: Run release terra-draw
+name: terra-draw-maplibre-gl-adapter Release
 
 permissions:
   contents: write
@@ -27,7 +27,7 @@ jobs:
         run: npm run docs
 
       - name: Run build
-        working-directory: ./packages/terra-draw
+        working-directory: ./packages/terra-draw-maplibre-gl-adapter
         run: npm run build
 
       - name: Set git credentials
@@ -36,7 +36,7 @@ jobs:
           git config --global user.name "James Milner"
 
       - name: Release
-        working-directory: ./packages/terra-draw
+        working-directory: ./packages/terra-draw-maplibre-gl-adapter
         run: npm run release
 
       - name: Push upstream
@@ -46,5 +46,6 @@ jobs:
         run: git push origin main --tags
 
       - run: npm publish
+        working-directory: ./packages/terra-draw-maplibre-gl-adapter
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

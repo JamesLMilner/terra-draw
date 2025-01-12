@@ -1,4 +1,4 @@
-name: Dry-run release terra-draw
+name: terra-draw-maplibre-gl-adapter Dry-run Release 
 
 permissions:
   contents: write
@@ -27,7 +27,7 @@ jobs:
         run: npm run docs
 
       - name: Run build
-        working-directory: ./packages/terra-draw
+        working-directory: ./packages/terra-draw-maplibre-gl-adapter
         run: npm run build
 
       - name: Set git credentials
@@ -36,5 +36,6 @@ jobs:
           git config --global user.name "James Milner"
 
       - name: Release
-        working-directory: ./packages/terra-draw
+        working-directory: ./packages/terra-draw-maplibre-gl-adapter
         run: npm run release:dryrun
+ 

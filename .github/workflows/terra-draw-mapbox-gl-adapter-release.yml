@@ -26,6 +26,10 @@ jobs:
       - name: Update Docs
         run: npm run docs
 
+      - name: Run terra-draw build
+        working-directory: ./packages/terra-draw
+        run: npm run build
+
       - name: Run build
         working-directory: ./packages/terra-draw-mapbox-gl-adapter
         run: npm run build

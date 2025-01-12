@@ -34,8 +34,6 @@ jobs:
         working-directory: ./packages/terra-draw-leaflet-adapter
         run: npm run build
       
-
-
       - name: Set git credentials
         run: |
           git config --global user.email "terradraw@githubactions.com"
@@ -44,6 +42,19 @@ jobs:
       - name: Release
         working-directory: ./packages/terra-draw-leaflet-adapter
         run: npm run release
+
+      - name: Check if package-lock.json changed
+        run: |
+          npm install
+
+          # Check if package-lock.json changed
+          if ! git diff --exit-code --quiet package-lock.json; then
+            echo "package-lock.json has changed"
+            git add package-lock.json
+            git commit -m "chore(terra-draw): update package-lock.json during CI release"
+          else
+            echo "No changes to package-lock.json"
+          fi
 
       - name: Push upstream
         run: git push origin main

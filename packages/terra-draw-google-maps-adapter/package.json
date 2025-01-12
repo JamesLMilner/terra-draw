@@ -10,7 +10,7 @@
 		"@types/google.maps": "^3.49.2"
 	},
 	"scripts": {
-		"release": "commit-and-tag-version .versionrc.cjs",
+		"release": "commit-and-tag-version .versionrc.cjs -t terra-draw-google-maps-adapter@",
 		"release:dryrun": "commit-and-tag-version .versionrc.cjs -t terra-draw-google-maps-adapter@ --dry-run",
 		"build": "microbundle",
 		"watch": "microbundle --watch --format modern",

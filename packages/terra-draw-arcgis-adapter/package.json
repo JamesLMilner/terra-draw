@@ -7,7 +7,7 @@
 		"@arcgis/core": "^4.31.6"
 	},
 	"scripts": {
-		"release": "commit-and-tag-version .versionrc.cjs",
+		"release": "commit-and-tag-version .versionrc.cjs -t terra-draw-arcgis-adapter@",
 		"release:dryrun": "commit-and-tag-version .versionrc.cjs -t terra-draw-arcgis-adapter@ --dry-run",
 		"build": "microbundle",
 		"watch": "microbundle --watch --format modern",

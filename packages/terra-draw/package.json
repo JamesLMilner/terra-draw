@@ -1,0 +1,49 @@
+{
+	"name": "terra-draw",
+	"version": "1.0.0-beta.12",
+	"description": "Frictionless map drawing across mapping provider",
+	"scripts": {
+		"release": "commit-and-tag-version .versionrc.cjs",
+		"release:dryrun": "commit-and-tag-version .versionrc.cjs -t terra-draw@ --dry-run",
+		"build": "microbundle",
+		"watch": "microbundle --watch --format modern",
+		"unused": "knip",
+		"test": "jest --config jest.config.ts",
+		"test:coverage": "jest --config jest.config.ts --coverage",
+		"test:nocheck": "jest --config jest.nocheck.config.ts",
+		"test:nocheck:coverage": "jest --config jest.nocheck.config.ts --coverage",
+		"lint": "eslint src/",
+		"lint:quiet": "eslint --quiet src/",
+		"lint:fix": "eslint --fix src/",
+		"lint:fix:quiet": "eslint --fix --quiet src/",
+		"format": "prettier --ignore-path .gitignore --write \"**/*.+(js|ts|json)\"",
+		"format:quiet": "prettier --ignore-path .gitignore --write \"**/*.+(js|ts|json)\" --log-level=silent"
+	},
+	"type": "module",
+	"source": "src/terra-draw.ts",
+	"exports": {
+		"types": "./dist/terra-draw.d.ts",
+		"require": "./dist/terra-draw.cjs",
+		"default": "./dist/terra-draw.modern.js"
+	},
+	"types": "./dist/terra-draw.d.ts",
+	"main": "./dist/terra-draw.cjs",
+	"module": "./dist/terra-draw.module.js",
+	"unpkg": "./dist/terra-draw.umd.js",
+	"author": "James Milner",
+	"license": "MIT",
+	"repository": "JamesLMilner/terra-draw",
+	"keywords": [
+		"map",
+		"drawing",
+		"draw",
+		"map drawing",
+		"geometry",
+		"arcgis",
+		"leaflet",
+		"maplibre",
+		"openlayers",
+		"mapbox"
+	],
+	"sideEffects": false
+}

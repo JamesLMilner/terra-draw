@@ -1,3 +1,4 @@
+// eslint-disable-next-line no-console
 console.log("===== Using ts-jest ======");
 
 module.exports = {
@@ -5,16 +6,20 @@ module.exports = {
 	testEnvironment: "node",
 	testPathIgnorePatterns: [
 		"<rootDir>/node_modules/",
-		"<rootDir>/e2e/",
+		"<rootDir>/packages/e2e/",
+		"<rootDir>/packages/packages/",
 		"<rootDir>/docs/",
 		"<rootDir>/coverage/",
 		"<rootDir>/scripts/",
 		"<rootDir>/guides/",
 	],
-	coveragePathIgnorePatterns: ["<rootDir>/src/test/", "<rootDir>/e2e/"],
-	setupFilesAfterEnv: ["<rootDir>/src/test/jest.matchers.ts"],
+	coveragePathIgnorePatterns: [
+		"<rootDir>/packages/.*/src/test",
+		"<rootDir>/packages/e2e/",
+		"<rootDir>/packages/development/",
+	],
 	collectCoverage: true,
-	collectCoverageFrom: ["./src/**"],
+	collectCoverageFrom: ["<rootDir>/packages/**/src/**"],
 	coverageThreshold: {
 		global: {
 			lines: 80,

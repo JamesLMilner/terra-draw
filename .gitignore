@@ -12,7 +12,7 @@ scratch/
 .env*
 !.env.example
 .DS_Store
-e2e/test-results/
-e2e/playwright-report/
-e2e/blob-report/
-e2e/playwright/.cache/
+packages/e2e/test-results/
+packages/e2e/playwright-report/
+packages/e2e/blob-report/
+packages/e2e/playwright/.cache/

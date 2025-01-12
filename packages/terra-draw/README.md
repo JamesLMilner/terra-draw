@@ -1,7 +1,25 @@
 # Terra Draw
 
-This package is the core package for Terra Draw. You can read more context about what Terra Draw is in [the root level README](../../README.md) and more information on how to get started in the [GUIDES section of the Terra Draw monorepo](../../guides/1.GETTING_STARTED.md).
+This package is the core package for the Terra Draw library. Terra Draw aims to provide frictionless drawing across mapping libraries. 
+
+## Getting Started
+
+For full getting started instructions for Terra Draw please read the [getting started guide in the GitHub repository](https://github.com/JamesLMilner/terra-draw/blob/main/guides/1.GETTING_STARTED.md).
+
+You will require an adapter to work with your mapping library of choice. Please see the detailed [guide on adapters in the GitHub repository](https://github.com/JamesLMilner/terra-draw/blob/main/guides/1.ADAPTERS.md) to understand which are supported and how to get started with them
+
+Installing the package can be done like so:
+
+```shell
+npm install terra-draw
+```
+
+#### Quick Links
+
+* [GitHub Repository](https://www.github.com/JamesLMilner/terra-draw)
+* [API Docs](https://terradraw.io/#/api) 
+* [Website](https://terradraw.io)
 
 ## License 
 
-[MIT](../../LICENSE)
+[MIT](https://github.com/JamesLMilner/terra-draw/blob/main/LICENSE)

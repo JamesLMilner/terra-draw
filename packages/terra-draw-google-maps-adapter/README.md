@@ -4,4 +4,4 @@ This package is for the Terra Draw Google Maps Adapter. You can find out more ab
 
 ## License 
 
-[MIT](../../LICENSE)
+[MIT](https://github.com/JamesLMilner/terra-draw/blob/main/LICENSE)

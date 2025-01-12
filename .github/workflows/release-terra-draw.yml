@@ -1,4 +1,4 @@
-name: Dry-run release terra-draw
+name: Run release terra-draw
 
 permissions:
   contents: write

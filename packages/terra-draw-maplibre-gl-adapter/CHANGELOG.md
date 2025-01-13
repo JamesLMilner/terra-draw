@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.0.1](https://github.com/JamesLMilner/terra-draw/compare/terra-draw-maplibre-gl-adapter@1.0.0...terra-draw-maplibre-gl-adapter@1.0.1) (2025-01-13)
+
+
+### fix
+
+* **terra-draw-maplibre-gl-adapter:** ensure the README has correct links on npm (#419) ([](https://github.com/JamesLMilner/terra-draw/commit/ccaa50632d6e954389111bbe63fee79bdb7f6a06)), closes [#419](https://github.com/JamesLMilner/terra-draw/issues/419)
+
 ## 1.0.0 (2025-01-12)
 
 

@@ -4,7 +4,7 @@ This package is for the [Terra Draw](https://www.github.com/JamesLMilner/terra-d
 
 ## Getting Started
 
-For full getting started instructions for Terra Draw please read the [getting started guide in the GitHub repository](https://github.com/JamesLMilner/terra-draw/blob/main/guides/1.GETTING_STARTED.md). To get started with the MapboxGL adapter, please see the detailed [guide on adapters in the GitHub repository](https://github.com/JamesLMilner/terra-draw/blob/main/guides/3.ADAPTERS.md) to understand which are supported and how to get started with them. The guide has a specific section on the [TerraDrawMapLibreGLAdapter](https://github.com/JamesLMilner/terra-draw/blob/main/guides/3.ADAPTERS.md#maplibre).
+For full getting started instructions for Terra Draw please read the [getting started guide in the GitHub repository](https://github.com/JamesLMilner/terra-draw/blob/main/guides/1.GETTING_STARTED.md). To get started with the MapLibre adapter, please see the detailed [guide on adapters in the GitHub repository](https://github.com/JamesLMilner/terra-draw/blob/main/guides/3.ADAPTERS.md) to understand which are supported and how to get started with them. The guide has a specific section on the [TerraDrawMapLibreGLAdapter](https://github.com/JamesLMilner/terra-draw/blob/main/guides/3.ADAPTERS.md#maplibre).
 
 
 #### Installation

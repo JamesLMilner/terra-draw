@@ -39,7 +39,7 @@ jobs:
           git config --global user.email "terradraw@githubactions.com"
           git config --global user.name "James Milner"
 
-      - name: Release
+      - name: Dry Run Release
         working-directory: ./packages/terra-draw-openlayers-adapter
         run: npm run release:dryrun
  

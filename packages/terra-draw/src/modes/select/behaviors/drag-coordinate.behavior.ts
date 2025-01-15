@@ -90,7 +90,7 @@ export class DragCoordinateBehavior extends TerraDrawModeBehavior {
 		allowSelfIntersection: boolean,
 		validateFeature?: Validation,
 	): boolean {
-		if (!this.draggedCoordinate.id) {
+		if (this.draggedCoordinate.id == null) {
 			return false;
 		}
 		const index = this.draggedCoordinate.index;

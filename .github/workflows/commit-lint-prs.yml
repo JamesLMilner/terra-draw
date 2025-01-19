@@ -12,4 +12,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: PR Conventional Commit Validation Against Commit Lint Config
-      - run: echo "${{ github.event.pull_request.title }}" | npx commitlint
+        env:
+            TITLE: ${{ github.event.pull_request.title }}
+        run: echo "$TITLE" | npx commitlint

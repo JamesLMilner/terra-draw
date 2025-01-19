@@ -16,6 +16,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "22.x"
+      - name: Install packages
+        run: npm ci
       - name: PR Conventional Commit Validation Against Commit Lint Config
         env:
             TITLE: ${{ github.event.pull_request.title }}

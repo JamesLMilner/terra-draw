@@ -172,6 +172,7 @@ export const SELECT_PROPERTIES = {
 } as const;
 
 export const COMMON_PROPERTIES = {
+	EDITED: "edited",
 	CLOSING_POINT: "closingPoint",
 	SNAPPING_POINT: "snappingPoint",
 };

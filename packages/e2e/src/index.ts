@@ -131,7 +131,9 @@ const example = {
 						},
 					},
 				}),
-				new TerraDrawPointMode(),
+				new TerraDrawPointMode({
+					editable: this.config?.includes("pointEditable"),
+				}),
 				new TerraDrawLineStringMode({
 					snapping: {
 						toCoordinate: this.config?.includes("snappingCoordinate"),

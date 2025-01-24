@@ -71,6 +71,28 @@ test.describe("point mode", () => {
 
 		await expectPaths({ page, count: 3 });
 	});
+
+	test("mode can set with editable set to true and points can be moved", async ({
+		page,
+	}) => {
+		const mapDiv = await setupMap({
+			page,
+			configQueryParam: ["pointEditable"],
+		});
+		await changeMode({ page, mode });
+
+		await page.mouse.click(mapDiv.width / 2, mapDiv.height / 2);
+		await expectGroupPosition({ page, x: 633, y: 353 });
+
+		await page.mouse.move(mapDiv.width / 2, mapDiv.height / 2);
+		await page.mouse.down();
+		await page.mouse.move(mapDiv.width / 3, mapDiv.height / 3);
+		await page.mouse.up();
+
+		await expectPaths({ page, count: 1 });
+
+		await expectGroupPosition({ page, x: 419, y: 233 });
+	});
 });
 
 test.describe("linestring mode", () => {

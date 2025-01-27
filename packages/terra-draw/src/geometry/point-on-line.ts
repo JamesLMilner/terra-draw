@@ -12,10 +12,12 @@ export function nearestPointOnLine(
 	| {
 			coordinate: Position;
 			distance: number;
+			lineIndex: number;
 	  }
 	| undefined {
 	let closestPoint: Position = [Infinity, Infinity];
 	let closestDistance = Infinity;
+	let lineIndex = 0;
 
 	for (let line of lines) {
 		const startPosition: Position = line[0];
@@ -54,13 +56,14 @@ export function nearestPointOnLine(
 			if (intersectDistance < closestDistance) {
 				closestPoint = intersectPosition;
 				closestDistance = intersectDistance;
+				lineIndex = lines.indexOf(line);
 			}
 		}
 	}
 
 	return closestDistance === Infinity
 		? undefined
-		: { coordinate: closestPoint, distance: closestDistance };
+		: { coordinate: closestPoint, distance: closestDistance, lineIndex };
 }
 
 /*

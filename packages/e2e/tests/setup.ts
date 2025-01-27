@@ -3,6 +3,7 @@ import { Page, expect } from "@playwright/test";
 export const pageUrl = "http://localhost:3000/";
 
 export type TestConfigOptions =
+	| "polygonEditable"
 	| "pointEditable"
 	| "validationSuccess"
 	| "validationFailure"

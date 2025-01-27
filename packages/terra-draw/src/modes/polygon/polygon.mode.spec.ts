@@ -800,36 +800,203 @@ describe("cleanUp", () => {
 	});
 });
 
-describe("onDrag", () => {
-	it("does nothing", () => {
+describe("onDragStart", () => {
+	it("does nothing if editable is not enabled", () => {
 		const polygonMode = new TerraDrawPolygonMode();
-		polygonMode.register(MockModeConfig(polygonMode.mode));
+		const mockConfig = MockModeConfig(polygonMode.mode);
+		polygonMode.register(mockConfig);
+		polygonMode.start();
 
-		expect(() => {
-			polygonMode.onDrag();
-		}).not.toThrow();
+		polygonMode.onDragStart(MockCursorEvent({ lng: 0, lat: 0 }), () => {});
+		expect(mockConfig.onChange).not.toHaveBeenCalled();
+	});
+
+	it("creates the drag point when editable is true and a coordinate is selected", () => {
+		const polygonMode = new TerraDrawPolygonMode({ editable: true });
+		const mockConfig = MockModeConfig(polygonMode.mode);
+		polygonMode.register(mockConfig);
+		polygonMode.start();
+
+		// Create a polygon to edit
+		polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+		polygonMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
+
+		polygonMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
+
+		polygonMode.onMouseMove(MockCursorEvent({ lng: 2, lat: 2 }));
+
+		polygonMode.onClick(MockCursorEvent({ lng: 2, lat: 2 }));
+
+		polygonMode.onMouseMove(MockCursorEvent({ lng: 3, lat: 3 }));
+
+		polygonMode.onClick(MockCursorEvent({ lng: 3, lat: 3 }));
+
+		polygonMode.onClick(MockCursorEvent({ lng: 3, lat: 3 }));
+
+		// Ensure it's there
+		let features = mockConfig.store.copyAll();
+		expect(features.length).toBe(1);
+
+		// Reset to make it easier to track for onDragStart
+		mockConfig.onChange.mockClear();
+		mockConfig.setCursor.mockClear();
+
+		polygonMode.onDragStart(MockCursorEvent({ lng: 0, lat: 0 }), () => {});
+
+		expect(mockConfig.onChange).toHaveBeenCalledTimes(1);
+		expect(mockConfig.onChange).toHaveBeenNthCalledWith(
+			1,
+			[expect.any(String)],
+			"create",
+		);
+		expect(mockConfig.setCursor).toHaveBeenCalledTimes(1);
+		expect(mockConfig.setCursor).toHaveBeenNthCalledWith(1, "grabbing");
 	});
 });
 
-describe("onDragStart", () => {
-	it("does nothing", () => {
+describe("onDrag", () => {
+	it("does nothing if editable is not enabled", () => {
 		const polygonMode = new TerraDrawPolygonMode();
-		polygonMode.register(MockModeConfig(polygonMode.mode));
+		const mockConfig = MockModeConfig(polygonMode.mode);
+		polygonMode.register(mockConfig);
 
-		expect(() => {
-			polygonMode.onDragStart();
-		}).not.toThrow();
+		polygonMode.onDrag(MockCursorEvent({ lng: 0, lat: 0 }), () => {});
+		expect(mockConfig.onChange).not.toHaveBeenCalled();
+	});
+
+	it("moves the drag point correctly", () => {
+		const polygonMode = new TerraDrawPolygonMode({ editable: true });
+		const mockConfig = MockModeConfig(polygonMode.mode);
+		polygonMode.register(mockConfig);
+		polygonMode.start();
+
+		// Create a polygon to edit
+		polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+		polygonMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
+
+		polygonMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
+
+		polygonMode.onMouseMove(MockCursorEvent({ lng: 2, lat: 2 }));
+
+		polygonMode.onClick(MockCursorEvent({ lng: 2, lat: 2 }));
+
+		polygonMode.onMouseMove(MockCursorEvent({ lng: 3, lat: 3 }));
+
+		polygonMode.onClick(MockCursorEvent({ lng: 3, lat: 3 }));
+
+		polygonMode.onClick(MockCursorEvent({ lng: 3, lat: 3 }));
+
+		// Ensure it's there
+		let features = mockConfig.store.copyAll();
+		expect(features.length).toBe(1);
+
+		polygonMode.onDragStart(MockCursorEvent({ lng: 0, lat: 0 }), () => {});
+
+		// Reset to make it easier to track for onDragStart
+		mockConfig.onChange.mockClear();
+		mockConfig.setCursor.mockClear();
+
+		polygonMode.onDrag(MockCursorEvent({ lng: 1, lat: 1 }), () => {});
+
+		expect(mockConfig.onChange).toHaveBeenCalledTimes(3);
+		expect(mockConfig.onChange).toHaveBeenNthCalledWith(
+			1,
+			[expect.any(String)],
+			"update",
+		);
+		expect(mockConfig.onChange).toHaveBeenNthCalledWith(
+			2,
+			[expect.any(String)],
+			"update",
+		);
+		expect(mockConfig.onChange).toHaveBeenNthCalledWith(
+			3,
+			[expect.any(String)],
+			"update",
+		);
+
+		const allFeatures = mockConfig.store.copyAll();
+
+		expect(allFeatures.length).toBe(2);
+
+		// Edited polygon
+		expect(allFeatures[0].geometry.type).toBe("Polygon");
+		expect(allFeatures[0].properties.edited).toBe(true);
+
+		// Edit point
+		expect(allFeatures[1].geometry.type).toBe("Point");
+		expect(allFeatures[1].properties.edited).toBe(true);
+		expect(allFeatures[1].geometry.coordinates).toEqual([1, 1]);
+
+		// We don't change the cursor in onDrag
+		expect(mockConfig.setCursor).toHaveBeenCalledTimes(0);
 	});
 });
 
 describe("onDragEnd", () => {
-	it("does nothing", () => {
+	it("does nothing if editable is not enabled", () => {
 		const polygonMode = new TerraDrawPolygonMode();
-		polygonMode.register(MockModeConfig(polygonMode.mode));
+		const mockConfig = MockModeConfig(polygonMode.mode);
+		polygonMode.register(mockConfig);
 
-		expect(() => {
-			polygonMode.onDragEnd();
-		}).not.toThrow();
+		polygonMode.onDragEnd(MockCursorEvent({ lng: 0, lat: 0 }), () => {});
+		expect(mockConfig.onChange).not.toHaveBeenCalled();
+	});
+
+	it("removes the drag point after it's finished", () => {
+		const polygonMode = new TerraDrawPolygonMode({ editable: true });
+		const mockConfig = MockModeConfig(polygonMode.mode);
+		polygonMode.register(mockConfig);
+		polygonMode.start();
+
+		// Create a polygon to edit
+		polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+		polygonMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
+
+		polygonMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
+
+		polygonMode.onMouseMove(MockCursorEvent({ lng: 2, lat: 2 }));
+
+		polygonMode.onClick(MockCursorEvent({ lng: 2, lat: 2 }));
+
+		polygonMode.onMouseMove(MockCursorEvent({ lng: 3, lat: 3 }));
+
+		polygonMode.onClick(MockCursorEvent({ lng: 3, lat: 3 }));
+
+		polygonMode.onClick(MockCursorEvent({ lng: 3, lat: 3 }));
+
+		// Ensure it's there
+		let features = mockConfig.store.copyAll();
+		expect(features.length).toBe(1);
+
+		polygonMode.onDragStart(MockCursorEvent({ lng: 0, lat: 0 }), () => {});
+
+		polygonMode.onDrag(MockCursorEvent({ lng: 1, lat: 1 }), () => {});
+
+		// Reset to make it easier to track for onDragStart
+		mockConfig.onChange.mockClear();
+		mockConfig.setCursor.mockClear();
+
+		polygonMode.onDragEnd(MockCursorEvent({ lng: 1, lat: 1 }), () => {});
+
+		expect(mockConfig.onChange).toHaveBeenCalledTimes(2);
+
+		// Remove the edit drag point
+		expect(mockConfig.onChange).toHaveBeenNthCalledWith(
+			1,
+			[expect.any(String)],
+			"delete",
+		);
+
+		// Remove the edited property from the polygonux
+		expect(mockConfig.onChange).toHaveBeenNthCalledWith(
+			2,
+			[expect.any(String)],
+			"update",
+		);
 	});
 });
 

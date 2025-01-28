@@ -21,11 +21,13 @@ export function webMercatorNearestPointOnLine(
 ):
 	| {
 			coordinate: Position;
+			lineIndex: number;
 			distance: number;
 	  }
 	| undefined {
 	let closestPoint: Position = [Infinity, Infinity];
 	let closestDistance = Infinity;
+	let lineIndex = 0;
 
 	for (let line of lines) {
 		const startPosition: Position = line[0];
@@ -70,13 +72,18 @@ export function webMercatorNearestPointOnLine(
 			if (intersectDistance < closestDistance) {
 				closestPoint = intersectPosition;
 				closestDistance = intersectDistance;
+				lineIndex = lines.indexOf(line);
 			}
 		}
 	}
 
 	return closestDistance === Infinity
 		? undefined
-		: { coordinate: closestPoint, distance: closestDistance };
+		: {
+				coordinate: closestPoint,
+				lineIndex: lineIndex,
+				distance: closestDistance,
+			};
 }
 
 /**

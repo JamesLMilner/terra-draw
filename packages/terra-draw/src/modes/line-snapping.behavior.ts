@@ -18,37 +18,47 @@ export class LineSnappingBehavior extends TerraDrawModeBehavior {
 
 	/** Returns the nearest snappable coordinate - on first click there is no currentId so no need to provide */
 	public getSnappableCoordinateFirstClick = (event: TerraDrawMouseEvent) => {
-		return this.getSnappable(event, (feature) => {
+		const snappable = this.getSnappable(event, (feature) => {
 			return Boolean(
 				feature.properties && feature.properties.mode === this.mode,
 			);
 		});
+
+		return snappable.coordinate;
 	};
 
 	public getSnappableCoordinate = (
 		event: TerraDrawMouseEvent,
 		currentFeatureId: FeatureId,
 	) => {
-		return this.getSnappable(event, (feature) => {
+		const snappable = this.getSnappable(event, (feature) => {
 			return Boolean(
 				feature.properties &&
 					feature.properties.mode === this.mode &&
 					feature.id !== currentFeatureId,
 			);
 		});
+
+		return snappable.coordinate;
 	};
 
-	private getSnappable(
+	public getSnappable(
 		event: TerraDrawMouseEvent,
-		filter: (feature: Feature) => boolean,
+		filter?: (feature: Feature) => boolean,
 	) {
 		const boundingBox = this.clickBoundingBox.create(event) as BBoxPolygon;
 		const features = this.store.search(boundingBox, filter);
-		const closest: { coord: undefined | Position; minDistance: number } = {
-			coord: undefined,
+		const closest: {
+			coordinate: undefined | Position;
+			minDistance: number;
+			featureId: undefined | FeatureId;
+			featureCoordinateIndex: undefined | number;
+		} = {
+			featureId: undefined,
+			featureCoordinateIndex: undefined,
+			coordinate: undefined,
 			minDistance: Infinity,
 		};
-
 		features.forEach((feature) => {
 			let coordinates: Position[];
 			if (feature.geometry.type === "Polygon") {
@@ -68,6 +78,7 @@ export class LineSnappingBehavior extends TerraDrawModeBehavior {
 			let nearest:
 				| {
 						coordinate: Position;
+						lineIndex: number;
 						distance: number;
 				  }
 				| undefined;
@@ -86,11 +97,13 @@ export class LineSnappingBehavior extends TerraDrawModeBehavior {
 
 			const distance = this.pixelDistance.measure(event, nearest.coordinate);
 			if (distance < closest.minDistance && distance < this.pointerDistance) {
-				closest.coord = nearest.coordinate;
+				closest.featureId = feature.id;
+				closest.coordinate = nearest.coordinate;
+				closest.featureCoordinateIndex = nearest.lineIndex;
 				closest.minDistance = distance;
 			}
 		});
 
-		return closest.coord;
+		return closest;
 	}
 }

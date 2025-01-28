@@ -22,6 +22,7 @@ import { coordinatesIdentical } from "../../geometry/coordinates-identical";
 import { ClosingPointsBehavior } from "./behaviors/closing-points.behavior";
 import { getDefaultStyling } from "../../util/styling";
 import {
+	BBoxPolygon,
 	FeatureId,
 	GeoJSONStoreFeatures,
 	StoreValidation,
@@ -48,11 +49,17 @@ type PolygonStyling = {
 	snappingPointColor: HexColorStyling;
 	snappingPointOutlineWidth: NumericStyling;
 	snappingPointOutlineColor: HexColorStyling;
+	editedPointWidth: NumericStyling;
+	editedPointColor: HexColorStyling;
+	editedPointOutlineWidth: NumericStyling;
+	editedPointOutlineColor: HexColorStyling;
 };
 
 interface Cursors {
 	start?: Cursor;
 	close?: Cursor;
+	dragStart?: Cursor;
+	dragEnd?: Cursor;
 }
 
 interface Snapping {
@@ -67,6 +74,7 @@ interface TerraDrawPolygonModeOptions<T extends CustomStyling>
 	pointerDistance?: number;
 	keyEvents?: TerraDrawPolygonModeKeyEvents | null;
 	cursors?: Cursors;
+	editable?: boolean;
 }
 
 export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> {
@@ -76,14 +84,21 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 	private currentId: FeatureId | undefined;
 	private keyEvents: TerraDrawPolygonModeKeyEvents;
 	private snapping: Snapping | undefined;
+	private editable: boolean;
 
 	private snappedPointId: FeatureId | undefined;
+	private editedFeatureId: FeatureId | undefined;
+	private editedFeatureCoordinateIndex: number | undefined;
+	private editedSnapType: "line" | "coordinate" | undefined;
+	private editedInsertIndex: number | undefined;
+	private editedPointId: FeatureId | undefined;
 
 	// Behaviors
 	private lineSnapping!: LineSnappingBehavior;
 	private coordinateSnapping!: CoordinateSnappingBehavior;
 	private pixelDistance!: PixelDistanceBehavior;
 	private closingPoints!: ClosingPointsBehavior;
+	private clickBoundingBox!: ClickBoundingBoxBehavior;
 	private cursors: Required<Cursors>;
 	private mouseMove = false;
 
@@ -93,6 +108,8 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 		const defaultCursors = {
 			start: "crosshair",
 			close: "pointer",
+			dragStart: "grabbing",
+			dragEnd: "crosshair",
 		} as Required<Cursors>;
 
 		if (options && options.cursors) {
@@ -113,6 +130,12 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 				options && options.keyEvents
 					? { ...defaultKeyEvents, ...options.keyEvents }
 					: defaultKeyEvents;
+		}
+
+		if (options && options.editable) {
+			this.editable = options.editable;
+		} else {
+			this.editable = false;
 		}
 	}
 
@@ -162,17 +185,17 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 
 	/** @internal */
 	registerBehaviors(config: BehaviorConfig) {
-		const boundingBox = new ClickBoundingBoxBehavior(config);
+		this.clickBoundingBox = new ClickBoundingBoxBehavior(config);
 		this.pixelDistance = new PixelDistanceBehavior(config);
 		this.lineSnapping = new LineSnappingBehavior(
 			config,
 			this.pixelDistance,
-			boundingBox,
+			this.clickBoundingBox,
 		);
 		this.coordinateSnapping = new CoordinateSnappingBehavior(
 			config,
 			this.pixelDistance,
-			boundingBox,
+			this.clickBoundingBox,
 		);
 		this.closingPoints = new ClosingPointsBehavior(config, this.pixelDistance);
 	}
@@ -564,30 +587,233 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 	/** @internal */
 	onKeyDown() {}
 
-	/** @internal */
-	onDragStart() {
-		// We want to allow the default drag
-		// cursor to exist
-		this.setCursor("unset");
+	onDragStart(
+		event: TerraDrawMouseEvent,
+		setMapDraggability: (enabled: boolean) => void,
+	) {
+		if (!this.editable) {
+			return;
+		}
+
+		let snappedCoordinate: Position | undefined = undefined;
+
+		if (this.state === "started") {
+			const lineSnapped = this.lineSnapping.getSnappable(event);
+
+			if (lineSnapped.coordinate) {
+				this.editedSnapType = "line";
+				this.editedFeatureCoordinateIndex = lineSnapped.featureCoordinateIndex;
+				this.editedFeatureId = lineSnapped.featureId;
+				snappedCoordinate = lineSnapped.coordinate;
+			}
+
+			const coordinateSnapped = this.coordinateSnapping.getSnappable(event);
+
+			if (coordinateSnapped.coordinate) {
+				this.editedSnapType = "coordinate";
+				this.editedFeatureCoordinateIndex =
+					coordinateSnapped.featureCoordinateIndex;
+				this.editedFeatureId = coordinateSnapped.featureId;
+				snappedCoordinate = coordinateSnapped.coordinate;
+			}
+		}
+
+		// We only need to stop the map dragging if
+		// we actually have something selected
+		if (!this.editedFeatureId || !snappedCoordinate) {
+			return;
+		}
+
+		// Create a point to drag when editing
+		if (!this.editedPointId) {
+			const [editedPointId] = this.store.create([
+				{
+					geometry: {
+						type: "Point",
+						coordinates: snappedCoordinate,
+					},
+					properties: {
+						mode: this.mode,
+						[COMMON_PROPERTIES.EDITED]: true,
+					},
+				},
+			]);
+
+			this.editedPointId = editedPointId;
+		}
+
+		// Drag Feature
+		this.setCursor(this.cursors.dragStart);
+
+		setMapDraggability(false);
 	}
 
 	/** @internal */
-	onDrag() {}
+	onDrag(
+		event: TerraDrawMouseEvent,
+		setMapDraggability: (enabled: boolean) => void,
+	) {
+		if (
+			this.editedFeatureId === undefined ||
+			this.editedFeatureCoordinateIndex === undefined
+		) {
+			return;
+		}
+
+		const featureCopy: Polygon = this.store.getGeometryCopy(
+			this.editedFeatureId,
+		);
+		const featureCoordinates = featureCopy.coordinates[0];
+
+		// Either it's a coordinate drag or a line drag where the line coordinate has already been inserted
+		if (
+			this.editedSnapType === "coordinate" ||
+			(this.editedSnapType === "line" && this.editedInsertIndex !== undefined)
+		) {
+			// Account for the first and last point being the same
+			const isStartingOrEndingCoordinate =
+				this.editedFeatureCoordinateIndex === 0 ||
+				this.editedFeatureCoordinateIndex ===
+					featureCopy.coordinates[0].length - 1;
+
+			if (isStartingOrEndingCoordinate) {
+				featureCoordinates[0] = [event.lng, event.lat];
+				featureCoordinates[featureCoordinates.length - 1] = [
+					event.lng,
+					event.lat,
+				];
+			} else {
+				featureCoordinates[this.editedFeatureCoordinateIndex] = [
+					event.lng,
+					event.lat,
+				];
+			}
+		} else if (
+			this.editedSnapType === "line" &&
+			this.editedInsertIndex === undefined
+		) {
+			// Splice inserts _before_ the index, so we need to add 1
+			this.editedInsertIndex = this.editedFeatureCoordinateIndex + 1;
+
+			// Insert the new dragged snapped line coordinate
+			featureCopy.coordinates[0].splice(this.editedInsertIndex, 0, [
+				event.lng,
+				event.lat,
+			]);
+
+			// We have inserted a point, need to change the edit index
+			// so it can be moved correctly when it gets dragged again
+			this.editedFeatureCoordinateIndex++;
+		}
+
+		const newPolygonGeometry = {
+			type: "Polygon",
+			coordinates: featureCopy.coordinates,
+		} as Polygon;
+
+		if (this.validate) {
+			const validationResult = this.validate(
+				{
+					type: "Feature",
+					geometry: newPolygonGeometry,
+					properties: this.store.getPropertiesCopy(this.editedFeatureId),
+				} as GeoJSONStoreFeatures,
+				{
+					project: this.project,
+					unproject: this.unproject,
+					coordinatePrecision: this.coordinatePrecision,
+					updateType: UpdateTypes.Provisional,
+				},
+			);
+
+			if (!validationResult.valid) {
+				return;
+			}
+		}
+
+		if (this.snapping && this.snappedPointId) {
+			this.store.delete([this.snappedPointId]);
+			this.snappedPointId = undefined;
+		}
+
+		this.store.updateGeometry([
+			{
+				id: this.editedFeatureId,
+				geometry: newPolygonGeometry,
+			},
+		]);
+
+		if (this.editedPointId) {
+			this.store.updateGeometry([
+				{
+					id: this.editedPointId,
+					geometry: {
+						type: "Point",
+						coordinates: [event.lng, event.lat],
+					},
+				},
+			]);
+		}
+
+		this.store.updateProperty([
+			{
+				id: this.editedFeatureId,
+				property: COMMON_PROPERTIES.EDITED,
+				value: true,
+			},
+		]);
+
+		setMapDraggability(true);
+	}
 
 	/** @internal */
-	onDragEnd() {
-		// Set it back to crosshair
-		this.setCursor(this.cursors.start);
+	onDragEnd(
+		_: TerraDrawMouseEvent,
+		setMapDraggability: (enabled: boolean) => void,
+	) {
+		if (this.editedFeatureId === undefined) {
+			return;
+		}
+
+		this.setCursor(this.cursors.dragEnd);
+
+		if (this.editedPointId) {
+			this.store.delete([this.editedPointId]);
+			this.editedPointId = undefined;
+		}
+
+		this.store.updateProperty([
+			{
+				id: this.editedFeatureId,
+				property: COMMON_PROPERTIES.EDITED,
+				value: false,
+			},
+		]);
+
+		// Reset edit state
+		this.editedFeatureId = undefined;
+		this.editedFeatureCoordinateIndex = undefined;
+		this.editedInsertIndex = undefined;
+		this.editedSnapType = undefined;
+
+		setMapDraggability(true);
 	}
 
 	/** @internal */
 	cleanUp() {
 		const cleanUpId = this.currentId;
 		const snappedPointId = this.snappedPointId;
+		const editedPointId = this.editedPointId;
 
 		this.currentId = undefined;
 		this.snappedPointId = undefined;
+		this.editedPointId = undefined;
+		this.editedFeatureId = undefined;
+		this.editedFeatureCoordinateIndex = undefined;
+		this.editedInsertIndex = undefined;
+		this.editedSnapType = undefined;
 		this.currentCoordinate = 0;
+
 		if (this.state === "drawing") {
 			this.setStarted();
 		}
@@ -595,6 +821,9 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 		try {
 			if (cleanUpId !== undefined) {
 				this.store.delete([cleanUpId]);
+			}
+			if (editedPointId !== undefined) {
+				this.store.delete([editedPointId]);
 			}
 			if (snappedPointId !== undefined) {
 				this.store.delete([snappedPointId]);
@@ -638,51 +867,74 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 				styles.zIndex = 10;
 				return styles;
 			} else if (feature.geometry.type === "Point") {
+				const editedPoint = feature.properties[COMMON_PROPERTIES.EDITED];
 				const closingPoint =
 					feature.properties[COMMON_PROPERTIES.CLOSING_POINT];
 				const snappingPoint =
 					feature.properties[COMMON_PROPERTIES.SNAPPING_POINT];
 
-				styles.pointWidth = this.getNumericStylingValue(
-					closingPoint
-						? this.styles.closingPointWidth
+				const pointType = editedPoint
+					? "editedPoint"
+					: closingPoint
+						? "closingPoint"
 						: snappingPoint
-							? this.styles.snappingPointWidth
-							: styles.pointWidth,
+							? "snappingPoint"
+							: undefined;
+
+				if (!pointType) {
+					return styles;
+				}
+
+				const styleMap = {
+					editedPoint: {
+						width: this.styles.editedPointOutlineWidth,
+						color: this.styles.editedPointColor,
+						outlineColor: this.styles.editedPointOutlineColor,
+						outlineWidth: this.styles.editedPointOutlineWidth,
+					},
+					closingPoint: {
+						width: this.styles.closingPointWidth,
+						color: this.styles.closingPointColor,
+						outlineColor: this.styles.closingPointOutlineColor,
+						outlineWidth: this.styles.closingPointOutlineWidth,
+					},
+					snappingPoint: {
+						width: this.styles.snappingPointWidth,
+						color: this.styles.snappingPointColor,
+						outlineColor: this.styles.snappingPointOutlineColor,
+						outlineWidth: this.styles.snappingPointOutlineWidth,
+					},
+				};
+
+				styles.pointWidth = this.getNumericStylingValue(
+					styleMap[pointType].width,
 					styles.pointWidth,
 					feature,
 				);
 
 				styles.pointColor = this.getHexColorStylingValue(
-					closingPoint
-						? this.styles.closingPointColor
-						: snappingPoint
-							? this.styles.snappingPointColor
-							: styles.pointColor,
+					styleMap[pointType].color,
 					styles.pointColor,
 					feature,
 				);
 
 				styles.pointOutlineColor = this.getHexColorStylingValue(
-					closingPoint
-						? this.styles.closingPointOutlineColor
-						: snappingPoint
-							? this.styles.snappingPointOutlineColor
-							: styles.pointOutlineColor,
+					styleMap[pointType].outlineColor,
 					styles.pointOutlineColor,
 					feature,
 				);
 
 				styles.pointOutlineWidth = this.getNumericStylingValue(
-					closingPoint
-						? this.styles.closingPointOutlineWidth
-						: snappingPoint
-							? this.styles.snappingPointOutlineWidth
-							: 2,
+					styleMap[pointType].outlineWidth,
 					2,
 					feature,
 				);
-				styles.zIndex = 30;
+
+				if (editedPoint) {
+					styles.zIndex = 35;
+				} else {
+					styles.zIndex = 30;
+				}
 				return styles;
 			}
 		}

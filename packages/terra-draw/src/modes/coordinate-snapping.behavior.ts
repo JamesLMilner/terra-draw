@@ -16,36 +16,47 @@ export class CoordinateSnappingBehavior extends TerraDrawModeBehavior {
 
 	/** Returns the nearest snappable coordinate - on first click there is no currentId so no need to provide */
 	public getSnappableCoordinateFirstClick = (event: TerraDrawMouseEvent) => {
-		return this.getSnappable(event, (feature) => {
+		const snappble = this.getSnappable(event, (feature) => {
 			return Boolean(
 				feature.properties && feature.properties.mode === this.mode,
 			);
 		});
+
+		return snappble.coordinate;
 	};
 
 	public getSnappableCoordinate = (
 		event: TerraDrawMouseEvent,
 		currentFeatureId: FeatureId,
 	) => {
-		return this.getSnappable(event, (feature) => {
+		const snappable = this.getSnappable(event, (feature) => {
 			return Boolean(
 				feature.properties &&
 					feature.properties.mode === this.mode &&
 					feature.id !== currentFeatureId,
 			);
 		});
+
+		return snappable.coordinate;
 	};
 
-	private getSnappable(
+	public getSnappable(
 		event: TerraDrawMouseEvent,
-		filter: (feature: Feature) => boolean,
+		filter?: (feature: Feature) => boolean,
 	) {
 		const bbox = this.clickBoundingBox.create(event) as BBoxPolygon;
 
 		const features = this.store.search(bbox, filter);
 
-		const closest: { coord: undefined | Position; minDist: number } = {
-			coord: undefined,
+		const closest: {
+			coordinate: undefined | Position;
+			minDist: number;
+			featureId: undefined | FeatureId;
+			featureCoordinateIndex: undefined | number;
+		} = {
+			featureId: undefined,
+			featureCoordinateIndex: undefined,
+			coordinate: undefined,
 			minDist: Infinity,
 		};
 
@@ -59,15 +70,17 @@ export class CoordinateSnappingBehavior extends TerraDrawModeBehavior {
 				return;
 			}
 
-			coordinates.forEach((coord) => {
+			coordinates.forEach((coord, coordIndex) => {
 				const dist = this.pixelDistance.measure(event, coord);
 				if (dist < closest.minDist && dist < this.pointerDistance) {
-					closest.coord = coord;
+					closest.coordinate = coord;
 					closest.minDist = dist;
+					closest.featureId = feature.id;
+					closest.featureCoordinateIndex = coordIndex;
 				}
 			});
 		});
 
-		return closest.coord;
+		return closest;
 	}
 }

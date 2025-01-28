@@ -340,7 +340,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 			coordinates = geometry.coordinates;
 
 			// Prevent creating an invalid linestring
-			if (coordinates.length <= 3) {
+			if (coordinates.length <= 2) {
 				return;
 			}
 		}
@@ -350,10 +350,11 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 			return;
 		}
 
-		if (
-			(geometry.type === "Polygon" && coordinateIndex === 0) ||
-			coordinateIndex === coordinates.length - 1
-		) {
+		const isFinalPolygonCoordinate =
+			geometry.type === "Polygon" &&
+			(coordinateIndex === 0 || coordinateIndex === coordinates.length - 1);
+
+		if (isFinalPolygonCoordinate) {
 			// Deleting the final coordinate in a polygon breaks it
 			// because GeoJSON expects a duplicate, so we need to fix
 			// it by adding the new first coordinate to the end

@@ -422,8 +422,6 @@ class TerraDraw {
 	 * @param mode - The mode you wish to set a style for
 	 * @param styles - The styles you wish to set for the mode - this is
 	 * the same as the initialisation style schema
-	 *
-	 * @beta
 	 */
 	setModeStyles<Styling extends Record<string, number | HexColor>>(
 		mode: string,
@@ -442,8 +440,6 @@ class TerraDraw {
 	 * Allows the user to get a snapshot (copy) of all given features
 	 *
 	 * @returns An array of all given Feature Geometries in the instances store
-	 *
-	 * @beta
 	 */
 	getSnapshot() {
 		// This is a read only method so we do not need to check if enabled
@@ -453,8 +449,6 @@ class TerraDraw {
 	/**
 	 * Removes all data from the current store and removes any rendered layers
 	 * via the registering the adapter.
-	 *
-	 * @beta
 	 */
 	clear() {
 		this.checkEnabled();
@@ -468,7 +462,6 @@ class TerraDraw {
 	 *
 	 * @return true or false depending on if the instance is stopped or started
 	 * @readonly
-	 * @beta
 	 */
 	get enabled(): boolean {
 		return this._enabled;
@@ -476,8 +469,6 @@ class TerraDraw {
 
 	/**
 	 * enabled is a read only property and will throw and error if you try and set it.
-	 *
-	 * @beta
 	 */
 	set enabled(_) {
 		throw new Error("Enabled is read only");
@@ -485,10 +476,7 @@ class TerraDraw {
 
 	/**
 	 * A method for getting the current mode name
-	 *
 	 * @return the current mode name
-	 *
-	 * @beta
 	 */
 	getMode(): string {
 		// This is a read only method so we do not need to check if enabled
@@ -499,8 +487,6 @@ class TerraDraw {
 	 * A method for setting the current mode by name. Under the hood this will stop
 	 * the previous mode and start the new one.
 	 * @param mode - The mode name you wish to start
-	 *
-	 * @beta
 	 */
 	setMode(mode: string) {
 		this.checkEnabled();
@@ -527,8 +513,6 @@ class TerraDraw {
 	 * A method for removing features to the store
 	 * @param ids
 	 * @returns
-	 *
-	 * @beta
 	 */
 	removeFeatures(ids: FeatureId[]) {
 		this.checkEnabled();
@@ -540,7 +524,6 @@ class TerraDraw {
 	 * If not select mode is provided in the instance, an error will be thrown. If the instance is not currently
 	 * in the select mode, it will switch to it.
 	 * @param id - the id of the feature to select
-	 * @beta
 	 */
 	selectFeature(id: FeatureId) {
 		const selectMdode = this.getSelectMode();
@@ -552,7 +535,6 @@ class TerraDraw {
 	 * If not select mode is provided in the instance, an error will be thrown. If the instance is not currently
 	 * in the select mode, it will switch to it.
 	 * @param id  - the id of the feature to deselect
-	 * @beta
 	 */
 	deselectFeature(id: FeatureId) {
 		const selectMode = this.getSelectMode();
@@ -565,7 +547,6 @@ class TerraDraw {
 	 * outside of the Terra Draw instance but want to add them in to the store.
 	 * @returns a id, either number of string based on whatever the configured idStrategy is
 	 *
-	 * @beta
 	 */
 	getFeatureId(): FeatureId {
 		return this._store.getId();
@@ -574,8 +555,6 @@ class TerraDraw {
 	/**
 	 * Returns true or false depending on if the Terra Draw instance has a feature with a given id
 	 * @returns a boolean determining if the instance has a feature with the given id
-	 *
-	 * @beta
 	 */
 	hasFeature(id: FeatureId): boolean {
 		return this._store.has(id);
@@ -587,8 +566,6 @@ class TerraDraw {
 	 * in the instance.
 	 * @param features - an array of GeoJSON features
 	 * @returns an array of validation results
-	 *
-	 * @beta
 	 */
 	addFeatures(features: GeoJSONStoreFeatures[]): StoreValidation[] {
 		this.checkEnabled();
@@ -640,8 +617,6 @@ class TerraDraw {
 	/**
 	 * A method starting Terra Draw. It put the instance into a started state, and
 	 * in registers the passed adapter giving it all the callbacks required to operate.
-	 *
-	 * @beta
 	 */
 	start() {
 		this._enabled = true;
@@ -690,8 +665,6 @@ class TerraDraw {
 	 * Gets the features at a given longitude and latitude.
 	 * Will return point and linestrings that are a given pixel distance
 	 * away from the lng/lat and any polygons which contain it.
-	 *
-	 * @beta
 	 */
 	getFeaturesAtLngLat(
 		lngLat: { lng: number; lat: number },
@@ -712,8 +685,6 @@ class TerraDraw {
 	 * Takes a given pointer event and
 	 * Will return point and linestrings that are a given pixel distance
 	 * away from the lng/lat and any polygons which contain it.
-	 *
-	 * @beta
 	 */
 	getFeaturesAtPointerEvent(
 		event: PointerEvent | MouseEvent,
@@ -737,8 +708,6 @@ class TerraDraw {
 	/**
 	 * A method for stopping Terra Draw. Will clear the store, deregister the adapter and
 	 * remove any rendered layers in the process.
-	 *
-	 * @beta
 	 */
 	stop() {
 		this._enabled = false;
@@ -751,7 +720,6 @@ class TerraDraw {
 	 * @param event - The name of the event you wish to listen for
 	 * @param callback - The callback with you wish to be called when this event occurs
 	 *
-	 * @beta
 	 */
 	on<T extends TerraDrawEvents>(
 		event: T,
@@ -771,7 +739,6 @@ class TerraDraw {
 	 * @param event - The name of the event you wish to unregister
 	 * @param callback - The callback you originally provided to the 'on' method
 	 *
-	 * @beta
 	 */
 	off<T extends TerraDrawEvents>(
 		event: TerraDrawEvents,

@@ -168,6 +168,7 @@ const example = {
 									);
 								}
 							: undefined,
+					editable: this.config?.includes("polygonEditable"),
 					snapping: {
 						toCoordinate: this.config?.includes("snappingCoordinate"),
 					},

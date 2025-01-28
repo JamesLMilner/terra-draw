@@ -335,6 +335,10 @@ export class GeoJSONStore<Id extends FeatureId = FeatureId> {
 		}
 	}
 
+	copy(id: FeatureId): GeoJSONStoreFeatures {
+		return this.clone(this.store[id]);
+	}
+
 	copyAll(): GeoJSONStoreFeatures[] {
 		return this.clone(Object.keys(this.store).map((id) => this.store[id]));
 	}

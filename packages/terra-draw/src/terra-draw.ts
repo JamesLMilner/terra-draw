@@ -447,6 +447,15 @@ class TerraDraw {
 	}
 
 	/**
+	 * Allows the user to get a copy of a given feature by id
+	 *
+	 * @returns A copy of the feature geometry in the instances store
+	 */
+	getSnapshotFeature(id: FeatureId) {
+		return this._store.copy(id);
+	}
+
+	/**
 	 * Removes all data from the current store and removes any rendered layers
 	 * via the registering the adapter.
 	 */

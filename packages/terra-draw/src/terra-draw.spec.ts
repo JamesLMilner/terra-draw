@@ -605,6 +605,53 @@ describe("Terra Draw", () => {
 
 			expect(features).toHaveLength(1);
 		});
+
+		it("gets features at a given longitude and latitude within a given pointer distance", () => {
+			const draw = new TerraDraw({
+				adapter,
+				modes: [new TerraDrawPointMode()],
+			});
+
+			draw.start();
+
+			draw.addFeatures([
+				{
+					type: "Feature",
+					geometry: {
+						type: "Point",
+						coordinates: [0, 0],
+					},
+					properties: {
+						mode: "point",
+					},
+				},
+				{
+					type: "Feature",
+					geometry: {
+						type: "Point",
+						coordinates: [50, 50],
+					},
+					properties: {
+						mode: "point",
+					},
+				},
+			]);
+
+			adapter.getLngLatFromEvent = jest.fn(() => ({ lng: 50, lat: 50 }));
+
+			const features = draw.getFeaturesAtPointerEvent(
+				{
+					clientX: 50,
+					clientY: 50,
+				} as PointerEvent,
+				{
+					pointerDistance: 10,
+				},
+			);
+
+			expect(features).toHaveLength(1);
+			expect(features[0].geometry.coordinates).toEqual([50, 50]);
+		});
 	});
 
 	describe("start and stop", () => {

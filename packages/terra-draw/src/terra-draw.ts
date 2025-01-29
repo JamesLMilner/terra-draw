@@ -324,7 +324,7 @@ class TerraDraw {
 			lng: number;
 			lat: number;
 		},
-		options?: { pointerDistance: number; ignoreSelectFeatures: boolean },
+		options?: { pointerDistance?: number; ignoreSelectFeatures?: boolean },
 	) {
 		const pointerDistance =
 			options && options.pointerDistance !== undefined
@@ -682,13 +682,12 @@ class TerraDraw {
 	}
 
 	/**
-	 * Takes a given pointer event and
-	 * Will return point and linestrings that are a given pixel distance
-	 * away from the lng/lat and any polygons which contain it.
+	 * Takes a given pointer event and will return point and linestrings that are
+	 * a given pixel distance away from the longitude/latitude, and any polygons which contain it.
 	 */
 	getFeaturesAtPointerEvent(
 		event: PointerEvent | MouseEvent,
-		options?: { pointerDistance: number; ignoreSelectFeatures: boolean },
+		options?: { pointerDistance?: number; ignoreSelectFeatures?: boolean },
 	) {
 		const getLngLatFromEvent = this._adapter.getLngLatFromEvent.bind(
 			this._adapter,

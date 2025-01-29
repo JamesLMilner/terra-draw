@@ -45,6 +45,9 @@ jobs:
       - name: Push tags upstream
         run: git push origin main --tags
 
+      - name: Copy README.md
+        run: cp README.md ./packages/terra-draw
+
       - run: npm publish
         working-directory: ./packages/terra-draw
         env:

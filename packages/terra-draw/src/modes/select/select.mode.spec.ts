@@ -1736,7 +1736,7 @@ describe("TerraDrawSelectMode", () => {
 			});
 		});
 
-		it("fires onFinish for resizeable if it is currently being dragged", () => {
+		it("fires onFinish for resizable if it is currently being dragged", () => {
 			setSelectMode({
 				flags: {
 					polygon: {

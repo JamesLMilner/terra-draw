@@ -638,7 +638,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 		) {
 			this.setCursor(this.cursors.dragStart);
 
-			// With resizeable
+			// With resizable
 			if (modeFlags.feature.coordinates.resizable) {
 				this.dragCoordinateResizeFeature.startDragging(
 					selectedId,

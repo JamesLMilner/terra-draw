@@ -13,20 +13,20 @@ import {
 	TerraDrawSectorMode,
 	ValidateMinAreaSquareMeters,
 	ValidateNotSelfIntersecting,
-} from "terra-draw";
+} from "../../terra-draw/src/terra-draw";
 
-import { TerraDrawMapboxGLAdapter } from "terra-draw-mapbox-gl-adapter";
-import { TerraDrawLeafletAdapter } from "terra-draw-leaflet-adapter";
-import { TerraDrawGoogleMapsAdapter } from "terra-draw-google-maps-adapter";
-import { TerraDrawMapLibreGLAdapter } from "terra-draw-maplibre-gl-adapter";
-import { TerraDrawArcGISMapsSDKAdapter } from "terra-draw-arcgis-adapter";
-import { TerraDrawOpenLayersAdapter } from "terra-draw-openlayers-adapter";
+import { TerraDrawMapboxGLAdapter } from "../../terra-draw-mapbox-gl-adapter/src/terra-draw-mapbox-gl-adapter";
+import { TerraDrawLeafletAdapter } from "../../terra-draw-leaflet-adapter/src/terra-draw-leaflet-adapter";
+import { TerraDrawGoogleMapsAdapter } from "../../terra-draw-google-maps-adapter/src/terra-draw-google-maps-adapter";
+import { TerraDrawMapLibreGLAdapter } from "../../terra-draw-maplibre-gl-adapter/src/terra-draw-maplibre-gl-adapter";
+import { TerraDrawArcGISMapsSDKAdapter } from "../../terra-draw-arcgis-adapter/src/terra-draw-arcgis-adapter";
+import { TerraDrawOpenLayersAdapter } from "../../terra-draw-openlayers-adapter/src/terra-draw-openlayers-adapter";
 
 // Mapbox
 import mapboxgl from "mapbox-gl";
 
 // MapLibre
-import maplibregl from "maplibre-gl";
+import maplibregl, { StyleSpecification } from "maplibre-gl";
 
 // Leaflet
 import * as L from "leaflet";
@@ -372,7 +372,7 @@ const example = {
 
 		const map = new maplibregl.Map({
 			container: this.generateId(Libraries.MapLibre),
-			style: OSMStyle as maplibregl.StyleSpecification,
+			style: OSMStyle as StyleSpecification,
 			center: [lng, lat],
 			zoom: zoom,
 		});

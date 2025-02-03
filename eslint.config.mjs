@@ -5,7 +5,7 @@ import prettierConfig from "eslint-config-prettier";
 import json from "@eslint/json";
 import markdown from "@eslint/markdown";
 
-const ignores = ["**/node_modules", "**/dist", "**/docs", ".github", ".husky", ".vscode", "**/public", "**/coverage", "packages/e2e/playwright-report"];
+const ignores = ["**/node_modules", "**/dist", "**/docs", ".github", ".husky", ".vscode", "**/public", "**/coverage", "packages/e2e/playwright-report", "packages/e2e/test-results"];
 
 export default [
 	{

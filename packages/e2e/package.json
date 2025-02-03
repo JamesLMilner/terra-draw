@@ -14,9 +14,7 @@
 	"author": "James Milner",
 	"license": "MIT",
 	"dependencies": {
-		"leaflet": "1.9.4",
-		"terra-draw": "1.0.0",
-		"terra-draw-leaflet-adapter": "1.0.0"
+		"leaflet": "1.9.4"
 	},
 	"devDependencies": {
 		"@playwright/test": "^1.49.1",

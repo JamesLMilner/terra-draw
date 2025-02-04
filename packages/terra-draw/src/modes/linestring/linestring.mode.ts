@@ -493,7 +493,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 		// We want pointer devices (mobile/tablet) to have
 		// similar behaviour to mouse based devices so we
 		// trigger a mousemove event before every click
-		// if one has not been trigged to emulate this
+		// if one has not been triggered to emulate this
 		if (this.currentCoordinate > 0 && !this.mouseMove) {
 			this.onMouseMove(event);
 		}

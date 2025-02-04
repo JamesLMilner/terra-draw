@@ -26,4 +26,4 @@ npm run test:headed
 
 ## Tests
 
-Tests are located in the `tests` folder. You will see the `leaflet.spec.ts` file, this is where the tests are kept for the E2E tests written for the Leaflet Adapter. There are also some convienence methods written in the `setup.ts` file which can be leveraged to write tests more easily.
+Tests are located in the `tests` folder. You will see the `leaflet.spec.ts` file, this is where the tests are kept for the E2E tests written for the Leaflet Adapter. There are also some convenience methods written in the `setup.ts` file which can be leveraged to write tests more easily.

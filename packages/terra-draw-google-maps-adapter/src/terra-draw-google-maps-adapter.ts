@@ -66,7 +66,7 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawExtend.TerraDrawBaseAda
 		this._overlay = new this._lib.OverlayView();
 		this._overlay.draw = function () {};
 
-		// Unforunately it is only ready after the onAdd
+		// Unfortunately it is only ready after the onAdd
 		// method is called, which is why we need to use the 'ready'
 		// listener with the Google Maps adapter
 		this._overlay.onAdd = () => {

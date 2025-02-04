@@ -24,12 +24,12 @@ export function transformRotate(
 	// Use centroid of GeoJSON if pivot is not provided
 	const pivot = centroid(feature);
 
-	const cooordinates =
+	const coordinates =
 		feature.geometry.type === "Polygon"
 			? feature.geometry.coordinates[0]
 			: feature.geometry.coordinates;
 
-	cooordinates.forEach((pointCoords: Position) => {
+	coordinates.forEach((pointCoords: Position) => {
 		const initialAngle = rhumbBearing(pivot, pointCoords);
 		const finalAngle = initialAngle + angle;
 		const distance = rhumbDistance(pivot, pointCoords);

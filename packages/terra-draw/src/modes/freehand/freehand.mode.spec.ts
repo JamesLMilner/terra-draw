@@ -198,7 +198,7 @@ describe("TerraDrawFreehandMode", () => {
 
 				freehandMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
-				// Closing cooridnate should still exist
+				// Closing coordinate should still exist
 				features = store.copyAll();
 				expect(features.length).toBe(2);
 
@@ -216,7 +216,7 @@ describe("TerraDrawFreehandMode", () => {
 
 				freehandMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
-				// Closing cooridnate should be removed
+				// Closing coordinate should be removed
 				features = store.copyAll();
 				expect(features.length).toBe(1);
 

@@ -1,7 +1,7 @@
 import { Polygon } from "geojson";
 import { earthRadius } from "../helpers";
 
-// Adapted from @turf/area is MIT Licensed licesned https://github.com/Turfjs/turf/blob/master/packages/turf-area/index.ts
+// Adapted from @turf/area is MIT Licensed licensed https://github.com/Turfjs/turf/blob/master/packages/turf-area/index.ts
 // In turn adapted from NASA: https://dataverse.jpl.nasa.gov/file.xhtml?fileId=47998&version=2.0
 
 export function polygonAreaSquareMeters(polygon: Polygon) {

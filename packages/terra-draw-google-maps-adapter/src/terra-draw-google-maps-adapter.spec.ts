@@ -312,7 +312,7 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 	});
 
 	describe("getLngLatFromEvent", () => {
-		it("returns null for initialized map", () => {
+		it("returns null for uninitialized map", () => {
 			const mapMock = createMockGoogleMap();
 			const adapter = new TerraDrawGoogleMapsAdapter({
 				lib: {

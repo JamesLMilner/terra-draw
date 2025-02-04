@@ -22,12 +22,12 @@ export function transformScale(
 		return feature;
 	}
 
-	const cooordinates =
+	const coordinates =
 		feature.geometry.type === "Polygon"
 			? feature.geometry.coordinates[0]
 			: feature.geometry.coordinates;
 
-	cooordinates.forEach((pointCoords: Position) => {
+	coordinates.forEach((pointCoords: Position) => {
 		const originalDistance = rhumbDistance(origin, pointCoords);
 		const bearing = rhumbBearing(origin, pointCoords);
 		const newDistance = originalDistance * factor;

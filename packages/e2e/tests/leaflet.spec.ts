@@ -785,7 +785,7 @@ test.describe("sensor mode", () => {
 		await page.mouse.move(mapDiv.width / 3, mapDiv.height / 3, { steps: 30 });
 		await page.mouse.click(mapDiv.width / 3, mapDiv.height / 3);
 
-		// The cursor is now behind the initial arc and so wont close the sensor
+		// The cursor is now behind the initial arc and so won't close the sensor
 		await page.mouse.move(mapDiv.width / 1, mapDiv.height / 3, { steps: 30 });
 		await page.mouse.click(mapDiv.width / 1, mapDiv.height / 3);
 
@@ -1123,7 +1123,7 @@ test.describe("select mode", () => {
 			// Deselect
 			await page.mouse.click(mapDiv.width - 10, mapDiv.height / 2);
 
-			// We are attempting to dragg right tothe top left corner but it is not getting there
+			// We are attempting to dragg right to the top left corner but it is not getting there
 			// because it is capped by the validation. If this was allowed x would be ~90
 			await expectGroupPosition({ page, x: 553, y: 273 });
 		});
@@ -1168,7 +1168,7 @@ test.describe("select mode", () => {
 			// Deselect
 			await page.mouse.click(mapDiv.width - 10, mapDiv.height / 2);
 
-			// We are attempting to dragg right tothe top left corner but it is not getting there
+			// We are attempting to dragg right to the top left corner but it is not getting there
 			// because it is capped by the validation. If this was allowed x would be ~90
 			await expectGroupPosition({ page, x: 563, y: 301 });
 		});

@@ -545,7 +545,7 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 
 		const [west, south, east, north] = bbox;
 
-		//   Bounding box is represnted as follows:
+		//   Bounding box is represented as follows:
 		//
 		//   0    1    2
 		//   *----*----*

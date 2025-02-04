@@ -982,7 +982,7 @@ describe("TerraDrawSelectMode", () => {
 				expect(store.updateGeometry).toHaveBeenCalledTimes(0);
 			});
 
-			it("deletes a coordinate in deleteable set to true and a coordinate is clicked on", () => {
+			it("deletes a coordinate in deletable set to true and a coordinate is clicked on", () => {
 				setSelectMode({
 					flags: {
 						polygon: {
@@ -1108,7 +1108,7 @@ describe("TerraDrawSelectMode", () => {
 
 			selectMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
-			// Pointer set to move when teh cursor is
+			// Pointer set to move when the cursor is
 			expect(setCursor).toHaveBeenCalledTimes(1);
 			expect(setCursor).toHaveBeenCalledWith("move");
 

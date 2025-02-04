@@ -60,7 +60,7 @@ export class MidPointBehavior extends TerraDrawModeBehavior {
 		this.store.delete([...this._midPoints, ...this.selectionPointBehavior.ids]);
 
 		// We don't need to check if flags are correct
-		// because selection points are prerequiste for midpoints
+		// because selection points are prerequisite for midpoints
 		this.create(
 			updatedCoordinates,
 			midPointFeatureId as string,

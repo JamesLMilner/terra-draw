@@ -89,7 +89,7 @@ jobs:
       with:
         node-version: "22.x"
     - name: Install parent directory
-      run: npm install
+      run: npm ci
     - name: Build terra-draw
       run: cd packages/terra-draw && npm run build
     - name: Build terra-draw-leaflet-adapter
@@ -107,7 +107,7 @@ jobs:
         key: ${{ runner.os }}-playwright-${{ env.PLAYWRIGHT_VERSION }}
     - name: Install e2e test
       working-directory: ./packages/e2e
-      run: npm install --ignore-scripts
+      run: npm ci --ignore-scripts
     - run: npx playwright install --with-deps
       working-directory: ./packages/e2e
       if: steps.playwright-cache.outputs.cache-hit != 'true'

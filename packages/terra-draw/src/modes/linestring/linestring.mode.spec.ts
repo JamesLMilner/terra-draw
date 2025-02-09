@@ -787,33 +787,203 @@ describe("TerraDrawLineStringMode", () => {
 		});
 	});
 
-	describe("onDrag", () => {
-		it("does nothing", () => {
+	describe("onDragStart", () => {
+		it("does nothing if editable is not enabled", () => {
 			const lineStringMode = new TerraDrawLineStringMode();
+			const mockConfig = MockModeConfig(lineStringMode.mode);
+			lineStringMode.register(mockConfig);
+			lineStringMode.start();
 
-			expect(() => {
-				lineStringMode.onDrag();
-			}).not.toThrow();
+			lineStringMode.onDragStart(MockCursorEvent({ lng: 0, lat: 0 }), () => {});
+			expect(mockConfig.onChange).not.toHaveBeenCalled();
+		});
+
+		it("creates the drag point when editable is true and a coordinate is selected", () => {
+			const lineStringMode = new TerraDrawLineStringMode({ editable: true });
+			const mockConfig = MockModeConfig(lineStringMode.mode);
+			lineStringMode.register(mockConfig);
+			lineStringMode.start();
+
+			// Create a linestring to edit
+			lineStringMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+			lineStringMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
+
+			lineStringMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
+
+			lineStringMode.onMouseMove(MockCursorEvent({ lng: 2, lat: 2 }));
+
+			lineStringMode.onClick(MockCursorEvent({ lng: 2, lat: 2 }));
+
+			lineStringMode.onMouseMove(MockCursorEvent({ lng: 3, lat: 3 }));
+
+			lineStringMode.onClick(MockCursorEvent({ lng: 3, lat: 3 }));
+
+			lineStringMode.onClick(MockCursorEvent({ lng: 3, lat: 3 }));
+
+			// Ensure it's there
+			let features = mockConfig.store.copyAll();
+			expect(features.length).toBe(1);
+
+			// Reset to make it easier to track for onDragStart
+			mockConfig.onChange.mockClear();
+			mockConfig.setCursor.mockClear();
+
+			lineStringMode.onDragStart(MockCursorEvent({ lng: 0, lat: 0 }), () => {});
+
+			expect(mockConfig.onChange).toHaveBeenCalledTimes(1);
+			expect(mockConfig.onChange).toHaveBeenNthCalledWith(
+				1,
+				[expect.any(String)],
+				"create",
+			);
+			expect(mockConfig.setCursor).toHaveBeenCalledTimes(1);
+			expect(mockConfig.setCursor).toHaveBeenNthCalledWith(1, "grabbing");
 		});
 	});
 
-	describe("onDragStart", () => {
-		it("does nothing", () => {
+	describe("onDrag", () => {
+		it("does nothing if editable is not enabled", () => {
 			const lineStringMode = new TerraDrawLineStringMode();
+			const mockConfig = MockModeConfig(lineStringMode.mode);
+			lineStringMode.register(mockConfig);
 
-			expect(() => {
-				lineStringMode.onDragStart();
-			}).not.toThrow();
+			lineStringMode.onDrag(MockCursorEvent({ lng: 0, lat: 0 }), () => {});
+			expect(mockConfig.onChange).not.toHaveBeenCalled();
+		});
+
+		it("moves the drag point correctly", () => {
+			const lineStringMode = new TerraDrawLineStringMode({ editable: true });
+			const mockConfig = MockModeConfig(lineStringMode.mode);
+			lineStringMode.register(mockConfig);
+			lineStringMode.start();
+
+			// Create a linestring to edit
+			lineStringMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+			lineStringMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
+
+			lineStringMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
+
+			lineStringMode.onMouseMove(MockCursorEvent({ lng: 2, lat: 2 }));
+
+			lineStringMode.onClick(MockCursorEvent({ lng: 2, lat: 2 }));
+
+			lineStringMode.onMouseMove(MockCursorEvent({ lng: 3, lat: 3 }));
+
+			lineStringMode.onClick(MockCursorEvent({ lng: 3, lat: 3 }));
+
+			lineStringMode.onClick(MockCursorEvent({ lng: 3, lat: 3 }));
+
+			// Ensure it's there
+			let features = mockConfig.store.copyAll();
+			expect(features.length).toBe(1);
+
+			lineStringMode.onDragStart(MockCursorEvent({ lng: 0, lat: 0 }), () => {});
+
+			// Reset to make it easier to track for onDragStart
+			mockConfig.onChange.mockClear();
+			mockConfig.setCursor.mockClear();
+
+			lineStringMode.onDrag(MockCursorEvent({ lng: 1, lat: 1 }), () => {});
+
+			expect(mockConfig.onChange).toHaveBeenCalledTimes(3);
+			expect(mockConfig.onChange).toHaveBeenNthCalledWith(
+				1,
+				[expect.any(String)],
+				"update",
+			);
+			expect(mockConfig.onChange).toHaveBeenNthCalledWith(
+				2,
+				[expect.any(String)],
+				"update",
+			);
+			expect(mockConfig.onChange).toHaveBeenNthCalledWith(
+				3,
+				[expect.any(String)],
+				"update",
+			);
+
+			const allFeatures = mockConfig.store.copyAll();
+
+			expect(allFeatures.length).toBe(2);
+
+			// Edited linestring
+			expect(allFeatures[0].geometry.type).toBe("LineString");
+			expect(allFeatures[0].properties.edited).toBe(true);
+
+			// Edit point
+			expect(allFeatures[1].geometry.type).toBe("Point");
+			expect(allFeatures[1].properties.edited).toBe(true);
+			expect(allFeatures[1].geometry.coordinates).toEqual([1, 1]);
+
+			// We don't change the cursor in onDrag
+			expect(mockConfig.setCursor).toHaveBeenCalledTimes(0);
 		});
 	});
 
 	describe("onDragEnd", () => {
-		it("does nothing", () => {
+		it("does nothing if editable is not enabled", () => {
 			const lineStringMode = new TerraDrawLineStringMode();
+			const mockConfig = MockModeConfig(lineStringMode.mode);
+			lineStringMode.register(mockConfig);
 
-			expect(() => {
-				lineStringMode.onDragEnd();
-			}).not.toThrow();
+			lineStringMode.onDragEnd(MockCursorEvent({ lng: 0, lat: 0 }), () => {});
+			expect(mockConfig.onChange).not.toHaveBeenCalled();
+		});
+
+		it("removes the drag point after it's finished", () => {
+			const lineStringMode = new TerraDrawLineStringMode({ editable: true });
+			const mockConfig = MockModeConfig(lineStringMode.mode);
+			lineStringMode.register(mockConfig);
+			lineStringMode.start();
+
+			// Create a linestring to edit
+			lineStringMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+			lineStringMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
+
+			lineStringMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
+
+			lineStringMode.onMouseMove(MockCursorEvent({ lng: 2, lat: 2 }));
+
+			lineStringMode.onClick(MockCursorEvent({ lng: 2, lat: 2 }));
+
+			lineStringMode.onMouseMove(MockCursorEvent({ lng: 3, lat: 3 }));
+
+			lineStringMode.onClick(MockCursorEvent({ lng: 3, lat: 3 }));
+
+			lineStringMode.onClick(MockCursorEvent({ lng: 3, lat: 3 }));
+
+			// Ensure it's there
+			let features = mockConfig.store.copyAll();
+			expect(features.length).toBe(1);
+
+			lineStringMode.onDragStart(MockCursorEvent({ lng: 0, lat: 0 }), () => {});
+
+			lineStringMode.onDrag(MockCursorEvent({ lng: 1, lat: 1 }), () => {});
+
+			// Reset to make it easier to track for onDragStart
+			mockConfig.onChange.mockClear();
+			mockConfig.setCursor.mockClear();
+
+			lineStringMode.onDragEnd(MockCursorEvent({ lng: 1, lat: 1 }), () => {});
+
+			expect(mockConfig.onChange).toHaveBeenCalledTimes(2);
+
+			// Remove the edit drag point
+			expect(mockConfig.onChange).toHaveBeenNthCalledWith(
+				1,
+				[expect.any(String)],
+				"delete",
+			);
+
+			// Remove the edited property from the linestring
+			expect(mockConfig.onChange).toHaveBeenNthCalledWith(
+				2,
+				[expect.any(String)],
+				"update",
+			);
 		});
 	});
 

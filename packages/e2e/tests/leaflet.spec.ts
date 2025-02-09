@@ -253,6 +253,35 @@ test.describe("linestring mode", () => {
 			await expectPaths({ page, count: 2 });
 		});
 	}
+
+	test(`mode can set with editable set to true and points can be moved`, async ({
+		page,
+	}) => {
+		const mapDiv = await setupMap({
+			page,
+			configQueryParam: ["lineStringEditable"],
+		});
+		await changeMode({ page, mode });
+
+		await page.mouse.move(mapDiv.width / 2, mapDiv.height / 2, { steps: 30 });
+		await page.mouse.click(mapDiv.width / 2, mapDiv.height / 2);
+		await page.mouse.move(mapDiv.width / 3, mapDiv.height / 3, { steps: 30 });
+		await page.mouse.click(mapDiv.width / 3, mapDiv.height / 3);
+
+		// Close
+		await page.mouse.click(mapDiv.width / 3, mapDiv.height / 3);
+
+		await expectPaths({ page, count: 1 });
+		await expectPathDimensions({ page, width: 217, height: 124 });
+
+		await page.mouse.move(mapDiv.width / 2, mapDiv.height / 2, { steps: 30 });
+		await page.mouse.down();
+		await page.mouse.move(mapDiv.width / 2, mapDiv.height / 4, { steps: 30 });
+		await page.mouse.up();
+
+		await expectPaths({ page, count: 1 });
+		await expectPathDimensions({ page, width: 217, height: 64 });
+	});
 });
 
 test.describe("polygon mode", () => {

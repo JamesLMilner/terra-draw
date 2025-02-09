@@ -5,6 +5,7 @@ export const pageUrl = "http://localhost:3000/";
 export type TestConfigOptions =
 	| "polygonEditable"
 	| "pointEditable"
+	| "lineStringEditable"
 	| "validationSuccess"
 	| "validationFailure"
 	| "insertCoordinates"

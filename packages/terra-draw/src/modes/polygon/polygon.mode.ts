@@ -22,7 +22,6 @@ import { coordinatesIdentical } from "../../geometry/coordinates-identical";
 import { ClosingPointsBehavior } from "./behaviors/closing-points.behavior";
 import { getDefaultStyling } from "../../util/styling";
 import {
-	BBoxPolygon,
 	FeatureId,
 	GeoJSONStoreFeatures,
 	StoreValidation,
@@ -83,10 +82,15 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 	private currentCoordinate = 0;
 	private currentId: FeatureId | undefined;
 	private keyEvents: TerraDrawPolygonModeKeyEvents;
-	private snapping: Snapping | undefined;
-	private editable: boolean;
+	private cursors: Required<Cursors>;
+	private mouseMove = false;
 
+	// Snapping
+	private snapping: Snapping | undefined;
 	private snappedPointId: FeatureId | undefined;
+
+	// Editable
+	private editable: boolean;
 	private editedFeatureId: FeatureId | undefined;
 	private editedFeatureCoordinateIndex: number | undefined;
 	private editedSnapType: "line" | "coordinate" | undefined;
@@ -99,8 +103,6 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 	private pixelDistance!: PixelDistanceBehavior;
 	private closingPoints!: ClosingPointsBehavior;
 	private clickBoundingBox!: ClickBoundingBoxBehavior;
-	private cursors: Required<Cursors>;
-	private mouseMove = false;
 
 	constructor(options?: TerraDrawPolygonModeOptions<PolygonStyling>) {
 		super(options);

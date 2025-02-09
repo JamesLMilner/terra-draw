@@ -397,17 +397,86 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 		return snappedCoordinate;
 	}
 
-	/** @internal */
-	onClick(event: TerraDrawMouseEvent) {
-		// We want pointer devices (mobile/tablet) to have
-		// similar behaviour to mouse based devices so we
-		// trigger a mousemove event before every click
-		// if one has not been trigged to emulate this
-		if (this.currentCoordinate > 0 && !this.mouseMove) {
-			this.onMouseMove(event);
+	private onRightClick(event: TerraDrawMouseEvent) {
+		if (!this.editable) {
+			return;
 		}
-		this.mouseMove = false;
 
+		const { featureId, featureCoordinateIndex: coordinateIndex } =
+			this.coordinateSnapping.getSnappable(event, (feature) => {
+				return feature.geometry.type === "Polygon";
+			});
+
+		if (!featureId || coordinateIndex === undefined) {
+			return;
+		}
+
+		const geometry = this.store.getGeometryCopy(featureId);
+
+		let coordinates;
+		if (geometry.type === "Polygon") {
+			coordinates = geometry.coordinates[0];
+
+			// Prevent creating an invalid polygon
+			if (coordinates.length <= 4) {
+				return;
+			}
+		} else {
+			return;
+		}
+
+		const isFinalPolygonCoordinate =
+			geometry.type === "Polygon" &&
+			(coordinateIndex === 0 || coordinateIndex === coordinates.length - 1);
+
+		if (isFinalPolygonCoordinate) {
+			// Deleting the final coordinate in a polygon breaks it
+			// because GeoJSON expects a duplicate, so we need to fix
+			// it by adding the new first coordinate to the end
+			coordinates.shift();
+			coordinates.pop();
+			coordinates.push([coordinates[0][0], coordinates[0][1]]);
+		} else {
+			// Remove coordinate from array
+			coordinates.splice(coordinateIndex, 1);
+		}
+
+		// Validate the new geometry
+		if (this.validate) {
+			const validationResult = this.validate(
+				{
+					id: featureId,
+					type: "Feature",
+					geometry,
+					properties: {},
+				},
+				{
+					project: this.project,
+					unproject: this.unproject,
+					coordinatePrecision: this.coordinatePrecision,
+					updateType: UpdateTypes.Commit,
+				},
+			);
+			if (!validationResult.valid) {
+				return;
+			}
+		}
+
+		// The geometry has changed, so if we were snapped to a point we need to remove it
+		if (this.snappedPointId) {
+			this.store.delete([this.snappedPointId]);
+			this.snappedPointId = undefined;
+		}
+
+		this.store.updateGeometry([
+			{
+				id: featureId,
+				geometry,
+			},
+		]);
+	}
+
+	private onLeftClick(event: TerraDrawMouseEvent) {
 		// Reset the snapping point
 		if (this.snappedPointId) {
 			this.store.delete([this.snappedPointId]);
@@ -574,6 +643,26 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 					this.closingPoints.update(updatedPolygon.geometry.coordinates[0]);
 				}
 			}
+		}
+	}
+
+	/** @internal */
+	onClick(event: TerraDrawMouseEvent) {
+		// We want pointer devices (mobile/tablet) to have
+		// similar behaviour to mouse based devices so we
+		// trigger a mousemove event before every click
+		// if one has not been trigged to emulate this
+		if (this.currentCoordinate > 0 && !this.mouseMove) {
+			this.onMouseMove(event);
+		}
+		this.mouseMove = false;
+
+		if (event.button === "right") {
+			this.onRightClick(event);
+			return;
+		} else if (event.button === "left") {
+			this.onLeftClick(event);
+			return;
 		}
 	}
 

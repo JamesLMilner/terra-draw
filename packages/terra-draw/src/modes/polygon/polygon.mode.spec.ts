@@ -225,6 +225,8 @@ describe("TerraDrawPolygonMode", () => {
 
 	describe("onClick", () => {
 		let polygonMode: TerraDrawPolygonMode;
+		let onChange: jest.Mock;
+		let onFinish: jest.Mock;
 		let store: GeoJSONStore;
 
 		const validation: Validation = (feature, { updateType }) => {
@@ -235,9 +237,11 @@ describe("TerraDrawPolygonMode", () => {
 		};
 
 		beforeEach(() => {
-			polygonMode = new TerraDrawPolygonMode();
+			polygonMode = new TerraDrawPolygonMode({ editable: true });
 			const mockConfig = MockModeConfig(polygonMode.mode);
 
+			onFinish = mockConfig.onFinish;
+			onChange = mockConfig.onChange;
 			store = mockConfig.store;
 			polygonMode.register(mockConfig);
 			polygonMode.start();
@@ -521,6 +525,45 @@ describe("TerraDrawPolygonMode", () => {
 					id: expect.any(String),
 				},
 			]);
+		});
+
+		it("right click can delete a point if editable is true", () => {
+			polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+			polygonMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
+
+			polygonMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
+
+			polygonMode.onMouseMove(MockCursorEvent({ lng: 2, lat: 2 }));
+
+			polygonMode.onClick(MockCursorEvent({ lng: 2, lat: 2 }));
+
+			polygonMode.onMouseMove(MockCursorEvent({ lng: 3, lat: 3 }));
+
+			polygonMode.onClick(MockCursorEvent({ lng: 3, lat: 3 }));
+
+			polygonMode.onClick(MockCursorEvent({ lng: 3, lat: 3 }));
+
+			let features = store.copyAll();
+			expect(features.length).toBe(1);
+
+			expect(onFinish).toHaveBeenCalledTimes(1);
+			expect(onChange).toHaveBeenCalledTimes(12);
+
+			// Delete a coordinate
+			polygonMode.onClick(MockCursorEvent({ lng: 1, lat: 1, button: "right" }));
+
+			expect(onChange).toHaveBeenNthCalledWith(
+				13,
+				[expect.any(String)],
+				"update",
+			);
+
+			const featuresAfter = store.copyAll();
+			expect(featuresAfter.length).toBe(1);
+			expect(featuresAfter[0].geometry.coordinates[0]).not.toEqual(
+				features[0].geometry.coordinates[0],
+			);
 		});
 
 		describe("validate", () => {

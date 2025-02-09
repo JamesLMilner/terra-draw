@@ -524,17 +524,73 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 		this.updateGeometries(line, undefined, UpdateTypes.Provisional);
 	}
 
-	/** @internal */
-	onClick(event: TerraDrawMouseEvent) {
-		// We want pointer devices (mobile/tablet) to have
-		// similar behaviour to mouse based devices so we
-		// trigger a mousemove event before every click
-		// if one has not been triggered to emulate this
-		if (this.currentCoordinate > 0 && !this.mouseMove) {
-			this.onMouseMove(event);
+	private onRightClick(event: TerraDrawMouseEvent) {
+		if (!this.editable || this.state !== "started") {
+			return;
 		}
-		this.mouseMove = false;
 
+		const { featureId, featureCoordinateIndex: coordinateIndex } =
+			this.coordinateSnapping.getSnappable(event, (feature) => {
+				return feature.geometry.type === "LineString";
+			});
+
+		if (!featureId || coordinateIndex === undefined) {
+			return;
+		}
+
+		const geometry = this.store.getGeometryCopy(featureId);
+
+		let coordinates;
+		if (geometry.type === "LineString") {
+			coordinates = geometry.coordinates;
+
+			// Prevent creating an invalid linestring
+			if (coordinates.length <= 2) {
+				return;
+			}
+		} else {
+			return;
+		}
+
+		// Remove coordinate from array
+		coordinates.splice(coordinateIndex, 1);
+
+		// Validate the new geometry
+		if (this.validate) {
+			const validationResult = this.validate(
+				{
+					id: featureId,
+					type: "Feature",
+					geometry,
+					properties: {},
+				},
+				{
+					project: this.project,
+					unproject: this.unproject,
+					coordinatePrecision: this.coordinatePrecision,
+					updateType: UpdateTypes.Commit,
+				},
+			);
+			if (!validationResult.valid) {
+				return;
+			}
+		}
+
+		// The geometry has changed, so if we were snapped to a point we need to remove it
+		if (this.snappedPointId) {
+			this.store.delete([this.snappedPointId]);
+			this.snappedPointId = undefined;
+		}
+
+		this.store.updateGeometry([
+			{
+				id: featureId,
+				geometry,
+			},
+		]);
+	}
+
+	private onLeftClick(event: TerraDrawMouseEvent) {
 		// Reset the snapping point
 		if (this.snappedPointId) {
 			this.store.delete([this.snappedPointId]);
@@ -555,6 +611,24 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 				x: event.containerX,
 				y: event.containerY,
 			});
+		}
+	}
+
+	/** @internal */
+	onClick(event: TerraDrawMouseEvent) {
+		// We want pointer devices (mobile/tablet) to have
+		// similar behaviour to mouse based devices so we
+		// trigger a mousemove event before every click
+		// if one has not been triggered to emulate this
+		if (this.currentCoordinate > 0 && !this.mouseMove) {
+			this.onMouseMove(event);
+		}
+		this.mouseMove = false;
+
+		if (event.button === "right") {
+			this.onRightClick(event);
+		} else if (event.button === "left") {
+			this.onLeftClick(event);
 		}
 	}
 

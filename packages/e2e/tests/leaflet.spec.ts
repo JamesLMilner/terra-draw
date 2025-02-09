@@ -93,6 +93,28 @@ test.describe("point mode", () => {
 
 		await expectGroupPosition({ page, x: 419, y: 233 });
 	});
+
+	test("mode can set with editable set to true and points can be deleted", async ({
+		page,
+	}) => {
+		const mapDiv = await setupMap({
+			page,
+			configQueryParam: ["pointEditable"],
+		});
+		await changeMode({ page, mode });
+
+		await page.mouse.click(mapDiv.width / 2, mapDiv.height / 2);
+		await expectPaths({ page, count: 1 });
+		await page.mouse.move(mapDiv.width / 2, mapDiv.height / 2);
+
+		await page.mouse.click(mapDiv.width / 2, mapDiv.height / 2, {
+			button: "right",
+			clickCount: 1,
+		});
+
+		// await page.pause();
+		await expectPaths({ page, count: 0 });
+	});
 });
 
 test.describe("linestring mode", () => {
@@ -281,6 +303,36 @@ test.describe("linestring mode", () => {
 
 		await expectPaths({ page, count: 1 });
 		await expectPathDimensions({ page, width: 217, height: 64 });
+	});
+
+	test(`mode can set with editable set to true and points can be deleted`, async ({
+		page,
+	}) => {
+		const mapDiv = await setupMap({
+			page,
+			configQueryParam: ["lineStringEditable"],
+		});
+		await changeMode({ page, mode });
+
+		await page.mouse.move(mapDiv.width / 2, mapDiv.height / 2, { steps: 30 });
+		await page.mouse.click(mapDiv.width / 2, mapDiv.height / 2);
+		await page.mouse.move(mapDiv.width / 3, mapDiv.height / 2, { steps: 30 });
+		await page.mouse.click(mapDiv.width / 3, mapDiv.height / 2);
+		await page.mouse.move(mapDiv.width / 4, mapDiv.height / 3, { steps: 30 });
+		await page.mouse.click(mapDiv.width / 4, mapDiv.height / 3);
+
+		// Close
+		await page.mouse.click(mapDiv.width / 4, mapDiv.height / 3);
+
+		await expectPaths({ page, count: 1 });
+		await expectPathDimensions({ page, width: 324, height: 124 });
+
+		await page.mouse.click(mapDiv.width / 4, mapDiv.height / 3, {
+			button: "right",
+			clickCount: 1,
+		});
+
+		await expectPathDimensions({ page, width: 217, height: 4 });
 	});
 });
 
@@ -560,6 +612,56 @@ test.describe("polygon mode", () => {
 
 		// Check to see the dimensions have changed due to the edit
 		await expectPathDimensions({ page, width: 104, height: 104 + offset });
+	});
+
+	test("can use editable setting to delete a coordinate with right click", async ({
+		page,
+	}) => {
+		const mapDiv = await setupMap({
+			page,
+			configQueryParam: ["polygonEditable"],
+		});
+		await changeMode({ page, mode });
+
+		// The length of the square sides in pixels
+		const sideLength = 100;
+
+		// Calculating the half of the side length
+		const halfLength = sideLength / 2;
+
+		// Coordinates of the center
+		const centerX = mapDiv.width / 2;
+		const centerY = mapDiv.height / 2;
+
+		// Coordinates of the four corners of the square
+		const topLeft = { x: centerX - halfLength, y: centerY - halfLength };
+		const topRight = { x: centerX + halfLength, y: centerY - halfLength };
+		const bottomLeft = {
+			x: centerX - halfLength + 25,
+			y: centerY + halfLength + 25,
+		};
+		const bottomRight = { x: centerX + halfLength, y: centerY + halfLength };
+
+		// Perform clicks at each corner
+		await page.mouse.click(topLeft.x, topLeft.y);
+		await page.mouse.click(topRight.x, topRight.y);
+		await page.mouse.click(bottomRight.x, bottomRight.y);
+		await page.mouse.click(bottomLeft.x, bottomLeft.y);
+
+		// Close the square
+		await page.mouse.click(bottomLeft.x, bottomLeft.y);
+
+		await expectPaths({ page, count: 1 });
+		await expectPathDimensions({ page, width: 104, height: 129 });
+
+		await page.mouse.click(bottomLeft.x, bottomLeft.y, {
+			button: "right",
+			clickCount: 1,
+		});
+
+		// The dimensions should have changed due to the deletion
+		await expectPaths({ page, count: 1 });
+		await expectPathDimensions({ page, width: 104, height: 104 });
 	});
 });
 

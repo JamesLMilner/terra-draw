@@ -121,6 +121,30 @@ describe("TerraDrawPointMode", () => {
 			);
 		});
 
+		it("right click can delete a point if editable is true", () => {
+			const pointMode = new TerraDrawPointMode({ editable: true });
+
+			const mockConfig = MockModeConfig(pointMode.mode);
+
+			pointMode.register(mockConfig);
+
+			pointMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+			expect(mockConfig.onChange).toHaveBeenCalledTimes(1);
+			expect(mockConfig.onChange).toHaveBeenCalledWith(
+				[expect.any(String)],
+				"create",
+			);
+
+			pointMode.onClick(MockCursorEvent({ lng: 0, lat: 0, button: "right" }));
+
+			expect(mockConfig.onChange).toHaveBeenCalledTimes(2);
+			expect(mockConfig.onChange).toHaveBeenCalledWith(
+				[expect.any(String)],
+				"delete",
+			);
+		});
+
 		describe("validate", () => {
 			it("does not create the point if validation returns false", () => {
 				const pointMode = new TerraDrawPointMode({

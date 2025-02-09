@@ -110,7 +110,7 @@ export const expectPaths = async ({
 	} else {
 		await expect(
 			await page.locator(selector).count(),
-			`locator count should be greater than 0 for selector ${selector}`,
+			`locator count should be 0 for selector ${selector}`,
 		).toBe(0);
 	}
 };

@@ -150,7 +150,7 @@ describe("TerraDrawLineStringMode", () => {
 		let store: GeoJSONStore;
 
 		beforeEach(() => {
-			lineStringMode = new TerraDrawLineStringMode();
+			lineStringMode = new TerraDrawLineStringMode({ editable: true });
 			const mockConfig = MockModeConfig(lineStringMode.mode);
 			onChange = mockConfig.onChange;
 			onFinish = mockConfig.onFinish;
@@ -384,6 +384,74 @@ describe("TerraDrawLineStringMode", () => {
 				[5, 10],
 				[10, 10],
 			]);
+		});
+
+		it("right click can delete a point if editable is true", () => {
+			lineStringMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+			lineStringMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
+
+			lineStringMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
+
+			let features = store.copyAll();
+
+			// Drawn LineString and Closing point
+			expect(features.length).toBe(2);
+
+			expect(features[0].geometry.coordinates).toStrictEqual([
+				[0, 0],
+				[1, 1],
+				[1, 1],
+			]);
+
+			expect(features[1].geometry.coordinates).toStrictEqual([1, 1]);
+
+			lineStringMode.onMouseMove(MockCursorEvent({ lng: 2, lat: 2 }));
+
+			lineStringMode.onClick(MockCursorEvent({ lng: 2, lat: 2 }));
+
+			expect(onChange).not.toHaveBeenCalledWith([expect.any(String)], "delete");
+
+			lineStringMode.onClick(MockCursorEvent({ lng: 2, lat: 2 }));
+
+			expect(onChange).toHaveBeenCalledTimes(9);
+
+			expect(onChange).toHaveBeenNthCalledWith(
+				9,
+				[expect.any(String)],
+				"delete",
+			);
+
+			expect(onFinish).toHaveBeenCalledTimes(1);
+
+			features = store.copyAll();
+			expect(features.length).toBe(1);
+
+			expect(features[0].geometry.coordinates).toStrictEqual([
+				[0, 0],
+				[1, 1],
+				[2, 2],
+			]);
+
+			expect(onChange).toHaveBeenCalledTimes(9);
+
+			// Delete a coordinate
+			lineStringMode.onClick(
+				MockCursorEvent({ lng: 1, lat: 1, button: "right" }),
+			);
+
+			expect(onChange).toHaveBeenCalledTimes(10);
+			expect(onChange).toHaveBeenNthCalledWith(
+				10,
+				[expect.any(String)],
+				"update",
+			);
+
+			const featuresAfter = store.copyAll();
+			expect(featuresAfter.length).toBe(1);
+			expect(featuresAfter[0].geometry.coordinates).not.toEqual(
+				features[0].geometry.coordinates,
+			);
 		});
 
 		describe("validations", () => {

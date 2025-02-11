@@ -447,11 +447,15 @@ class TerraDraw {
 	}
 
 	/**
-	 * Allows the user to get a copy of a given feature by id
+	 * Allows the user to get a snapshot (copy) of a given feature by id
 	 *
 	 * @returns A copy of the feature geometry in the instances store
 	 */
 	getSnapshotFeature(id: FeatureId) {
+		if (!this._store.has(id)) {
+			return undefined;
+		}
+
 		return this._store.copy(id);
 	}
 

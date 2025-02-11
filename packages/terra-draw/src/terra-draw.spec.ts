@@ -1,6 +1,7 @@
 /**
  * @jest-environment jsdom
  */
+import { FeatureId } from "./extend";
 import {
 	TerraDraw,
 	TerraDrawLineStringMode,
@@ -310,6 +311,56 @@ describe("Terra Draw", () => {
 			expect(draw.hasFeature("f8e5a38d-ecfa-4294-8461-d9cff0e0d7f8")).toBe(
 				false,
 			);
+		});
+	});
+
+	describe("getSnapshotFeature", () => {
+		it("returns the correct feature for an id", () => {
+			const draw = new TerraDraw({
+				adapter,
+				modes: [new TerraDrawPointMode()],
+			});
+
+			draw.start();
+			const [result] = draw.addFeatures([
+				{
+					type: "Feature",
+					geometry: {
+						type: "Point",
+						coordinates: [-25.431289673, 34.355907891],
+					},
+					properties: {
+						mode: "point",
+					},
+				},
+			]);
+
+			const feature = draw.getSnapshotFeature(result.id as FeatureId);
+
+			expect(feature).toEqual({
+				geometry: {
+					coordinates: [-25.431289673, 34.355907891],
+					type: "Point",
+				},
+				id: expect.any(String),
+				properties: {
+					mode: "point",
+				},
+				type: "Feature",
+			});
+		});
+
+		it("returns undefined if feature does not exist for an id", () => {
+			const draw = new TerraDraw({
+				adapter,
+				modes: [new TerraDrawPointMode()],
+			});
+
+			draw.start();
+
+			const feature = draw.getSnapshotFeature(0);
+
+			expect(feature).toEqual(undefined);
 		});
 	});
 

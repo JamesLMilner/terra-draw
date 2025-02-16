@@ -3,6 +3,8 @@ import { MockModeConfig } from "../../test/mock-mode-config";
 import { MockCursorEvent } from "../../test/mock-cursor-event";
 import { TerraDrawSensorMode } from "./sensor.mode";
 import { MockKeyboardEvent } from "../../test/mock-keyboard-event";
+import { Polygon } from "geojson";
+import { followsRightHandRule } from "../../geometry/boolean/right-hand-rule";
 
 describe("TerraDrawSensorMode", () => {
 	describe("constructor", () => {
@@ -177,6 +179,7 @@ describe("TerraDrawSensorMode", () => {
 	describe("onClick", () => {
 		let sensorMode: TerraDrawSensorMode;
 		let store: GeoJSONStore;
+		let onFinish: jest.Mock;
 
 		describe("with successful validation", () => {
 			beforeEach(() => {
@@ -186,6 +189,7 @@ describe("TerraDrawSensorMode", () => {
 				const mockConfig = MockModeConfig(sensorMode.mode);
 
 				store = mockConfig.store;
+				onFinish = mockConfig.onFinish;
 				sensorMode.register(mockConfig);
 				sensorMode.start();
 			});
@@ -235,7 +239,7 @@ describe("TerraDrawSensorMode", () => {
 
 				sensorMode.onMouseMove(MockCursorEvent({ lng: 2, lat: 2 }));
 
-				sensorMode.onClick(MockCursorEvent({ lng: 2, lat: 2 }));
+				sensorMode.onClick(MockCursorEvent({ lng: 3, lat: 3 }));
 
 				sensorMode.onMouseMove(MockCursorEvent({ lng: 1.5, lat: 1.5 }));
 
@@ -251,6 +255,7 @@ describe("TerraDrawSensorMode", () => {
 				const featuresAfterFinalClick = store.copyAll();
 
 				expect(featuresAfterFinalClick.length).toBe(1);
+				expect(onFinish).toHaveBeenCalledTimes(1);
 			});
 		});
 
@@ -301,17 +306,18 @@ describe("TerraDrawSensorMode", () => {
 		let onChange: jest.Mock;
 		let onFinish: jest.Mock;
 
-		it("does nothing if on finish key press is pressed while not drawing", () => {
+		beforeEach(() => {
 			sensorMode = new TerraDrawSensorMode();
 			const mockConfig = MockModeConfig(sensorMode.mode);
 			store = new GeoJSONStore();
 			store = mockConfig.store;
 			onChange = mockConfig.onChange;
 			onFinish = mockConfig.onFinish;
-
 			sensorMode.register(mockConfig);
 			sensorMode.start();
+		});
 
+		it("does nothing if on finish key press is pressed while not drawing", () => {
 			let features = store.copyAll();
 			expect(features.length).toBe(0);
 
@@ -322,16 +328,6 @@ describe("TerraDrawSensorMode", () => {
 		});
 
 		it("cancels drawing sensor on cancel key press", () => {
-			sensorMode = new TerraDrawSensorMode();
-			const mockConfig = MockModeConfig(sensorMode.mode);
-			store = new GeoJSONStore();
-			store = mockConfig.store;
-			onChange = mockConfig.onChange;
-			onFinish = mockConfig.onFinish;
-
-			sensorMode.register(mockConfig);
-			sensorMode.start();
-
 			sensorMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
 			let features = store.copyAll();
@@ -344,17 +340,31 @@ describe("TerraDrawSensorMode", () => {
 		});
 
 		it("successfully creates a sensor on enter key press on final part of drawing", () => {
-			sensorMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			sensorMode.onMouseMove(
+				MockCursorEvent({ lng: -0.097577795, lat: 51.516549851 }),
+			);
+			sensorMode.onClick(
+				MockCursorEvent({ lng: -0.097577795, lat: 51.516549851 }),
+			);
 
-			sensorMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
+			sensorMode.onMouseMove(
+				MockCursorEvent({ lng: -0.102022215, lat: 51.526467445 }),
+			);
+			sensorMode.onClick(
+				MockCursorEvent({ lng: -0.102022215, lat: 51.526467445 }),
+			);
 
-			sensorMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
+			sensorMode.onMouseMove(
+				MockCursorEvent({ lng: -0.085349604, lat: 51.51874384 }),
+			);
+			sensorMode.onClick(
+				MockCursorEvent({ lng: -0.085349604, lat: 51.51874384 }),
+			);
 
-			sensorMode.onMouseMove(MockCursorEvent({ lng: 2, lat: 2 }));
-
-			sensorMode.onClick(MockCursorEvent({ lng: 2, lat: 2 }));
-
-			sensorMode.onMouseMove(MockCursorEvent({ lng: 1.5, lat: 1.5 }));
+			sensorMode.onMouseMove(
+				MockCursorEvent({ lng: -0.073104649, lat: 51.524295939 }),
+			);
+			// sensorMode.onClick(MockCursorEvent({ lng: -0.073104649, lat: 51.524295939 }));
 
 			const features = store.copyAll();
 
@@ -365,6 +375,12 @@ describe("TerraDrawSensorMode", () => {
 			const featuresAfterFinalClick = store.copyAll();
 
 			expect(featuresAfterFinalClick.length).toBe(1);
+			expect(featuresAfterFinalClick[0].geometry.type).toBe("Polygon");
+
+			expect(
+				followsRightHandRule(featuresAfterFinalClick[0].geometry as Polygon),
+			).toBe(true);
+			expect(onFinish).toHaveBeenCalledTimes(1);
 		});
 
 		it("does not finish on key press when keyEvents null", () => {

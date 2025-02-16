@@ -33,6 +33,7 @@ import {
 import { cartesianDistance } from "../../geometry/measure/pixel-distance";
 import { isClockwiseWebMercator } from "../../geometry/clockwise";
 import { limitPrecision } from "../../geometry/limit-decimal-precision";
+import { ensureRightHandRule } from "../../geometry/ensure-right-hand-rule";
 
 type TerraDrawSectorModeKeyEvents = {
 	cancel?: KeyboardEvent["key"] | null;
@@ -106,6 +107,16 @@ export class TerraDrawSectorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 			return;
 		}
 
+		// Fix right hand rule if necessary
+		const correctedGeometry = ensureRightHandRule(
+			this.store.getGeometryCopy<Polygon>(this.currentId),
+		);
+		if (correctedGeometry) {
+			this.store.updateGeometry([
+				{ id: this.currentId, geometry: correctedGeometry },
+			]);
+		}
+
 		const finishedId = this.currentId;
 
 		this.currentCoordinate = 0;
@@ -146,7 +157,7 @@ export class TerraDrawSectorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 			this.currentId,
 		).coordinates[0];
 
-		let updatedCoordinates;
+		let updatedCoordinates: Polygon["coordinates"][0] | undefined;
 
 		if (this.currentCoordinate === 1) {
 			// We must add a very small epsilon value so that Mapbox GL

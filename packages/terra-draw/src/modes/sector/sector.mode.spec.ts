@@ -1,9 +1,10 @@
-import { Position } from "geojson";
+import { Polygon, Position } from "geojson";
 import { GeoJSONStore } from "../../store/store";
 import { MockModeConfig } from "../../test/mock-mode-config";
 import { TerraDrawSectorMode } from "./sector.mode";
 import { MockCursorEvent } from "../../test/mock-cursor-event";
 import { MockKeyboardEvent } from "../../test/mock-keyboard-event";
+import { followsRightHandRule } from "../../geometry/boolean/right-hand-rule";
 
 describe("TerraDrawSectorMode", () => {
 	describe("constructor", () => {
@@ -201,6 +202,7 @@ describe("TerraDrawSectorMode", () => {
 	describe("onClick", () => {
 		let sectorMode: TerraDrawSectorMode;
 		let store: GeoJSONStore;
+		let onFinish: jest.Mock;
 
 		describe("with successful validation", () => {
 			beforeEach(() => {
@@ -212,23 +214,42 @@ describe("TerraDrawSectorMode", () => {
 				const mockConfig = MockModeConfig(sectorMode.mode);
 
 				store = mockConfig.store;
+				onFinish = mockConfig.onFinish;
 				sectorMode.register(mockConfig);
 				sectorMode.start();
 			});
 
 			it("can create a sector", () => {
-				sectorMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+				sectorMode.onClick(
+					MockCursorEvent({ lng: -0.128673315, lat: 51.500349947 }),
+				);
 
-				sectorMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
+				sectorMode.onMouseMove(
+					MockCursorEvent({ lng: -0.092495679, lat: 51.515995286 }),
+				);
 
-				sectorMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
+				sectorMode.onClick(
+					MockCursorEvent({ lng: -0.092495679, lat: 51.515995286 }),
+				);
 
-				sectorMode.onMouseMove(MockCursorEvent({ lng: 2, lat: 2 }));
+				sectorMode.onMouseMove(
+					MockCursorEvent({ lng: -0.087491348, lat: 51.490132315 }),
+				);
 
-				sectorMode.onClick(MockCursorEvent({ lng: 2, lat: 2 }));
+				sectorMode.onClick(
+					MockCursorEvent({ lng: -0.087491348, lat: 51.490132315 }),
+				);
 
 				let features = store.copyAll();
 				expect(features.length).toBe(1);
+
+				expect(features[0].geometry.type).toBe("Polygon");
+
+				expect(followsRightHandRule(features[0].geometry as Polygon)).toBe(
+					true,
+				);
+
+				expect(onFinish).toHaveBeenCalledTimes(1);
 
 				// Create a new sector polygon
 				sectorMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
@@ -336,20 +357,21 @@ describe("TerraDrawSectorMode", () => {
 
 			sectorMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
-			let features = store.copyAll();
-			expect(features.length).toBe(1);
+			sectorMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
+
+			sectorMode.onMouseMove(MockCursorEvent({ lng: 2, lat: 1 }));
 
 			sectorMode.onKeyUp(MockKeyboardEvent({ key: "Enter" }));
 
-			sectorMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			expect(onFinish).toHaveBeenNthCalledWith(1, expect.any(String), {
+				action: "draw",
+				mode: "sector",
+			});
 
-			features = store.copyAll();
-			// Two as the sector has been closed via enter
-			expect(features.length).toBe(2);
-
-			expect(onChange).toHaveBeenCalledTimes(2);
-			expect(onChange).toHaveBeenCalledWith([expect.any(String)], "create");
-			expect(onFinish).toHaveBeenCalledTimes(1);
+			const features = store.copyAll();
+			expect(features.length).toBe(1);
+			expect(features[0].geometry.type).toBe("Polygon");
+			expect(followsRightHandRule(features[0].geometry as Polygon)).toBe(true);
 		});
 
 		it("does not finish on key press when keyEvents null", () => {

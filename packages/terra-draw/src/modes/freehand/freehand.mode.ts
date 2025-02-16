@@ -23,6 +23,7 @@ import {
 } from "../../store/store";
 import { cartesianDistance } from "../../geometry/measure/pixel-distance";
 import { ValidatePolygonFeature } from "../../validations/polygon.validation";
+import { ensureRightHandRule } from "../../geometry/ensure-right-hand-rule";
 
 type TerraDrawFreehandModeKeyEvents = {
 	cancel: KeyboardEvent["key"] | null;
@@ -115,6 +116,18 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 	private close() {
 		if (this.currentId === undefined) {
 			return;
+		}
+
+		// Fix right hand rule if necessary
+		if (this.currentId) {
+			const correctedGeometry = ensureRightHandRule(
+				this.store.getGeometryCopy<Polygon>(this.currentId),
+			);
+			if (correctedGeometry) {
+				this.store.updateGeometry([
+					{ id: this.currentId, geometry: correctedGeometry },
+				]);
+			}
 		}
 
 		const finishedId = this.currentId;
@@ -324,7 +337,9 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 		if (event.key === this.keyEvents.cancel) {
 			this.cleanUp();
 		} else if (event.key === this.keyEvents.finish) {
-			this.close();
+			if (this.startingClick === true) {
+				this.close();
+			}
 		}
 	}
 

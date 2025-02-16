@@ -29,6 +29,7 @@ import {
 import { ValidatePolygonFeature } from "../../validations/polygon.validation";
 import { LineSnappingBehavior } from "../line-snapping.behavior";
 import { CoordinateSnappingBehavior } from "../coordinate-snapping.behavior";
+import { ensureRightHandRule } from "../../geometry/ensure-right-hand-rule";
 
 type TerraDrawPolygonModeKeyEvents = {
 	cancel?: KeyboardEvent["key"] | null;
@@ -167,6 +168,18 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 		}
 
 		const finishedId = this.currentId;
+
+		// Fix right hand rule if necessary
+		if (this.currentId) {
+			const correctedGeometry = ensureRightHandRule(
+				this.store.getGeometryCopy<Polygon>(this.currentId),
+			);
+			if (correctedGeometry) {
+				this.store.updateGeometry([
+					{ id: this.currentId, geometry: correctedGeometry },
+				]);
+			}
+		}
 
 		if (this.snappedPointId) {
 			this.store.delete([this.snappedPointId]);

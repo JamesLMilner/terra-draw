@@ -32,6 +32,7 @@ import {
 import { cartesianDistance } from "../../geometry/measure/pixel-distance";
 import { isClockwiseWebMercator } from "../../geometry/clockwise";
 import { limitPrecision } from "../../geometry/limit-decimal-precision";
+import { ensureRightHandRule } from "../../geometry/ensure-right-hand-rule";
 
 type TerraDrawSensorModeKeyEvents = {
 	cancel?: KeyboardEvent["key"] | null;
@@ -121,6 +122,18 @@ export class TerraDrawSensorMode extends TerraDrawBaseDrawMode<SensorPolygonStyl
 
 		if (finishedInitialArcId) {
 			this.store.delete([finishedInitialArcId]);
+		}
+
+		// Fix right hand rule if necessary
+		if (this.currentId) {
+			const correctedGeometry = ensureRightHandRule(
+				this.store.getGeometryCopy<Polygon>(this.currentId),
+			);
+			if (correctedGeometry) {
+				this.store.updateGeometry([
+					{ id: this.currentId, geometry: correctedGeometry },
+				]);
+			}
 		}
 
 		this.currentCoordinate = 0;

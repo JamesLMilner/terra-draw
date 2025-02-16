@@ -345,6 +345,11 @@ export class TerraDrawAngledRectangleMode extends TerraDrawBaseDrawMode<PolygonS
 		if (event.key === this.keyEvents.cancel) {
 			this.cleanUp();
 		} else if (event.key === this.keyEvents.finish) {
+			// We don't want to close a unfinished polygon
+			if (this.currentCoordinate < 2) {
+				this.cleanUp();
+				return;
+			}
 			this.close();
 		}
 	}

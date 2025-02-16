@@ -20,6 +20,7 @@ import {
 	TerraDrawBaseDrawMode,
 } from "../base.mode";
 import { ValidateNonIntersectingPolygonFeature } from "../../validations/polygon.validation";
+import { ensureRightHandRule } from "../../geometry/ensure-right-hand-rule";
 
 type TerraDrawRectangleModeKeyEvents = {
 	cancel: KeyboardEvent["key"] | null;
@@ -128,6 +129,19 @@ export class TerraDrawRectangleMode extends TerraDrawBaseDrawMode<RectanglePolyg
 
 	private close() {
 		const finishedId = this.currentRectangleId;
+
+		// Fix right hand rule if necessary
+		if (finishedId) {
+			const correctedGeometry = ensureRightHandRule(
+				this.store.getGeometryCopy<Polygon>(finishedId),
+			);
+			if (correctedGeometry) {
+				this.store.updateGeometry([
+					{ id: finishedId, geometry: correctedGeometry },
+				]);
+			}
+		}
+
 		this.center = undefined;
 		this.currentRectangleId = undefined;
 		this.clickCount = 0;

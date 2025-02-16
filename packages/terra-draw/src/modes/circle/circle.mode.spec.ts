@@ -2,6 +2,8 @@ import { GeoJSONStore } from "../../store/store";
 import { MockModeConfig } from "../../test/mock-mode-config";
 import { MockCursorEvent } from "../../test/mock-cursor-event";
 import { TerraDrawCircleMode } from "./circle.mode";
+import { Polygon } from "geojson";
+import { followsRightHandRule } from "../../geometry/boolean/right-hand-rule";
 
 describe("TerraDrawCircleMode", () => {
 	describe("constructor", () => {
@@ -161,6 +163,10 @@ describe("TerraDrawCircleMode", () => {
 					features = store.copyAll();
 					expect(features.length).toBe(1);
 
+					expect(followsRightHandRule(features[0].geometry as Polygon)).toBe(
+						true,
+					);
+
 					// We don't expect any changes if there is no cursor movement
 					expect(onChange).toHaveBeenCalledTimes(1);
 					expect(onChange).toHaveBeenCalledWith([expect.any(String)], "create");
@@ -180,6 +186,10 @@ describe("TerraDrawCircleMode", () => {
 
 					features = store.copyAll();
 					expect(features.length).toBe(1);
+
+					expect(followsRightHandRule(features[0].geometry as Polygon)).toBe(
+						true,
+					);
 
 					expect(onChange).toHaveBeenCalledTimes(5);
 					expect(onChange).toHaveBeenCalledWith([expect.any(String)], "create");

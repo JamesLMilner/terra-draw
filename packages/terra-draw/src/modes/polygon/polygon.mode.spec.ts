@@ -314,15 +314,16 @@ describe("TerraDrawPolygonMode", () => {
 			const coordinates = [
 				[5, 5],
 				[5, 5],
-				[5, 10],
-				[5, 10],
-				[10, 10],
-				[10, 10],
 				[10, 5],
 				[10, 5],
+				[10, 10],
+				[10, 10],
+				[5, 10],
+				[5, 10],
 				[5, 5],
 				[5, 5],
 			];
+
 			polygonMode = new TerraDrawPolygonMode({
 				snapping: {
 					toCustom: () => {
@@ -360,9 +361,9 @@ describe("TerraDrawPolygonMode", () => {
 			expect(features[0].geometry.coordinates).toStrictEqual([
 				[
 					[5, 5],
-					[5, 10],
-					[10, 10],
 					[10, 5],
+					[10, 10],
+					[5, 10],
 					[5, 5],
 				],
 			]);
@@ -446,7 +447,7 @@ describe("TerraDrawPolygonMode", () => {
 					[3, 3],
 					[4, 4],
 					[0, 0],
-				],
+				].reverse(), // Reverse to make it right hand rule valid
 			]);
 		});
 
@@ -506,7 +507,8 @@ describe("TerraDrawPolygonMode", () => {
 			expect(store.updateGeometry).toHaveBeenCalledTimes(7);
 
 			polygonMode.onClick(thirdPoint);
-			expect(store.updateGeometry).toHaveBeenCalledTimes(8);
+			// Right hand rule is not valid so extra update!
+			expect(store.updateGeometry).toHaveBeenCalledTimes(9);
 
 			// Polygon is now closed
 			expect(store.updateGeometry).toHaveBeenNthCalledWith(8, [
@@ -548,15 +550,16 @@ describe("TerraDrawPolygonMode", () => {
 			expect(features.length).toBe(1);
 
 			expect(onFinish).toHaveBeenCalledTimes(1);
-			expect(onChange).toHaveBeenCalledTimes(12);
+			// Extra call because of the right hand rule fixing
+			expect(onChange).toHaveBeenCalledTimes(13);
 
 			// Delete a coordinate
 			polygonMode.onClick(MockCursorEvent({ lng: 1, lat: 1, button: "right" }));
 
 			expect(onChange).toHaveBeenNthCalledWith(
 				13,
-				[expect.any(String)],
-				"update",
+				[expect.any(String), expect.any(String)],
+				"delete",
 			);
 
 			const featuresAfter = store.copyAll();

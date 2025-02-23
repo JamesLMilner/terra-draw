@@ -113,6 +113,64 @@ describe("TerraDrawSectorMode", () => {
 		});
 	});
 
+	describe("updateOptions", () => {
+		it("can change cursors", () => {
+			const sectorMode = new TerraDrawSectorMode();
+			sectorMode.updateOptions({
+				cursors: {
+					start: "pointer",
+				},
+			});
+			const mockConfig = MockModeConfig(sectorMode.mode);
+			sectorMode.register(mockConfig);
+			sectorMode.start();
+			expect(mockConfig.setCursor).toHaveBeenCalledWith("pointer");
+		});
+
+		it("can change key events", () => {
+			const sectorMode = new TerraDrawSectorMode();
+			sectorMode.updateOptions({
+				keyEvents: {
+					cancel: "C",
+					finish: "F",
+				},
+			});
+			const mockConfig = MockModeConfig(sectorMode.mode);
+			sectorMode.register(mockConfig);
+			sectorMode.start();
+
+			sectorMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+			let features = mockConfig.store.copyAll();
+			expect(features.length).toBe(1);
+
+			sectorMode.onKeyUp(MockKeyboardEvent({ key: "C" }));
+
+			features = mockConfig.store.copyAll();
+			expect(features.length).toBe(0);
+		});
+
+		it("can update styles", () => {
+			const sectorMode = new TerraDrawSectorMode();
+
+			const mockConfig = MockModeConfig(sectorMode.mode);
+
+			sectorMode.register(mockConfig);
+			sectorMode.start();
+
+			sectorMode.updateOptions({
+				styles: {
+					fillColor: "#ffffff",
+				},
+			});
+			expect(sectorMode.styles).toStrictEqual({
+				fillColor: "#ffffff",
+			});
+
+			expect(mockConfig.onChange).toHaveBeenCalledTimes(1);
+		});
+	});
+
 	describe("onMouseMove", () => {
 		let sectorMode: TerraDrawSectorMode;
 		let store: GeoJSONStore;
@@ -536,6 +594,8 @@ describe("TerraDrawSectorMode", () => {
 					fillOpacity: () => 0.5,
 				},
 			});
+
+			sectorMode.register(MockModeConfig(sectorMode.mode));
 
 			expect(
 				sectorMode.styleFeature({

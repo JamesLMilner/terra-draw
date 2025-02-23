@@ -91,6 +91,31 @@ describe("TerraDrawRenderMode", () => {
 		});
 	});
 
+	describe("updateOptions", () => {
+		it("can update styles", () => {
+			const polygonMode = new TerraDrawRenderMode({
+				modeName: "arbitary",
+				styles: { pointColor: "#12121" },
+			});
+
+			const mockConfig = MockModeConfig(polygonMode.mode);
+
+			polygonMode.register(mockConfig);
+			polygonMode.start();
+
+			polygonMode.updateOptions({
+				styles: {
+					pointColor: "#ffffff",
+				},
+			});
+			expect(polygonMode.styles).toStrictEqual({
+				pointColor: "#ffffff",
+			});
+
+			expect(mockConfig.onChange).toHaveBeenCalledTimes(1);
+		});
+	});
+
 	describe("registerBehaviors", () => {
 		it("changes the mode name when registerBehaviors called", () => {
 			const renderMode = new TerraDrawRenderMode(options);
@@ -195,6 +220,8 @@ describe("TerraDrawRenderMode", () => {
 				},
 			});
 
+			renderMode.register(MockModeConfig(renderMode.mode));
+
 			expect(
 				renderMode.styleFeature({
 					type: "Feature",
@@ -219,6 +246,8 @@ describe("TerraDrawRenderMode", () => {
 					polygonOutlineWidth: () => 3,
 				},
 			});
+
+			renderMode.register(MockModeConfig(renderMode.mode));
 
 			expect(
 				renderMode.styleFeature({

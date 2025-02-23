@@ -4,6 +4,7 @@ import { MockCursorEvent } from "../../test/mock-cursor-event";
 import { TerraDrawAngledRectangleMode } from "./angled-rectangle.mode";
 import { Polygon } from "geojson";
 import { followsRightHandRule } from "../../geometry/boolean/right-hand-rule";
+import { MockKeyboardEvent } from "../../test/mock-keyboard-event";
 
 describe("TerraDrawAngledRectangleMode", () => {
 	describe("constructor", () => {
@@ -109,6 +110,65 @@ describe("TerraDrawAngledRectangleMode", () => {
 			angledRectangleMode.stop();
 
 			expect(angledRectangleMode.state).toBe("stopped");
+		});
+	});
+
+	describe("updateOptions", () => {
+		it("can change cursors", () => {
+			const angledRectangleMode = new TerraDrawAngledRectangleMode();
+			angledRectangleMode.updateOptions({
+				cursors: {
+					start: "pointer",
+					close: "pointer",
+				},
+			});
+			const mockConfig = MockModeConfig(angledRectangleMode.mode);
+			angledRectangleMode.register(mockConfig);
+			angledRectangleMode.start();
+			expect(mockConfig.setCursor).toHaveBeenCalledWith("pointer");
+		});
+
+		it("can change key events", () => {
+			const angledRectangleMode = new TerraDrawAngledRectangleMode();
+			angledRectangleMode.updateOptions({
+				keyEvents: {
+					cancel: "C",
+					finish: "F",
+				},
+			});
+			const mockConfig = MockModeConfig(angledRectangleMode.mode);
+			angledRectangleMode.register(mockConfig);
+			angledRectangleMode.start();
+
+			angledRectangleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+			let features = mockConfig.store.copyAll();
+			expect(features.length).toBe(1);
+
+			angledRectangleMode.onKeyUp(MockKeyboardEvent({ key: "C" }));
+
+			features = mockConfig.store.copyAll();
+			expect(features.length).toBe(0);
+		});
+
+		it("can update styles", () => {
+			const angledRectangleMode = new TerraDrawAngledRectangleMode();
+
+			const mockConfig = MockModeConfig(angledRectangleMode.mode);
+
+			angledRectangleMode.register(mockConfig);
+			angledRectangleMode.start();
+
+			angledRectangleMode.updateOptions({
+				styles: {
+					fillColor: "#ffffff",
+				},
+			});
+			expect(angledRectangleMode.styles).toStrictEqual({
+				fillColor: "#ffffff",
+			});
+
+			expect(mockConfig.onChange).toHaveBeenCalledTimes(1);
 		});
 	});
 
@@ -488,6 +548,8 @@ describe("TerraDrawAngledRectangleMode", () => {
 					fillOpacity: () => 0.5,
 				},
 			});
+
+			rectangleMode.register(MockModeConfig(rectangleMode.mode));
 
 			expect(
 				rectangleMode.styleFeature({

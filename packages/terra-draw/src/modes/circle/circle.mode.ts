@@ -31,6 +31,8 @@ type TerraDrawCircleModeKeyEvents = {
 	finish: KeyboardEvent["key"] | null;
 };
 
+const defaultKeyEvents = { cancel: "Escape", finish: "Enter" };
+
 type CirclePolygonStyling = {
 	fillColor: HexColorStyling;
 	outlineColor: HexColorStyling;
@@ -42,6 +44,10 @@ interface Cursors {
 	start?: Cursor;
 }
 
+const defaultCursors = {
+	start: "crosshair",
+} as Required<Cursors>;
+
 interface TerraDrawCircleModeOptions<T extends CustomStyling>
 	extends BaseModeOptions<T> {
 	keyEvents?: TerraDrawCircleModeKeyEvents | null;
@@ -51,12 +57,12 @@ interface TerraDrawCircleModeOptions<T extends CustomStyling>
 }
 
 export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyling> {
-	mode = "circle";
+	mode = "circle" as const;
 	private center: Position | undefined;
 	private clickCount = 0;
 	private currentCircleId: FeatureId | undefined;
-	private keyEvents: TerraDrawCircleModeKeyEvents;
-	private cursors: Required<Cursors>;
+	private keyEvents: TerraDrawCircleModeKeyEvents = defaultKeyEvents;
+	private cursors: Required<Cursors> = defaultCursors;
 	private startingRadiusKilometers = 0.00001;
 	private cursorMovedAfterInitialCursorDown = false;
 
@@ -69,33 +75,28 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 	 * @param options.pointerDistance - Distance in pixels to consider a pointer close to a vertex
 	 */
 	constructor(options?: TerraDrawCircleModeOptions<CirclePolygonStyling>) {
-		super(options);
+		super(options, true);
+		this.updateOptions(options);
+	}
 
-		const defaultCursors = {
-			start: "crosshair",
-		} as Required<Cursors>;
+	override updateOptions(
+		options?: TerraDrawCircleModeOptions<CirclePolygonStyling>,
+	) {
+		super.updateOptions(options);
 
-		if (options && options.cursors) {
-			this.cursors = { ...defaultCursors, ...options.cursors };
-		} else {
-			this.cursors = defaultCursors;
+		if (options?.cursors) {
+			this.cursors = { ...this.cursors, ...options.cursors };
 		}
 
-		// We want to have some defaults, but also allow key bindings
-		// to be explicitly turned off
 		if (options?.keyEvents === null) {
 			this.keyEvents = { cancel: null, finish: null };
-		} else {
-			const defaultKeyEvents = { cancel: "Escape", finish: "Enter" };
-			this.keyEvents =
-				options && options.keyEvents
-					? { ...defaultKeyEvents, ...options.keyEvents }
-					: defaultKeyEvents;
+		} else if (options?.keyEvents) {
+			this.keyEvents = { ...this.keyEvents, ...options.keyEvents };
 		}
 
-		this.startingRadiusKilometers =
-			options?.startingRadiusKilometers ?? 0.00001;
-		this.validate = options?.validation;
+		if (options?.startingRadiusKilometers) {
+			this.startingRadiusKilometers = options.startingRadiusKilometers;
+		}
 	}
 
 	private close() {

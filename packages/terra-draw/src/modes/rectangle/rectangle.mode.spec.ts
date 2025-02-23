@@ -417,6 +417,8 @@ describe("TerraDrawRectangleMode", () => {
 				},
 			});
 
+			rectangleMode.register(MockModeConfig(rectangleMode.mode));
+
 			expect(
 				rectangleMode.styleFeature({
 					type: "Feature",

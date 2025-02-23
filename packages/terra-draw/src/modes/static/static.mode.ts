@@ -7,7 +7,7 @@ type StaticModeStyling = StaticModeStylingExt<TerraDrawAdapterStyling>;
 
 export class TerraDrawStaticMode extends TerraDrawBaseDrawMode<StaticModeStyling> {
 	type = ModeTypes.Static;
-	mode = "static";
+	mode = "static" as const;
 	start() {}
 	stop() {}
 	onKeyUp() {}

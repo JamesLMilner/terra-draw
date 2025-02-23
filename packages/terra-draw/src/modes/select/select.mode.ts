@@ -39,6 +39,13 @@ type TerraDrawSelectModeKeyEvents = {
 	scale: KeyboardEvent["key"][] | null;
 };
 
+const defaultKeyEvents = {
+	deselect: "Escape",
+	delete: "Delete",
+	rotate: ["Control", "r"],
+	scale: ["Control", "s"],
+};
+
 type ModeFlags = {
 	feature?: {
 		validation?: Validation;
@@ -92,6 +99,13 @@ interface Cursors {
 	insertMidpoint?: Cursor;
 }
 
+const defaultCursors = {
+	pointerOver: "move",
+	dragStart: "move",
+	dragEnd: "move",
+	insertMidpoint: "crosshair",
+} as Required<Cursors>;
+
 interface TerraDrawSelectModeOptions<T extends CustomStyling>
 	extends BaseModeOptions<T> {
 	pointerDistance?: number;
@@ -103,15 +117,17 @@ interface TerraDrawSelectModeOptions<T extends CustomStyling>
 }
 
 export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStyling> {
-	public mode = "select";
+	public mode = "select" as const;
 
 	private allowManualDeselection = true;
 	private dragEventThrottle = 5;
 	private dragEventCount = 0;
 	private selected: FeatureId[] = [];
 
-	private flags: { [mode: string]: ModeFlags };
-	private keyEvents: TerraDrawSelectModeKeyEvents;
+	private flags: { [mode: string]: ModeFlags } = {};
+	private keyEvents: TerraDrawSelectModeKeyEvents = defaultKeyEvents;
+	private cursors: Required<Cursors> = defaultCursors;
+	private validations: Record<string, Validation> = {};
 
 	// Behaviors
 	private selectionPoints!: SelectionPointBehavior;
@@ -124,23 +140,19 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 	private rotateFeature!: RotateFeatureBehavior;
 	private scaleFeature!: ScaleFeatureBehavior;
 	private dragCoordinateResizeFeature!: DragCoordinateResizeBehavior;
-	private cursors: Required<Cursors>;
-	private validations: Record<string, Validation> = {};
 
 	constructor(options?: TerraDrawSelectModeOptions<SelectionStyling>) {
-		super(options);
+		super(options, true);
+		this.updateOptions(options);
+	}
 
-		this.flags = options && options.flags ? options.flags : {};
-
-		const defaultCursors = {
-			pointerOver: "move",
-			dragStart: "move",
-			dragEnd: "move",
-			insertMidpoint: "crosshair",
-		} as Required<Cursors>;
+	override updateOptions(
+		options?: TerraDrawSelectModeOptions<SelectionStyling>,
+	) {
+		super.updateOptions(options);
 
 		if (options && options.cursors) {
-			this.cursors = { ...defaultCursors, ...options.cursors };
+			this.cursors = { ...this.cursors, ...options.cursors };
 		} else {
 			this.cursors = defaultCursors;
 		}
@@ -154,31 +166,25 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 				rotate: null,
 				scale: null,
 			};
-		} else {
-			const defaultKeyEvents = {
-				deselect: "Escape",
-				delete: "Delete",
-				rotate: ["Control", "r"],
-				scale: ["Control", "s"],
-			};
-			this.keyEvents =
-				options && options.keyEvents
-					? { ...defaultKeyEvents, ...options.keyEvents }
-					: defaultKeyEvents;
+		} else if (options?.keyEvents) {
+			this.keyEvents = { ...this.keyEvents, ...options.keyEvents };
 		}
 
-		this.dragEventThrottle =
-			(options &&
-				options.dragEventThrottle !== undefined &&
-				options.dragEventThrottle) ||
-			5;
+		if (options?.dragEventThrottle !== undefined) {
+			this.dragEventThrottle = options.dragEventThrottle;
+		}
 
-		this.allowManualDeselection = options?.allowManualDeselection ?? true;
+		if (options?.allowManualDeselection !== undefined) {
+			this.allowManualDeselection = options.allowManualDeselection;
+		}
 
-		// Validations
-		if (options && options.flags && options.flags) {
-			for (const mode in options.flags) {
-				const feature = options.flags[mode].feature;
+		// Flags and Validations
+		if (options?.flags) {
+			this.flags = { ...this.flags, ...options.flags };
+			this.validations = {};
+
+			for (const mode in this.flags) {
+				const feature = this.flags[mode].feature;
 				if (feature && feature.validation) {
 					this.validations[mode] = feature.validation;
 				}

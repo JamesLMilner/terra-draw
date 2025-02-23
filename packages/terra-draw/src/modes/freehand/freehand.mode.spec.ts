@@ -110,6 +110,65 @@ describe("TerraDrawFreehandMode", () => {
 		});
 	});
 
+	describe("updateOptions", () => {
+		it("can change cursors", () => {
+			const freehandMode = new TerraDrawFreehandMode();
+			freehandMode.updateOptions({
+				cursors: {
+					start: "pointer",
+					close: "pointer",
+				},
+			});
+			const mockConfig = MockModeConfig(freehandMode.mode);
+			freehandMode.register(mockConfig);
+			freehandMode.start();
+			expect(mockConfig.setCursor).toHaveBeenCalledWith("pointer");
+		});
+
+		it("can change key events", () => {
+			const freehandMode = new TerraDrawFreehandMode();
+			freehandMode.updateOptions({
+				keyEvents: {
+					cancel: "C",
+					finish: "F",
+				},
+			});
+			const mockConfig = MockModeConfig(freehandMode.mode);
+			freehandMode.register(mockConfig);
+			freehandMode.start();
+
+			freehandMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+			let features = mockConfig.store.copyAll();
+			expect(features.length).toBe(2);
+
+			freehandMode.onKeyUp(MockKeyboardEvent({ key: "C" }));
+
+			features = mockConfig.store.copyAll();
+			expect(features.length).toBe(0);
+		});
+
+		it("can update styles", () => {
+			const freehandMode = new TerraDrawFreehandMode();
+
+			const mockConfig = MockModeConfig(freehandMode.mode);
+
+			freehandMode.register(mockConfig);
+			freehandMode.start();
+
+			freehandMode.updateOptions({
+				styles: {
+					fillColor: "#ffffff",
+				},
+			});
+			expect(freehandMode.styles).toStrictEqual({
+				fillColor: "#ffffff",
+			});
+
+			expect(mockConfig.onChange).toHaveBeenCalledTimes(1);
+		});
+	});
+
 	describe("onClick", () => {
 		let freehandMode: TerraDrawFreehandMode;
 		let store: GeoJSONStore;
@@ -698,6 +757,8 @@ describe("TerraDrawFreehandMode", () => {
 					fillOpacity: () => 0.5,
 				},
 			});
+
+			freehandMode.register(MockModeConfig(freehandMode.mode));
 
 			expect(
 				freehandMode.styleFeature({

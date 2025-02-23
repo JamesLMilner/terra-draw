@@ -36,6 +36,8 @@ type TerraDrawPolygonModeKeyEvents = {
 	finish?: KeyboardEvent["key"] | null;
 };
 
+const defaultKeyEvents = { cancel: "Escape", finish: "Enter" };
+
 type PolygonStyling = {
 	fillColor: HexColorStyling;
 	outlineColor: HexColorStyling;
@@ -62,6 +64,13 @@ interface Cursors {
 	dragEnd?: Cursor;
 }
 
+const defaultCursors = {
+	start: "crosshair",
+	close: "pointer",
+	dragStart: "grabbing",
+	dragEnd: "crosshair",
+} as Required<Cursors>;
+
 interface Snapping {
 	toLine?: boolean;
 	toCoordinate?: boolean;
@@ -78,12 +87,12 @@ interface TerraDrawPolygonModeOptions<T extends CustomStyling>
 }
 
 export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> {
-	mode = "polygon";
+	mode = "polygon" as const;
 
 	private currentCoordinate = 0;
 	private currentId: FeatureId | undefined;
-	private keyEvents: TerraDrawPolygonModeKeyEvents;
-	private cursors: Required<Cursors>;
+	private keyEvents: TerraDrawPolygonModeKeyEvents = defaultKeyEvents;
+	private cursors: Required<Cursors> = defaultCursors;
 	private mouseMove = false;
 
 	// Snapping
@@ -91,7 +100,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 	private snappedPointId: FeatureId | undefined;
 
 	// Editable
-	private editable: boolean;
+	private editable: boolean = false;
 	private editedFeatureId: FeatureId | undefined;
 	private editedFeatureCoordinateIndex: number | undefined;
 	private editedSnapType: "line" | "coordinate" | undefined;
@@ -106,39 +115,32 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 	private clickBoundingBox!: ClickBoundingBoxBehavior;
 
 	constructor(options?: TerraDrawPolygonModeOptions<PolygonStyling>) {
-		super(options);
+		super(options, true);
+		this.updateOptions(options);
+	}
 
-		const defaultCursors = {
-			start: "crosshair",
-			close: "pointer",
-			dragStart: "grabbing",
-			dragEnd: "crosshair",
-		} as Required<Cursors>;
+	override updateOptions(
+		options?: TerraDrawPolygonModeOptions<PolygonStyling>,
+	) {
+		super.updateOptions(options);
 
-		if (options && options.cursors) {
-			this.cursors = { ...defaultCursors, ...options.cursors };
-		} else {
-			this.cursors = defaultCursors;
+		if (options?.cursors) {
+			this.cursors = { ...this.cursors, ...options.cursors };
 		}
 
-		this.snapping = options && options.snapping ? options.snapping : undefined;
-
-		// We want to have some defaults, but also allow key bindings
-		// to be explicitly turned off
+		// null is the case where we want to explicitly turn key bindings off
 		if (options?.keyEvents === null) {
 			this.keyEvents = { cancel: null, finish: null };
-		} else {
-			const defaultKeyEvents = { cancel: "Escape", finish: "Enter" };
-			this.keyEvents =
-				options && options.keyEvents
-					? { ...defaultKeyEvents, ...options.keyEvents }
-					: defaultKeyEvents;
+		} else if (options?.keyEvents) {
+			this.keyEvents = { ...this.keyEvents, ...options.keyEvents };
 		}
 
-		if (options && options.editable) {
+		if (options?.snapping) {
+			this.snapping = options.snapping;
+		}
+
+		if (options?.editable) {
 			this.editable = options.editable;
-		} else {
-			this.editable = false;
 		}
 	}
 

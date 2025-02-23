@@ -105,6 +105,65 @@ describe("TerraDrawLineStringMode", () => {
 		});
 	});
 
+	describe("updateOptions", () => {
+		it("can change cursors", () => {
+			const lineStringMode = new TerraDrawLineStringMode();
+			lineStringMode.updateOptions({
+				cursors: {
+					start: "pointer",
+					close: "pointer",
+				},
+			});
+			const mockConfig = MockModeConfig(lineStringMode.mode);
+			lineStringMode.register(mockConfig);
+			lineStringMode.start();
+			expect(mockConfig.setCursor).toHaveBeenCalledWith("pointer");
+		});
+
+		it("can change key events", () => {
+			const lineStringMode = new TerraDrawLineStringMode();
+			lineStringMode.updateOptions({
+				keyEvents: {
+					cancel: "C",
+					finish: "F",
+				},
+			});
+			const mockConfig = MockModeConfig(lineStringMode.mode);
+			lineStringMode.register(mockConfig);
+			lineStringMode.start();
+
+			lineStringMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+			let features = mockConfig.store.copyAll();
+			expect(features.length).toBe(1);
+
+			lineStringMode.onKeyUp(MockKeyboardEvent({ key: "C" }));
+
+			features = mockConfig.store.copyAll();
+			expect(features.length).toBe(0);
+		});
+
+		it("can update styles", () => {
+			const lineStringMode = new TerraDrawLineStringMode();
+
+			const mockConfig = MockModeConfig(lineStringMode.mode);
+
+			lineStringMode.register(mockConfig);
+			lineStringMode.start();
+
+			lineStringMode.updateOptions({
+				styles: {
+					lineStringColor: "#ffffff",
+				},
+			});
+			expect(lineStringMode.styles).toStrictEqual({
+				lineStringColor: "#ffffff",
+			});
+
+			expect(mockConfig.onChange).toHaveBeenCalledTimes(1);
+		});
+	});
+
 	describe("onMouseMove", () => {
 		let lineStringMode: TerraDrawLineStringMode;
 		let onChange: jest.Mock;

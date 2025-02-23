@@ -42,6 +42,12 @@ interface Cursors {
 	dragEnd?: Cursor;
 }
 
+const defaultCursors = {
+	create: "crosshair",
+	dragStart: "grabbing",
+	dragEnd: "crosshair",
+} as Required<Cursors>;
+
 interface TerraDrawPointModeOptions<T extends CustomStyling>
 	extends BaseModeOptions<T> {
 	cursors?: Cursors;
@@ -49,10 +55,13 @@ interface TerraDrawPointModeOptions<T extends CustomStyling>
 }
 
 export class TerraDrawPointMode extends TerraDrawBaseDrawMode<PointModeStyling> {
-	mode = "point";
+	mode = "point" as const;
 
-	private cursors: Required<Cursors>;
-	private editable: boolean;
+	// Options
+	private cursors: Required<Cursors> = defaultCursors;
+	private editable: boolean = false;
+
+	// Internal state
 	private editedFeatureId: FeatureId | undefined;
 
 	// Behaviors
@@ -60,23 +69,21 @@ export class TerraDrawPointMode extends TerraDrawBaseDrawMode<PointModeStyling> 
 	private clickBoundingBox!: ClickBoundingBoxBehavior;
 
 	constructor(options?: TerraDrawPointModeOptions<PointModeStyling>) {
-		super(options);
-		const defaultCursors = {
-			create: "crosshair",
-			dragStart: "grabbing",
-			dragEnd: "crosshair",
-		} as Required<Cursors>;
+		super(options, true);
+		this.updateOptions(options);
+	}
 
-		if (options && options.cursors) {
-			this.cursors = { ...defaultCursors, ...options.cursors };
-		} else {
-			this.cursors = defaultCursors;
+	updateOptions(
+		options?: TerraDrawPointModeOptions<PointModeStyling> | undefined,
+	): void {
+		super.updateOptions(options);
+
+		if (options?.cursors) {
+			this.cursors = { ...this.cursors, ...options.cursors };
 		}
 
-		if (options && options.editable) {
+		if (options?.editable) {
 			this.editable = options.editable;
-		} else {
-			this.editable = false;
 		}
 	}
 

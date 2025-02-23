@@ -26,6 +26,7 @@
 	"type": "module",
 	"source": "src/terra-draw-mapbox-gl-adapter.ts",
 	"exports": {
+		"source": "./src/terra-draw-mapbox-gl-adapter.ts",
 		"types": "./dist/terra-draw-mapbox-gl-adapter.d.ts",
 		"require": "./dist/terra-draw-mapbox-gl-adapter.cjs",
 		"default": "./dist/terra-draw-mapbox-gl-adapter.modern.js"

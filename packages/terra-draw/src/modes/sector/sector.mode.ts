@@ -40,6 +40,8 @@ type TerraDrawSectorModeKeyEvents = {
 	finish?: KeyboardEvent["key"] | null;
 };
 
+const defaultKeyEvents = { cancel: "Escape", finish: "Enter" };
+
 type SectorPolygonStyling = {
 	fillColor: HexColorStyling;
 	outlineColor: HexColorStyling;
@@ -52,6 +54,11 @@ interface Cursors {
 	close?: Cursor;
 }
 
+const defaultCursors = {
+	start: "crosshair",
+	close: "pointer",
+} as Required<Cursors>;
+
 interface TerraDrawSectorModeOptions<T extends CustomStyling>
 	extends BaseModeOptions<T> {
 	arcPoints?: number;
@@ -61,45 +68,41 @@ interface TerraDrawSectorModeOptions<T extends CustomStyling>
 }
 
 export class TerraDrawSectorMode extends TerraDrawBaseDrawMode<SectorPolygonStyling> {
-	mode = "sector";
+	mode = "sector" as const;
 
 	private currentCoordinate = 0;
 	private currentId: FeatureId | undefined;
-	private keyEvents: TerraDrawSectorModeKeyEvents;
+	private keyEvents: TerraDrawSectorModeKeyEvents = defaultKeyEvents;
 	private direction: "clockwise" | "anticlockwise" | undefined;
-	private arcPoints: number;
+	private arcPoints: number = 64;
 
 	// Behaviors
-	private cursors: Required<Cursors>;
+	private cursors: Required<Cursors> = defaultCursors;
 	private mouseMove = false;
 
 	constructor(options?: TerraDrawSectorModeOptions<SectorPolygonStyling>) {
-		super(options);
+		super(options, true);
+		this.updateOptions(options);
+	}
 
-		const defaultCursors = {
-			start: "crosshair",
-			close: "pointer",
-		} as Required<Cursors>;
+	override updateOptions(
+		options?: TerraDrawSectorModeOptions<SectorPolygonStyling>,
+	) {
+		super.updateOptions(options);
 
-		if (options && options.cursors) {
-			this.cursors = { ...defaultCursors, ...options.cursors };
-		} else {
-			this.cursors = defaultCursors;
+		if (options?.cursors) {
+			this.cursors = { ...this.cursors, ...options.cursors };
 		}
 
-		// We want to have some defaults, but also allow key bindings
-		// to be explicitly turned off
 		if (options?.keyEvents === null) {
 			this.keyEvents = { cancel: null, finish: null };
-		} else {
-			const defaultKeyEvents = { cancel: "Escape", finish: "Enter" };
-			this.keyEvents =
-				options && options.keyEvents
-					? { ...defaultKeyEvents, ...options.keyEvents }
-					: defaultKeyEvents;
+		} else if (options?.keyEvents) {
+			this.keyEvents = { ...this.keyEvents, ...options.keyEvents };
 		}
 
-		this.arcPoints = options?.arcPoints || 64;
+		if (options?.arcPoints) {
+			this.arcPoints = options.arcPoints;
+		}
 	}
 
 	private close() {

@@ -96,6 +96,41 @@ describe("TerraDrawPointMode", () => {
 		});
 	});
 
+	describe("updateOptions", () => {
+		it("can change cursors", () => {
+			const pointMode = new TerraDrawPointMode();
+			pointMode.updateOptions({
+				cursors: {
+					create: "pointer",
+				},
+			});
+			const mockConfig = MockModeConfig(pointMode.mode);
+			pointMode.register(mockConfig);
+			pointMode.start();
+			expect(mockConfig.setCursor).toHaveBeenCalledWith("pointer");
+		});
+
+		it("can change editable", () => {
+			const pointMode = new TerraDrawPointMode();
+			pointMode.updateOptions({ editable: true });
+
+			const mockConfig = MockModeConfig(pointMode.mode);
+			pointMode.register(mockConfig);
+			pointMode.start();
+
+			pointMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+			pointMode.onDragStart(MockCursorEvent({ lng: 0, lat: 0 }), jest.fn());
+			pointMode.onDrag(MockCursorEvent({ lng: 0, lat: 1 }), jest.fn());
+			pointMode.onDragEnd(MockCursorEvent({ lng: 0, lat: 1 }), jest.fn());
+
+			expect(mockConfig.onChange).toHaveBeenCalledTimes(4);
+			expect(mockConfig.store.copyAll()[0].geometry.coordinates).toEqual([
+				0, 1,
+			]);
+		});
+	});
+
 	describe("onClick", () => {
 		it("throws an error if not registered", () => {
 			const pointMode = new TerraDrawPointMode();

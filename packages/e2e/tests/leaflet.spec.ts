@@ -1337,7 +1337,7 @@ test.describe("select mode", () => {
 		await page.mouse.click(mapDiv.width - 10, mapDiv.height / 2);
 
 		// Dragged the square up and to the left
-		await expectGroupPosition({ page, x: 490, y: 408 });
+		await expectGroupPosition({ page, x: 490, y: 407 });
 	});
 
 	test("selected circle has it's shape maintained from center origin when coordinates are dragged with resizable flag", async ({

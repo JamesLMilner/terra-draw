@@ -2,6 +2,34 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.2.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.1.0...terra-draw@1.2.0) (2025-02-23)
+
+
+### docs
+
+* **terra-draw:** fix broken link in 'adapters' page (#476) ([](https://github.com/JamesLMilner/terra-draw/commit/b24f24be73519e455a5204e237554d4c9b39988e)), closes [#476](https://github.com/JamesLMilner/terra-draw/issues/476)
+* **terra-draw:** slightly simplified wording about IDs in documentation (#474) ([](https://github.com/JamesLMilner/terra-draw/commit/3e2929282ef1bc7aa32beea146c15d14f6723846)), closes [#474](https://github.com/JamesLMilner/terra-draw/issues/474)
+
+
+### feat
+
+* **terra-draw:** add editable option for linestring mode to allow moving polygons whilst drawing (#468) ([](https://github.com/JamesLMilner/terra-draw/commit/b5e38a11bc7163f79a5ab807cddce1eaf574d6a7)), closes [#468](https://github.com/JamesLMilner/terra-draw/issues/468)
+* **terra-draw:** add getSnapshotFeature method to allow fetching single features easily (#471) ([](https://github.com/JamesLMilner/terra-draw/commit/55c85ec2bc7a3dc2a102415e0ad920ae76b40f14)), closes [#471](https://github.com/JamesLMilner/terra-draw/issues/471)
+* **terra-draw:** allow deletion of coordinates with right clicks when editable is true (#469) ([](https://github.com/JamesLMilner/terra-draw/commit/b29dbfbd4bddce3f4909874413cf1112f9d6fb14)), closes [#469](https://github.com/JamesLMilner/terra-draw/issues/469)
+* **terra-draw:** allow updating mode options dynamically via updateModeOptions method (#477) ([](https://github.com/JamesLMilner/terra-draw/commit/6fb37ab4bc31f73d6d9357e52a595c5071c695aa)), closes [#477](https://github.com/JamesLMilner/terra-draw/issues/477)
+
+
+### fix
+
+* **terra-draw:** ensure that polygons created by builtin modes abide by right hand rule (#473) ([](https://github.com/JamesLMilner/terra-draw/commit/bd27b92f1331435f4f27249271d5742d19a055f8)), closes [#473](https://github.com/JamesLMilner/terra-draw/issues/473)
+
+
+### chore
+
+* **terra-draw:** correct spelling mistakes across codebase (#463) ([](https://github.com/JamesLMilner/terra-draw/commit/7cb433f8caea3a3b4c1789152b38fa9916edf3b6)), closes [#463](https://github.com/JamesLMilner/terra-draw/issues/463)
+* **terra-draw:** fix e2e tests on CI after 1.1.0 bump (#464) ([](https://github.com/JamesLMilner/terra-draw/commit/f274f53302b2defc6684ddfe1ae158fac7fecc5a)), closes [#464](https://github.com/JamesLMilner/terra-draw/issues/464)
+* **terra-draw:** improve bump script to be more accurate in the recommended version (#465) ([](https://github.com/JamesLMilner/terra-draw/commit/b44377661a61d787d86ba138a74490bb0183e6a6)), closes [#465](https://github.com/JamesLMilner/terra-draw/issues/465)
+
 ## [1.1.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.0.0...terra-draw@1.1.0) (2025-02-03)
 
 

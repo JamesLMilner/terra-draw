@@ -364,6 +364,57 @@ describe("Terra Draw", () => {
 		});
 	});
 
+	describe("updateModeOptions", () => {
+		it("updates the mode options", () => {
+			const draw = new TerraDraw({
+				adapter,
+				modes: [new TerraDrawPointMode()],
+			});
+
+			draw.start();
+
+			draw.updateModeOptions("point", {
+				editable: true,
+				cursors: { start: "move" },
+			});
+		});
+
+		it("updates the mode styles", () => {
+			const draw = new TerraDraw({
+				adapter,
+				modes: [new TerraDrawPointMode()],
+			});
+
+			const onStyleChange = jest.fn();
+
+			const onChange = jest.fn((_, type) => {
+				if (type === "styling") {
+					onStyleChange();
+				}
+			});
+
+			draw.on("change", onChange);
+
+			draw.start();
+
+			draw.updateModeOptions<typeof TerraDrawPointMode>("point", {
+				styles: {
+					pointWidth: 5,
+					pointColor: "#000000",
+					pointOutlineColor: "#000000",
+					pointOutlineWidth: 2,
+					editedPointColor: "#000000",
+					editedPointWidth: 5,
+					editedPointOutlineColor: "#000000",
+					editedPointOutlineWidth: 2,
+				},
+			});
+
+			expect(onChange).toHaveBeenCalledTimes(1);
+			expect(onStyleChange).toHaveBeenCalledTimes(1);
+		});
+	});
+
 	describe("selectFeature", () => {
 		it("throws an error if there is no select moded", () => {
 			const draw = new TerraDraw({

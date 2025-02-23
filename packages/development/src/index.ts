@@ -185,6 +185,7 @@ const getModes = () => {
 				toLine: false,
 				toCoordinate: false,
 			},
+			editable: true,
 			validation: (feature, { updateType }) => {
 				if (updateType === "finish" || updateType === "commit") {
 					return ValidateNotSelfIntersecting(feature);

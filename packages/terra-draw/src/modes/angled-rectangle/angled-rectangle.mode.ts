@@ -38,6 +38,8 @@ type TerraDrawPolygonModeKeyEvents = {
 	finish?: KeyboardEvent["key"] | null;
 };
 
+const defaultKeyEvents = { cancel: "Escape", finish: "Enter" };
+
 type PolygonStyling = {
 	fillColor: HexColorStyling;
 	outlineColor: HexColorStyling;
@@ -50,6 +52,11 @@ interface Cursors {
 	close?: Cursor;
 }
 
+const defaultCursors = {
+	start: "crosshair",
+	close: "pointer",
+} as Required<Cursors>;
+
 interface TerraDrawPolygonModeOptions<T extends CustomStyling>
 	extends BaseModeOptions<T> {
 	pointerDistance?: number;
@@ -58,40 +65,34 @@ interface TerraDrawPolygonModeOptions<T extends CustomStyling>
 }
 
 export class TerraDrawAngledRectangleMode extends TerraDrawBaseDrawMode<PolygonStyling> {
-	mode = "angled-rectangle";
+	mode = "angled-rectangle" as const;
 
 	private currentCoordinate = 0;
 	private currentId: FeatureId | undefined;
-	private keyEvents: TerraDrawPolygonModeKeyEvents;
+	private keyEvents: TerraDrawPolygonModeKeyEvents = defaultKeyEvents;
 
 	// Behaviors
-	private cursors: Required<Cursors>;
+	private cursors: Required<Cursors> = defaultCursors;
 	private mouseMove = false;
 
 	constructor(options?: TerraDrawPolygonModeOptions<PolygonStyling>) {
-		super(options);
+		super(options, true);
+		this.updateOptions(options);
+	}
 
-		const defaultCursors = {
-			start: "crosshair",
-			close: "pointer",
-		} as Required<Cursors>;
+	override updateOptions(
+		options?: TerraDrawPolygonModeOptions<PolygonStyling>,
+	) {
+		super.updateOptions(options);
 
-		if (options && options.cursors) {
-			this.cursors = { ...defaultCursors, ...options.cursors };
-		} else {
-			this.cursors = defaultCursors;
+		if (options?.cursors) {
+			this.cursors = { ...this.cursors, ...options.cursors };
 		}
 
-		// We want to have some defaults, but also allow key bindings
-		// to be explicitly turned off
 		if (options?.keyEvents === null) {
 			this.keyEvents = { cancel: null, finish: null };
-		} else {
-			const defaultKeyEvents = { cancel: "Escape", finish: "Enter" };
-			this.keyEvents =
-				options && options.keyEvents
-					? { ...defaultKeyEvents, ...options.keyEvents }
-					: defaultKeyEvents;
+		} else if (options?.keyEvents) {
+			this.keyEvents = { ...this.keyEvents, ...options.keyEvents };
 		}
 	}
 

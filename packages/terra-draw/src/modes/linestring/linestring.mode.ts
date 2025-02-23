@@ -38,6 +38,8 @@ type TerraDrawLineStringModeKeyEvents = {
 	finish: KeyboardEvent["key"] | null;
 };
 
+const defaultKeyEvents = { cancel: "Escape", finish: "Enter" } as const;
+
 type LineStringStyling = {
 	lineStringWidth: NumericStyling;
 	lineStringColor: HexColorStyling;
@@ -57,6 +59,13 @@ interface Cursors {
 	dragStart?: Cursor;
 	dragEnd?: Cursor;
 }
+
+const defaultCursors = {
+	start: "crosshair",
+	close: "pointer",
+	dragStart: "grabbing",
+	dragEnd: "crosshair",
+} as Required<Cursors>;
 
 interface InertCoordinates {
 	strategy: "amount"; // In future this could be extended
@@ -79,21 +88,21 @@ interface TerraDrawLineStringModeOptions<T extends CustomStyling>
 }
 
 export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringStyling> {
-	mode = "linestring";
+	mode = "linestring" as const;
 
 	private currentCoordinate = 0;
 	private currentId: FeatureId | undefined;
 	private closingPointId: FeatureId | undefined;
-	private keyEvents: TerraDrawLineStringModeKeyEvents;
+	private keyEvents: TerraDrawLineStringModeKeyEvents = defaultKeyEvents;
 	private snapping: Snapping | undefined;
-	private cursors: Required<Cursors>;
+	private cursors: Required<Cursors> = defaultCursors;
 	private mouseMove = false;
 	private insertCoordinates: InertCoordinates | undefined;
 	private lastCommitedCoordinates: Position[] | undefined;
 	private snappedPointId: FeatureId | undefined;
 
 	// Editable properties
-	private editable: boolean;
+	private editable: boolean = false;
 	private editedFeatureId: FeatureId | undefined;
 	private editedFeatureCoordinateIndex: number | undefined;
 	private editedSnapType: "line" | "coordinate" | undefined;
@@ -108,43 +117,35 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 	private clickBoundingBox!: ClickBoundingBoxBehavior;
 
 	constructor(options?: TerraDrawLineStringModeOptions<LineStringStyling>) {
-		super(options);
+		super(options, true);
+		this.updateOptions(options);
+	}
 
-		const defaultCursors = {
-			start: "crosshair",
-			close: "pointer",
-			dragStart: "grabbing",
-			dragEnd: "crosshair",
-		} as Required<Cursors>;
+	updateOptions(
+		options?: TerraDrawLineStringModeOptions<LineStringStyling> | undefined,
+	) {
+		super.updateOptions(options);
 
-		if (options && options.cursors) {
-			this.cursors = { ...defaultCursors, ...options.cursors };
-		} else {
-			this.cursors = defaultCursors;
+		if (options?.cursors) {
+			this.cursors = { ...this.cursors, ...options.cursors };
 		}
 
-		this.snapping = options && options.snapping ? options.snapping : undefined;
+		if (options?.snapping) {
+			this.snapping = options.snapping;
+		}
 
-		// We want to have some defaults, but also allow key bindings
-		// to be explicitly turned off
 		if (options?.keyEvents === null) {
 			this.keyEvents = { cancel: null, finish: null };
-		} else {
-			const defaultKeyEvents = { cancel: "Escape", finish: "Enter" };
-			this.keyEvents =
-				options && options.keyEvents
-					? { ...defaultKeyEvents, ...options.keyEvents }
-					: defaultKeyEvents;
+		} else if (options?.keyEvents) {
+			this.keyEvents = { ...this.keyEvents, ...options.keyEvents };
 		}
 
-		this.validate = options?.validation;
-
-		this.insertCoordinates = options?.insertCoordinates;
+		if (options?.insertCoordinates) {
+			this.insertCoordinates = options.insertCoordinates;
+		}
 
 		if (options && options.editable) {
 			this.editable = options.editable;
-		} else {
-			this.editable = false;
 		}
 	}
 

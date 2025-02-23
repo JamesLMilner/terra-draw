@@ -4,6 +4,7 @@ import { MockCursorEvent } from "../../test/mock-cursor-event";
 import { TerraDrawCircleMode } from "./circle.mode";
 import { Polygon } from "geojson";
 import { followsRightHandRule } from "../../geometry/boolean/right-hand-rule";
+import { MockKeyboardEvent } from "../../test/mock-keyboard-event";
 
 describe("TerraDrawCircleMode", () => {
 	describe("constructor", () => {
@@ -111,6 +112,64 @@ describe("TerraDrawCircleMode", () => {
 			circleMode.stop();
 
 			expect(circleMode.state).toBe("stopped");
+		});
+	});
+
+	describe("updateOptions", () => {
+		it("can change cursors", () => {
+			const circleMode = new TerraDrawCircleMode();
+			circleMode.updateOptions({
+				cursors: {
+					start: "pointer",
+				},
+			});
+			const mockConfig = MockModeConfig(circleMode.mode);
+			circleMode.register(mockConfig);
+			circleMode.start();
+			expect(mockConfig.setCursor).toHaveBeenCalledWith("pointer");
+		});
+
+		it("can change key events", () => {
+			const circleMode = new TerraDrawCircleMode();
+			circleMode.updateOptions({
+				keyEvents: {
+					cancel: "C",
+					finish: "F",
+				},
+			});
+			const mockConfig = MockModeConfig(circleMode.mode);
+			circleMode.register(mockConfig);
+			circleMode.start();
+
+			circleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+			let features = mockConfig.store.copyAll();
+			expect(features.length).toBe(1);
+
+			circleMode.onKeyUp(MockKeyboardEvent({ key: "C" }));
+
+			features = mockConfig.store.copyAll();
+			expect(features.length).toBe(0);
+		});
+
+		it("can update styles", () => {
+			const circleMode = new TerraDrawCircleMode();
+
+			const mockConfig = MockModeConfig(circleMode.mode);
+
+			circleMode.register(mockConfig);
+			circleMode.start();
+
+			circleMode.updateOptions({
+				styles: {
+					fillColor: "#ffffff",
+				},
+			});
+			expect(circleMode.styles).toStrictEqual({
+				fillColor: "#ffffff",
+			});
+
+			expect(mockConfig.onChange).toHaveBeenCalledTimes(1);
 		});
 	});
 

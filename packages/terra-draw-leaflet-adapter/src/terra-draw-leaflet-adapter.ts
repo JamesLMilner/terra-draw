@@ -284,6 +284,32 @@ export class TerraDrawLeafletAdapter extends TerraDrawExtend.TerraDrawBaseAdapte
 			);
 			this._map.addLayer(this._layers[updated.id as string]);
 		});
+
+		// Handle the scenario where only the styles have change and not the geometries
+		const isStylingChange =
+			changes.created.length === 0 &&
+			changes.updated.length === 0 &&
+			changes.deletedIds.length === 0;
+
+		if (isStylingChange) {
+			Object.keys(this._layers).forEach((layer) => {
+				// TODO: without rAF, this seems to not update styles when there is only 1 layer
+				requestAnimationFrame(() => {
+					const layerObj = this._layers[layer];
+					const layerGeoJSON = layerObj.toGeoJSON();
+					this._map.removeLayer(layerObj);
+
+					const newLayer = this._lib.geoJSON(
+						layerGeoJSON,
+						this.styleGeoJSONLayer(styling),
+					);
+					this._layers[layer] = newLayer;
+
+					newLayer.addTo(this._map);
+					this._map.addLayer(this._layers[layer]);
+				});
+			});
+		}
 	}
 
 	/**

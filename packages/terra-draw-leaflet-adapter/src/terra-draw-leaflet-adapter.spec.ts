@@ -255,7 +255,7 @@ describe("TerraDrawLeafletAdapter", () => {
 
 			// Create the adapter instance with the mocked map
 			const lib = {
-				geoJSON: jest.fn(),
+				geoJSON: jest.fn(() => ({})),
 			} as any;
 
 			const adapter = new TerraDrawLeafletAdapter({
@@ -291,8 +291,34 @@ describe("TerraDrawLeafletAdapter", () => {
 								mode: "test",
 							},
 						},
+						{
+							id: "4",
+							type: "Feature",
+							geometry: {
+								type: "Point",
+								coordinates: [1, 2],
+							},
+							properties: {
+								mode: "test",
+							},
+						},
 					],
-					deletedIds: ["3"],
+					deletedIds: [],
+					updated: [],
+				},
+				{
+					test: () => ({}) as any,
+				},
+			);
+
+			expect(lib.geoJSON).toHaveBeenCalledTimes(2);
+			expect(map.addLayer).toHaveBeenCalledTimes(2); // 1 for created 1 for updated
+
+			adapter.render(
+				{
+					unchanged: [],
+					created: [],
+					deletedIds: ["2"],
 					updated: [
 						{
 							id: "4",
@@ -311,9 +337,6 @@ describe("TerraDrawLeafletAdapter", () => {
 					test: () => ({}) as any,
 				},
 			);
-
-			expect(lib.geoJSON).toHaveBeenCalledTimes(2);
-			expect(map.addLayer).toHaveBeenCalledTimes(2); // 1 for created 1 for updated
 			expect(map.removeLayer).toHaveBeenCalledTimes(2); // 1 for update 1 for delete
 		});
 

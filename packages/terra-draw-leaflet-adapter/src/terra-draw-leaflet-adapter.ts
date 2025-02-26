@@ -265,24 +265,41 @@ export class TerraDrawLeafletAdapter extends TerraDrawExtend.TerraDrawBaseAdapte
 	 */
 	public render(changes: TerraDrawChanges, styling: TerraDrawStylingFunction) {
 		changes.created.forEach((created) => {
-			this._layers[created.id as string] = this._lib.geoJSON(
+			if (!created.id) {
+				// This should never happen but protects against a run time error
+				return;
+			}
+			this._layers[created.id] = this._lib.geoJSON(
 				created,
 				this.styleGeoJSONLayer(styling),
 			);
-			this._map.addLayer(this._layers[created.id as string]);
+			this._map.addLayer(this._layers[created.id]);
 		});
 
 		changes.deletedIds.forEach((deleted) => {
-			this._map.removeLayer(this._layers[deleted]);
+			if (this._layers[deleted]) {
+				this._map.removeLayer(this._layers[deleted]);
+				delete this._layers[deleted];
+			}
 		});
 
 		changes.updated.forEach((updated) => {
-			this._map.removeLayer(this._layers[updated.id as string]);
-			this._layers[updated.id as string] = this._lib.geoJSON(
+			if (!updated.id) {
+				// This should never happen but protects against a run time error
+				return;
+			}
+
+			// Remove the layer if it exists
+			if (this._layers[updated.id]) {
+				this._map.removeLayer(this._layers[updated.id]);
+			}
+
+			// Create a new layer to replace it with new styling
+			this._layers[updated.id] = this._lib.geoJSON(
 				updated,
 				this.styleGeoJSONLayer(styling),
 			);
-			this._map.addLayer(this._layers[updated.id as string]);
+			this._map.addLayer(this._layers[updated.id]);
 		});
 
 		// Handle the scenario where only the styles have change and not the geometries
@@ -292,9 +309,10 @@ export class TerraDrawLeafletAdapter extends TerraDrawExtend.TerraDrawBaseAdapte
 			changes.deletedIds.length === 0;
 
 		if (isStylingChange) {
+			const scheduleStyleUpdates: (() => void)[] = [];
+
 			Object.keys(this._layers).forEach((layer) => {
-				// TODO: without rAF, this seems to not update styles when there is only 1 layer
-				requestAnimationFrame(() => {
+				scheduleStyleUpdates.push(() => {
 					const layerObj = this._layers[layer];
 					const layerGeoJSON = layerObj.toGeoJSON();
 					this._map.removeLayer(layerObj);
@@ -308,6 +326,11 @@ export class TerraDrawLeafletAdapter extends TerraDrawExtend.TerraDrawBaseAdapte
 					newLayer.addTo(this._map);
 					this._map.addLayer(this._layers[layer]);
 				});
+			});
+
+			// TODO: without rAF, this seems to not update styles when there is only 1 layer
+			setTimeout(() => {
+				scheduleStyleUpdates.forEach((rerender) => rerender());
 			});
 		}
 	}

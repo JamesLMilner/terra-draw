@@ -8,7 +8,7 @@ import {
 	UpdateTypes,
 	COMMON_PROPERTIES,
 } from "../../common";
-import { Polygon, Position } from "geojson";
+import { Feature, Polygon, Position } from "geojson";
 import {
 	TerraDrawBaseDrawMode,
 	BaseModeOptions,
@@ -412,15 +412,23 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 		return snappedCoordinate;
 	}
 
+	private polygonFilter(feature: Feature) {
+		return Boolean(
+			feature.geometry.type === "Polygon" &&
+				feature.properties &&
+				feature.properties.mode === this.mode,
+		);
+	}
+
 	private onRightClick(event: TerraDrawMouseEvent) {
 		if (!this.editable) {
 			return;
 		}
 
 		const { featureId, featureCoordinateIndex: coordinateIndex } =
-			this.coordinateSnapping.getSnappable(event, (feature) => {
-				return feature.geometry.type === "Polygon";
-			});
+			this.coordinateSnapping.getSnappable(event, (feature) =>
+				this.polygonFilter(feature),
+			);
 
 		if (!featureId || coordinateIndex === undefined) {
 			return;
@@ -704,7 +712,9 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 		let snappedCoordinate: Position | undefined = undefined;
 
 		if (this.state === "started") {
-			const lineSnapped = this.lineSnapping.getSnappable(event);
+			const lineSnapped = this.lineSnapping.getSnappable(event, (feature) =>
+				this.polygonFilter(feature),
+			);
 
 			if (lineSnapped.coordinate) {
 				this.editedSnapType = "line";
@@ -713,7 +723,10 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 				snappedCoordinate = lineSnapped.coordinate;
 			}
 
-			const coordinateSnapped = this.coordinateSnapping.getSnappable(event);
+			const coordinateSnapped = this.coordinateSnapping.getSnappable(
+				event,
+				(feature) => this.polygonFilter(feature),
+			);
 
 			if (coordinateSnapped.coordinate) {
 				this.editedSnapType = "coordinate";

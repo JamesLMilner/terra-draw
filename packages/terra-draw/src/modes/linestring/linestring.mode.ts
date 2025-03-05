@@ -9,7 +9,7 @@ import {
 	CartesianPoint,
 	COMMON_PROPERTIES,
 } from "../../common";
-import { LineString, Point, Position } from "geojson";
+import { Feature, LineString, Point, Position } from "geojson";
 import {
 	BaseModeOptions,
 	CustomStyling,
@@ -531,9 +531,9 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 		}
 
 		const { featureId, featureCoordinateIndex: coordinateIndex } =
-			this.coordinateSnapping.getSnappable(event, (feature) => {
-				return feature.geometry.type === "LineString";
-			});
+			this.coordinateSnapping.getSnappable(event, (feature) =>
+				this.lineStringFilter(feature),
+			);
 
 		if (!featureId || coordinateIndex === undefined) {
 			return;
@@ -659,7 +659,9 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 		let snappedCoordinate: Position | undefined = undefined;
 
 		if (this.state === "started") {
-			const lineSnapped = this.lineSnapping.getSnappable(event);
+			const lineSnapped = this.lineSnapping.getSnappable(event, (feature) =>
+				this.lineStringFilter(feature),
+			);
 
 			if (lineSnapped.coordinate) {
 				this.editedSnapType = "line";
@@ -668,7 +670,10 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 				snappedCoordinate = lineSnapped.coordinate;
 			}
 
-			const coordinateSnapped = this.coordinateSnapping.getSnappable(event);
+			const coordinateSnapped = this.coordinateSnapping.getSnappable(
+				event,
+				(feature) => this.lineStringFilter(feature),
+			);
 
 			if (coordinateSnapped.coordinate) {
 				this.editedSnapType = "coordinate";
@@ -948,6 +953,14 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 	validateFeature(feature: unknown): StoreValidation {
 		return this.validateModeFeature(feature, (baseValidatedFeature) =>
 			ValidateLineStringFeature(baseValidatedFeature, this.coordinatePrecision),
+		);
+	}
+
+	private lineStringFilter(feature: Feature) {
+		return Boolean(
+			feature.geometry.type === "LineString" &&
+				feature.properties &&
+				feature.properties.mode === this.mode,
 		);
 	}
 

@@ -167,6 +167,52 @@ describe("TerraDrawPolygonMode", () => {
 			]);
 		});
 
+		it("can set editable which ignores non polygon mode features", () => {
+			const polygonMode = new TerraDrawPolygonMode();
+			polygonMode.updateOptions({
+				editable: true,
+			});
+			const mockConfig = MockModeConfig(polygonMode.mode);
+
+			// Create an initial square to snap to
+			const mockPolygon = MockPolygonSquare();
+			mockConfig.store.create([
+				{
+					geometry: mockPolygon.geometry,
+					properties: { mode: "square" },
+				},
+			]);
+
+			polygonMode.register(mockConfig);
+			polygonMode.start();
+
+			let features = mockConfig.store.copyAll();
+			expect(features.length).toBe(1);
+			expect(features[0].geometry.coordinates[0]).toStrictEqual([
+				[0, 0],
+				[0, 1],
+				[1, 1],
+				[1, 0],
+				[0, 0],
+			]);
+
+			// Edit the coordinate to -1, -1 coordinate position from 0, 0 position
+			polygonMode.onDragStart(MockCursorEvent({ lng: 0, lat: 0 }), jest.fn());
+			polygonMode.onDrag(MockCursorEvent({ lng: -1, lat: -1 }), jest.fn());
+			polygonMode.onDragEnd(MockCursorEvent({ lng: -1, lat: -1 }), jest.fn());
+
+			// Geometry does not change
+			features = mockConfig.store.copyAll();
+			expect(features.length).toBe(1);
+			expect(features[0].geometry.coordinates[0]).toStrictEqual([
+				[0, 0],
+				[0, 1],
+				[1, 1],
+				[1, 0],
+				[0, 0],
+			]);
+		});
+
 		it("can update styles", () => {
 			const polygonMode = new TerraDrawPolygonMode();
 

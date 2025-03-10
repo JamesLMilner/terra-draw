@@ -7,6 +7,8 @@ import {
 	Cursor,
 	UpdateTypes,
 	COMMON_PROPERTIES,
+	Project,
+	Unproject,
 } from "../../common";
 import { Feature, Polygon, Position } from "geojson";
 import {
@@ -74,7 +76,16 @@ const defaultCursors = {
 interface Snapping {
 	toLine?: boolean;
 	toCoordinate?: boolean;
-	toCustom?: (event: TerraDrawMouseEvent) => Position | undefined;
+	toCustom?: (
+		event: TerraDrawMouseEvent,
+		context: {
+			currentId?: FeatureId;
+			currentCoordinate?: number;
+			getCurrentGeometrySnapshot: () => Polygon | null;
+			project: Project;
+			unproject: Unproject;
+		},
+	) => Position | undefined;
 }
 
 interface TerraDrawPolygonModeOptions<T extends CustomStyling>
@@ -406,7 +417,16 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 		}
 
 		if (this.snapping?.toCustom) {
-			snappedCoordinate = this.snapping.toCustom(event);
+			snappedCoordinate = this.snapping.toCustom(event, {
+				currentCoordinate: this.currentCoordinate,
+				currentId: this.currentId,
+				getCurrentGeometrySnapshot: this.currentId
+					? () =>
+							this.store.getGeometryCopy<Polygon>(this.currentId as FeatureId)
+					: () => null,
+				project: this.project,
+				unproject: this.unproject,
+			});
 		}
 
 		return snappedCoordinate;

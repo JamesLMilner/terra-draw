@@ -128,7 +128,8 @@ describe("isValidPolygonFeature", () => {
 		} as Feature<Polygon, Record<string, any>>;
 		expect(ValidatePolygonFeature(validFeature, 9)).toEqual({
 			valid: false,
-			reason: "Feature has invalid coordinates",
+			reason:
+				"Feature has invalid coordinates with excessive coordinate precision",
 		});
 	});
 });

@@ -1,11 +1,18 @@
 import { Validation } from "../common";
 import { GeoJSONStoreFeatures } from "../terra-draw";
-import { coordinateIsValid } from "../geometry/boolean/is-valid-coordinate";
+import {
+	coordinateIsValid,
+	coordinatePrecisionIsValid,
+} from "../geometry/boolean/is-valid-coordinate";
 
 export const ValidationReasonFeatureIsNotALineString =
 	"Feature is not a LineString";
 export const ValidationReasonFeatureHasLessThanTwoCoordinates =
 	"Feature has less than 2 coordinates";
+export const ValidationReasonFeatureInvalidCoordinates =
+	"Feature has invalid coordinates";
+export const ValidationReasonFeatureInvalidCoordinatePrecision =
+	"Feature has invalid coordinates with excessive coordinate precision";
 
 export function ValidateLineStringFeature(
 	feature: GeoJSONStoreFeatures,
@@ -27,12 +34,23 @@ export function ValidateLineStringFeature(
 
 	if (
 		!feature.geometry.coordinates.every((coordinate) =>
+			coordinatePrecisionIsValid(coordinate, coordinatePrecision),
+		)
+	) {
+		return {
+			valid: false,
+			reason: ValidationReasonFeatureInvalidCoordinatePrecision,
+		};
+	}
+
+	if (
+		!feature.geometry.coordinates.every((coordinate) =>
 			coordinateIsValid(coordinate, coordinatePrecision),
 		)
 	) {
 		return {
 			valid: false,
-			reason: "Feature has invalid coordinates",
+			reason: ValidationReasonFeatureInvalidCoordinates,
 		};
 	}
 

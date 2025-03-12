@@ -9,7 +9,7 @@ import {
 	CartesianPoint,
 	COMMON_PROPERTIES,
 } from "../../common";
-import { LineString, Point, Position } from "geojson";
+import { Feature, LineString, Point, Position } from "geojson";
 import {
 	BaseModeOptions,
 	CustomStyling,
@@ -31,11 +31,14 @@ import { InsertCoordinatesBehavior } from "../insert-coordinates.behavior";
 import { haversineDistanceKilometers } from "../../geometry/measure/haversine-distance";
 import { coordinatesIdentical } from "../../geometry/coordinates-identical";
 import { ValidateLineStringFeature } from "../../validations/linestring.validation";
+import { LineSnappingBehavior } from "../line-snapping.behavior";
 
 type TerraDrawLineStringModeKeyEvents = {
 	cancel: KeyboardEvent["key"] | null;
 	finish: KeyboardEvent["key"] | null;
 };
+
+const defaultKeyEvents = { cancel: "Escape", finish: "Enter" } as const;
 
 type LineStringStyling = {
 	lineStringWidth: NumericStyling;
@@ -53,7 +56,16 @@ type LineStringStyling = {
 interface Cursors {
 	start?: Cursor;
 	close?: Cursor;
+	dragStart?: Cursor;
+	dragEnd?: Cursor;
 }
+
+const defaultCursors = {
+	start: "crosshair",
+	close: "pointer",
+	dragStart: "grabbing",
+	dragEnd: "crosshair",
+} as Required<Cursors>;
 
 interface InertCoordinates {
 	strategy: "amount"; // In future this could be extended
@@ -72,57 +84,69 @@ interface TerraDrawLineStringModeOptions<T extends CustomStyling>
 	keyEvents?: TerraDrawLineStringModeKeyEvents | null;
 	cursors?: Cursors;
 	insertCoordinates?: InertCoordinates;
+	editable?: boolean;
 }
 
 export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringStyling> {
-	mode = "linestring";
+	mode = "linestring" as const;
 
 	private currentCoordinate = 0;
 	private currentId: FeatureId | undefined;
 	private closingPointId: FeatureId | undefined;
-	private keyEvents: TerraDrawLineStringModeKeyEvents;
+	private keyEvents: TerraDrawLineStringModeKeyEvents = defaultKeyEvents;
 	private snapping: Snapping | undefined;
-	private cursors: Required<Cursors>;
+	private cursors: Required<Cursors> = defaultCursors;
 	private mouseMove = false;
 	private insertCoordinates: InertCoordinates | undefined;
 	private lastCommitedCoordinates: Position[] | undefined;
 	private snappedPointId: FeatureId | undefined;
 
+	// Editable properties
+	private editable: boolean = false;
+	private editedFeatureId: FeatureId | undefined;
+	private editedFeatureCoordinateIndex: number | undefined;
+	private editedSnapType: "line" | "coordinate" | undefined;
+	private editedInsertIndex: number | undefined;
+	private editedPointId: FeatureId | undefined;
+
 	// Behaviors
 	private coordinateSnapping!: CoordinateSnappingBehavior;
 	private insertPoint!: InsertCoordinatesBehavior;
+	private lineSnapping!: LineSnappingBehavior;
+	private pixelDistance!: PixelDistanceBehavior;
+	private clickBoundingBox!: ClickBoundingBoxBehavior;
 
 	constructor(options?: TerraDrawLineStringModeOptions<LineStringStyling>) {
-		super(options);
+		super(options, true);
+		this.updateOptions(options);
+	}
 
-		const defaultCursors = {
-			start: "crosshair",
-			close: "pointer",
-		} as Required<Cursors>;
+	updateOptions(
+		options?: TerraDrawLineStringModeOptions<LineStringStyling> | undefined,
+	) {
+		super.updateOptions(options);
 
-		if (options && options.cursors) {
-			this.cursors = { ...defaultCursors, ...options.cursors };
-		} else {
-			this.cursors = defaultCursors;
+		if (options?.cursors) {
+			this.cursors = { ...this.cursors, ...options.cursors };
 		}
 
-		this.snapping = options && options.snapping ? options.snapping : undefined;
+		if (options?.snapping) {
+			this.snapping = options.snapping;
+		}
 
-		// We want to have some defaults, but also allow key bindings
-		// to be explicitly turned off
 		if (options?.keyEvents === null) {
 			this.keyEvents = { cancel: null, finish: null };
-		} else {
-			const defaultKeyEvents = { cancel: "Escape", finish: "Enter" };
-			this.keyEvents =
-				options && options.keyEvents
-					? { ...defaultKeyEvents, ...options.keyEvents }
-					: defaultKeyEvents;
+		} else if (options?.keyEvents) {
+			this.keyEvents = { ...this.keyEvents, ...options.keyEvents };
 		}
 
-		this.validate = options?.validation;
+		if (options?.insertCoordinates) {
+			this.insertCoordinates = options.insertCoordinates;
+		}
 
-		this.insertCoordinates = options?.insertCoordinates;
+		if (options && options.editable) {
+			this.editable = options.editable;
+		}
 	}
 
 	private close() {
@@ -369,6 +393,19 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 		);
 
 		this.insertPoint = new InsertCoordinatesBehavior(config);
+
+		this.clickBoundingBox = new ClickBoundingBoxBehavior(config);
+		this.pixelDistance = new PixelDistanceBehavior(config);
+		this.lineSnapping = new LineSnappingBehavior(
+			config,
+			this.pixelDistance,
+			this.clickBoundingBox,
+		);
+		this.coordinateSnapping = new CoordinateSnappingBehavior(
+			config,
+			this.pixelDistance,
+			this.clickBoundingBox,
+		);
 	}
 
 	/** @internal */
@@ -488,17 +525,73 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 		this.updateGeometries(line, undefined, UpdateTypes.Provisional);
 	}
 
-	/** @internal */
-	onClick(event: TerraDrawMouseEvent) {
-		// We want pointer devices (mobile/tablet) to have
-		// similar behaviour to mouse based devices so we
-		// trigger a mousemove event before every click
-		// if one has not been trigged to emulate this
-		if (this.currentCoordinate > 0 && !this.mouseMove) {
-			this.onMouseMove(event);
+	private onRightClick(event: TerraDrawMouseEvent) {
+		if (!this.editable || this.state !== "started") {
+			return;
 		}
-		this.mouseMove = false;
 
+		const { featureId, featureCoordinateIndex: coordinateIndex } =
+			this.coordinateSnapping.getSnappable(event, (feature) =>
+				this.lineStringFilter(feature),
+			);
+
+		if (!featureId || coordinateIndex === undefined) {
+			return;
+		}
+
+		const geometry = this.store.getGeometryCopy(featureId);
+
+		let coordinates;
+		if (geometry.type === "LineString") {
+			coordinates = geometry.coordinates;
+
+			// Prevent creating an invalid linestring
+			if (coordinates.length <= 2) {
+				return;
+			}
+		} else {
+			return;
+		}
+
+		// Remove coordinate from array
+		coordinates.splice(coordinateIndex, 1);
+
+		// Validate the new geometry
+		if (this.validate) {
+			const validationResult = this.validate(
+				{
+					id: featureId,
+					type: "Feature",
+					geometry,
+					properties: {},
+				},
+				{
+					project: this.project,
+					unproject: this.unproject,
+					coordinatePrecision: this.coordinatePrecision,
+					updateType: UpdateTypes.Commit,
+				},
+			);
+			if (!validationResult.valid) {
+				return;
+			}
+		}
+
+		// The geometry has changed, so if we were snapped to a point we need to remove it
+		if (this.snappedPointId) {
+			this.store.delete([this.snappedPointId]);
+			this.snappedPointId = undefined;
+		}
+
+		this.store.updateGeometry([
+			{
+				id: featureId,
+				geometry,
+			},
+		]);
+	}
+
+	private onLeftClick(event: TerraDrawMouseEvent) {
 		// Reset the snapping point
 		if (this.snappedPointId) {
 			this.store.delete([this.snappedPointId]);
@@ -523,6 +616,24 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 	}
 
 	/** @internal */
+	onClick(event: TerraDrawMouseEvent) {
+		// We want pointer devices (mobile/tablet) to have
+		// similar behaviour to mouse based devices so we
+		// trigger a mousemove event before every click
+		// if one has not been triggered to emulate this
+		if (this.currentCoordinate > 0 && !this.mouseMove) {
+			this.onMouseMove(event);
+		}
+		this.mouseMove = false;
+
+		if (event.button === "right") {
+			this.onRightClick(event);
+		} else if (event.button === "left") {
+			this.onLeftClick(event);
+		}
+	}
+
+	/** @internal */
 	onKeyDown() {}
 
 	/** @internal */
@@ -537,13 +648,208 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 	}
 
 	/** @internal */
-	onDragStart() {}
+	onDragStart(
+		event: TerraDrawMouseEvent,
+		setMapDraggability: (enabled: boolean) => void,
+	) {
+		if (!this.editable) {
+			return;
+		}
+
+		let snappedCoordinate: Position | undefined = undefined;
+
+		if (this.state === "started") {
+			const lineSnapped = this.lineSnapping.getSnappable(event, (feature) =>
+				this.lineStringFilter(feature),
+			);
+
+			if (lineSnapped.coordinate) {
+				this.editedSnapType = "line";
+				this.editedFeatureCoordinateIndex = lineSnapped.featureCoordinateIndex;
+				this.editedFeatureId = lineSnapped.featureId;
+				snappedCoordinate = lineSnapped.coordinate;
+			}
+
+			const coordinateSnapped = this.coordinateSnapping.getSnappable(
+				event,
+				(feature) => this.lineStringFilter(feature),
+			);
+
+			if (coordinateSnapped.coordinate) {
+				this.editedSnapType = "coordinate";
+				this.editedFeatureCoordinateIndex =
+					coordinateSnapped.featureCoordinateIndex;
+				this.editedFeatureId = coordinateSnapped.featureId;
+				snappedCoordinate = coordinateSnapped.coordinate;
+			}
+		}
+
+		// We only need to stop the map dragging if
+		// we actually have something selected
+		if (!this.editedFeatureId || !snappedCoordinate) {
+			return;
+		}
+
+		// Create a point to drag when editing
+		if (!this.editedPointId) {
+			const [editedPointId] = this.store.create([
+				{
+					geometry: {
+						type: "Point",
+						coordinates: snappedCoordinate,
+					},
+					properties: {
+						mode: this.mode,
+						[COMMON_PROPERTIES.EDITED]: true,
+					},
+				},
+			]);
+
+			this.editedPointId = editedPointId;
+		}
+
+		// Drag Feature
+		this.setCursor(this.cursors.dragStart);
+
+		setMapDraggability(false);
+	}
 
 	/** @internal */
-	onDrag() {}
+	onDrag(
+		event: TerraDrawMouseEvent,
+		setMapDraggability: (enabled: boolean) => void,
+	) {
+		if (
+			this.editedFeatureId === undefined ||
+			this.editedFeatureCoordinateIndex === undefined
+		) {
+			return;
+		}
+
+		const featureCopy: LineString = this.store.getGeometryCopy(
+			this.editedFeatureId,
+		);
+		const featureCoordinates = featureCopy.coordinates;
+
+		// Either it's a coordinate drag or a line drag where the line coordinate has already been inserted
+		if (
+			this.editedSnapType === "coordinate" ||
+			(this.editedSnapType === "line" && this.editedInsertIndex !== undefined)
+		) {
+			featureCoordinates[this.editedFeatureCoordinateIndex] = [
+				event.lng,
+				event.lat,
+			];
+		} else if (
+			this.editedSnapType === "line" &&
+			this.editedInsertIndex === undefined
+		) {
+			// Splice inserts _before_ the index, so we need to add 1
+			this.editedInsertIndex = this.editedFeatureCoordinateIndex + 1;
+
+			// Insert the new dragged snapped line coordinate
+			featureCopy.coordinates.splice(this.editedInsertIndex, 0, [
+				event.lng,
+				event.lat,
+			]);
+
+			// We have inserted a point, need to change the edit index
+			// so it can be moved correctly when it gets dragged again
+			this.editedFeatureCoordinateIndex++;
+		}
+
+		const newLineStringGeometry = {
+			type: "LineString",
+			coordinates: featureCopy.coordinates,
+		} as LineString;
+
+		if (this.validate) {
+			const validationResult = this.validate(
+				{
+					type: "Feature",
+					geometry: newLineStringGeometry,
+					properties: this.store.getPropertiesCopy(this.editedFeatureId),
+				} as GeoJSONStoreFeatures,
+				{
+					project: this.project,
+					unproject: this.unproject,
+					coordinatePrecision: this.coordinatePrecision,
+					updateType: UpdateTypes.Provisional,
+				},
+			);
+
+			if (!validationResult.valid) {
+				return;
+			}
+		}
+
+		if (this.snapping && this.snappedPointId) {
+			this.store.delete([this.snappedPointId]);
+			this.snappedPointId = undefined;
+		}
+
+		this.store.updateGeometry([
+			{
+				id: this.editedFeatureId,
+				geometry: newLineStringGeometry,
+			},
+		]);
+
+		if (this.editedPointId) {
+			this.store.updateGeometry([
+				{
+					id: this.editedPointId,
+					geometry: {
+						type: "Point",
+						coordinates: [event.lng, event.lat],
+					},
+				},
+			]);
+		}
+
+		this.store.updateProperty([
+			{
+				id: this.editedFeatureId,
+				property: COMMON_PROPERTIES.EDITED,
+				value: true,
+			},
+		]);
+
+		setMapDraggability(true);
+	}
 
 	/** @internal */
-	onDragEnd() {}
+	onDragEnd(
+		_: TerraDrawMouseEvent,
+		setMapDraggability: (enabled: boolean) => void,
+	) {
+		if (this.editedFeatureId === undefined) {
+			return;
+		}
+
+		this.setCursor(this.cursors.dragEnd);
+
+		if (this.editedPointId) {
+			this.store.delete([this.editedPointId]);
+			this.editedPointId = undefined;
+		}
+
+		this.store.updateProperty([
+			{
+				id: this.editedFeatureId,
+				property: COMMON_PROPERTIES.EDITED,
+				value: false,
+			},
+		]);
+
+		// Reset edit state
+		this.editedFeatureId = undefined;
+		this.editedFeatureCoordinateIndex = undefined;
+		this.editedInsertIndex = undefined;
+		this.editedSnapType = undefined;
+
+		setMapDraggability(true);
+	}
 
 	/** @internal */
 	cleanUp() {
@@ -647,6 +953,14 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 	validateFeature(feature: unknown): StoreValidation {
 		return this.validateModeFeature(feature, (baseValidatedFeature) =>
 			ValidateLineStringFeature(baseValidatedFeature, this.coordinatePrecision),
+		);
+	}
+
+	private lineStringFilter(feature: Feature) {
+		return Boolean(
+			feature.geometry.type === "LineString" &&
+				feature.properties &&
+				feature.properties.mode === this.mode,
 		);
 	}
 

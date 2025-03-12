@@ -32,11 +32,14 @@ import {
 import { cartesianDistance } from "../../geometry/measure/pixel-distance";
 import { isClockwiseWebMercator } from "../../geometry/clockwise";
 import { limitPrecision } from "../../geometry/limit-decimal-precision";
+import { ensureRightHandRule } from "../../geometry/ensure-right-hand-rule";
 
 type TerraDrawSensorModeKeyEvents = {
 	cancel?: KeyboardEvent["key"] | null;
 	finish?: KeyboardEvent["key"] | null;
 };
+
+const defaultKeyEvents = { cancel: "Escape", finish: "Enter" };
 
 type SensorPolygonStyling = {
 	centerPointColor: HexColorStyling;
@@ -54,6 +57,11 @@ interface Cursors {
 	close?: Cursor;
 }
 
+const defaultCursors = {
+	start: "crosshair",
+	close: "pointer",
+} as Required<Cursors>;
+
 interface TerraDrawSensorModeOptions<T extends CustomStyling>
 	extends BaseModeOptions<T> {
 	arcPoints?: number;
@@ -63,47 +71,43 @@ interface TerraDrawSensorModeOptions<T extends CustomStyling>
 }
 
 export class TerraDrawSensorMode extends TerraDrawBaseDrawMode<SensorPolygonStyling> {
-	mode = "sensor";
+	mode = "sensor" as const;
 
 	private currentCoordinate = 0;
 	private currentId: FeatureId | undefined;
 	private currentInitialArcId: FeatureId | undefined;
 	private currentStartingPointId: FeatureId | undefined;
-	private keyEvents: TerraDrawSensorModeKeyEvents;
+	private keyEvents: TerraDrawSensorModeKeyEvents = defaultKeyEvents;
 	private direction: "clockwise" | "anticlockwise" | undefined;
-	private arcPoints: number;
+	private arcPoints: number = 64;
 
 	// Behaviors
-	private cursors: Required<Cursors>;
+	private cursors: Required<Cursors> = defaultCursors;
 	private mouseMove = false;
 
 	constructor(options?: TerraDrawSensorModeOptions<SensorPolygonStyling>) {
-		super(options);
+		super(options, true);
+		this.updateOptions(options);
+	}
 
-		const defaultCursors = {
-			start: "crosshair",
-			close: "pointer",
-		} as Required<Cursors>;
+	override updateOptions(
+		options?: TerraDrawSensorModeOptions<SensorPolygonStyling>,
+	): void {
+		super.updateOptions(options);
 
-		if (options && options.cursors) {
-			this.cursors = { ...defaultCursors, ...options.cursors };
-		} else {
-			this.cursors = defaultCursors;
+		if (options?.cursors) {
+			this.cursors = { ...this.cursors, ...options.cursors };
 		}
 
-		// We want to have some defaults, but also allow key bindings
-		// to be explicitly turned off
 		if (options?.keyEvents === null) {
 			this.keyEvents = { cancel: null, finish: null };
-		} else {
-			const defaultKeyEvents = { cancel: "Escape", finish: "Enter" };
-			this.keyEvents =
-				options && options.keyEvents
-					? { ...defaultKeyEvents, ...options.keyEvents }
-					: defaultKeyEvents;
+		} else if (options?.keyEvents) {
+			this.keyEvents = { ...this.keyEvents, ...options.keyEvents };
 		}
 
-		this.arcPoints = options?.arcPoints || 64;
+		if (options?.arcPoints) {
+			this.arcPoints = options.arcPoints;
+		}
 	}
 
 	private close() {
@@ -121,6 +125,18 @@ export class TerraDrawSensorMode extends TerraDrawBaseDrawMode<SensorPolygonStyl
 
 		if (finishedInitialArcId) {
 			this.store.delete([finishedInitialArcId]);
+		}
+
+		// Fix right hand rule if necessary
+		if (this.currentId) {
+			const correctedGeometry = ensureRightHandRule(
+				this.store.getGeometryCopy<Polygon>(this.currentId),
+			);
+			if (correctedGeometry) {
+				this.store.updateGeometry([
+					{ id: this.currentId, geometry: correctedGeometry },
+				]);
+			}
 		}
 
 		this.currentCoordinate = 0;
@@ -275,7 +291,7 @@ export class TerraDrawSensorMode extends TerraDrawBaseDrawMode<SensorPolygonStyl
 				return;
 			}
 
-			// This shouldn't happen but we protect against it incase as we can't calculate if the cursor
+			// This shouldn't happen but we protect against it in case as we can't calculate if the cursor
 			// is in the sector otherwise
 			if (!this.direction) {
 				return;
@@ -490,7 +506,7 @@ export class TerraDrawSensorMode extends TerraDrawBaseDrawMode<SensorPolygonStyl
 		// We want pointer devices (mobile/tablet) to have
 		// similar behaviour to mouse based devices so we
 		// trigger a mousemove event before every click
-		// if one has not been trigged to emulate this
+		// if one has not been triggered to emulate this
 		if (this.currentCoordinate > 0 && !this.mouseMove) {
 			this.onMouseMove(event);
 		}

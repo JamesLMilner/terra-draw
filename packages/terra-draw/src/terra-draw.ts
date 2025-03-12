@@ -17,6 +17,7 @@ import {
 	OnFinishContext,
 } from "./common";
 import {
+	CustomStyling,
 	ModeTypes,
 	TerraDrawBaseDrawMode,
 	TerraDrawBaseSelectMode,
@@ -55,6 +56,13 @@ import { TerraDrawSensorMode } from "./modes/sensor/sensor.mode";
 import * as TerraDrawExtend from "./extend";
 import { hasModeProperty } from "./store/store-feature-validation";
 import { ValidationReasons } from "./validation-reasons";
+
+// Helper type to determine the instance type of a class
+type InstanceType<T extends new (...args: any[]) => any> = T extends new (
+	...args: any[]
+) => infer R
+	? R
+	: never;
 
 type FinishListener = (id: FeatureId, context: OnFinishContext) => void;
 type ChangeListener = (ids: FeatureId[], type: string) => void;
@@ -417,6 +425,9 @@ class TerraDraw {
 	}
 
 	/**
+	 * @deprecated This method is scheduled for removal in the next major version. Instead use the 'updateModeOptions' method passing the
+	 * styles property in the options object, and this will dynamically update the styles for the mode.
+	 *
 	 * Allows the setting of a style for a given mode
 	 *
 	 * @param mode - The mode you wish to set a style for
@@ -437,6 +448,27 @@ class TerraDraw {
 	}
 
 	/**
+	 * Allow updating of the current options passed to the mode dynamically
+	 * after the mode has been started. You can also use this method to update styles
+	 * as these are passed from the options object.
+	 * @param mode - the mode name you wish to update (the mode name is the public 'mode' property of the mode class)
+	 * @param options - the options object - this allows _partial_ updating of the modes options (i.e. you do not need to pass the whole options object)
+	 */
+	updateModeOptions<Mode extends { new (...args: any[]): any }>(
+		mode: InstanceType<Mode>["mode"],
+		options: ConstructorParameters<Mode>[0],
+	) {
+		this.checkEnabled();
+		if (!this._modes[mode]) {
+			throw new Error("No mode with this name present");
+		}
+
+		this._modes[mode].updateOptions(
+			options as TerraDrawExtend.BaseModeOptions<any>,
+		);
+	}
+
+	/**
 	 * Allows the user to get a snapshot (copy) of all given features
 	 *
 	 * @returns An array of all given Feature Geometries in the instances store
@@ -444,6 +476,19 @@ class TerraDraw {
 	getSnapshot() {
 		// This is a read only method so we do not need to check if enabled
 		return this._store.copyAll();
+	}
+
+	/**
+	 * Allows the user to get a snapshot (copy) of a given feature by id
+	 *
+	 * @returns A copy of the feature geometry in the instances store
+	 */
+	getSnapshotFeature(id: FeatureId) {
+		if (!this._store.has(id)) {
+			return undefined;
+		}
+
+		return this._store.copy(id);
 	}
 
 	/**

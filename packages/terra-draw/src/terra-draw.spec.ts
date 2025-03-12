@@ -1,6 +1,7 @@
 /**
  * @jest-environment jsdom
  */
+import { FeatureId } from "./extend";
 import {
 	TerraDraw,
 	TerraDrawLineStringMode,
@@ -310,6 +311,107 @@ describe("Terra Draw", () => {
 			expect(draw.hasFeature("f8e5a38d-ecfa-4294-8461-d9cff0e0d7f8")).toBe(
 				false,
 			);
+		});
+	});
+
+	describe("getSnapshotFeature", () => {
+		it("returns the correct feature for an id", () => {
+			const draw = new TerraDraw({
+				adapter,
+				modes: [new TerraDrawPointMode()],
+			});
+
+			draw.start();
+			const [result] = draw.addFeatures([
+				{
+					type: "Feature",
+					geometry: {
+						type: "Point",
+						coordinates: [-25.431289673, 34.355907891],
+					},
+					properties: {
+						mode: "point",
+					},
+				},
+			]);
+
+			const feature = draw.getSnapshotFeature(result.id as FeatureId);
+
+			expect(feature).toEqual({
+				geometry: {
+					coordinates: [-25.431289673, 34.355907891],
+					type: "Point",
+				},
+				id: expect.any(String),
+				properties: {
+					mode: "point",
+				},
+				type: "Feature",
+			});
+		});
+
+		it("returns undefined if feature does not exist for an id", () => {
+			const draw = new TerraDraw({
+				adapter,
+				modes: [new TerraDrawPointMode()],
+			});
+
+			draw.start();
+
+			const feature = draw.getSnapshotFeature(0);
+
+			expect(feature).toEqual(undefined);
+		});
+	});
+
+	describe("updateModeOptions", () => {
+		it("updates the mode options", () => {
+			const draw = new TerraDraw({
+				adapter,
+				modes: [new TerraDrawPointMode()],
+			});
+
+			draw.start();
+
+			draw.updateModeOptions("point", {
+				editable: true,
+				cursors: { start: "move" },
+			});
+		});
+
+		it("updates the mode styles", () => {
+			const draw = new TerraDraw({
+				adapter,
+				modes: [new TerraDrawPointMode()],
+			});
+
+			const onStyleChange = jest.fn();
+
+			const onChange = jest.fn((_, type) => {
+				if (type === "styling") {
+					onStyleChange();
+				}
+			});
+
+			draw.on("change", onChange);
+
+			draw.start();
+
+			draw.updateModeOptions<typeof TerraDrawPointMode>("point", {
+				styles: {
+					pointWidth: 5,
+					pointColor: "#000000",
+					pointOutlineColor: "#000000",
+					pointOutlineWidth: 2,
+					editedPointColor: "#000000",
+					editedPointWidth: 5,
+					editedPointOutlineColor: "#000000",
+					editedPointOutlineWidth: 2,
+				},
+			});
+
+			expect(onChange).toHaveBeenCalledTimes(1);
+			expect(onStyleChange).toHaveBeenCalledTimes(1);
 		});
 	});
 

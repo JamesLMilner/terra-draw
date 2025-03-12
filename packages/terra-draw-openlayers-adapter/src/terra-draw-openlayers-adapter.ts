@@ -59,7 +59,7 @@ export class TerraDrawOpenLayersAdapter extends TerraDrawExtend.TerraDrawBaseAda
 
 		this._container = this._map.getViewport();
 
-		// TODO: Is this the best way to recieve keyboard events
+		// TODO: Is this the best way to receive keyboard events
 		this._container.setAttribute("tabindex", "0");
 
 		const vectorSource = new this._lib.VectorSource({
@@ -89,8 +89,8 @@ export class TerraDrawOpenLayersAdapter extends TerraDrawExtend.TerraDrawBaseAda
 	private _geoJSONReader: GeoJSON;
 
 	/**
-	 * Converts a hexideciaml color to RGB
-	 * @param hex a string of the hexidecimal string
+	 * Converts a hexadecimal color to RGB
+	 * @param hex a string of the hexadecimal string
 	 * @returns an object to red green and blue (RGB) color
 	 */
 	private hexToRGB(hex: string): { r: number; g: number; b: number } {

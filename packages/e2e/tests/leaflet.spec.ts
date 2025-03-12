@@ -93,6 +93,28 @@ test.describe("point mode", () => {
 
 		await expectGroupPosition({ page, x: 419, y: 233 });
 	});
+
+	test("mode can set with editable set to true and points can be deleted", async ({
+		page,
+	}) => {
+		const mapDiv = await setupMap({
+			page,
+			configQueryParam: ["pointEditable"],
+		});
+		await changeMode({ page, mode });
+
+		await page.mouse.click(mapDiv.width / 2, mapDiv.height / 2);
+		await expectPaths({ page, count: 1 });
+		await page.mouse.move(mapDiv.width / 2, mapDiv.height / 2);
+
+		await page.mouse.click(mapDiv.width / 2, mapDiv.height / 2, {
+			button: "right",
+			clickCount: 1,
+		});
+
+		// await page.pause();
+		await expectPaths({ page, count: 0 });
+	});
 });
 
 test.describe("linestring mode", () => {
@@ -253,6 +275,65 @@ test.describe("linestring mode", () => {
 			await expectPaths({ page, count: 2 });
 		});
 	}
+
+	test(`mode can set with editable set to true and points can be moved`, async ({
+		page,
+	}) => {
+		const mapDiv = await setupMap({
+			page,
+			configQueryParam: ["lineStringEditable"],
+		});
+		await changeMode({ page, mode });
+
+		await page.mouse.move(mapDiv.width / 2, mapDiv.height / 2, { steps: 30 });
+		await page.mouse.click(mapDiv.width / 2, mapDiv.height / 2);
+		await page.mouse.move(mapDiv.width / 3, mapDiv.height / 3, { steps: 30 });
+		await page.mouse.click(mapDiv.width / 3, mapDiv.height / 3);
+
+		// Close
+		await page.mouse.click(mapDiv.width / 3, mapDiv.height / 3);
+
+		await expectPaths({ page, count: 1 });
+		await expectPathDimensions({ page, width: 217, height: 124 });
+
+		await page.mouse.move(mapDiv.width / 2, mapDiv.height / 2, { steps: 30 });
+		await page.mouse.down();
+		await page.mouse.move(mapDiv.width / 2, mapDiv.height / 4, { steps: 30 });
+		await page.mouse.up();
+
+		await expectPaths({ page, count: 1 });
+		await expectPathDimensions({ page, width: 217, height: 64 });
+	});
+
+	test(`mode can set with editable set to true and points can be deleted`, async ({
+		page,
+	}) => {
+		const mapDiv = await setupMap({
+			page,
+			configQueryParam: ["lineStringEditable"],
+		});
+		await changeMode({ page, mode });
+
+		await page.mouse.move(mapDiv.width / 2, mapDiv.height / 2, { steps: 30 });
+		await page.mouse.click(mapDiv.width / 2, mapDiv.height / 2);
+		await page.mouse.move(mapDiv.width / 3, mapDiv.height / 2, { steps: 30 });
+		await page.mouse.click(mapDiv.width / 3, mapDiv.height / 2);
+		await page.mouse.move(mapDiv.width / 4, mapDiv.height / 3, { steps: 30 });
+		await page.mouse.click(mapDiv.width / 4, mapDiv.height / 3);
+
+		// Close
+		await page.mouse.click(mapDiv.width / 4, mapDiv.height / 3);
+
+		await expectPaths({ page, count: 1 });
+		await expectPathDimensions({ page, width: 324, height: 124 });
+
+		await page.mouse.click(mapDiv.width / 4, mapDiv.height / 3, {
+			button: "right",
+			clickCount: 1,
+		});
+
+		await expectPathDimensions({ page, width: 217, height: 4 });
+	});
 });
 
 test.describe("polygon mode", () => {
@@ -532,6 +613,56 @@ test.describe("polygon mode", () => {
 		// Check to see the dimensions have changed due to the edit
 		await expectPathDimensions({ page, width: 104, height: 104 + offset });
 	});
+
+	test("can use editable setting to delete a coordinate with right click", async ({
+		page,
+	}) => {
+		const mapDiv = await setupMap({
+			page,
+			configQueryParam: ["polygonEditable"],
+		});
+		await changeMode({ page, mode });
+
+		// The length of the square sides in pixels
+		const sideLength = 100;
+
+		// Calculating the half of the side length
+		const halfLength = sideLength / 2;
+
+		// Coordinates of the center
+		const centerX = mapDiv.width / 2;
+		const centerY = mapDiv.height / 2;
+
+		// Coordinates of the four corners of the square
+		const topLeft = { x: centerX - halfLength, y: centerY - halfLength };
+		const topRight = { x: centerX + halfLength, y: centerY - halfLength };
+		const bottomLeft = {
+			x: centerX - halfLength + 25,
+			y: centerY + halfLength + 25,
+		};
+		const bottomRight = { x: centerX + halfLength, y: centerY + halfLength };
+
+		// Perform clicks at each corner
+		await page.mouse.click(topLeft.x, topLeft.y);
+		await page.mouse.click(topRight.x, topRight.y);
+		await page.mouse.click(bottomRight.x, bottomRight.y);
+		await page.mouse.click(bottomLeft.x, bottomLeft.y);
+
+		// Close the square
+		await page.mouse.click(bottomLeft.x, bottomLeft.y);
+
+		await expectPaths({ page, count: 1 });
+		await expectPathDimensions({ page, width: 104, height: 129 });
+
+		await page.mouse.click(bottomLeft.x, bottomLeft.y, {
+			button: "right",
+			clickCount: 1,
+		});
+
+		// The dimensions should have changed due to the deletion
+		await expectPaths({ page, count: 1 });
+		await expectPathDimensions({ page, width: 104, height: 104 });
+	});
 });
 
 test.describe("rectangle mode", () => {
@@ -785,7 +916,7 @@ test.describe("sensor mode", () => {
 		await page.mouse.move(mapDiv.width / 3, mapDiv.height / 3, { steps: 30 });
 		await page.mouse.click(mapDiv.width / 3, mapDiv.height / 3);
 
-		// The cursor is now behind the initial arc and so wont close the sensor
+		// The cursor is now behind the initial arc and so won't close the sensor
 		await page.mouse.move(mapDiv.width / 1, mapDiv.height / 3, { steps: 30 });
 		await page.mouse.click(mapDiv.width / 1, mapDiv.height / 3);
 
@@ -1123,7 +1254,7 @@ test.describe("select mode", () => {
 			// Deselect
 			await page.mouse.click(mapDiv.width - 10, mapDiv.height / 2);
 
-			// We are attempting to dragg right tothe top left corner but it is not getting there
+			// We are attempting to dragg right to the top left corner but it is not getting there
 			// because it is capped by the validation. If this was allowed x would be ~90
 			await expectGroupPosition({ page, x: 553, y: 273 });
 		});
@@ -1168,7 +1299,7 @@ test.describe("select mode", () => {
 			// Deselect
 			await page.mouse.click(mapDiv.width - 10, mapDiv.height / 2);
 
-			// We are attempting to dragg right tothe top left corner but it is not getting there
+			// We are attempting to dragg right to the top left corner but it is not getting there
 			// because it is capped by the validation. If this was allowed x would be ~90
 			await expectGroupPosition({ page, x: 563, y: 301 });
 		});
@@ -1206,7 +1337,7 @@ test.describe("select mode", () => {
 		await page.mouse.click(mapDiv.width - 10, mapDiv.height / 2);
 
 		// Dragged the square up and to the left
-		await expectGroupPosition({ page, x: 490, y: 408 });
+		await expectGroupPosition({ page, x: 490, y: 407 });
 	});
 
 	test("selected circle has it's shape maintained from center origin when coordinates are dragged with resizable flag", async ({

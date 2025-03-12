@@ -135,6 +135,7 @@ const example = {
 					editable: this.config?.includes("pointEditable"),
 				}),
 				new TerraDrawLineStringMode({
+					editable: this.config?.includes("lineStringEditable"),
 					snapping: {
 						toCoordinate: this.config?.includes("snappingCoordinate"),
 					},

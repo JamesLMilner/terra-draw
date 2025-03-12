@@ -7,8 +7,10 @@ import {
 	Cursor,
 	UpdateTypes,
 	COMMON_PROPERTIES,
+	Project,
+	Unproject,
 } from "../../common";
-import { Polygon, Position } from "geojson";
+import { Feature, Polygon, Position } from "geojson";
 import {
 	TerraDrawBaseDrawMode,
 	BaseModeOptions,
@@ -22,7 +24,6 @@ import { coordinatesIdentical } from "../../geometry/coordinates-identical";
 import { ClosingPointsBehavior } from "./behaviors/closing-points.behavior";
 import { getDefaultStyling } from "../../util/styling";
 import {
-	BBoxPolygon,
 	FeatureId,
 	GeoJSONStoreFeatures,
 	StoreValidation,
@@ -30,11 +31,14 @@ import {
 import { ValidatePolygonFeature } from "../../validations/polygon.validation";
 import { LineSnappingBehavior } from "../line-snapping.behavior";
 import { CoordinateSnappingBehavior } from "../coordinate-snapping.behavior";
+import { ensureRightHandRule } from "../../geometry/ensure-right-hand-rule";
 
 type TerraDrawPolygonModeKeyEvents = {
 	cancel?: KeyboardEvent["key"] | null;
 	finish?: KeyboardEvent["key"] | null;
 };
+
+const defaultKeyEvents = { cancel: "Escape", finish: "Enter" };
 
 type PolygonStyling = {
 	fillColor: HexColorStyling;
@@ -62,10 +66,26 @@ interface Cursors {
 	dragEnd?: Cursor;
 }
 
+const defaultCursors = {
+	start: "crosshair",
+	close: "pointer",
+	dragStart: "grabbing",
+	dragEnd: "crosshair",
+} as Required<Cursors>;
+
 interface Snapping {
 	toLine?: boolean;
 	toCoordinate?: boolean;
-	toCustom?: (event: TerraDrawMouseEvent) => Position | undefined;
+	toCustom?: (
+		event: TerraDrawMouseEvent,
+		context: {
+			currentId?: FeatureId;
+			currentCoordinate?: number;
+			getCurrentGeometrySnapshot: () => Polygon | null;
+			project: Project;
+			unproject: Unproject;
+		},
+	) => Position | undefined;
 }
 
 interface TerraDrawPolygonModeOptions<T extends CustomStyling>
@@ -78,15 +98,20 @@ interface TerraDrawPolygonModeOptions<T extends CustomStyling>
 }
 
 export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> {
-	mode = "polygon";
+	mode = "polygon" as const;
 
 	private currentCoordinate = 0;
 	private currentId: FeatureId | undefined;
-	private keyEvents: TerraDrawPolygonModeKeyEvents;
-	private snapping: Snapping | undefined;
-	private editable: boolean;
+	private keyEvents: TerraDrawPolygonModeKeyEvents = defaultKeyEvents;
+	private cursors: Required<Cursors> = defaultCursors;
+	private mouseMove = false;
 
+	// Snapping
+	private snapping: Snapping | undefined;
 	private snappedPointId: FeatureId | undefined;
+
+	// Editable
+	private editable: boolean = false;
 	private editedFeatureId: FeatureId | undefined;
 	private editedFeatureCoordinateIndex: number | undefined;
 	private editedSnapType: "line" | "coordinate" | undefined;
@@ -99,43 +124,34 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 	private pixelDistance!: PixelDistanceBehavior;
 	private closingPoints!: ClosingPointsBehavior;
 	private clickBoundingBox!: ClickBoundingBoxBehavior;
-	private cursors: Required<Cursors>;
-	private mouseMove = false;
 
 	constructor(options?: TerraDrawPolygonModeOptions<PolygonStyling>) {
-		super(options);
+		super(options, true);
+		this.updateOptions(options);
+	}
 
-		const defaultCursors = {
-			start: "crosshair",
-			close: "pointer",
-			dragStart: "grabbing",
-			dragEnd: "crosshair",
-		} as Required<Cursors>;
+	override updateOptions(
+		options?: TerraDrawPolygonModeOptions<PolygonStyling>,
+	) {
+		super.updateOptions(options);
 
-		if (options && options.cursors) {
-			this.cursors = { ...defaultCursors, ...options.cursors };
-		} else {
-			this.cursors = defaultCursors;
+		if (options?.cursors) {
+			this.cursors = { ...this.cursors, ...options.cursors };
 		}
 
-		this.snapping = options && options.snapping ? options.snapping : undefined;
-
-		// We want to have some defaults, but also allow key bindings
-		// to be explicitly turned off
+		// null is the case where we want to explicitly turn key bindings off
 		if (options?.keyEvents === null) {
 			this.keyEvents = { cancel: null, finish: null };
-		} else {
-			const defaultKeyEvents = { cancel: "Escape", finish: "Enter" };
-			this.keyEvents =
-				options && options.keyEvents
-					? { ...defaultKeyEvents, ...options.keyEvents }
-					: defaultKeyEvents;
+		} else if (options?.keyEvents) {
+			this.keyEvents = { ...this.keyEvents, ...options.keyEvents };
 		}
 
-		if (options && options.editable) {
+		if (options?.snapping) {
+			this.snapping = options.snapping;
+		}
+
+		if (options?.editable) {
 			this.editable = options.editable;
-		} else {
-			this.editable = false;
 		}
 	}
 
@@ -165,6 +181,18 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 		}
 
 		const finishedId = this.currentId;
+
+		// Fix right hand rule if necessary
+		if (this.currentId) {
+			const correctedGeometry = ensureRightHandRule(
+				this.store.getGeometryCopy<Polygon>(this.currentId),
+			);
+			if (correctedGeometry) {
+				this.store.updateGeometry([
+					{ id: this.currentId, geometry: correctedGeometry },
+				]);
+			}
+		}
 
 		if (this.snappedPointId) {
 			this.store.delete([this.snappedPointId]);
@@ -389,23 +417,109 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 		}
 
 		if (this.snapping?.toCustom) {
-			snappedCoordinate = this.snapping.toCustom(event);
+			snappedCoordinate = this.snapping.toCustom(event, {
+				currentCoordinate: this.currentCoordinate,
+				currentId: this.currentId,
+				getCurrentGeometrySnapshot: this.currentId
+					? () =>
+							this.store.getGeometryCopy<Polygon>(this.currentId as FeatureId)
+					: () => null,
+				project: this.project,
+				unproject: this.unproject,
+			});
 		}
 
 		return snappedCoordinate;
 	}
 
-	/** @internal */
-	onClick(event: TerraDrawMouseEvent) {
-		// We want pointer devices (mobile/tablet) to have
-		// similar behaviour to mouse based devices so we
-		// trigger a mousemove event before every click
-		// if one has not been trigged to emulate this
-		if (this.currentCoordinate > 0 && !this.mouseMove) {
-			this.onMouseMove(event);
-		}
-		this.mouseMove = false;
+	private polygonFilter(feature: Feature) {
+		return Boolean(
+			feature.geometry.type === "Polygon" &&
+				feature.properties &&
+				feature.properties.mode === this.mode,
+		);
+	}
 
+	private onRightClick(event: TerraDrawMouseEvent) {
+		if (!this.editable) {
+			return;
+		}
+
+		const { featureId, featureCoordinateIndex: coordinateIndex } =
+			this.coordinateSnapping.getSnappable(event, (feature) =>
+				this.polygonFilter(feature),
+			);
+
+		if (!featureId || coordinateIndex === undefined) {
+			return;
+		}
+
+		const geometry = this.store.getGeometryCopy(featureId);
+
+		let coordinates;
+		if (geometry.type === "Polygon") {
+			coordinates = geometry.coordinates[0];
+
+			// Prevent creating an invalid polygon
+			if (coordinates.length <= 4) {
+				return;
+			}
+		} else {
+			return;
+		}
+
+		const isFinalPolygonCoordinate =
+			geometry.type === "Polygon" &&
+			(coordinateIndex === 0 || coordinateIndex === coordinates.length - 1);
+
+		if (isFinalPolygonCoordinate) {
+			// Deleting the final coordinate in a polygon breaks it
+			// because GeoJSON expects a duplicate, so we need to fix
+			// it by adding the new first coordinate to the end
+			coordinates.shift();
+			coordinates.pop();
+			coordinates.push([coordinates[0][0], coordinates[0][1]]);
+		} else {
+			// Remove coordinate from array
+			coordinates.splice(coordinateIndex, 1);
+		}
+
+		// Validate the new geometry
+		if (this.validate) {
+			const validationResult = this.validate(
+				{
+					id: featureId,
+					type: "Feature",
+					geometry,
+					properties: {},
+				},
+				{
+					project: this.project,
+					unproject: this.unproject,
+					coordinatePrecision: this.coordinatePrecision,
+					updateType: UpdateTypes.Commit,
+				},
+			);
+			if (!validationResult.valid) {
+				return;
+			}
+		}
+
+		// The geometry has changed, so if we were snapped to a point we need to remove it
+		if (this.snappedPointId) {
+			this.store.delete([this.snappedPointId]);
+			this.snappedPointId = undefined;
+		}
+
+		this.store.updateGeometry([
+			{
+				id: featureId,
+				geometry,
+			},
+		]);
+	}
+
+	private onLeftClick(event: TerraDrawMouseEvent) {
 		// Reset the snapping point
 		if (this.snappedPointId) {
 			this.store.delete([this.snappedPointId]);
@@ -576,6 +690,26 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 	}
 
 	/** @internal */
+	onClick(event: TerraDrawMouseEvent) {
+		// We want pointer devices (mobile/tablet) to have
+		// similar behaviour to mouse based devices so we
+		// trigger a mousemove event before every click
+		// if one has not been trigged to emulate this
+		if (this.currentCoordinate > 0 && !this.mouseMove) {
+			this.onMouseMove(event);
+		}
+		this.mouseMove = false;
+
+		if (event.button === "right") {
+			this.onRightClick(event);
+			return;
+		} else if (event.button === "left") {
+			this.onLeftClick(event);
+			return;
+		}
+	}
+
+	/** @internal */
 	onKeyUp(event: TerraDrawKeyboardEvent) {
 		if (event.key === this.keyEvents.cancel) {
 			this.cleanUp();
@@ -598,7 +732,9 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 		let snappedCoordinate: Position | undefined = undefined;
 
 		if (this.state === "started") {
-			const lineSnapped = this.lineSnapping.getSnappable(event);
+			const lineSnapped = this.lineSnapping.getSnappable(event, (feature) =>
+				this.polygonFilter(feature),
+			);
 
 			if (lineSnapped.coordinate) {
 				this.editedSnapType = "line";
@@ -607,7 +743,10 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 				snappedCoordinate = lineSnapped.coordinate;
 			}
 
-			const coordinateSnapped = this.coordinateSnapping.getSnappable(event);
+			const coordinateSnapped = this.coordinateSnapping.getSnappable(
+				event,
+				(feature) => this.polygonFilter(feature),
+			);
 
 			if (coordinateSnapped.coordinate) {
 				this.editedSnapType = "coordinate";

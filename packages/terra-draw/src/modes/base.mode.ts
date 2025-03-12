@@ -35,15 +35,16 @@ export enum ModeTypes {
 	Render = "render",
 }
 
-export type BaseModeOptions<T extends CustomStyling> = {
-	styles?: Partial<T>;
+export type BaseModeOptions<Styling extends CustomStyling> = {
+	styles?: Partial<Styling>;
 	pointerDistance?: number;
 	validation?: Validation;
 	projection?: Projection;
 };
 
-export abstract class TerraDrawBaseDrawMode<T extends CustomStyling> {
-	protected _state: TerraDrawModeState;
+export abstract class TerraDrawBaseDrawMode<Styling extends CustomStyling> {
+	// State
+	protected _state: TerraDrawModeState = "unregistered";
 	get state() {
 		return this._state;
 	}
@@ -51,41 +52,64 @@ export abstract class TerraDrawBaseDrawMode<T extends CustomStyling> {
 		throw new Error("Please use the modes lifecycle methods");
 	}
 
-	protected _styles: Partial<T>;
-
-	get styles(): Partial<T> {
+	// Styles
+	protected _styles: Partial<Styling> = {};
+	get styles(): Partial<Styling> {
 		return this._styles;
 	}
-	set styles(styling: Partial<T>) {
+	set styles(styling: Partial<Styling>) {
 		if (typeof styling !== "object") {
 			throw new Error("Styling must be an object");
 		}
-		this.onStyleChange([], "styling");
+
+		// Note: This may not be initialised yet as styles can be set/changed pre-registration
+		if (this.onStyleChange) {
+			this.onStyleChange([], "styling");
+		}
 		this._styles = styling;
 	}
 
 	protected behaviors: TerraDrawModeBehavior[] = [];
 	protected validate: Validation | undefined;
-	protected pointerDistance: number;
+	protected pointerDistance: number = 40;
 	protected coordinatePrecision!: number;
 	protected onStyleChange!: StoreChangeHandler;
 	protected store!: GeoJSONStore;
+	protected projection: Projection = "web-mercator";
+
 	protected setDoubleClickToZoom!: TerraDrawModeRegisterConfig["setDoubleClickToZoom"];
 	protected unproject!: TerraDrawModeRegisterConfig["unproject"];
 	protected project!: TerraDrawModeRegisterConfig["project"];
 	protected setCursor!: TerraDrawModeRegisterConfig["setCursor"];
 	protected registerBehaviors(behaviorConfig: BehaviorConfig): void {}
-	protected projection!: Projection;
 
-	constructor(options?: BaseModeOptions<T>) {
-		this._state = "unregistered";
-		this._styles =
-			options && options.styles ? { ...options.styles } : ({} as Partial<T>);
-		this.pointerDistance = (options && options.pointerDistance) || 40;
+	constructor(
+		options?: BaseModeOptions<Styling>,
+		willCallUpdateOptionsInParentClass = false,
+	) {
+		// Note: We want to updateOptions on the base class by default, but we don't want it to be
+		// called twice if the extending class is going to call it as well
+		if (!willCallUpdateOptionsInParentClass) {
+			this.updateOptions(options);
+		}
+	}
 
-		this.validate = options && options.validation;
+	updateOptions(options?: BaseModeOptions<Styling>) {
+		if (options?.styles) {
+			// Note: we are updating this.styles and not this._styles - this is because
+			// once registered we want to trigger the onStyleChange
+			this.styles = { ...this._styles, ...options.styles };
+		}
 
-		this.projection = (options && options.projection) || "web-mercator";
+		if (options?.pointerDistance) {
+			this.pointerDistance = options.pointerDistance;
+		}
+		if (options?.validation) {
+			this.validate = options && options.validation;
+		}
+		if (options?.projection) {
+			this.projection = options.projection;
+		}
 	}
 
 	type = ModeTypes.Drawing;
@@ -269,8 +293,8 @@ export abstract class TerraDrawBaseDrawMode<T extends CustomStyling> {
 }
 
 export abstract class TerraDrawBaseSelectMode<
-	T extends CustomStyling,
-> extends TerraDrawBaseDrawMode<T> {
+	Styling extends CustomStyling,
+> extends TerraDrawBaseDrawMode<Styling> {
 	public type = ModeTypes.Select;
 
 	public abstract selectFeature(featureId: FeatureId): void;

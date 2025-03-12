@@ -2,6 +2,9 @@ import { GeoJSONStore } from "../../store/store";
 import { MockModeConfig } from "../../test/mock-mode-config";
 import { MockCursorEvent } from "../../test/mock-cursor-event";
 import { TerraDrawCircleMode } from "./circle.mode";
+import { Polygon } from "geojson";
+import { followsRightHandRule } from "../../geometry/boolean/right-hand-rule";
+import { MockKeyboardEvent } from "../../test/mock-keyboard-event";
 
 describe("TerraDrawCircleMode", () => {
 	describe("constructor", () => {
@@ -112,6 +115,64 @@ describe("TerraDrawCircleMode", () => {
 		});
 	});
 
+	describe("updateOptions", () => {
+		it("can change cursors", () => {
+			const circleMode = new TerraDrawCircleMode();
+			circleMode.updateOptions({
+				cursors: {
+					start: "pointer",
+				},
+			});
+			const mockConfig = MockModeConfig(circleMode.mode);
+			circleMode.register(mockConfig);
+			circleMode.start();
+			expect(mockConfig.setCursor).toHaveBeenCalledWith("pointer");
+		});
+
+		it("can change key events", () => {
+			const circleMode = new TerraDrawCircleMode();
+			circleMode.updateOptions({
+				keyEvents: {
+					cancel: "C",
+					finish: "F",
+				},
+			});
+			const mockConfig = MockModeConfig(circleMode.mode);
+			circleMode.register(mockConfig);
+			circleMode.start();
+
+			circleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+			let features = mockConfig.store.copyAll();
+			expect(features.length).toBe(1);
+
+			circleMode.onKeyUp(MockKeyboardEvent({ key: "C" }));
+
+			features = mockConfig.store.copyAll();
+			expect(features.length).toBe(0);
+		});
+
+		it("can update styles", () => {
+			const circleMode = new TerraDrawCircleMode();
+
+			const mockConfig = MockModeConfig(circleMode.mode);
+
+			circleMode.register(mockConfig);
+			circleMode.start();
+
+			circleMode.updateOptions({
+				styles: {
+					fillColor: "#ffffff",
+				},
+			});
+			expect(circleMode.styles).toStrictEqual({
+				fillColor: "#ffffff",
+			});
+
+			expect(mockConfig.onChange).toHaveBeenCalledTimes(1);
+		});
+	});
+
 	describe("onClick", () => {
 		let circleMode: TerraDrawCircleMode;
 		let store: GeoJSONStore;
@@ -161,6 +222,10 @@ describe("TerraDrawCircleMode", () => {
 					features = store.copyAll();
 					expect(features.length).toBe(1);
 
+					expect(followsRightHandRule(features[0].geometry as Polygon)).toBe(
+						true,
+					);
+
 					// We don't expect any changes if there is no cursor movement
 					expect(onChange).toHaveBeenCalledTimes(1);
 					expect(onChange).toHaveBeenCalledWith([expect.any(String)], "create");
@@ -180,6 +245,10 @@ describe("TerraDrawCircleMode", () => {
 
 					features = store.copyAll();
 					expect(features.length).toBe(1);
+
+					expect(followsRightHandRule(features[0].geometry as Polygon)).toBe(
+						true,
+					);
 
 					expect(onChange).toHaveBeenCalledTimes(5);
 					expect(onChange).toHaveBeenCalledWith([expect.any(String)], "create");

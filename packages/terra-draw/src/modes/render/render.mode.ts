@@ -33,7 +33,7 @@ type RenderModeStyling = {
 
 interface TerraDrawRenderModeOptions<T extends CustomStyling>
 	extends BaseModeOptions<T> {
-	modeName: string;
+	modeName?: string;
 	// styles need to be there else we could fall back to BaseModeOptions
 	styles: Partial<T>;
 }
@@ -43,8 +43,21 @@ export class TerraDrawRenderMode extends TerraDrawBaseDrawMode<RenderModeStyling
 	public mode = "render"; // This gets changed dynamically
 
 	constructor(options: TerraDrawRenderModeOptions<RenderModeStyling>) {
-		super({ styles: options.styles });
-		this.mode = options.modeName;
+		if (!options.modeName) {
+			throw new Error("Mode name is required for TerraDrawRenderMode");
+		}
+
+		super(options, true);
+		this.updateOptions(options);
+	}
+
+	updateOptions(
+		options?: TerraDrawRenderModeOptions<RenderModeStyling> | undefined,
+	): void {
+		super.updateOptions(options);
+		if (options?.modeName) {
+			this.mode = options.modeName;
+		}
 	}
 
 	/** @internal */

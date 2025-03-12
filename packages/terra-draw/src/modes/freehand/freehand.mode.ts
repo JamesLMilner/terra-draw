@@ -23,11 +23,14 @@ import {
 } from "../../store/store";
 import { cartesianDistance } from "../../geometry/measure/pixel-distance";
 import { ValidatePolygonFeature } from "../../validations/polygon.validation";
+import { ensureRightHandRule } from "../../geometry/ensure-right-hand-rule";
 
 type TerraDrawFreehandModeKeyEvents = {
 	cancel: KeyboardEvent["key"] | null;
 	finish: KeyboardEvent["key"] | null;
 };
+
+const defaultKeyEvents = { cancel: "Escape", finish: "Enter" };
 
 type FreehandPolygonStyling = {
 	fillColor: HexColorStyling;
@@ -45,6 +48,11 @@ interface Cursors {
 	close?: Cursor;
 }
 
+const defaultCursors = {
+	start: "crosshair",
+	close: "pointer",
+} as Required<Cursors>;
+
 interface TerraDrawFreehandModeOptions<T extends CustomStyling>
 	extends BaseModeOptions<T> {
 	minDistance?: number;
@@ -56,65 +64,72 @@ interface TerraDrawFreehandModeOptions<T extends CustomStyling>
 }
 
 export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygonStyling> {
-	mode = "freehand";
+	mode = "freehand" as const;
 
 	private startingClick = false;
 	private currentId: FeatureId | undefined;
 	private closingPointId: FeatureId | undefined;
-	private minDistance: number;
-	private keyEvents: TerraDrawFreehandModeKeyEvents;
-	private cursors: Required<Cursors>;
-	private preventPointsNearClose: boolean;
-	private autoClose: boolean;
+	private minDistance: number = 20;
+	private keyEvents: TerraDrawFreehandModeKeyEvents = defaultKeyEvents;
+	private cursors: Required<Cursors> = defaultCursors;
+	private preventPointsNearClose: boolean = true;
+	private autoClose: boolean = false;
 	private autoCloseTimeout = 500;
 	private hasLeftStartingPoint = false;
 	private preventNewFeature = false;
 
 	constructor(options?: TerraDrawFreehandModeOptions<FreehandPolygonStyling>) {
-		super(options);
+		super(options, true);
+		this.updateOptions(options);
+	}
 
-		const defaultCursors = {
-			start: "crosshair",
-			close: "pointer",
-		} as Required<Cursors>;
+	public updateOptions(
+		options?: TerraDrawFreehandModeOptions<FreehandPolygonStyling> | undefined,
+	): void {
+		super.updateOptions(options);
 
-		if (options && options.cursors) {
-			this.cursors = { ...defaultCursors, ...options.cursors };
-		} else {
-			this.cursors = defaultCursors;
+		if (options?.minDistance) {
+			this.minDistance = options.minDistance;
 		}
 
-		this.preventPointsNearClose =
-			(options && options.preventPointsNearClose) || true;
-
-		if (options && options.autoCloseTimeout && !options.autoClose) {
-			throw new Error("autoCloseTimeout is set, but autoClose is not enabled");
+		if (options?.preventPointsNearClose !== undefined) {
+			this.preventPointsNearClose = options.preventPointsNearClose;
 		}
 
-		this.autoClose = (options && options.autoClose) || false;
+		if (options?.autoClose !== undefined) {
+			this.autoClose = options.autoClose;
+		}
 
-		this.autoCloseTimeout = (options && options.autoCloseTimeout) || 500;
+		if (options?.autoCloseTimeout) {
+			this.autoCloseTimeout = options.autoCloseTimeout;
+		}
 
-		this.minDistance = (options && options.minDistance) || 20;
-
-		// We want to have some defaults, but also allow key bindings
-		// to be explicitly turned off
 		if (options?.keyEvents === null) {
 			this.keyEvents = { cancel: null, finish: null };
-		} else {
-			const defaultKeyEvents = { cancel: "Escape", finish: "Enter" };
-			this.keyEvents =
-				options && options.keyEvents
-					? { ...defaultKeyEvents, ...options.keyEvents }
-					: defaultKeyEvents;
+		} else if (options?.keyEvents) {
+			this.keyEvents = { ...this.keyEvents, ...options.keyEvents };
 		}
 
-		this.validate = options?.validation;
+		if (options?.cursors) {
+			this.cursors = { ...this.cursors, ...options.cursors };
+		}
 	}
 
 	private close() {
 		if (this.currentId === undefined) {
 			return;
+		}
+
+		// Fix right hand rule if necessary
+		if (this.currentId) {
+			const correctedGeometry = ensureRightHandRule(
+				this.store.getGeometryCopy<Polygon>(this.currentId),
+			);
+			if (correctedGeometry) {
+				this.store.updateGeometry([
+					{ id: this.currentId, geometry: correctedGeometry },
+				]);
+			}
 		}
 
 		const finishedId = this.currentId;
@@ -324,7 +339,9 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 		if (event.key === this.keyEvents.cancel) {
 			this.cleanUp();
 		} else if (event.key === this.keyEvents.finish) {
-			this.close();
+			if (this.startingClick === true) {
+				this.close();
+			}
 		}
 	}
 

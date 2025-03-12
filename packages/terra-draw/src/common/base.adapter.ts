@@ -228,7 +228,7 @@ export abstract class TerraDrawBaseAdapter implements TerraDrawAdapter {
 							isMicroDrag =
 								pixelDistanceToCheck < this._minPixelDragDistanceDrawing;
 						} else if (modeState === "selecting") {
-							// Simiarly when selecting, we want to ignore very small pointer
+							// Similarly when selecting, we want to ignore very small pointer
 							// movements when holding the map down as these are normally done
 							// by accident when drawing and is not an intended drag
 							isMicroDrag =
@@ -318,7 +318,7 @@ export abstract class TerraDrawBaseAdapter implements TerraDrawAdapter {
 					}
 
 					// Ensure we go back to the regular behaviour
-					// not dragging and re-enable draggin on the actual map
+					// not dragging and re-enable dragging on the actual map
 					this._dragState = "not-dragging";
 					this.setDraggability(true);
 				},

@@ -62,7 +62,7 @@ describe("GeoJSONStore", () => {
 	});
 
 	describe("has", () => {
-		it("returns false for non exisiting store feature", () => {
+		it("returns false for non existing store feature", () => {
 			const store = new GeoJSONStore();
 
 			expect(store.has("e3ccd3b9-afb1-4f0b-91d8-22a768d5f284")).toBe(false);

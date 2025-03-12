@@ -42,6 +42,12 @@ interface Cursors {
 	dragEnd?: Cursor;
 }
 
+const defaultCursors = {
+	create: "crosshair",
+	dragStart: "grabbing",
+	dragEnd: "crosshair",
+} as Required<Cursors>;
+
 interface TerraDrawPointModeOptions<T extends CustomStyling>
 	extends BaseModeOptions<T> {
 	cursors?: Cursors;
@@ -49,10 +55,13 @@ interface TerraDrawPointModeOptions<T extends CustomStyling>
 }
 
 export class TerraDrawPointMode extends TerraDrawBaseDrawMode<PointModeStyling> {
-	mode = "point";
+	mode = "point" as const;
 
-	private cursors: Required<Cursors>;
-	private editable: boolean;
+	// Options
+	private cursors: Required<Cursors> = defaultCursors;
+	private editable: boolean = false;
+
+	// Internal state
 	private editedFeatureId: FeatureId | undefined;
 
 	// Behaviors
@@ -60,23 +69,21 @@ export class TerraDrawPointMode extends TerraDrawBaseDrawMode<PointModeStyling> 
 	private clickBoundingBox!: ClickBoundingBoxBehavior;
 
 	constructor(options?: TerraDrawPointModeOptions<PointModeStyling>) {
-		super(options);
-		const defaultCursors = {
-			create: "crosshair",
-			dragStart: "grabbing",
-			dragEnd: "crosshair",
-		} as Required<Cursors>;
+		super(options, true);
+		this.updateOptions(options);
+	}
 
-		if (options && options.cursors) {
-			this.cursors = { ...defaultCursors, ...options.cursors };
-		} else {
-			this.cursors = defaultCursors;
+	updateOptions(
+		options?: TerraDrawPointModeOptions<PointModeStyling> | undefined,
+	): void {
+		super.updateOptions(options);
+
+		if (options?.cursors) {
+			this.cursors = { ...this.cursors, ...options.cursors };
 		}
 
-		if (options && options.editable) {
+		if (options?.editable) {
 			this.editable = options.editable;
-		} else {
-			this.editable = false;
 		}
 	}
 
@@ -99,37 +106,11 @@ export class TerraDrawPointMode extends TerraDrawBaseDrawMode<PointModeStyling> 
 			throw new Error("Mode must be registered first");
 		}
 
-		const geometry = {
-			type: "Point",
-			coordinates: [event.lng, event.lat],
-		} as Point;
-
-		const properties = { mode: this.mode };
-
-		if (this.validate) {
-			const validationResult = this.validate(
-				{
-					type: "Feature",
-					geometry,
-					properties,
-				} as GeoJSONStoreFeatures,
-				{
-					project: this.project,
-					unproject: this.unproject,
-					coordinatePrecision: this.coordinatePrecision,
-					updateType: UpdateTypes.Finish,
-				},
-			);
-
-			if (!validationResult.valid) {
-				return;
-			}
+		if (event.button === "right") {
+			this.onRightClick(event);
+		} else if (event.button === "left") {
+			this.onLeftClick(event);
 		}
-
-		const [pointId] = this.store.create([{ geometry, properties }]);
-
-		// Ensure that any listerers are triggered with the main created geometry
-		this.onFinish(pointId, { mode: this.mode, action: "draw" });
 	}
 
 	/** @internal */
@@ -151,39 +132,8 @@ export class TerraDrawPointMode extends TerraDrawBaseDrawMode<PointModeStyling> 
 		setMapDraggability: (enabled: boolean) => void,
 	) {
 		if (this.editable) {
-			const bbox = this.clickBoundingBox.create(event) as BBoxPolygon;
-			const features = this.store.search(bbox);
-
-			let distance = Infinity;
-			let clickedFeature: GeoJSONStoreFeatures | undefined = undefined;
-
-			for (let i = 0; i < features.length; i++) {
-				const feature = features[i];
-				const isPoint =
-					feature.geometry.type === "Point" &&
-					feature.properties.mode === this.mode;
-
-				if (!isPoint) {
-					continue;
-				}
-
-				const position = feature.geometry.coordinates as Position;
-				const distanceToFeature = this.pixelDistance.measure(event, position);
-
-				if (
-					distanceToFeature > distance ||
-					distanceToFeature > this.pointerDistance
-				) {
-					continue;
-				}
-
-				distance = distanceToFeature;
-				clickedFeature = feature;
-			}
-
-			if (clickedFeature) {
-				this.editedFeatureId = clickedFeature.id;
-			}
+			const nearestPointFeature = this.getNearestPointFeature(event);
+			this.editedFeatureId = nearestPointFeature?.id;
 		}
 
 		// We only need to stop the map dragging if
@@ -335,5 +285,86 @@ export class TerraDrawPointMode extends TerraDrawBaseDrawMode<PointModeStyling> 
 		return this.validateModeFeature(feature, (baseValidatedFeature) =>
 			ValidatePointFeature(baseValidatedFeature, this.coordinatePrecision),
 		);
+	}
+
+	private onLeftClick(event: TerraDrawMouseEvent) {
+		const geometry = {
+			type: "Point",
+			coordinates: [event.lng, event.lat],
+		} as Point;
+
+		const properties = { mode: this.mode };
+
+		if (this.validate) {
+			const validationResult = this.validate(
+				{
+					type: "Feature",
+					geometry,
+					properties,
+				} as GeoJSONStoreFeatures,
+				{
+					project: this.project,
+					unproject: this.unproject,
+					coordinatePrecision: this.coordinatePrecision,
+					updateType: UpdateTypes.Finish,
+				},
+			);
+
+			if (!validationResult.valid) {
+				return;
+			}
+		}
+
+		const [pointId] = this.store.create([{ geometry, properties }]);
+
+		// Ensure that any listerers are triggered with the main created geometry
+		this.onFinish(pointId, { mode: this.mode, action: "draw" });
+	}
+
+	private onRightClick(event: TerraDrawMouseEvent) {
+		// We only want to be able to delete points if the mode is editable
+		if (!this.editable) {
+			return;
+		}
+
+		const clickedFeature = this.getNearestPointFeature(event);
+
+		if (clickedFeature) {
+			this.store.delete([clickedFeature.id as FeatureId]);
+		}
+	}
+
+	private getNearestPointFeature(event: TerraDrawMouseEvent) {
+		const bbox = this.clickBoundingBox.create(event) as BBoxPolygon;
+		const features = this.store.search(bbox);
+
+		let distance = Infinity;
+		let clickedFeature: GeoJSONStoreFeatures | undefined = undefined;
+
+		for (let i = 0; i < features.length; i++) {
+			const feature = features[i];
+			const isPoint =
+				feature.geometry.type === "Point" &&
+				feature.properties.mode === this.mode;
+
+			if (!isPoint) {
+				continue;
+			}
+
+			const position = feature.geometry.coordinates as Position;
+			const distanceToFeature = this.pixelDistance.measure(event, position);
+
+			if (
+				distanceToFeature > distance ||
+				distanceToFeature > this.pointerDistance
+			) {
+				continue;
+			}
+
+			distance = distanceToFeature;
+			clickedFeature = feature;
+		}
+
+		return clickedFeature;
 	}
 }

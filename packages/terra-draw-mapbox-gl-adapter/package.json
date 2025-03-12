@@ -7,8 +7,8 @@
 		"mapbox-gl": "^3.9.2"
 	},
 	"scripts": {
-		"release": "commit-and-tag-version .versionrc.cjs -t terra-draw-mapbox-gl-adapter@",
-		"release:dryrun": "commit-and-tag-version .versionrc.cjs -t terra-draw-mapbox-gl-adapter@ --dry-run",
+		"release": "TYPE=$(node ../../bump.mjs) && commit-and-tag-version .versionrc.cjs -t terra-draw-mapbox-gl-adapter@ --release-as $TYPE",
+		"release:dryrun": "TYPE=$(node ../../bump.mjs) && commit-and-tag-version .versionrc.cjs -t terra-draw-mapbox-gl-adapter@ --dry-run --release-as $TYPE",
 		"build": "microbundle",
 		"watch": "microbundle --watch --format modern",
 		"unused": "knip",
@@ -26,6 +26,7 @@
 	"type": "module",
 	"source": "src/terra-draw-mapbox-gl-adapter.ts",
 	"exports": {
+		"source": "./src/terra-draw-mapbox-gl-adapter.ts",
 		"types": "./dist/terra-draw-mapbox-gl-adapter.d.ts",
 		"require": "./dist/terra-draw-mapbox-gl-adapter.cjs",
 		"default": "./dist/terra-draw-mapbox-gl-adapter.modern.js"

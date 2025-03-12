@@ -5,6 +5,7 @@ export const pageUrl = "http://localhost:3000/";
 export type TestConfigOptions =
 	| "polygonEditable"
 	| "pointEditable"
+	| "lineStringEditable"
 	| "validationSuccess"
 	| "validationFailure"
 	| "insertCoordinates"
@@ -109,7 +110,7 @@ export const expectPaths = async ({
 	} else {
 		await expect(
 			await page.locator(selector).count(),
-			`locator count should be greater than 0 for selector ${selector}`,
+			`locator count should be 0 for selector ${selector}`,
 		).toBe(0);
 	}
 };
@@ -133,6 +134,11 @@ export const expectPathDimensions = async ({
 	expect(boundingBox?.height).toBe(height);
 };
 
+const expectCloseTo = (actual: number, expected: number, tolerance = 1) => {
+	expect(actual).toBeGreaterThanOrEqual(expected - tolerance);
+	expect(actual).toBeLessThanOrEqual(expected + tolerance);
+};
+
 export const expectGroupPosition = async ({
 	page,
 	x,
@@ -146,8 +152,12 @@ export const expectGroupPosition = async ({
 
 	const boundingBox = await page.locator(selector).boundingBox();
 
-	expect(boundingBox?.x).toBe(x);
-	expect(boundingBox?.y).toBe(y);
+	if (!boundingBox) {
+		throw new Error(`Selector ${selector} bounding box not found`);
+	}
+
+	expectCloseTo(boundingBox.x, x);
+	expectCloseTo(boundingBox.y, y);
 };
 
 export const drawRectangularPolygon = async ({

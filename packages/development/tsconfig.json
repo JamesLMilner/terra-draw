@@ -1,0 +1,18 @@
+{
+	"extends": "./../../tsconfig.base.json",
+	"include": [
+		"src",
+		"../terra-draw/src",
+		"../terra-draw-google-maps-adapter/src",
+		"../terra-draw-mapbox-gl-adapter/src",
+		"../terra-draw-maplibre-gl-adapter/src",
+		"../terra-draw-leaflet-adapter/src",
+		"../terra-draw-arcgis-adapter/src",
+		"../terra-draw-openlayers-adapter/src"
+	],
+	"compilerOptions": {
+		"composite": true,
+		"outDir": "dist",
+		"rootDir": "../"
+	}
+}

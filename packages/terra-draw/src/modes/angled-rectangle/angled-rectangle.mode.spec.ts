@@ -2,6 +2,9 @@ import { GeoJSONStore } from "../../store/store";
 import { MockModeConfig } from "../../test/mock-mode-config";
 import { MockCursorEvent } from "../../test/mock-cursor-event";
 import { TerraDrawAngledRectangleMode } from "./angled-rectangle.mode";
+import { Polygon } from "geojson";
+import { followsRightHandRule } from "../../geometry/boolean/right-hand-rule";
+import { MockKeyboardEvent } from "../../test/mock-keyboard-event";
 
 describe("TerraDrawAngledRectangleMode", () => {
 	describe("constructor", () => {
@@ -110,6 +113,65 @@ describe("TerraDrawAngledRectangleMode", () => {
 		});
 	});
 
+	describe("updateOptions", () => {
+		it("can change cursors", () => {
+			const angledRectangleMode = new TerraDrawAngledRectangleMode();
+			angledRectangleMode.updateOptions({
+				cursors: {
+					start: "pointer",
+					close: "pointer",
+				},
+			});
+			const mockConfig = MockModeConfig(angledRectangleMode.mode);
+			angledRectangleMode.register(mockConfig);
+			angledRectangleMode.start();
+			expect(mockConfig.setCursor).toHaveBeenCalledWith("pointer");
+		});
+
+		it("can change key events", () => {
+			const angledRectangleMode = new TerraDrawAngledRectangleMode();
+			angledRectangleMode.updateOptions({
+				keyEvents: {
+					cancel: "C",
+					finish: "F",
+				},
+			});
+			const mockConfig = MockModeConfig(angledRectangleMode.mode);
+			angledRectangleMode.register(mockConfig);
+			angledRectangleMode.start();
+
+			angledRectangleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+			let features = mockConfig.store.copyAll();
+			expect(features.length).toBe(1);
+
+			angledRectangleMode.onKeyUp(MockKeyboardEvent({ key: "C" }));
+
+			features = mockConfig.store.copyAll();
+			expect(features.length).toBe(0);
+		});
+
+		it("can update styles", () => {
+			const angledRectangleMode = new TerraDrawAngledRectangleMode();
+
+			const mockConfig = MockModeConfig(angledRectangleMode.mode);
+
+			angledRectangleMode.register(mockConfig);
+			angledRectangleMode.start();
+
+			angledRectangleMode.updateOptions({
+				styles: {
+					fillColor: "#ffffff",
+				},
+			});
+			expect(angledRectangleMode.styles).toStrictEqual({
+				fillColor: "#ffffff",
+			});
+
+			expect(mockConfig.onChange).toHaveBeenCalledTimes(1);
+		});
+	});
+
 	describe("onMouseMove", () => {
 		let angledRectangleMode: TerraDrawAngledRectangleMode;
 		let store: GeoJSONStore;
@@ -212,6 +274,10 @@ describe("TerraDrawAngledRectangleMode", () => {
 
 				let features = store.copyAll();
 				expect(features.length).toBe(1);
+
+				expect(followsRightHandRule(features[0].geometry as Polygon)).toBe(
+					true,
+				);
 
 				// Create a new angled rectangle polygon
 				angledRectangleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
@@ -325,6 +391,10 @@ describe("TerraDrawAngledRectangleMode", () => {
 
 			rectangleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
+			rectangleMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
+
+			rectangleMode.onMouseMove(MockCursorEvent({ lng: 2, lat: 2 }));
+
 			let features = store.copyAll();
 			expect(features.length).toBe(1);
 
@@ -340,7 +410,7 @@ describe("TerraDrawAngledRectangleMode", () => {
 			// Two as the rectangle has been closed via enter
 			expect(features.length).toBe(2);
 
-			expect(onChange).toHaveBeenCalledTimes(2);
+			expect(onChange).toHaveBeenCalledTimes(5);
 			expect(onChange).toHaveBeenCalledWith([expect.any(String)], "create");
 			expect(onFinish).toHaveBeenCalledTimes(1);
 		});
@@ -478,6 +548,8 @@ describe("TerraDrawAngledRectangleMode", () => {
 					fillOpacity: () => 0.5,
 				},
 			});
+
+			rectangleMode.register(MockModeConfig(rectangleMode.mode));
 
 			expect(
 				rectangleMode.styleFeature({

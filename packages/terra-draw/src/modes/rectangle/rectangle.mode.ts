@@ -20,11 +20,14 @@ import {
 	TerraDrawBaseDrawMode,
 } from "../base.mode";
 import { ValidateNonIntersectingPolygonFeature } from "../../validations/polygon.validation";
+import { ensureRightHandRule } from "../../geometry/ensure-right-hand-rule";
 
 type TerraDrawRectangleModeKeyEvents = {
 	cancel: KeyboardEvent["key"] | null;
 	finish: KeyboardEvent["key"] | null;
 };
+
+const defaultKeyEvents = { cancel: "Escape", finish: "Enter" };
 
 type RectanglePolygonStyling = {
 	fillColor: HexColorStyling;
@@ -37,6 +40,10 @@ interface Cursors {
 	start?: Cursor;
 }
 
+const defaultCursors = {
+	start: "crosshair",
+} as Required<Cursors>;
+
 interface TerraDrawRectangleModeOptions<T extends CustomStyling>
 	extends BaseModeOptions<T> {
 	keyEvents?: TerraDrawRectangleModeKeyEvents | null;
@@ -44,38 +51,33 @@ interface TerraDrawRectangleModeOptions<T extends CustomStyling>
 }
 
 export class TerraDrawRectangleMode extends TerraDrawBaseDrawMode<RectanglePolygonStyling> {
-	mode = "rectangle";
+	mode = "rectangle" as const;
 	private center: Position | undefined;
 	private clickCount = 0;
 	private currentRectangleId: FeatureId | undefined;
-	private keyEvents: TerraDrawRectangleModeKeyEvents;
-	private cursors: Required<Cursors>;
+	private keyEvents: TerraDrawRectangleModeKeyEvents = defaultKeyEvents;
+	private cursors: Required<Cursors> = defaultCursors;
 
 	constructor(
 		options?: TerraDrawRectangleModeOptions<RectanglePolygonStyling>,
 	) {
-		super(options);
+		super(options, true);
+		this.updateOptions(options);
+	}
 
-		const defaultCursors = {
-			start: "crosshair",
-		} as Required<Cursors>;
+	override updateOptions(
+		options?: TerraDrawRectangleModeOptions<RectanglePolygonStyling>,
+	) {
+		super.updateOptions(options);
 
-		if (options && options.cursors) {
-			this.cursors = { ...defaultCursors, ...options.cursors };
-		} else {
-			this.cursors = defaultCursors;
+		if (options?.cursors) {
+			this.cursors = { ...this.cursors, ...options.cursors };
 		}
 
-		// We want to have some defaults, but also allow key bindings
-		// to be explicitly turned off
 		if (options?.keyEvents === null) {
 			this.keyEvents = { cancel: null, finish: null };
-		} else {
-			const defaultKeyEvents = { cancel: "Escape", finish: "Enter" };
-			this.keyEvents =
-				options && options.keyEvents
-					? { ...defaultKeyEvents, ...options.keyEvents }
-					: defaultKeyEvents;
+		} else if (options?.keyEvents) {
+			this.keyEvents = { ...this.keyEvents, ...options.keyEvents };
 		}
 	}
 
@@ -128,6 +130,19 @@ export class TerraDrawRectangleMode extends TerraDrawBaseDrawMode<RectanglePolyg
 
 	private close() {
 		const finishedId = this.currentRectangleId;
+
+		// Fix right hand rule if necessary
+		if (finishedId) {
+			const correctedGeometry = ensureRightHandRule(
+				this.store.getGeometryCopy<Polygon>(finishedId),
+			);
+			if (correctedGeometry) {
+				this.store.updateGeometry([
+					{ id: finishedId, geometry: correctedGeometry },
+				]);
+			}
+		}
+
 		this.center = undefined;
 		this.currentRectangleId = undefined;
 		this.clickCount = 0;

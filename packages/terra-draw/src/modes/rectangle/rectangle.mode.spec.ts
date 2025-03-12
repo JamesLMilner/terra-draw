@@ -3,6 +3,8 @@ import { MockModeConfig } from "../../test/mock-mode-config";
 import { MockCursorEvent } from "../../test/mock-cursor-event";
 import { TerraDrawRectangleMode } from "./rectangle.mode";
 import { MockKeyboardEvent } from "../../test/mock-keyboard-event";
+import { Polygon } from "geojson";
+import { followsRightHandRule } from "../../geometry/boolean/right-hand-rule";
 
 describe("TerraDrawRectangleMode", () => {
 	describe("constructor", () => {
@@ -149,10 +151,14 @@ describe("TerraDrawRectangleMode", () => {
 				let features = store.copyAll();
 				expect(features.length).toBe(1);
 
-				rectangleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+				rectangleMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
 
 				features = store.copyAll();
 				expect(features.length).toBe(1);
+
+				expect(followsRightHandRule(features[0].geometry as Polygon)).toBe(
+					true,
+				);
 
 				expect(onChange).toHaveBeenCalledTimes(2);
 				expect(onChange).toHaveBeenCalledWith([expect.any(String)], "create");
@@ -195,7 +201,8 @@ describe("TerraDrawRectangleMode", () => {
 			// Two as the rectangle has been closed via enter
 			expect(features.length).toBe(2);
 
-			expect(onChange).toHaveBeenCalledTimes(2);
+			// close calls onChange an extra time because of the right hand rule fixing
+			expect(onChange).toHaveBeenCalledTimes(3);
 			expect(onChange).toHaveBeenCalledWith([expect.any(String)], "create");
 			expect(onFinish).toHaveBeenCalledTimes(1);
 		});
@@ -270,6 +277,10 @@ describe("TerraDrawRectangleMode", () => {
 			expect(feature.id).toBe(updatedFeature.id);
 			expect(feature.geometry.coordinates).not.toStrictEqual(
 				updatedFeature.geometry.coordinates,
+			);
+
+			expect(followsRightHandRule(updatedFeature.geometry as Polygon)).toBe(
+				true,
 			);
 		});
 	});
@@ -405,6 +416,8 @@ describe("TerraDrawRectangleMode", () => {
 					fillOpacity: () => 0.5,
 				},
 			});
+
+			rectangleMode.register(MockModeConfig(rectangleMode.mode));
 
 			expect(
 				rectangleMode.styleFeature({

@@ -15,8 +15,8 @@
 	"license": "MIT",
 	"dependencies": {
 		"leaflet": "1.9.4",
-		"terra-draw": "1.0.0",
-		"terra-draw-leaflet-adapter": "1.0.0"
+		"terra-draw": "1.2.0",
+		"terra-draw-leaflet-adapter": "1.0.2"
 	},
 	"devDependencies": {
 		"@playwright/test": "^1.49.1",

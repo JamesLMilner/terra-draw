@@ -1,6 +1,7 @@
 import {
 	validLatitude,
 	validLongitude,
+	coordinatePrecisionIsValid,
 	coordinateIsValid,
 	getDecimalPlaces,
 } from "./is-valid-coordinate";
@@ -82,5 +83,21 @@ describe("getDecimalPlaces", () => {
 
 	it("returns the correct number of decimal places for a float less than 0", () => {
 		expect(getDecimalPlaces(-0.123)).toBe(3);
+	});
+});
+
+describe("coordinatePrecisionIsValid", () => {
+	it("should return true for valid coordinate", () => {
+		expect(coordinatePrecisionIsValid([45, 90], 9)).toBe(true);
+	});
+
+	it("should return false for coordinate with more decimal places than given", () => {
+		expect(coordinatePrecisionIsValid([45.123, 90.123], 2)).toBe(false);
+	});
+
+	it("should return false for coordinate with non-number elements", () => {
+		expect(coordinatePrecisionIsValid(["45", 90], 9)).toBe(false);
+		expect(coordinatePrecisionIsValid([45, "90"], 9)).toBe(false);
+		expect(coordinatePrecisionIsValid(["45", "90"], 9)).toBe(false);
 	});
 });

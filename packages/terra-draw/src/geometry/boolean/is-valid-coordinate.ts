@@ -6,6 +6,21 @@ export function validLongitude(lng: number) {
 	return lng >= -180 && lng <= 180;
 }
 
+export function coordinatePrecisionIsValid(
+	coordinate: unknown[],
+	coordinatePrecision: number,
+) {
+	return (
+		coordinate.length === 2 &&
+		typeof coordinate[0] === "number" &&
+		typeof coordinate[1] === "number" &&
+		coordinate[0] !== Infinity &&
+		coordinate[1] !== Infinity &&
+		getDecimalPlaces(coordinate[0]) <= coordinatePrecision &&
+		getDecimalPlaces(coordinate[1]) <= coordinatePrecision
+	);
+}
+
 export function coordinateIsValid(
 	coordinate: unknown[],
 	coordinatePrecision: number,
@@ -18,8 +33,7 @@ export function coordinateIsValid(
 		coordinate[1] !== Infinity &&
 		validLongitude(coordinate[0]) &&
 		validLatitude(coordinate[1]) &&
-		getDecimalPlaces(coordinate[0]) <= coordinatePrecision &&
-		getDecimalPlaces(coordinate[1]) <= coordinatePrecision
+		coordinatePrecisionIsValid(coordinate, coordinatePrecision)
 	);
 }
 

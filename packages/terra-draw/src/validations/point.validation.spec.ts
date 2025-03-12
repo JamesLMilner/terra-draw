@@ -43,7 +43,8 @@ describe("isValidPoint", () => {
 		} as Feature<Point, Record<string, any>>;
 		expect(ValidatePointFeature(invalidPoint, 2)).toEqual({
 			valid: false,
-			reason: "Feature has invalid coordinates",
+			reason:
+				"Feature has invalid coordinates with excessive coordinate precision",
 		});
 	});
 });

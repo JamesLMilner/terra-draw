@@ -154,7 +154,7 @@ export class TerraDrawLeafletAdapter extends TerraDrawExtend.TerraDrawBaseAdapte
 						fillColor: featureStyles.polygonFillColor,
 						weight: featureStyles.polygonOutlineWidth,
 						stroke: true,
-						color: featureStyles.polygonFillColor,
+						color: featureStyles.polygonOutlineColor,
 						pane: paneId,
 					};
 				}

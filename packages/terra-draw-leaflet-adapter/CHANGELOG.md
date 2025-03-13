@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.0.3](https://github.com/JamesLMilner/terra-draw/compare/terra-draw-leaflet-adapter@1.0.2...terra-draw-leaflet-adapter@1.0.3) (2025-03-13)
+
+
+### fix
+
+* **terra-draw-leaflet-adapter:** use polygonOutlineColor instead of polygonFillColor for color (#494) ([](https://github.com/JamesLMilner/terra-draw/commit/37c7e8dd9b27179e30193fa1aff660f893d498f7)), closes [#494](https://github.com/JamesLMilner/terra-draw/issues/494)
+
 ## [1.0.2](https://github.com/JamesLMilner/terra-draw/compare/terra-draw-leaflet-adapter@1.0.1...terra-draw-leaflet-adapter@1.0.2) (2025-02-26)
 
 

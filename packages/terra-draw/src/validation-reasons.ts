@@ -10,6 +10,7 @@ import {
 import {
 	ValidationReasonFeatureInvalidCoordinates,
 	ValidationReasonFeatureNotPoint,
+	ValidationReasonFeatureInvalidCoordinatePrecision,
 } from "./validations/point.validation";
 import {
 	ValidationReasonFeatureHasHoles,
@@ -21,6 +22,7 @@ import {
 export const ValidationReasons = {
 	ValidationReasonFeatureNotPoint,
 	ValidationReasonFeatureInvalidCoordinates,
+	ValidationReasonFeatureInvalidCoordinatePrecision,
 	ValidationReasonFeatureNotPolygon,
 	ValidationReasonFeatureHasHoles,
 	ValidationReasonFeatureLessThanFourCoordinates,

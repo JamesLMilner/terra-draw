@@ -2,6 +2,36 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.3.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.2.0...terra-draw@1.3.0) (2025-03-16)
+
+
+### fix
+
+* **terra-draw:** added new ValidationReason if feature has excessive coordinate precision (#501) ([](https://github.com/JamesLMilner/terra-draw/commit/2d2c62bf2216a918de254c83551ea7e87ee431f5)), closes [#501](https://github.com/JamesLMilner/terra-draw/issues/501)
+* **terra-draw:** ensure that editable only allows updating features in the current mode (#484) ([](https://github.com/JamesLMilner/terra-draw/commit/cd85181d288df79395a3476600d913c0d8706245)), closes [#484](https://github.com/JamesLMilner/terra-draw/issues/484)
+
+
+### chore
+
+* **terra-draw:** add a script that can bump all necessary packages (#487) ([](https://github.com/JamesLMilner/terra-draw/commit/3b6d3ea50601a01c561de24080dc237860d0598e)), closes [#487](https://github.com/JamesLMilner/terra-draw/issues/487)
+* **terra-draw:** automatically update relevant package.json/package-lock.json on releases (#500) ([](https://github.com/JamesLMilner/terra-draw/commit/ccc34eb23ad0871e149a047bdbd4c249b18d7075)), closes [#500](https://github.com/JamesLMilner/terra-draw/issues/500)
+* **terra-draw:** ensure e2e test package is using latest terra-draw-leaflet-adapter version (#498) ([](https://github.com/JamesLMilner/terra-draw/commit/ddd5f4eb8be43682ad359f4d1e4b64a9f09a0ca4)), closes [#498](https://github.com/JamesLMilner/terra-draw/issues/498)
+* **terra-draw:** fix broken link on the Getting Started guide (#475) ([](https://github.com/JamesLMilner/terra-draw/commit/0a20718cdb89eec07eafd9789f78b6f828aae39f)), closes [#475](https://github.com/JamesLMilner/terra-draw/issues/475)
+* **terra-draw:** fix build due to e2e package.json referencing terra-draw v1.1.0 (#478) ([](https://github.com/JamesLMilner/terra-draw/commit/ec0666f39cec0bb4cdf3f9ca0e29cdd161c86a59)), closes [#478](https://github.com/JamesLMilner/terra-draw/issues/478)
+* **terra-draw:** update the e2e and development package terra-draw and adapter versions (#483) ([](https://github.com/JamesLMilner/terra-draw/commit/d84541bfbbfa66706d5ecb1430b914a0b649fec4)), closes [#483](https://github.com/JamesLMilner/terra-draw/issues/483)
+
+
+### feat
+
+* **terra-draw:** allow dragging of midpoints in select mode by passing a flag (#497) ([](https://github.com/JamesLMilner/terra-draw/commit/44af00d173ea9d911af3878add2df07adddd30ad)), closes [#497](https://github.com/JamesLMilner/terra-draw/issues/497)
+* **terra-draw:** provide context object argument to toCustom callback in polygon mode (#489) ([](https://github.com/JamesLMilner/terra-draw/commit/f5d955563afd605dda95e9b6217fd9e5584c1dd5)), closes [#489](https://github.com/JamesLMilner/terra-draw/issues/489)
+
+
+### docs
+
+* **terra-draw:** add section on updateModeOptions to MODES guide (#491) ([](https://github.com/JamesLMilner/terra-draw/commit/8b3a20f60dc86ef282eebafb2f061ab387d56ae2)), closes [#491](https://github.com/JamesLMilner/terra-draw/issues/491)
+* **terra-draw:** correct guidance around using updateModeOptions (#479) ([](https://github.com/JamesLMilner/terra-draw/commit/cf0099fd3e8f0a526217f475cee9a21d284daedc)), closes [#479](https://github.com/JamesLMilner/terra-draw/issues/479)
+
 ## [1.2.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.1.0...terra-draw@1.2.0) (2025-02-23)
 
 

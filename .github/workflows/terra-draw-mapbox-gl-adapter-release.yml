@@ -43,6 +43,10 @@ jobs:
         working-directory: ./packages/terra-draw-mapbox-gl-adapter
         run: npm run release
 
+      - name: Update package version references
+        run: |
+          node update.mjs
+
       - name: Check if package-lock.json changed
         run: |
           npm install
@@ -50,7 +54,7 @@ jobs:
           if ! git diff --exit-code --quiet package-lock.json; then
             echo "package-lock.json has changed"
             git add package-lock.json
-            git commit -m "chore(terra-draw): automated update package-lock.json during CI release"
+            git commit -m "chore(terra-draw): automated update to package-lock.json during CI release"
           else
             echo "No changes to package-lock.json"
           fi

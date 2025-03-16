@@ -1,7 +1,10 @@
 import { Feature, Polygon, Position } from "geojson";
 import { GeoJSONStoreFeatures } from "../terra-draw";
 import { selfIntersects } from "../geometry/boolean/self-intersects";
-import { coordinateIsValid } from "../geometry/boolean/is-valid-coordinate";
+import {
+	coordinateIsValid,
+	coordinatePrecisionIsValid,
+} from "../geometry/boolean/is-valid-coordinate";
 import { Validation } from "../common";
 
 export const ValidationReasonFeatureNotPolygon = "Feature is not a Polygon";
@@ -12,6 +15,8 @@ export const ValidationReasonFeatureHasInvalidCoordinates =
 	"Feature has invalid coordinates";
 export const ValidationReasonFeatureCoordinatesNotClosed =
 	"Feature coordinates are not closed";
+export const ValidationReasonFeatureInvalidCoordinatePrecision =
+	"Feature has coordinates with excessive precision";
 
 export function ValidatePolygonFeature(
 	feature: GeoJSONStoreFeatures,
@@ -38,15 +43,25 @@ export function ValidatePolygonFeature(
 		};
 	}
 
-	if (
-		!feature.geometry.coordinates[0].every((coordinate) =>
-			coordinateIsValid(coordinate, coordinatePrecision),
-		)
-	) {
-		return {
-			valid: false,
-			reason: ValidationReasonFeatureHasInvalidCoordinates,
-		};
+	for (let i = 0; i < feature.geometry.coordinates[0].length; i++) {
+		if (!coordinateIsValid(feature.geometry.coordinates[0][i])) {
+			return {
+				valid: false,
+				reason: ValidationReasonFeatureHasInvalidCoordinates,
+			};
+		}
+
+		if (
+			!coordinatePrecisionIsValid(
+				feature.geometry.coordinates[0][i],
+				coordinatePrecision,
+			)
+		) {
+			return {
+				valid: false,
+				reason: ValidationReasonFeatureInvalidCoordinatePrecision,
+			};
+		}
 	}
 
 	if (

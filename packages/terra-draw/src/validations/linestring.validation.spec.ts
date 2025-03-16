@@ -65,7 +65,7 @@ describe("ValidateLineStringFeature", () => {
 		} as Feature<LineString, Record<string, any>>;
 		expect(ValidateLineStringFeature(validFeature, 2)).toEqual({
 			valid: false,
-			reason: "Feature has invalid coordinates",
+			reason: "Feature has coordinates with excessive precision",
 		});
 	});
 });

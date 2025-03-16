@@ -1,11 +1,18 @@
 import { Validation } from "../common";
 import { GeoJSONStoreFeatures } from "../terra-draw";
-import { coordinateIsValid } from "../geometry/boolean/is-valid-coordinate";
+import {
+	coordinateIsValid,
+	coordinatePrecisionIsValid,
+} from "../geometry/boolean/is-valid-coordinate";
 
 export const ValidationReasonFeatureIsNotALineString =
 	"Feature is not a LineString";
 export const ValidationReasonFeatureHasLessThanTwoCoordinates =
 	"Feature has less than 2 coordinates";
+export const ValidationReasonFeatureInvalidCoordinates =
+	"Feature has invalid coordinates";
+export const ValidationReasonFeatureInvalidCoordinatePrecision =
+	"Feature has coordinates with excessive precision";
 
 export function ValidateLineStringFeature(
 	feature: GeoJSONStoreFeatures,
@@ -25,15 +32,25 @@ export function ValidateLineStringFeature(
 		};
 	}
 
-	if (
-		!feature.geometry.coordinates.every((coordinate) =>
-			coordinateIsValid(coordinate, coordinatePrecision),
-		)
-	) {
-		return {
-			valid: false,
-			reason: "Feature has invalid coordinates",
-		};
+	for (let i = 0; i < feature.geometry.coordinates.length; i++) {
+		if (!coordinateIsValid(feature.geometry.coordinates[i])) {
+			return {
+				valid: false,
+				reason: ValidationReasonFeatureInvalidCoordinates,
+			};
+		}
+
+		if (
+			!coordinatePrecisionIsValid(
+				feature.geometry.coordinates[i],
+				coordinatePrecision,
+			)
+		) {
+			return {
+				valid: false,
+				reason: ValidationReasonFeatureInvalidCoordinatePrecision,
+			};
+		}
 	}
 
 	return { valid: true };

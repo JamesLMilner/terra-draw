@@ -1,6 +1,7 @@
 import {
 	validLatitude,
 	validLongitude,
+	coordinatePrecisionIsValid,
 	coordinateIsValid,
 	getDecimalPlaces,
 } from "./is-valid-coordinate";
@@ -43,24 +44,24 @@ describe("validLatitude", () => {
 
 describe("coordinateIsValid", () => {
 	it("should return true for valid coordinate", () => {
-		expect(coordinateIsValid([45, 90], 9)).toBe(true);
+		expect(coordinateIsValid([45, 90])).toBe(true);
 	});
 
 	it("should return false for coordinate with incorrect length", () => {
-		expect(coordinateIsValid([45], 9)).toBe(false);
-		expect(coordinateIsValid([45, 90, 100], 9)).toBe(false);
+		expect(coordinateIsValid([45])).toBe(false);
+		expect(coordinateIsValid([45, 90, 100])).toBe(false);
 	});
 
 	it("should return false for coordinate with non-number elements", () => {
-		expect(coordinateIsValid(["45", 90], 9)).toBe(false);
-		expect(coordinateIsValid([45, "90"], 9)).toBe(false);
-		expect(coordinateIsValid(["45", "90"], 9)).toBe(false);
+		expect(coordinateIsValid(["45", 90])).toBe(false);
+		expect(coordinateIsValid([45, "90"])).toBe(false);
+		expect(coordinateIsValid(["45", "90"])).toBe(false);
 	});
 
 	it("should return false for coordinate with invalid longitude and latitude", () => {
-		expect(coordinateIsValid([181, 90], 9)).toBe(false);
-		expect(coordinateIsValid([45, 91], 9)).toBe(false);
-		expect(coordinateIsValid([-181, -91], 9)).toBe(false);
+		expect(coordinateIsValid([181, 90])).toBe(false);
+		expect(coordinateIsValid([45, 91])).toBe(false);
+		expect(coordinateIsValid([-181, -91])).toBe(false);
 	});
 });
 
@@ -82,5 +83,15 @@ describe("getDecimalPlaces", () => {
 
 	it("returns the correct number of decimal places for a float less than 0", () => {
 		expect(getDecimalPlaces(-0.123)).toBe(3);
+	});
+});
+
+describe("coordinatePrecisionIsValid", () => {
+	it("should return true for valid coordinate", () => {
+		expect(coordinatePrecisionIsValid([45, 90], 9)).toBe(true);
+	});
+
+	it("should return false for coordinate with more decimal places than given", () => {
+		expect(coordinatePrecisionIsValid([45.123, 90.123], 2)).toBe(false);
 	});
 });

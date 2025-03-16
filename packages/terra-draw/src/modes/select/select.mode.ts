@@ -54,7 +54,11 @@ type ModeFlags = {
 		scaleable?: boolean;
 		selfIntersectable?: boolean;
 		coordinates?: {
-			midpoints?: boolean;
+			midpoints?:
+				| boolean
+				| {
+						draggable?: boolean;
+				  };
 			draggable?: boolean;
 			resizable?: ResizeOptions;
 			deletable?: boolean;
@@ -619,7 +623,10 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 				(modeFlags.feature.coordinates &&
 					modeFlags.feature.coordinates.draggable) ||
 				(modeFlags.feature.coordinates &&
-					modeFlags.feature.coordinates.resizable));
+					modeFlags.feature.coordinates.resizable) ||
+				(modeFlags.feature.coordinates &&
+					typeof modeFlags.feature.coordinates.midpoints === "object" &&
+					modeFlags.feature.coordinates.midpoints.draggable));
 
 		if (!draggable) {
 			return;
@@ -657,6 +664,38 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 
 			setMapDraggability(false);
 			return;
+		}
+
+		// Dragging Midpoint
+		if (
+			modeFlags &&
+			modeFlags.feature &&
+			modeFlags.feature.coordinates &&
+			typeof modeFlags.feature.coordinates.midpoints === "object" &&
+			modeFlags.feature.coordinates.midpoints.draggable
+		) {
+			const { clickedMidPoint: draggedMidPoint } =
+				this.featuresAtMouseEvent.find(event, this.selected.length > 0);
+
+			if (this.selected.length && draggedMidPoint) {
+				// We insert the midpoint first
+				this.midPoints.insert(
+					draggedMidPoint.id as string,
+					this.coordinatePrecision,
+				);
+
+				const draggableCoordinateIndexAfterInsert =
+					this.dragCoordinate.getDraggableIndex(event, selectedId);
+
+				this.dragCoordinate.startDragging(
+					selectedId,
+					draggableCoordinateIndexAfterInsert,
+				);
+
+				setMapDraggability(false);
+
+				return;
+			}
 		}
 
 		// Drag Feature

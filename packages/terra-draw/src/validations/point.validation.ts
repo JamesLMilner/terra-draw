@@ -9,7 +9,7 @@ export const ValidationReasonFeatureNotPoint = "Feature is not a Point";
 export const ValidationReasonFeatureInvalidCoordinates =
 	"Feature has invalid coordinates";
 export const ValidationReasonFeatureInvalidCoordinatePrecision =
-	"Feature has invalid coordinates with excessive coordinate precision";
+	"Feature has coordinates with excessive precision";
 
 export function ValidatePointFeature(
 	feature: GeoJSONStoreFeatures,
@@ -22,6 +22,13 @@ export function ValidatePointFeature(
 		};
 	}
 
+	if (!coordinateIsValid(feature.geometry.coordinates)) {
+		return {
+			valid: false,
+			reason: ValidationReasonFeatureInvalidCoordinates,
+		};
+	}
+
 	if (
 		!coordinatePrecisionIsValid(
 			feature.geometry.coordinates,
@@ -31,13 +38,6 @@ export function ValidatePointFeature(
 		return {
 			valid: false,
 			reason: ValidationReasonFeatureInvalidCoordinatePrecision,
-		};
-	}
-
-	if (!coordinateIsValid(feature.geometry.coordinates, coordinatePrecision)) {
-		return {
-			valid: false,
-			reason: ValidationReasonFeatureInvalidCoordinates,
 		};
 	}
 

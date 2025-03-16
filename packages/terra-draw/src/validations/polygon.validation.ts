@@ -16,7 +16,7 @@ export const ValidationReasonFeatureHasInvalidCoordinates =
 export const ValidationReasonFeatureCoordinatesNotClosed =
 	"Feature coordinates are not closed";
 export const ValidationReasonFeatureInvalidCoordinatePrecision =
-	"Feature has invalid coordinates with excessive coordinate precision";
+	"Feature has coordinates with excessive precision";
 
 export function ValidatePolygonFeature(
 	feature: GeoJSONStoreFeatures,
@@ -43,26 +43,25 @@ export function ValidatePolygonFeature(
 		};
 	}
 
-	if (
-		!feature.geometry.coordinates[0].every((coordinate) =>
-			coordinatePrecisionIsValid(coordinate, coordinatePrecision),
-		)
-	) {
-		return {
-			valid: false,
-			reason: ValidationReasonFeatureInvalidCoordinatePrecision,
-		};
-	}
+	for (let i = 0; i < feature.geometry.coordinates[0].length; i++) {
+		if (!coordinateIsValid(feature.geometry.coordinates[0][i])) {
+			return {
+				valid: false,
+				reason: ValidationReasonFeatureHasInvalidCoordinates,
+			};
+		}
 
-	if (
-		!feature.geometry.coordinates[0].every((coordinate) =>
-			coordinateIsValid(coordinate, coordinatePrecision),
-		)
-	) {
-		return {
-			valid: false,
-			reason: ValidationReasonFeatureHasInvalidCoordinates,
-		};
+		if (
+			!coordinatePrecisionIsValid(
+				feature.geometry.coordinates[0][i],
+				coordinatePrecision,
+			)
+		) {
+			return {
+				valid: false,
+				reason: ValidationReasonFeatureInvalidCoordinatePrecision,
+			};
+		}
 	}
 
 	if (

@@ -12,7 +12,10 @@ import { SelectionPointBehavior } from "./selection-point.behavior";
 import { FeatureId, GeoJSONStoreGeometries } from "../../../store/store";
 import { limitPrecision } from "../../../geometry/limit-decimal-precision";
 import { cartesianDistance } from "../../../geometry/measure/pixel-distance";
-import { coordinateIsValid } from "../../../geometry/boolean/is-valid-coordinate";
+import {
+	coordinateIsValid,
+	coordinatePrecisionIsValid,
+} from "../../../geometry/boolean/is-valid-coordinate";
 import {
 	lngLatToWebMercatorXY,
 	webMercatorXYToLngLat,
@@ -706,7 +709,7 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 			coordinate[1] = limitPrecision(coordinate[1], this.coordinatePrecision);
 
 			// Ensure the coordinate we are about to update with is valid
-			if (!coordinateIsValid(coordinate, this.coordinatePrecision)) {
+			if (!coordinatePrecisionIsValid(coordinate, this.coordinatePrecision)) {
 				return false;
 			}
 		}

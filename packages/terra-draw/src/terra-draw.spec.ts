@@ -416,7 +416,7 @@ describe("Terra Draw", () => {
 	});
 
 	describe("selectFeature", () => {
-		it("throws an error if there is no select moded", () => {
+		it("throws an error if there is no select mode present", () => {
 			const draw = new TerraDraw({
 				adapter,
 				modes: [new TerraDrawPointMode()],
@@ -479,6 +479,84 @@ describe("Terra Draw", () => {
 
 			const feature = draw.getSnapshot()[0];
 			expect(feature.properties.selected).toBe(true);
+		});
+	});
+
+	describe("addFeatures", () => {
+		it("returns valid false if the coordinate precision is excessive", () => {
+			const draw = new TerraDraw({
+				adapter: new TerraDrawTestAdapter({
+					lib: {},
+					coordinatePrecision: 3,
+				}),
+				modes: [
+					new TerraDrawPointMode(),
+					new TerraDrawSelectMode({
+						flags: {
+							point: {
+								feature: { draggable: true },
+							},
+						},
+					}),
+				],
+			});
+
+			draw.start();
+			const [result] = draw.addFeatures([
+				{
+					id: "f8e5a38d-ecfa-4294-8461-d9cff0e0d7f8",
+					type: "Feature",
+					geometry: {
+						type: "Point",
+						coordinates: [-25.431289673, 34.355907891],
+					},
+					properties: {
+						mode: "point",
+					},
+				},
+			]);
+
+			expect(result.valid).toBe(false);
+			expect(result.reason).toBe(
+				"Feature has coordinates with excessive precision",
+			);
+		});
+
+		it("returns valid true if the coordinate precision is exactly the adapter coordinate precision", () => {
+			const draw = new TerraDraw({
+				adapter: new TerraDrawTestAdapter({
+					lib: {},
+					coordinatePrecision: 9,
+				}),
+				modes: [
+					new TerraDrawPointMode(),
+					new TerraDrawSelectMode({
+						flags: {
+							point: {
+								feature: { draggable: true },
+							},
+						},
+					}),
+				],
+			});
+
+			draw.start();
+			const [result] = draw.addFeatures([
+				{
+					id: "f8e5a38d-ecfa-4294-8461-d9cff0e0d7f8",
+					type: "Feature",
+					geometry: {
+						type: "Point",
+						coordinates: [-25.431289673, 34.355907891],
+					},
+					properties: {
+						mode: "point",
+					},
+				},
+			]);
+
+			expect(result.valid).toBe(true);
+			expect(result.reason).toBe(undefined);
 		});
 	});
 

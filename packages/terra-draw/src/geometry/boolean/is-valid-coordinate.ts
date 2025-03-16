@@ -1,3 +1,5 @@
+import { Position } from "geojson";
+
 export function validLatitude(lat: number) {
 	return lat >= -90 && lat <= 90;
 }
@@ -7,24 +9,16 @@ export function validLongitude(lng: number) {
 }
 
 export function coordinatePrecisionIsValid(
-	coordinate: unknown[],
+	coordinate: Position,
 	coordinatePrecision: number,
 ) {
 	return (
-		coordinate.length === 2 &&
-		typeof coordinate[0] === "number" &&
-		typeof coordinate[1] === "number" &&
-		coordinate[0] !== Infinity &&
-		coordinate[1] !== Infinity &&
 		getDecimalPlaces(coordinate[0]) <= coordinatePrecision &&
 		getDecimalPlaces(coordinate[1]) <= coordinatePrecision
 	);
 }
 
-export function coordinateIsValid(
-	coordinate: unknown[],
-	coordinatePrecision: number,
-) {
+export function coordinateIsValid(coordinate: unknown[]) {
 	return (
 		coordinate.length === 2 &&
 		typeof coordinate[0] === "number" &&
@@ -32,8 +26,7 @@ export function coordinateIsValid(
 		coordinate[0] !== Infinity &&
 		coordinate[1] !== Infinity &&
 		validLongitude(coordinate[0]) &&
-		validLatitude(coordinate[1]) &&
-		coordinatePrecisionIsValid(coordinate, coordinatePrecision)
+		validLatitude(coordinate[1])
 	);
 }
 

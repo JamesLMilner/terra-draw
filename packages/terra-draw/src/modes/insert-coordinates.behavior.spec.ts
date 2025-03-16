@@ -1,4 +1,7 @@
-import { coordinateIsValid } from "../geometry/boolean/is-valid-coordinate";
+import {
+	coordinateIsValid,
+	coordinatePrecisionIsValid,
+} from "../geometry/boolean/is-valid-coordinate";
 import { coordinatesIdentical } from "../geometry/coordinates-identical";
 import { haversineDistanceKilometers } from "../geometry/measure/haversine-distance";
 import { MockBehaviorConfig } from "../test/mock-behavior-config";
@@ -27,9 +30,10 @@ describe("InsertCoordinatesBehavior", () => {
 
 			const seenCoordinatesOne = new Set();
 			thousandKms.forEach((coordinate) => {
-				expect(coordinateIsValid(coordinate, config.coordinatePrecision)).toBe(
-					true,
-				);
+				expect(coordinateIsValid(coordinate)).toBe(true);
+				expect(
+					coordinatePrecisionIsValid(coordinate, config.coordinatePrecision),
+				).toBe(true);
 				expect(seenCoordinatesOne.has(coordinate.toString)).toBe(false);
 				seenCoordinatesOne.add(coordinate.toString());
 
@@ -59,9 +63,10 @@ describe("InsertCoordinatesBehavior", () => {
 
 			const seenCoordinatesTwo = new Set();
 			hundredKms.forEach((coordinate) => {
-				expect(coordinateIsValid(coordinate, config.coordinatePrecision)).toBe(
-					true,
-				);
+				expect(coordinateIsValid(coordinate)).toBe(true);
+				expect(
+					coordinatePrecisionIsValid(coordinate, config.coordinatePrecision),
+				).toBe(true);
 				expect(seenCoordinatesTwo.has(coordinate.toString)).toBe(false);
 				seenCoordinatesTwo.add(coordinate.toString());
 
@@ -98,9 +103,10 @@ describe("InsertCoordinatesBehavior", () => {
 
 			const seenCoordinatesOne = new Set();
 			thousandKms.forEach((coordinate) => {
-				expect(coordinateIsValid(coordinate, config.coordinatePrecision)).toBe(
-					true,
-				);
+				expect(coordinateIsValid(coordinate)).toBe(true);
+				expect(
+					coordinatePrecisionIsValid(coordinate, config.coordinatePrecision),
+				).toBe(true);
 				expect(seenCoordinatesOne.has(coordinate.toString)).toBe(false);
 				seenCoordinatesOne.add(coordinate.toString());
 
@@ -131,9 +137,11 @@ describe("InsertCoordinatesBehavior", () => {
 
 			const seenCoordinatesTwo = new Set();
 			hundredKms.forEach((coordinate) => {
-				expect(coordinateIsValid(coordinate, config.coordinatePrecision)).toBe(
-					true,
-				);
+				expect(coordinateIsValid(coordinate)).toBe(true);
+				expect(
+					coordinatePrecisionIsValid(coordinate, config.coordinatePrecision),
+				).toBe(true);
+
 				expect(seenCoordinatesTwo.has(coordinate.toString)).toBe(false);
 				seenCoordinatesOne.add(coordinate.toString());
 

@@ -12,7 +12,7 @@ export const ValidationReasonFeatureHasLessThanTwoCoordinates =
 export const ValidationReasonFeatureInvalidCoordinates =
 	"Feature has invalid coordinates";
 export const ValidationReasonFeatureInvalidCoordinatePrecision =
-	"Feature has invalid coordinates with excessive coordinate precision";
+	"Feature has coordinates with excessive precision";
 
 export function ValidateLineStringFeature(
 	feature: GeoJSONStoreFeatures,
@@ -32,26 +32,25 @@ export function ValidateLineStringFeature(
 		};
 	}
 
-	if (
-		!feature.geometry.coordinates.every((coordinate) =>
-			coordinatePrecisionIsValid(coordinate, coordinatePrecision),
-		)
-	) {
-		return {
-			valid: false,
-			reason: ValidationReasonFeatureInvalidCoordinatePrecision,
-		};
-	}
+	for (let i = 0; i < feature.geometry.coordinates.length; i++) {
+		if (!coordinateIsValid(feature.geometry.coordinates[i])) {
+			return {
+				valid: false,
+				reason: ValidationReasonFeatureInvalidCoordinates,
+			};
+		}
 
-	if (
-		!feature.geometry.coordinates.every((coordinate) =>
-			coordinateIsValid(coordinate, coordinatePrecision),
-		)
-	) {
-		return {
-			valid: false,
-			reason: ValidationReasonFeatureInvalidCoordinates,
-		};
+		if (
+			!coordinatePrecisionIsValid(
+				feature.geometry.coordinates[i],
+				coordinatePrecision,
+			)
+		) {
+			return {
+				valid: false,
+				reason: ValidationReasonFeatureInvalidCoordinatePrecision,
+			};
+		}
 	}
 
 	return { valid: true };

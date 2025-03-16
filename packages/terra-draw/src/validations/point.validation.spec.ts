@@ -32,7 +32,7 @@ describe("isValidPoint", () => {
 		});
 	});
 
-	it("returns false for a Point with incorrect coordinate precision", () => {
+	it("returns false for a Point with invalid latitude", () => {
 		const invalidPoint = {
 			type: "Feature",
 			properties: {},
@@ -41,10 +41,24 @@ describe("isValidPoint", () => {
 				coordinates: [45.123, 90.123],
 			},
 		} as Feature<Point, Record<string, any>>;
+		expect(ValidatePointFeature(invalidPoint, 9)).toEqual({
+			valid: false,
+			reason: "Feature has invalid coordinates",
+		});
+	});
+
+	it("returns false for a Point with incorrect coordinate precision", () => {
+		const invalidPoint = {
+			type: "Feature",
+			properties: {},
+			geometry: {
+				type: "Point",
+				coordinates: [45.123, 89.123],
+			},
+		} as Feature<Point, Record<string, any>>;
 		expect(ValidatePointFeature(invalidPoint, 2)).toEqual({
 			valid: false,
-			reason:
-				"Feature has invalid coordinates with excessive coordinate precision",
+			reason: "Feature has coordinates with excessive precision",
 		});
 	});
 });

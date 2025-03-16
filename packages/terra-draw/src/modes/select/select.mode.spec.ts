@@ -1458,7 +1458,7 @@ describe("TerraDrawSelectMode", () => {
 			});
 		});
 
-		describe("drag reszing with center", () => {
+		describe("drag resizing with center", () => {
 			it("does trigger drag events if mode is draggable for linestring", () => {
 				setSelectMode({
 					flags: {
@@ -1606,6 +1606,123 @@ describe("TerraDrawSelectMode", () => {
 						expect.any(String),
 					],
 					"update",
+				);
+			});
+		});
+
+		describe("drag midpoint", () => {
+			it("does trigger when midpoints draggable flag enabled", () => {
+				setSelectMode({
+					flags: {
+						polygon: {
+							feature: {
+								draggable: false,
+								coordinates: {
+									draggable: false,
+									midpoints: {
+										draggable: true,
+									},
+								},
+							},
+						},
+					},
+				});
+
+				addPolygonToStore([
+					[0, 0],
+					[0, 1],
+					[1, 1],
+					[1, 0],
+					[0, 0],
+				]);
+
+				expect(onChange).toHaveBeenNthCalledWith(
+					1,
+					[expect.any(String)],
+					"create",
+				);
+
+				// Store the ids of the created feature
+				const idOne = onChange.mock.calls[0][0] as string[];
+
+				// Select polygon
+				selectMode.onClick(MockCursorEvent({ lng: 0.5, lat: 0.5 }));
+
+				expect(onSelect).toHaveBeenCalledTimes(1);
+				expect(onSelect).toHaveBeenNthCalledWith(1, idOne[0]);
+
+				// Polygon selected set to true
+				expect(onChange).toHaveBeenNthCalledWith(2, idOne, "update");
+
+				// Create mid points
+				expect(onChange).toHaveBeenNthCalledWith(
+					4,
+					[
+						expect.any(String),
+						expect.any(String),
+						expect.any(String),
+						expect.any(String),
+					],
+					"create",
+				);
+
+				expect(onChange).toHaveBeenCalledTimes(4);
+
+				selectMode.onDragStart(
+					MockCursorEvent({ lng: 0, lat: 0.5 }),
+					jest.fn(),
+				);
+
+				expect(onChange).toHaveBeenCalledTimes(8);
+
+				expect(onChange).toHaveBeenNthCalledWith(5, idOne, "update");
+
+				// Delete existing midpoints and selection points
+				expect(onChange).toHaveBeenNthCalledWith(
+					6,
+					[
+						expect.any(String),
+						expect.any(String),
+						expect.any(String),
+						expect.any(String),
+						expect.any(String),
+						expect.any(String),
+						expect.any(String),
+						expect.any(String),
+					],
+					"delete",
+				);
+
+				// Mid points
+				expect(onChange).toHaveBeenNthCalledWith(
+					7,
+					[
+						expect.any(String),
+						expect.any(String),
+						expect.any(String),
+						expect.any(String),
+						expect.any(String),
+					],
+					"create",
+				);
+
+				// Selection points
+				expect(onChange).toHaveBeenNthCalledWith(
+					8,
+					[
+						expect.any(String),
+						expect.any(String),
+						expect.any(String),
+						expect.any(String),
+						expect.any(String),
+					],
+					"create",
+				);
+
+				const setMapDraggability = jest.fn();
+				selectMode.onDrag(
+					MockCursorEvent({ lng: 0, lat: 0.5 }),
+					setMapDraggability,
 				);
 			});
 		});

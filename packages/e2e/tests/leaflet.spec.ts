@@ -1214,6 +1214,39 @@ test.describe("select mode", () => {
 			await expectGroupPosition({ page, x: 538, y: 308 });
 		});
 
+		test(`selected polygon can insert midpoints ${name}`, async ({ page }) => {
+			const mapDiv = await setupMap({ page, configQueryParam: config });
+
+			await changeMode({ page, mode: "polygon" });
+
+			// Draw a rectangle
+			const { topLeft, topRight } = await drawRectangularPolygon({
+				mapDiv,
+				page,
+			});
+
+			// Change to select mode
+			await changeMode({ page, mode });
+
+			const x = topLeft.x - 2;
+			const y = topLeft.y - 2;
+			await expectGroupPosition({ page, x, y });
+
+			// Select
+			await page.mouse.click(mapDiv.width / 2, mapDiv.height / 2);
+			await expectPaths({ page, count: 9 }); // 4 selection + 4 midpoints points and 1 square
+
+			// Insert midpoint between topLeft and topRight
+			await page.mouse.click(
+				(topLeft.x + topRight.x) / 2,
+				(topLeft.y + topRight.y) / 2,
+			);
+
+			// When we add a midpoint, it converts to a selection point and
+			// we insert two more midpoints each side giving us 11 paths
+			await expectPaths({ page, count: 11 });
+		});
+
 		test(`selected polygon can have individual coordinates dragged and succeeds when validation succeeds ${name}`, async ({
 			page,
 		}) => {

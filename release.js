@@ -12,6 +12,12 @@ module.exports = (packageName, packageJsonPath, changelogPath) => ({
 			if (!commit.scope || commit.scope !== packageName) {
 				return null;
 			}
+
+			// If commit message starts with automated update
+			if (commit.header.includes("automated update")) {
+				return null;
+			}
+
 			return commit;
 		},
 	},

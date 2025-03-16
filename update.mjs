@@ -17,7 +17,6 @@ for (let i = 0; i < packages.length; i++) {
     latestVersions[packageName] = packageJson.version
 }
 
-
 const isValidInteger = (n) => !isNaN(Number(n))
 
 // We loop through all relevant packages

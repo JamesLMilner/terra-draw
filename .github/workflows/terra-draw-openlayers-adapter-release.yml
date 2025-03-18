@@ -53,6 +53,7 @@ jobs:
           # Check if package-lock.json changed
           if ! git diff --exit-code --quiet package-lock.json; then
             echo "package-lock.json has changed"
+            git add \*package.json
             git add package-lock.json
             git commit -m "chore(terra-draw): automated update to package-lock.json during CI release"
           else

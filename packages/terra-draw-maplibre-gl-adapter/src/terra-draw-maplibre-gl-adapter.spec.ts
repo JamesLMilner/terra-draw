@@ -37,13 +37,13 @@ describe("TerraDrawMapLibreGLAdapter", () => {
 				enable: jest.fn(),
 				disable: jest.fn(),
 				isActive: jest.fn(),
-				isEnabled: jest.fn(),
+				isEnabled: jest.fn(() => true),
 			} as unknown as maplibregl.DragPanHandler,
 			dragRotate: {
 				enable: jest.fn(),
 				disable: jest.fn(),
 				isActive: jest.fn(),
-				isEnabled: jest.fn(),
+				isEnabled: jest.fn(() => true),
 			} as unknown as maplibregl.DragRotateHandler,
 			addSource: jest.fn(),
 			addLayer: jest.fn(),
@@ -133,6 +133,7 @@ describe("TerraDrawMapLibreGLAdapter", () => {
 	describe("setDraggability", () => {
 		it("setDraggability enables and disables map dragging", () => {
 			const map = createMapLibreGLMap();
+
 			const adapter = new TerraDrawMapLibreGLAdapter({
 				map: map as maplibregl.Map,
 			});
@@ -148,8 +149,58 @@ describe("TerraDrawMapLibreGLAdapter", () => {
 			adapter.setDraggability(false);
 			expect(map.dragPan?.enable).toHaveBeenCalledTimes(1);
 			expect(map.dragPan?.disable).toHaveBeenCalledTimes(1);
+			expect(map.dragRotate?.enable).toHaveBeenCalledTimes(1);
+			expect(map.dragRotate?.disable).toHaveBeenCalledTimes(1);
+		});
+
+		it("respects original pan/rotate settings when calling setDraggability", () => {
+			const map = createMapLibreGLMap();
+
+			map.dragPan!.isEnabled = jest.fn(() => false);
+			map.dragRotate!.isEnabled = jest.fn(() => false);
+
+			const adapter = new TerraDrawMapLibreGLAdapter({
+				map: map as maplibregl.Map,
+			});
+
+			// Test enabling dragging
+			adapter.setDraggability(true);
+			expect(map.dragPan?.enable).toHaveBeenCalledTimes(0);
+			expect(map.dragPan?.disable).toHaveBeenCalledTimes(0);
+			expect(map.dragRotate?.enable).toHaveBeenCalledTimes(0);
+			expect(map.dragRotate?.disable).toHaveBeenCalledTimes(0);
+
+			// Test disabling dragging
+			adapter.setDraggability(false);
+			expect(map.dragPan?.enable).toHaveBeenCalledTimes(0);
+			expect(map.dragPan?.disable).toHaveBeenCalledTimes(0);
+			expect(map.dragRotate?.enable).toHaveBeenCalledTimes(0);
+			expect(map.dragRotate?.disable).toHaveBeenCalledTimes(0);
+		});
+
+		it("respects mixed pan/rotate settings when calling setDraggability", () => {
+			const map = createMapLibreGLMap();
+
+			map.dragPan!.isEnabled = jest.fn(() => true);
+			map.dragRotate!.isEnabled = jest.fn(() => false);
+
+			const adapter = new TerraDrawMapLibreGLAdapter({
+				map: map as maplibregl.Map,
+			});
+
+			// Test enabling dragging
+			adapter.setDraggability(true);
+			expect(map.dragPan?.enable).toHaveBeenCalledTimes(1);
+			expect(map.dragPan?.disable).toHaveBeenCalledTimes(0);
+			expect(map.dragRotate?.enable).toHaveBeenCalledTimes(0);
+			expect(map.dragRotate?.disable).toHaveBeenCalledTimes(0);
+
+			// Test disabling dragging
+			adapter.setDraggability(false);
 			expect(map.dragPan?.enable).toHaveBeenCalledTimes(1);
 			expect(map.dragPan?.disable).toHaveBeenCalledTimes(1);
+			expect(map.dragRotate?.enable).toHaveBeenCalledTimes(0);
+			expect(map.dragRotate?.disable).toHaveBeenCalledTimes(0);
 		});
 	});
 

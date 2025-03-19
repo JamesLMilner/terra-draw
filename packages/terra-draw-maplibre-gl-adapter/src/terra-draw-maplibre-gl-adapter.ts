@@ -30,8 +30,14 @@ export class TerraDrawMapLibreGLAdapter<
 
 		this._map = config.map as Map;
 		this._container = this._map.getContainer();
+
+		// We want to respect the initial map settings
+		this._initialDragRotate = this._map.dragRotate.isEnabled();
+		this._initialDragPan = this._map.dragPan.isEnabled();
 	}
 
+	private _initialDragPan: boolean;
+	private _initialDragRotate: boolean;
 	private _nextRender: number | undefined;
 	private _map: Map;
 	private _container: HTMLElement;
@@ -243,11 +249,19 @@ export class TerraDrawMapLibreGLAdapter<
 		if (enabled) {
 			// MapLibre GL has both drag rotation and drag panning interactions
 			// hence having to enable/disable both
-			this._map.dragRotate.enable();
-			this._map.dragPan.enable();
+			if (this._initialDragRotate) {
+				this._map.dragRotate.enable();
+			}
+			if (this._initialDragPan) {
+				this._map.dragPan.enable();
+			}
 		} else {
-			this._map.dragRotate.disable();
-			this._map.dragPan.disable();
+			if (this._initialDragRotate) {
+				this._map.dragRotate.disable();
+			}
+			if (this._initialDragPan) {
+				this._map.dragPan.disable();
+			}
 		}
 	}
 

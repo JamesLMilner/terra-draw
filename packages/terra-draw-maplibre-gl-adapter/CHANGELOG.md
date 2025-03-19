@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.0.2](https://github.com/JamesLMilner/terra-draw/compare/terra-draw-maplibre-gl-adapter@1.0.1...terra-draw-maplibre-gl-adapter@1.0.2) (2025-03-19)
+
+
+### fix
+
+* **terra-draw-maplibre-gl-adapter:** respect dragRotate and dragPan settings at initialisation (#504) ([](https://github.com/JamesLMilner/terra-draw/commit/fedcea7281843928744f1ea78d8f2e942b9878c6)), closes [#504](https://github.com/JamesLMilner/terra-draw/issues/504)
+
+
+### chore
+
+* **terra-draw-maplibre-gl-adapter:** fix typo in README (#424) ([](https://github.com/JamesLMilner/terra-draw/commit/374c779dd701de5c41ff2decba0152b8f8f78791)), closes [#424](https://github.com/JamesLMilner/terra-draw/issues/424)
+
 ## [1.0.1](https://github.com/JamesLMilner/terra-draw/compare/terra-draw-maplibre-gl-adapter@1.0.0...terra-draw-maplibre-gl-adapter@1.0.1) (2025-01-13)
 
 

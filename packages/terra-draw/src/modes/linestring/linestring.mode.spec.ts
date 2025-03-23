@@ -948,6 +948,8 @@ describe("TerraDrawLineStringMode", () => {
 
 			lineStringMode.onClick(MockCursorEvent({ lng: 3, lat: 3 }));
 
+			mockConfig.onFinish.mockClear();
+
 			// Ensure it's there
 			let features = mockConfig.store.copyAll();
 			expect(features.length).toBe(1);
@@ -966,6 +968,9 @@ describe("TerraDrawLineStringMode", () => {
 			);
 			expect(mockConfig.setCursor).toHaveBeenCalledTimes(1);
 			expect(mockConfig.setCursor).toHaveBeenNthCalledWith(1, "grabbing");
+
+			// We don't call onFinish in onDragStart but in onDragEnd
+			expect(mockConfig.onFinish).toHaveBeenCalledTimes(0);
 		});
 	});
 
@@ -1001,6 +1006,8 @@ describe("TerraDrawLineStringMode", () => {
 			lineStringMode.onClick(MockCursorEvent({ lng: 3, lat: 3 }));
 
 			lineStringMode.onClick(MockCursorEvent({ lng: 3, lat: 3 }));
+
+			mockConfig.onFinish.mockClear();
 
 			// Ensure it's there
 			let features = mockConfig.store.copyAll();
@@ -1046,6 +1053,9 @@ describe("TerraDrawLineStringMode", () => {
 
 			// We don't change the cursor in onDrag
 			expect(mockConfig.setCursor).toHaveBeenCalledTimes(0);
+
+			// We don't call onFinish in onDrag but in onDragEnd
+			expect(mockConfig.onFinish).toHaveBeenCalledTimes(0);
 		});
 	});
 
@@ -1082,6 +1092,8 @@ describe("TerraDrawLineStringMode", () => {
 
 			lineStringMode.onClick(MockCursorEvent({ lng: 3, lat: 3 }));
 
+			mockConfig.onFinish.mockClear();
+
 			// Ensure it's there
 			let features = mockConfig.store.copyAll();
 			expect(features.length).toBe(1);
@@ -1111,6 +1123,8 @@ describe("TerraDrawLineStringMode", () => {
 				[expect.any(String)],
 				"update",
 			);
+
+			expect(mockConfig.onFinish).toHaveBeenCalledTimes(1);
 		});
 	});
 

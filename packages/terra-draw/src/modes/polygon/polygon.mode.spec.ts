@@ -761,6 +761,8 @@ describe("TerraDrawPolygonMode", () => {
 			expect(featuresAfter[0].geometry.coordinates[0]).not.toEqual(
 				features[0].geometry.coordinates[0],
 			);
+
+			expect(onFinish).toHaveBeenCalledTimes(2);
 		});
 
 		describe("validate", () => {
@@ -1049,6 +1051,7 @@ describe("onDragStart", () => {
 
 		polygonMode.onDragStart(MockCursorEvent({ lng: 0, lat: 0 }), () => {});
 		expect(mockConfig.onChange).not.toHaveBeenCalled();
+		expect(mockConfig.onFinish).not.toHaveBeenCalled();
 	});
 
 	it("creates the drag point when editable is true and a coordinate is selected", () => {
@@ -1074,6 +1077,8 @@ describe("onDragStart", () => {
 
 		polygonMode.onClick(MockCursorEvent({ lng: 3, lat: 3 }));
 
+		mockConfig.onFinish.mockClear();
+
 		// Ensure it's there
 		let features = mockConfig.store.copyAll();
 		expect(features.length).toBe(1);
@@ -1092,6 +1097,9 @@ describe("onDragStart", () => {
 		);
 		expect(mockConfig.setCursor).toHaveBeenCalledTimes(1);
 		expect(mockConfig.setCursor).toHaveBeenNthCalledWith(1, "grabbing");
+
+		// We don't call onFinish in onDragStart but in onDragEnd
+		expect(mockConfig.onFinish).toHaveBeenCalledTimes(0);
 	});
 });
 
@@ -1208,6 +1216,8 @@ describe("onDragEnd", () => {
 
 		polygonMode.onClick(MockCursorEvent({ lng: 3, lat: 3 }));
 
+		mockConfig.onFinish.mockClear();
+
 		// Ensure it's there
 		let features = mockConfig.store.copyAll();
 		expect(features.length).toBe(1);
@@ -1237,6 +1247,8 @@ describe("onDragEnd", () => {
 			[expect.any(String)],
 			"update",
 		);
+
+		expect(mockConfig.onFinish).toHaveBeenCalledTimes(1);
 	});
 });
 

@@ -14,12 +14,14 @@ import { FeatureId } from "../../../store/store";
 import { webMercatorCentroid } from "../../../geometry/web-mercator-centroid";
 import { lngLatToWebMercatorXY } from "../../../geometry/project/web-mercator";
 import { webMercatorBearing } from "../../../geometry/measure/bearing";
+import { CoordinatePointBehavior } from "./coordinate-point.behavior";
 
 export class RotateFeatureBehavior extends TerraDrawModeBehavior {
 	constructor(
 		readonly config: BehaviorConfig,
 		private readonly selectionPoints: SelectionPointBehavior,
 		private readonly midPoints: MidPointBehavior,
+		private readonly coordinatePoints: CoordinatePointBehavior,
 	) {
 		super(config);
 	}
@@ -101,6 +103,9 @@ export class RotateFeatureBehavior extends TerraDrawModeBehavior {
 		const updatedSelectionPoints =
 			this.selectionPoints.getUpdated(updatedCoords) || [];
 
+		const updatedCoordinatePoints =
+			this.coordinatePoints.getUpdated(selectedId, updatedCoords) || [];
+
 		if (validateFeature) {
 			if (
 				!validateFeature(
@@ -127,6 +132,7 @@ export class RotateFeatureBehavior extends TerraDrawModeBehavior {
 			{ id: selectedId, geometry },
 			...updatedSelectionPoints,
 			...updatedMidPoints,
+			...updatedCoordinatePoints,
 		]);
 
 		if (this.projection === "web-mercator") {

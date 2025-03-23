@@ -175,4 +175,6 @@ export const COMMON_PROPERTIES = {
 	EDITED: "edited",
 	CLOSING_POINT: "closingPoint",
 	SNAPPING_POINT: "snappingPoint",
+	COORDINATE_POINT: "coordinatePoint",
+	COORDINATE_POINT_IDS: "coordinatePointIds",
 };

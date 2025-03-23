@@ -173,6 +173,7 @@ const example = {
 					snapping: {
 						toCoordinate: this.config?.includes("snappingCoordinate"),
 					},
+					showCoordinatePoints: this.config?.includes("showCoordinatePoints"),
 				}),
 				new TerraDrawRectangleMode(),
 				new TerraDrawCircleMode({

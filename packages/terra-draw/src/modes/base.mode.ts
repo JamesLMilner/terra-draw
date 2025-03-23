@@ -179,6 +179,8 @@ export abstract class TerraDrawBaseDrawMode<Styling extends CustomStyling> {
 		return this.performFeatureValidation(feature);
 	}
 
+	afterFeatureAdded(feature: GeoJSONStoreFeatures) {}
+
 	private performFeatureValidation(feature: unknown): ReturnType<Validation> {
 		if (this._state === "unregistered") {
 			throw new Error("Mode must be registered");

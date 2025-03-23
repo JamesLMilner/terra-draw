@@ -619,44 +619,56 @@ class TerraDraw {
 			return [];
 		}
 
-		return this._store.load(features, (feature) => {
-			// If the feature has a mode property, we use that to validate the feature
-			if (hasModeProperty(feature)) {
-				const featureMode = feature.properties.mode;
-				const modeToAddTo = this._modes[featureMode];
+		return this._store.load(
+			features,
+			(feature) => {
+				// If the feature has a mode property, we use that to validate the feature
+				if (hasModeProperty(feature)) {
+					const featureMode = feature.properties.mode;
+					const modeToAddTo = this._modes[featureMode];
 
-				// if the mode does not exist, we return false
-				if (!modeToAddTo) {
+					// if the mode does not exist, we return false
+					if (!modeToAddTo) {
+						return {
+							id: (feature as { id?: FeatureId }).id,
+							valid: false,
+							reason: `${featureMode} mode is not in the list of instantiated modes`,
+						};
+					}
+
+					// use the inbuilt validation of the mode
+					const validation = modeToAddTo.validateFeature.bind(modeToAddTo);
+					const validationResult = validation(feature);
+					const valid = validationResult.valid;
+					const reason = validationResult.reason
+						? validationResult.reason
+						: !validationResult.valid
+							? "Feature is invalid"
+							: undefined;
 					return {
 						id: (feature as { id?: FeatureId }).id,
-						valid: false,
-						reason: `${featureMode} mode is not in the list of instantiated modes`,
+						valid,
+						reason,
 					};
 				}
 
-				// use the inbuilt validation of the mode
-				const validation = modeToAddTo.validateFeature.bind(modeToAddTo);
-				const validationResult = validation(feature);
-				const valid = validationResult.valid;
-				const reason = validationResult.reason
-					? validationResult.reason
-					: !validationResult.valid
-						? "Feature is invalid"
-						: undefined;
+				// If the feature does not have a mode property, we return false
 				return {
 					id: (feature as { id?: FeatureId }).id,
-					valid,
-					reason,
+					valid: false,
+					reason: "Mode property does not exist",
 				};
-			}
-
-			// If the feature does not have a mode property, we return false
-			return {
-				id: (feature as { id?: FeatureId }).id,
-				valid: false,
-				reason: "Mode property does not exist",
-			};
-		});
+			},
+			(feature) => {
+				if (hasModeProperty(feature)) {
+					const featureMode = feature.properties.mode;
+					const modeToAddTo = this._modes[featureMode];
+					if (modeToAddTo && modeToAddTo.afterFeatureAdded) {
+						modeToAddTo.afterFeatureAdded(feature);
+					}
+				}
+			},
+		);
 	}
 
 	/**

@@ -21,6 +21,7 @@ import {
 	webMercatorXYToLngLat,
 } from "../../../geometry/project/web-mercator";
 import { webMercatorCentroid } from "../../../geometry/web-mercator-centroid";
+import { CoordinatePointBehavior } from "./coordinate-point.behavior";
 
 export type ResizeOptions =
 	| "center"
@@ -47,6 +48,7 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 		private readonly pixelDistance: PixelDistanceBehavior,
 		private readonly selectionPoints: SelectionPointBehavior,
 		private readonly midPoints: MidPointBehavior,
+		private readonly coordinatePoints: CoordinatePointBehavior,
 	) {
 		super(config);
 	}
@@ -473,9 +475,12 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 			return null;
 		}
 
-		const feature = { type: "Feature", geometry, properties: {} } as Feature<
-			Polygon | LineString
-		>;
+		const feature = {
+			id,
+			type: "Feature",
+			geometry,
+			properties: {},
+		} as Feature<Polygon | LineString>;
 
 		return feature;
 	}
@@ -718,6 +723,11 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 		const updatedMidPoints = this.midPoints.getUpdated(updatedCoords) || [];
 		const updatedSelectionPoints =
 			this.selectionPoints.getUpdated(updatedCoords) || [];
+		const updatedCoordinatePoints =
+			this.coordinatePoints.getUpdated(
+				feature.id as FeatureId,
+				updatedCoords,
+			) || [];
 
 		const updatedGeometry = {
 			type: feature.geometry.type as "Polygon" | "LineString",
@@ -753,6 +763,7 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 			},
 			...updatedSelectionPoints,
 			...updatedMidPoints,
+			...updatedCoordinatePoints,
 		]);
 
 		return true;

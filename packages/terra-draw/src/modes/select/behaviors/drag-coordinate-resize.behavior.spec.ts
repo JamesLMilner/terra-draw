@@ -10,6 +10,7 @@ import { DragCoordinateResizeBehavior } from "./drag-coordinate-resize.behavior"
 import { MidPointBehavior } from "./midpoint.behavior";
 import { SelectionPointBehavior } from "./selection-point.behavior";
 import { MockCursorEvent } from "../../../test/mock-cursor-event";
+import { CoordinatePointBehavior } from "./coordinate-point.behavior";
 
 describe("DragCoordinateResizeBehavior", () => {
 	const createLineString = (
@@ -38,11 +39,17 @@ describe("DragCoordinateResizeBehavior", () => {
 		it("constructs", () => {
 			const config = MockBehaviorConfig("test");
 			const selectionPointBehavior = new SelectionPointBehavior(config);
+			const coordinatePointBehavior = new CoordinatePointBehavior(config);
 			new DragCoordinateResizeBehavior(
 				config,
 				new PixelDistanceBehavior(config),
 				selectionPointBehavior,
-				new MidPointBehavior(config, selectionPointBehavior),
+				new MidPointBehavior(
+					config,
+					selectionPointBehavior,
+					coordinatePointBehavior,
+				),
+				coordinatePointBehavior,
 			);
 		});
 	});
@@ -55,9 +62,12 @@ describe("DragCoordinateResizeBehavior", () => {
 			config = MockBehaviorConfig("test");
 			const selectionPointBehavior = new SelectionPointBehavior(config);
 			const pixelDistanceBehavior = new PixelDistanceBehavior(config);
+			const coordinatePointBehavior = new CoordinatePointBehavior(config);
+
 			const midpointBehavior = new MidPointBehavior(
 				config,
 				selectionPointBehavior,
+				coordinatePointBehavior,
 			);
 
 			dragMaintainedShapeBehavior = new DragCoordinateResizeBehavior(
@@ -65,6 +75,7 @@ describe("DragCoordinateResizeBehavior", () => {
 				pixelDistanceBehavior,
 				selectionPointBehavior,
 				midpointBehavior,
+				coordinatePointBehavior,
 			);
 		});
 

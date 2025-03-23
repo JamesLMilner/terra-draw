@@ -17,12 +17,14 @@ import {
 	webMercatorXYToLngLat,
 } from "../../../geometry/project/web-mercator";
 import { cartesianDistance } from "../../../geometry/measure/pixel-distance";
+import { CoordinatePointBehavior } from "./coordinate-point.behavior";
 
 export class ScaleFeatureBehavior extends TerraDrawModeBehavior {
 	constructor(
 		readonly config: BehaviorConfig,
 		private readonly selectionPoints: SelectionPointBehavior,
 		private readonly midPoints: MidPointBehavior,
+		private readonly coordinatePoints: CoordinatePointBehavior,
 	) {
 		super(config);
 	}
@@ -105,6 +107,9 @@ export class ScaleFeatureBehavior extends TerraDrawModeBehavior {
 		const updatedSelectionPoints =
 			this.selectionPoints.getUpdated(updatedCoords) || [];
 
+		const updatedCoordinatePoints =
+			this.coordinatePoints.getUpdated(selectedId, updatedCoords) || [];
+
 		if (validateFeature) {
 			if (
 				!validateFeature(
@@ -131,6 +136,7 @@ export class ScaleFeatureBehavior extends TerraDrawModeBehavior {
 			{ id: selectedId, geometry },
 			...updatedSelectionPoints,
 			...updatedMidPoints,
+			...updatedCoordinatePoints,
 		]);
 
 		this.lastDistance = distance;

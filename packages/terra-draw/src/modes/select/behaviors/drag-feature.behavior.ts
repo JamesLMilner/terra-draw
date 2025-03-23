@@ -10,6 +10,7 @@ import {
 	lngLatToWebMercatorXY,
 	webMercatorXYToLngLat,
 } from "../../../geometry/project/web-mercator";
+import { CoordinatePointBehavior } from "./coordinate-point.behavior";
 
 export class DragFeatureBehavior extends TerraDrawModeBehavior {
 	constructor(
@@ -17,6 +18,7 @@ export class DragFeatureBehavior extends TerraDrawModeBehavior {
 		private readonly featuresAtCursorEvent: FeatureAtPointerEventBehavior,
 		private readonly selectionPoints: SelectionPointBehavior,
 		private readonly midPoints: MidPointBehavior,
+		private readonly coordinatePoints: CoordinatePointBehavior,
 	) {
 		super(config);
 	}
@@ -158,6 +160,12 @@ export class DragFeatureBehavior extends TerraDrawModeBehavior {
 
 			const updatedMidPoints = this.midPoints.getUpdated(updatedCoords) || [];
 
+			const updatedCoordinatePoints =
+				this.coordinatePoints.getUpdated(
+					this.draggedFeatureId,
+					updatedCoords,
+				) || [];
+
 			if (validateFeature) {
 				const validationResult = validateFeature(
 					{
@@ -184,6 +192,7 @@ export class DragFeatureBehavior extends TerraDrawModeBehavior {
 				{ id: this.draggedFeatureId, geometry },
 				...updatedSelectionPoints,
 				...updatedMidPoints,
+				...updatedCoordinatePoints,
 			]);
 
 			this.dragPosition = [event.lng, event.lat];

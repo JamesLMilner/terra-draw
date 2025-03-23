@@ -441,6 +441,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 	}
 
 	private onRightClick(event: TerraDrawMouseEvent) {
+		// Right click is only relevant when editable is true
 		if (!this.editable) {
 			return;
 		}
@@ -517,6 +518,8 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 				geometry,
 			},
 		]);
+
+		this.onFinish(featureId, { mode: this.mode, action: "edit" });
 	}
 
 	private onLeftClick(event: TerraDrawMouseEvent) {
@@ -928,6 +931,8 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 				value: false,
 			},
 		]);
+
+		this.onFinish(this.editedFeatureId, { mode: this.mode, action: "edit" });
 
 		// Reset edit state
 		this.editedFeatureId = undefined;

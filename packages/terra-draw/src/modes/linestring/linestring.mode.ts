@@ -589,6 +589,8 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 				geometry,
 			},
 		]);
+
+		this.onFinish(featureId, { mode: this.mode, action: "edit" });
 	}
 
 	private onLeftClick(event: TerraDrawMouseEvent) {
@@ -841,6 +843,8 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 				value: false,
 			},
 		]);
+
+		this.onFinish(this.editedFeatureId, { mode: this.mode, action: "edit" });
 
 		// Reset edit state
 		this.editedFeatureId = undefined;

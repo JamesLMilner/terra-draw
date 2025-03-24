@@ -194,7 +194,10 @@ const getModes = () => {
 			},
 			styles: {
 				snappingPointColor: "#3fc8e0",
+				coordinatePointColor: "#565656",
+				coordinatePointOutlineColor: "#8c8c8c",
 			},
+			showCoordinatePoints: true,
 		}),
 		new TerraDrawRectangleMode(),
 		new TerraDrawCircleMode(),
@@ -388,6 +391,34 @@ const example = {
 			});
 
 			draw.start();
+
+			console.log(
+				draw.addFeatures([
+					{
+						id: "0ac08c1c-0a72-4fb2-888d-ad8c1dd67051",
+						type: "Feature",
+						geometry: {
+							type: "Polygon",
+							coordinates: [
+								[
+									[0, 0],
+									[0, 1],
+									[1, 1],
+									[1, 0],
+									[0, 0],
+								],
+							],
+						},
+						properties: {
+							mode: "polygon",
+						},
+					},
+				]),
+			);
+
+			draw.updateModeOptions<typeof TerraDrawPolygonMode>("polygon", {
+				showCoordinatePoints: false,
+			});
 
 			addModeChangeHandler(draw, currentSelected);
 		});

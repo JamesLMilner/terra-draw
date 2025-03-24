@@ -1,6 +1,6 @@
 import L from "leaflet";
 
-import { TerraDrawLeafletAdapter } from "terra-draw-leaflet-adapter";
+import { TerraDrawLeafletAdapter } from "../../terra-draw-leaflet-adapter/src/terra-draw-leaflet-adapter";
 
 import {
 	TerraDraw,
@@ -16,7 +16,7 @@ import {
 	TerraDrawRenderMode,
 	TerraDrawSelectMode,
 	ValidateMaxAreaSquareMeters,
-} from "terra-draw";
+} from "../../terra-draw/src/terra-draw";
 
 const example = {
 	lng: -0.118092,

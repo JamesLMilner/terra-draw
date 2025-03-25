@@ -152,8 +152,9 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawExtend.TerraDrawBaseAdapt
 	private _addGeoJSONLayer<T extends GeoJSONStoreGeometries>(
 		featureType: Feature<T>["geometry"]["type"],
 		features: Feature<T>[],
+		tag?: string,
 	) {
-		const id = `td-${featureType.toLowerCase()}`;
+		const id = `td-${featureType.toLowerCase()}${tag ? `-${tag}` : ""}`;
 		this._addGeoJSONSource(id, features);
 		this._addLayer(id, featureType);
 
@@ -163,8 +164,9 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawExtend.TerraDrawBaseAdapt
 	private _setGeoJSONLayerData<T extends GeoJSONStoreGeometries>(
 		featureType: Feature<T>["geometry"]["type"],
 		features: Feature<T>[],
+		tag?: string,
 	) {
-		const id = `td-${featureType.toLowerCase()}`;
+		const id = `td-${featureType.toLowerCase()}${tag ? `-${tag}` : ""}`;
 		(this._map.getSource(id) as GeoJSONSource).setData({
 			type: "FeatureCollection",
 			features: features,
@@ -319,6 +321,7 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawExtend.TerraDrawBaseAdapt
 				...changes.unchanged,
 			];
 
+			const lowerZIndexPoints = [];
 			const points = [];
 			const linestrings = [];
 			const polygons = [];
@@ -334,7 +337,12 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawExtend.TerraDrawBaseAdapt
 					properties.pointOutlineColor = styles.pointOutlineColor;
 					properties.pointOutlineWidth = styles.pointOutlineWidth;
 					properties.pointWidth = styles.pointWidth;
-					points.push(feature);
+
+					if (styles.zIndex < 30) {
+						lowerZIndexPoints.push(feature);
+					} else {
+						points.push(feature);
+					}
 				} else if (feature.geometry.type === "LineString") {
 					properties.lineStringColor = styles.lineStringColor;
 					properties.lineStringWidth = styles.lineStringWidth;
@@ -361,10 +369,18 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawExtend.TerraDrawBaseAdapt
 				const updatedPolygon = forceUpdate || this.changedIds.polygons;
 
 				let pointId;
+				let lowerZIndexPointId;
+
 				if (updatePoints) {
 					pointId = this._setGeoJSONLayerData<Point>(
 						"Point",
 						points as Feature<Point>[],
+					);
+
+					lowerZIndexPointId = this._setGeoJSONLayerData<Point>(
+						"Point",
+						lowerZIndexPoints as Feature<Point>[],
+						"lower",
 					);
 				}
 
@@ -388,6 +404,10 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawExtend.TerraDrawBaseAdapt
 				// Ensure selection/mid points are rendered on top
 				if (pointId) {
 					this._map.moveLayer(pointId);
+
+					if (lowerZIndexPointId) {
+						this._map.moveLayer(lowerZIndexPointId, pointId);
+					}
 				}
 			}
 
@@ -432,6 +452,13 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawExtend.TerraDrawBaseAdapt
 			"Point",
 			[] as Feature<Point>[],
 		);
+
+		const lowerZIndexPointId = this._addGeoJSONLayer<Point>(
+			"Point",
+			[] as Feature<Point>[],
+			"lower",
+		);
+
 		this._addGeoJSONLayer<LineString>(
 			"LineString",
 			[] as Feature<LineString>[],
@@ -441,6 +468,10 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawExtend.TerraDrawBaseAdapt
 		// Ensure selection/mid points are rendered on top
 		if (pointId) {
 			this._map.moveLayer(pointId);
+
+			if (lowerZIndexPointId) {
+				this._map.moveLayer(lowerZIndexPointId, pointId);
+			}
 		}
 
 		this._rendered = true;

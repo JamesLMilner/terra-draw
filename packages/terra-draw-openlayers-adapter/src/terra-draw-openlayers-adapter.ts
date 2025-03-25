@@ -70,15 +70,18 @@ export class TerraDrawOpenLayersAdapter extends TerraDrawExtend.TerraDrawBaseAda
 			Feature<Geometry>
 		>;
 
+		this.baseZIndex = config.zIndex ?? 100000;
+
 		const vectorLayer = new this._lib.VectorLayer({
 			source: vectorSource as unknown as VectorSource<never>,
 			style: (feature) => this.getStyles(feature, this.stylingFunction()),
-			zIndex: config.zIndex ?? 100000,
+			zIndex: this.baseZIndex,
 		});
 
 		this._map.addLayer(vectorLayer);
 	}
 
+	private baseZIndex = 100000;
 	private stylingFunction = () => ({});
 
 	private _lib: InjectableOL;
@@ -117,6 +120,7 @@ export class TerraDrawOpenLayersAdapter extends TerraDrawExtend.TerraDrawBaseAda
 					properties,
 				});
 				return new this._lib.Style({
+					zIndex: this.baseZIndex + style.zIndex,
 					image: new this._lib.Circle({
 						radius: style.pointWidth,
 						fill: new this._lib.Fill({
@@ -137,6 +141,7 @@ export class TerraDrawOpenLayersAdapter extends TerraDrawExtend.TerraDrawBaseAda
 					properties,
 				});
 				return new this._lib.Style({
+					zIndex: style.zIndex,
 					stroke: new this._lib.Stroke({
 						color: style.lineStringColor,
 						width: style.lineStringWidth,
@@ -148,11 +153,13 @@ export class TerraDrawOpenLayersAdapter extends TerraDrawExtend.TerraDrawBaseAda
 				const style = styling[properties.mode]({
 					type: "Feature",
 					geometry: { type: "Polygon", coordinates: [] },
+
 					properties,
 				});
 				const { r, g, b } = this.hexToRGB(style.polygonFillColor);
 
 				return new this._lib.Style({
+					zIndex: style.zIndex,
 					stroke: new this._lib.Stroke({
 						color: style.polygonOutlineColor,
 						width: style.polygonOutlineWidth,

@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.3.1](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.3.0...terra-draw@1.3.1) (2025-03-25)
+
+
+### fix
+
+* **terra-draw:** edits made via the editable option now trigger a finish event (#508) ([](https://github.com/JamesLMilner/terra-draw/commit/e23a08237d66d9fba8d5f49f952b740247f2da73)), closes [#508](https://github.com/JamesLMilner/terra-draw/issues/508)
+
 ## [1.3.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.2.0...terra-draw@1.3.0) (2025-03-16)
 
 

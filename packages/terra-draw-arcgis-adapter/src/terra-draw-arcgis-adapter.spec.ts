@@ -371,7 +371,7 @@ describe("TerraDrawArcGISMapsSDKAdapter", () => {
 			);
 
 			expect(graphicsMock.add).toHaveBeenCalledTimes(1);
-			expect(graphicsMock.add).toHaveBeenLastCalledWith(mockedGraphicCall);
+			expect(graphicsMock.add).toHaveBeenLastCalledWith(mockedGraphicCall, 0);
 			expect(removeMock).not.toHaveBeenCalled();
 		});
 
@@ -404,7 +404,7 @@ describe("TerraDrawArcGISMapsSDKAdapter", () => {
 			expect(removeMock).toHaveBeenCalledTimes(1);
 			expect(removeMock).toHaveBeenLastCalledWith(mockedFeature);
 			expect(graphicsMock.add).toHaveBeenCalledTimes(1);
-			expect(graphicsMock.add).toHaveBeenLastCalledWith(mockedGraphicCall);
+			expect(graphicsMock.add).toHaveBeenLastCalledWith(mockedGraphicCall, 0);
 		});
 
 		it("handles deleted ids", () => {
@@ -535,7 +535,7 @@ describe("TerraDrawArcGISMapsSDKAdapter", () => {
 					},
 				);
 
-				expect(graphicsMock.add).toHaveBeenCalledWith(mockedGraphicCall);
+				expect(graphicsMock.add).toHaveBeenCalledWith(mockedGraphicCall, 0);
 			});
 		});
 

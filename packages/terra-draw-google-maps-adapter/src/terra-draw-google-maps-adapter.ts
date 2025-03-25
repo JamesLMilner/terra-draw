@@ -434,12 +434,14 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawExtend.TerraDrawBaseAda
 							rotation: 0,
 							scale: 1,
 						},
+						zIndex: calculatedStyles.zIndex,
 					};
 
 				case "LineString":
 					return {
 						strokeColor: calculatedStyles.lineStringColor,
 						strokeWeight: calculatedStyles.lineStringWidth,
+						zIndex: calculatedStyles.zIndex,
 					};
 				case "Polygon":
 					return {
@@ -447,6 +449,7 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawExtend.TerraDrawBaseAda
 						strokeWeight: calculatedStyles.polygonOutlineWidth,
 						fillOpacity: calculatedStyles.polygonFillOpacity,
 						fillColor: calculatedStyles.polygonFillColor,
+						zIndex: calculatedStyles.zIndex,
 					};
 			}
 

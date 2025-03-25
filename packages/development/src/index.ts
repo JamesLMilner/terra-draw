@@ -169,11 +169,12 @@ const getModes = () => {
 				},
 			},
 		}),
-		new TerraDrawPointMode(),
+		new TerraDrawPointMode({ editable: true }),
 		new TerraDrawLineStringMode({
 			snapping: {
 				toCoordinate: true,
 			},
+			editable: true,
 			// insertCoordinates: {
 			// 	strategy: "amount",
 			// 	value: 10,
@@ -193,8 +194,12 @@ const getModes = () => {
 				return { valid: true };
 			},
 			styles: {
-				snappingPointColor: "#3fc8e0",
+				snappingPointColor: "#ffff00",
+				editedPointColor: "#008000",
+				coordinatePointColor: "#ff0000",
+				closingPointColor: "#0000ff",
 			},
+			showCoordinatePoints: true,
 		}),
 		new TerraDrawRectangleMode(),
 		new TerraDrawCircleMode(),

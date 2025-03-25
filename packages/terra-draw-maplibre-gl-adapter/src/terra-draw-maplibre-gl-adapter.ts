@@ -162,8 +162,9 @@ export class TerraDrawMapLibreGLAdapter<
 	private _addGeoJSONLayer<T extends GeoJSONStoreGeometries>(
 		featureType: Feature<T>["geometry"]["type"],
 		features: Feature<T>[],
+		tag?: string,
 	) {
-		const id = `td-${featureType.toLowerCase()}`;
+		const id = `td-${featureType.toLowerCase()}${tag ? `-${tag}` : ""}`;
 		this._addGeoJSONSource(id, features);
 		this._addLayer(id, featureType);
 
@@ -173,8 +174,9 @@ export class TerraDrawMapLibreGLAdapter<
 	private _setGeoJSONLayerData<T extends GeoJSONStoreGeometries>(
 		featureType: Feature<T>["geometry"]["type"],
 		features: Feature<T>[],
+		tag?: string,
 	) {
-		const id = `td-${featureType.toLowerCase()}`;
+		const id = `td-${featureType.toLowerCase()}${tag ? `-${tag}` : ""}`;
 		(this._map.getSource(id) as GeoJSONSource).setData({
 			type: "FeatureCollection",
 			features: features,
@@ -324,7 +326,7 @@ export class TerraDrawMapLibreGLAdapter<
 			cancelAnimationFrame(this._nextRender);
 		}
 
-		// Because MapLibre GL makes us pass in a full re-render of all the features
+		// Because Maplibre GL makes us pass in a full re-render of all the features
 		// we can do debounce rendering to only render the last render in a given
 		// frame bucket (16ms)
 		this._nextRender = requestAnimationFrame(() => {
@@ -337,6 +339,7 @@ export class TerraDrawMapLibreGLAdapter<
 				...changes.unchanged,
 			];
 
+			const lowerZIndexPoints = [];
 			const points = [];
 			const linestrings = [];
 			const polygons = [];
@@ -352,7 +355,12 @@ export class TerraDrawMapLibreGLAdapter<
 					properties.pointOutlineColor = styles.pointOutlineColor;
 					properties.pointOutlineWidth = styles.pointOutlineWidth;
 					properties.pointWidth = styles.pointWidth;
-					points.push(feature);
+
+					if (styles.zIndex < 30) {
+						lowerZIndexPoints.push(feature);
+					} else {
+						points.push(feature);
+					}
 				} else if (feature.geometry.type === "LineString") {
 					properties.lineStringColor = styles.lineStringColor;
 					properties.lineStringWidth = styles.lineStringWidth;
@@ -366,26 +374,7 @@ export class TerraDrawMapLibreGLAdapter<
 				}
 			}
 
-			if (!this._rendered) {
-				const pointId = this._addGeoJSONLayer<Point>(
-					"Point",
-					points as Feature<Point>[],
-				);
-				this._addGeoJSONLayer<LineString>(
-					"LineString",
-					linestrings as Feature<LineString>[],
-				);
-				this._addGeoJSONLayer<Polygon>(
-					"Polygon",
-					polygons as Feature<Polygon>[],
-				);
-				this._rendered = true;
-
-				// Ensure selection/mid points are rendered on top
-				if (pointId) {
-					this._map.moveLayer(pointId);
-				}
-			} else {
+			if (this._rendered) {
 				// If deletion occurred we always have to update all layers
 				// as we don't know the type (TODO: perhaps we could pass that back?)
 				const deletionOccurred = this.changedIds.deletion;
@@ -398,10 +387,18 @@ export class TerraDrawMapLibreGLAdapter<
 				const updatedPolygon = forceUpdate || this.changedIds.polygons;
 
 				let pointId;
+				let lowerZIndexPointId;
+
 				if (updatePoints) {
 					pointId = this._setGeoJSONLayerData<Point>(
 						"Point",
 						points as Feature<Point>[],
+					);
+
+					lowerZIndexPointId = this._setGeoJSONLayerData<Point>(
+						"Point",
+						lowerZIndexPoints as Feature<Point>[],
+						"lower",
 					);
 				}
 
@@ -425,6 +422,10 @@ export class TerraDrawMapLibreGLAdapter<
 				// Ensure selection/mid points are rendered on top
 				if (pointId) {
 					this._map.moveLayer(pointId);
+
+					if (lowerZIndexPointId) {
+						this._map.moveLayer(lowerZIndexPointId, pointId);
+					}
 				}
 			}
 
@@ -464,6 +465,35 @@ export class TerraDrawMapLibreGLAdapter<
 
 	public register(callbacks: TerraDrawExtend.TerraDrawCallbacks) {
 		super.register(callbacks);
+
+		const pointId = this._addGeoJSONLayer<Point>(
+			"Point",
+			[] as Feature<Point>[],
+		);
+
+		const lowerZIndexPointId = this._addGeoJSONLayer<Point>(
+			"Point",
+			[] as Feature<Point>[],
+			"lower",
+		);
+
+		this._addGeoJSONLayer<LineString>(
+			"LineString",
+			[] as Feature<LineString>[],
+		);
+		this._addGeoJSONLayer<Polygon>("Polygon", [] as Feature<Polygon>[]);
+
+		// Ensure selection/mid points are rendered on top
+		if (pointId) {
+			this._map.moveLayer(pointId);
+
+			if (lowerZIndexPointId) {
+				this._map.moveLayer(lowerZIndexPointId, pointId);
+			}
+		}
+
+		this._rendered = true;
+
 		if (this._currentModeCallbacks?.onReady) {
 			this._currentModeCallbacks.onReady();
 		}

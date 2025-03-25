@@ -261,7 +261,7 @@ export class TerraDrawArcGISMapsSDKAdapter extends TerraDrawExtend.TerraDrawBase
 		});
 
 		// ensure we add points at the topmost position by adding other geometries at index 0
-		if (type === "Point") {
+		if (type === "Point" && style.zIndex >= 30) {
 			this._featureLayer.graphics.add(graphic);
 		} else {
 			this._featureLayer.graphics.add(graphic, 0);

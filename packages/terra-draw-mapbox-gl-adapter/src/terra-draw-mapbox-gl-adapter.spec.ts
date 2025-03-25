@@ -258,8 +258,8 @@ describe("TerraDrawMapboxGLAdapter", () => {
 			const rAFCallback = (requestAnimationFrame as jest.Mock).mock.calls[0][0];
 			rAFCallback();
 
-			expect(map.addSource).toHaveBeenCalledTimes(3);
-			expect(map.addLayer).toHaveBeenCalledTimes(4);
+			expect(map.addSource).toHaveBeenCalledTimes(4);
+			expect(map.addLayer).toHaveBeenCalledTimes(5);
 
 			adapter.clear();
 
@@ -295,8 +295,8 @@ describe("TerraDrawMapboxGLAdapter", () => {
 
 			rAFCallback();
 
-			expect(map.addSource).toHaveBeenCalledTimes(3);
-			expect(map.addLayer).toHaveBeenCalledTimes(4);
+			expect(map.addSource).toHaveBeenCalledTimes(4);
+			expect(map.addLayer).toHaveBeenCalledTimes(5);
 		});
 
 		it("updates layers and sources when data is passed", () => {
@@ -307,7 +307,13 @@ describe("TerraDrawMapboxGLAdapter", () => {
 				map: map as mapboxgl.Map,
 			});
 
+			expect(map.addSource).toHaveBeenCalledTimes(0);
+			expect(map.addLayer).toHaveBeenCalledTimes(0);
+
 			adapter.register(MockCallbacks());
+
+			expect(map.addSource).toHaveBeenCalledTimes(4);
+			expect(map.addLayer).toHaveBeenCalledTimes(5);
 
 			adapter.render(
 				{
@@ -325,8 +331,8 @@ describe("TerraDrawMapboxGLAdapter", () => {
 
 			rAFCallback();
 
-			expect(map.addSource).toHaveBeenCalledTimes(3);
-			expect(map.addLayer).toHaveBeenCalledTimes(4);
+			expect(map.addSource).toHaveBeenCalledTimes(4);
+			expect(map.addLayer).toHaveBeenCalledTimes(5);
 
 			adapter.render(
 				{
@@ -391,7 +397,7 @@ describe("TerraDrawMapboxGLAdapter", () => {
 
 			rAFCallback();
 
-			expect(map.getSource).toHaveBeenCalledTimes(6);
+			expect(map.getSource).toHaveBeenCalledTimes(8);
 
 			adapter.render(
 				{
@@ -412,7 +418,7 @@ describe("TerraDrawMapboxGLAdapter", () => {
 			rAFCallback();
 
 			// Force update because of the deletion
-			expect(map.getSource).toHaveBeenCalledTimes(9);
+			expect(map.getSource).toHaveBeenCalledTimes(12);
 		});
 	});
 

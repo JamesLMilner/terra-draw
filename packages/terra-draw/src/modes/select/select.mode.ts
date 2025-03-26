@@ -8,8 +8,9 @@ import {
 	Cursor,
 	Validation,
 	UpdateTypes,
+	COMMON_PROPERTIES,
 } from "../../common";
-import { Point, Position } from "geojson";
+import { Point, Polygon, Position } from "geojson";
 import {
 	BaseModeOptions,
 	CustomStyling,
@@ -31,6 +32,7 @@ import {
 	DragCoordinateResizeBehavior,
 	ResizeOptions,
 } from "./behaviors/drag-coordinate-resize.behavior";
+import { CoordinatePointBehavior } from "./behaviors/coordinate-point.behavior";
 
 type TerraDrawSelectModeKeyEvents = {
 	deselect: KeyboardEvent["key"] | null;
@@ -144,6 +146,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 	private rotateFeature!: RotateFeatureBehavior;
 	private scaleFeature!: ScaleFeatureBehavior;
 	private dragCoordinateResizeFeature!: DragCoordinateResizeBehavior;
+	private coordinatePoints!: CoordinatePointBehavior;
 
 	constructor(options?: TerraDrawSelectModeOptions<SelectionStyling>) {
 		super(options, true);
@@ -196,6 +199,39 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 		}
 	}
 
+	private createOrUpdateCoordinatePoint(polygonId: FeatureId) {
+		const existingPolygonProps = this.store.getPropertiesCopy(polygonId);
+
+		if (existingPolygonProps.coordinatePointIds) {
+			this.store.delete(existingPolygonProps.coordinatePointIds as FeatureId[]);
+		}
+
+		const existingPolygon = this.store.getGeometryCopy(polygonId);
+
+		const coordinates = existingPolygon
+			.coordinates[0] as Polygon["coordinates"][0];
+		const coordinatePointIds = this.store.create(
+			coordinates.map((coordinate) => ({
+				geometry: {
+					type: "Point",
+					coordinates: coordinate,
+				},
+				properties: {
+					mode: this.mode,
+					[COMMON_PROPERTIES.COORDINATE_POINT]: true,
+				},
+			})),
+		);
+
+		this.store.updateProperty([
+			{
+				id: polygonId,
+				property: "coordinatePointIds",
+				value: coordinatePointIds,
+			},
+		]);
+	}
+
 	selectFeature(featureId: FeatureId) {
 		this.select(featureId, false);
 	}
@@ -218,18 +254,25 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 		);
 
 		this.selectionPoints = new SelectionPointBehavior(config);
-		this.midPoints = new MidPointBehavior(config, this.selectionPoints);
+		this.coordinatePoints = new CoordinatePointBehavior(config);
+		this.midPoints = new MidPointBehavior(
+			config,
+			this.selectionPoints,
+			this.coordinatePoints,
+		);
 
 		this.rotateFeature = new RotateFeatureBehavior(
 			config,
 			this.selectionPoints,
 			this.midPoints,
+			this.coordinatePoints,
 		);
 
 		this.scaleFeature = new ScaleFeatureBehavior(
 			config,
 			this.selectionPoints,
 			this.midPoints,
+			this.coordinatePoints,
 		);
 
 		this.dragFeature = new DragFeatureBehavior(
@@ -237,18 +280,21 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 			this.featuresAtMouseEvent,
 			this.selectionPoints,
 			this.midPoints,
+			this.coordinatePoints,
 		);
 		this.dragCoordinate = new DragCoordinateBehavior(
 			config,
 			this.pixelDistance,
 			this.selectionPoints,
 			this.midPoints,
+			this.coordinatePoints,
 		);
 		this.dragCoordinateResizeFeature = new DragCoordinateResizeBehavior(
 			config,
 			this.pixelDistance,
 			this.selectionPoints,
 			this.midPoints,
+			this.coordinatePoints,
 		);
 	}
 
@@ -397,13 +443,20 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 			}
 		}
 
-		this.store.delete([...this.midPoints.ids, ...this.selectionPoints.ids]);
+		const deletePoints = [...this.midPoints.ids, ...this.selectionPoints.ids];
+
+		this.store.delete(deletePoints);
+
 		this.store.updateGeometry([
 			{
 				id: featureId,
 				geometry,
 			},
 		]);
+
+		if (properties.coordinatePointIds) {
+			this.coordinatePoints.createOrUpdate(featureId);
+		}
 
 		this.selectionPoints.create(
 			coordinates,
@@ -498,6 +551,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 			// is visible?
 
 			this.midPoints.insert(
+				this.selected[0],
 				clickedMidPoint.id as string,
 				this.coordinatePrecision,
 			);
@@ -680,6 +734,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 			if (this.selected.length && draggedMidPoint) {
 				// We insert the midpoint first
 				this.midPoints.insert(
+					selectedId,
 					draggedMidPoint.id as string,
 					this.coordinatePrecision,
 				);

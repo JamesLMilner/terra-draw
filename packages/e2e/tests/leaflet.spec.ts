@@ -663,6 +663,148 @@ test.describe("polygon mode", () => {
 		await expectPaths({ page, count: 1 });
 		await expectPathDimensions({ page, width: 104, height: 104 });
 	});
+
+	test("can use showCoordinatePoints to render coordinate points", async ({
+		page,
+	}) => {
+		const mapDiv = await setupMap({
+			page,
+			configQueryParam: ["showCoordinatePoints"],
+		});
+		await changeMode({ page, mode });
+
+		// The length of the square sides in pixels
+		const sideLength = 100;
+
+		// Calculating the half of the side length
+		const halfLength = sideLength / 2;
+
+		// Coordinates of the center
+		const centerX = mapDiv.width / 2;
+		const centerY = mapDiv.height / 2;
+
+		// Coordinates of the four corners of the square
+		const topLeft = { x: centerX - halfLength, y: centerY - halfLength };
+		const topRight = { x: centerX + halfLength, y: centerY - halfLength };
+		const bottomLeft = { x: centerX - halfLength, y: centerY + halfLength };
+		const bottomRight = { x: centerX + halfLength, y: centerY + halfLength };
+
+		// Perform clicks at each corner
+		await page.mouse.click(topLeft.x, topLeft.y);
+		await page.mouse.click(topRight.x, topRight.y);
+		await page.mouse.click(bottomRight.x, bottomRight.y);
+		await page.mouse.click(bottomLeft.x, bottomLeft.y);
+
+		// Close the square
+		await page.mouse.click(bottomLeft.x, bottomLeft.y);
+
+		await expectPaths({ page, count: 5 });
+		await expectPathDimensions({ page, width: 104, height: 104 });
+	});
+
+	test("can use showCoordinatePoints alongside editable to edit drawn polygon by dragging one of it's coordinates", async ({
+		page,
+	}) => {
+		const mapDiv = await setupMap({
+			page,
+			configQueryParam: ["polygonEditable", "showCoordinatePoints"],
+		});
+		await changeMode({ page, mode });
+
+		// The length of the square sides in pixels
+		const sideLength = 100;
+
+		// Calculating the half of the side length
+		const halfLength = sideLength / 2;
+
+		// Coordinates of the center
+		const centerX = mapDiv.width / 2;
+		const centerY = mapDiv.height / 2;
+
+		// Coordinates of the four corners of the square
+		const topLeft = { x: centerX - halfLength, y: centerY - halfLength };
+		const topRight = { x: centerX + halfLength, y: centerY - halfLength };
+		const bottomLeft = { x: centerX - halfLength, y: centerY + halfLength };
+		const bottomRight = { x: centerX + halfLength, y: centerY + halfLength };
+
+		// Perform clicks at each corner
+		await page.mouse.click(topLeft.x, topLeft.y);
+		await page.mouse.click(topRight.x, topRight.y);
+		await page.mouse.click(bottomRight.x, bottomRight.y);
+		await page.mouse.click(bottomLeft.x, bottomLeft.y);
+
+		// Close the square
+		await page.mouse.click(bottomLeft.x, bottomLeft.y);
+
+		await expectPaths({ page, count: 5 });
+		await expectPathDimensions({ page, width: 104, height: 104 });
+
+		await page.mouse.move(topLeft.x, topLeft.y);
+		await page.mouse.down();
+		await page.mouse.move(topLeft.x - 100, topLeft.y - 10, { steps: 30 });
+
+		// Check to see the editable point has appeared
+		await expectPaths({ page, count: 6 });
+
+		// Stop editing (dragging)
+		await page.mouse.up();
+
+		// Check to see the editable point has disappeared
+		await expectPaths({ page, count: 5 });
+
+		// Check to see the dimensions have changed due to the edit
+		await expectPathDimensions({ page, width: 204, height: 114 });
+	});
+
+	test("can use  showCoordinatePoints alongside editable to delete a coordinate with right click", async ({
+		page,
+	}) => {
+		const mapDiv = await setupMap({
+			page,
+			configQueryParam: ["polygonEditable", "showCoordinatePoints"],
+		});
+		await changeMode({ page, mode });
+
+		// The length of the square sides in pixels
+		const sideLength = 100;
+
+		// Calculating the half of the side length
+		const halfLength = sideLength / 2;
+
+		// Coordinates of the center
+		const centerX = mapDiv.width / 2;
+		const centerY = mapDiv.height / 2;
+
+		// Coordinates of the four corners of the square
+		const topLeft = { x: centerX - halfLength, y: centerY - halfLength };
+		const topRight = { x: centerX + halfLength, y: centerY - halfLength };
+		const bottomLeft = {
+			x: centerX - halfLength + 25,
+			y: centerY + halfLength + 25,
+		};
+		const bottomRight = { x: centerX + halfLength, y: centerY + halfLength };
+
+		// Perform clicks at each corner
+		await page.mouse.click(topLeft.x, topLeft.y);
+		await page.mouse.click(topRight.x, topRight.y);
+		await page.mouse.click(bottomRight.x, bottomRight.y);
+		await page.mouse.click(bottomLeft.x, bottomLeft.y);
+
+		// Close the square
+		await page.mouse.click(bottomLeft.x, bottomLeft.y);
+
+		await expectPaths({ page, count: 5 });
+		await expectPathDimensions({ page, width: 104, height: 129 });
+
+		await page.mouse.click(bottomLeft.x, bottomLeft.y, {
+			button: "right",
+			clickCount: 1,
+		});
+
+		// The dimensions should have changed due to the deletion
+		await expectPaths({ page, count: 4 });
+		await expectPathDimensions({ page, width: 104, height: 104 });
+	});
 });
 
 test.describe("rectangle mode", () => {

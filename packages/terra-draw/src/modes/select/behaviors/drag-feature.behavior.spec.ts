@@ -4,6 +4,7 @@ import { MockCursorEvent } from "../../../test/mock-cursor-event";
 import { BehaviorConfig } from "../../base.behavior";
 import { ClickBoundingBoxBehavior } from "../../click-bounding-box.behavior";
 import { PixelDistanceBehavior } from "../../pixel-distance.behavior";
+import { CoordinatePointBehavior } from "./coordinate-point.behavior";
 import { DragFeatureBehavior } from "./drag-feature.behavior";
 import { FeatureAtPointerEventBehavior } from "./feature-at-pointer-event.behavior";
 import { MidPointBehavior } from "./midpoint.behavior";
@@ -19,9 +20,12 @@ describe("DragFeatureBehavior", () => {
 				new ClickBoundingBoxBehavior(config),
 				new PixelDistanceBehavior(config),
 			);
+			const coordinatePointBehavior = new CoordinatePointBehavior(config);
+
 			const midpointBehavior = new MidPointBehavior(
 				config,
 				selectionPointBehavior,
+				coordinatePointBehavior,
 			);
 
 			new DragFeatureBehavior(
@@ -29,6 +33,7 @@ describe("DragFeatureBehavior", () => {
 				featureAtPointerEventBehavior,
 				selectionPointBehavior,
 				midpointBehavior,
+				coordinatePointBehavior,
 			);
 		});
 	});
@@ -48,9 +53,12 @@ describe("DragFeatureBehavior", () => {
 				new ClickBoundingBoxBehavior(config),
 				new PixelDistanceBehavior(config),
 			);
+			const coordinatePointBehavior = new CoordinatePointBehavior(config);
+
 			const midpointBehavior = new MidPointBehavior(
 				config,
 				selectionPointBehavior,
+				coordinatePointBehavior,
 			);
 
 			dragFeatureBehavior = new DragFeatureBehavior(
@@ -58,6 +66,7 @@ describe("DragFeatureBehavior", () => {
 				featureAtPointerEventBehavior,
 				selectionPointBehavior,
 				midpointBehavior,
+				coordinatePointBehavior,
 			);
 		});
 

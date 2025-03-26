@@ -6,6 +6,7 @@ import {
 import { MockBehaviorConfig } from "../../../test/mock-behavior-config";
 import { MockCursorEvent } from "../../../test/mock-cursor-event";
 import { BehaviorConfig } from "../../base.behavior";
+import { CoordinatePointBehavior } from "./coordinate-point.behavior";
 import { MidPointBehavior } from "./midpoint.behavior";
 import { ScaleFeatureBehavior } from "./scale-feature.behavior";
 import { SelectionPointBehavior } from "./selection-point.behavior";
@@ -15,10 +16,16 @@ describe("ScaleFeatureBehavior", () => {
 		it("constructs", () => {
 			const config = MockBehaviorConfig("test");
 			const selectionPointBehavior = new SelectionPointBehavior(config);
+			const coordinatePointBehavior = new CoordinatePointBehavior(config);
 			new ScaleFeatureBehavior(
 				config,
 				selectionPointBehavior,
-				new MidPointBehavior(config, selectionPointBehavior),
+				new MidPointBehavior(
+					config,
+					selectionPointBehavior,
+					coordinatePointBehavior,
+				),
+				coordinatePointBehavior,
 			);
 		});
 	});
@@ -30,10 +37,17 @@ describe("ScaleFeatureBehavior", () => {
 		beforeEach(() => {
 			config = MockBehaviorConfig("test");
 			const selectionPointBehavior = new SelectionPointBehavior(config);
+			const coordinatePointBehavior = new CoordinatePointBehavior(config);
+
 			scaleFeatureBehavior = new ScaleFeatureBehavior(
 				config,
 				selectionPointBehavior,
-				new MidPointBehavior(config, selectionPointBehavior),
+				new MidPointBehavior(
+					config,
+					selectionPointBehavior,
+					coordinatePointBehavior,
+				),
+				coordinatePointBehavior,
 			);
 
 			jest.spyOn(config.store, "updateGeometry");

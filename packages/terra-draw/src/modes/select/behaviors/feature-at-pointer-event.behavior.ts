@@ -37,10 +37,11 @@ export class FeatureAtPointerEventBehavior extends TerraDrawModeBehavior {
 				// Ignore selection points always, and ignore mid points
 				// when nothing is selected
 				const isSelectionPoint = feature.properties.selectionPoint;
+				const isCoordinatePoint = feature.properties.coordinatePoint;
 				const isNonSelectedMidPoint =
 					!hasSelection && feature.properties[SELECT_PROPERTIES.MID_POINT];
 
-				if (isSelectionPoint || isNonSelectedMidPoint) {
+				if (isSelectionPoint || isCoordinatePoint || isNonSelectedMidPoint) {
 					continue;
 				}
 

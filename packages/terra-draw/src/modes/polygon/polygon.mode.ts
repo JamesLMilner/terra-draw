@@ -32,6 +32,7 @@ import { ValidatePolygonFeature } from "../../validations/polygon.validation";
 import { LineSnappingBehavior } from "../line-snapping.behavior";
 import { CoordinateSnappingBehavior } from "../coordinate-snapping.behavior";
 import { ensureRightHandRule } from "../../geometry/ensure-right-hand-rule";
+import { CoordinatePointBehavior } from "../select/behaviors/coordinate-point.behavior";
 
 type TerraDrawPolygonModeKeyEvents = {
 	cancel?: KeyboardEvent["key"] | null;
@@ -57,6 +58,10 @@ type PolygonStyling = {
 	editedPointColor: HexColorStyling;
 	editedPointOutlineWidth: NumericStyling;
 	editedPointOutlineColor: HexColorStyling;
+	coordinatePointWidth: NumericStyling;
+	coordinatePointColor: HexColorStyling;
+	coordinatePointOutlineWidth: NumericStyling;
+	coordinatePointOutlineColor: HexColorStyling;
 };
 
 interface Cursors {
@@ -95,6 +100,7 @@ interface TerraDrawPolygonModeOptions<T extends CustomStyling>
 	keyEvents?: TerraDrawPolygonModeKeyEvents | null;
 	cursors?: Cursors;
 	editable?: boolean;
+	showCoordinatePoints?: boolean;
 }
 
 export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> {
@@ -105,6 +111,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 	private keyEvents: TerraDrawPolygonModeKeyEvents = defaultKeyEvents;
 	private cursors: Required<Cursors> = defaultCursors;
 	private mouseMove = false;
+	private showCoordinatePoints = false;
 
 	// Snapping
 	private snapping: Snapping | undefined;
@@ -119,6 +126,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 	private editedPointId: FeatureId | undefined;
 
 	// Behaviors
+	private coordinatePoints!: CoordinatePointBehavior;
 	private lineSnapping!: LineSnappingBehavior;
 	private coordinateSnapping!: CoordinateSnappingBehavior;
 	private pixelDistance!: PixelDistanceBehavior;
@@ -150,8 +158,35 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 			this.snapping = options.snapping;
 		}
 
-		if (options?.editable) {
+		if (options?.editable !== undefined) {
 			this.editable = options.editable;
+		}
+
+		if (options?.showCoordinatePoints !== undefined) {
+			this.showCoordinatePoints = options.showCoordinatePoints;
+
+			// If we are not showing coordinate points, we need to add them all
+			if (this.coordinatePoints && options.showCoordinatePoints === true) {
+				const features = this.store.copyAllWhere(
+					(properties) => properties.mode === this.mode,
+				);
+				const polygonIds = features.map((feature) => feature.id as FeatureId);
+				polygonIds.forEach((id) => {
+					this.coordinatePoints.createOrUpdate(id);
+				});
+			} else if (this.coordinatePoints && this.showCoordinatePoints === false) {
+				const featuresWithCoordinates = this.store.copyAllWhere(
+					(properties) =>
+						properties.mode === this.mode &&
+						Boolean(
+							properties[COMMON_PROPERTIES.COORDINATE_POINT_IDS] as FeatureId[],
+						),
+				);
+
+				this.coordinatePoints.deletePointsByFeatureIds(
+					featuresWithCoordinates.map((f) => f.id as FeatureId),
+				);
+			}
 		}
 	}
 
@@ -226,6 +261,8 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 			this.clickBoundingBox,
 		);
 		this.closingPoints = new ClosingPointsBehavior(config, this.pixelDistance);
+
+		this.coordinatePoints = new CoordinatePointBehavior(config);
 	}
 
 	/** @internal */
@@ -377,6 +414,10 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 			{ id: this.currentId, geometry: updatedGeometry },
 		]);
 
+		if (this.showCoordinatePoints) {
+			this.coordinatePoints.createOrUpdate(this.currentId);
+		}
+
 		return true;
 	}
 
@@ -518,6 +559,10 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 				geometry,
 			},
 		]);
+
+		if (this.showCoordinatePoints) {
+			this.coordinatePoints.createOrUpdate(featureId);
+		}
 
 		this.onFinish(featureId, { mode: this.mode, action: "edit" });
 	}
@@ -885,6 +930,10 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 			},
 		]);
 
+		if (this.showCoordinatePoints) {
+			this.coordinatePoints.createOrUpdate(this.editedFeatureId);
+		}
+
 		if (this.editedPointId) {
 			this.store.updateGeometry([
 				{
@@ -963,6 +1012,10 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 		}
 
 		try {
+			if (cleanUpId) {
+				this.coordinatePoints.deletePointsByFeatureIds([cleanUpId]);
+			}
+
 			if (cleanUpId !== undefined) {
 				this.store.delete([cleanUpId]);
 			}
@@ -1016,6 +1069,8 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 					feature.properties[COMMON_PROPERTIES.CLOSING_POINT];
 				const snappingPoint =
 					feature.properties[COMMON_PROPERTIES.SNAPPING_POINT];
+				const coordinatePoint =
+					feature.properties[COMMON_PROPERTIES.COORDINATE_POINT];
 
 				const pointType = editedPoint
 					? "editedPoint"
@@ -1023,7 +1078,9 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 						? "closingPoint"
 						: snappingPoint
 							? "snappingPoint"
-							: undefined;
+							: coordinatePoint
+								? "coordinatePoint"
+								: undefined;
 
 				if (!pointType) {
 					return styles;
@@ -1047,6 +1104,12 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 						color: this.styles.snappingPointColor,
 						outlineColor: this.styles.snappingPointOutlineColor,
 						outlineWidth: this.styles.snappingPointOutlineWidth,
+					},
+					coordinatePoint: {
+						width: this.styles.coordinatePointWidth,
+						color: this.styles.coordinatePointColor,
+						outlineColor: this.styles.coordinatePointOutlineColor,
+						outlineWidth: this.styles.coordinatePointOutlineWidth,
 					},
 				};
 
@@ -1076,14 +1139,23 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 
 				if (editedPoint) {
 					styles.zIndex = 35;
+				} else if (coordinatePoint) {
+					styles.zIndex = 25;
 				} else {
 					styles.zIndex = 30;
 				}
+
 				return styles;
 			}
 		}
 
 		return styles;
+	}
+
+	afterFeatureAdded(feature: GeoJSONStoreFeatures) {
+		if (this.showCoordinatePoints) {
+			this.coordinatePoints.createOrUpdate(feature.id as FeatureId);
+		}
 	}
 
 	validateFeature(feature: unknown): StoreValidation {

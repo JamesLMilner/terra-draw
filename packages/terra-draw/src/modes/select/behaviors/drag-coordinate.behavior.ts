@@ -7,6 +7,7 @@ import { MidPointBehavior } from "./midpoint.behavior";
 import { SelectionPointBehavior } from "./selection-point.behavior";
 import { selfIntersects } from "../../../geometry/boolean/self-intersects";
 import { FeatureId } from "../../../store/store";
+import { CoordinatePointBehavior } from "./coordinate-point.behavior";
 
 export class DragCoordinateBehavior extends TerraDrawModeBehavior {
 	constructor(
@@ -14,6 +15,7 @@ export class DragCoordinateBehavior extends TerraDrawModeBehavior {
 		private readonly pixelDistance: PixelDistanceBehavior,
 		private readonly selectionPoints: SelectionPointBehavior,
 		private readonly midPoints: MidPointBehavior,
+		private readonly coordinatePoints: CoordinatePointBehavior,
 	) {
 		super(config);
 	}
@@ -142,6 +144,12 @@ export class DragCoordinateBehavior extends TerraDrawModeBehavior {
 
 		const updatedMidPoints = this.midPoints.getUpdated(geomCoordinates) || [];
 
+		const updatedCoordinatePoints =
+			this.coordinatePoints.getUpdated(
+				this.draggedCoordinate.id,
+				geomCoordinates,
+			) || [];
+
 		if (
 			geometry.type !== "Point" &&
 			!allowSelfIntersection &&
@@ -185,6 +193,7 @@ export class DragCoordinateBehavior extends TerraDrawModeBehavior {
 			// Update selection and mid points
 			...updatedSelectionPoints,
 			...updatedMidPoints,
+			...updatedCoordinatePoints,
 		]);
 
 		return true;

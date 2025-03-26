@@ -5,13 +5,19 @@ import {
 	getMidPoints,
 } from "../../../geometry/get-midpoints";
 import { SelectionPointBehavior } from "./selection-point.behavior";
-import { Projection, SELECT_PROPERTIES } from "../../../common";
+import {
+	COMMON_PROPERTIES,
+	Projection,
+	SELECT_PROPERTIES,
+} from "../../../common";
 import { FeatureId } from "../../../store/store";
+import { CoordinatePointBehavior } from "./coordinate-point.behavior";
 
 export class MidPointBehavior extends TerraDrawModeBehavior {
 	constructor(
 		readonly config: BehaviorConfig,
 		private readonly selectionPointBehavior: SelectionPointBehavior,
+		private readonly coordinatePointBehavior: CoordinatePointBehavior,
 	) {
 		super(config);
 	}
@@ -24,12 +30,16 @@ export class MidPointBehavior extends TerraDrawModeBehavior {
 
 	set ids(_: string[]) {}
 
-	public insert(midPointId: string, coordinatePrecision: number) {
+	public insert(
+		featureId: FeatureId,
+		midPointId: FeatureId,
+		coordinatePrecision: number,
+	) {
 		const midPoint = this.store.getGeometryCopy(midPointId);
 		const { midPointFeatureId, midPointSegment } =
 			this.store.getPropertiesCopy(midPointId);
 		const geometry = this.store.getGeometryCopy<Polygon | LineString>(
-			midPointFeatureId as string,
+			midPointFeatureId as FeatureId,
 		);
 
 		// Update the coordinates to include inserted midpoint
@@ -52,6 +62,13 @@ export class MidPointBehavior extends TerraDrawModeBehavior {
 		// Update the selected features geometry to insert
 		// the new midpoint
 		this.store.updateGeometry([{ id: midPointFeatureId as string, geometry }]);
+
+		// We need to update the coordinate points to reflect the new midpoint
+		const featureProperties = this.store.getPropertiesCopy(featureId as string);
+
+		if (featureProperties[COMMON_PROPERTIES.COORDINATE_POINT_IDS]) {
+			this.coordinatePointBehavior.createOrUpdate(featureId);
+		}
 
 		// TODO: is there a way of just updating the selection points rather
 		// than fully deleting / recreating?

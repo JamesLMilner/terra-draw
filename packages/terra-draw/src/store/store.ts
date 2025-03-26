@@ -93,6 +93,7 @@ export class GeoJSONStore<Id extends FeatureId = FeatureId> {
 			feature: unknown,
 			tracked?: boolean,
 		) => StoreValidation,
+		afterFeatureAdded?: (feature: GeoJSONStoreFeatures) => void,
 	): StoreValidation[] {
 		if (data.length === 0) {
 			return [];
@@ -164,6 +165,8 @@ export class GeoJSONStore<Id extends FeatureId = FeatureId> {
 
 			this.store[id] = feature;
 			changes.push(id);
+
+			afterFeatureAdded && afterFeatureAdded(feature);
 
 			validations.push({ id, valid: true });
 
@@ -341,6 +344,18 @@ export class GeoJSONStore<Id extends FeatureId = FeatureId> {
 
 	copyAll(): GeoJSONStoreFeatures[] {
 		return this.clone(Object.keys(this.store).map((id) => this.store[id]));
+	}
+
+	copyAllWhere(
+		equals: (properties: JSONObject) => boolean,
+	): GeoJSONStoreFeatures[] {
+		return this.clone(
+			Object.keys(this.store)
+				.map((id) => this.store[id])
+				.filter((feature) => {
+					return feature.properties && equals(feature.properties);
+				}),
+		);
 	}
 
 	clear(): void {

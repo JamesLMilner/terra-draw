@@ -17,13 +17,31 @@ import {
 	TerraDrawSelectMode,
 	ValidateMaxAreaSquareMeters,
 } from "terra-draw";
+import { TestConfigOptions } from "../tests/setup";
 
-const example = {
-	lng: -0.118092,
-	lat: 51.509865,
-	zoom: 12,
-	initialised: [],
-	config: null as string[] | null,
+class TestMap {
+	private lng: number;
+	private lat: number;
+	private zoom: number;
+	private config: TestConfigOptions[] | null = null;
+
+	constructor(
+		{ lng, lat, zoom }: { lng: number; lat: number; zoom: number } = {
+			lng: -0.118092,
+			lat: 51.509865,
+			zoom: 12,
+		},
+	) {
+		this.lng = lng;
+		this.lat = lat;
+		this.zoom = zoom;
+
+		this.initPageConfig();
+		const map = this.initLeaflet();
+		const draw = this.initDraw(map);
+		this.initControls(draw);
+	}
+
 	initPageConfig() {
 		const urlParams = new URLSearchParams(window.location.search);
 		// eslint-disable-next-line no-console
@@ -31,9 +49,9 @@ const example = {
 		const config = urlParams.get("config");
 
 		if (config) {
-			this.config = config.split(",");
+			this.config = config.split(",") as TestConfigOptions[];
 		}
-	},
+	}
 	initLeaflet() {
 		const { lng, lat, zoom } = this;
 
@@ -50,7 +68,7 @@ const example = {
 		}).addTo(map);
 
 		return map;
-	},
+	}
 
 	initDraw(map: L.Map) {
 		// eslint-disable-next-line no-console
@@ -199,7 +217,7 @@ const example = {
 		draw.start();
 
 		return draw;
-	},
+	}
 	initControls(draw: TerraDraw) {
 		const currentSelected = { mode: "static", button: undefined } as {
 			mode: string;
@@ -240,10 +258,7 @@ const example = {
 				draw.clear();
 			},
 		);
-	},
-};
+	}
+}
 
-example.initPageConfig();
-const map = example.initLeaflet();
-const draw = example.initDraw(map);
-example.initControls(draw);
+new TestMap();

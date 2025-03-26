@@ -9,6 +9,7 @@ import {
 	pageUrl,
 	setupMap,
 	TestConfigOptions,
+	expectNthPathDimensions,
 } from "./setup";
 
 test.describe("page setup", () => {
@@ -1354,6 +1355,79 @@ test.describe("select mode", () => {
 
 			// Dragged the coordinate to the left and down slightly
 			await expectGroupPosition({ page, x: 538, y: 308 });
+		});
+
+		test(`selected polygon can have individual coordinates dragged and snapped ${name}`, async ({
+			page,
+		}) => {
+			const mapDiv = await setupMap({
+				page,
+				configQueryParam: config
+					? config.concat("selectDragSnapping")
+					: ["selectDragSnapping"],
+			});
+
+			await changeMode({ page, mode: "polygon" });
+
+			// Draw a rectangle
+			const halfLength = 30 / 2;
+			const centerX = mapDiv.width / 2;
+			const centerY = mapDiv.height / 2;
+			const topLeft = { x: centerX - halfLength, y: centerY - halfLength };
+			const topRight = { x: centerX + halfLength, y: centerY - halfLength };
+			const bottomLeft = { x: centerX - halfLength, y: centerY + halfLength };
+			const bottomRight = { x: centerX + halfLength, y: centerY + halfLength };
+			await page.mouse.click(topLeft.x, topLeft.y);
+			await page.mouse.click(topRight.x, topRight.y);
+			await page.mouse.click(bottomRight.x, bottomRight.y);
+			await page.mouse.click(bottomLeft.x, bottomLeft.y);
+			await page.mouse.click(bottomLeft.x, bottomLeft.y); // Closed
+
+			const centerXTwo = mapDiv.width / 2 - 40;
+			const centerYTwo = mapDiv.height / 2 - 40;
+
+			const topLeftTwo = {
+				x: centerXTwo - halfLength,
+				y: centerYTwo - halfLength,
+			};
+			const topRightTwo = {
+				x: centerXTwo + halfLength,
+				y: centerYTwo - halfLength,
+			};
+			const bottomLeftTwo = {
+				x: centerXTwo - halfLength,
+				y: centerYTwo + halfLength,
+			};
+			const bottomRightTwo = {
+				x: centerXTwo + halfLength,
+				y: centerYTwo + halfLength,
+			};
+			await page.mouse.click(topLeftTwo.x, topLeftTwo.y);
+			await page.mouse.click(topRightTwo.x, topRightTwo.y);
+			await page.mouse.click(bottomRightTwo.x, bottomRightTwo.y);
+			await page.mouse.click(bottomLeftTwo.x, bottomLeftTwo.y);
+			await page.mouse.click(bottomLeftTwo.x, bottomLeftTwo.y); // Closed
+
+			// Change to select mode
+			await changeMode({ page, mode });
+
+			// Deselect
+			await page.mouse.click(topLeftTwo.x + 10, topLeftTwo.y + 10);
+
+			// Drag
+			await page.mouse.move(bottomRightTwo.x, bottomRightTwo.y);
+			await page.mouse.down();
+			await page.mouse.move(bottomRightTwo.x - 5, topLeft.y, { steps: 10 }); // Steps is required
+			await page.mouse.move(bottomRightTwo.x - 10, topLeft.y, { steps: 10 }); // Steps is required
+			await page.mouse.move(bottomRightTwo.x - 15, topLeft.y, { steps: 10 }); // Steps is required
+
+			// TODO: We need a better way to test this is actually working. We can see it visually but it's hard to select on because
+			// there are two geometries and the selectors do not work
+
+			await page.mouse.up();
+
+			// Deselect
+			await page.mouse.click(mapDiv.width - 10, mapDiv.height / 2);
 		});
 
 		test(`selected polygon can insert midpoints ${name}`, async ({ page }) => {

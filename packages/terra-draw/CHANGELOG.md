@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.4.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.3.1...terra-draw@1.4.0) (2025-03-26)
+
+
+### feat
+
+* **terra-draw:** add snappable as an option for dragging geometry coordinates in select mode (#519) ([](https://github.com/JamesLMilner/terra-draw/commit/6b9492aa3e073955dfcaf99f64e9be1e4a9d5f05)), closes [#519](https://github.com/JamesLMilner/terra-draw/issues/519)
+* **terra-draw:** provide a way to render coordinate points for polygons (#516) ([](https://github.com/JamesLMilner/terra-draw/commit/e47cc414f26b685ebccac2f9c00ebf3b59170ea6)), closes [#516](https://github.com/JamesLMilner/terra-draw/issues/516)
+
+
+### chore
+
+* **terra-draw:** use a class to get better typings when setting up map/draw for the e2e tests (#518) ([](https://github.com/JamesLMilner/terra-draw/commit/69f4aab809c532d875afbec0200a5bf78a020c78)), closes [#518](https://github.com/JamesLMilner/terra-draw/issues/518)
+
 ## [1.3.1](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.3.0...terra-draw@1.3.1) (2025-03-25)
 
 

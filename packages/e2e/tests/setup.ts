@@ -13,7 +13,8 @@ export type TestConfigOptions =
 	| "globeCircle"
 	| "globeSelect"
 	| "snappingCoordinate"
-	| "showCoordinatePoints";
+	| "showCoordinatePoints"
+	| "selectDragSnapping";
 
 export const setupMap = async ({
 	page,
@@ -144,10 +145,12 @@ export const expectGroupPosition = async ({
 	page,
 	x,
 	y,
+	item,
 }: {
 	page: Page;
 	x: number;
 	y: number;
+	item?: number;
 }) => {
 	const selector = "svg > g > path";
 

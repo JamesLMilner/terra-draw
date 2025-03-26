@@ -116,6 +116,7 @@ const getModes = () => {
 						rotateable: true,
 						scaleable: true,
 						coordinates: {
+							snappable: true,
 							midpoints: true,
 							draggable: true,
 							deletable: true,
@@ -195,11 +196,11 @@ const getModes = () => {
 			},
 			styles: {
 				snappingPointColor: "#ffff00",
-				editedPointColor: "#008000",
-				coordinatePointColor: "#ff0000",
-				closingPointColor: "#0000ff",
+				// editedPointColor: "#008000",
+				// coordinatePointColor: "#ff0000",
+				// closingPointColor: "#0000ff",
 			},
-			showCoordinatePoints: true,
+			// showCoordinatePoints: true,
 		}),
 		new TerraDrawRectangleMode(),
 		new TerraDrawCircleMode(),

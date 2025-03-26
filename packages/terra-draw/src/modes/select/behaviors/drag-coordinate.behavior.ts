@@ -8,6 +8,7 @@ import { SelectionPointBehavior } from "./selection-point.behavior";
 import { selfIntersects } from "../../../geometry/boolean/self-intersects";
 import { FeatureId } from "../../../store/store";
 import { CoordinatePointBehavior } from "./coordinate-point.behavior";
+import { CoordinateSnappingBehavior } from "../../coordinate-snapping.behavior";
 
 export class DragCoordinateBehavior extends TerraDrawModeBehavior {
 	constructor(
@@ -16,6 +17,7 @@ export class DragCoordinateBehavior extends TerraDrawModeBehavior {
 		private readonly selectionPoints: SelectionPointBehavior,
 		private readonly midPoints: MidPointBehavior,
 		private readonly coordinatePoints: CoordinatePointBehavior,
+		private readonly coordinateSnapping: CoordinateSnappingBehavior,
 	) {
 		super(config);
 	}
@@ -90,13 +92,15 @@ export class DragCoordinateBehavior extends TerraDrawModeBehavior {
 	public drag(
 		event: TerraDrawMouseEvent,
 		allowSelfIntersection: boolean,
-		validateFeature?: Validation,
+		validateFeature: Validation,
+		snapping: boolean,
 	): boolean {
 		if (this.draggedCoordinate.id === null) {
 			return false;
 		}
 		const index = this.draggedCoordinate.index;
 		const geometry = this.store.getGeometryCopy(this.draggedCoordinate.id);
+		const properties = this.store.getPropertiesCopy(this.draggedCoordinate.id);
 
 		const geomCoordinates = (
 			geometry.type === "LineString"
@@ -109,7 +113,25 @@ export class DragCoordinateBehavior extends TerraDrawModeBehavior {
 			(index === geomCoordinates.length - 1 || index === 0);
 
 		// Store the updated coord
-		const updatedCoordinate = [event.lng, event.lat];
+		let updatedCoordinate = [event.lng, event.lat];
+
+		// When we are snapping find the nearest coordinate of the same mode
+		// that is not the one we are dragging
+		if (snapping) {
+			let snapped: Position | undefined = undefined;
+
+			snapped = this.coordinateSnapping.getSnappable(event, (feature) => {
+				return Boolean(
+					feature.properties &&
+					feature.properties.mode === properties.mode &&
+					feature.id !== this.draggedCoordinate.id,
+				);
+			}).coordinate;
+
+			if (snapped) {
+				updatedCoordinate = snapped;
+			}
+		}
 
 		// Ensure that coordinates do not exceed
 		// lng lat limits. Long term we may want to figure out

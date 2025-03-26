@@ -33,6 +33,7 @@ import {
 	ResizeOptions,
 } from "./behaviors/drag-coordinate-resize.behavior";
 import { CoordinatePointBehavior } from "./behaviors/coordinate-point.behavior";
+import { CoordinateSnappingBehavior } from "../coordinate-snapping.behavior";
 
 type TerraDrawSelectModeKeyEvents = {
 	deselect: KeyboardEvent["key"] | null;
@@ -56,11 +57,12 @@ type ModeFlags = {
 		scaleable?: boolean;
 		selfIntersectable?: boolean;
 		coordinates?: {
+			snappable?: boolean;
 			midpoints?:
-				| boolean
-				| {
-						draggable?: boolean;
-				  };
+			| boolean
+			| {
+				draggable?: boolean;
+			};
 			draggable?: boolean;
 			resizable?: ResizeOptions;
 			deletable?: boolean;
@@ -138,6 +140,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 	// Behaviors
 	private selectionPoints!: SelectionPointBehavior;
 	private midPoints!: MidPointBehavior;
+	private coordinateSnap!: CoordinateSnappingBehavior;
 	private featuresAtMouseEvent!: FeatureAtPointerEventBehavior;
 	private pixelDistance!: PixelDistanceBehavior;
 	private clickBoundingBox!: ClickBoundingBoxBehavior;
@@ -260,6 +263,11 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 			this.selectionPoints,
 			this.coordinatePoints,
 		);
+		this.coordinateSnap = new CoordinateSnappingBehavior(
+			config,
+			this.pixelDistance,
+			this.clickBoundingBox,
+		);
 
 		this.rotateFeature = new RotateFeatureBehavior(
 			config,
@@ -288,6 +296,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 			this.selectionPoints,
 			this.midPoints,
 			this.coordinatePoints,
+			this.coordinateSnap,
 		);
 		this.dragCoordinateResizeFeature = new DragCoordinateResizeBehavior(
 			config,
@@ -336,9 +345,9 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 
 		let clickedSelectionPointProps:
 			| {
-					selectionPointFeatureId: string;
-					index: number;
-			  }
+				selectionPointFeatureId: string;
+				index: number;
+			}
 			| undefined;
 
 		let clickedFeatureDistance = Infinity;
@@ -844,7 +853,8 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 
 		// Check if coordinate is draggable and is dragged
 		if (this.dragCoordinate.isDragging()) {
-			this.dragCoordinate.drag(event, canSelfIntersect, validation);
+			const snapping = Boolean(modeFlags.feature?.coordinates?.snappable);
+			this.dragCoordinate.drag(event, canSelfIntersect, validation, snapping);
 			return;
 		}
 

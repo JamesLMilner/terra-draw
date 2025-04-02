@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.4.1](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.4.0...terra-draw@1.4.1) (2025-04-02)
+
+
+### fix
+
+* **terra-draw:** ensure that coordinate, midpoints and selection points deleted on clean up (#521) ([](https://github.com/JamesLMilner/terra-draw/commit/d9506eb64798c83f860d0ec83c706ef6ec464e14)), closes [#521](https://github.com/JamesLMilner/terra-draw/issues/521)
+
 ## [1.4.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.3.1...terra-draw@1.4.0) (2025-03-26)
 
 

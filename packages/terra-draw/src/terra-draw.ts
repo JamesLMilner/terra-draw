@@ -15,6 +15,7 @@ import {
 	TerraDrawMouseEvent,
 	SELECT_PROPERTIES,
 	OnFinishContext,
+	COMMON_PROPERTIES,
 } from "./common";
 import {
 	CustomStyling,
@@ -561,7 +562,31 @@ class TerraDraw {
 	 */
 	removeFeatures(ids: FeatureId[]) {
 		this.checkEnabled();
-		this._store.delete(ids);
+
+		const coordinatePointsToDelete: FeatureId[] = [];
+
+		ids.forEach((id) => {
+			// Deselect any passed features - this removes all selection points and midpoints
+			if (!this._store.has(id)) {
+				throw new Error(`No feature with id ${id}, can not delete`);
+			}
+
+			const feature = this._store.copy(id);
+			if (feature.properties[SELECT_PROPERTIES.SELECTED]) {
+				this.deselectFeature(id);
+			}
+
+			// If the feature has coordinate points, we want to remove them as well
+			if (feature.properties[COMMON_PROPERTIES.COORDINATE_POINT_IDS]) {
+				coordinatePointsToDelete.push(
+					...(feature.properties[
+						COMMON_PROPERTIES.COORDINATE_POINT_IDS
+					] as FeatureId[]),
+				);
+			}
+		});
+
+		this._store.delete([...ids, ...coordinatePointsToDelete]);
 	}
 
 	/**
@@ -571,8 +596,8 @@ class TerraDraw {
 	 * @param id - the id of the feature to select
 	 */
 	selectFeature(id: FeatureId) {
-		const selectMdode = this.getSelectMode();
-		selectMdode.selectFeature(id);
+		const selectMode = this.getSelectMode();
+		selectMode.selectFeature(id);
 	}
 
 	/**

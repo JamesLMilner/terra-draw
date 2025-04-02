@@ -329,7 +329,7 @@ export class GeoJSONStore<Id extends FeatureId = FeatureId> {
 				delete this.store[id];
 				this.spatialIndex.remove(id as FeatureId);
 			} else {
-				throw new Error("No feature with this id, can not delete");
+				throw new Error(`No feature with id ${id}, can not delete`);
 			}
 		});
 

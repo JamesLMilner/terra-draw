@@ -123,8 +123,8 @@ export class DragCoordinateBehavior extends TerraDrawModeBehavior {
 			snapped = this.coordinateSnapping.getSnappable(event, (feature) => {
 				return Boolean(
 					feature.properties &&
-					feature.properties.mode === properties.mode &&
-					feature.id !== this.draggedCoordinate.id,
+						feature.properties.mode === properties.mode &&
+						feature.id !== this.draggedCoordinate.id,
 				);
 			}).coordinate;
 

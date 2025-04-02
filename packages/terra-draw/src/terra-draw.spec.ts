@@ -560,6 +560,135 @@ describe("Terra Draw", () => {
 		});
 	});
 
+	describe("removeFeatures", () => {
+		it("correctly removes a feature as expected", () => {
+			const draw = new TerraDraw({
+				adapter: new TerraDrawTestAdapter({
+					lib: {},
+					coordinatePrecision: 3,
+				}),
+				modes: [
+					new TerraDrawPointMode(),
+					new TerraDrawSelectMode({
+						flags: {
+							point: {
+								feature: { draggable: true },
+							},
+						},
+					}),
+				],
+			});
+
+			draw.start();
+			const [result] = draw.addFeatures([
+				{
+					id: "f8e5a38d-ecfa-4294-8461-d9cff0e0d7f8",
+					type: "Feature",
+					geometry: {
+						type: "Point",
+						coordinates: [-25, 34],
+					},
+					properties: {
+						mode: "point",
+					},
+				},
+			]);
+
+			expect(result.valid).toBe(true);
+
+			draw.removeFeatures([result.id as FeatureId]);
+
+			expect(draw.getSnapshot()).toHaveLength(0);
+		});
+
+		it("throws an error trying to remove non-existent feature", () => {
+			const draw = new TerraDraw({
+				adapter: new TerraDrawTestAdapter({
+					lib: {},
+					coordinatePrecision: 3,
+				}),
+				modes: [
+					new TerraDrawPointMode(),
+					new TerraDrawSelectMode({
+						flags: {
+							point: {
+								feature: { draggable: true },
+							},
+						},
+					}),
+				],
+			});
+
+			draw.start();
+
+			expect(() => {
+				draw.removeFeatures(["123" as FeatureId]);
+			}).toThrow("No feature with id 123, can not delete");
+		});
+
+		it("removes coordinate points and selection points if they are present", () => {
+			const draw = new TerraDraw({
+				adapter: new TerraDrawTestAdapter({
+					lib: {},
+					coordinatePrecision: 3,
+				}),
+				modes: [
+					new TerraDrawPolygonMode({ showCoordinatePoints: true }),
+					new TerraDrawSelectMode({
+						flags: {
+							polygon: {
+								feature: {
+									draggable: true,
+									coordinates: {
+										draggable: true,
+										deletable: true,
+										midpoints: true,
+									},
+								},
+							},
+						},
+					}),
+				],
+			});
+
+			draw.start();
+			const [result] = draw.addFeatures([
+				{
+					id: "f8e5a38d-ecfa-4294-8461-d9cff0e0d7f8",
+					type: "Feature",
+					geometry: {
+						type: "Polygon",
+						coordinates: [
+							[
+								[0, 0],
+								[0, 1],
+								[1, 1],
+								[1, 0],
+								[0, 0],
+							],
+						],
+					},
+					properties: {
+						mode: "polygon",
+					},
+				},
+			]);
+
+			expect(result.valid).toBe(true);
+
+			draw.setMode("select");
+
+			draw.selectFeature(result.id as FeatureId);
+
+			// 4 selection points, 4 coordinate points, 4 midpoints, 1 polygon = 13
+			expect(draw.getSnapshot()).toHaveLength(13);
+
+			draw.removeFeatures([result.id as FeatureId]);
+
+			expect(draw.getSnapshot()).toHaveLength(0);
+		});
+	});
+
 	describe("deselectFeature", () => {
 		it("throws an error if there is no select moded", () => {
 			const draw = new TerraDraw({

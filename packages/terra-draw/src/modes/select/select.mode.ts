@@ -59,10 +59,10 @@ type ModeFlags = {
 		coordinates?: {
 			snappable?: boolean;
 			midpoints?:
-			| boolean
-			| {
-				draggable?: boolean;
-			};
+				| boolean
+				| {
+						draggable?: boolean;
+				  };
 			draggable?: boolean;
 			resizable?: ResizeOptions;
 			deletable?: boolean;
@@ -345,9 +345,9 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 
 		let clickedSelectionPointProps:
 			| {
-				selectionPointFeatureId: string;
-				index: number;
-			}
+					selectionPointFeatureId: string;
+					index: number;
+			  }
 			| undefined;
 
 		let clickedFeatureDistance = Infinity;
@@ -520,7 +520,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 		this.selected = [featureId];
 
 		this.store.updateProperty([
-			{ id: featureId, property: "selected", value: true },
+			{ id: featureId, property: SELECT_PROPERTIES.SELECTED, value: true },
 		]);
 		this.onSelect(featureId);
 

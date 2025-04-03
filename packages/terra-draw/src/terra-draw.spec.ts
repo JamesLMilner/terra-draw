@@ -1,6 +1,7 @@
 /**
  * @jest-environment jsdom
  */
+import { COMMON_PROPERTIES } from "./common";
 import { FeatureId } from "./extend";
 import {
 	TerraDraw,
@@ -686,6 +687,76 @@ describe("Terra Draw", () => {
 			draw.removeFeatures([result.id as FeatureId]);
 
 			expect(draw.getSnapshot()).toHaveLength(0);
+		});
+
+		it("can handle removing and re-adding a polygon when showCoordinatePoints is true", () => {
+			const draw = new TerraDraw({
+				adapter: new TerraDrawTestAdapter({
+					lib: {},
+					coordinatePrecision: 3,
+				}),
+				modes: [
+					new TerraDrawPolygonMode({ showCoordinatePoints: true }),
+					new TerraDrawSelectMode({
+						flags: {
+							polygon: {
+								feature: {
+									draggable: true,
+									coordinates: {
+										draggable: true,
+										deletable: true,
+										midpoints: true,
+									},
+								},
+							},
+						},
+					}),
+				],
+			});
+
+			draw.start();
+			const [result] = draw.addFeatures([
+				{
+					id: "f8e5a38d-ecfa-4294-8461-d9cff0e0d7f8",
+					type: "Feature",
+					geometry: {
+						type: "Polygon",
+						coordinates: [
+							[
+								[0, 0],
+								[0, 1],
+								[1, 1],
+								[1, 0],
+								[0, 0],
+							],
+						],
+					},
+					properties: {
+						mode: "polygon",
+					},
+				},
+			]);
+
+			expect(result.valid).toBe(true);
+
+			draw.setMode("select");
+
+			draw.selectFeature(result.id as FeatureId);
+
+			// 4 selection points, 4 coordinate points, 4 midpoints, 1 polygon = 13
+			expect(draw.getSnapshot()).toHaveLength(13);
+
+			const polygon = draw.getSnapshotFeature(result.id as FeatureId);
+
+			if (!polygon) {
+				throw new Error("Polygon not found");
+			}
+
+			draw.removeFeatures([result.id as FeatureId]);
+
+			draw.addFeatures([polygon]);
+
+			expect(draw.getSnapshot()).toHaveLength(5);
 		});
 	});
 

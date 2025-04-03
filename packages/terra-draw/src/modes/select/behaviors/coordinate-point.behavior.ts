@@ -24,13 +24,22 @@ export class CoordinatePointBehavior extends TerraDrawModeBehavior {
 
 		const existingFeatureProps = this.store.getPropertiesCopy(featureId);
 
-		if (!existingFeatureProps.coordinatePointIds) {
+		const existingCoordinatePointIds =
+			existingFeatureProps.coordinatePointIds as FeatureId[];
+
+		// If no existing coordinate points, create them
+		if (!existingCoordinatePointIds) {
 			const coordinatePointIds = this.createPoints(
 				coordinates,
 				existingProperties.mode as string,
 			);
 			this.setFeatureCoordinatePoints(featureId, coordinatePointIds);
-		} else {
+		}
+		// If the existing coordinate points are present in the store, update them
+		else if (
+			existingCoordinatePointIds &&
+			existingCoordinatePointIds.every((id) => this.store.has(id))
+		) {
 			// Check if the coordinates have changed
 			const existingCoordinates =
 				existingFeatureProps.coordinatePointIds as FeatureId[];
@@ -69,6 +78,23 @@ export class CoordinatePointBehavior extends TerraDrawModeBehavior {
 					]);
 				});
 			}
+		}
+		// If the existing coordinate points are not present in the store, delete them and recreate
+		else {
+			// If there are any leftover coordinate points we remove them
+			const existingPoints = existingCoordinatePointIds.filter((id) =>
+				this.store.has(id),
+			);
+			if (existingPoints.length) {
+				this.deleteCoordinatePoints(existingPoints);
+			}
+
+			// Create new coordinate points
+			const coordinatePointIds = this.createPoints(
+				coordinates,
+				existingProperties.mode as string,
+			);
+			this.setFeatureCoordinatePoints(featureId, coordinatePointIds);
 		}
 	}
 
@@ -130,16 +156,21 @@ export class CoordinatePointBehavior extends TerraDrawModeBehavior {
 	}
 
 	private deleteCoordinatePoints(coordinatePointIds: FeatureId[]) {
-		this.store.delete(coordinatePointIds as FeatureId[]);
+		// We have to account for someone manually deleting the coordinate points or only partially restoring them
+		// from some persistent storage. Essentially we cannot assume they are all present in the store.
+		const existingCoordinatePointIds = coordinatePointIds.filter((id) =>
+			this.store.has(id),
+		) as FeatureId[];
+		this.store.delete(existingCoordinatePointIds);
 	}
 
 	private deleteIfPresent(featureId: FeatureId) {
 		const existingFeatureProps = this.store.getPropertiesCopy(featureId);
+		const coordinatePoints =
+			existingFeatureProps.coordinatePointIds as FeatureId[];
 
-		if (existingFeatureProps.coordinatePointIds) {
-			this.deleteCoordinatePoints(
-				existingFeatureProps.coordinatePointIds as FeatureId[],
-			);
+		if (coordinatePoints) {
+			this.deleteCoordinatePoints(coordinatePoints);
 			this.setFeatureCoordinatePoints(featureId, null);
 		}
 	}

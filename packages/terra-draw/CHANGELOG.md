@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.4.2](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.4.1...terra-draw@1.4.2) (2025-04-03)
+
+
+### fix
+
+* **terra-draw:** account for coordinate points potentially not existing (#522) ([](https://github.com/JamesLMilner/terra-draw/commit/a9729bce9fe61491a56a58d2a0c952d3df97149e)), closes [#522](https://github.com/JamesLMilner/terra-draw/issues/522)
+
 ## [1.4.1](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.4.0...terra-draw@1.4.1) (2025-04-02)
 
 

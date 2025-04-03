@@ -306,8 +306,8 @@ describe("TerraDrawMapLibreGLAdapter", () => {
 
 			adapter.clear();
 
-			expect(map.removeLayer).toHaveBeenCalledTimes(4);
-			expect(map.removeSource).toHaveBeenCalledTimes(3);
+			expect(map.removeLayer).toHaveBeenCalledTimes(5);
+			expect(map.removeSource).toHaveBeenCalledTimes(4);
 		});
 	});
 
@@ -520,8 +520,8 @@ describe("TerraDrawMapLibreGLAdapter", () => {
 			adapter.unregister();
 
 			// Clears any set data
-			expect(map.removeLayer).toHaveBeenCalledTimes(4);
-			expect(map.removeSource).toHaveBeenCalledTimes(3);
+			expect(map.removeLayer).toHaveBeenCalledTimes(5);
+			expect(map.removeSource).toHaveBeenCalledTimes(4);
 		});
 	});
 });

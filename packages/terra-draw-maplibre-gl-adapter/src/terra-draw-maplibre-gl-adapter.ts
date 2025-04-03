@@ -59,6 +59,13 @@ export class TerraDrawMapLibreGLAdapter<
 				if (geometryKey === "polygon") {
 					this._map.removeLayer(id + "-outline");
 				}
+
+				// Special case for points as it has another id for the lower z-index
+				if (geometryKey === "point") {
+					this._map.removeLayer(id + "-lower");
+					this._map.removeSource(id + "-lower");
+				}
+
 				this._map.removeSource(id);
 			});
 

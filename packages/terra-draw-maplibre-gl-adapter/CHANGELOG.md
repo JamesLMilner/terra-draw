@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.0.3](https://github.com/JamesLMilner/terra-draw/compare/terra-draw-maplibre-gl-adapter@1.0.2...terra-draw-maplibre-gl-adapter@1.0.3) (2025-04-03)
+
+
+### fix
+
+* **terra-draw-maplibre-gl-adapter:** better handle zindexes to support layered points (#515) ([](https://github.com/JamesLMilner/terra-draw/commit/18e62883db2e60b53e2f4a9c2568a6ee6a194bea)), closes [#515](https://github.com/JamesLMilner/terra-draw/issues/515)
+* **terra-draw-maplibre-gl-adapter:** ensure lower point layer is cleaned up correctly (#523) ([](https://github.com/JamesLMilner/terra-draw/commit/0652adf730439b8735651a735eea46ad12c99a06)), closes [#523](https://github.com/JamesLMilner/terra-draw/issues/523)
+
 ## [1.0.2](https://github.com/JamesLMilner/terra-draw/compare/terra-draw-maplibre-gl-adapter@1.0.1...terra-draw-maplibre-gl-adapter@1.0.2) (2025-03-19)
 
 

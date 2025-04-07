@@ -18,7 +18,6 @@ import {
 	COMMON_PROPERTIES,
 } from "./common";
 import {
-	CustomStyling,
 	ModeTypes,
 	TerraDrawBaseDrawMode,
 	TerraDrawBaseSelectMode,
@@ -836,6 +835,9 @@ class TerraDraw {
 
 export {
 	TerraDraw,
+	IdStrategy,
+	TerraDrawEvents,
+	TerraDrawEventListeners,
 
 	// Modes
 	TerraDrawSelectMode,
@@ -853,20 +855,14 @@ export {
 	// Types that are required for 3rd party developers to extend
 	TerraDrawExtend,
 
-	// Basic types that appear in the public API
+	// TerraDrawBaseMode
 	BehaviorConfig,
-	FeatureId,
 	GeoJSONStoreFeatures,
 	GeoJSONStoreGeometries,
 	HexColor,
-	IdStrategy,
-	TerraDrawAdapterStyling,
-	TerraDrawBaseDrawMode,
-	TerraDrawBaseSelectMode,
-	TerraDrawEventListeners,
-	TerraDrawEvents,
-	TerraDrawKeyboardEvent,
 	TerraDrawMouseEvent,
+	TerraDrawAdapterStyling,
+	TerraDrawKeyboardEvent,
 
 	// TerraDrawBaseAdapter
 	TerraDrawChanges,

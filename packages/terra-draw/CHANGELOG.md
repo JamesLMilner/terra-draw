@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.4.3](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.4.2...terra-draw@1.4.3) (2025-04-07)
+
+
+### chore
+
+* **terra-draw:** export additional types for easier typing and extension  (#524) ([](https://github.com/JamesLMilner/terra-draw/commit/1ad36d430376d571f645a3508c5893def528ccaf)), closes [#524](https://github.com/JamesLMilner/terra-draw/issues/524)
+
 ## [1.4.2](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.4.1...terra-draw@1.4.2) (2025-04-03)
 
 

@@ -18,7 +18,6 @@ import {
 	COMMON_PROPERTIES,
 } from "./common";
 import {
-	CustomStyling,
 	ModeTypes,
 	TerraDrawBaseDrawMode,
 	TerraDrawBaseSelectMode,
@@ -836,6 +835,9 @@ class TerraDraw {
 
 export {
 	TerraDraw,
+	IdStrategy,
+	TerraDrawEvents,
+	TerraDrawEventListeners,
 
 	// Modes
 	TerraDrawSelectMode,

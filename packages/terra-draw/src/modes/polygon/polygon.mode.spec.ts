@@ -1,4 +1,4 @@
-import { Validation } from "../../common";
+import { TerraDrawGeoJSONStore, Validation } from "../../common";
 import {
 	FeatureId,
 	GeoJSONStore,
@@ -291,11 +291,13 @@ describe("TerraDrawPolygonMode", () => {
 					expect.any(String),
 				],
 				"create",
+				undefined,
 			);
 			expect(mockConfig.onChange).toHaveBeenNthCalledWith(
 				2,
 				[featureId],
 				"update",
+				undefined,
 			);
 		});
 	});
@@ -340,11 +342,13 @@ describe("TerraDrawPolygonMode", () => {
 					expect.any(String),
 				],
 				"create",
+				undefined,
 			);
 			expect(mockConfig.onChange).toHaveBeenNthCalledWith(
 				2,
 				[featureId],
 				"update",
+				undefined,
 			);
 		});
 
@@ -452,7 +456,7 @@ describe("TerraDrawPolygonMode", () => {
 
 	describe("onMouseMove", () => {
 		let polygonMode: TerraDrawPolygonMode;
-		let store: GeoJSONStore;
+		let store: TerraDrawGeoJSONStore;
 		let onChange: jest.Mock;
 
 		beforeEach(() => {
@@ -568,7 +572,7 @@ describe("TerraDrawPolygonMode", () => {
 		let polygonMode: TerraDrawPolygonMode;
 		let onChange: jest.Mock;
 		let onFinish: jest.Mock;
-		let store: GeoJSONStore;
+		let store: TerraDrawGeoJSONStore;
 
 		const validation: Validation = (feature, { updateType }) => {
 			if (updateType === "finish" || updateType === "commit") {
@@ -901,6 +905,7 @@ describe("TerraDrawPolygonMode", () => {
 				13,
 				[expect.any(String), expect.any(String)],
 				"delete",
+				undefined,
 			);
 
 			const featuresAfter = store.copyAll();
@@ -1033,7 +1038,7 @@ describe("TerraDrawPolygonMode", () => {
 
 	describe("onKeyUp", () => {
 		let polygonMode: TerraDrawPolygonMode;
-		let store: GeoJSONStore;
+		let store: TerraDrawGeoJSONStore;
 		let onFinish: jest.Mock;
 
 		beforeEach(() => {
@@ -1157,7 +1162,7 @@ describe("TerraDrawPolygonMode", () => {
 });
 
 describe("cleanUp", () => {
-	let store: GeoJSONStore;
+	let store: TerraDrawGeoJSONStore;
 	let polygonMode: TerraDrawPolygonMode;
 
 	beforeEach(() => {
@@ -1241,6 +1246,7 @@ describe("onDragStart", () => {
 			1,
 			[expect.any(String)],
 			"create",
+			undefined,
 		);
 		expect(mockConfig.setCursor).toHaveBeenCalledTimes(1);
 		expect(mockConfig.setCursor).toHaveBeenNthCalledWith(1, "grabbing");
@@ -1300,16 +1306,19 @@ describe("onDrag", () => {
 			1,
 			[expect.any(String)],
 			"update",
+			undefined,
 		);
 		expect(mockConfig.onChange).toHaveBeenNthCalledWith(
 			2,
 			[expect.any(String)],
 			"update",
+			undefined,
 		);
 		expect(mockConfig.onChange).toHaveBeenNthCalledWith(
 			3,
 			[expect.any(String)],
 			"update",
+			undefined,
 		);
 
 		const allFeatures = mockConfig.store.copyAll();
@@ -1386,6 +1395,7 @@ describe("onDragEnd", () => {
 			1,
 			[expect.any(String)],
 			"delete",
+			undefined,
 		);
 
 		// Remove the edited property from the polygonux
@@ -1393,6 +1403,7 @@ describe("onDragEnd", () => {
 			2,
 			[expect.any(String)],
 			"update",
+			undefined,
 		);
 
 		expect(mockConfig.onFinish).toHaveBeenCalledTimes(1);

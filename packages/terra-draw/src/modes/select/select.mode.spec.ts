@@ -4,10 +4,11 @@ import { MockModeConfig } from "../../test/mock-mode-config";
 import { TerraDrawSelectMode } from "./select.mode";
 import { MockCursorEvent } from "../../test/mock-cursor-event";
 import { MockKeyboardEvent } from "../../test/mock-keyboard-event";
+import { TerraDrawGeoJSONStore } from "../../common";
 
 describe("TerraDrawSelectMode", () => {
 	let selectMode: TerraDrawSelectMode;
-	let store: GeoJSONStore;
+	let store: TerraDrawGeoJSONStore;
 	let onChange: jest.Mock;
 	let setCursor: jest.Mock;
 	let project: jest.Mock;
@@ -394,6 +395,7 @@ describe("TerraDrawSelectMode", () => {
 						1,
 						[expect.any(String)],
 						"create",
+						undefined,
 					);
 
 					// Store the ids of the created feature
@@ -406,7 +408,12 @@ describe("TerraDrawSelectMode", () => {
 					expect(onSelect).toHaveBeenNthCalledWith(1, idOne[0]);
 
 					// Polygon selected set to true
-					expect(onChange).toHaveBeenNthCalledWith(2, idOne, "update");
+					expect(onChange).toHaveBeenNthCalledWith(
+						2,
+						idOne,
+						"update",
+						undefined,
+					);
 
 					// Create selection points
 					expect(onChange).toHaveBeenNthCalledWith(
@@ -420,6 +427,7 @@ describe("TerraDrawSelectMode", () => {
 							// as it is identical to to the first
 						],
 						"create",
+						undefined,
 					);
 				});
 
@@ -447,6 +455,7 @@ describe("TerraDrawSelectMode", () => {
 						1,
 						[expect.any(String)],
 						"create",
+						undefined,
 					);
 
 					// Store the ids of the created feature
@@ -459,7 +468,12 @@ describe("TerraDrawSelectMode", () => {
 					expect(onSelect).toHaveBeenNthCalledWith(1, idOne[0]);
 
 					// Polygon selected set to true
-					expect(onChange).toHaveBeenNthCalledWith(2, idOne, "update");
+					expect(onChange).toHaveBeenNthCalledWith(
+						2,
+						idOne,
+						"update",
+						undefined,
+					);
 
 					// Create selection points
 					expect(onChange).toHaveBeenNthCalledWith(
@@ -473,6 +487,7 @@ describe("TerraDrawSelectMode", () => {
 							// as it is identical to to the first
 						],
 						"create",
+						undefined,
 					);
 
 					// Create mid points
@@ -485,6 +500,7 @@ describe("TerraDrawSelectMode", () => {
 							expect.any(String),
 						],
 						"create",
+						undefined,
 					);
 				});
 
@@ -508,6 +524,7 @@ describe("TerraDrawSelectMode", () => {
 							1,
 							[expect.any(String)],
 							"create",
+							undefined,
 						);
 
 						addPolygonToStore([
@@ -522,6 +539,7 @@ describe("TerraDrawSelectMode", () => {
 							2,
 							[expect.any(String)],
 							"create",
+							undefined,
 						);
 
 						// Store the ids of the created features
@@ -540,7 +558,12 @@ describe("TerraDrawSelectMode", () => {
 						expect(onSelect).toHaveBeenNthCalledWith(1, idOne[0]);
 
 						// First polygon selected set to true
-						expect(onChange).toHaveBeenNthCalledWith(3, idOne, "update");
+						expect(onChange).toHaveBeenNthCalledWith(
+							3,
+							idOne,
+							"update",
+							undefined,
+						);
 
 						// Deselect first polygon, select second
 						selectMode.onClick(
@@ -559,10 +582,20 @@ describe("TerraDrawSelectMode", () => {
 						expect(onDeselect).toHaveBeenNthCalledWith(1, idOne[0]);
 
 						// First polygon selected set to false
-						expect(onChange).toHaveBeenNthCalledWith(4, idOne, "update");
+						expect(onChange).toHaveBeenNthCalledWith(
+							4,
+							idOne,
+							"update",
+							undefined,
+						);
 
 						// Second polygon selected set to true
-						expect(onChange).toHaveBeenNthCalledWith(5, idTwo, "update");
+						expect(onChange).toHaveBeenNthCalledWith(
+							5,
+							idTwo,
+							"update",
+							undefined,
+						);
 					});
 
 					it("with selection points flag", () => {
@@ -589,6 +622,7 @@ describe("TerraDrawSelectMode", () => {
 							1,
 							[expect.any(String)],
 							"create",
+							undefined,
 						);
 
 						addPolygonToStore([
@@ -603,6 +637,7 @@ describe("TerraDrawSelectMode", () => {
 							2,
 							[expect.any(String)],
 							"create",
+							undefined,
 						);
 
 						// Store the ids of the created features
@@ -621,7 +656,12 @@ describe("TerraDrawSelectMode", () => {
 						expect(onSelect).toHaveBeenNthCalledWith(1, idOne[0]);
 
 						// First polygon selected set to true
-						expect(onChange).toHaveBeenNthCalledWith(3, idOne, "update");
+						expect(onChange).toHaveBeenNthCalledWith(
+							3,
+							idOne,
+							"update",
+							undefined,
+						);
 
 						// Create selection points
 						expect(onChange).toHaveBeenNthCalledWith(
@@ -635,6 +675,7 @@ describe("TerraDrawSelectMode", () => {
 								// as it is identical to to the first
 							],
 							"create",
+							undefined,
 						);
 
 						// Deselect first polygon, select second
@@ -653,7 +694,12 @@ describe("TerraDrawSelectMode", () => {
 						expect(onDeselect).toHaveBeenCalledTimes(1);
 						expect(onDeselect).toHaveBeenNthCalledWith(1, idOne[0]);
 
-						expect(onChange).toHaveBeenNthCalledWith(5, idOne, "update");
+						expect(onChange).toHaveBeenNthCalledWith(
+							5,
+							idOne,
+							"update",
+							undefined,
+						);
 
 						// Delete first polygon selection points
 						expect(onChange).toHaveBeenNthCalledWith(
@@ -666,10 +712,16 @@ describe("TerraDrawSelectMode", () => {
 								// Again only 4 points as we skip closing coord
 							],
 							"delete",
+							undefined,
 						);
 
 						// Second polygon selected set to true
-						expect(onChange).toHaveBeenNthCalledWith(7, idTwo, "update");
+						expect(onChange).toHaveBeenNthCalledWith(
+							7,
+							idTwo,
+							"update",
+							undefined,
+						);
 					});
 
 					it("with mid points flag", () => {
@@ -696,6 +748,7 @@ describe("TerraDrawSelectMode", () => {
 							1,
 							[expect.any(String)],
 							"create",
+							undefined,
 						);
 
 						addPolygonToStore([
@@ -710,6 +763,7 @@ describe("TerraDrawSelectMode", () => {
 							2,
 							[expect.any(String)],
 							"create",
+							undefined,
 						);
 
 						// Store the ids of the created features
@@ -728,7 +782,12 @@ describe("TerraDrawSelectMode", () => {
 						expect(onSelect).toHaveBeenNthCalledWith(1, idOne[0]);
 
 						// First polygon selected set to true
-						expect(onChange).toHaveBeenNthCalledWith(3, idOne, "update");
+						expect(onChange).toHaveBeenNthCalledWith(
+							3,
+							idOne,
+							"update",
+							undefined,
+						);
 
 						// Create selection points
 						expect(onChange).toHaveBeenNthCalledWith(
@@ -742,6 +801,7 @@ describe("TerraDrawSelectMode", () => {
 								// as it is identical to to the first
 							],
 							"create",
+							undefined,
 						);
 
 						// Create mid points
@@ -754,6 +814,7 @@ describe("TerraDrawSelectMode", () => {
 								expect.any(String),
 							],
 							"create",
+							undefined,
 						);
 
 						// Deselect first polygon, select second
@@ -772,7 +833,12 @@ describe("TerraDrawSelectMode", () => {
 						expect(onDeselect).toHaveBeenCalledTimes(1);
 						expect(onDeselect).toHaveBeenNthCalledWith(1, idOne[0]);
 
-						expect(onChange).toHaveBeenNthCalledWith(6, idOne, "update");
+						expect(onChange).toHaveBeenNthCalledWith(
+							6,
+							idOne,
+							"update",
+							undefined,
+						);
 
 						// Delete first polygon selection points
 						expect(onChange).toHaveBeenNthCalledWith(
@@ -785,6 +851,7 @@ describe("TerraDrawSelectMode", () => {
 								// Again only 4 points as we skip closing coord
 							],
 							"delete",
+							undefined,
 						);
 
 						// Delete first polygon mid points
@@ -797,10 +864,16 @@ describe("TerraDrawSelectMode", () => {
 								expect.any(String),
 							],
 							"delete",
+							undefined,
 						);
 
 						// Second polygon selected set to true
-						expect(onChange).toHaveBeenNthCalledWith(9, idTwo, "update");
+						expect(onChange).toHaveBeenNthCalledWith(
+							9,
+							idTwo,
+							"update",
+							undefined,
+						);
 					});
 				});
 			});
@@ -834,6 +907,7 @@ describe("TerraDrawSelectMode", () => {
 					1,
 					[expect.any(String)],
 					"create",
+					undefined,
 				);
 
 				addPolygonToStore([
@@ -848,6 +922,7 @@ describe("TerraDrawSelectMode", () => {
 					2,
 					[expect.any(String)],
 					"create",
+					undefined,
 				);
 
 				// Store the ids of the created features
@@ -860,7 +935,7 @@ describe("TerraDrawSelectMode", () => {
 				expect(onSelect).toHaveBeenNthCalledWith(1, idOne[0]);
 
 				// First polygon selected set to true
-				expect(onChange).toHaveBeenNthCalledWith(3, idOne, "update");
+				expect(onChange).toHaveBeenNthCalledWith(3, idOne, "update", undefined);
 
 				jest.spyOn(store, "getGeometryCopy");
 				jest.spyOn(store, "getPropertiesCopy");
@@ -900,6 +975,7 @@ describe("TerraDrawSelectMode", () => {
 					1,
 					[expect.any(String)],
 					"create",
+					undefined,
 				);
 
 				// Store the ids of the created features
@@ -912,7 +988,7 @@ describe("TerraDrawSelectMode", () => {
 				expect(onSelect).toHaveBeenNthCalledWith(1, idOne[0]);
 
 				// First polygon selected set to true
-				expect(onChange).toHaveBeenNthCalledWith(2, idOne, "update");
+				expect(onChange).toHaveBeenNthCalledWith(2, idOne, "update", undefined);
 
 				jest.spyOn(store, "getGeometryCopy");
 				jest.spyOn(store, "updateGeometry");
@@ -951,6 +1027,7 @@ describe("TerraDrawSelectMode", () => {
 					1,
 					[expect.any(String)],
 					"create",
+					undefined,
 				);
 
 				// Store the ids of the created features
@@ -968,7 +1045,7 @@ describe("TerraDrawSelectMode", () => {
 				expect(onSelect).toHaveBeenNthCalledWith(1, idOne[0]);
 
 				// First polygon selected set to true
-				expect(onChange).toHaveBeenNthCalledWith(2, idOne, "update");
+				expect(onChange).toHaveBeenNthCalledWith(2, idOne, "update", undefined);
 
 				jest.spyOn(store, "delete");
 				jest.spyOn(store, "updateGeometry");
@@ -1003,6 +1080,7 @@ describe("TerraDrawSelectMode", () => {
 					1,
 					[expect.any(String)],
 					"create",
+					undefined,
 				);
 
 				// Store the ids of the created features
@@ -1015,7 +1093,7 @@ describe("TerraDrawSelectMode", () => {
 				expect(onSelect).toHaveBeenNthCalledWith(1, idOne[0]);
 
 				// First polygon selected set to true
-				expect(onChange).toHaveBeenNthCalledWith(2, idOne, "update");
+				expect(onChange).toHaveBeenNthCalledWith(2, idOne, "update", undefined);
 
 				jest.spyOn(store, "delete");
 				jest.spyOn(store, "updateGeometry");
@@ -1053,6 +1131,7 @@ describe("TerraDrawSelectMode", () => {
 					2,
 					[expect.any(String)],
 					"update",
+					undefined,
 				);
 
 				expect(onSelect).toHaveBeenCalledTimes(1);
@@ -1066,6 +1145,7 @@ describe("TerraDrawSelectMode", () => {
 					3,
 					[expect.any(String)],
 					"delete",
+					undefined,
 				);
 			});
 		});
@@ -1292,7 +1372,12 @@ describe("TerraDrawSelectMode", () => {
 					);
 
 					expect(onChange).toHaveBeenCalledTimes(3);
-					expect(onChange).toHaveBeenNthCalledWith(3, idOne, "update");
+					expect(onChange).toHaveBeenNthCalledWith(
+						3,
+						idOne,
+						"update",
+						undefined,
+					);
 				});
 			});
 
@@ -1333,7 +1418,12 @@ describe("TerraDrawSelectMode", () => {
 					);
 
 					expect(onChange).toHaveBeenCalledTimes(3);
-					expect(onChange).toHaveBeenNthCalledWith(3, idOne, "update");
+					expect(onChange).toHaveBeenNthCalledWith(
+						3,
+						idOne,
+						"update",
+						undefined,
+					);
 				});
 			});
 		});
@@ -1366,6 +1456,7 @@ describe("TerraDrawSelectMode", () => {
 					3,
 					[expect.any(String)],
 					"update",
+					undefined,
 				);
 
 				// Create selection points
@@ -1373,6 +1464,7 @@ describe("TerraDrawSelectMode", () => {
 					4,
 					[expect.any(String), expect.any(String)],
 					"create",
+					undefined,
 				);
 
 				selectMode.onDragStart(MockCursorEvent({ lng: 1, lat: 1 }), jest.fn());
@@ -1391,6 +1483,7 @@ describe("TerraDrawSelectMode", () => {
 					5,
 					[expect.any(String), expect.any(String)],
 					"update",
+					undefined,
 				);
 			});
 
@@ -1424,6 +1517,7 @@ describe("TerraDrawSelectMode", () => {
 					3,
 					[expect.any(String)],
 					"update",
+					undefined,
 				);
 
 				// Create selection points
@@ -1436,6 +1530,7 @@ describe("TerraDrawSelectMode", () => {
 						expect.any(String),
 					],
 					"create",
+					undefined,
 				);
 
 				selectMode.onDragStart(MockCursorEvent({ lng: 1, lat: 1 }), jest.fn());
@@ -1454,6 +1549,7 @@ describe("TerraDrawSelectMode", () => {
 					5,
 					[expect.any(String), expect.any(String)],
 					"update",
+					undefined,
 				);
 			});
 
@@ -1501,6 +1597,7 @@ describe("TerraDrawSelectMode", () => {
 					4,
 					[expect.any(String)],
 					"update",
+					undefined,
 				);
 
 				// Create selection points
@@ -1513,6 +1610,7 @@ describe("TerraDrawSelectMode", () => {
 						expect.any(String),
 					],
 					"create",
+					undefined,
 				);
 
 				selectMode.onDragStart(MockCursorEvent({ lng: 1, lat: 1 }), jest.fn());
@@ -1557,6 +1655,7 @@ describe("TerraDrawSelectMode", () => {
 					6,
 					[expect.any(String), expect.any(String)],
 					"update",
+					undefined,
 				);
 			});
 
@@ -1602,6 +1701,7 @@ describe("TerraDrawSelectMode", () => {
 					4,
 					[expect.any(String)],
 					"update",
+					undefined,
 				);
 
 				// Create selection points
@@ -1614,6 +1714,7 @@ describe("TerraDrawSelectMode", () => {
 						expect.any(String),
 					],
 					"create",
+					undefined,
 				);
 
 				selectMode.onDragStart(MockCursorEvent({ lng: 1, lat: 1 }), jest.fn());
@@ -1655,6 +1756,7 @@ describe("TerraDrawSelectMode", () => {
 					6,
 					[expect.any(String), expect.any(String)],
 					"update",
+					undefined,
 				);
 			});
 		});
@@ -1694,6 +1796,7 @@ describe("TerraDrawSelectMode", () => {
 					3,
 					[expect.any(String)],
 					"update",
+					undefined,
 				);
 
 				// Create selection points
@@ -1701,6 +1804,7 @@ describe("TerraDrawSelectMode", () => {
 					4,
 					[expect.any(String), expect.any(String)],
 					"create",
+					undefined,
 				);
 
 				selectMode.onDragStart(MockCursorEvent({ lng: 1, lat: 1 }), jest.fn());
@@ -1724,6 +1828,7 @@ describe("TerraDrawSelectMode", () => {
 					5,
 					[expect.any(String), expect.any(String), expect.any(String)],
 					"update",
+					undefined,
 				);
 			});
 
@@ -1766,6 +1871,7 @@ describe("TerraDrawSelectMode", () => {
 					3,
 					[expect.any(String)],
 					"update",
+					undefined,
 				);
 
 				// Create selection points
@@ -1778,6 +1884,7 @@ describe("TerraDrawSelectMode", () => {
 						expect.any(String),
 					],
 					"create",
+					undefined,
 				);
 
 				selectMode.onDragStart(MockCursorEvent({ lng: 1, lat: 1 }), jest.fn());
@@ -1807,6 +1914,7 @@ describe("TerraDrawSelectMode", () => {
 						expect.any(String),
 					],
 					"update",
+					undefined,
 				);
 			});
 		});
@@ -1841,6 +1949,7 @@ describe("TerraDrawSelectMode", () => {
 					1,
 					[expect.any(String)],
 					"create",
+					undefined,
 				);
 
 				// Store the ids of the created feature
@@ -1853,7 +1962,7 @@ describe("TerraDrawSelectMode", () => {
 				expect(onSelect).toHaveBeenNthCalledWith(1, idOne[0]);
 
 				// Polygon selected set to true
-				expect(onChange).toHaveBeenNthCalledWith(2, idOne, "update");
+				expect(onChange).toHaveBeenNthCalledWith(2, idOne, "update", undefined);
 
 				// Create mid points
 				expect(onChange).toHaveBeenNthCalledWith(
@@ -1865,6 +1974,7 @@ describe("TerraDrawSelectMode", () => {
 						expect.any(String),
 					],
 					"create",
+					undefined,
 				);
 
 				expect(onChange).toHaveBeenCalledTimes(4);
@@ -1876,7 +1986,7 @@ describe("TerraDrawSelectMode", () => {
 
 				expect(onChange).toHaveBeenCalledTimes(8);
 
-				expect(onChange).toHaveBeenNthCalledWith(5, idOne, "update");
+				expect(onChange).toHaveBeenNthCalledWith(5, idOne, "update", undefined);
 
 				// Delete existing midpoints and selection points
 				expect(onChange).toHaveBeenNthCalledWith(
@@ -1892,6 +2002,7 @@ describe("TerraDrawSelectMode", () => {
 						expect.any(String),
 					],
 					"delete",
+					undefined,
 				);
 
 				// Mid points
@@ -1905,6 +2016,7 @@ describe("TerraDrawSelectMode", () => {
 						expect.any(String),
 					],
 					"create",
+					undefined,
 				);
 
 				// Selection points
@@ -1918,6 +2030,7 @@ describe("TerraDrawSelectMode", () => {
 						expect.any(String),
 					],
 					"create",
+					undefined,
 				);
 
 				const setMapDraggability = jest.fn();
@@ -1975,6 +2088,7 @@ describe("TerraDrawSelectMode", () => {
 				3,
 				[expect.any(String)],
 				"update",
+				undefined,
 			);
 
 			// Create selection points
@@ -1987,6 +2101,7 @@ describe("TerraDrawSelectMode", () => {
 					expect.any(String),
 				],
 				"create",
+				undefined,
 			);
 
 			selectMode.onDragStart(MockCursorEvent({ lng: 1, lat: 1 }), jest.fn());
@@ -2089,6 +2204,7 @@ describe("TerraDrawSelectMode", () => {
 				3,
 				[expect.any(String)],
 				"update",
+				undefined,
 			);
 
 			// Create selection points
@@ -2101,6 +2217,7 @@ describe("TerraDrawSelectMode", () => {
 					expect.any(String),
 				],
 				"create",
+				undefined,
 			);
 
 			selectMode.onDragStart(MockCursorEvent({ lng: 1, lat: 1 }), jest.fn());

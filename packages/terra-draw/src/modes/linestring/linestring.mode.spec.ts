@@ -4,6 +4,7 @@ import { MockCursorEvent } from "../../test/mock-cursor-event";
 import { ValidateNotSelfIntersecting } from "../../validations/not-self-intersecting.validation";
 import { TerraDrawLineStringMode } from "./linestring.mode";
 import { MockKeyboardEvent } from "../../test/mock-keyboard-event";
+import { TerraDrawGeoJSONStore } from "../../common";
 
 describe("TerraDrawLineStringMode", () => {
 	describe("constructor", () => {
@@ -167,7 +168,7 @@ describe("TerraDrawLineStringMode", () => {
 	describe("onMouseMove", () => {
 		let lineStringMode: TerraDrawLineStringMode;
 		let onChange: jest.Mock;
-		let store: GeoJSONStore;
+		let store: TerraDrawGeoJSONStore;
 
 		beforeEach(() => {
 			lineStringMode = new TerraDrawLineStringMode();
@@ -206,7 +207,7 @@ describe("TerraDrawLineStringMode", () => {
 		let lineStringMode: TerraDrawLineStringMode;
 		let onChange: jest.Mock;
 		let onFinish: jest.Mock;
-		let store: GeoJSONStore;
+		let store: TerraDrawGeoJSONStore;
 
 		beforeEach(() => {
 			lineStringMode = new TerraDrawLineStringMode({ editable: true });
@@ -288,6 +289,7 @@ describe("TerraDrawLineStringMode", () => {
 				9,
 				[expect.any(String)],
 				"delete",
+				undefined,
 			);
 
 			expect(onFinish).toHaveBeenCalledTimes(1);
@@ -347,6 +349,7 @@ describe("TerraDrawLineStringMode", () => {
 				9,
 				[expect.any(String)],
 				"delete",
+				undefined,
 			);
 
 			expect(onFinish).toHaveBeenCalledTimes(1);
@@ -479,6 +482,7 @@ describe("TerraDrawLineStringMode", () => {
 				9,
 				[expect.any(String)],
 				"delete",
+				undefined,
 			);
 
 			expect(onFinish).toHaveBeenCalledTimes(1);
@@ -504,6 +508,7 @@ describe("TerraDrawLineStringMode", () => {
 				10,
 				[expect.any(String)],
 				"update",
+				undefined,
 			);
 
 			const featuresAfter = store.copyAll();
@@ -698,6 +703,7 @@ describe("TerraDrawLineStringMode", () => {
 				expect(onChange).not.toHaveBeenCalledWith(
 					[expect.any(String)],
 					"delete",
+					undefined,
 				);
 
 				lineStringMode.onClick(MockCursorEvent({ lng: 2, lat: 2 }));
@@ -708,6 +714,7 @@ describe("TerraDrawLineStringMode", () => {
 					9,
 					[expect.any(String)],
 					"delete",
+					undefined,
 				);
 
 				features = store.copyAll();
@@ -726,7 +733,7 @@ describe("TerraDrawLineStringMode", () => {
 		let lineStringMode: TerraDrawLineStringMode;
 		let onChange: jest.Mock;
 		let onFinish: jest.Mock;
-		let store: GeoJSONStore;
+		let store: TerraDrawGeoJSONStore;
 
 		beforeEach(() => {
 			lineStringMode = new TerraDrawLineStringMode();
@@ -784,6 +791,7 @@ describe("TerraDrawLineStringMode", () => {
 				expect(onChange).not.toHaveBeenCalledWith(
 					[expect.any(String)],
 					"delete",
+					undefined,
 				);
 
 				lineStringMode.onKeyUp(MockKeyboardEvent({ key: "Enter" }));
@@ -794,6 +802,7 @@ describe("TerraDrawLineStringMode", () => {
 					8,
 					[expect.any(String)],
 					"delete",
+					undefined,
 				);
 
 				features = store.copyAll();
@@ -847,6 +856,7 @@ describe("TerraDrawLineStringMode", () => {
 				expect(onChange).not.toHaveBeenCalledWith(
 					[expect.any(String)],
 					"delete",
+					undefined,
 				);
 
 				lineStringMode.onKeyUp(MockKeyboardEvent({ key: "Escape" }));
@@ -871,7 +881,7 @@ describe("TerraDrawLineStringMode", () => {
 
 	describe("cleanUp", () => {
 		let lineStringMode: TerraDrawLineStringMode;
-		let store: GeoJSONStore;
+		let store: TerraDrawGeoJSONStore;
 
 		beforeEach(() => {
 			lineStringMode = new TerraDrawLineStringMode();
@@ -965,6 +975,7 @@ describe("TerraDrawLineStringMode", () => {
 				1,
 				[expect.any(String)],
 				"create",
+				undefined,
 			);
 			expect(mockConfig.setCursor).toHaveBeenCalledTimes(1);
 			expect(mockConfig.setCursor).toHaveBeenNthCalledWith(1, "grabbing");
@@ -1026,16 +1037,19 @@ describe("TerraDrawLineStringMode", () => {
 				1,
 				[expect.any(String)],
 				"update",
+				undefined,
 			);
 			expect(mockConfig.onChange).toHaveBeenNthCalledWith(
 				2,
 				[expect.any(String)],
 				"update",
+				undefined,
 			);
 			expect(mockConfig.onChange).toHaveBeenNthCalledWith(
 				3,
 				[expect.any(String)],
 				"update",
+				undefined,
 			);
 
 			const allFeatures = mockConfig.store.copyAll();
@@ -1115,6 +1129,7 @@ describe("TerraDrawLineStringMode", () => {
 				1,
 				[expect.any(String)],
 				"delete",
+				undefined,
 			);
 
 			// Remove the edited property from the linestring
@@ -1122,6 +1137,7 @@ describe("TerraDrawLineStringMode", () => {
 				2,
 				[expect.any(String)],
 				"update",
+				undefined,
 			);
 
 			expect(mockConfig.onFinish).toHaveBeenCalledTimes(1);

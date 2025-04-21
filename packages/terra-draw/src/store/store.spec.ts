@@ -304,10 +304,33 @@ describe("GeoJSONStore", () => {
 			]);
 			store.delete([id]);
 
-			expect(mockCallback).toHaveBeenCalledTimes(3);
-			expect(mockCallback).toHaveBeenNthCalledWith(1, [id], "create");
-			expect(mockCallback).toHaveBeenNthCalledWith(2, [id], "update");
-			expect(mockCallback).toHaveBeenNthCalledWith(3, [id], "delete");
+			const [idTwo] = store.create<string>(
+				[{ geometry: { type: "Point", coordinates: [0, 0] } }],
+				{ origin: "api" },
+			);
+
+			expect(mockCallback).toHaveBeenCalledTimes(4);
+			expect(mockCallback).toHaveBeenNthCalledWith(
+				1,
+				[id],
+				"create",
+				undefined,
+			);
+			expect(mockCallback).toHaveBeenNthCalledWith(
+				2,
+				[id],
+				"update",
+				undefined,
+			);
+			expect(mockCallback).toHaveBeenNthCalledWith(
+				3,
+				[id],
+				"delete",
+				undefined,
+			);
+			expect(mockCallback).toHaveBeenNthCalledWith(4, [idTwo], "create", {
+				origin: "api",
+			});
 		});
 	});
 

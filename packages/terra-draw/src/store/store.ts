@@ -28,9 +28,10 @@ export type StoreValidation = {
 
 type StoreChangeEvents = "delete" | "create" | "update" | "styling";
 
-export type StoreChangeHandler = (
+export type StoreChangeHandler<OnChangeContext> = (
 	ids: FeatureId[],
 	change: StoreChangeEvents,
+	context?: OnChangeContext,
 ) => void;
 
 export type FeatureId = string | number;
@@ -50,7 +51,10 @@ export const defaultIdStrategy = {
 	isValidId: (id: FeatureId) => typeof id === "string" && id.length === 36,
 };
 
-export class GeoJSONStore<Id extends FeatureId = FeatureId> {
+export class GeoJSONStore<
+	OnChangeContext extends Record<string, JSON> | undefined,
+	Id extends FeatureId = FeatureId,
+> {
 	constructor(config?: GeoJSONStoreConfig<Id>) {
 		this.store = {};
 		this.spatialIndex = new SpatialIndex();
@@ -73,7 +77,7 @@ export class GeoJSONStore<Id extends FeatureId = FeatureId> {
 	};
 
 	// Default to no-op
-	private _onChange: StoreChangeHandler = () => {};
+	private _onChange: StoreChangeHandler<OnChangeContext | undefined> = () => {};
 
 	private clone<T>(obj: T): T {
 		return JSON.parse(JSON.stringify(obj));
@@ -94,6 +98,7 @@ export class GeoJSONStore<Id extends FeatureId = FeatureId> {
 			tracked?: boolean,
 		) => StoreValidation,
 		afterFeatureAdded?: (feature: GeoJSONStoreFeatures) => void,
+		context?: OnChangeContext,
 	): StoreValidation[] {
 		if (data.length === 0) {
 			return [];
@@ -173,7 +178,11 @@ export class GeoJSONStore<Id extends FeatureId = FeatureId> {
 			return true;
 		});
 		this.spatialIndex.load(clonedData);
-		this._onChange(changes, "create");
+
+		// Only trigger onChange if we have changes
+		if (changes.length > 0) {
+			this._onChange(changes, "create", context);
+		}
 
 		return validations;
 	}
@@ -190,9 +199,9 @@ export class GeoJSONStore<Id extends FeatureId = FeatureId> {
 		}
 	}
 
-	registerOnChange(onChange: StoreChangeHandler) {
-		this._onChange = (ids, change) => {
-			onChange(ids, change);
+	registerOnChange(onChange: StoreChangeHandler<OnChangeContext | undefined>) {
+		this._onChange = (ids, change, context) => {
+			onChange(ids, change, context);
 		};
 	}
 
@@ -218,6 +227,7 @@ export class GeoJSONStore<Id extends FeatureId = FeatureId> {
 
 	updateProperty(
 		propertiesToUpdate: { id: FeatureId; property: string; value: JSON }[],
+		context?: OnChangeContext,
 	): void {
 		const ids: FeatureId[] = [];
 		propertiesToUpdate.forEach(({ id, property, value }) => {
@@ -240,12 +250,13 @@ export class GeoJSONStore<Id extends FeatureId = FeatureId> {
 		});
 
 		if (this._onChange) {
-			this._onChange(ids, "update");
+			this._onChange(ids, "update", context);
 		}
 	}
 
 	updateGeometry(
 		geometriesToUpdate: { id: FeatureId; geometry: GeoJSONStoreGeometries }[],
+		context?: OnChangeContext,
 	): void {
 		const ids: FeatureId[] = [];
 		geometriesToUpdate.forEach(({ id, geometry }) => {
@@ -270,7 +281,7 @@ export class GeoJSONStore<Id extends FeatureId = FeatureId> {
 		});
 
 		if (this._onChange) {
-			this._onChange(ids, "update");
+			this._onChange(ids, "update", context);
 		}
 	}
 
@@ -279,6 +290,7 @@ export class GeoJSONStore<Id extends FeatureId = FeatureId> {
 			geometry: GeoJSONStoreGeometries;
 			properties?: JSONObject;
 		}[],
+		context?: OnChangeContext,
 	): Id[] {
 		const ids: FeatureId[] = [];
 		features.forEach(({ geometry, properties }) => {
@@ -317,13 +329,13 @@ export class GeoJSONStore<Id extends FeatureId = FeatureId> {
 		});
 
 		if (this._onChange) {
-			this._onChange([...ids], "create");
+			this._onChange([...ids], "create", context);
 		}
 
 		return ids as Id[];
 	}
 
-	delete(ids: FeatureId[]): void {
+	delete(ids: FeatureId[], context?: OnChangeContext): void {
 		ids.forEach((id) => {
 			if (this.store[id]) {
 				delete this.store[id];
@@ -334,7 +346,7 @@ export class GeoJSONStore<Id extends FeatureId = FeatureId> {
 		});
 
 		if (this._onChange) {
-			this._onChange([...ids], "delete");
+			this._onChange([...ids], "delete", context);
 		}
 	}
 

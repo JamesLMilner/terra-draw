@@ -1,9 +1,10 @@
+import { OnChangeContext } from "../common";
 import { GeoJSONStore } from "../store/store";
 
 export function MockModeConfig(mode: string) {
 	return {
 		mode,
-		store: new GeoJSONStore(),
+		store: new GeoJSONStore<OnChangeContext | undefined>(),
 		setCursor: jest.fn(),
 		onChange: jest.fn(),
 		onSelect: jest.fn(),

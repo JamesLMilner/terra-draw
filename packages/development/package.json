@@ -11,7 +11,7 @@
 	"author": "James Milner",
 	"license": "MIT",
 	"dependencies": {
-		"terra-draw": "1.4.3",
+		"terra-draw": "1.5.0",
 		"leaflet": "1.9.4",
 		"maplibre-gl": "3.6.2",
 		"@arcgis/core": "4.31.6",

@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.5.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.4.3...terra-draw@1.5.0) (2025-04-21)
+
+
+### feat
+
+* **terra-draw:** add metadata object when onChange is called via the Terra Draw API (#530) ([](https://github.com/JamesLMilner/terra-draw/commit/19eb7633d450296aafa39c489fb355686f102ba2)), closes [#530](https://github.com/JamesLMilner/terra-draw/issues/530)
+
 ## [1.4.3](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.4.2...terra-draw@1.4.3) (2025-04-07)
 
 

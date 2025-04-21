@@ -5,6 +5,7 @@ import { TerraDrawFreehandMode } from "./freehand.mode";
 import { MockKeyboardEvent } from "../../test/mock-keyboard-event";
 import { Polygon } from "geojson";
 import { followsRightHandRule } from "../../geometry/boolean/right-hand-rule";
+import { TerraDrawGeoJSONStore } from "../../common";
 
 describe("TerraDrawFreehandMode", () => {
 	describe("constructor", () => {
@@ -171,7 +172,7 @@ describe("TerraDrawFreehandMode", () => {
 
 	describe("onClick", () => {
 		let freehandMode: TerraDrawFreehandMode;
-		let store: GeoJSONStore;
+		let store: TerraDrawGeoJSONStore;
 		let onChange: jest.Mock;
 		let onFinish: jest.Mock;
 
@@ -203,6 +204,7 @@ describe("TerraDrawFreehandMode", () => {
 				expect(onChange).toHaveBeenCalledWith(
 					[expect.any(String), expect.any(String)],
 					"create",
+					undefined,
 				);
 
 				const features = store.copyAll();
@@ -230,6 +232,7 @@ describe("TerraDrawFreehandMode", () => {
 				expect(onChange).toHaveBeenCalledWith(
 					[expect.any(String), expect.any(String)],
 					"create",
+					undefined,
 				);
 				expect(onFinish).toHaveBeenCalledTimes(1);
 			});
@@ -298,7 +301,7 @@ describe("TerraDrawFreehandMode", () => {
 
 	describe("onMouseMove", () => {
 		let freehandMode: TerraDrawFreehandMode;
-		let store: GeoJSONStore;
+		let store: TerraDrawGeoJSONStore;
 		let onChange: jest.Mock;
 		let onFinish: jest.Mock;
 
@@ -321,6 +324,7 @@ describe("TerraDrawFreehandMode", () => {
 				1,
 				[expect.any(String), expect.any(String)],
 				"create",
+				undefined,
 			);
 
 			const feature = store.copyAll()[0];
@@ -368,6 +372,7 @@ describe("TerraDrawFreehandMode", () => {
 					1,
 					[expect.any(String), expect.any(String)],
 					"create",
+					undefined,
 				);
 
 				const feature = store.copyAll()[0];
@@ -433,6 +438,7 @@ describe("TerraDrawFreehandMode", () => {
 					1,
 					[expect.any(String), expect.any(String)],
 					"create",
+					undefined,
 				);
 
 				const feature = store.copyAll()[0];
@@ -490,7 +496,7 @@ describe("TerraDrawFreehandMode", () => {
 
 	describe("onMouseMove - autoClose", () => {
 		let freehandMode: TerraDrawFreehandMode;
-		let store: GeoJSONStore;
+		let store: TerraDrawGeoJSONStore;
 		let onChange: jest.Mock;
 		let onFinish: jest.Mock;
 
@@ -513,6 +519,7 @@ describe("TerraDrawFreehandMode", () => {
 				1,
 				[expect.any(String), expect.any(String)],
 				"create",
+				undefined,
 			);
 
 			const feature = store.copyAll()[0];
@@ -588,12 +595,13 @@ describe("TerraDrawFreehandMode", () => {
 				2,
 				[expect.any(String)],
 				"delete",
+				undefined,
 			);
 		});
 	});
 
 	describe("onKeyUp", () => {
-		let store: GeoJSONStore;
+		let store: TerraDrawGeoJSONStore;
 		let freehandMode: TerraDrawFreehandMode;
 		let onChange: jest.Mock;
 		let onFinish: jest.Mock;
@@ -668,21 +676,25 @@ describe("TerraDrawFreehandMode", () => {
 					1,
 					[expect.any(String), expect.any(String)],
 					"create",
+					undefined,
 				);
 				expect(onChange).toHaveBeenNthCalledWith(
 					2,
 					[expect.any(String)],
 					"update",
+					undefined,
 				);
 				expect(onChange).toHaveBeenNthCalledWith(
 					3,
 					[expect.any(String)],
 					"update",
+					undefined,
 				);
 				expect(onChange).toHaveBeenNthCalledWith(
 					4,
 					[expect.any(String)],
 					"delete",
+					undefined,
 				);
 				expect(onFinish).toHaveBeenCalledTimes(1);
 				expect(onFinish).toHaveBeenNthCalledWith(1, expect.any(String), {

@@ -5,6 +5,7 @@ import { TerraDrawSensorMode } from "./sensor.mode";
 import { MockKeyboardEvent } from "../../test/mock-keyboard-event";
 import { Polygon } from "geojson";
 import { followsRightHandRule } from "../../geometry/boolean/right-hand-rule";
+import { TerraDrawGeoJSONStore } from "../../common";
 
 describe("TerraDrawSensorMode", () => {
 	describe("constructor", () => {
@@ -173,7 +174,7 @@ describe("TerraDrawSensorMode", () => {
 
 	describe("onMouseMove", () => {
 		let sensorMode: TerraDrawSensorMode;
-		let store: GeoJSONStore;
+		let store: TerraDrawGeoJSONStore;
 		let onChange: jest.Mock;
 
 		beforeEach(() => {
@@ -236,7 +237,7 @@ describe("TerraDrawSensorMode", () => {
 
 	describe("onClick", () => {
 		let sensorMode: TerraDrawSensorMode;
-		let store: GeoJSONStore;
+		let store: TerraDrawGeoJSONStore;
 		let onFinish: jest.Mock;
 
 		describe("with successful validation", () => {
@@ -360,7 +361,7 @@ describe("TerraDrawSensorMode", () => {
 
 	describe("onKeyUp", () => {
 		let sensorMode: TerraDrawSensorMode;
-		let store: GeoJSONStore;
+		let store: TerraDrawGeoJSONStore;
 		let onChange: jest.Mock;
 		let onFinish: jest.Mock;
 
@@ -464,7 +465,11 @@ describe("TerraDrawSensorMode", () => {
 			expect(features.length).toBe(1);
 
 			expect(onChange).toHaveBeenCalledTimes(1);
-			expect(onChange).toHaveBeenCalledWith([expect.any(String)], "create");
+			expect(onChange).toHaveBeenCalledWith(
+				[expect.any(String)],
+				"create",
+				undefined,
+			);
 			expect(onFinish).toHaveBeenCalledTimes(0);
 		});
 	});

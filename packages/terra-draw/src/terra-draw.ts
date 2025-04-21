@@ -16,6 +16,8 @@ import {
 	SELECT_PROPERTIES,
 	OnFinishContext,
 	COMMON_PROPERTIES,
+	TerraDrawGeoJSONStore,
+	OnChangeContext,
 } from "./common";
 import {
 	ModeTypes,
@@ -65,7 +67,11 @@ type InstanceType<T extends new (...args: any[]) => any> = T extends new (
 	: never;
 
 type FinishListener = (id: FeatureId, context: OnFinishContext) => void;
-type ChangeListener = (ids: FeatureId[], type: string) => void;
+type ChangeListener = (
+	ids: FeatureId[],
+	type: string,
+	context?: OnChangeContext,
+) => void;
 type SelectListener = (id: FeatureId) => void;
 type DeselectListener = () => void;
 
@@ -86,7 +92,7 @@ class TerraDraw {
 	private _mode: TerraDrawBaseDrawMode<any> | TerraDrawBaseSelectMode<any>;
 	private _adapter: TerraDrawAdapter;
 	private _enabled = false;
-	private _store: GeoJSONStore;
+	private _store: TerraDrawGeoJSONStore;
 	private _eventListeners: {
 		ready: (() => void)[];
 		change: ChangeListener[];
@@ -151,7 +157,7 @@ class TerraDraw {
 			finish: [],
 			ready: [],
 		};
-		this._store = new GeoJSONStore<FeatureId>({
+		this._store = new GeoJSONStore<OnChangeContext | undefined, FeatureId>({
 			tracked: options.tracked ? true : false,
 			idStrategy: options.idStrategy ? options.idStrategy : undefined,
 		});
@@ -186,13 +192,17 @@ class TerraDraw {
 			});
 		};
 
-		const onChange: StoreChangeHandler = (ids, event) => {
+		const onChange: StoreChangeHandler<OnChangeContext | undefined> = (
+			ids,
+			event,
+			context,
+		) => {
 			if (!this._enabled) {
 				return;
 			}
 
 			this._eventListeners.change.forEach((listener) => {
-				listener(ids, event);
+				listener(ids, event, context);
 			});
 
 			const { changed, unchanged } = getChanged(ids);
@@ -585,7 +595,9 @@ class TerraDraw {
 			}
 		});
 
-		this._store.delete([...ids, ...coordinatePointsToDelete]);
+		this._store.delete([...ids, ...coordinatePointsToDelete], {
+			origin: "api",
+		});
 	}
 
 	/**
@@ -692,6 +704,7 @@ class TerraDraw {
 					}
 				}
 			},
+			{ origin: "api" },
 		);
 	}
 

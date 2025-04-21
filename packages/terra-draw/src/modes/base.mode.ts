@@ -1,9 +1,11 @@
 import { BehaviorConfig, TerraDrawModeBehavior } from "./base.behavior";
 import {
+	OnChangeContext,
 	HexColor,
 	OnFinishContext,
 	Projection,
 	TerraDrawAdapterStyling,
+	TerraDrawGeoJSONStore,
 	TerraDrawKeyboardEvent,
 	TerraDrawModeRegisterConfig,
 	TerraDrawModeState,
@@ -73,8 +75,8 @@ export abstract class TerraDrawBaseDrawMode<Styling extends CustomStyling> {
 	protected validate: Validation | undefined;
 	protected pointerDistance: number = 40;
 	protected coordinatePrecision!: number;
-	protected onStyleChange!: StoreChangeHandler;
-	protected store!: GeoJSONStore;
+	protected onStyleChange!: StoreChangeHandler<OnChangeContext | undefined>;
+	protected store!: TerraDrawGeoJSONStore;
 	protected projection: Projection = "web-mercator";
 
 	protected setDoubleClickToZoom!: TerraDrawModeRegisterConfig["setDoubleClickToZoom"];

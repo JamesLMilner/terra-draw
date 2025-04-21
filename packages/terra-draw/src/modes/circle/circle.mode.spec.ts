@@ -5,6 +5,7 @@ import { TerraDrawCircleMode } from "./circle.mode";
 import { Polygon } from "geojson";
 import { followsRightHandRule } from "../../geometry/boolean/right-hand-rule";
 import { MockKeyboardEvent } from "../../test/mock-keyboard-event";
+import { TerraDrawGeoJSONStore } from "../../common";
 
 describe("TerraDrawCircleMode", () => {
 	describe("constructor", () => {
@@ -175,7 +176,7 @@ describe("TerraDrawCircleMode", () => {
 
 	describe("onClick", () => {
 		let circleMode: TerraDrawCircleMode;
-		let store: GeoJSONStore;
+		let store: TerraDrawGeoJSONStore;
 		let onChange: jest.Mock;
 		let onFinish: jest.Mock;
 
@@ -208,7 +209,11 @@ describe("TerraDrawCircleMode", () => {
 					circleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
 					expect(onChange).toHaveBeenCalledTimes(1);
-					expect(onChange).toHaveBeenCalledWith([expect.any(String)], "create");
+					expect(onChange).toHaveBeenCalledWith(
+						[expect.any(String)],
+						"create",
+						undefined,
+					);
 				});
 
 				it("finishes drawing circle on second click with no cursor movement", () => {
@@ -228,7 +233,11 @@ describe("TerraDrawCircleMode", () => {
 
 					// We don't expect any changes if there is no cursor movement
 					expect(onChange).toHaveBeenCalledTimes(1);
-					expect(onChange).toHaveBeenCalledWith([expect.any(String)], "create");
+					expect(onChange).toHaveBeenCalledWith(
+						[expect.any(String)],
+						"create",
+						undefined,
+					);
 
 					expect(onFinish).toHaveBeenCalledTimes(1);
 				});
@@ -251,7 +260,11 @@ describe("TerraDrawCircleMode", () => {
 					);
 
 					expect(onChange).toHaveBeenCalledTimes(5);
-					expect(onChange).toHaveBeenCalledWith([expect.any(String)], "create");
+					expect(onChange).toHaveBeenCalledWith(
+						[expect.any(String)],
+						"create",
+						undefined,
+					);
 
 					expect(onFinish).toHaveBeenCalledTimes(1);
 				});
@@ -276,7 +289,11 @@ describe("TerraDrawCircleMode", () => {
 					circleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
 					expect(onChange).toHaveBeenCalledTimes(1);
-					expect(onChange).toHaveBeenCalledWith([expect.any(String)], "create");
+					expect(onChange).toHaveBeenCalledWith(
+						[expect.any(String)],
+						"create",
+						undefined,
+					);
 					expect(store.copyAll()[0].properties.radiusKilometers).toStrictEqual(
 						1000,
 					);
@@ -314,7 +331,11 @@ describe("TerraDrawCircleMode", () => {
 					expect(features.length).toBe(1);
 
 					expect(onChange).toHaveBeenCalledTimes(1);
-					expect(onChange).toHaveBeenCalledWith([expect.any(String)], "create");
+					expect(onChange).toHaveBeenCalledWith(
+						[expect.any(String)],
+						"create",
+						undefined,
+					);
 
 					expect(onFinish).toHaveBeenCalledTimes(0);
 				});
@@ -333,7 +354,11 @@ describe("TerraDrawCircleMode", () => {
 					expect(features.length).toBe(1);
 
 					expect(onChange).toHaveBeenCalledTimes(1);
-					expect(onChange).toHaveBeenCalledWith([expect.any(String)], "create");
+					expect(onChange).toHaveBeenCalledWith(
+						[expect.any(String)],
+						"create",
+						undefined,
+					);
 					expect(onFinish).toHaveBeenCalledTimes(1);
 					expect(onFinish).toHaveBeenNthCalledWith(1, expect.any(String), {
 						action: "draw",
@@ -346,7 +371,7 @@ describe("TerraDrawCircleMode", () => {
 
 	describe("onKeyUp", () => {
 		let circleMode: TerraDrawCircleMode;
-		let store: GeoJSONStore;
+		let store: TerraDrawGeoJSONStore;
 		let onChange: jest.Mock;
 		let onFinish: jest.Mock;
 
@@ -379,7 +404,11 @@ describe("TerraDrawCircleMode", () => {
 			expect(features.length).toBe(1);
 
 			expect(onChange).toHaveBeenCalledTimes(1);
-			expect(onChange).toHaveBeenCalledWith([expect.any(String)], "create");
+			expect(onChange).toHaveBeenCalledWith(
+				[expect.any(String)],
+				"create",
+				undefined,
+			);
 			expect(onFinish).toHaveBeenCalledTimes(1);
 			expect(onFinish).toHaveBeenNthCalledWith(1, expect.any(String), {
 				action: "draw",
@@ -390,7 +419,7 @@ describe("TerraDrawCircleMode", () => {
 
 	describe("onMouseMove", () => {
 		let circleMode: TerraDrawCircleMode;
-		let store: GeoJSONStore;
+		let store: TerraDrawGeoJSONStore;
 		let onChange: jest.Mock;
 
 		beforeEach(() => {
@@ -413,6 +442,7 @@ describe("TerraDrawCircleMode", () => {
 				1,
 				[expect.any(String)],
 				"create",
+				undefined,
 			);
 
 			const feature = store.copyAll()[0];
@@ -423,6 +453,7 @@ describe("TerraDrawCircleMode", () => {
 				2,
 				[expect.any(String)],
 				"update",
+				undefined,
 			);
 
 			const updatedFeature = store.copyAll()[0];
@@ -464,12 +495,13 @@ describe("TerraDrawCircleMode", () => {
 				2,
 				[expect.any(String)],
 				"delete",
+				undefined,
 			);
 		});
 	});
 
 	describe("onKeyUp", () => {
-		let store: GeoJSONStore;
+		let store: TerraDrawGeoJSONStore;
 		let circleMode: TerraDrawCircleMode;
 
 		beforeEach(() => {

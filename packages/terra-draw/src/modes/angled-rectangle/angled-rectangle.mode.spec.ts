@@ -5,6 +5,7 @@ import { TerraDrawAngledRectangleMode } from "./angled-rectangle.mode";
 import { Polygon } from "geojson";
 import { followsRightHandRule } from "../../geometry/boolean/right-hand-rule";
 import { MockKeyboardEvent } from "../../test/mock-keyboard-event";
+import { TerraDrawGeoJSONStore } from "../../common";
 
 describe("TerraDrawAngledRectangleMode", () => {
 	describe("constructor", () => {
@@ -174,7 +175,7 @@ describe("TerraDrawAngledRectangleMode", () => {
 
 	describe("onMouseMove", () => {
 		let angledRectangleMode: TerraDrawAngledRectangleMode;
-		let store: GeoJSONStore;
+		let store: TerraDrawGeoJSONStore;
 		let onChange: jest.Mock;
 
 		beforeEach(() => {
@@ -247,7 +248,7 @@ describe("TerraDrawAngledRectangleMode", () => {
 
 	describe("onClick", () => {
 		let angledRectangleMode: TerraDrawAngledRectangleMode;
-		let store: GeoJSONStore;
+		let store: TerraDrawGeoJSONStore;
 
 		describe("with successful validation", () => {
 			beforeEach(() => {
@@ -324,7 +325,7 @@ describe("TerraDrawAngledRectangleMode", () => {
 
 	describe("onKeyUp", () => {
 		let rectangleMode: TerraDrawAngledRectangleMode;
-		let store: GeoJSONStore;
+		let store: TerraDrawGeoJSONStore;
 		let onChange: jest.Mock;
 		let onFinish: jest.Mock;
 
@@ -411,7 +412,11 @@ describe("TerraDrawAngledRectangleMode", () => {
 			expect(features.length).toBe(2);
 
 			expect(onChange).toHaveBeenCalledTimes(5);
-			expect(onChange).toHaveBeenCalledWith([expect.any(String)], "create");
+			expect(onChange).toHaveBeenCalledWith(
+				[expect.any(String)],
+				"create",
+				undefined,
+			);
 			expect(onFinish).toHaveBeenCalledTimes(1);
 		});
 
@@ -442,7 +447,11 @@ describe("TerraDrawAngledRectangleMode", () => {
 			expect(features.length).toBe(1);
 
 			expect(onChange).toHaveBeenCalledTimes(1);
-			expect(onChange).toHaveBeenCalledWith([expect.any(String)], "create");
+			expect(onChange).toHaveBeenCalledWith(
+				[expect.any(String)],
+				"create",
+				undefined,
+			);
 			expect(onFinish).toHaveBeenCalledTimes(0);
 		});
 	});

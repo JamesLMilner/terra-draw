@@ -502,6 +502,10 @@ describe("Terra Draw", () => {
 				],
 			});
 
+			const onChange = jest.fn();
+
+			draw.on("change", onChange);
+
 			draw.start();
 			const [result] = draw.addFeatures([
 				{
@@ -521,6 +525,8 @@ describe("Terra Draw", () => {
 			expect(result.reason).toBe(
 				"Feature has coordinates with excessive precision",
 			);
+
+			expect(onChange).not.toHaveBeenCalled();
 		});
 
 		it("returns valid true if the coordinate precision is exactly the adapter coordinate precision", () => {
@@ -541,6 +547,10 @@ describe("Terra Draw", () => {
 				],
 			});
 
+			const onChange = jest.fn();
+
+			draw.on("change", onChange);
+
 			draw.start();
 			const [result] = draw.addFeatures([
 				{
@@ -558,6 +568,11 @@ describe("Terra Draw", () => {
 
 			expect(result.valid).toBe(true);
 			expect(result.reason).toBe(undefined);
+
+			expect(onChange).toHaveBeenCalledTimes(1);
+			expect(onChange).toHaveBeenCalledWith([expect.any(String)], "create", {
+				origin: "api",
+			});
 		});
 	});
 
@@ -580,6 +595,9 @@ describe("Terra Draw", () => {
 				],
 			});
 
+			const onChange = jest.fn();
+			draw.on("change", onChange);
+
 			draw.start();
 			const [result] = draw.addFeatures([
 				{
@@ -595,9 +613,16 @@ describe("Terra Draw", () => {
 				},
 			]);
 
+			expect(onChange).toHaveBeenCalledTimes(1);
+
 			expect(result.valid).toBe(true);
 
 			draw.removeFeatures([result.id as FeatureId]);
+
+			expect(onChange).toHaveBeenCalledTimes(2);
+			expect(onChange).toHaveBeenCalledWith([result.id], "delete", {
+				origin: "api",
+			});
 
 			expect(draw.getSnapshot()).toHaveLength(0);
 		});

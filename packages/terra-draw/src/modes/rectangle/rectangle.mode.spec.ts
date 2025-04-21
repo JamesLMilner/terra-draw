@@ -5,6 +5,7 @@ import { TerraDrawRectangleMode } from "./rectangle.mode";
 import { MockKeyboardEvent } from "../../test/mock-keyboard-event";
 import { Polygon } from "geojson";
 import { followsRightHandRule } from "../../geometry/boolean/right-hand-rule";
+import { TerraDrawGeoJSONStore } from "../../common";
 
 describe("TerraDrawRectangleMode", () => {
 	describe("constructor", () => {
@@ -111,7 +112,7 @@ describe("TerraDrawRectangleMode", () => {
 
 	describe("onClick", () => {
 		let rectangleMode: TerraDrawRectangleMode;
-		let store: GeoJSONStore;
+		let store: TerraDrawGeoJSONStore;
 		let onChange: jest.Mock;
 		let onFinish: jest.Mock;
 
@@ -142,7 +143,11 @@ describe("TerraDrawRectangleMode", () => {
 				rectangleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
 				expect(onChange).toHaveBeenCalledTimes(1);
-				expect(onChange).toHaveBeenCalledWith([expect.any(String)], "create");
+				expect(onChange).toHaveBeenCalledWith(
+					[expect.any(String)],
+					"create",
+					undefined,
+				);
 			});
 
 			it("finishes drawing rectangle on second click", () => {
@@ -161,7 +166,11 @@ describe("TerraDrawRectangleMode", () => {
 				);
 
 				expect(onChange).toHaveBeenCalledTimes(2);
-				expect(onChange).toHaveBeenCalledWith([expect.any(String)], "create");
+				expect(onChange).toHaveBeenCalledWith(
+					[expect.any(String)],
+					"create",
+					undefined,
+				);
 				expect(onFinish).toHaveBeenCalledTimes(1);
 				expect(onFinish).toHaveBeenNthCalledWith(1, expect.any(String), {
 					action: "draw",
@@ -173,7 +182,7 @@ describe("TerraDrawRectangleMode", () => {
 
 	describe("onKeyUp", () => {
 		let rectangleMode: TerraDrawRectangleMode;
-		let store: GeoJSONStore;
+		let store: TerraDrawGeoJSONStore;
 		let onChange: jest.Mock;
 		let onFinish: jest.Mock;
 
@@ -203,7 +212,11 @@ describe("TerraDrawRectangleMode", () => {
 
 			// close calls onChange an extra time because of the right hand rule fixing
 			expect(onChange).toHaveBeenCalledTimes(3);
-			expect(onChange).toHaveBeenCalledWith([expect.any(String)], "create");
+			expect(onChange).toHaveBeenCalledWith(
+				[expect.any(String)],
+				"create",
+				undefined,
+			);
 			expect(onFinish).toHaveBeenCalledTimes(1);
 		});
 
@@ -230,14 +243,18 @@ describe("TerraDrawRectangleMode", () => {
 			expect(features.length).toBe(1);
 
 			expect(onChange).toHaveBeenCalledTimes(1);
-			expect(onChange).toHaveBeenCalledWith([expect.any(String)], "create");
+			expect(onChange).toHaveBeenCalledWith(
+				[expect.any(String)],
+				"create",
+				undefined,
+			);
 			expect(onFinish).toHaveBeenCalledTimes(0);
 		});
 	});
 
 	describe("onMouseMove", () => {
 		let rectangleMode: TerraDrawRectangleMode;
-		let store: GeoJSONStore;
+		let store: TerraDrawGeoJSONStore;
 		let onChange: jest.Mock;
 
 		beforeEach(() => {
@@ -260,6 +277,7 @@ describe("TerraDrawRectangleMode", () => {
 				1,
 				[expect.any(String)],
 				"create",
+				undefined,
 			);
 
 			const feature = store.copyAll()[0];
@@ -270,6 +288,7 @@ describe("TerraDrawRectangleMode", () => {
 				2,
 				[expect.any(String)],
 				"update",
+				undefined,
 			);
 
 			const updatedFeature = store.copyAll()[0];
@@ -315,12 +334,13 @@ describe("TerraDrawRectangleMode", () => {
 				2,
 				[expect.any(String)],
 				"delete",
+				undefined,
 			);
 		});
 	});
 
 	describe("onKeyUp", () => {
-		let store: GeoJSONStore;
+		let store: TerraDrawGeoJSONStore;
 		let rectangleMode: TerraDrawRectangleMode;
 
 		beforeEach(() => {

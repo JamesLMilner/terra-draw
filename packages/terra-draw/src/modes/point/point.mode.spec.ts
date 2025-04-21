@@ -153,6 +153,7 @@ describe("TerraDrawPointMode", () => {
 			expect(mockConfig.onChange).toHaveBeenCalledWith(
 				[expect.any(String)],
 				"create",
+				undefined,
 			);
 		});
 
@@ -169,6 +170,7 @@ describe("TerraDrawPointMode", () => {
 			expect(mockConfig.onChange).toHaveBeenCalledWith(
 				[expect.any(String)],
 				"create",
+				undefined,
 			);
 
 			pointMode.onClick(MockCursorEvent({ lng: 0, lat: 0, button: "right" }));
@@ -177,6 +179,7 @@ describe("TerraDrawPointMode", () => {
 			expect(mockConfig.onChange).toHaveBeenCalledWith(
 				[expect.any(String)],
 				"delete",
+				undefined,
 			);
 		});
 
@@ -218,6 +221,7 @@ describe("TerraDrawPointMode", () => {
 				expect(mockConfig.onChange).toHaveBeenCalledWith(
 					[expect.any(String)],
 					"create",
+					undefined,
 				);
 			});
 		});
@@ -375,6 +379,7 @@ describe("TerraDrawPointMode", () => {
 				2,
 				[expect.any(String)],
 				"update",
+				undefined,
 			);
 
 			// On finished called from onClick and is then only called after onDragEnd

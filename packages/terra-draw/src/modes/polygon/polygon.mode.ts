@@ -9,6 +9,7 @@ import {
 	COMMON_PROPERTIES,
 	Project,
 	Unproject,
+	Z_INDEX,
 } from "../../common";
 import { Feature, Polygon, Position } from "geojson";
 import {
@@ -1061,7 +1062,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 					feature,
 				);
 
-				styles.zIndex = 10;
+				styles.zIndex = Z_INDEX.LAYER_ONE;
 				return styles;
 			} else if (feature.geometry.type === "Point") {
 				const editedPoint = feature.properties[COMMON_PROPERTIES.EDITED];
@@ -1138,11 +1139,11 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 				);
 
 				if (editedPoint) {
-					styles.zIndex = 35;
+					styles.zIndex = Z_INDEX.LAYER_FOUR;
 				} else if (coordinatePoint) {
-					styles.zIndex = 25;
+					styles.zIndex = Z_INDEX.LAYER_TWO;
 				} else {
-					styles.zIndex = 30;
+					styles.zIndex = Z_INDEX.LAYER_THREE;
 				}
 
 				return styles;

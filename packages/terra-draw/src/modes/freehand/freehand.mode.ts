@@ -7,6 +7,7 @@ import {
 	Cursor,
 	UpdateTypes,
 	COMMON_PROPERTIES,
+	Z_INDEX,
 } from "../../common";
 import { Polygon } from "geojson";
 
@@ -409,7 +410,7 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 				feature,
 			);
 
-			styles.zIndex = 10;
+			styles.zIndex = Z_INDEX.LAYER_ONE;
 
 			return styles;
 		} else if (
@@ -441,7 +442,7 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 				feature,
 			);
 
-			styles.zIndex = 40;
+			styles.zIndex = Z_INDEX.LAYER_FIVE;
 
 			return styles;
 		}

@@ -8,6 +8,7 @@ import {
 	UpdateTypes,
 	CartesianPoint,
 	COMMON_PROPERTIES,
+	Z_INDEX,
 } from "../../common";
 import { Feature, LineString, Point, Position } from "geojson";
 import {
@@ -903,7 +904,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 				feature,
 			);
 
-			styles.zIndex = 10;
+			styles.zIndex = Z_INDEX.LAYER_ONE;
 
 			return styles;
 		} else if (
@@ -946,7 +947,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 				feature,
 			);
 
-			styles.zIndex = 40;
+			styles.zIndex = Z_INDEX.LAYER_FIVE;
 
 			return styles;
 		}

@@ -185,3 +185,11 @@ export const COMMON_PROPERTIES = {
 	COORDINATE_POINT: "coordinatePoint",
 	COORDINATE_POINT_IDS: "coordinatePointIds",
 };
+
+export const Z_INDEX = {
+	LAYER_ONE: 10,
+	LAYER_TWO: 20,
+	LAYER_THREE: 30,
+	LAYER_FOUR: 40,
+	LAYER_FIVE: 50,
+} as const;

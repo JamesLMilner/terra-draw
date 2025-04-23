@@ -8,6 +8,7 @@ import {
 	Cursor,
 	UpdateTypes,
 	Projection,
+	Z_INDEX,
 } from "../../common";
 import { haversineDistanceKilometers } from "../../geometry/measure/haversine-distance";
 import { circle, circleWebMercator } from "../../geometry/shape/create-circle";
@@ -271,7 +272,7 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 				feature,
 			);
 
-			styles.zIndex = 10;
+			styles.zIndex = Z_INDEX.LAYER_ONE;
 
 			return styles;
 		}

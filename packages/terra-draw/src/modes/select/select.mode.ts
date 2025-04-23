@@ -9,6 +9,7 @@ import {
 	Validation,
 	UpdateTypes,
 	COMMON_PROPERTIES,
+	Z_INDEX,
 } from "../../common";
 import { Point, Polygon, Position } from "geojson";
 import {
@@ -991,7 +992,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 					feature,
 				);
 
-				styles.zIndex = 30;
+				styles.zIndex = Z_INDEX.LAYER_THREE;
 
 				return styles;
 			}
@@ -1021,7 +1022,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 					feature,
 				);
 
-				styles.zIndex = 40;
+				styles.zIndex = Z_INDEX.LAYER_FIVE;
 
 				return styles;
 			}
@@ -1054,7 +1055,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 					feature,
 				);
 
-				styles.zIndex = 10;
+				styles.zIndex = Z_INDEX.LAYER_ONE;
 				return styles;
 			} else if (feature.geometry.type === "LineString") {
 				styles.lineStringColor = this.getHexColorStylingValue(
@@ -1069,7 +1070,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 					feature,
 				);
 
-				styles.zIndex = 10;
+				styles.zIndex = Z_INDEX.LAYER_ONE;
 				return styles;
 			} else if (feature.geometry.type === "Point") {
 				styles.pointWidth = this.getNumericStylingValue(
@@ -1096,7 +1097,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 					feature,
 				);
 
-				styles.zIndex = 10;
+				styles.zIndex = Z_INDEX.LAYER_ONE;
 				return styles;
 			}
 		}

@@ -6,6 +6,7 @@ import {
 	NumericStyling,
 	Cursor,
 	UpdateTypes,
+	Z_INDEX,
 } from "../../common";
 import { Polygon } from "geojson";
 import {
@@ -411,7 +412,7 @@ export class TerraDrawAngledRectangleMode extends TerraDrawBaseDrawMode<PolygonS
 					feature,
 				);
 
-				styles.zIndex = 10;
+				styles.zIndex = Z_INDEX.LAYER_ONE;
 			}
 		}
 

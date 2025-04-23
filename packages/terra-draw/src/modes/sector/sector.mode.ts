@@ -6,6 +6,7 @@ import {
 	NumericStyling,
 	Cursor,
 	UpdateTypes,
+	Z_INDEX,
 } from "../../common";
 import { Polygon, Position } from "geojson";
 import {
@@ -453,7 +454,7 @@ export class TerraDrawSectorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 					feature,
 				);
 
-				styles.zIndex = 10;
+				styles.zIndex = Z_INDEX.LAYER_ONE;
 			}
 		}
 

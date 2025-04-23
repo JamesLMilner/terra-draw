@@ -7,6 +7,7 @@ import {
 	NumericStyling,
 	Cursor,
 	UpdateTypes,
+	Z_INDEX,
 } from "../../common";
 import {
 	FeatureId,
@@ -277,7 +278,7 @@ export class TerraDrawRectangleMode extends TerraDrawBaseDrawMode<RectanglePolyg
 				feature,
 			);
 
-			styles.zIndex = 10;
+			styles.zIndex = Z_INDEX.LAYER_ONE;
 
 			return styles;
 		}

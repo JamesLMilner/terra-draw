@@ -6,6 +6,7 @@ import {
 	Cursor,
 	UpdateTypes,
 	COMMON_PROPERTIES,
+	Z_INDEX,
 } from "../../common";
 import {
 	BBoxPolygon,
@@ -275,7 +276,7 @@ export class TerraDrawPointMode extends TerraDrawBaseDrawMode<PointModeStyling> 
 				feature,
 			);
 
-			styles.zIndex = 30;
+			styles.zIndex = Z_INDEX.LAYER_THREE;
 		}
 
 		return styles;

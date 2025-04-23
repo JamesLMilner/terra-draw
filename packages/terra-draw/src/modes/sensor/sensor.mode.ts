@@ -6,6 +6,7 @@ import {
 	NumericStyling,
 	Cursor,
 	UpdateTypes,
+	Z_INDEX,
 } from "../../common";
 import { LineString, Point, Polygon, Position } from "geojson";
 import {
@@ -620,7 +621,7 @@ export class TerraDrawSensorMode extends TerraDrawBaseDrawMode<SensorPolygonStyl
 					feature,
 				);
 
-				styles.zIndex = 10;
+				styles.zIndex = Z_INDEX.LAYER_ONE;
 			} else if (feature.geometry.type === "LineString") {
 				styles.lineStringColor = this.getHexColorStylingValue(
 					this.styles.outlineColor,
@@ -634,7 +635,7 @@ export class TerraDrawSensorMode extends TerraDrawBaseDrawMode<SensorPolygonStyl
 					feature,
 				);
 
-				styles.zIndex = 10;
+				styles.zIndex = Z_INDEX.LAYER_ONE;
 			} else if (feature.geometry.type === "Point") {
 				styles.pointColor = this.getHexColorStylingValue(
 					this.styles.centerPointColor,
@@ -660,7 +661,7 @@ export class TerraDrawSensorMode extends TerraDrawBaseDrawMode<SensorPolygonStyl
 					feature,
 				);
 
-				styles.zIndex = 20;
+				styles.zIndex = Z_INDEX.LAYER_TWO;
 			}
 		}
 

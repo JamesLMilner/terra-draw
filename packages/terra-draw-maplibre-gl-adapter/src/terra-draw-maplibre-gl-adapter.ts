@@ -24,6 +24,7 @@ export class TerraDrawMapLibreGLAdapter<
 	constructor(
 		config: {
 			map: MapType;
+			renderBelowLayerId?: string;
 		} & TerraDrawExtend.BaseAdapterConfig,
 	) {
 		super(config);
@@ -34,8 +35,10 @@ export class TerraDrawMapLibreGLAdapter<
 		// We want to respect the initial map settings
 		this._initialDragRotate = this._map.dragRotate.isEnabled();
 		this._initialDragPan = this._map.dragPan.isEnabled();
+		this._renderBeforeLayerId = config.renderBelowLayerId;
 	}
 
+	private _renderBeforeLayerId: string | undefined;
 	private _initialDragPan: boolean;
 	private _initialDragRotate: boolean;
 	private _nextRender: number | undefined;
@@ -422,18 +425,6 @@ export class TerraDrawMapLibreGLAdapter<
 						polygons as Feature<Polygon>[],
 					);
 				}
-
-				// TODO: This logic could be better - I think this will render the selection points above user
-				// defined layers outside of Terra Draw which is perhaps unideal
-
-				// Ensure selection/mid points are rendered on top
-				if (pointId) {
-					this._map.moveLayer(pointId);
-
-					if (lowerZIndexPointId) {
-						this._map.moveLayer(lowerZIndexPointId, pointId);
-					}
-				}
 			}
 
 			// Reset changed ids
@@ -473,9 +464,14 @@ export class TerraDrawMapLibreGLAdapter<
 	public register(callbacks: TerraDrawExtend.TerraDrawCallbacks) {
 		super.register(callbacks);
 
-		const pointId = this._addGeoJSONLayer<Point>(
-			"Point",
-			[] as Feature<Point>[],
+		const polygonStringId = this._addGeoJSONLayer<Polygon>(
+			"Polygon",
+			[] as Feature<Polygon>[],
+		);
+
+		const lineStringId = this._addGeoJSONLayer<LineString>(
+			"LineString",
+			[] as Feature<LineString>[],
 		);
 
 		const lowerZIndexPointId = this._addGeoJSONLayer<Point>(
@@ -484,19 +480,17 @@ export class TerraDrawMapLibreGLAdapter<
 			"lower",
 		);
 
-		this._addGeoJSONLayer<LineString>(
-			"LineString",
-			[] as Feature<LineString>[],
+		const pointId = this._addGeoJSONLayer<Point>(
+			"Point",
+			[] as Feature<Point>[],
 		);
-		this._addGeoJSONLayer<Polygon>("Polygon", [] as Feature<Polygon>[]);
 
-		// Ensure selection/mid points are rendered on top
-		if (pointId) {
-			this._map.moveLayer(pointId);
-
-			if (lowerZIndexPointId) {
-				this._map.moveLayer(lowerZIndexPointId, pointId);
-			}
+		if (this._renderBeforeLayerId) {
+			this._map.moveLayer(pointId, this._renderBeforeLayerId);
+			this._map.moveLayer(lowerZIndexPointId, pointId);
+			this._map.moveLayer(lineStringId, lowerZIndexPointId);
+			this._map.moveLayer(polygonStringId + "-outline", lineStringId);
+			this._map.moveLayer(polygonStringId, lineStringId);
 		}
 
 		this._rendered = true;

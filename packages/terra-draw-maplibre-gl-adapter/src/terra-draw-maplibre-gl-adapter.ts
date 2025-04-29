@@ -46,6 +46,18 @@ export class TerraDrawMapLibreGLAdapter<
 	private _container: HTMLElement;
 	private _rendered = false;
 
+	private _removeLayerIfExists(id: string) {
+		if (this._map.getLayer(id)) {
+			this._map.removeLayer(id);
+		}
+	}
+
+	private _removeSourceIfExists(id: string) {
+		if (this._map.getSource(id)) {
+			this._map.removeSource(id);
+		}
+	}
+
 	/**
 	 * Clears the map of rendered layers and sources
 	 * @returns void
@@ -55,21 +67,21 @@ export class TerraDrawMapLibreGLAdapter<
 			const geometryTypes = ["point", "linestring", "polygon"] as const;
 			geometryTypes.forEach((geometryKey) => {
 				const id = `td-${geometryKey.toLowerCase()}`;
-				this._map.removeLayer(id);
+				this._removeLayerIfExists(id);
 
 				// Special case for polygons as it has another id for the outline
 				// that we need to make sure we remove
 				if (geometryKey === "polygon") {
-					this._map.removeLayer(id + "-outline");
+					this._removeLayerIfExists(id + "-outline");
 				}
 
 				// Special case for points as it has another id for the lower z-index
 				if (geometryKey === "point") {
-					this._map.removeLayer(id + "-lower");
-					this._map.removeSource(id + "-lower");
+					this._removeLayerIfExists(id + "-lower");
+					this._removeSourceIfExists(id + "-lower");
 				}
 
-				this._map.removeSource(id);
+				this._removeSourceIfExists(id);
 			});
 
 			this._rendered = false;

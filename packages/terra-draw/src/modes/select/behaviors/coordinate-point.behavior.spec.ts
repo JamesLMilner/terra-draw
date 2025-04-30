@@ -21,6 +21,9 @@ describe("CoordinatePointBehavior", () => {
 	describe("api", () => {
 		it("createOrUpdate", () => {
 			const config = MockBehaviorConfig("test");
+
+			jest.spyOn(config.store, "create");
+
 			const coordinatePointBehavior = new CoordinatePointBehavior(config);
 
 			const mockPolygon = MockPolygonSquare();
@@ -40,6 +43,25 @@ describe("CoordinatePointBehavior", () => {
 			const coordinatePointIds = properties.coordinatePointIds as string[];
 			expect(coordinatePointIds.length).toBe(4);
 			expect(coordinatePointIds.every(isUUIDV4)).toBe(true);
+
+			expect(config.store.create).toHaveBeenCalledTimes(2);
+
+			// Ensure all coordinate points are created
+			const coordinatePoints = config.store.copyAllWhere((properties) =>
+				Boolean(properties[COMMON_PROPERTIES.COORDINATE_POINT]),
+			);
+
+			expect(coordinatePoints.length).toBe(4);
+			expect(
+				coordinatePoints.every((point) => point.geometry.type === "Point"),
+			).toBe(true);
+			expect(
+				coordinatePoints.every(
+					(point) =>
+						point.properties[COMMON_PROPERTIES.COORDINATE_POINT_FEATURE_ID] ===
+						featureId,
+				),
+			).toBe(true);
 		});
 
 		it("createOrUpdate creates new points if previous ones have been deleted", () => {
@@ -71,6 +93,23 @@ describe("CoordinatePointBehavior", () => {
 
 			// Ensure they have changed
 			expect(coordinatePointIdsAfterDelete).not.toEqual(coordinatePointIds);
+
+			// Ensure all coordinate points are created
+			const coordinatePoints = config.store.copyAllWhere((properties) =>
+				Boolean(properties[COMMON_PROPERTIES.COORDINATE_POINT]),
+			);
+
+			expect(coordinatePoints.length).toBe(4);
+			expect(
+				coordinatePoints.every((point) => point.geometry.type === "Point"),
+			).toBe(true);
+			expect(
+				coordinatePoints.every(
+					(point) =>
+						point.properties[COMMON_PROPERTIES.COORDINATE_POINT_FEATURE_ID] ===
+						featureId,
+				),
+			).toBe(true);
 		});
 
 		it("deletePointsByFeatureIds", () => {

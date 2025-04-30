@@ -183,6 +183,7 @@ export const COMMON_PROPERTIES = {
 	CLOSING_POINT: "closingPoint",
 	SNAPPING_POINT: "snappingPoint",
 	COORDINATE_POINT: "coordinatePoint",
+	COORDINATE_POINT_FEATURE_ID: "coordinatePointFeatureId",
 	COORDINATE_POINT_IDS: "coordinatePointIds",
 };
 

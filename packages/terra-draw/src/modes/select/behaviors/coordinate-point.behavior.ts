@@ -32,6 +32,7 @@ export class CoordinatePointBehavior extends TerraDrawModeBehavior {
 			const coordinatePointIds = this.createPoints(
 				coordinates,
 				existingProperties.mode as string,
+				featureId,
 			);
 			this.setFeatureCoordinatePoints(featureId, coordinatePointIds);
 		}
@@ -54,6 +55,7 @@ export class CoordinatePointBehavior extends TerraDrawModeBehavior {
 				const coordinatePointIds = this.createPoints(
 					coordinates,
 					existingProperties.mode as string,
+					featureId,
 				);
 				this.setFeatureCoordinatePoints(featureId, coordinatePointIds);
 			} else {
@@ -93,6 +95,7 @@ export class CoordinatePointBehavior extends TerraDrawModeBehavior {
 			const coordinatePointIds = this.createPoints(
 				coordinates,
 				existingProperties.mode as string,
+				featureId,
 			);
 			this.setFeatureCoordinatePoints(featureId, coordinatePointIds);
 		}
@@ -127,7 +130,11 @@ export class CoordinatePointBehavior extends TerraDrawModeBehavior {
 		}[];
 	}
 
-	private createPoints(coordinates: Position[], mode: string) {
+	private createPoints(
+		coordinates: Position[],
+		mode: string,
+		featureId: FeatureId,
+	) {
 		return this.store.create(
 			coordinates.map((coordinate) => ({
 				geometry: {
@@ -137,6 +144,7 @@ export class CoordinatePointBehavior extends TerraDrawModeBehavior {
 				properties: {
 					mode,
 					[COMMON_PROPERTIES.COORDINATE_POINT]: true,
+					[COMMON_PROPERTIES.COORDINATE_POINT_FEATURE_ID]: featureId,
 				},
 			})),
 		);

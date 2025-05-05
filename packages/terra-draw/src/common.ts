@@ -43,6 +43,7 @@ export interface TerraDrawMouseEvent {
 	containerY: number;
 	button: "neither" | "left" | "middle" | "right";
 	heldKeys: string[];
+	isContextMenu: boolean;
 }
 
 export interface TerraDrawKeyboardEvent {

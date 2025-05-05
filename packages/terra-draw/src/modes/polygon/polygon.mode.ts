@@ -94,11 +94,17 @@ interface Snapping {
 	) => Position | undefined;
 }
 
+interface PolygonPointerEvents {
+	rightClick?: boolean;
+	contextMenu?: boolean;
+}
+
 interface TerraDrawPolygonModeOptions<T extends CustomStyling>
 	extends BaseModeOptions<T> {
 	snapping?: Snapping;
 	pointerDistance?: number;
 	keyEvents?: TerraDrawPolygonModeKeyEvents | null;
+	pointerEvents?: PolygonPointerEvents;
 	cursors?: Cursors;
 	editable?: boolean;
 	showCoordinatePoints?: boolean;
@@ -119,6 +125,10 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 	private snappedPointId: FeatureId | undefined;
 
 	// Editable
+	private pointerEvents: PolygonPointerEvents = {
+		rightClick: true,
+		contextMenu: false,
+	};
 	private editable: boolean = false;
 	private editedFeatureId: FeatureId | undefined;
 	private editedFeatureCoordinateIndex: number | undefined;
@@ -161,6 +171,10 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 
 		if (options?.editable !== undefined) {
 			this.editable = options.editable;
+		}
+
+		if (options?.pointerEvents !== undefined) {
+			this.pointerEvents = options.pointerEvents;
 		}
 
 		if (options?.showCoordinatePoints !== undefined) {
@@ -749,7 +763,10 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 		}
 		this.mouseMove = false;
 
-		if (event.button === "right") {
+		if (
+			(this.pointerEvents.rightClick && event.button === "right") ||
+			(this.pointerEvents.contextMenu && event.isContextMenu)
+		) {
 			this.onRightClick(event);
 			return;
 		} else if (event.button === "left") {

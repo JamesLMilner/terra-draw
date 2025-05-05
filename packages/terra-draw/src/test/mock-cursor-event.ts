@@ -4,10 +4,12 @@ export const MockCursorEvent = ({
 	lng,
 	lat,
 	button,
+	isContextMenu,
 }: {
 	lng: TerraDrawMouseEvent["lng"];
 	lat: TerraDrawMouseEvent["lat"];
 	button?: TerraDrawMouseEvent["button"];
+	isContextMenu?: TerraDrawMouseEvent["isContextMenu"];
 }) =>
 	({
 		lng,
@@ -16,4 +18,5 @@ export const MockCursorEvent = ({
 		containerY: lat * 40,
 		button: button ? button : ("left" as const),
 		heldKeys: [],
+		isContextMenu: isContextMenu ? isContextMenu : false,
 	}) as TerraDrawMouseEvent;

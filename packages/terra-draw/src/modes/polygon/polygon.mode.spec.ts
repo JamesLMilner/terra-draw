@@ -917,6 +917,63 @@ describe("TerraDrawPolygonMode", () => {
 			expect(onFinish).toHaveBeenCalledTimes(2);
 		});
 
+		it("context menu click can delete a point if editable is true", () => {
+			polygonMode.updateOptions({
+				pointerEvents: {
+					contextMenu: true,
+					rightClick: false,
+				},
+			});
+
+			polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+			polygonMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
+
+			polygonMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
+
+			polygonMode.onMouseMove(MockCursorEvent({ lng: 2, lat: 2 }));
+
+			polygonMode.onClick(MockCursorEvent({ lng: 2, lat: 2 }));
+
+			polygonMode.onMouseMove(MockCursorEvent({ lng: 3, lat: 3 }));
+
+			polygonMode.onClick(MockCursorEvent({ lng: 3, lat: 3 }));
+
+			polygonMode.onClick(MockCursorEvent({ lng: 3, lat: 3 }));
+
+			let features = store.copyAll();
+			expect(features.length).toBe(1);
+
+			expect(onFinish).toHaveBeenCalledTimes(1);
+			// Extra call because of the right hand rule fixing
+			expect(onChange).toHaveBeenCalledTimes(13);
+
+			// Delete a coordinate
+			polygonMode.onClick(
+				MockCursorEvent({
+					lng: 1,
+					lat: 1,
+					button: "left",
+					isContextMenu: true,
+				}),
+			);
+
+			expect(onChange).toHaveBeenNthCalledWith(
+				13,
+				[expect.any(String), expect.any(String)],
+				"delete",
+				undefined,
+			);
+
+			const featuresAfter = store.copyAll();
+			expect(featuresAfter.length).toBe(1);
+			expect(featuresAfter[0].geometry.coordinates[0]).not.toEqual(
+				features[0].geometry.coordinates[0],
+			);
+
+			expect(onFinish).toHaveBeenCalledTimes(2);
+		});
+
 		describe("validate", () => {
 			it("does not create a polygon if it has intersections and there is a validation that returns false", () => {
 				polygonMode = new TerraDrawPolygonMode({

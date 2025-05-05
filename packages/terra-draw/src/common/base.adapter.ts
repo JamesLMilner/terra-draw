@@ -47,6 +47,8 @@ export abstract class TerraDrawBaseAdapter implements TerraDrawAdapter {
 				: 9;
 	}
 
+	private _nextKeyUpIsContextMenu = false;
+
 	protected _minPixelDragDistance: number;
 	protected _minPixelDragDistanceDrawing: number;
 	protected _minPixelDragDistanceSelecting: number;
@@ -89,6 +91,7 @@ export abstract class TerraDrawBaseAdapter implements TerraDrawAdapter {
 
 	protected getDrawEventFromEvent(
 		event: PointerEvent | MouseEvent,
+		isContextMenu = false,
 	): TerraDrawMouseEvent | null {
 		const latLng = this.getLngLatFromEvent(event);
 
@@ -108,6 +111,7 @@ export abstract class TerraDrawBaseAdapter implements TerraDrawAdapter {
 			containerY,
 			button,
 			heldKeys,
+			isContextMenu,
 		};
 	}
 
@@ -243,6 +247,9 @@ export abstract class TerraDrawBaseAdapter implements TerraDrawAdapter {
 							return;
 						}
 
+						// If we are dragging it is not a context menu key up event any more
+						this._nextKeyUpIsContextMenu = false;
+
 						this._dragState = "dragging";
 						this._currentModeCallbacks.onDragStart(
 							drawEvent,
@@ -272,6 +279,10 @@ export abstract class TerraDrawBaseAdapter implements TerraDrawAdapter {
 
 					// We do not want the context menu to open
 					event.preventDefault();
+
+					// We signify that the next keyup event is related to the context menu
+					// and we want to set isContextMenu to true
+					this._nextKeyUpIsContextMenu = true;
 				},
 				register: (callback) => {
 					const mapElement = this.getMapEventElement();
@@ -314,6 +325,12 @@ export abstract class TerraDrawBaseAdapter implements TerraDrawAdapter {
 					) {
 						// If we're not dragging or about to drag we
 						// can trigger the onClick event
+						// We want to reset it to false after we have used it
+						if (this._nextKeyUpIsContextMenu) {
+							drawEvent.isContextMenu = true;
+							this._nextKeyUpIsContextMenu = false;
+						}
+
 						this._currentModeCallbacks.onClick(drawEvent);
 					}
 

@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.1.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw-maplibre-gl-adapter@1.0.3...terra-draw-maplibre-gl-adapter@1.1.0) (2025-05-06)
+
+
+### fix
+
+* **terra-draw-maplibre-gl-adapter:** fix clear and unregister methods (#540) ([](https://github.com/JamesLMilner/terra-draw/commit/53ba278b40c10b476587029dd82aa8a590bcec68)), closes [#540](https://github.com/JamesLMilner/terra-draw/issues/540)
+
+
+### chore
+
+* **terra-draw-maplibre-gl-adapter:** use sort-key rather than extra point layer ordering (#539) ([](https://github.com/JamesLMilner/terra-draw/commit/e15b6a2f093e18feea97a869a4db41121ab6d524)), closes [#539](https://github.com/JamesLMilner/terra-draw/issues/539)
+
+
+### feat
+
+* **terra-draw-maplibre-gl-adapter:** add renderBelowLayerId option to control render order (#532) ([](https://github.com/JamesLMilner/terra-draw/commit/46e446651f716cb5582c37e72dc74b63c34587f1)), closes [#532](https://github.com/JamesLMilner/terra-draw/issues/532)
+
 ## [1.0.3](https://github.com/JamesLMilner/terra-draw/compare/terra-draw-maplibre-gl-adapter@1.0.2...terra-draw-maplibre-gl-adapter@1.0.3) (2025-04-03)
 
 

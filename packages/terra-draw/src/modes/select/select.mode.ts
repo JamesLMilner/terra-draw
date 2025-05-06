@@ -115,6 +115,11 @@ const defaultCursors = {
 	insertMidpoint: "crosshair",
 } as Required<Cursors>;
 
+interface SelectPointerEvents {
+	rightClick?: boolean;
+	contextMenu?: boolean;
+}
+
 interface TerraDrawSelectModeOptions<T extends CustomStyling>
 	extends BaseModeOptions<T> {
 	pointerDistance?: number;
@@ -123,6 +128,7 @@ interface TerraDrawSelectModeOptions<T extends CustomStyling>
 	dragEventThrottle?: number;
 	cursors?: Cursors;
 	allowManualDeselection?: boolean;
+	pointerEvents?: SelectPointerEvents;
 }
 
 export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStyling> {
@@ -137,6 +143,10 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 	private keyEvents: TerraDrawSelectModeKeyEvents = defaultKeyEvents;
 	private cursors: Required<Cursors> = defaultCursors;
 	private validations: Record<string, Validation> = {};
+	private pointerEvents: SelectPointerEvents = {
+		rightClick: true,
+		contextMenu: false,
+	};
 
 	// Behaviors
 	private selectionPoints!: SelectionPointBehavior;
@@ -166,6 +176,10 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 			this.cursors = { ...this.cursors, ...options.cursors };
 		} else {
 			this.cursors = defaultCursors;
+		}
+
+		if (options?.pointerEvents !== undefined) {
+			this.pointerEvents = options.pointerEvents;
 		}
 
 		// We want to have some defaults, but also allow key bindings
@@ -592,9 +606,11 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 
 	/** @internal */
 	onClick(event: TerraDrawMouseEvent) {
-		if (event.button === "right") {
+		if (
+			(this.pointerEvents.rightClick && event.button === "right") ||
+			(this.pointerEvents.contextMenu && event.isContextMenu)
+		) {
 			this.onRightClick(event);
-			return;
 		} else if (event.button === "left") {
 			this.onLeftClick(event);
 		}

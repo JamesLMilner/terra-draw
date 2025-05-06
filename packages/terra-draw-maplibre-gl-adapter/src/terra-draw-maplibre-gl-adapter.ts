@@ -44,37 +44,6 @@ export class TerraDrawMapLibreGLAdapter<
 	private _nextRender: number | undefined;
 	private _map: Map;
 	private _container: HTMLElement;
-	private _rendered = false;
-
-	/**
-	 * Clears the map of rendered layers and sources
-	 * @returns void
-	 * */
-	private clearLayers() {
-		if (this._rendered) {
-			const geometryTypes = ["point", "linestring", "polygon"] as const;
-			geometryTypes.forEach((geometryKey) => {
-				const id = `td-${geometryKey.toLowerCase()}`;
-				this._map.removeLayer(id);
-
-				// Special case for polygons as it has another id for the outline
-				// that we need to make sure we remove
-				if (geometryKey === "polygon") {
-					this._map.removeLayer(id + "-outline");
-				}
-
-				this._map.removeSource(id);
-			});
-
-			this._rendered = false;
-
-			// TODO: This is necessary to prevent render artifacts, perhaps there is a nicer solution?
-			if (this._nextRender) {
-				cancelAnimationFrame(this._nextRender);
-				this._nextRender = undefined;
-			}
-		}
-	}
 
 	private _addGeoJSONSource(id: string, features: Feature[]) {
 		this._map.addSource(id, {
@@ -383,35 +352,33 @@ export class TerraDrawMapLibreGLAdapter<
 				}
 			}
 
-			if (this._rendered) {
-				// If deletion occurred we always have to update all layers
-				// as we don't know the type (TODO: perhaps we could pass that back?)
-				const deletionOccurred = this.changedIds.deletion;
-				const styleUpdatedOccurred = this.changedIds.styling;
-				const forceUpdate = deletionOccurred || styleUpdatedOccurred;
+			// If deletion occurred we always have to update all layers
+			// as we don't know the type (TODO: perhaps we could pass that back?)
+			const deletionOccurred = this.changedIds.deletion;
+			const styleUpdatedOccurred = this.changedIds.styling;
+			const forceUpdate = deletionOccurred || styleUpdatedOccurred;
 
-				// Determine if we need to update each layer by geometry type
-				const updatePoints = forceUpdate || this.changedIds.points;
-				const updateLineStrings = forceUpdate || this.changedIds.linestrings;
-				const updatedPolygon = forceUpdate || this.changedIds.polygons;
+			// Determine if we need to update each layer by geometry type
+			const updatePoints = forceUpdate || this.changedIds.points;
+			const updateLineStrings = forceUpdate || this.changedIds.linestrings;
+			const updatedPolygon = forceUpdate || this.changedIds.polygons;
 
-				if (updatePoints) {
-					this._setGeoJSONLayerData<Point>("Point", points as Feature<Point>[]);
-				}
+			if (updatePoints) {
+				this._setGeoJSONLayerData<Point>("Point", points as Feature<Point>[]);
+			}
 
-				if (updateLineStrings) {
-					this._setGeoJSONLayerData<LineString>(
-						"LineString",
-						linestrings as Feature<LineString>[],
-					);
-				}
+			if (updateLineStrings) {
+				this._setGeoJSONLayerData<LineString>(
+					"LineString",
+					linestrings as Feature<LineString>[],
+				);
+			}
 
-				if (updatedPolygon) {
-					this._setGeoJSONLayerData<Polygon>(
-						"Polygon",
-						polygons as Feature<Polygon>[],
-					);
-				}
+			if (updatedPolygon) {
+				this._setGeoJSONLayerData<Polygon>(
+					"Polygon",
+					polygons as Feature<Polygon>[],
+				);
 			}
 
 			// Reset changed ids
@@ -434,8 +401,17 @@ export class TerraDrawMapLibreGLAdapter<
 			// Clear up state first
 			this._currentModeCallbacks.onClear();
 
-			// Then clean up rendering
-			this.clearLayers();
+			// TODO: This is necessary to prevent render artifacts, perhaps there is a nicer solution?
+			if (this._nextRender) {
+				cancelAnimationFrame(this._nextRender);
+				this._nextRender = undefined;
+			}
+
+			this._setGeoJSONLayerData<Point>("Point", []);
+
+			this._setGeoJSONLayerData<LineString>("LineString", []);
+
+			this._setGeoJSONLayerData<Polygon>("Polygon", []);
 		}
 	}
 
@@ -444,8 +420,15 @@ export class TerraDrawMapLibreGLAdapter<
 	}
 
 	public unregister(): void {
-		// TODO: It seems this shouldn't be necessary as extends BaseAdapter which as this method
-		return super.unregister();
+		super.unregister();
+
+		this._map.removeLayer("td-point");
+		this._map.removeSource("td-point");
+		this._map.removeLayer("td-linestring");
+		this._map.removeSource("td-linestring");
+		this._map.removeLayer("td-polygon");
+		this._map.removeLayer("td-polygon-outline");
+		this._map.removeSource("td-polygon");
 	}
 
 	public register(callbacks: TerraDrawExtend.TerraDrawCallbacks) {
@@ -472,8 +455,6 @@ export class TerraDrawMapLibreGLAdapter<
 			this._map.moveLayer(polygonStringId + "-outline", lineStringId);
 			this._map.moveLayer(polygonStringId, lineStringId);
 		}
-
-		this._rendered = true;
 
 		if (this._currentModeCallbacks?.onReady) {
 			this._currentModeCallbacks.onReady();

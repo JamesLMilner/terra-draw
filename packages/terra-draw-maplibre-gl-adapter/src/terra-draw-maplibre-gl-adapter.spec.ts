@@ -303,11 +303,13 @@ describe("TerraDrawMapLibreGLAdapter", () => {
 
 			expect(map.addSource).toHaveBeenCalledTimes(3);
 			expect(map.addLayer).toHaveBeenCalledTimes(4);
+			expect(map.getSource).toHaveBeenCalledTimes(3);
 
 			adapter.clear();
 
-			expect(map.removeLayer).toHaveBeenCalledTimes(4);
-			expect(map.removeSource).toHaveBeenCalledTimes(3);
+			expect(map.removeLayer).toHaveBeenCalledTimes(0);
+			expect(map.removeSource).toHaveBeenCalledTimes(0);
+			expect(map.getSource).toHaveBeenCalledTimes(6);
 		});
 	});
 

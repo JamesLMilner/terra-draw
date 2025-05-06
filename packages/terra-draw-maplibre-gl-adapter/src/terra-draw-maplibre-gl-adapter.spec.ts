@@ -301,13 +301,13 @@ describe("TerraDrawMapLibreGLAdapter", () => {
 			const rAFCallback = (requestAnimationFrame as jest.Mock).mock.calls[0][0];
 			rAFCallback();
 
-			expect(map.addSource).toHaveBeenCalledTimes(4);
-			expect(map.addLayer).toHaveBeenCalledTimes(5);
+			expect(map.addSource).toHaveBeenCalledTimes(3);
+			expect(map.addLayer).toHaveBeenCalledTimes(4);
 
 			adapter.clear();
 
-			expect(map.removeLayer).toHaveBeenCalledTimes(5);
-			expect(map.removeSource).toHaveBeenCalledTimes(4);
+			expect(map.removeLayer).toHaveBeenCalledTimes(4);
+			expect(map.removeSource).toHaveBeenCalledTimes(3);
 		});
 	});
 
@@ -338,8 +338,8 @@ describe("TerraDrawMapLibreGLAdapter", () => {
 
 			rAFCallback();
 
-			expect(map.addSource).toHaveBeenCalledTimes(4);
-			expect(map.addLayer).toHaveBeenCalledTimes(5);
+			expect(map.addSource).toHaveBeenCalledTimes(3);
+			expect(map.addLayer).toHaveBeenCalledTimes(4);
 		});
 
 		it("updates layers and sources when data is passed", () => {
@@ -355,8 +355,8 @@ describe("TerraDrawMapLibreGLAdapter", () => {
 
 			adapter.register(MockCallbacks());
 
-			expect(map.addSource).toHaveBeenCalledTimes(4);
-			expect(map.addLayer).toHaveBeenCalledTimes(5);
+			expect(map.addSource).toHaveBeenCalledTimes(3);
+			expect(map.addLayer).toHaveBeenCalledTimes(4);
 
 			adapter.render(
 				{
@@ -374,8 +374,8 @@ describe("TerraDrawMapLibreGLAdapter", () => {
 
 			rAFCallback();
 
-			expect(map.addSource).toHaveBeenCalledTimes(4);
-			expect(map.addLayer).toHaveBeenCalledTimes(5);
+			expect(map.addSource).toHaveBeenCalledTimes(3);
+			expect(map.addLayer).toHaveBeenCalledTimes(4);
 
 			adapter.render(
 				{
@@ -440,7 +440,7 @@ describe("TerraDrawMapLibreGLAdapter", () => {
 
 			rAFCallback();
 
-			expect(map.getSource).toHaveBeenCalledTimes(8);
+			expect(map.getSource).toHaveBeenCalledTimes(6);
 
 			adapter.render(
 				{
@@ -461,7 +461,7 @@ describe("TerraDrawMapLibreGLAdapter", () => {
 			rAFCallback();
 
 			// Force update because of the deletion
-			expect(map.getSource).toHaveBeenCalledTimes(12);
+			expect(map.getSource).toHaveBeenCalledTimes(9);
 		});
 	});
 
@@ -520,8 +520,8 @@ describe("TerraDrawMapLibreGLAdapter", () => {
 			adapter.unregister();
 
 			// Clears any set data
-			expect(map.removeLayer).toHaveBeenCalledTimes(5);
-			expect(map.removeSource).toHaveBeenCalledTimes(4);
+			expect(map.removeLayer).toHaveBeenCalledTimes(4);
+			expect(map.removeSource).toHaveBeenCalledTimes(3);
 		});
 	});
 });

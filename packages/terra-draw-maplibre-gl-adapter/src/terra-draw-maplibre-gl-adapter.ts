@@ -63,12 +63,6 @@ export class TerraDrawMapLibreGLAdapter<
 					this._map.removeLayer(id + "-outline");
 				}
 
-				// Special case for points as it has another id for the lower z-index
-				if (geometryKey === "point") {
-					this._map.removeLayer(id + "-lower");
-					this._map.removeSource(id + "-lower");
-				}
-
 				this._map.removeSource(id);
 			});
 
@@ -98,6 +92,9 @@ export class TerraDrawMapLibreGLAdapter<
 			id,
 			source: id,
 			type: "fill",
+			layout: {
+				"fill-sort-key": ["get", "zIndex"],
+			},
 			// No need for filters as style is driven by properties
 			paint: {
 				"fill-color": ["get", "polygonFillColor"],
@@ -111,6 +108,9 @@ export class TerraDrawMapLibreGLAdapter<
 			id: id + "-outline",
 			source: id,
 			type: "line",
+			layout: {
+				"line-sort-key": ["get", "zIndex"],
+			},
 			// No need for filters as style is driven by properties
 			paint: {
 				"line-width": ["get", "polygonOutlineWidth"],
@@ -126,6 +126,9 @@ export class TerraDrawMapLibreGLAdapter<
 			id,
 			source: id,
 			type: "line",
+			layout: {
+				"line-sort-key": ["get", "zIndex"],
+			},
 			// No need for filters as style is driven by properties
 			paint: {
 				"line-width": ["get", "lineStringWidth"],
@@ -141,6 +144,9 @@ export class TerraDrawMapLibreGLAdapter<
 			id,
 			source: id,
 			type: "circle",
+			layout: {
+				"circle-sort-key": ["get", "zIndex"],
+			},
 			// No need for filters as style is driven by properties
 			paint: {
 				"circle-stroke-color": ["get", "pointOutlineColor"],
@@ -172,9 +178,8 @@ export class TerraDrawMapLibreGLAdapter<
 	private _addGeoJSONLayer<T extends GeoJSONStoreGeometries>(
 		featureType: Feature<T>["geometry"]["type"],
 		features: Feature<T>[],
-		tag?: string,
 	) {
-		const id = `td-${featureType.toLowerCase()}${tag ? `-${tag}` : ""}`;
+		const id = `td-${featureType.toLowerCase()}`;
 		this._addGeoJSONSource(id, features);
 		this._addLayer(id, featureType);
 
@@ -184,9 +189,8 @@ export class TerraDrawMapLibreGLAdapter<
 	private _setGeoJSONLayerData<T extends GeoJSONStoreGeometries>(
 		featureType: Feature<T>["geometry"]["type"],
 		features: Feature<T>[],
-		tag?: string,
 	) {
-		const id = `td-${featureType.toLowerCase()}${tag ? `-${tag}` : ""}`;
+		const id = `td-${featureType.toLowerCase()}`;
 		(this._map.getSource(id) as GeoJSONSource).setData({
 			type: "FeatureCollection",
 			features: features,
@@ -349,7 +353,6 @@ export class TerraDrawMapLibreGLAdapter<
 				...changes.unchanged,
 			];
 
-			const lowerZIndexPoints = [];
 			const points = [];
 			const linestrings = [];
 			const polygons = [];
@@ -365,12 +368,8 @@ export class TerraDrawMapLibreGLAdapter<
 					properties.pointOutlineColor = styles.pointOutlineColor;
 					properties.pointOutlineWidth = styles.pointOutlineWidth;
 					properties.pointWidth = styles.pointWidth;
-
-					if (styles.zIndex < 30) {
-						lowerZIndexPoints.push(feature);
-					} else {
-						points.push(feature);
-					}
+					properties.zIndex = styles.zIndex;
+					points.push(feature);
 				} else if (feature.geometry.type === "LineString") {
 					properties.lineStringColor = styles.lineStringColor;
 					properties.lineStringWidth = styles.lineStringWidth;
@@ -396,20 +395,8 @@ export class TerraDrawMapLibreGLAdapter<
 				const updateLineStrings = forceUpdate || this.changedIds.linestrings;
 				const updatedPolygon = forceUpdate || this.changedIds.polygons;
 
-				let pointId;
-				let lowerZIndexPointId;
-
 				if (updatePoints) {
-					pointId = this._setGeoJSONLayerData<Point>(
-						"Point",
-						points as Feature<Point>[],
-					);
-
-					lowerZIndexPointId = this._setGeoJSONLayerData<Point>(
-						"Point",
-						lowerZIndexPoints as Feature<Point>[],
-						"lower",
-					);
+					this._setGeoJSONLayerData<Point>("Point", points as Feature<Point>[]);
 				}
 
 				if (updateLineStrings) {
@@ -474,12 +461,6 @@ export class TerraDrawMapLibreGLAdapter<
 			[] as Feature<LineString>[],
 		);
 
-		const lowerZIndexPointId = this._addGeoJSONLayer<Point>(
-			"Point",
-			[] as Feature<Point>[],
-			"lower",
-		);
-
 		const pointId = this._addGeoJSONLayer<Point>(
 			"Point",
 			[] as Feature<Point>[],
@@ -487,8 +468,7 @@ export class TerraDrawMapLibreGLAdapter<
 
 		if (this._renderBeforeLayerId) {
 			this._map.moveLayer(pointId, this._renderBeforeLayerId);
-			this._map.moveLayer(lowerZIndexPointId, pointId);
-			this._map.moveLayer(lineStringId, lowerZIndexPointId);
+			this._map.moveLayer(lineStringId, pointId);
 			this._map.moveLayer(polygonStringId + "-outline", lineStringId);
 			this._map.moveLayer(polygonStringId, lineStringId);
 		}

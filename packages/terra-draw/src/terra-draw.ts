@@ -502,8 +502,8 @@ class TerraDraw {
 	}
 
 	/**
-	 * Removes all data from the current store and removes any rendered layers
-	 * via the registering the adapter.
+	 * Removes all data from the current store and ensures any rendered data is cleared
+	 * from the map.
 	 */
 	clear() {
 		this.checkEnabled();

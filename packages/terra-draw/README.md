@@ -17,7 +17,7 @@ Terra Draw centralizes map drawing logic and provides a host of out-of-the-box d
 
 Terra Draw works with your mapping library of choice via adapters. Please pick the adapter for the mapping library you are working with:
 
-* [terra-draw-maplibre-gl-js-adapter](https://www.npmjs.com/package/terra-draw-maplibre-gl-js-adapter)
+* [terra-draw-maplibre-gl-adapter](https://www.npmjs.com/package/terra-draw-maplibre-gl-adapter)
 * [terra-draw-leaflet-adapter](https://www.npmjs.com/package/terra-draw-leaflet-adapter)
 * [terra-draw-google-maps-adapter](https://www.npmjs.com/package/terra-draw-googl-emaps-adapter)
 * [terra-draw-mapbox-gl-js-adapter](https://www.npmjs.com/package/terra-draw-mapbox-gl-js-adapter)

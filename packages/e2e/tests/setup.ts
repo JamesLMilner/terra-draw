@@ -14,7 +14,8 @@ export type TestConfigOptions =
 	| "globeSelect"
 	| "snappingCoordinate"
 	| "showCoordinatePoints"
-	| "selectDragSnapping";
+	| "selectDragSnapping"
+	| "disableLeftClick";
 
 export const setupMap = async ({
 	page,

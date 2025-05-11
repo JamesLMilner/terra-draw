@@ -11,6 +11,7 @@ import { ValidateNotSelfIntersecting } from "../../validations/not-self-intersec
 import { TerraDrawPolygonMode } from "./polygon.mode";
 import { MockKeyboardEvent } from "../../test/mock-keyboard-event";
 import { MockPolygonSquare } from "../../test/mock-features";
+import { DefaultPointerEvents } from "../base.mode";
 
 describe("TerraDrawPolygonMode", () => {
 	describe("constructor", () => {
@@ -920,6 +921,7 @@ describe("TerraDrawPolygonMode", () => {
 		it("context menu click can delete a point if editable is true", () => {
 			polygonMode.updateOptions({
 				pointerEvents: {
+					...DefaultPointerEvents,
 					contextMenu: true,
 					rightClick: false,
 				},
@@ -972,6 +974,33 @@ describe("TerraDrawPolygonMode", () => {
 			);
 
 			expect(onFinish).toHaveBeenCalledTimes(2);
+		});
+
+		describe("with leftClick pointer event set to false", () => {
+			beforeEach(() => {
+				polygonMode = new TerraDrawPolygonMode({
+					pointerEvents: {
+						...DefaultPointerEvents,
+						leftClick: false,
+					},
+				});
+				const mockConfig = MockModeConfig(polygonMode.mode);
+
+				store = mockConfig.store;
+				polygonMode.register(mockConfig);
+				polygonMode.start();
+			});
+
+			it("should not allow click", () => {
+				polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+				polygonMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
+
+				polygonMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
+
+				let features = store.copyAll();
+				expect(features.length).toBe(0);
+			});
 		});
 
 		describe("validate", () => {

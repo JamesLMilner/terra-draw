@@ -620,19 +620,28 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 
 	/** @internal */
 	onClick(event: TerraDrawMouseEvent) {
-		// We want pointer devices (mobile/tablet) to have
-		// similar behaviour to mouse based devices so we
-		// trigger a mousemove event before every click
-		// if one has not been triggered to emulate this
-		if (this.currentCoordinate > 0 && !this.mouseMove) {
-			this.onMouseMove(event);
-		}
-		this.mouseMove = false;
+		if (
+			(event.button === "right" &&
+				this.allowPointerEvent(this.pointerEvents.rightClick, event)) ||
+			(event.button === "left" &&
+				this.allowPointerEvent(this.pointerEvents.leftClick, event)) ||
+			(event.isContextMenu &&
+				this.allowPointerEvent(this.pointerEvents.contextMenu, event))
+		) {
+			// We want pointer devices (mobile/tablet) to have
+			// similar behaviour to mouse based devices so we
+			// trigger a mousemove event before every click
+			// if one has not been triggered to emulate this
+			if (this.currentCoordinate > 0 && !this.mouseMove) {
+				this.onMouseMove(event);
+			}
+			this.mouseMove = false;
 
-		if (event.button === "right") {
-			this.onRightClick(event);
-		} else if (event.button === "left") {
-			this.onLeftClick(event);
+			if (event.button === "right") {
+				this.onRightClick(event);
+			} else if (event.button === "left") {
+				this.onLeftClick(event);
+			}
 		}
 	}
 
@@ -655,6 +664,10 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 		event: TerraDrawMouseEvent,
 		setMapDraggability: (enabled: boolean) => void,
 	) {
+		if (!this.allowPointerEvent(this.pointerEvents.onDragStart, event)) {
+			return;
+		}
+
 		if (!this.editable) {
 			return;
 		}
@@ -722,6 +735,10 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 		event: TerraDrawMouseEvent,
 		setMapDraggability: (enabled: boolean) => void,
 	) {
+		if (!this.allowPointerEvent(this.pointerEvents.onDrag, event)) {
+			return;
+		}
+
 		if (
 			this.editedFeatureId === undefined ||
 			this.editedFeatureCoordinateIndex === undefined
@@ -823,9 +840,13 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 
 	/** @internal */
 	onDragEnd(
-		_: TerraDrawMouseEvent,
+		event: TerraDrawMouseEvent,
 		setMapDraggability: (enabled: boolean) => void,
 	) {
+		if (!this.allowPointerEvent(this.pointerEvents.onDragEnd, event)) {
+			return;
+		}
+
 		if (this.editedFeatureId === undefined) {
 			return;
 		}

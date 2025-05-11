@@ -6,6 +6,7 @@ import { Polygon } from "geojson";
 import { followsRightHandRule } from "../../geometry/boolean/right-hand-rule";
 import { MockKeyboardEvent } from "../../test/mock-keyboard-event";
 import { TerraDrawGeoJSONStore } from "../../common";
+import { DefaultPointerEvents } from "../base.mode";
 
 describe("TerraDrawAngledRectangleMode", () => {
 	describe("constructor", () => {
@@ -319,6 +320,33 @@ describe("TerraDrawAngledRectangleMode", () => {
 
 				features = store.copyAll();
 				expect(features.length).toBe(1);
+			});
+		});
+
+		describe("with leftClick pointer event set to false", () => {
+			beforeEach(() => {
+				angledRectangleMode = new TerraDrawAngledRectangleMode({
+					pointerEvents: {
+						...DefaultPointerEvents,
+						leftClick: false,
+					},
+				});
+				const mockConfig = MockModeConfig(angledRectangleMode.mode);
+
+				store = mockConfig.store;
+				angledRectangleMode.register(mockConfig);
+				angledRectangleMode.start();
+			});
+
+			it("should not allow click", () => {
+				angledRectangleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+				angledRectangleMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
+
+				angledRectangleMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
+
+				let features = store.copyAll();
+				expect(features.length).toBe(0);
 			});
 		});
 	});

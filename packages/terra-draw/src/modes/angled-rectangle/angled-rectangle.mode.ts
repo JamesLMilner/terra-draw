@@ -275,70 +275,79 @@ export class TerraDrawAngledRectangleMode extends TerraDrawBaseDrawMode<PolygonS
 
 	/** @internal */
 	onClick(event: TerraDrawMouseEvent) {
-		// We want pointer devices (mobile/tablet) to have
-		// similar behaviour to mouse based devices so we
-		// trigger a mousemove event before every click
-		// if one has not been triggered to emulate this
-		if (this.currentCoordinate > 0 && !this.mouseMove) {
-			this.onMouseMove(event);
-		}
-		this.mouseMove = false;
+		if (
+			(event.button === "right" &&
+				this.allowPointerEvent(this.pointerEvents.rightClick, event)) ||
+			(event.button === "left" &&
+				this.allowPointerEvent(this.pointerEvents.leftClick, event)) ||
+			(event.isContextMenu &&
+				this.allowPointerEvent(this.pointerEvents.contextMenu, event))
+		) {
+			// We want pointer devices (mobile/tablet) to have
+			// similar behaviour to mouse based devices so we
+			// trigger a mousemove event before every click
+			// if one has not been triggered to emulate this
+			if (this.currentCoordinate > 0 && !this.mouseMove) {
+				this.onMouseMove(event);
+			}
+			this.mouseMove = false;
 
-		if (this.currentCoordinate === 0) {
-			const [newId] = this.store.create([
-				{
-					geometry: {
-						type: "Polygon",
-						coordinates: [
-							[
-								[event.lng, event.lat],
-								[event.lng, event.lat],
-								[event.lng, event.lat],
-								[event.lng, event.lat],
+			if (this.currentCoordinate === 0) {
+				const [newId] = this.store.create([
+					{
+						geometry: {
+							type: "Polygon",
+							coordinates: [
+								[
+									[event.lng, event.lat],
+									[event.lng, event.lat],
+									[event.lng, event.lat],
+									[event.lng, event.lat],
+								],
 							],
-						],
+						},
+						properties: { mode: this.mode },
 					},
-					properties: { mode: this.mode },
-				},
-			]);
-			this.currentId = newId;
-			this.currentCoordinate++;
+				]);
+				this.currentId = newId;
+				this.currentCoordinate++;
 
-			// Ensure the state is updated to reflect drawing has started
-			this.setDrawing();
-		} else if (this.currentCoordinate === 1 && this.currentId) {
-			const currentPolygonGeometry = this.store.getGeometryCopy<Polygon>(
-				this.currentId,
-			);
+				// Ensure the state is updated to reflect drawing has started
+				this.setDrawing();
+			} else if (this.currentCoordinate === 1 && this.currentId) {
+				const currentPolygonGeometry = this.store.getGeometryCopy<Polygon>(
+					this.currentId,
+				);
 
-			const previousCoordinate = currentPolygonGeometry.coordinates[0][0];
-			const isIdentical = coordinatesIdentical(
-				[event.lng, event.lat],
-				previousCoordinate,
-			);
-
-			if (isIdentical) {
-				return;
-			}
-
-			const updated = this.updatePolygonGeometry(
-				this.currentId,
-				[
-					currentPolygonGeometry.coordinates[0][0],
+				const previousCoordinate = currentPolygonGeometry.coordinates[0][0];
+				const isIdentical = coordinatesIdentical(
 					[event.lng, event.lat],
-					[event.lng, event.lat],
-					currentPolygonGeometry.coordinates[0][0],
-				],
-				UpdateTypes.Commit,
-			);
+					previousCoordinate,
+				);
 
-			if (!updated) {
-				return;
+				if (isIdentical) {
+					return;
+				}
+
+				const updated = this.updatePolygonGeometry(
+					this.currentId,
+					[
+						currentPolygonGeometry.coordinates[0][0],
+						[event.lng, event.lat],
+						[event.lng, event.lat],
+						currentPolygonGeometry.coordinates[0][0],
+					],
+					UpdateTypes.Commit,
+				);
+
+				if (!updated) {
+					return;
+				}
+
+				this.currentCoordinate++;
+			} else if (this.currentCoordinate === 2 && this.currentId) {
+				this.close();
 			}
-
-			this.currentCoordinate++;
-		} else if (this.currentCoordinate === 2 && this.currentId) {
-			this.close();
 		}
 	}
 

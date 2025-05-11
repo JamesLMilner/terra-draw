@@ -2,6 +2,7 @@ import { Point } from "geojson";
 import { MockModeConfig } from "../../test/mock-mode-config";
 import { TerraDrawPointMode } from "./point.mode";
 import { MockCursorEvent } from "../../test/mock-cursor-event";
+import { DefaultPointerEvents } from "../base.mode";
 
 describe("TerraDrawPointMode", () => {
 	describe("constructor", () => {
@@ -181,6 +182,28 @@ describe("TerraDrawPointMode", () => {
 				"delete",
 				undefined,
 			);
+		});
+
+		describe("with leftClick pointer event set to false", () => {
+			it("should not allow click", () => {
+				const pointMode = new TerraDrawPointMode({
+					pointerEvents: {
+						...DefaultPointerEvents,
+						leftClick: false,
+					},
+				});
+				const mockConfig = MockModeConfig(pointMode.mode);
+
+				pointMode.register(mockConfig);
+				pointMode.start();
+
+				pointMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+				pointMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
+
+				let features = mockConfig.store.copyAll();
+				expect(features.length).toBe(0);
+			});
 		});
 
 		describe("validate", () => {

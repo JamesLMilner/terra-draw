@@ -176,6 +176,14 @@ class TestMap {
 							: undefined),
 				}),
 				new TerraDrawPolygonMode({
+					pointerEvents: {
+						rightClick: true,
+						contextMenu: false,
+						onDragStart: true,
+						onDrag: true,
+						onDragEnd: true,
+						leftClick: this.config?.includes("disableLeftClick") ? false : true,
+					},
 					validation:
 						this.config?.includes("validationSuccess") ||
 						this.config?.includes("validationFailure")

@@ -16,6 +16,7 @@ import {
 	TerraDrawBaseDrawMode,
 	BaseModeOptions,
 	CustomStyling,
+	PointerEvents,
 } from "../base.mode";
 import { PixelDistanceBehavior } from "../pixel-distance.behavior";
 import { ClickBoundingBoxBehavior } from "../click-bounding-box.behavior";
@@ -94,17 +95,12 @@ interface Snapping {
 	) => Position | undefined;
 }
 
-interface PolygonPointerEvents {
-	rightClick?: boolean;
-	contextMenu?: boolean;
-}
-
 interface TerraDrawPolygonModeOptions<T extends CustomStyling>
 	extends BaseModeOptions<T> {
 	snapping?: Snapping;
 	pointerDistance?: number;
 	keyEvents?: TerraDrawPolygonModeKeyEvents | null;
-	pointerEvents?: PolygonPointerEvents;
+	pointerEvents?: PointerEvents;
 	cursors?: Cursors;
 	editable?: boolean;
 	showCoordinatePoints?: boolean;
@@ -125,10 +121,6 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 	private snappedPointId: FeatureId | undefined;
 
 	// Editable
-	private pointerEvents: PolygonPointerEvents = {
-		rightClick: true,
-		contextMenu: false,
-	};
 	private editable: boolean = false;
 	private editedFeatureId: FeatureId | undefined;
 	private editedFeatureCoordinateIndex: number | undefined;
@@ -764,12 +756,17 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 		this.mouseMove = false;
 
 		if (
-			(this.pointerEvents.rightClick && event.button === "right") ||
-			(this.pointerEvents.contextMenu && event.isContextMenu)
+			(event.button === "right" &&
+				this.allowPointerEvent(this.pointerEvents.rightClick, event)) ||
+			(event.isContextMenu &&
+				this.allowPointerEvent(this.pointerEvents.contextMenu, event))
 		) {
 			this.onRightClick(event);
 			return;
-		} else if (event.button === "left") {
+		} else if (
+			event.button === "left" &&
+			this.allowPointerEvent(this.pointerEvents.leftClick, event)
+		) {
 			this.onLeftClick(event);
 			return;
 		}
@@ -791,6 +788,10 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 		event: TerraDrawMouseEvent,
 		setMapDraggability: (enabled: boolean) => void,
 	) {
+		if (!this.allowPointerEvent(this.pointerEvents.onDragStart, event)) {
+			return;
+		}
+
 		if (!this.editable) {
 			return;
 		}
@@ -858,6 +859,10 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 		event: TerraDrawMouseEvent,
 		setMapDraggability: (enabled: boolean) => void,
 	) {
+		if (!this.allowPointerEvent(this.pointerEvents.onDrag, event)) {
+			return;
+		}
+
 		if (
 			this.editedFeatureId === undefined ||
 			this.editedFeatureCoordinateIndex === undefined
@@ -977,9 +982,13 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 
 	/** @internal */
 	onDragEnd(
-		_: TerraDrawMouseEvent,
+		event: TerraDrawMouseEvent,
 		setMapDraggability: (enabled: boolean) => void,
 	) {
+		if (!this.allowPointerEvent(this.pointerEvents.onDragEnd, event)) {
+			return;
+		}
+
 		if (this.editedFeatureId === undefined) {
 			return;
 		}

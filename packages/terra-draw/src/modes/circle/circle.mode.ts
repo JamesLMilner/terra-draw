@@ -158,39 +158,48 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 
 	/** @internal */
 	onClick(event: TerraDrawMouseEvent) {
-		if (this.clickCount === 0) {
-			this.center = [event.lng, event.lat];
-			const startingCircle = circle({
-				center: this.center,
-				radiusKilometers: this.startingRadiusKilometers,
-				coordinatePrecision: this.coordinatePrecision,
-			});
+		if (
+			(event.button === "right" &&
+				this.allowPointerEvent(this.pointerEvents.rightClick, event)) ||
+			(event.button === "left" &&
+				this.allowPointerEvent(this.pointerEvents.leftClick, event)) ||
+			(event.isContextMenu &&
+				this.allowPointerEvent(this.pointerEvents.contextMenu, event))
+		) {
+			if (this.clickCount === 0) {
+				this.center = [event.lng, event.lat];
+				const startingCircle = circle({
+					center: this.center,
+					radiusKilometers: this.startingRadiusKilometers,
+					coordinatePrecision: this.coordinatePrecision,
+				});
 
-			const [createdId] = this.store.create([
-				{
-					geometry: startingCircle.geometry,
-					properties: {
-						mode: this.mode,
-						radiusKilometers: this.startingRadiusKilometers,
+				const [createdId] = this.store.create([
+					{
+						geometry: startingCircle.geometry,
+						properties: {
+							mode: this.mode,
+							radiusKilometers: this.startingRadiusKilometers,
+						},
 					},
-				},
-			]);
-			this.currentCircleId = createdId;
-			this.clickCount++;
-			this.cursorMovedAfterInitialCursorDown = false;
-			this.setDrawing();
-		} else {
-			if (
-				this.clickCount === 1 &&
-				this.center &&
-				this.currentCircleId !== undefined &&
-				this.cursorMovedAfterInitialCursorDown
-			) {
-				this.updateCircle(event);
-			}
+				]);
+				this.currentCircleId = createdId;
+				this.clickCount++;
+				this.cursorMovedAfterInitialCursorDown = false;
+				this.setDrawing();
+			} else {
+				if (
+					this.clickCount === 1 &&
+					this.center &&
+					this.currentCircleId !== undefined &&
+					this.cursorMovedAfterInitialCursorDown
+				) {
+					this.updateCircle(event);
+				}
 
-			// Finish drawing
-			this.close();
+				// Finish drawing
+				this.close();
+			}
 		}
 	}
 

@@ -5,6 +5,7 @@ import { ValidateNotSelfIntersecting } from "../../validations/not-self-intersec
 import { TerraDrawLineStringMode } from "./linestring.mode";
 import { MockKeyboardEvent } from "../../test/mock-keyboard-event";
 import { TerraDrawGeoJSONStore } from "../../common";
+import { DefaultPointerEvents } from "../base.mode";
 
 describe("TerraDrawLineStringMode", () => {
 	describe("constructor", () => {
@@ -516,6 +517,33 @@ describe("TerraDrawLineStringMode", () => {
 			expect(featuresAfter[0].geometry.coordinates).not.toEqual(
 				features[0].geometry.coordinates,
 			);
+		});
+
+		describe("with leftClick pointer event set to false", () => {
+			beforeEach(() => {
+				lineStringMode = new TerraDrawLineStringMode({
+					pointerEvents: {
+						...DefaultPointerEvents,
+						leftClick: false,
+					},
+				});
+				const mockConfig = MockModeConfig(lineStringMode.mode);
+
+				store = mockConfig.store;
+				lineStringMode.register(mockConfig);
+				lineStringMode.start();
+			});
+
+			it("should not allow click", () => {
+				lineStringMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+				lineStringMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
+
+				lineStringMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
+
+				let features = store.copyAll();
+				expect(features.length).toBe(0);
+			});
 		});
 
 		describe("validations", () => {

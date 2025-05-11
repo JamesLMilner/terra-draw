@@ -172,33 +172,42 @@ export class TerraDrawRectangleMode extends TerraDrawBaseDrawMode<RectanglePolyg
 
 	/** @internal */
 	onClick(event: TerraDrawMouseEvent) {
-		if (this.clickCount === 0) {
-			this.center = [event.lng, event.lat];
-			const [createdId] = this.store.create([
-				{
-					geometry: {
-						type: "Polygon",
-						coordinates: [
-							[
-								[event.lng, event.lat],
-								[event.lng, event.lat],
-								[event.lng, event.lat],
-								[event.lng, event.lat],
+		if (
+			(event.button === "right" &&
+				this.allowPointerEvent(this.pointerEvents.rightClick, event)) ||
+			(event.button === "left" &&
+				this.allowPointerEvent(this.pointerEvents.leftClick, event)) ||
+			(event.isContextMenu &&
+				this.allowPointerEvent(this.pointerEvents.contextMenu, event))
+		) {
+			if (this.clickCount === 0) {
+				this.center = [event.lng, event.lat];
+				const [createdId] = this.store.create([
+					{
+						geometry: {
+							type: "Polygon",
+							coordinates: [
+								[
+									[event.lng, event.lat],
+									[event.lng, event.lat],
+									[event.lng, event.lat],
+									[event.lng, event.lat],
+								],
 							],
-						],
+						},
+						properties: {
+							mode: this.mode,
+						},
 					},
-					properties: {
-						mode: this.mode,
-					},
-				},
-			]);
-			this.currentRectangleId = createdId;
-			this.clickCount++;
-			this.setDrawing();
-		} else {
-			this.updateRectangle(event, UpdateTypes.Finish);
-			// Finish drawing
-			this.close();
+				]);
+				this.currentRectangleId = createdId;
+				this.clickCount++;
+				this.setDrawing();
+			} else {
+				this.updateRectangle(event, UpdateTypes.Finish);
+				// Finish drawing
+				this.close();
+			}
 		}
 	}
 

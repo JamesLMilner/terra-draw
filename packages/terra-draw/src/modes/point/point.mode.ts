@@ -107,10 +107,20 @@ export class TerraDrawPointMode extends TerraDrawBaseDrawMode<PointModeStyling> 
 			throw new Error("Mode must be registered first");
 		}
 
-		if (event.button === "right") {
+		if (
+			(event.button === "right" &&
+				this.allowPointerEvent(this.pointerEvents.rightClick, event)) ||
+			(event.isContextMenu &&
+				this.allowPointerEvent(this.pointerEvents.contextMenu, event))
+		) {
 			this.onRightClick(event);
-		} else if (event.button === "left") {
+			return;
+		} else if (
+			event.button === "left" &&
+			this.allowPointerEvent(this.pointerEvents.leftClick, event)
+		) {
 			this.onLeftClick(event);
+			return;
 		}
 	}
 
@@ -132,6 +142,10 @@ export class TerraDrawPointMode extends TerraDrawBaseDrawMode<PointModeStyling> 
 		event: TerraDrawMouseEvent,
 		setMapDraggability: (enabled: boolean) => void,
 	) {
+		if (!this.allowPointerEvent(this.pointerEvents.onDragStart, event)) {
+			return;
+		}
+
 		if (this.editable) {
 			const nearestPointFeature = this.getNearestPointFeature(event);
 			this.editedFeatureId = nearestPointFeature?.id;
@@ -154,6 +168,10 @@ export class TerraDrawPointMode extends TerraDrawBaseDrawMode<PointModeStyling> 
 		event: TerraDrawMouseEvent,
 		setMapDraggability: (enabled: boolean) => void,
 	) {
+		if (!this.allowPointerEvent(this.pointerEvents.onDrag, event)) {
+			return;
+		}
+
 		if (this.editedFeatureId === undefined) {
 			return;
 		}
@@ -208,9 +226,13 @@ export class TerraDrawPointMode extends TerraDrawBaseDrawMode<PointModeStyling> 
 
 	/** @internal */
 	onDragEnd(
-		_: TerraDrawMouseEvent,
+		event: TerraDrawMouseEvent,
 		setMapDraggability: (enabled: boolean) => void,
 	) {
+		if (!this.allowPointerEvent(this.pointerEvents.onDragEnd, event)) {
+			return;
+		}
+
 		if (this.editedFeatureId === undefined) {
 			return;
 		}

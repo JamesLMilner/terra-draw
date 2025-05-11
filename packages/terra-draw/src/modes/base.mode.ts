@@ -15,7 +15,6 @@ import {
 } from "../common";
 import {
 	FeatureId,
-	GeoJSONStore,
 	GeoJSONStoreFeatures,
 	StoreChangeHandler,
 } from "../store/store";
@@ -37,11 +36,32 @@ export enum ModeTypes {
 	Render = "render",
 }
 
+export const DefaultPointerEvents = {
+	rightClick: true,
+	contextMenu: false,
+	leftClick: true,
+	onDragStart: true,
+	onDrag: true,
+	onDragEnd: true,
+} as const;
+
+type AllowPointerEvent = boolean | ((event: TerraDrawMouseEvent) => boolean);
+
+export interface PointerEvents {
+	leftClick: AllowPointerEvent;
+	rightClick: AllowPointerEvent;
+	contextMenu: AllowPointerEvent;
+	onDragStart: AllowPointerEvent;
+	onDrag: AllowPointerEvent;
+	onDragEnd: AllowPointerEvent;
+}
+
 export type BaseModeOptions<Styling extends CustomStyling> = {
 	styles?: Partial<Styling>;
 	pointerDistance?: number;
 	validation?: Validation;
 	projection?: Projection;
+	pointerEvents?: PointerEvents;
 };
 
 export abstract class TerraDrawBaseDrawMode<Styling extends CustomStyling> {
@@ -71,6 +91,7 @@ export abstract class TerraDrawBaseDrawMode<Styling extends CustomStyling> {
 		this._styles = styling;
 	}
 
+	protected pointerEvents: PointerEvents = DefaultPointerEvents;
 	protected behaviors: TerraDrawModeBehavior[] = [];
 	protected validate: Validation | undefined;
 	protected pointerDistance: number = 40;
@@ -112,6 +133,23 @@ export abstract class TerraDrawBaseDrawMode<Styling extends CustomStyling> {
 		if (options?.projection) {
 			this.projection = options.projection;
 		}
+
+		if (options?.pointerEvents !== undefined) {
+			this.pointerEvents = options.pointerEvents;
+		}
+	}
+
+	protected allowPointerEvent(
+		pointerEvent: AllowPointerEvent,
+		event: TerraDrawMouseEvent,
+	) {
+		if (typeof pointerEvent === "boolean") {
+			return pointerEvent;
+		}
+		if (typeof pointerEvent === "function") {
+			return pointerEvent(event);
+		}
+		return true;
 	}
 
 	type = ModeTypes.Drawing;

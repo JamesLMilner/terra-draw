@@ -6,6 +6,7 @@ import { MockKeyboardEvent } from "../../test/mock-keyboard-event";
 import { Polygon } from "geojson";
 import { followsRightHandRule } from "../../geometry/boolean/right-hand-rule";
 import { TerraDrawGeoJSONStore } from "../../common";
+import { DefaultPointerEvents } from "../base.mode";
 
 describe("TerraDrawSensorMode", () => {
 	describe("constructor", () => {
@@ -471,6 +472,33 @@ describe("TerraDrawSensorMode", () => {
 				undefined,
 			);
 			expect(onFinish).toHaveBeenCalledTimes(0);
+		});
+
+		describe("with leftClick pointer event set to false", () => {
+			beforeEach(() => {
+				sensorMode = new TerraDrawSensorMode({
+					pointerEvents: {
+						...DefaultPointerEvents,
+						leftClick: false,
+					},
+				});
+				const mockConfig = MockModeConfig(sensorMode.mode);
+
+				store = mockConfig.store;
+				sensorMode.register(mockConfig);
+				sensorMode.start();
+			});
+
+			it("should not allow click", () => {
+				sensorMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+				sensorMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
+
+				sensorMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
+
+				let features = store.copyAll();
+				expect(features.length).toBe(0);
+			});
 		});
 	});
 

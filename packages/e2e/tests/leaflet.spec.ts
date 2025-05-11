@@ -9,7 +9,6 @@ import {
 	pageUrl,
 	setupMap,
 	TestConfigOptions,
-	expectNthPathDimensions,
 } from "./setup";
 
 test.describe("page setup", () => {
@@ -757,7 +756,7 @@ test.describe("polygon mode", () => {
 		await expectPathDimensions({ page, width: 204, height: 114 });
 	});
 
-	test("can use  showCoordinatePoints alongside editable to delete a coordinate with right click", async ({
+	test("can use showCoordinatePoints alongside editable to delete a coordinate with right click", async ({
 		page,
 	}) => {
 		const mapDiv = await setupMap({
@@ -805,6 +804,32 @@ test.describe("polygon mode", () => {
 		// The dimensions should have changed due to the deletion
 		await expectPaths({ page, count: 4 });
 		await expectPathDimensions({ page, width: 104, height: 104 });
+	});
+
+	test("can use the pointerEvents object to disable left click events", async ({
+		page,
+	}) => {
+		const mapDiv = await setupMap({
+			page,
+			configQueryParam: ["disableLeftClick"],
+		});
+		await changeMode({ page, mode });
+
+		// The length of the square sides in pixels
+		const sideLength = 100;
+
+		// Calculating the half of the side length
+		const halfLength = sideLength / 2;
+
+		// Coordinates of the center
+		const centerX = mapDiv.width / 2;
+		const centerY = mapDiv.height / 2;
+
+		const topLeft = { x: centerX - halfLength, y: centerY - halfLength };
+
+		await page.mouse.click(topLeft.x, topLeft.y);
+
+		await expectPaths({ page, count: 0 });
 	});
 });
 

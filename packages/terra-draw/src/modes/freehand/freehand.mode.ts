@@ -289,47 +289,56 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 
 	/** @internal */
 	onClick(event: TerraDrawMouseEvent) {
-		if (this.preventNewFeature) {
-			return;
-		}
+		if (
+			(event.button === "right" &&
+				this.allowPointerEvent(this.pointerEvents.rightClick, event)) ||
+			(event.button === "left" &&
+				this.allowPointerEvent(this.pointerEvents.leftClick, event)) ||
+			(event.isContextMenu &&
+				this.allowPointerEvent(this.pointerEvents.contextMenu, event))
+		) {
+			if (this.preventNewFeature) {
+				return;
+			}
 
-		if (this.startingClick === false) {
-			const [createdId, closingPointId] = this.store.create([
-				{
-					geometry: {
-						type: "Polygon",
-						coordinates: [
-							[
-								[event.lng, event.lat],
-								[event.lng, event.lat],
-								[event.lng, event.lat],
-								[event.lng, event.lat],
+			if (this.startingClick === false) {
+				const [createdId, closingPointId] = this.store.create([
+					{
+						geometry: {
+							type: "Polygon",
+							coordinates: [
+								[
+									[event.lng, event.lat],
+									[event.lng, event.lat],
+									[event.lng, event.lat],
+									[event.lng, event.lat],
+								],
 							],
-						],
+						},
+						properties: { mode: this.mode },
 					},
-					properties: { mode: this.mode },
-				},
-				{
-					geometry: {
-						type: "Point",
-						coordinates: [event.lng, event.lat],
+					{
+						geometry: {
+							type: "Point",
+							coordinates: [event.lng, event.lat],
+						},
+						properties: {
+							mode: this.mode,
+							[COMMON_PROPERTIES.CLOSING_POINT]: true,
+						},
 					},
-					properties: {
-						mode: this.mode,
-						[COMMON_PROPERTIES.CLOSING_POINT]: true,
-					},
-				},
-			]);
+				]);
 
-			this.currentId = createdId;
-			this.closingPointId = closingPointId;
-			this.startingClick = true;
-			this.setDrawing();
+				this.currentId = createdId;
+				this.closingPointId = closingPointId;
+				this.startingClick = true;
+				this.setDrawing();
 
-			return;
+				return;
+			}
+
+			this.close();
 		}
-
-		this.close();
 	}
 
 	/** @internal */

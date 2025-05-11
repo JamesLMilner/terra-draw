@@ -115,11 +115,6 @@ const defaultCursors = {
 	insertMidpoint: "crosshair",
 } as Required<Cursors>;
 
-interface SelectPointerEvents {
-	rightClick?: boolean;
-	contextMenu?: boolean;
-}
-
 interface TerraDrawSelectModeOptions<T extends CustomStyling>
 	extends BaseModeOptions<T> {
 	pointerDistance?: number;
@@ -128,7 +123,6 @@ interface TerraDrawSelectModeOptions<T extends CustomStyling>
 	dragEventThrottle?: number;
 	cursors?: Cursors;
 	allowManualDeselection?: boolean;
-	pointerEvents?: SelectPointerEvents;
 }
 
 export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStyling> {
@@ -143,10 +137,6 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 	private keyEvents: TerraDrawSelectModeKeyEvents = defaultKeyEvents;
 	private cursors: Required<Cursors> = defaultCursors;
 	private validations: Record<string, Validation> = {};
-	private pointerEvents: SelectPointerEvents = {
-		rightClick: true,
-		contextMenu: false,
-	};
 
 	// Behaviors
 	private selectionPoints!: SelectionPointBehavior;
@@ -176,10 +166,6 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 			this.cursors = { ...this.cursors, ...options.cursors };
 		} else {
 			this.cursors = defaultCursors;
-		}
-
-		if (options?.pointerEvents !== undefined) {
-			this.pointerEvents = options.pointerEvents;
 		}
 
 		// We want to have some defaults, but also allow key bindings
@@ -607,11 +593,16 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 	/** @internal */
 	onClick(event: TerraDrawMouseEvent) {
 		if (
-			(this.pointerEvents.rightClick && event.button === "right") ||
-			(this.pointerEvents.contextMenu && event.isContextMenu)
+			(event.button === "right" &&
+				this.allowPointerEvent(this.pointerEvents.rightClick, event)) ||
+			(event.isContextMenu &&
+				this.allowPointerEvent(this.pointerEvents.contextMenu, event))
 		) {
 			this.onRightClick(event);
-		} else if (event.button === "left") {
+		} else if (
+			event.button === "left" &&
+			this.allowPointerEvent(this.pointerEvents.leftClick, event)
+		) {
 			this.onLeftClick(event);
 		}
 	}
@@ -686,6 +677,10 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 		event: TerraDrawMouseEvent,
 		setMapDraggability: (enabled: boolean) => void,
 	) {
+		if (!this.allowPointerEvent(this.pointerEvents.onDragStart, event)) {
+			return;
+		}
+
 		// We only need to stop the map dragging if
 		// we actually have something selected
 		if (!this.selected.length) {
@@ -798,6 +793,10 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 		event: TerraDrawMouseEvent,
 		setMapDraggability: (enabled: boolean) => void,
 	) {
+		if (!this.allowPointerEvent(this.pointerEvents.onDrag, event)) {
+			return;
+		}
+
 		const selectedId = this.selected[0];
 
 		// If nothing selected we can return early
@@ -886,9 +885,13 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 
 	/** @internal */
 	onDragEnd(
-		_: TerraDrawMouseEvent,
+		event: TerraDrawMouseEvent,
 		setMapDraggability: (enabled: boolean) => void,
 	) {
+		if (!this.allowPointerEvent(this.pointerEvents.onDragEnd, event)) {
+			return;
+		}
+
 		this.setCursor(this.cursors.dragEnd);
 
 		// If we have finished dragging a coordinate or a feature

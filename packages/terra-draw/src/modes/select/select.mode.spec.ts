@@ -1,10 +1,10 @@
 import { Position } from "geojson";
-import { GeoJSONStore } from "../../store/store";
 import { MockModeConfig } from "../../test/mock-mode-config";
 import { TerraDrawSelectMode } from "./select.mode";
 import { MockCursorEvent } from "../../test/mock-cursor-event";
 import { MockKeyboardEvent } from "../../test/mock-keyboard-event";
 import { TerraDrawGeoJSONStore, TerraDrawMouseEvent } from "../../common";
+import { DefaultPointerEvents } from "../base.mode";
 
 describe("TerraDrawSelectMode", () => {
 	let selectMode: TerraDrawSelectMode;
@@ -1115,6 +1115,7 @@ describe("TerraDrawSelectMode", () => {
 			it("does not select if no features", () => {
 				selectMode.updateOptions({
 					pointerEvents: {
+						...DefaultPointerEvents,
 						rightClick: false,
 						contextMenu: true,
 					},
@@ -1130,6 +1131,7 @@ describe("TerraDrawSelectMode", () => {
 			it("returns if different feature than selected is clicked on", () => {
 				setSelectMode({
 					pointerEvents: {
+						...DefaultPointerEvents,
 						rightClick: false,
 						contextMenu: true,
 					},
@@ -1199,6 +1201,7 @@ describe("TerraDrawSelectMode", () => {
 			it("does not delete coordinate if coordinate is clicked on but deletable is set to false", () => {
 				setSelectMode({
 					pointerEvents: {
+						...DefaultPointerEvents,
 						rightClick: false,
 						contextMenu: true,
 					},
@@ -1256,6 +1259,10 @@ describe("TerraDrawSelectMode", () => {
 					pointerEvents: {
 						rightClick: false,
 						contextMenu: true,
+						leftClick: true,
+						onDragStart: true,
+						onDrag: true,
+						onDragEnd: true,
 					},
 					flags: {
 						polygon: {
@@ -1308,6 +1315,7 @@ describe("TerraDrawSelectMode", () => {
 			it("deletes a coordinate in deletable set to true and a coordinate is clicked on", () => {
 				setSelectMode({
 					pointerEvents: {
+						...DefaultPointerEvents,
 						rightClick: false,
 						contextMenu: true,
 					},

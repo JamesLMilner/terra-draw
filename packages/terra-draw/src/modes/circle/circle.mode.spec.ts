@@ -6,6 +6,7 @@ import { Polygon } from "geojson";
 import { followsRightHandRule } from "../../geometry/boolean/right-hand-rule";
 import { MockKeyboardEvent } from "../../test/mock-keyboard-event";
 import { TerraDrawGeoJSONStore } from "../../common";
+import { DefaultPointerEvents } from "../base.mode";
 
 describe("TerraDrawCircleMode", () => {
 	describe("constructor", () => {
@@ -364,6 +365,33 @@ describe("TerraDrawCircleMode", () => {
 						action: "draw",
 						mode: "circle",
 					});
+				});
+			});
+
+			describe("with leftClick pointer event set to false", () => {
+				beforeEach(() => {
+					circleMode = new TerraDrawCircleMode({
+						pointerEvents: {
+							...DefaultPointerEvents,
+							leftClick: false,
+						},
+					});
+					const mockConfig = MockModeConfig(circleMode.mode);
+
+					store = mockConfig.store;
+					circleMode.register(mockConfig);
+					circleMode.start();
+				});
+
+				it("should not allow click", () => {
+					circleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+					circleMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
+
+					circleMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
+
+					let features = store.copyAll();
+					expect(features.length).toBe(0);
 				});
 			});
 		});

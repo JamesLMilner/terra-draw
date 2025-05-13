@@ -220,8 +220,6 @@ export class TerraDrawPointMode extends TerraDrawBaseDrawMode<PointModeStyling> 
 				value: true,
 			},
 		]);
-
-		setMapDraggability(true);
 	}
 
 	/** @internal */

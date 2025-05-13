@@ -834,8 +834,6 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 				value: true,
 			},
 		]);
-
-		setMapDraggability(true);
 	}
 
 	/** @internal */

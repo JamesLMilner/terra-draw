@@ -976,8 +976,6 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 				value: true,
 			},
 		]);
-
-		setMapDraggability(true);
 	}
 
 	/** @internal */

@@ -20,7 +20,7 @@ Terra Draw works with your mapping library of choice via adapters. Please pick t
 * [terra-draw-maplibre-gl-adapter](https://www.npmjs.com/package/terra-draw-maplibre-gl-adapter)
 * [terra-draw-leaflet-adapter](https://www.npmjs.com/package/terra-draw-leaflet-adapter)
 * [terra-draw-google-maps-adapter](https://www.npmjs.com/package/terra-draw-googl-emaps-adapter)
-* [terra-draw-mapbox-gl-js-adapter](https://www.npmjs.com/package/terra-draw-mapbox-gl-js-adapter)
+* [terra-draw-mapbox-gl-adapter](https://www.npmjs.com/package/terra-draw-mapbox-gl-adapter)
 * [terra-draw-google-maps-adapter](https://www.npmjs.com/package/terra-draw-google-maps-adapter)
 * [terra-draw-arcgis-adapter](https://www.npmjs.com/package/terra-draw-arcgis-adapter)
 

@@ -2,6 +2,34 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.6.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.5.0...terra-draw@1.6.0) (2025-05-15)
+
+
+### docs
+
+* **terra-draw:** add style-load event to guides for Mapbox/MapLibre (#537) ([](https://github.com/JamesLMilner/terra-draw/commit/6a233a9e5a65b41bb355421cab5d61cdb06739f0)), closes [#537](https://github.com/JamesLMilner/terra-draw/issues/537)
+* **terra-draw:** do not mention reference specifics of how adapters clear up data (#541) ([](https://github.com/JamesLMilner/terra-draw/commit/391c4244d6817d4c88aa4e216fe0d80731ec672c)), closes [#541](https://github.com/JamesLMilner/terra-draw/issues/541)
+* **terra-draw:** ensure README link to terra-draw-mapbox-gl-js-adapter is correct (#545) ([](https://github.com/JamesLMilner/terra-draw/commit/633bc49b6eca4d04c0d2ec94d32a0af2c109239d)), closes [#545](https://github.com/JamesLMilner/terra-draw/issues/545)
+* **terra-draw:** fix package name of terra-draw-maplibre-gl-adapter in README (#542) ([](https://github.com/JamesLMilner/terra-draw/commit/0cac76120acfed3fdb6ddc02977d8c45003187b4)), closes [#542](https://github.com/JamesLMilner/terra-draw/issues/542)
+* **terra-draw:** update a link in 4.MODES.md (#546) ([](https://github.com/JamesLMilner/terra-draw/commit/409a7c479ded7f4fc6dd80223e6febad43f71984)), closes [#546](https://github.com/JamesLMilner/terra-draw/issues/546)
+
+
+### fix
+
+* **terra-draw:** ensure draggability is not set to true whilst editing polygons (#544) ([](https://github.com/JamesLMilner/terra-draw/commit/0e36035f88d32af607ea2f2c4a5e2d048166264b)), closes [#544](https://github.com/JamesLMilner/terra-draw/issues/544)
+
+
+### feat
+
+* **terra-draw:** add a way to determine which feature a coordinate point relates to (#536) ([](https://github.com/JamesLMilner/terra-draw/commit/5eedd1158b664580bcfbd751a22bea06ac861f5d)), closes [#536](https://github.com/JamesLMilner/terra-draw/issues/536)
+* **terra-draw:** allow coordinate deletions with contextmenu events (#538) ([](https://github.com/JamesLMilner/terra-draw/commit/acf0d339fbf00b1f84e53056d99c6f3362cdaf20)), closes [#538](https://github.com/JamesLMilner/terra-draw/issues/538)
+* **terra-draw:** allow filtering of pointer events with a function or boolean (#543) ([](https://github.com/JamesLMilner/terra-draw/commit/faa2311470372318d9478d3c8701559d2aed6c70)), closes [#543](https://github.com/JamesLMilner/terra-draw/issues/543)
+
+
+### chore
+
+* **terra-draw:** use a constant for feature zIndexing (#531) ([](https://github.com/JamesLMilner/terra-draw/commit/d28591006fce8c240e0aa841006f43b7adf1b3c4)), closes [#531](https://github.com/JamesLMilner/terra-draw/issues/531)
+
 ## [1.5.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.4.3...terra-draw@1.5.0) (2025-04-21)
 
 

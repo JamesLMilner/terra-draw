@@ -25,6 +25,10 @@ export function webMercatorBearing(
 	const deltaX = x2 - x1;
 	const deltaY = y2 - y1;
 
+	if (deltaX === 0 && deltaY === 0) {
+		return 0; // No movement
+	}
+
 	// Calculate the angle in radians
 	let angle = Math.atan2(deltaY, deltaX);
 

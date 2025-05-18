@@ -1,4 +1,9 @@
-import { TerraDrawMouseEvent, UpdateTypes, Validation } from "../../../common";
+import {
+	CartesianPoint,
+	TerraDrawMouseEvent,
+	UpdateTypes,
+	Validation,
+} from "../../../common";
 import { BehaviorConfig, TerraDrawModeBehavior } from "../../base.behavior";
 import { Feature, LineString, Polygon, Position } from "geojson";
 import { SelectionPointBehavior } from "./selection-point.behavior";
@@ -30,9 +35,13 @@ export class ScaleFeatureBehavior extends TerraDrawModeBehavior {
 	}
 
 	private lastDistance: number | undefined;
+	private selectedGeometryCentroid: Position | undefined;
+	private selectedGeometryWebMercatorCentroid: CartesianPoint | undefined;
 
 	reset() {
 		this.lastDistance = undefined;
+		this.selectedGeometryCentroid = undefined;
+		this.selectedGeometryWebMercatorCentroid = undefined;
 	}
 
 	scale(
@@ -57,14 +66,29 @@ export class ScaleFeatureBehavior extends TerraDrawModeBehavior {
 
 		let distance;
 
-		const originWebMercator = webMercatorCentroid(feature);
-
 		if (this.config.projection === "web-mercator") {
+			if (!this.selectedGeometryWebMercatorCentroid) {
+				this.selectedGeometryWebMercatorCentroid = webMercatorCentroid(feature);
+			}
+
 			const selectedWebMercator = lngLatToWebMercatorXY(event.lng, event.lat);
-			distance = cartesianDistance(originWebMercator, selectedWebMercator);
+			distance = cartesianDistance(
+				this.selectedGeometryWebMercatorCentroid,
+				selectedWebMercator,
+			);
 		} else if (this.config.projection === "globe") {
+			// Cache the centroid of the selected geometry
+			// to avoid recalculating it on every cursor move
+			if (!this.selectedGeometryCentroid) {
+				this.selectedGeometryCentroid = centroid({
+					type: "Feature",
+					geometry,
+					properties: {},
+				});
+			}
+
 			distance = haversineDistanceKilometers(
-				centroid({ type: "Feature", geometry, properties: {} }),
+				this.selectedGeometryCentroid,
 				mouseCoord,
 			);
 		} else {
@@ -80,14 +104,27 @@ export class ScaleFeatureBehavior extends TerraDrawModeBehavior {
 		const scale = 1 - (this.lastDistance - distance) / distance;
 
 		if (this.config.projection === "web-mercator") {
+			if (!this.selectedGeometryWebMercatorCentroid) {
+				this.selectedGeometryWebMercatorCentroid = webMercatorCentroid(feature);
+			}
+
 			const { lng, lat } = webMercatorXYToLngLat(
-				originWebMercator.x,
-				originWebMercator.y,
+				this.selectedGeometryWebMercatorCentroid.x,
+				this.selectedGeometryWebMercatorCentroid.y,
 			);
 			transformScaleWebMercator(feature, scale, [lng, lat]);
 		} else if (this.config.projection === "globe") {
-			const origin = centroid(feature);
-			transformScale(feature, scale, origin);
+			// Cache the centroid of the selected geometry
+			// to avoid recalculating it on every cursor move
+			if (!this.selectedGeometryCentroid) {
+				this.selectedGeometryCentroid = centroid({
+					type: "Feature",
+					geometry,
+					properties: {},
+				});
+			}
+
+			transformScale(feature, scale, this.selectedGeometryCentroid);
 		}
 
 		// Coordinates are either polygon or linestring at this point

@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.6.1](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.6.0...terra-draw@1.6.1) (2025-05-19)
+
+
+### fix
+
+* **terra-draw:** improve rotating and scaling behaviours for geographically small geometries (#549) ([](https://github.com/JamesLMilner/terra-draw/commit/d1ec0e3b92a4fcdb46bcc71587b54264016ac969)), closes [#549](https://github.com/JamesLMilner/terra-draw/issues/549)
+
+
+### docs
+
+* **terra-draw:** ensure style.load event is wrapping MapLibre and Mapbox examples (#550) ([](https://github.com/JamesLMilner/terra-draw/commit/aa205f996558e936b043f4421275550e8d63e0ec)), closes [#550](https://github.com/JamesLMilner/terra-draw/issues/550)
+
 ## [1.6.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.5.0...terra-draw@1.6.0) (2025-05-15)
 
 

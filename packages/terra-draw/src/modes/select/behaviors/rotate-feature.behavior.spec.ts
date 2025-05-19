@@ -52,6 +52,7 @@ describe("RotateFeatureBehavior", () => {
 			);
 
 			jest.spyOn(config.store, "updateGeometry");
+			jest.spyOn(config.store, "getGeometryCopy");
 		});
 
 		describe("rotate", () => {
@@ -76,6 +77,10 @@ describe("RotateFeatureBehavior", () => {
 
 				rotateFeatureBehavior.rotate(MockCursorEvent({ lng: 0, lat: 0 }), id);
 				rotateFeatureBehavior.rotate(MockCursorEvent({ lng: 0, lat: 0 }), id);
+
+				// We cache the geometry in the first event
+				// and then use it in the second event
+				expect(config.store.getGeometryCopy).toHaveBeenCalledTimes(1);
 				expect(config.store.updateGeometry).toHaveBeenCalledTimes(1);
 			});
 
@@ -84,6 +89,10 @@ describe("RotateFeatureBehavior", () => {
 
 				rotateFeatureBehavior.rotate(MockCursorEvent({ lng: 0, lat: 0 }), id);
 				rotateFeatureBehavior.rotate(MockCursorEvent({ lng: 0, lat: 0 }), id);
+
+				// We cache the geometry in the first event
+				// and then use it in the second event
+				expect(config.store.getGeometryCopy).toHaveBeenCalledTimes(1);
 				expect(config.store.updateGeometry).toHaveBeenCalledTimes(1);
 			});
 		});

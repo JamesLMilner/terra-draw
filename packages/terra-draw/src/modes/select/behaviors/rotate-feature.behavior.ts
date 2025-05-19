@@ -1,4 +1,9 @@
-import { TerraDrawMouseEvent, UpdateTypes, Validation } from "../../../common";
+import {
+	CartesianPoint,
+	TerraDrawMouseEvent,
+	UpdateTypes,
+	Validation,
+} from "../../../common";
 import { BehaviorConfig, TerraDrawModeBehavior } from "../../base.behavior";
 import { Feature, LineString, Polygon, Position } from "geojson";
 import { SelectionPointBehavior } from "./selection-point.behavior";
@@ -27,9 +32,15 @@ export class RotateFeatureBehavior extends TerraDrawModeBehavior {
 	}
 
 	private lastBearing: number | undefined;
+	private selectedGeometry: Polygon | LineString | undefined;
+	private selectedGeometryCentroid: Position | undefined;
+	private selectedGeometryWebMercatorCentroid: CartesianPoint | undefined;
 
 	reset() {
 		this.lastBearing = undefined;
+		this.selectedGeometry = undefined;
+		this.selectedGeometryWebMercatorCentroid = undefined;
+		this.selectedGeometryCentroid = undefined;
 	}
 
 	rotate(
@@ -37,9 +48,13 @@ export class RotateFeatureBehavior extends TerraDrawModeBehavior {
 		selectedId: FeatureId,
 		validateFeature?: Validation,
 	) {
-		const geometry = this.store.getGeometryCopy<LineString | Polygon>(
-			selectedId,
-		);
+		if (!this.selectedGeometry) {
+			this.selectedGeometry = this.store.getGeometryCopy<LineString | Polygon>(
+				selectedId,
+			);
+		}
+
+		const geometry = this.selectedGeometry;
 
 		// Update the geometry of the dragged feature
 		if (geometry.type !== "Polygon" && geometry.type !== "LineString") {
@@ -54,10 +69,22 @@ export class RotateFeatureBehavior extends TerraDrawModeBehavior {
 			| Feature<LineString>;
 
 		if (this.config.projection === "web-mercator") {
-			const centerWebMercator = webMercatorCentroid(feature);
+			// Cache the centroid of the selected geometry
+			// to avoid recalculating it on every cursor move
+			if (!this.selectedGeometryWebMercatorCentroid) {
+				this.selectedGeometryWebMercatorCentroid = webMercatorCentroid(feature);
+			}
+
 			const cursorWebMercator = lngLatToWebMercatorXY(event.lng, event.lat);
 
-			bearing = webMercatorBearing(centerWebMercator, cursorWebMercator);
+			bearing = webMercatorBearing(
+				this.selectedGeometryWebMercatorCentroid,
+				cursorWebMercator,
+			);
+
+			if (bearing === 0) {
+				return;
+			}
 
 			if (!this.lastBearing) {
 				this.lastBearing = bearing;
@@ -68,10 +95,17 @@ export class RotateFeatureBehavior extends TerraDrawModeBehavior {
 
 			transformRotateWebMercator(feature, -angle);
 		} else if (this.config.projection === "globe") {
-			bearing = rhumbBearing(
-				centroid({ type: "Feature", geometry, properties: {} }),
-				mouseCoord,
-			);
+			// Cache the centroid of the selected geometry
+			// to avoid recalculating it on every cursor move
+			if (!this.selectedGeometryCentroid) {
+				this.selectedGeometryCentroid = centroid({
+					type: "Feature",
+					geometry,
+					properties: {},
+				});
+			}
+
+			bearing = rhumbBearing(this.selectedGeometryCentroid, mouseCoord);
 
 			// We need an original bearing to compare against
 			if (!this.lastBearing) {

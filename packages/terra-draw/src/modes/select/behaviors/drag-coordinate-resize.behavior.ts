@@ -12,10 +12,7 @@ import { SelectionPointBehavior } from "./selection-point.behavior";
 import { FeatureId, GeoJSONStoreGeometries } from "../../../store/store";
 import { limitPrecision } from "../../../geometry/limit-decimal-precision";
 import { cartesianDistance } from "../../../geometry/measure/pixel-distance";
-import {
-	coordinateIsValid,
-	coordinatePrecisionIsValid,
-} from "../../../geometry/boolean/is-valid-coordinate";
+import { coordinatePrecisionIsValid } from "../../../geometry/boolean/is-valid-coordinate";
 import {
 	lngLatToWebMercatorXY,
 	webMercatorXYToLngLat,

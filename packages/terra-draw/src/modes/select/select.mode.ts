@@ -277,13 +277,6 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 			this.coordinatePoints,
 		);
 
-		this.scaleFeature = new ScaleFeatureBehavior(
-			config,
-			this.selectionPoints,
-			this.midPoints,
-			this.coordinatePoints,
-		);
-
 		this.dragFeature = new DragFeatureBehavior(
 			config,
 			this.featuresAtMouseEvent,
@@ -305,6 +298,11 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 			this.selectionPoints,
 			this.midPoints,
 			this.coordinatePoints,
+		);
+
+		this.scaleFeature = new ScaleFeatureBehavior(
+			config,
+			this.dragCoordinateResizeFeature,
 		);
 	}
 
@@ -842,6 +840,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 			this.canScale(event)
 		) {
 			setMapDraggability(false);
+
 			this.scaleFeature.scale(event, selectedId, validation);
 			return;
 		}

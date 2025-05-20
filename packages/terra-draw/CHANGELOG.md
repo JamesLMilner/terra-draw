@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.6.2](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.6.1...terra-draw@1.6.2) (2025-05-20)
+
+
+### fix
+
+* **terra-draw:** resolve issue with scaling not tracking cursor correctly (#552) ([](https://github.com/JamesLMilner/terra-draw/commit/43868ef3827b6af8e79db8b1c623e59677a365ec)), closes [#552](https://github.com/JamesLMilner/terra-draw/issues/552)
+
 ## [1.6.1](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.6.0...terra-draw@1.6.1) (2025-05-19)
 
 

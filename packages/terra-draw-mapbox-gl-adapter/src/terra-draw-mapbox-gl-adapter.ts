@@ -42,18 +42,13 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawExtend.TerraDrawBaseAdapt
 			const geometryTypes = ["point", "linestring", "polygon"] as const;
 			geometryTypes.forEach((geometryKey) => {
 				const id = `td-${geometryKey.toLowerCase()}`;
-				this._map.removeLayer(id);
-
-				// Special case for polygons as it has another id for the outline
-				// that we need to make sure we remove
-				if (geometryKey === "polygon") {
-					this._map.removeLayer(id + "-outline");
+				const source = this._map.getSource(id) as GeoJSONSource;
+				if (source) {
+					source.setData({ type: "FeatureCollection", features: [] });
+				} else {
+					console.warn(`Source ${id} not found during clearLayers`);
 				}
-				this._map.removeSource(id);
 			});
-
-			this._rendered = false;
-
 			// TODO: This is necessary to prevent render artifacts, perhaps there is a nicer solution?
 			if (this._nextRender) {
 				cancelAnimationFrame(this._nextRender);
@@ -433,6 +428,18 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawExtend.TerraDrawBaseAdapt
 
 			// Then clean up rendering
 			this.clearLayers();
+
+			// Reset changedIds to ensure subsequent renders update all layers
+			this.changedIds = {
+				points: false,
+				linestrings: false,
+				polygons: false,
+				deletion: false,
+				styling: false,
+			};
+			if (this._currentModeCallbacks.onReady) {
+				this._currentModeCallbacks.onReady();
+			}
 		}
 	}
 

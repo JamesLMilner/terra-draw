@@ -55,6 +55,7 @@ describe("TerraDrawMapboxGLAdapter", () => {
 			},
 			addSource: jest.fn(),
 			addLayer: jest.fn(),
+			getLayer: jest.fn((id: string) => ({ id })),
 			moveLayer: jest.fn(),
 			removeLayer: jest.fn(),
 			removeSource: jest.fn(),
@@ -234,37 +235,73 @@ describe("TerraDrawMapboxGLAdapter", () => {
 	});
 
 	describe("clear", () => {
-		it("removes layers and sources correctly", () => {
+		it("clears source data without removing layers or sources", () => {
 			jest.spyOn(window, "requestAnimationFrame");
-
 			const map = createMapboxGLMap();
 			const adapter = new TerraDrawMapboxGLAdapter({
 				map: map as mapboxgl.Map,
 			});
-
-			adapter.register(MockCallbacks());
-
+			const callbacks = MockCallbacks();
+			adapter.register(callbacks);
+			// Simulate rendering some data
 			adapter.render(
 				{
-					created: [],
+					created: [
+						{
+							id: "1",
+							type: "Feature",
+							geometry: {
+								type: "Point",
+								coordinates: [1, 1],
+							},
+							properties: {
+								mode: "point",
+							},
+						},
+					],
 					updated: [],
 					unchanged: [],
 					deletedIds: [],
 				},
 				{
-					test: () => ({}) as unknown as TerraDrawAdapterStyling,
+					point: () => ({
+						pointColor: "#FF0000",
+						pointOutlineColor: "#FFFFFF",
+						pointWidth: 5,
+						pointOutlineWidth: 1,
+						lineStringColor: "#000000",
+						lineStringWidth: 2,
+						polygonFillColor: "#000000",
+						polygonFillOpacity: 0.5,
+						polygonOutlineColor: "#000000",
+						polygonOutlineWidth: 1,
+						zIndex: 1,
+					}),
 				},
 			);
 			const rAFCallback = (requestAnimationFrame as jest.Mock).mock.calls[0][0];
 			rAFCallback();
-
-			expect(map.addSource).toHaveBeenCalledTimes(4);
-			expect(map.addLayer).toHaveBeenCalledTimes(5);
-
+			// Verify initial setup
+			expect(map.addSource).toHaveBeenCalledTimes(4); // point, point-lower, linestring, polygon
+			expect(map.addLayer).toHaveBeenCalledTimes(5); // point, point-lower, linestring, polygon, polygon-outline
+			expect(map.getSource).toHaveBeenCalledWith("td-point");
 			adapter.clear();
-
-			expect(map.removeLayer).toHaveBeenCalledTimes(4);
-			expect(map.removeSource).toHaveBeenCalledTimes(3);
+			// Verify that onClear was called
+			expect(callbacks.onClear).toHaveBeenCalledTimes(1);
+			// Verify that sources were cleared, not removed
+			expect(map.getSource).toHaveBeenCalledWith("td-point");
+			expect(map.getSource).toHaveBeenCalledWith("td-linestring");
+			expect(map.getSource).toHaveBeenCalledWith("td-polygon");
+			expect(map.getSource).toHaveBeenCalledWith("td-point-lower");
+			expect(
+				(map.getSource as jest.Mock).mock.results[0].value.setData,
+			).toHaveBeenCalledWith({
+				type: "FeatureCollection",
+				features: [],
+			});
+			expect(map.removeSource).not.toHaveBeenCalled();
+			expect(map.removeLayer).not.toHaveBeenCalled();
+			// Remove getLayer expectations
 		});
 	});
 
@@ -477,8 +514,8 @@ describe("TerraDrawMapboxGLAdapter", () => {
 			adapter.unregister();
 
 			// Clears any set data
-			expect(map.removeLayer).toHaveBeenCalledTimes(4);
-			expect(map.removeSource).toHaveBeenCalledTimes(3);
+			expect(map.removeLayer).toHaveBeenCalledTimes(0);
+			expect(map.removeSource).toHaveBeenCalledTimes(0);
 		});
 	});
 });

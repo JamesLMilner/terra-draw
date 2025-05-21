@@ -20,47 +20,28 @@ import {
 
 export class TerraDrawMapboxGLAdapter extends TerraDrawExtend.TerraDrawBaseAdapter {
 	constructor(
-		config: { map: mapboxgl.Map } & TerraDrawExtend.BaseAdapterConfig,
+		config: {
+			map: mapboxgl.Map;
+			renderBelowLayerId?: string;
+		} & TerraDrawExtend.BaseAdapterConfig,
 	) {
 		super(config);
 
 		this._map = config.map;
 		this._container = this._map.getContainer();
+
+		// We want to respect the initial map settings
+		this._initialDragRotate = this._map.dragRotate.isEnabled();
+		this._initialDragPan = this._map.dragPan.isEnabled();
+		this._renderBeforeLayerId = config.renderBelowLayerId;
 	}
 
+	private _renderBeforeLayerId: string | undefined;
+	private _initialDragPan: boolean;
+	private _initialDragRotate: boolean;
 	private _nextRender: number | undefined;
 	private _map: mapboxgl.Map;
 	private _container: HTMLElement;
-	private _rendered = false;
-
-	/**
-	 * Clears the map of rendered layers and sources
-	 * @returns void
-	 * */
-	private clearLayers() {
-		if (this._rendered) {
-			const geometryTypes = ["point", "linestring", "polygon"] as const;
-			geometryTypes.forEach((geometryKey) => {
-				const id = `td-${geometryKey.toLowerCase()}`;
-				this._map.removeLayer(id);
-
-				// Special case for polygons as it has another id for the outline
-				// that we need to make sure we remove
-				if (geometryKey === "polygon") {
-					this._map.removeLayer(id + "-outline");
-				}
-				this._map.removeSource(id);
-			});
-
-			this._rendered = false;
-
-			// TODO: This is necessary to prevent render artifacts, perhaps there is a nicer solution?
-			if (this._nextRender) {
-				cancelAnimationFrame(this._nextRender);
-				this._nextRender = undefined;
-			}
-		}
-	}
 
 	private _addGeoJSONSource(id: string, features: Feature[]) {
 		this._map.addSource(id, {
@@ -78,6 +59,9 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawExtend.TerraDrawBaseAdapt
 			id,
 			source: id,
 			type: "fill",
+			layout: {
+				"fill-sort-key": ["get", "zIndex"],
+			},
 			// No need for filters as style is driven by properties
 			paint: {
 				"fill-color": ["get", "polygonFillColor"],
@@ -91,6 +75,9 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawExtend.TerraDrawBaseAdapt
 			id: id + "-outline",
 			source: id,
 			type: "line",
+			layout: {
+				"line-sort-key": ["get", "zIndex"],
+			},
 			// No need for filters as style is driven by properties
 			paint: {
 				"line-width": ["get", "polygonOutlineWidth"],
@@ -106,6 +93,9 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawExtend.TerraDrawBaseAdapt
 			id,
 			source: id,
 			type: "line",
+			layout: {
+				"line-sort-key": ["get", "zIndex"],
+			},
 			// No need for filters as style is driven by properties
 			paint: {
 				"line-width": ["get", "lineStringWidth"],
@@ -121,6 +111,9 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawExtend.TerraDrawBaseAdapt
 			id,
 			source: id,
 			type: "circle",
+			layout: {
+				"circle-sort-key": ["get", "zIndex"],
+			},
 			// No need for filters as style is driven by properties
 			paint: {
 				"circle-stroke-color": ["get", "pointOutlineColor"],
@@ -152,9 +145,8 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawExtend.TerraDrawBaseAdapt
 	private _addGeoJSONLayer<T extends GeoJSONStoreGeometries>(
 		featureType: Feature<T>["geometry"]["type"],
 		features: Feature<T>[],
-		tag?: string,
 	) {
-		const id = `td-${featureType.toLowerCase()}${tag ? `-${tag}` : ""}`;
+		const id = `td-${featureType.toLowerCase()}`;
 		this._addGeoJSONSource(id, features);
 		this._addLayer(id, featureType);
 
@@ -164,9 +156,8 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawExtend.TerraDrawBaseAdapt
 	private _setGeoJSONLayerData<T extends GeoJSONStoreGeometries>(
 		featureType: Feature<T>["geometry"]["type"],
 		features: Feature<T>[],
-		tag?: string,
 	) {
-		const id = `td-${featureType.toLowerCase()}${tag ? `-${tag}` : ""}`;
+		const id = `td-${featureType.toLowerCase()}`;
 		(this._map.getSource(id) as GeoJSONSource).setData({
 			type: "FeatureCollection",
 			features: features,
@@ -241,11 +232,19 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawExtend.TerraDrawBaseAdapt
 		if (enabled) {
 			// Mapbox GL has both drag rotation and drag panning interactions
 			// hence having to enable/disable both
-			this._map.dragRotate.enable();
-			this._map.dragPan.enable();
+			if (this._initialDragRotate) {
+				this._map.dragRotate.enable();
+			}
+			if (this._initialDragPan) {
+				this._map.dragPan.enable();
+			}
 		} else {
-			this._map.dragRotate.disable();
-			this._map.dragPan.disable();
+			if (this._initialDragRotate) {
+				this._map.dragRotate.disable();
+			}
+			if (this._initialDragPan) {
+				this._map.dragPan.disable();
+			}
 		}
 	}
 
@@ -321,7 +320,6 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawExtend.TerraDrawBaseAdapt
 				...changes.unchanged,
 			];
 
-			const lowerZIndexPoints = [];
 			const points = [];
 			const linestrings = [];
 			const polygons = [];
@@ -337,12 +335,8 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawExtend.TerraDrawBaseAdapt
 					properties.pointOutlineColor = styles.pointOutlineColor;
 					properties.pointOutlineWidth = styles.pointOutlineWidth;
 					properties.pointWidth = styles.pointWidth;
-
-					if (styles.zIndex < 30) {
-						lowerZIndexPoints.push(feature);
-					} else {
-						points.push(feature);
-					}
+					properties.zIndex = styles.zIndex;
+					points.push(feature);
 				} else if (feature.geometry.type === "LineString") {
 					properties.lineStringColor = styles.lineStringColor;
 					properties.lineStringWidth = styles.lineStringWidth;
@@ -356,59 +350,33 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawExtend.TerraDrawBaseAdapt
 				}
 			}
 
-			if (this._rendered) {
-				// If deletion occurred we always have to update all layers
-				// as we don't know the type (TODO: perhaps we could pass that back?)
-				const deletionOccurred = this.changedIds.deletion;
-				const styleUpdatedOccurred = this.changedIds.styling;
-				const forceUpdate = deletionOccurred || styleUpdatedOccurred;
+			// If deletion occurred we always have to update all layers
+			// as we don't know the type (TODO: perhaps we could pass that back?)
+			const deletionOccurred = this.changedIds.deletion;
+			const styleUpdatedOccurred = this.changedIds.styling;
+			const forceUpdate = deletionOccurred || styleUpdatedOccurred;
 
-				// Determine if we need to update each layer by geometry type
-				const updatePoints = forceUpdate || this.changedIds.points;
-				const updateLineStrings = forceUpdate || this.changedIds.linestrings;
-				const updatedPolygon = forceUpdate || this.changedIds.polygons;
+			// Determine if we need to update each layer by geometry type
+			const updatePoints = forceUpdate || this.changedIds.points;
+			const updateLineStrings = forceUpdate || this.changedIds.linestrings;
+			const updatedPolygon = forceUpdate || this.changedIds.polygons;
 
-				let pointId;
-				let lowerZIndexPointId;
+			if (updatePoints) {
+				this._setGeoJSONLayerData<Point>("Point", points as Feature<Point>[]);
+			}
 
-				if (updatePoints) {
-					pointId = this._setGeoJSONLayerData<Point>(
-						"Point",
-						points as Feature<Point>[],
-					);
+			if (updateLineStrings) {
+				this._setGeoJSONLayerData<LineString>(
+					"LineString",
+					linestrings as Feature<LineString>[],
+				);
+			}
 
-					lowerZIndexPointId = this._setGeoJSONLayerData<Point>(
-						"Point",
-						lowerZIndexPoints as Feature<Point>[],
-						"lower",
-					);
-				}
-
-				if (updateLineStrings) {
-					this._setGeoJSONLayerData<LineString>(
-						"LineString",
-						linestrings as Feature<LineString>[],
-					);
-				}
-
-				if (updatedPolygon) {
-					this._setGeoJSONLayerData<Polygon>(
-						"Polygon",
-						polygons as Feature<Polygon>[],
-					);
-				}
-
-				// TODO: This logic could be better - I think this will render the selection points above user
-				// defined layers outside of Terra Draw which is perhaps unideal
-
-				// Ensure selection/mid points are rendered on top
-				if (pointId) {
-					this._map.moveLayer(pointId);
-
-					if (lowerZIndexPointId) {
-						this._map.moveLayer(lowerZIndexPointId, pointId);
-					}
-				}
+			if (updatedPolygon) {
+				this._setGeoJSONLayerData<Polygon>(
+					"Polygon",
+					polygons as Feature<Polygon>[],
+				);
 			}
 
 			// Reset changed ids
@@ -431,8 +399,17 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawExtend.TerraDrawBaseAdapt
 			// Clear up state first
 			this._currentModeCallbacks.onClear();
 
-			// Then clean up rendering
-			this.clearLayers();
+			// TODO: This is necessary to prevent render artifacts, perhaps there is a nicer solution?
+			if (this._nextRender) {
+				cancelAnimationFrame(this._nextRender);
+				this._nextRender = undefined;
+			}
+
+			this._setGeoJSONLayerData<Point>("Point", []);
+
+			this._setGeoJSONLayerData<LineString>("LineString", []);
+
+			this._setGeoJSONLayerData<Polygon>("Polygon", []);
 		}
 	}
 
@@ -441,40 +418,41 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawExtend.TerraDrawBaseAdapt
 	}
 
 	public unregister(): void {
-		// TODO: It seems this shouldn't be necessary as extends BaseAdapter which as this method
-		return super.unregister();
+		super.unregister();
+
+		this._map.removeLayer("td-point");
+		this._map.removeSource("td-point");
+		this._map.removeLayer("td-linestring");
+		this._map.removeSource("td-linestring");
+		this._map.removeLayer("td-polygon");
+		this._map.removeLayer("td-polygon-outline");
+		this._map.removeSource("td-polygon");
 	}
 
 	public register(callbacks: TerraDrawExtend.TerraDrawCallbacks) {
 		super.register(callbacks);
+
+		const polygonStringId = this._addGeoJSONLayer<Polygon>(
+			"Polygon",
+			[] as Feature<Polygon>[],
+		);
+
+		const lineStringId = this._addGeoJSONLayer<LineString>(
+			"LineString",
+			[] as Feature<LineString>[],
+		);
 
 		const pointId = this._addGeoJSONLayer<Point>(
 			"Point",
 			[] as Feature<Point>[],
 		);
 
-		const lowerZIndexPointId = this._addGeoJSONLayer<Point>(
-			"Point",
-			[] as Feature<Point>[],
-			"lower",
-		);
-
-		this._addGeoJSONLayer<LineString>(
-			"LineString",
-			[] as Feature<LineString>[],
-		);
-		this._addGeoJSONLayer<Polygon>("Polygon", [] as Feature<Polygon>[]);
-
-		// Ensure selection/mid points are rendered on top
-		if (pointId) {
-			this._map.moveLayer(pointId);
-
-			if (lowerZIndexPointId) {
-				this._map.moveLayer(lowerZIndexPointId, pointId);
-			}
+		if (this._renderBeforeLayerId) {
+			this._map.moveLayer(pointId, this._renderBeforeLayerId);
+			this._map.moveLayer(lineStringId, pointId);
+			this._map.moveLayer(polygonStringId + "-outline", lineStringId);
+			this._map.moveLayer(polygonStringId, lineStringId);
 		}
-
-		this._rendered = true;
 
 		if (this._currentModeCallbacks?.onReady) {
 			this._currentModeCallbacks.onReady();

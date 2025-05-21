@@ -38,7 +38,7 @@ describe("TerraDrawMapboxGLAdapter", () => {
 				enable: jest.fn(),
 				disable: jest.fn(),
 				isActive: jest.fn(),
-				isEnabled: jest.fn(),
+				isEnabled: jest.fn(() => true),
 				_el: jest.fn() as any,
 				_inertiaOptions: {} as any,
 				_mousePan: jest.fn() as any,
@@ -48,7 +48,7 @@ describe("TerraDrawMapboxGLAdapter", () => {
 				enable: jest.fn(),
 				disable: jest.fn(),
 				isActive: jest.fn(),
-				isEnabled: jest.fn(),
+				isEnabled: jest.fn(() => true),
 				_mousePitch: jest.fn() as any,
 				_mouseRotate: jest.fn() as any,
 				_pitchWithRotate: jest.fn() as any,
@@ -258,13 +258,13 @@ describe("TerraDrawMapboxGLAdapter", () => {
 			const rAFCallback = (requestAnimationFrame as jest.Mock).mock.calls[0][0];
 			rAFCallback();
 
-			expect(map.addSource).toHaveBeenCalledTimes(4);
-			expect(map.addLayer).toHaveBeenCalledTimes(5);
+			expect(map.addSource).toHaveBeenCalledTimes(3);
+			expect(map.addLayer).toHaveBeenCalledTimes(4);
 
 			adapter.clear();
 
-			expect(map.removeLayer).toHaveBeenCalledTimes(4);
-			expect(map.removeSource).toHaveBeenCalledTimes(3);
+			expect(map.removeLayer).toHaveBeenCalledTimes(0);
+			expect(map.removeSource).toHaveBeenCalledTimes(0);
 		});
 	});
 
@@ -295,8 +295,8 @@ describe("TerraDrawMapboxGLAdapter", () => {
 
 			rAFCallback();
 
-			expect(map.addSource).toHaveBeenCalledTimes(4);
-			expect(map.addLayer).toHaveBeenCalledTimes(5);
+			expect(map.addSource).toHaveBeenCalledTimes(3);
+			expect(map.addLayer).toHaveBeenCalledTimes(4);
 		});
 
 		it("updates layers and sources when data is passed", () => {
@@ -312,8 +312,8 @@ describe("TerraDrawMapboxGLAdapter", () => {
 
 			adapter.register(MockCallbacks());
 
-			expect(map.addSource).toHaveBeenCalledTimes(4);
-			expect(map.addLayer).toHaveBeenCalledTimes(5);
+			expect(map.addSource).toHaveBeenCalledTimes(3);
+			expect(map.addLayer).toHaveBeenCalledTimes(4);
 
 			adapter.render(
 				{
@@ -331,8 +331,8 @@ describe("TerraDrawMapboxGLAdapter", () => {
 
 			rAFCallback();
 
-			expect(map.addSource).toHaveBeenCalledTimes(4);
-			expect(map.addLayer).toHaveBeenCalledTimes(5);
+			expect(map.addSource).toHaveBeenCalledTimes(3);
+			expect(map.addLayer).toHaveBeenCalledTimes(4);
 
 			adapter.render(
 				{
@@ -397,7 +397,7 @@ describe("TerraDrawMapboxGLAdapter", () => {
 
 			rAFCallback();
 
-			expect(map.getSource).toHaveBeenCalledTimes(8);
+			expect(map.getSource).toHaveBeenCalledTimes(6);
 
 			adapter.render(
 				{
@@ -418,7 +418,7 @@ describe("TerraDrawMapboxGLAdapter", () => {
 			rAFCallback();
 
 			// Force update because of the deletion
-			expect(map.getSource).toHaveBeenCalledTimes(12);
+			expect(map.getSource).toHaveBeenCalledTimes(9);
 		});
 	});
 

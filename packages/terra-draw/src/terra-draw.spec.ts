@@ -11,6 +11,7 @@ import {
 	TerraDrawSelectMode,
 } from "./terra-draw";
 import { TerraDrawTestAdapter } from "./terra-draw.extensions.spec";
+import { MockCursorEvent } from "./test/mock-cursor-event";
 
 describe("Terra Draw", () => {
 	let adapter: TerraDrawTestAdapter;
@@ -915,6 +916,70 @@ describe("Terra Draw", () => {
 			draw.setMode("point");
 
 			expect(draw.getMode()).toBe("point");
+		});
+	});
+
+	describe("getModeState", () => {
+		it("returns registered", () => {
+			const draw = new TerraDraw({
+				adapter: new TerraDrawTestAdapter({
+					lib: {},
+					coordinatePrecision: 9,
+				}),
+				modes: [new TerraDrawPointMode()],
+			});
+
+			expect(draw.getModeState()).toBe("registered");
+		});
+
+		it("returns started", () => {
+			const draw = new TerraDraw({
+				adapter: new TerraDrawTestAdapter({
+					lib: {},
+					coordinatePrecision: 9,
+				}),
+				modes: [new TerraDrawPointMode()],
+			});
+
+			draw.start();
+			draw.setMode("point");
+
+			expect(draw.getModeState()).toBe("started");
+		});
+
+		it("returns drawing", () => {
+			const linestringMode = new TerraDrawLineStringMode();
+
+			const draw = new TerraDraw({
+				adapter: new TerraDrawTestAdapter({
+					lib: {},
+					coordinatePrecision: 9,
+				}),
+				modes: [linestringMode],
+			});
+
+			draw.start();
+			draw.setMode("linestring");
+
+			// NOTE: we shouldn't call a mode's onClick directly, but this is a test
+			linestringMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+			expect(draw.getModeState()).toBe("drawing");
+		});
+
+		it("returns selecting", () => {
+			const draw = new TerraDraw({
+				adapter: new TerraDrawTestAdapter({
+					lib: {},
+					coordinatePrecision: 9,
+				}),
+				modes: [new TerraDrawLineStringMode(), new TerraDrawSelectMode()],
+			});
+
+			draw.start();
+			draw.setMode("select");
+
+			expect(draw.getModeState()).toBe("selecting");
 		});
 	});
 

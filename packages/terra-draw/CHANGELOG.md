@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.6.3](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.6.2...terra-draw@1.6.3) (2025-06-01)
+
+
+### fix
+
+* **terra-draw:** ensure the initial click renders coordinate points when showCoordinatePoints true (#558) ([](https://github.com/JamesLMilner/terra-draw/commit/3b967f49262fc3577dc7a7d2eb855a3985461aa5)), closes [#558](https://github.com/JamesLMilner/terra-draw/issues/558)
+
 ## [1.6.2](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.6.1...terra-draw@1.6.2) (2025-05-20)
 
 

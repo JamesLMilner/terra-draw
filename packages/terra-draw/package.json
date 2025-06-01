@@ -1,6 +1,6 @@
 {
 	"name": "terra-draw",
-	"version": "1.6.2",
+	"version": "1.6.3",
 	"description": "Frictionless map drawing across mapping provider",
 	"scripts": {
 		"release": "TYPE=$(node ../../bump.mjs) && commit-and-tag-version .versionrc.cjs -t terra-draw@ --release-as $TYPE",

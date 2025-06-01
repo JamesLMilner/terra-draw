@@ -101,6 +101,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 	private cursors: Required<Cursors> = defaultCursors;
 	private mouseMove = false;
 	private showCoordinatePoints = false;
+	private lastMouseMoveEvent: TerraDrawMouseEvent | undefined;
 
 	// Snapping
 	private snapping: Snapping | undefined;
@@ -279,11 +280,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 		this.setCursor("unset");
 	}
 
-	/** @internal */
-	onMouseMove(event: TerraDrawMouseEvent) {
-		this.mouseMove = true;
-		this.setCursor(this.cursors.start);
-
+	private updateSnappedCoordinate(event: TerraDrawMouseEvent) {
 		const snappedCoordinate = this.snapCoordinate(event);
 
 		if (snappedCoordinate) {
@@ -320,6 +317,15 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 			this.store.delete([this.snappedPointId]);
 			this.snappedPointId = undefined;
 		}
+	}
+
+	/** @internal */
+	onMouseMove(event: TerraDrawMouseEvent) {
+		this.mouseMove = true;
+		this.setCursor(this.cursors.start);
+
+		this.lastMouseMoveEvent = event;
+		this.updateSnappedCoordinate(event);
 
 		if (this.currentId === undefined || this.currentCoordinate === 0) {
 			return;
@@ -800,6 +806,10 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 		let snappedCoordinate: Position | undefined = undefined;
 
 		if (this.state === "started") {
+			// Here we reuse the snapping logic to find the feature and coordinate
+			// that we want to edit. We can drag a arbitrary polygon coordinate point
+			// or an arbitrary point on one of its 'lines
+
 			const lineSnapped = this.lineSnapping.getSnappable(event, (feature) =>
 				this.polygonFilter(feature),
 			);
@@ -1181,6 +1191,48 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 	afterFeatureAdded(feature: GeoJSONStoreFeatures) {
 		if (this.showCoordinatePoints) {
 			this.coordinatePoints.createOrUpdate(feature.id as FeatureId);
+		}
+	}
+
+	afterFeatureUpdated(feature: GeoJSONStoreFeatures) {
+		// Clean up here is important to get right as we need to make a best effort to avoid erroneous
+		// internal state.
+
+		// IF we have coordinate points showing these need to be completely recreated
+		if (this.showCoordinatePoints) {
+			this.coordinatePoints.createOrUpdate(feature.id as FeatureId);
+		}
+
+		// If we are editing a feature by dragging one of its points
+		// we want to clear that state up as new polygon might be completely
+		// different in terms of it's coordinates
+		if (this.editedFeatureId === feature.id && this.editedPointId) {
+			this.store.delete([this.editedPointId]);
+			this.editedPointId = undefined;
+			this.editedFeatureId = undefined;
+			this.editedFeatureCoordinateIndex = undefined;
+			this.editedSnapType = undefined;
+		}
+
+		// We can recalculate the snapped point from the last mouse event if there was one
+		if (this.snappedPointId && this.lastMouseMoveEvent) {
+			this.updateSnappedCoordinate(
+				this.lastMouseMoveEvent as TerraDrawMouseEvent,
+			);
+		}
+
+		// NOTE: This handles the case we are currently drawing a polygon
+		// We need to reset the drawing state because it is very complicated (impossible?)
+		// to recover the drawing state after a feature update
+		if (this.currentId === feature.id) {
+			this.currentCoordinate = 0;
+			this.currentId = undefined;
+			this.closingPoints.delete();
+
+			// Go back to started state
+			if (this.state === "drawing") {
+				this.setStarted();
+			}
 		}
 	}
 

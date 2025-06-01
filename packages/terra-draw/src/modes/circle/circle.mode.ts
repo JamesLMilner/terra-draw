@@ -375,4 +375,18 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 			]);
 		}
 	}
+
+	afterFeatureUpdated(feature: GeoJSONStoreFeatures): void {
+		// If we are in the middle of drawing a circle and the feature being updated is the current circle,
+		// we need to reset the drawing state
+		if (this.currentCircleId === feature.id) {
+			this.cursorMovedAfterInitialCursorDown = false;
+			this.center = undefined;
+			this.currentCircleId = undefined;
+			this.clickCount = 0;
+			if (this.state === "drawing") {
+				this.setStarted();
+			}
+		}
+	}
 }

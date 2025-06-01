@@ -489,4 +489,17 @@ export class TerraDrawSectorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 			),
 		);
 	}
+
+	afterFeatureUpdated(feature: GeoJSONStoreFeatures): void {
+		// If we are in the middle of drawing a sector and the feature being updated is the current sector,
+		// we need to reset the drawing state
+		if (this.currentId === feature.id) {
+			this.currentId = undefined;
+			this.direction = undefined;
+			this.currentCoordinate = 0;
+			if (this.state === "drawing") {
+				this.setStarted();
+			}
+		}
+	}
 }

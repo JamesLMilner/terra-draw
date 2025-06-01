@@ -312,4 +312,17 @@ export class TerraDrawRectangleMode extends TerraDrawBaseDrawMode<RectanglePolyg
 			),
 		);
 	}
+
+	afterFeatureUpdated(feature: GeoJSONStoreFeatures): void {
+		// If we are in the middle of drawing a rectangle and the feature being updated is the current rectangle,
+		// we need to reset the drawing state
+		if (this.currentRectangleId === feature.id) {
+			this.center = undefined;
+			this.currentRectangleId = undefined;
+			this.clickCount = 0;
+			if (this.state === "drawing") {
+				this.setStarted();
+			}
+		}
+	}
 }

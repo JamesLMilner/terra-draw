@@ -1,4 +1,8 @@
-import { GeoJSONStore } from "../../store/store";
+import {
+	GeoJSONStore,
+	GeoJSONStoreFeatures,
+	JSONObject,
+} from "../../store/store";
 import { MockModeConfig } from "../../test/mock-mode-config";
 import { MockCursorEvent } from "../../test/mock-cursor-event";
 import { TerraDrawAngledRectangleMode } from "./angled-rectangle.mode";
@@ -7,6 +11,7 @@ import { followsRightHandRule } from "../../geometry/boolean/right-hand-rule";
 import { MockKeyboardEvent } from "../../test/mock-keyboard-event";
 import { COMMON_PROPERTIES, TerraDrawGeoJSONStore } from "../../common";
 import { DefaultPointerEvents } from "../base.mode";
+import { MockPolygonSquare } from "../../test/mock-features";
 
 describe("TerraDrawAngledRectangleMode", () => {
 	describe("constructor", () => {
@@ -615,6 +620,59 @@ describe("TerraDrawAngledRectangleMode", () => {
 				polygonOutlineWidth: 2,
 				polygonFillOpacity: 0.5,
 			});
+		});
+	});
+
+	describe("afterFeatureUpdated", () => {
+		it("does nothing when update is not for the currently drawn polygon", () => {
+			const angledRectangleMode = new TerraDrawAngledRectangleMode();
+			const mockConfig = MockModeConfig(angledRectangleMode.mode);
+			angledRectangleMode.register(mockConfig);
+			angledRectangleMode.start();
+
+			angledRectangleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			angledRectangleMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
+			angledRectangleMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
+			angledRectangleMode.onMouseMove(MockCursorEvent({ lng: 2, lat: 2 }));
+			angledRectangleMode.onClick(MockCursorEvent({ lng: 2, lat: 2 }));
+
+			expect(mockConfig.onFinish).toHaveBeenCalledTimes(1);
+
+			const feature = mockConfig.store.copyAll()[0];
+
+			// Set the onChange count to 0
+			mockConfig.onChange.mockClear();
+			mockConfig.setDoubleClickToZoom.mockClear();
+
+			angledRectangleMode.afterFeatureUpdated({
+				...feature,
+			});
+
+			expect(mockConfig.onChange).toHaveBeenCalledTimes(0);
+			expect(mockConfig.setDoubleClickToZoom).toHaveBeenCalledTimes(0);
+		});
+
+		it("sets drawing back to started", () => {
+			const angledRectangleMode = new TerraDrawAngledRectangleMode();
+			const mockConfig = MockModeConfig(angledRectangleMode.mode);
+			angledRectangleMode.register(mockConfig);
+			angledRectangleMode.start();
+
+			angledRectangleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			angledRectangleMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
+
+			const features = mockConfig.store.copyAll();
+			expect(features.length).toBe(1);
+			const feature = features[0];
+
+			// Set the onChange count to 0
+			mockConfig.setDoubleClickToZoom.mockClear();
+
+			angledRectangleMode.afterFeatureUpdated({
+				...feature,
+			});
+
+			expect(mockConfig.setDoubleClickToZoom).toHaveBeenCalledTimes(1);
 		});
 	});
 });

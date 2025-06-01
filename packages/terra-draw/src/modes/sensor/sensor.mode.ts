@@ -697,6 +697,28 @@ export class TerraDrawSensorMode extends TerraDrawBaseDrawMode<SensorPolygonStyl
 		);
 	}
 
+	afterFeatureUpdated(feature: GeoJSONStoreFeatures): void {
+		// If we are in the middle of drawing a sensor and the feature being updated is the current sensor,
+		// we need to reset the drawing state
+		if (this.currentId === feature.id) {
+			if (this.currentStartingPointId) {
+				this.store.delete([this.currentStartingPointId]);
+			}
+			if (this.currentInitialArcId) {
+				this.store.delete([this.currentInitialArcId]);
+			}
+
+			this.currentStartingPointId = undefined;
+			this.direction = undefined;
+			this.currentId = undefined;
+			this.currentCoordinate = 0;
+
+			if (this.state === "drawing") {
+				this.setStarted();
+			}
+		}
+	}
+
 	private getDeltaBearing(
 		direction: "anticlockwise" | "clockwise",
 		normalizedStart: number,

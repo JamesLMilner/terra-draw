@@ -197,6 +197,7 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 	/** @internal */
 	onMouseMove(event: TerraDrawMouseEvent) {
 		if (this.currentId === undefined || this.startingClick === false) {
+			this.setCursor(this.cursors.start);
 			return;
 		}
 
@@ -342,7 +343,12 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 				this.currentId = createdId;
 				this.closingPointId = closingPointId;
 				this.startingClick = true;
-				this.setDrawing();
+
+				// We could already be in drawing due to updating the existing polygon
+				// via afterFeatureUpdated
+				if (this.state !== "drawing") {
+					this.setDrawing();
+				}
 
 				return;
 			}
@@ -473,5 +479,20 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 		return this.validateModeFeature(feature, (baseValidatedFeature) =>
 			ValidatePolygonFeature(baseValidatedFeature, this.coordinatePrecision),
 		);
+	}
+
+	afterFeatureUpdated(feature: GeoJSONStoreFeatures) {
+		// NOTE: This handles the case we are currently drawing a polygon
+		// We need to reset the drawing state because it is very complicated (impossible?)
+		// to recover the drawing state after a feature update
+		if (this.currentId === feature.id) {
+			if (this.closingPointId) {
+				this.store.delete([this.closingPointId]);
+			}
+			this.startingClick = false;
+			this.currentId = undefined;
+			this.closingPointId = undefined;
+			this.hasLeftStartingPoint = false;
+		}
 	}
 }

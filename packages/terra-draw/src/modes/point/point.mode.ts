@@ -384,4 +384,13 @@ export class TerraDrawPointMode extends TerraDrawBaseDrawMode<PointModeStyling> 
 
 		return clickedFeature;
 	}
+
+	afterFeatureUpdated(feature: GeoJSONStoreFeatures) {
+		// If we are editing a point by dragging it we want to clear that state
+		// up as new point location might be completely  different in terms of it's location
+		if (this.editedFeatureId === feature.id) {
+			this.editedFeatureId = undefined;
+			this.setCursor(this.cursors.create);
+		}
+	}
 }

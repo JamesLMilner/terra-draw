@@ -413,17 +413,31 @@ class TerraDraw {
 		});
 	}
 
-	private getSelectMode() {
+	private getSelectModeOrThrow() {
+		const selectMode = this.getSelectMode({ switchToSelectMode: true });
+
+		if (!selectMode) {
+			throw new Error("No select mode defined in instance");
+		}
+
+		return selectMode;
+	}
+
+	private getSelectMode({
+		switchToSelectMode,
+	}: {
+		switchToSelectMode: boolean;
+	}) {
 		this.checkEnabled();
 
 		if (!this._instanceSelectMode) {
-			throw new Error("No select mode defined in instance");
+			return null;
 		}
 
 		const currentMode = this.getMode();
 
 		// If we're not already in the select mode, we switch to it
-		if (currentMode !== this._instanceSelectMode) {
+		if (switchToSelectMode && currentMode !== this._instanceSelectMode) {
 			this.setMode(this._instanceSelectMode);
 		}
 
@@ -432,6 +446,15 @@ class TerraDraw {
 		] as TerraDrawBaseSelectMode<any>;
 
 		return selectMode;
+	}
+
+	private isGuidanceFeature(feature: GeoJSONStoreFeatures): boolean {
+		return Boolean(
+			feature.properties[SELECT_PROPERTIES.MID_POINT] ||
+				feature.properties[SELECT_PROPERTIES.SELECTION_POINT] ||
+				feature.properties[COMMON_PROPERTIES.COORDINATE_POINT] ||
+				feature.properties[COMMON_PROPERTIES.SNAPPING_POINT],
+		);
 	}
 
 	/**
@@ -607,7 +630,7 @@ class TerraDraw {
 	 * @param id - the id of the feature to select
 	 */
 	selectFeature(id: FeatureId) {
-		const selectMode = this.getSelectMode();
+		const selectMode = this.getSelectModeOrThrow();
 		selectMode.selectFeature(id);
 	}
 
@@ -618,7 +641,7 @@ class TerraDraw {
 	 * @param id  - the id of the feature to deselect
 	 */
 	deselectFeature(id: FeatureId) {
-		const selectMode = this.getSelectMode();
+		const selectMode = this.getSelectModeOrThrow();
 		selectMode.deselectFeature(id);
 	}
 
@@ -639,6 +662,68 @@ class TerraDraw {
 	 */
 	hasFeature(id: FeatureId): boolean {
 		return this._store.has(id);
+	}
+
+	updateFeatureGeometry(id: FeatureId, geometry: GeoJSONStoreGeometries) {
+		if (!this._store.has(id)) {
+			throw new Error(`No feature with id ${id} present in store`);
+		}
+
+		const feature = this._store.copy(id);
+
+		// We don't want users to be able to update guidance features directly
+		if (this.isGuidanceFeature(feature)) {
+			throw new Error(
+				`Guidance features are not allowed to be updated directly.`,
+			);
+		}
+
+		// Ensure that the geometry is valid
+		if (!feature || !geometry || !geometry.type || !geometry.coordinates) {
+			throw new Error("Invalid geometry provided");
+		}
+		if (geometry.type !== feature.geometry.type) {
+			throw new Error(
+				`Geometry type mismatch: expected ${feature.geometry.type}, got ${geometry.type}`,
+			);
+		}
+
+		const mode = feature.properties.mode;
+		const modeToUpdate = this._modes[mode as string];
+
+		if (!modeToUpdate) {
+			throw new Error(`No mode with name ${mode} present in instance`);
+		}
+
+		const updatedFeature = { ...feature, geometry };
+
+		const validationResult = modeToUpdate.validateFeature(updatedFeature);
+
+		if (!validationResult.valid) {
+			throw new Error(
+				`Feature validation failed: ${validationResult.reason || "Unknown reason"}`,
+			);
+		}
+
+		this._store.updateGeometry(
+			[{ id: feature.id as FeatureId, geometry }],
+			{ origin: "api" }, // origin is used to indicate that this update has come from an API call
+		);
+
+		// If the mode has an afterFeatureUpdated method, we call it
+		if (modeToUpdate.afterFeatureUpdated) {
+			modeToUpdate.afterFeatureUpdated(updatedFeature);
+
+			const featureIsSelected =
+				updatedFeature.properties[SELECT_PROPERTIES.SELECTED];
+			const selectModePresent = this.getSelectMode({
+				switchToSelectMode: false,
+			});
+
+			if (selectModePresent && featureIsSelected) {
+				selectModePresent.afterFeatureUpdated(updatedFeature);
+			}
+		}
 	}
 
 	/**

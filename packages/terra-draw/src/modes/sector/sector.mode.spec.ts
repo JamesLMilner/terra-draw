@@ -1,11 +1,16 @@
 import { Polygon, Position } from "geojson";
-import { GeoJSONStore } from "../../store/store";
+import {
+	GeoJSONStore,
+	GeoJSONStoreFeatures,
+	JSONObject,
+} from "../../store/store";
 import { MockModeConfig } from "../../test/mock-mode-config";
 import { TerraDrawSectorMode } from "./sector.mode";
 import { MockCursorEvent } from "../../test/mock-cursor-event";
 import { MockKeyboardEvent } from "../../test/mock-keyboard-event";
 import { followsRightHandRule } from "../../geometry/boolean/right-hand-rule";
 import { TerraDrawGeoJSONStore } from "../../common";
+import { MockPolygonSquare } from "../../test/mock-features";
 
 describe("TerraDrawSectorMode", () => {
 	describe("constructor", () => {
@@ -614,6 +619,81 @@ describe("TerraDrawSectorMode", () => {
 				polygonOutlineWidth: 2,
 				polygonFillOpacity: 0.5,
 			});
+		});
+	});
+
+	describe("afterFeatureUpdated", () => {
+		it("does nothing when update is not for the currently drawn polygon", () => {
+			const sectorMode = new TerraDrawSectorMode();
+			const mockConfig = MockModeConfig(sectorMode.mode);
+			sectorMode.register(mockConfig);
+			sectorMode.start();
+
+			jest.spyOn(mockConfig.store, "delete");
+
+			sectorMode.onClick(
+				MockCursorEvent({ lng: -0.128673315, lat: 51.500349947 }),
+			);
+
+			sectorMode.onMouseMove(
+				MockCursorEvent({ lng: -0.092495679, lat: 51.515995286 }),
+			);
+
+			sectorMode.onClick(
+				MockCursorEvent({ lng: -0.092495679, lat: 51.515995286 }),
+			);
+
+			sectorMode.onMouseMove(
+				MockCursorEvent({ lng: -0.087491348, lat: 51.490132315 }),
+			);
+
+			sectorMode.onClick(
+				MockCursorEvent({ lng: -0.087491348, lat: 51.490132315 }),
+			);
+
+			sectorMode.onClick(
+				MockCursorEvent({ lng: -0.087491348, lat: 51.490132315 }),
+			);
+
+			let features = mockConfig.store.copyAll();
+			expect(features.length).toBe(2);
+
+			const createdPolygon = features[0] as GeoJSONStoreFeatures;
+
+			// Ensure the onChange count to 0
+			mockConfig.onChange.mockClear();
+			mockConfig.setDoubleClickToZoom.mockClear();
+
+			sectorMode.afterFeatureUpdated({
+				...createdPolygon,
+			});
+
+			expect(mockConfig.setDoubleClickToZoom).toHaveBeenCalledTimes(0);
+			expect(mockConfig.store.delete).toHaveBeenCalledTimes(0);
+			expect(mockConfig.onChange).toHaveBeenCalledTimes(0);
+		});
+
+		it("sets drawing back to started", () => {
+			const sectorMode = new TerraDrawSectorMode();
+			const mockConfig = MockModeConfig(sectorMode.mode);
+			sectorMode.register(mockConfig);
+			sectorMode.start();
+
+			sectorMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			sectorMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
+
+			const features = mockConfig.store.copyAll();
+			expect(features.length).toBe(1);
+			const feature = features[0];
+
+			// Set the onChange count to 0
+			mockConfig.setDoubleClickToZoom.mockClear();
+
+			sectorMode.afterFeatureUpdated({
+				...feature,
+			});
+
+			expect(mockConfig.setDoubleClickToZoom).toHaveBeenCalledTimes(1);
 		});
 	});
 });

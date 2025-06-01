@@ -608,6 +608,10 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 			this.currentId = newId;
 			this.currentCoordinate++;
 
+			if (this.showCoordinatePoints) {
+				this.coordinatePoints.createOrUpdate(newId);
+			}
+
 			// Ensure the state is updated to reflect drawing has started
 			this.setDrawing();
 		} else if (this.currentCoordinate === 1 && this.currentId) {

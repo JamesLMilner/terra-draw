@@ -976,6 +976,27 @@ describe("TerraDrawPolygonMode", () => {
 			expect(onFinish).toHaveBeenCalledTimes(2);
 		});
 
+		it("creates an initial coordinate points on first click when showCoordinatePoints is true", () => {
+			polygonMode.updateOptions({
+				showCoordinatePoints: true,
+			});
+
+			polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+			let features = store.copyAll();
+			expect(features.length).toBe(4);
+
+			expect(features[0].geometry.type).toBe("Polygon");
+			expect(features[0].properties.coordinatePointIds).toEqual([
+				expect.any(String),
+				expect.any(String),
+				expect.any(String),
+			]);
+			expect(features[1].geometry.type).toBe("Point");
+			expect(features[2].geometry.type).toBe("Point");
+			expect(features[3].geometry.type).toBe("Point");
+		});
+
 		describe("with leftClick pointer event set to false", () => {
 			beforeEach(() => {
 				polygonMode = new TerraDrawPolygonMode({

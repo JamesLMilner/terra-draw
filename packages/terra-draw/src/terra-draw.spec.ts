@@ -1,7 +1,7 @@
 /**
  * @jest-environment jsdom
  */
-import { COMMON_PROPERTIES } from "./common";
+import { COMMON_PROPERTIES, SELECT_PROPERTIES } from "./common";
 import { FeatureId } from "./extend";
 import {
 	TerraDraw,
@@ -783,6 +783,293 @@ describe("Terra Draw", () => {
 			draw.addFeatures([polygon]);
 
 			expect(draw.getSnapshot()).toHaveLength(5);
+		});
+	});
+
+	describe("updateFeatureGeometry", () => {
+		it("correctly updates a point geometry", () => {
+			const draw = new TerraDraw({
+				adapter: new TerraDrawTestAdapter({
+					lib: {},
+					coordinatePrecision: 3,
+				}),
+				modes: [new TerraDrawPointMode(), new TerraDrawSelectMode()],
+			});
+
+			const onChange = jest.fn();
+			draw.on("change", onChange);
+
+			draw.start();
+			const [result] = draw.addFeatures([
+				{
+					id: "f8e5a38d-ecfa-4294-8461-d9cff0e0d7f8",
+					type: "Feature",
+					geometry: {
+						type: "Point",
+						coordinates: [25, 34],
+					},
+					properties: {
+						mode: "point",
+					},
+				},
+			]);
+
+			expect(result.valid).toBe(true);
+
+			onChange.mockClear();
+
+			draw.updateFeatureGeometry(result.id as FeatureId, {
+				type: "Point",
+				coordinates: [-26, -34],
+			});
+
+			expect(onChange).toHaveBeenCalledTimes(1);
+
+			const snapshot = draw.getSnapshot();
+			expect(snapshot).toHaveLength(1);
+
+			const updatedFeature = snapshot[0];
+			expect(updatedFeature.id).toBe(result.id);
+
+			expect(updatedFeature.geometry.coordinates).toEqual([-26, -34]);
+		});
+
+		it("correctly updates a linestring geometry", () => {
+			const draw = new TerraDraw({
+				adapter: new TerraDrawTestAdapter({
+					lib: {},
+					coordinatePrecision: 3,
+				}),
+				modes: [new TerraDrawLineStringMode(), new TerraDrawSelectMode()],
+			});
+
+			const onChange = jest.fn();
+			draw.on("change", onChange);
+
+			draw.start();
+			const [result] = draw.addFeatures([
+				{
+					id: "f8e5a38d-ecfa-4294-8461-d9cff0e0d7f8",
+					type: "Feature",
+					geometry: {
+						type: "LineString",
+						coordinates: [
+							[25, 34],
+							[26, 35],
+						],
+					},
+					properties: {
+						mode: "linestring",
+					},
+				},
+			]);
+
+			expect(result.valid).toBe(true);
+
+			onChange.mockClear();
+
+			draw.updateFeatureGeometry(result.id as FeatureId, {
+				type: "LineString",
+				coordinates: [
+					[-25, -34],
+					[-26, -35],
+				],
+			});
+
+			expect(onChange).toHaveBeenCalledTimes(1);
+
+			const snapshot = draw.getSnapshot();
+			expect(snapshot).toHaveLength(1);
+
+			const updatedFeature = snapshot[0];
+			expect(updatedFeature.id).toBe(result.id);
+
+			expect(updatedFeature.geometry.coordinates).toEqual([
+				[-25, -34],
+				[-26, -35],
+			]);
+		});
+
+		it("correctly updates a polygon geometry", () => {
+			const draw = new TerraDraw({
+				adapter: new TerraDrawTestAdapter({
+					lib: {},
+					coordinatePrecision: 3,
+				}),
+				modes: [new TerraDrawPolygonMode(), new TerraDrawSelectMode()],
+			});
+
+			const onChange = jest.fn();
+			draw.on("change", onChange);
+
+			draw.start();
+			const [result] = draw.addFeatures([
+				{
+					id: "f8e5a38d-ecfa-4294-8461-d9cff0e0d7f8",
+					type: "Feature",
+					geometry: {
+						type: "Polygon",
+						coordinates: [
+							[
+								[25, 34],
+								[26, 35],
+								[27, 34],
+								[25, 34],
+							],
+						],
+					},
+					properties: {
+						mode: "polygon",
+					},
+				},
+			]);
+
+			expect(result.valid).toBe(true);
+
+			onChange.mockClear();
+
+			draw.updateFeatureGeometry(result.id as FeatureId, {
+				type: "Polygon",
+				coordinates: [
+					[
+						[-25, -34],
+						[-26, -35],
+						[-27, -34],
+						[-25, -34],
+					],
+				],
+			});
+
+			expect(onChange).toHaveBeenCalledTimes(1);
+
+			const snapshot = draw.getSnapshot();
+			expect(snapshot).toHaveLength(1);
+
+			const updatedFeature = snapshot[0];
+			expect(updatedFeature.id).toBe(result.id);
+
+			expect(updatedFeature.geometry.coordinates).toEqual([
+				[
+					[-25, -34],
+					[-26, -35],
+					[-27, -34],
+					[-25, -34],
+				],
+			]);
+		});
+
+		it("fails when geometries mismatch", () => {
+			const draw = new TerraDraw({
+				adapter: new TerraDrawTestAdapter({
+					lib: {},
+					coordinatePrecision: 3,
+				}),
+				modes: [
+					new TerraDrawPointMode(),
+					new TerraDrawSelectMode({
+						flags: {
+							point: {
+								feature: { draggable: true },
+							},
+						},
+					}),
+				],
+			});
+
+			const onChange = jest.fn();
+			draw.on("change", onChange);
+
+			draw.start();
+			const [result] = draw.addFeatures([
+				{
+					id: "f8e5a38d-ecfa-4294-8461-d9cff0e0d7f8",
+					type: "Feature",
+					geometry: {
+						type: "Point",
+						coordinates: [25, 34],
+					},
+					properties: {
+						mode: "point",
+					},
+				},
+			]);
+
+			onChange.mockClear();
+
+			expect(() => {
+				draw.updateFeatureGeometry(result.id as FeatureId, {
+					type: "LineString",
+					coordinates: [
+						[-26, -34],
+						[-27, -35],
+					],
+				});
+			}).toThrow("Geometry type mismatch: expected Point, got LineString");
+		});
+
+		it("fails when feature is guidance feature", () => {
+			const draw = new TerraDraw({
+				adapter: new TerraDrawTestAdapter({
+					lib: {},
+					coordinatePrecision: 3,
+				}),
+				modes: [
+					new TerraDrawPolygonMode(),
+					new TerraDrawSelectMode({
+						flags: {
+							polygon: {
+								feature: {
+									coordinates: {
+										draggable: true,
+									},
+								},
+							},
+						},
+					}),
+				],
+			});
+
+			const onChange = jest.fn();
+			draw.on("change", onChange);
+
+			draw.start();
+			const [result] = draw.addFeatures([
+				{
+					id: "f8e5a38d-ecfa-4294-8461-d9cff0e0d7f8",
+					type: "Feature",
+					geometry: {
+						type: "Polygon",
+						coordinates: [
+							[
+								[25, 34],
+								[26, 35],
+								[27, 34],
+								[25, 34],
+							],
+						],
+					},
+					properties: {
+						mode: "polygon",
+					},
+				},
+			]);
+
+			draw.selectFeature(result.id as FeatureId);
+
+			onChange.mockClear();
+
+			const guidanceFeature = draw
+				.getSnapshot()
+				.find((f) => f.properties[SELECT_PROPERTIES.SELECTION_POINT]);
+
+			expect(guidanceFeature).toBeDefined();
+
+			expect(() => {
+				draw.updateFeatureGeometry(guidanceFeature!.id as FeatureId, {
+					type: "Point",
+					coordinates: [-26, -34],
+				});
+			}).toThrow("Guidance features are not allowed to be updated directly");
 		});
 	});
 

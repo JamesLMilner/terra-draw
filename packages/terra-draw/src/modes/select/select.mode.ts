@@ -203,39 +203,6 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 		}
 	}
 
-	private createOrUpdateCoordinatePoint(polygonId: FeatureId) {
-		const existingPolygonProps = this.store.getPropertiesCopy(polygonId);
-
-		if (existingPolygonProps.coordinatePointIds) {
-			this.store.delete(existingPolygonProps.coordinatePointIds as FeatureId[]);
-		}
-
-		const existingPolygon = this.store.getGeometryCopy(polygonId);
-
-		const coordinates = existingPolygon
-			.coordinates[0] as Polygon["coordinates"][0];
-		const coordinatePointIds = this.store.create(
-			coordinates.map((coordinate) => ({
-				geometry: {
-					type: "Point",
-					coordinates: coordinate,
-				},
-				properties: {
-					mode: this.mode,
-					[COMMON_PROPERTIES.COORDINATE_POINT]: true,
-				},
-			})),
-		);
-
-		this.store.updateProperty([
-			{
-				id: polygonId,
-				property: "coordinatePointIds",
-				value: coordinatePointIds,
-			},
-		]);
-	}
-
 	selectFeature(featureId: FeatureId) {
 		this.select(featureId, false);
 	}
@@ -1121,5 +1088,46 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 		}
 
 		return styles;
+	}
+
+	afterFeatureUpdated(feature: GeoJSONStoreFeatures) {
+		// If we have a selected feature and it has been updated
+		// we need to update the selection points and midpoints
+		if (this.selected.length && feature.id === this.selected[0]) {
+			const flags = this.flags[feature.properties.mode as string];
+
+			if (!flags?.feature?.coordinates) {
+				return;
+			}
+
+			const type = feature.geometry.type as "Polygon" | "LineString";
+			const id = feature.id as FeatureId;
+
+			this.selectionPoints.delete();
+			this.midPoints.delete();
+
+			let coordinates: Position[] | undefined;
+			if (type === "Polygon") {
+				// For Polygon we need to take the first item in the coordinates array
+				coordinates = feature.geometry.coordinates[0] as Position[];
+			} else if (type === "LineString") {
+				// For LineString we can take the coordinates directly
+				coordinates = feature.geometry.coordinates as Position[];
+			} else {
+				return;
+			}
+
+			this.selectionPoints.create(coordinates, type, id);
+
+			if (flags?.feature?.coordinates?.midpoints) {
+				this.midPoints.create(
+					(type === "Polygon"
+						? feature.geometry.coordinates[0]
+						: feature.geometry.coordinates) as Position[],
+					id,
+					this.coordinatePrecision,
+				);
+			}
+		}
 	}
 }

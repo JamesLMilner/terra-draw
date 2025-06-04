@@ -539,6 +539,15 @@ class TerraDraw {
 	}
 
 	/**
+	 * Get the state of the mode i.e. if we are currently unregistered, registered, drawing etc. This can
+	 * be used to make decisions based on what the current mode is doing.
+	 * @returns the current mode state as a string
+	 */
+	getModeState() {
+		return this._mode.state;
+	}
+
+	/**
 	 * A method for setting the current mode by name. Under the hood this will stop
 	 * the previous mode and start the new one.
 	 * @param mode - The mode name you wish to start

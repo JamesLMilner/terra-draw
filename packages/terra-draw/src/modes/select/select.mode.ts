@@ -203,39 +203,6 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 		}
 	}
 
-	private createOrUpdateCoordinatePoint(polygonId: FeatureId) {
-		const existingPolygonProps = this.store.getPropertiesCopy(polygonId);
-
-		if (existingPolygonProps.coordinatePointIds) {
-			this.store.delete(existingPolygonProps.coordinatePointIds as FeatureId[]);
-		}
-
-		const existingPolygon = this.store.getGeometryCopy(polygonId);
-
-		const coordinates = existingPolygon
-			.coordinates[0] as Polygon["coordinates"][0];
-		const coordinatePointIds = this.store.create(
-			coordinates.map((coordinate) => ({
-				geometry: {
-					type: "Point",
-					coordinates: coordinate,
-				},
-				properties: {
-					mode: this.mode,
-					[COMMON_PROPERTIES.COORDINATE_POINT]: true,
-				},
-			})),
-		);
-
-		this.store.updateProperty([
-			{
-				id: polygonId,
-				property: "coordinatePointIds",
-				value: coordinatePointIds,
-			},
-		]);
-	}
-
 	selectFeature(featureId: FeatureId) {
 		this.select(featureId, false);
 	}
@@ -643,11 +610,17 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 				return;
 			}
 
+			const selectedId = this.selected[0];
+
 			// We are technically deselecting
 			// because the selected feature is deleted
 			// and will no longer exist or be selected
 			const previouslySelected = this.selected[0];
 			this.onDeselect(previouslySelected);
+
+			// Delete coordinate point first if they are present, this needs
+			// to be done before deleting the feature
+			this.coordinatePoints.deletePointsByFeatureIds([selectedId]);
 
 			// Delete all selected features
 			this.deleteSelected();

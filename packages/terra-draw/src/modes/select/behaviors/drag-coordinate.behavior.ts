@@ -1,4 +1,9 @@
-import { TerraDrawMouseEvent, UpdateTypes, Validation } from "../../../common";
+import {
+	Snapping,
+	TerraDrawMouseEvent,
+	UpdateTypes,
+	Validation,
+} from "../../../common";
 import { BehaviorConfig, TerraDrawModeBehavior } from "../../base.behavior";
 
 import { LineString, Polygon, Position, Point, Feature } from "geojson";
@@ -6,9 +11,10 @@ import { PixelDistanceBehavior } from "../../pixel-distance.behavior";
 import { MidPointBehavior } from "./midpoint.behavior";
 import { SelectionPointBehavior } from "./selection-point.behavior";
 import { selfIntersects } from "../../../geometry/boolean/self-intersects";
-import { FeatureId } from "../../../store/store";
+import { FeatureId, GeoJSONStoreFeatures } from "../../../store/store";
 import { CoordinatePointBehavior } from "./coordinate-point.behavior";
 import { CoordinateSnappingBehavior } from "../../coordinate-snapping.behavior";
+import { LineSnappingBehavior } from "../../line-snapping.behavior";
 
 export class DragCoordinateBehavior extends TerraDrawModeBehavior {
 	constructor(
@@ -18,6 +24,7 @@ export class DragCoordinateBehavior extends TerraDrawModeBehavior {
 		private readonly midPoints: MidPointBehavior,
 		private readonly coordinatePoints: CoordinatePointBehavior,
 		private readonly coordinateSnapping: CoordinateSnappingBehavior,
+		private readonly lineSnapping: LineSnappingBehavior,
 	) {
 		super(config);
 	}
@@ -89,18 +96,81 @@ export class DragCoordinateBehavior extends TerraDrawModeBehavior {
 		return closestCoordinate.index;
 	}
 
-	public drag(
+	private snapCoordinate(
+		event: TerraDrawMouseEvent,
+		snapping: Snapping,
+		draggedFeature: GeoJSONStoreFeatures,
+	): Position {
+		let snappedCoordinate: Position = [event.lng, event.lat];
+
+		// This is a uniform filter we can use across all snapping behaviors
+		const filter = (feature: Feature) => {
+			return Boolean(
+				feature.properties &&
+					feature.properties.mode === draggedFeature.properties.mode &&
+					feature.id !== this.draggedCoordinate.id,
+			);
+		};
+
+		if (snapping?.toLine) {
+			let snapped: Position | undefined;
+
+			snapped = this.lineSnapping.getSnappable(event, filter).coordinate;
+
+			if (snapped) {
+				snappedCoordinate = snapped;
+			}
+		}
+
+		if (snapping.toCoordinate) {
+			let snapped: Position | undefined = undefined;
+
+			snapped = this.coordinateSnapping.getSnappable(event, filter).coordinate;
+
+			if (snapped) {
+				snappedCoordinate = snapped;
+			}
+		}
+
+		if (snapping?.toCustom) {
+			let snapped: Position | undefined = undefined;
+
+			snapped = snapping.toCustom(event, {
+				currentCoordinate: this.draggedCoordinate.index,
+				currentId: draggedFeature.id,
+				getCurrentGeometrySnapshot: draggedFeature.id
+					? () =>
+							this.store.getGeometryCopy<Polygon>(
+								draggedFeature.id as FeatureId,
+							)
+					: () => null,
+				project: this.project,
+				unproject: this.unproject,
+			});
+
+			if (snapped) {
+				snappedCoordinate = snapped;
+			}
+		}
+
+		return snappedCoordinate;
+	}
+
+	drag(
 		event: TerraDrawMouseEvent,
 		allowSelfIntersection: boolean,
 		validateFeature: Validation,
-		snapping: boolean,
+		snapping: Snapping,
 	): boolean {
-		if (this.draggedCoordinate.id === null) {
+		const draggedFeatureId = this.draggedCoordinate.id;
+
+		if (draggedFeatureId === null) {
 			return false;
 		}
+
 		const index = this.draggedCoordinate.index;
-		const geometry = this.store.getGeometryCopy(this.draggedCoordinate.id);
-		const properties = this.store.getPropertiesCopy(this.draggedCoordinate.id);
+		const geometry = this.store.getGeometryCopy(draggedFeatureId);
+		const properties = this.store.getPropertiesCopy(draggedFeatureId);
 
 		const geomCoordinates = (
 			geometry.type === "LineString"
@@ -112,26 +182,18 @@ export class DragCoordinateBehavior extends TerraDrawModeBehavior {
 			geometry.type === "Polygon" &&
 			(index === geomCoordinates.length - 1 || index === 0);
 
-		// Store the updated coord
-		let updatedCoordinate = [event.lng, event.lat];
+		const draggedFeature: GeoJSONStoreFeatures = {
+			type: "Feature",
+			id: draggedFeatureId,
+			geometry,
+			properties,
+		};
 
-		// When we are snapping find the nearest coordinate of the same mode
-		// that is not the one we are dragging
-		if (snapping) {
-			let snapped: Position | undefined = undefined;
-
-			snapped = this.coordinateSnapping.getSnappable(event, (feature) => {
-				return Boolean(
-					feature.properties &&
-						feature.properties.mode === properties.mode &&
-						feature.id !== this.draggedCoordinate.id,
-				);
-			}).coordinate;
-
-			if (snapped) {
-				updatedCoordinate = snapped;
-			}
-		}
+		const updatedCoordinate = this.snapCoordinate(
+			event,
+			snapping,
+			draggedFeature,
+		);
 
 		// Ensure that coordinates do not exceed
 		// lng lat limits. Long term we may want to figure out
@@ -167,10 +229,7 @@ export class DragCoordinateBehavior extends TerraDrawModeBehavior {
 		const updatedMidPoints = this.midPoints.getUpdated(geomCoordinates) || [];
 
 		const updatedCoordinatePoints =
-			this.coordinatePoints.getUpdated(
-				this.draggedCoordinate.id,
-				geomCoordinates,
-			) || [];
+			this.coordinatePoints.getUpdated(draggedFeatureId, geomCoordinates) || [];
 
 		if (
 			geometry.type !== "Point" &&
@@ -185,20 +244,12 @@ export class DragCoordinateBehavior extends TerraDrawModeBehavior {
 		}
 
 		if (validateFeature) {
-			const validationResult = validateFeature(
-				{
-					type: "Feature",
-					id: this.draggedCoordinate.id,
-					geometry,
-					properties: {},
-				},
-				{
-					project: this.config.project,
-					unproject: this.config.unproject,
-					coordinatePrecision: this.config.coordinatePrecision,
-					updateType: UpdateTypes.Provisional,
-				},
-			);
+			const validationResult = validateFeature(draggedFeature, {
+				project: this.config.project,
+				unproject: this.config.unproject,
+				coordinatePrecision: this.config.coordinatePrecision,
+				updateType: UpdateTypes.Provisional,
+			});
 
 			if (!validationResult.valid) {
 				return false;
@@ -209,7 +260,7 @@ export class DragCoordinateBehavior extends TerraDrawModeBehavior {
 		this.store.updateGeometry([
 			// Update feature
 			{
-				id: this.draggedCoordinate.id,
+				id: draggedFeatureId,
 				geometry: geometry,
 			},
 			// Update selection and mid points

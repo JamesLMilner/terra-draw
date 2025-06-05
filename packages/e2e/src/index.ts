@@ -105,7 +105,13 @@ class TestMap {
 								rotateable: true,
 								scaleable: true,
 								coordinates: {
-									snappable: this.config?.includes("selectDragSnapping"),
+									snappable: this.config?.includes("selectDragSnapping")
+										? true
+										: this.config?.includes("selectDragSnappingToCustom")
+											? {
+													toCustom: () => [-0.118092, 51.509865],
+												}
+											: false,
 									midpoints: true,
 									draggable: true,
 									deletable: true,

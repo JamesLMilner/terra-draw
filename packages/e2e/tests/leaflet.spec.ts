@@ -1477,6 +1477,53 @@ test.describe("select mode", () => {
 			await page.mouse.click(mapDiv.width - 10, mapDiv.height / 2);
 		});
 
+		test(`selected polygon can have individual coordinates dragged and snapped via toCustom ${name}`, async ({
+			page,
+		}) => {
+			const mapDiv = await setupMap({
+				page,
+				configQueryParam: config
+					? config.concat("selectDragSnappingToCustom")
+					: ["selectDragSnappingToCustom"],
+			});
+
+			await changeMode({ page, mode: "polygon" });
+			// Draw a rectangle
+			const { topLeft, bottomLeft } = await drawRectangularPolygon({
+				mapDiv,
+				page,
+			});
+
+			// Change to select mode
+			await changeMode({ page, mode });
+
+			// Before drag
+			const x = topLeft.x - 2;
+			const y = topLeft.y - 2;
+			await expectGroupPosition({ page, x, y });
+
+			// Select
+			await page.mouse.click(mapDiv.width / 2, mapDiv.height / 2);
+			await expectPaths({ page, count: 9 }); // 8 selection points and 1 square
+
+			// Drag
+			await page.mouse.move(bottomLeft.x, bottomLeft.y);
+			await page.mouse.down();
+			await page.mouse.move(bottomLeft.x - 50, bottomLeft.y + 50, {
+				steps: 30,
+			}); // Steps is required
+			await page.mouse.up();
+
+			// Dragged to snap at the center of the screen even though we dragged to the left and down
+			await expectPathDimensions({
+				page,
+				width: 104,
+				height: 104,
+			});
+
+			await expectPaths({ page, count: 9 }); // 8 selection points and 1 square
+		});
+
 		test(`selected polygon can insert midpoints ${name}`, async ({ page }) => {
 			const mapDiv = await setupMap({ page, configQueryParam: config });
 

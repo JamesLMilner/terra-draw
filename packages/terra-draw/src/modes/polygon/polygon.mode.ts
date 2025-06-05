@@ -10,6 +10,7 @@ import {
 	Project,
 	Unproject,
 	Z_INDEX,
+	Snapping,
 } from "../../common";
 import { Feature, Polygon, Position } from "geojson";
 import {
@@ -79,21 +80,6 @@ const defaultCursors = {
 	dragStart: "grabbing",
 	dragEnd: "crosshair",
 } as Required<Cursors>;
-
-interface Snapping {
-	toLine?: boolean;
-	toCoordinate?: boolean;
-	toCustom?: (
-		event: TerraDrawMouseEvent,
-		context: {
-			currentId?: FeatureId;
-			currentCoordinate?: number;
-			getCurrentGeometrySnapshot: () => Polygon | null;
-			project: Project;
-			unproject: Unproject;
-		},
-	) => Position | undefined;
-}
 
 interface TerraDrawPolygonModeOptions<T extends CustomStyling>
 	extends BaseModeOptions<T> {

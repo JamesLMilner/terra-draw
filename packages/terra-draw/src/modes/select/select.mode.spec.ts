@@ -1809,7 +1809,7 @@ describe("TerraDrawSelectMode", () => {
 				);
 			});
 
-			it("can snap to nearby polygon coordinates if snappable is enabled", () => {
+			it("can snap to nearby polygon coordinates if snappable (toCoordinate) is enabled", () => {
 				setSelectMode({
 					flags: {
 						polygon: {
@@ -1915,7 +1915,7 @@ describe("TerraDrawSelectMode", () => {
 				);
 			});
 
-			it("can snap to nearby linestring coordinates if snappable is enabled", () => {
+			it("can snap to nearby linestring coordinates if snappable (toCoordinate) is enabled", () => {
 				setSelectMode({
 					flags: {
 						linestring: {
@@ -2007,6 +2007,340 @@ describe("TerraDrawSelectMode", () => {
 				]);
 
 				// Update linestring position and 1 selection points
+				// that gets moved
+				expect(onChange).toHaveBeenNthCalledWith(
+					6,
+					[expect.any(String), expect.any(String)],
+					"update",
+					undefined,
+				);
+			});
+
+			it("can snap to nearby polygon line if snappable toLine is enabled", () => {
+				setSelectMode({
+					flags: {
+						polygon: {
+							feature: {
+								coordinates: {
+									draggable: true,
+									snappable: {
+										toLine: true,
+									},
+								},
+							},
+						},
+					},
+				});
+
+				jest.spyOn(store, "updateGeometry");
+
+				// We want to account for ignoring points branch
+				addPointToStore([100, 89]);
+
+				expect(onChange).toHaveBeenCalledTimes(1);
+
+				addPolygonToStore([
+					[0, 0],
+					[0, 1],
+					[1, 1],
+					[1, 0],
+					[0, 0],
+				]);
+
+				addPolygonToStore([
+					[2, 2],
+					[2, 3],
+					[3, 3],
+					[3, 2],
+					[2, 2],
+				]);
+
+				expect(onChange).toHaveBeenCalledTimes(3);
+
+				selectMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+				expect(onSelect).toHaveBeenCalledTimes(1);
+				expect(onChange).toHaveBeenCalledTimes(5);
+
+				// Select feature
+				expect(onChange).toHaveBeenNthCalledWith(
+					4,
+					[expect.any(String)],
+					"update",
+					undefined,
+				);
+
+				// Create selection points
+				expect(onChange).toHaveBeenNthCalledWith(
+					5,
+					[
+						expect.any(String),
+						expect.any(String),
+						expect.any(String),
+						expect.any(String),
+					],
+					"create",
+					undefined,
+				);
+
+				selectMode.onDragStart(MockCursorEvent({ lng: 1, lat: 1 }), jest.fn());
+
+				const setMapDraggability = jest.fn();
+				selectMode.onDrag(
+					MockCursorEvent({ lng: 1.5, lat: 1.5 }),
+					setMapDraggability,
+				);
+
+				expect(onChange).toHaveBeenCalledTimes(6);
+
+				expect(store.updateGeometry).toHaveBeenCalledTimes(1);
+				expect(store.updateGeometry).toHaveBeenNthCalledWith(1, [
+					{
+						geometry: {
+							coordinates: [
+								[
+									[0, 0],
+									[0, 1],
+									[2, 2.0000000000000027],
+									[1, 0],
+									[0, 0],
+								],
+							],
+							type: "Polygon",
+						},
+						id: expect.any(String),
+					},
+					{
+						geometry: {
+							coordinates: [2, 2.0000000000000027],
+							type: "Point",
+						},
+						id: expect.any(String),
+					},
+				]);
+
+				// Update polygon position and 1 selection points
+				// that gets moved
+				expect(onChange).toHaveBeenNthCalledWith(
+					6,
+					[expect.any(String), expect.any(String)],
+					"update",
+					undefined,
+				);
+			});
+
+			it("can snap to nearby linestring coordinates if snappable toLine is enabled", () => {
+				setSelectMode({
+					flags: {
+						linestring: {
+							feature: {
+								coordinates: {
+									draggable: true,
+									snappable: {
+										toLine: true,
+									},
+								},
+							},
+						},
+					},
+				});
+
+				jest.spyOn(store, "updateGeometry");
+
+				// We want to account for ignoring points branch
+				addPointToStore([100, 89]);
+
+				expect(onChange).toHaveBeenCalledTimes(1);
+
+				addLineStringToStore([
+					[0, 0],
+					[0, 1],
+					[1, 1],
+					[1, 0],
+				]);
+
+				addLineStringToStore([
+					[2, 2],
+					[2, 3],
+					[3, 3],
+					[3, 2],
+				]);
+
+				expect(onChange).toHaveBeenCalledTimes(3);
+
+				selectMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+				expect(onSelect).toHaveBeenCalledTimes(1);
+				expect(onChange).toHaveBeenCalledTimes(5);
+
+				// Select feature
+				expect(onChange).toHaveBeenNthCalledWith(
+					4,
+					[expect.any(String)],
+					"update",
+					undefined,
+				);
+
+				// Create selection points
+				expect(onChange).toHaveBeenNthCalledWith(
+					5,
+					[
+						expect.any(String),
+						expect.any(String),
+						expect.any(String),
+						expect.any(String),
+					],
+					"create",
+					undefined,
+				);
+
+				selectMode.onDragStart(MockCursorEvent({ lng: 1, lat: 1 }), jest.fn());
+
+				const setMapDraggability = jest.fn();
+				selectMode.onDrag(
+					MockCursorEvent({ lng: 1.5, lat: 1.5 }),
+					setMapDraggability,
+				);
+
+				expect(onChange).toHaveBeenCalledTimes(6);
+
+				expect(store.updateGeometry).toHaveBeenCalledTimes(1);
+				expect(store.updateGeometry).toHaveBeenNthCalledWith(1, [
+					{
+						geometry: {
+							coordinates: [
+								[0, 0],
+								[0, 1],
+								[2, 2.0000000000000027],
+								[1, 0],
+							],
+							type: "LineString",
+						},
+						id: expect.any(String),
+					},
+					{
+						geometry: {
+							coordinates: [2, 2.0000000000000027],
+							type: "Point",
+						},
+						id: expect.any(String),
+					},
+				]);
+
+				// Update linestring position and 1 selection points
+				// that gets moved
+				expect(onChange).toHaveBeenNthCalledWith(
+					6,
+					[expect.any(String), expect.any(String)],
+					"update",
+					undefined,
+				);
+			});
+
+			it("can snap to nearby polygon line if snappable toCustom is enabled", () => {
+				setSelectMode({
+					flags: {
+						polygon: {
+							feature: {
+								coordinates: {
+									draggable: true,
+									snappable: {
+										toCustom: () => [45, 45],
+									},
+								},
+							},
+						},
+					},
+				});
+
+				jest.spyOn(store, "updateGeometry");
+
+				// We want to account for ignoring points branch
+				addPointToStore([100, 89]);
+
+				expect(onChange).toHaveBeenCalledTimes(1);
+
+				addPolygonToStore([
+					[0, 0],
+					[0, 1],
+					[1, 1],
+					[1, 0],
+					[0, 0],
+				]);
+
+				addPolygonToStore([
+					[2, 2],
+					[2, 3],
+					[3, 3],
+					[3, 2],
+					[2, 2],
+				]);
+
+				expect(onChange).toHaveBeenCalledTimes(3);
+
+				selectMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+				expect(onSelect).toHaveBeenCalledTimes(1);
+				expect(onChange).toHaveBeenCalledTimes(5);
+
+				// Select feature
+				expect(onChange).toHaveBeenNthCalledWith(
+					4,
+					[expect.any(String)],
+					"update",
+					undefined,
+				);
+
+				// Create selection points
+				expect(onChange).toHaveBeenNthCalledWith(
+					5,
+					[
+						expect.any(String),
+						expect.any(String),
+						expect.any(String),
+						expect.any(String),
+					],
+					"create",
+					undefined,
+				);
+
+				selectMode.onDragStart(MockCursorEvent({ lng: 1, lat: 1 }), jest.fn());
+
+				const setMapDraggability = jest.fn();
+				selectMode.onDrag(
+					MockCursorEvent({ lng: 1.5, lat: 1.5 }),
+					setMapDraggability,
+				);
+
+				expect(onChange).toHaveBeenCalledTimes(6);
+
+				expect(store.updateGeometry).toHaveBeenCalledTimes(1);
+				expect(store.updateGeometry).toHaveBeenNthCalledWith(1, [
+					{
+						geometry: {
+							coordinates: [
+								[
+									[0, 0],
+									[0, 1],
+									[45, 45],
+									[1, 0],
+									[0, 0],
+								],
+							],
+							type: "Polygon",
+						},
+						id: expect.any(String),
+					},
+					{
+						geometry: {
+							coordinates: [45, 45],
+							type: "Point",
+						},
+						id: expect.any(String),
+					},
+				]);
+
+				// Update polygon position and 1 selection points
 				// that gets moved
 				expect(onChange).toHaveBeenNthCalledWith(
 					6,

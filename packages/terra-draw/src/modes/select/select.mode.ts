@@ -8,17 +8,19 @@ import {
 	Cursor,
 	Validation,
 	UpdateTypes,
-	COMMON_PROPERTIES,
 	Z_INDEX,
 } from "../../common";
-import { Point, Polygon, Position } from "geojson";
+import { Point, Position } from "geojson";
 import {
 	BaseModeOptions,
 	CustomStyling,
 	TerraDrawBaseSelectMode,
 } from "../base.mode";
 import { MidPointBehavior } from "./behaviors/midpoint.behavior";
-import { SelectionPointBehavior } from "./behaviors/selection-point.behavior";
+import {
+	SelectionPointBehavior,
+	SelectionPointProperties,
+} from "./behaviors/selection-point.behavior";
 import { FeatureAtPointerEventBehavior } from "./behaviors/feature-at-pointer-event.behavior";
 import { PixelDistanceBehavior } from "../pixel-distance.behavior";
 import { ClickBoundingBoxBehavior } from "../click-bounding-box.behavior";
@@ -309,12 +311,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 			return;
 		}
 
-		let clickedSelectionPointProps:
-			| {
-					selectionPointFeatureId: string;
-					index: number;
-			  }
-			| undefined;
+		let clickedSelectionPointProps: SelectionPointProperties | undefined;
 
 		let clickedFeatureDistance = Infinity;
 
@@ -327,10 +324,9 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 				distance < clickedFeatureDistance
 			) {
 				clickedFeatureDistance = distance;
-				clickedSelectionPointProps = this.store.getPropertiesCopy(id) as {
-					selectionPointFeatureId: string;
-					index: number;
-				};
+				clickedSelectionPointProps = this.store.getPropertiesCopy(
+					id,
+				) as SelectionPointProperties;
 			}
 		});
 

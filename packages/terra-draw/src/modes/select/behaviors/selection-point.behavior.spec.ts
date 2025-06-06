@@ -33,10 +33,9 @@ describe("SelectionPointBehavior", () => {
 			expect(selectionPointBehavior.ids).toStrictEqual([]);
 		});
 
-		it("create - for polygon", () => {
-			const selectionPointBehavior = new SelectionPointBehavior(
-				MockBehaviorConfig("test"),
-			);
+		it("create for Polygon", () => {
+			const config = MockBehaviorConfig("test");
+			const selectionPointBehavior = new SelectionPointBehavior(config);
 
 			selectionPointBehavior.create(
 				[
@@ -51,6 +50,14 @@ describe("SelectionPointBehavior", () => {
 			selectionPointBehavior.ids.forEach((id) =>
 				expect(isUUIDV4(id as string)),
 			);
+
+			selectionPointBehavior.ids.forEach((id, i) => {
+				const properties = config.store.getPropertiesCopy(id);
+				expect(properties.mode).toBe("test");
+				expect(properties.index).toBe(i);
+				expect(properties.selectionPoint).toBe(true);
+				expect(properties.selectionPointFeatureId).toBe("id");
+			});
 		});
 
 		it("delete", () => {
@@ -91,7 +98,7 @@ describe("SelectionPointBehavior", () => {
 				expect(result).toBe(undefined);
 			});
 
-			it("should get updated coordinates if lengths match", () => {
+			it("should get updated coordinates if lengths match for Polygon", () => {
 				const config = MockBehaviorConfig("test");
 
 				const selectionPointBehavior = new SelectionPointBehavior(config);
@@ -117,8 +124,58 @@ describe("SelectionPointBehavior", () => {
 
 				expect(Array.isArray(result)).toBe(true);
 
-				(result as any[]).forEach((point) => {
+				(result as any[]).forEach((point, i) => {
 					expect(isUUIDV4(point.id as string));
+
+					const properties = config.store.getPropertiesCopy(point.id);
+
+					expect(properties.mode).toBe("test");
+					expect(properties.index).toBe(i);
+					expect(properties.selectionPoint).toBe(true);
+					expect(properties.selectionPointFeatureId).toBe("id");
+
+					expect(point.geometry.type).toBe("Point");
+					expect(point.geometry.coordinates).toStrictEqual([
+						expect.any(Number),
+						expect.any(Number),
+					]);
+				});
+			});
+
+			it("should get updated coordinates if lengths match for LineString", () => {
+				const config = MockBehaviorConfig("test");
+
+				const selectionPointBehavior = new SelectionPointBehavior(config);
+
+				selectionPointBehavior.create(
+					[
+						[0, 0],
+						[0, 1],
+						[1, 1],
+						[1, 0],
+					],
+					"LineString",
+					"id",
+				);
+
+				const result = selectionPointBehavior.getUpdated([
+					[2, 2],
+					[2, 3],
+					[2, 2],
+					[2, 3],
+				]);
+
+				expect(Array.isArray(result)).toBe(true);
+
+				(result as any[]).forEach((point, i) => {
+					expect(isUUIDV4(point.id as string));
+
+					const properties = config.store.getPropertiesCopy(point.id);
+
+					expect(properties.mode).toBe("test");
+					expect(properties.index).toBe(i);
+					expect(properties.selectionPoint).toBe(true);
+					expect(properties.selectionPointFeatureId).toBe("id");
 
 					expect(point.geometry.type).toBe("Point");
 					expect(point.geometry.coordinates).toStrictEqual([

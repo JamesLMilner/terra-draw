@@ -136,7 +136,7 @@ export class CoordinatePointBehavior extends TerraDrawModeBehavior {
 		featureId: FeatureId,
 	) {
 		return this.store.create(
-			coordinates.map((coordinate) => ({
+			coordinates.map((coordinate, i) => ({
 				geometry: {
 					type: "Point",
 					coordinates: coordinate,
@@ -145,6 +145,7 @@ export class CoordinatePointBehavior extends TerraDrawModeBehavior {
 					mode,
 					[COMMON_PROPERTIES.COORDINATE_POINT]: true,
 					[COMMON_PROPERTIES.COORDINATE_POINT_FEATURE_ID]: featureId,
+					index: i,
 				},
 			})),
 		);

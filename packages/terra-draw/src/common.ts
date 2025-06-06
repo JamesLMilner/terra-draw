@@ -176,6 +176,7 @@ export interface TerraDrawAdapter {
 export const SELECT_PROPERTIES = {
 	SELECTED: "selected",
 	MID_POINT: "midPoint",
+	SELECTION_POINT_FEATURE_ID: "selectionPointFeatureId",
 	SELECTION_POINT: "selectionPoint",
 } as const;
 
@@ -186,7 +187,7 @@ export const COMMON_PROPERTIES = {
 	COORDINATE_POINT: "coordinatePoint",
 	COORDINATE_POINT_FEATURE_ID: "coordinatePointFeatureId",
 	COORDINATE_POINT_IDS: "coordinatePointIds",
-};
+} as const;
 
 export const Z_INDEX = {
 	LAYER_ONE: 10,

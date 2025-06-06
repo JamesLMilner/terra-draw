@@ -2,6 +2,14 @@ import { LineString, Point, Polygon, Position } from "geojson";
 import { BehaviorConfig, TerraDrawModeBehavior } from "../../base.behavior";
 import { getCoordinatesAsPoints } from "../../../geometry/get-coordinates-as-points";
 import { FeatureId } from "../../../store/store";
+import { SELECT_PROPERTIES } from "../../../common";
+
+export type SelectionPointProperties = {
+	mode: string;
+	index: number;
+	[SELECT_PROPERTIES.SELECTION_POINT_FEATURE_ID]: string;
+	[SELECT_PROPERTIES.SELECTION_POINT]: true;
+};
 
 export class SelectionPointBehavior extends TerraDrawModeBehavior {
 	constructor(config: BehaviorConfig) {
@@ -24,9 +32,9 @@ export class SelectionPointBehavior extends TerraDrawModeBehavior {
 		this._selectionPoints = this.store.create(
 			getCoordinatesAsPoints(selectedCoords, type, (i) => ({
 				mode: this.mode,
-				selectionPoint: true,
-				selectionPointFeatureId: featureId,
 				index: i,
+				[SELECT_PROPERTIES.SELECTION_POINT]: true,
+				[SELECT_PROPERTIES.SELECTION_POINT_FEATURE_ID]: featureId,
 			})),
 		);
 	}

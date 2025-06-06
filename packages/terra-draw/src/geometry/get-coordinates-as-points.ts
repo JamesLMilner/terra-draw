@@ -1,10 +1,10 @@
 import { Point, Position } from "geojson";
 import { JSONObject } from "../store/store";
 
-export function getCoordinatesAsPoints(
+export function getCoordinatesAsPoints<Properties extends JSONObject>(
 	selectedCoords: Position[],
 	geometryType: "Polygon" | "LineString",
-	properties: (index: number) => JSONObject,
+	properties: (index: number) => Properties,
 ) {
 	const selectionPoints = [];
 

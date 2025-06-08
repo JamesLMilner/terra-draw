@@ -324,6 +324,9 @@ describe("TerraDrawMapLibreGLAdapter", () => {
 
 			adapter.register(MockCallbacks());
 
+			expect(map.addSource).toHaveBeenCalledTimes(3);
+			expect(map.addLayer).toHaveBeenCalledTimes(4);
+
 			adapter.render(
 				{
 					created: [],
@@ -345,6 +348,133 @@ describe("TerraDrawMapLibreGLAdapter", () => {
 		});
 
 		it("updates layers and sources when data is passed", () => {
+			jest.spyOn(window, "requestAnimationFrame");
+
+			const map = createMapLibreGLMap();
+			const adapter = new TerraDrawMapLibreGLAdapter({
+				map: map as maplibregl.Map,
+			});
+
+			expect(map.addSource).toHaveBeenCalledTimes(0);
+			expect(map.addLayer).toHaveBeenCalledTimes(0);
+
+			adapter.register(MockCallbacks());
+
+			expect(map.addSource).toHaveBeenCalledTimes(3);
+			expect(map.addLayer).toHaveBeenCalledTimes(4);
+
+			expect(map.getSource).toHaveBeenCalledTimes(0);
+
+			adapter.render(
+				{
+					created: [],
+					updated: [],
+					unchanged: [],
+					deletedIds: [],
+				},
+				{
+					test: () => ({}) as TerraDrawAdapterStyling,
+				},
+			);
+
+			let rAFCallback = (requestAnimationFrame as jest.Mock).mock.calls[0][0];
+
+			rAFCallback();
+
+			// No additional sources or layers should be added
+			expect(map.addSource).toHaveBeenCalledTimes(3);
+			expect(map.addLayer).toHaveBeenCalledTimes(4);
+
+			expect(map.getSource).toHaveBeenCalledTimes(3);
+
+			adapter.render(
+				{
+					created: [
+						{
+							id: "1",
+							type: "Feature",
+							geometry: {
+								type: "Point",
+								coordinates: [1, 1],
+							},
+							properties: {
+								mode: "point",
+							},
+						},
+						{
+							id: "2",
+							type: "Feature",
+							geometry: {
+								type: "LineString",
+								coordinates: [
+									[0, 0],
+									[1, 1],
+								],
+							},
+							properties: {
+								mode: "linestring",
+							},
+						},
+						{
+							id: "3",
+							type: "Feature",
+							geometry: {
+								type: "Polygon",
+								coordinates: [
+									[
+										[0, 0],
+										[0, 100],
+										[100, 100],
+										[100, 0],
+										[0, 0],
+									],
+								],
+							},
+							properties: {
+								mode: "polygon",
+							},
+						},
+					],
+					updated: [],
+					unchanged: [],
+					deletedIds: [],
+				},
+				{
+					point: () => ({}) as TerraDrawAdapterStyling,
+					linestring: () => ({}) as TerraDrawAdapterStyling,
+					polygon: () => ({}) as TerraDrawAdapterStyling,
+				},
+			);
+
+			rAFCallback = (requestAnimationFrame as jest.Mock).mock.calls[1][0];
+
+			rAFCallback();
+
+			expect(map.getSource).toHaveBeenCalledTimes(6);
+
+			adapter.render(
+				{
+					created: [],
+					updated: [],
+					unchanged: [],
+					deletedIds: ["3"],
+				},
+				{
+					point: () => ({}) as TerraDrawAdapterStyling,
+					linestring: () => ({}) as TerraDrawAdapterStyling,
+					polygon: () => ({}) as TerraDrawAdapterStyling,
+				},
+			);
+
+			rAFCallback = (requestAnimationFrame as jest.Mock).mock.calls[2][0];
+
+			rAFCallback();
+
+			// Force update because of the deletion
+			expect(map.getSource).toHaveBeenCalledTimes(9);
+		});
+
+		it("does not attempt to update after adapter is unregistered", () => {
 			jest.spyOn(window, "requestAnimationFrame");
 
 			const map = createMapLibreGLMap();
@@ -440,30 +570,20 @@ describe("TerraDrawMapLibreGLAdapter", () => {
 
 			rAFCallback = (requestAnimationFrame as jest.Mock).mock.calls[1][0];
 
-			rAFCallback();
+			expect(map.getSource).toHaveBeenCalledTimes(3);
 
+			adapter.unregister();
+
+			expect(map.removeLayer).toHaveBeenCalledTimes(4);
+			expect(map.removeSource).toHaveBeenCalledTimes(3);
+
+			// Clear updates the sources to empty
 			expect(map.getSource).toHaveBeenCalledTimes(6);
 
-			adapter.render(
-				{
-					created: [],
-					updated: [],
-					unchanged: [],
-					deletedIds: ["3"],
-				},
-				{
-					point: () => ({}) as TerraDrawAdapterStyling,
-					linestring: () => ({}) as TerraDrawAdapterStyling,
-					polygon: () => ({}) as TerraDrawAdapterStyling,
-				},
-			);
-
-			rAFCallback = (requestAnimationFrame as jest.Mock).mock.calls[2][0];
-
 			rAFCallback();
 
-			// Force update because of the deletion
-			expect(map.getSource).toHaveBeenCalledTimes(9);
+			// No further updates should be made after unregistering
+			expect(map.getSource).toHaveBeenCalledTimes(6);
 		});
 	});
 
@@ -493,6 +613,13 @@ describe("TerraDrawMapLibreGLAdapter", () => {
 	});
 
 	describe("register and unregister", () => {
+		const emptyRender = {
+			created: [],
+			updated: [],
+			unchanged: [],
+			deletedIds: [],
+		};
+
 		it("can register then unregister successfully", () => {
 			jest.spyOn(window, "requestAnimationFrame");
 
@@ -503,17 +630,9 @@ describe("TerraDrawMapLibreGLAdapter", () => {
 
 			adapter.register(MockCallbacks());
 
-			adapter.render(
-				{
-					created: [],
-					updated: [],
-					unchanged: [],
-					deletedIds: [],
-				},
-				{
-					test: () => ({}) as TerraDrawAdapterStyling,
-				},
-			);
+			adapter.render(emptyRender, {
+				test: () => ({}) as TerraDrawAdapterStyling,
+			});
 
 			const rAFCallback = (requestAnimationFrame as jest.Mock).mock.calls[0][0];
 
@@ -524,6 +643,34 @@ describe("TerraDrawMapLibreGLAdapter", () => {
 			// Clears any set data
 			expect(map.removeLayer).toHaveBeenCalledTimes(4);
 			expect(map.removeSource).toHaveBeenCalledTimes(3);
+		});
+
+		it("can register -> unregister -> register successfully", () => {
+			jest.spyOn(window, "requestAnimationFrame");
+
+			const map = createMapLibreGLMap();
+			const adapter = new TerraDrawMapLibreGLAdapter({
+				map: map as maplibregl.Map,
+			});
+
+			adapter.register(MockCallbacks());
+
+			adapter.render(emptyRender, {
+				test: () => ({}) as TerraDrawAdapterStyling,
+			});
+
+			const rAFCallback = (requestAnimationFrame as jest.Mock).mock.calls[0][0];
+
+			rAFCallback();
+
+			adapter.unregister();
+
+			// Clears any set data
+			expect(map.removeLayer).toHaveBeenCalledTimes(4);
+			expect(map.removeSource).toHaveBeenCalledTimes(3);
+
+			// Re-register
+			adapter.register(MockCallbacks());
 		});
 	});
 });

@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.7.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.6.3...terra-draw@1.7.0) (2025-06-08)
+
+
+### fix
+
+* **terra-draw:** avoid calling register/unregister when state is already enabled/disabled (#570) ([](https://github.com/JamesLMilner/terra-draw/commit/83416ab966ac2b907692ea8639c15c0f2b1465bb)), closes [#570](https://github.com/JamesLMilner/terra-draw/issues/570)
+* **terra-draw:** ensure coordinate points are cleaned up after delete (#566) ([](https://github.com/JamesLMilner/terra-draw/commit/0cf326891f11611643a1964ced6b1a23d2c6c20f)), closes [#566](https://github.com/JamesLMilner/terra-draw/issues/566)
+
+
+### feat
+
+* **terra-draw:** add getModeState to the Terra Draw API (#559) ([](https://github.com/JamesLMilner/terra-draw/commit/1fbcca103b23bfaa38bb3d24829bb9352236789d)), closes [#559](https://github.com/JamesLMilner/terra-draw/issues/559)
+* **terra-draw:** add index property to coordinate points (#569) ([](https://github.com/JamesLMilner/terra-draw/commit/1f7395762981feee0f41ad8aec24cfbeb060142b)), closes [#569](https://github.com/JamesLMilner/terra-draw/issues/569)
+
 ## [1.6.3](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.6.2...terra-draw@1.6.3) (2025-06-01)
 
 

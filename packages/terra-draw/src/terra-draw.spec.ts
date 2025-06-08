@@ -4,6 +4,7 @@
 import { COMMON_PROPERTIES } from "./common";
 import { FeatureId } from "./extend";
 import {
+	GeoJSONStoreFeatures,
 	TerraDraw,
 	TerraDrawLineStringMode,
 	TerraDrawPointMode,
@@ -23,7 +24,7 @@ describe("Terra Draw", () => {
 		});
 	});
 
-	describe("addFeature", () => {
+	describe("addFeatures", () => {
 		it("respects the default id strategy", () => {
 			const draw = new TerraDraw({
 				adapter,
@@ -224,6 +225,141 @@ describe("Terra Draw", () => {
 					valid: false,
 				},
 			]);
+		});
+
+		it("returns valid false if the coordinate precision is excessive", () => {
+			const draw = new TerraDraw({
+				adapter: new TerraDrawTestAdapter({
+					lib: {},
+					coordinatePrecision: 3,
+				}),
+				modes: [
+					new TerraDrawPointMode(),
+					new TerraDrawSelectMode({
+						flags: {
+							point: {
+								feature: { draggable: true },
+							},
+						},
+					}),
+				],
+			});
+
+			const onChange = jest.fn();
+
+			draw.on("change", onChange);
+
+			draw.start();
+			const [result] = draw.addFeatures([
+				{
+					id: "f8e5a38d-ecfa-4294-8461-d9cff0e0d7f8",
+					type: "Feature",
+					geometry: {
+						type: "Point",
+						coordinates: [-25.431289673, 34.355907891],
+					},
+					properties: {
+						mode: "point",
+					},
+				},
+			]);
+
+			expect(result.valid).toBe(false);
+			expect(result.reason).toBe(
+				"Feature has coordinates with excessive precision",
+			);
+
+			expect(onChange).not.toHaveBeenCalled();
+		});
+
+		it("returns valid true if the coordinate precision is exactly the adapter coordinate precision", () => {
+			const draw = new TerraDraw({
+				adapter: new TerraDrawTestAdapter({
+					lib: {},
+					coordinatePrecision: 9,
+				}),
+				modes: [
+					new TerraDrawPointMode(),
+					new TerraDrawSelectMode({
+						flags: {
+							point: {
+								feature: { draggable: true },
+							},
+						},
+					}),
+				],
+			});
+
+			const onChange = jest.fn();
+
+			draw.on("change", onChange);
+
+			draw.start();
+			const [result] = draw.addFeatures([
+				{
+					id: "f8e5a38d-ecfa-4294-8461-d9cff0e0d7f8",
+					type: "Feature",
+					geometry: {
+						type: "Point",
+						coordinates: [-25.431289673, 34.355907891],
+					},
+					properties: {
+						mode: "point",
+					},
+				},
+			]);
+
+			expect(result.valid).toBe(true);
+			expect(result.reason).toBe(undefined);
+
+			expect(onChange).toHaveBeenCalledTimes(1);
+			expect(onChange).toHaveBeenCalledWith([expect.any(String)], "create", {
+				origin: "api",
+			});
+		});
+
+		it("throws an error if not enabled", () => {
+			const draw = new TerraDraw({
+				adapter: new TerraDrawTestAdapter({
+					lib: {},
+					coordinatePrecision: 3,
+				}),
+				modes: [
+					new TerraDrawPointMode(),
+					new TerraDrawSelectMode({
+						flags: {
+							point: {
+								feature: { draggable: true },
+							},
+						},
+					}),
+				],
+			});
+
+			const onChange = jest.fn();
+
+			draw.on("change", onChange);
+
+			draw.start();
+			draw.stop();
+
+			expect(() => {
+				draw.addFeatures([
+					{
+						id: "f8e5a38d-ecfa-4294-8461-d9cff0e0d7f8",
+						type: "Feature",
+						geometry: {
+							type: "Point",
+							coordinates: [-25, 34],
+						},
+						properties: {
+							mode: "point",
+						},
+					},
+				]);
+			}).toThrow("Terra Draw is not enabled");
+
+			expect(onChange).not.toHaveBeenCalled();
 		});
 	});
 
@@ -484,99 +620,6 @@ describe("Terra Draw", () => {
 		});
 	});
 
-	describe("addFeatures", () => {
-		it("returns valid false if the coordinate precision is excessive", () => {
-			const draw = new TerraDraw({
-				adapter: new TerraDrawTestAdapter({
-					lib: {},
-					coordinatePrecision: 3,
-				}),
-				modes: [
-					new TerraDrawPointMode(),
-					new TerraDrawSelectMode({
-						flags: {
-							point: {
-								feature: { draggable: true },
-							},
-						},
-					}),
-				],
-			});
-
-			const onChange = jest.fn();
-
-			draw.on("change", onChange);
-
-			draw.start();
-			const [result] = draw.addFeatures([
-				{
-					id: "f8e5a38d-ecfa-4294-8461-d9cff0e0d7f8",
-					type: "Feature",
-					geometry: {
-						type: "Point",
-						coordinates: [-25.431289673, 34.355907891],
-					},
-					properties: {
-						mode: "point",
-					},
-				},
-			]);
-
-			expect(result.valid).toBe(false);
-			expect(result.reason).toBe(
-				"Feature has coordinates with excessive precision",
-			);
-
-			expect(onChange).not.toHaveBeenCalled();
-		});
-
-		it("returns valid true if the coordinate precision is exactly the adapter coordinate precision", () => {
-			const draw = new TerraDraw({
-				adapter: new TerraDrawTestAdapter({
-					lib: {},
-					coordinatePrecision: 9,
-				}),
-				modes: [
-					new TerraDrawPointMode(),
-					new TerraDrawSelectMode({
-						flags: {
-							point: {
-								feature: { draggable: true },
-							},
-						},
-					}),
-				],
-			});
-
-			const onChange = jest.fn();
-
-			draw.on("change", onChange);
-
-			draw.start();
-			const [result] = draw.addFeatures([
-				{
-					id: "f8e5a38d-ecfa-4294-8461-d9cff0e0d7f8",
-					type: "Feature",
-					geometry: {
-						type: "Point",
-						coordinates: [-25.431289673, 34.355907891],
-					},
-					properties: {
-						mode: "point",
-					},
-				},
-			]);
-
-			expect(result.valid).toBe(true);
-			expect(result.reason).toBe(undefined);
-
-			expect(onChange).toHaveBeenCalledTimes(1);
-			expect(onChange).toHaveBeenCalledWith([expect.any(String)], "create", {
-				origin: "api",
-			});
-		});
-	});
-
 	describe("removeFeatures", () => {
 		it("correctly removes a feature as expected", () => {
 			const draw = new TerraDraw({
@@ -626,6 +669,53 @@ describe("Terra Draw", () => {
 			});
 
 			expect(draw.getSnapshot()).toHaveLength(0);
+		});
+
+		it("throws an error if not enabled", () => {
+			const draw = new TerraDraw({
+				adapter: new TerraDrawTestAdapter({
+					lib: {},
+					coordinatePrecision: 3,
+				}),
+				modes: [
+					new TerraDrawPointMode(),
+					new TerraDrawSelectMode({
+						flags: {
+							point: {
+								feature: { draggable: true },
+							},
+						},
+					}),
+				],
+			});
+
+			const onChange = jest.fn();
+			draw.on("change", onChange);
+
+			draw.start();
+			const [result] = draw.addFeatures([
+				{
+					id: "f8e5a38d-ecfa-4294-8461-d9cff0e0d7f8",
+					type: "Feature",
+					geometry: {
+						type: "Point",
+						coordinates: [-25, 34],
+					},
+					properties: {
+						mode: "point",
+					},
+				},
+			]);
+
+			expect(onChange).toHaveBeenCalledTimes(1);
+
+			expect(result.valid).toBe(true);
+
+			draw.stop();
+
+			expect(() => {
+				draw.removeFeatures([result.id as FeatureId]);
+			}).toThrow("Terra Draw is not enabled");
 		});
 
 		it("throws an error trying to remove non-existent feature", () => {
@@ -849,7 +939,96 @@ describe("Terra Draw", () => {
 	});
 
 	describe("clear", () => {
-		it("clears the store", () => {
+		const point = {
+			type: "Feature",
+			geometry: {
+				type: "Point",
+				coordinates: [0, 0],
+			},
+			properties: {
+				mode: "point",
+			},
+		} as GeoJSONStoreFeatures;
+
+		it("clears the store in static mode", () => {
+			const draw = new TerraDraw({
+				adapter,
+				modes: [new TerraDrawPointMode()],
+			});
+
+			expect(draw.enabled).toBe(false);
+
+			draw.start();
+
+			draw.addFeatures([point]);
+
+			draw.clear();
+
+			const snapshot = draw.getSnapshot();
+
+			expect(snapshot).toHaveLength(0);
+		});
+
+		it("clears the store in point mode", () => {
+			const draw = new TerraDraw({
+				adapter,
+				modes: [new TerraDrawPointMode()],
+			});
+
+			expect(draw.enabled).toBe(false);
+
+			draw.start();
+
+			draw.setMode("point");
+
+			draw.addFeatures([point]);
+
+			draw.clear();
+
+			const snapshot = draw.getSnapshot();
+
+			expect(snapshot).toHaveLength(0);
+		});
+
+		it("does not throw if called multiple times in point mode", () => {
+			const draw = new TerraDraw({
+				adapter,
+				modes: [new TerraDrawPointMode()],
+			});
+
+			expect(draw.enabled).toBe(false);
+
+			draw.start();
+
+			draw.setMode("point");
+
+			draw.addFeatures([point]);
+
+			draw.clear();
+			let snapshot = draw.getSnapshot();
+			expect(snapshot).toHaveLength(0);
+
+			draw.clear();
+			snapshot = draw.getSnapshot();
+			expect(snapshot).toHaveLength(0);
+
+			draw.clear();
+			snapshot = draw.getSnapshot();
+			expect(snapshot).toHaveLength(0);
+		});
+
+		it("throws an error if trying to clear whilst unregistered (never started)", () => {
+			const draw = new TerraDraw({
+				adapter,
+				modes: [new TerraDrawPointMode()],
+			});
+
+			expect(() => {
+				draw.clear();
+			}).toThrow("Terra Draw is not enabled");
+		});
+
+		it("throws an error if trying to clear whilst unregistered (started then stopped)", () => {
 			const draw = new TerraDraw({
 				adapter,
 				modes: [new TerraDrawPointMode()],
@@ -872,11 +1051,11 @@ describe("Terra Draw", () => {
 				},
 			]);
 
-			draw.clear();
+			draw.stop();
 
-			const snapshot = draw.getSnapshot();
-
-			expect(snapshot).toHaveLength(0);
+			expect(() => {
+				draw.clear();
+			}).toThrow("Terra Draw is not enabled");
 		});
 	});
 
@@ -899,6 +1078,17 @@ describe("Terra Draw", () => {
 			draw.start();
 
 			expect(draw.enabled).toBe(true);
+		});
+
+		it("throws an error if trying to set enabled directly (it is a read only property)", () => {
+			const draw = new TerraDraw({
+				adapter,
+				modes: [new TerraDrawPointMode()],
+			});
+
+			expect(() => {
+				draw.enabled = true;
+			}).toThrow("Enabled is read only");
 		});
 	});
 
@@ -1131,8 +1321,24 @@ describe("Terra Draw", () => {
 				modes: [new TerraDrawPointMode()],
 			});
 
+			// Starts out false
 			expect(draw.enabled).toBe(false);
 
+			draw.start();
+			expect(draw.enabled).toBe(true);
+		});
+
+		it("start has no effect if already started", () => {
+			const draw = new TerraDraw({
+				adapter,
+				modes: [new TerraDrawPointMode()],
+			});
+
+			// Starts out false
+			expect(draw.enabled).toBe(false);
+
+			draw.start();
+			expect(draw.enabled).toBe(true);
 			draw.start();
 			expect(draw.enabled).toBe(true);
 		});
@@ -1150,6 +1356,36 @@ describe("Terra Draw", () => {
 
 			draw.stop();
 			expect(draw.enabled).toBe(false);
+		});
+
+		it("stop has no effect if already stopped", () => {
+			const draw = new TerraDraw({
+				adapter,
+				modes: [new TerraDrawPointMode()],
+			});
+
+			// Starts out false
+			expect(draw.enabled).toBe(false);
+			draw.stop();
+			expect(draw.enabled).toBe(false);
+			draw.stop();
+			expect(draw.enabled).toBe(false);
+		});
+
+		it("can fully cycle through stop -> start -> stop -> start", () => {
+			const draw = new TerraDraw({
+				adapter,
+				modes: [new TerraDrawPointMode()],
+			});
+
+			// Starts out false
+			expect(draw.enabled).toBe(false);
+			draw.start();
+			expect(draw.enabled).toBe(true);
+			draw.stop();
+			expect(draw.enabled).toBe(false);
+			draw.start();
+			expect(draw.enabled).toBe(true);
 		});
 	});
 
@@ -1179,6 +1415,52 @@ describe("Terra Draw", () => {
 			]);
 
 			expect(callback).toHaveBeenCalled();
+		});
+
+		it("it calls on change after draw has been stopped and started", async () => {
+			const draw = new TerraDraw({
+				adapter,
+				modes: [new TerraDrawPointMode()],
+			});
+
+			draw.start();
+
+			const callback = jest.fn();
+			draw.on("change", callback);
+
+			draw.addFeatures([
+				{
+					type: "Feature",
+					geometry: {
+						type: "Point",
+						coordinates: [-25, 34],
+					},
+					properties: {
+						mode: "point",
+					},
+				},
+			]);
+
+			expect(callback).toHaveBeenCalledTimes(1);
+
+			draw.stop();
+
+			draw.start();
+
+			draw.addFeatures([
+				{
+					type: "Feature",
+					geometry: {
+						type: "Point",
+						coordinates: [-35, 44],
+					},
+					properties: {
+						mode: "point",
+					},
+				},
+			]);
+
+			expect(callback).toHaveBeenCalledTimes(2);
 		});
 	});
 

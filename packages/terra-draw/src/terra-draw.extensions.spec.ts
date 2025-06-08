@@ -158,6 +158,10 @@ export class TerraDrawTestAdapter extends TerraDrawBaseAdapter {
 	public register(callbacks: TerraDrawExtend.TerraDrawCallbacks): void {
 		this._currentModeCallbacks = callbacks;
 	}
+
+	public unregister(): void {
+		super.unregister();
+	}
 }
 
 /**

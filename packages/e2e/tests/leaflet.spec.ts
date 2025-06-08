@@ -9,6 +9,7 @@ import {
 	pageUrl,
 	setupMap,
 	TestConfigOptions,
+	clickToggleOnOff,
 } from "./setup";
 
 test.describe("page setup", () => {
@@ -47,6 +48,27 @@ test.describe("page setup", () => {
 		await expect(
 			await page.locator("#webpack-dev-server-client-overlay").count(),
 		).toBe(0);
+	});
+
+	test("starting -> stopping -> starting draw instance produces no console errors", async ({
+		page,
+	}) => {
+		const errors: string[] = [];
+		page.on("console", (msg) => {
+			if (msg.type() === "error") {
+				errors.push(msg.text());
+			}
+		});
+		await page.goto(pageUrl);
+		await expect(page.getByRole("application")).toBeVisible();
+
+		// Turn Terra Draw off
+		await clickToggleOnOff({ page });
+
+		// Turn Terra Draw on
+		await clickToggleOnOff({ page });
+
+		expect(errors).toEqual([]);
 	});
 });
 

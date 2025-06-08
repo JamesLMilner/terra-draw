@@ -313,6 +313,12 @@ export class TerraDrawMapLibreGLAdapter<
 		// we can do debounce rendering to only render the last render in a given
 		// frame bucket (16ms)
 		this._nextRender = requestAnimationFrame(() => {
+			// Because unregister may be called synchronously, and the rAF can occur after
+			// it lets ensure the adapter is actually registered
+			if (!this._currentModeCallbacks) {
+				return;
+			}
+
 			// Get a map of the changed feature IDs by geometry type
 			// We use this to determine which MB layers need to be updated
 
@@ -397,22 +403,25 @@ export class TerraDrawMapLibreGLAdapter<
 	 * @returns void
 	 * */
 	public clear() {
-		if (this._currentModeCallbacks) {
-			// Clear up state first
-			this._currentModeCallbacks.onClear();
-
-			// TODO: This is necessary to prevent render artifacts, perhaps there is a nicer solution?
-			if (this._nextRender) {
-				cancelAnimationFrame(this._nextRender);
-				this._nextRender = undefined;
-			}
-
-			this._setGeoJSONLayerData<Point>("Point", []);
-
-			this._setGeoJSONLayerData<LineString>("LineString", []);
-
-			this._setGeoJSONLayerData<Polygon>("Polygon", []);
+		// If we are not registered, do nothing
+		if (!this._currentModeCallbacks) {
+			return;
 		}
+
+		// Clear up state first
+		this._currentModeCallbacks.onClear();
+
+		// TODO: This is necessary to prevent render artifacts, perhaps there is a nicer solution?
+		if (this._nextRender) {
+			cancelAnimationFrame(this._nextRender);
+			this._nextRender = undefined;
+		}
+
+		this._setGeoJSONLayerData<Point>("Point", []);
+
+		this._setGeoJSONLayerData<LineString>("LineString", []);
+
+		this._setGeoJSONLayerData<Polygon>("Polygon", []);
 	}
 
 	public getCoordinatePrecision(): number {
@@ -421,6 +430,14 @@ export class TerraDrawMapLibreGLAdapter<
 
 	public unregister(): void {
 		super.unregister();
+
+		this.changedIds = {
+			points: false,
+			linestrings: false,
+			polygons: false,
+			deletion: false,
+			styling: false,
+		};
 
 		this._map.removeLayer("td-point");
 		this._map.removeSource("td-point");

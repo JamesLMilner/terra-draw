@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.1.1](https://github.com/JamesLMilner/terra-draw/compare/terra-draw-maplibre-gl-adapter@1.1.0...terra-draw-maplibre-gl-adapter@1.1.1) (2025-06-08)
+
+
+### fix
+
+* **terra-draw-maplibre-gl-adapter:** ensure adapter is registered on next rAF callback (#571) ([](https://github.com/JamesLMilner/terra-draw/commit/1b3a84e8e4974f84b72e6ba15aea863aa4e9dc14)), closes [#571](https://github.com/JamesLMilner/terra-draw/issues/571)
+
 ## [1.1.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw-maplibre-gl-adapter@1.0.3...terra-draw-maplibre-gl-adapter@1.1.0) (2025-05-06)
 
 

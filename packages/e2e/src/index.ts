@@ -267,6 +267,17 @@ class TestMap {
 				draw.clear();
 			},
 		);
+
+		(document.getElementById("toggle") as HTMLButtonElement).addEventListener(
+			"click",
+			() => {
+				if (draw.enabled) {
+					draw.stop();
+				} else {
+					draw.start();
+				}
+			},
+		);
 	}
 }
 

@@ -408,7 +408,12 @@ export abstract class TerraDrawBaseAdapter implements TerraDrawAdapter {
 		this._listeners.forEach((listener) => {
 			listener.unregister();
 		});
+
+		console.log("calling this.onClear from base adapter");
 		this.clear();
+
+		// This has to come last because we call this._currentModeCallbacks.onClear()
+		this._currentModeCallbacks = undefined;
 	}
 
 	public abstract clear(): void;

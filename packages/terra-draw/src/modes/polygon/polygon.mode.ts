@@ -250,6 +250,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 			this.setStarted();
 		}
 
+		console.log("onFinish polygon mode");
 		this.onFinish(finishedId, { mode: this.mode, action: "draw" });
 	}
 
@@ -575,6 +576,8 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 	}
 
 	private onLeftClick(event: TerraDrawMouseEvent) {
+		console.log("onLeftClick");
+
 		// Reset the snapping point
 		if (this.snappedPointId) {
 			this.store.delete([this.snappedPointId]);
@@ -698,10 +701,20 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 				this.currentId,
 			).coordinates[0];
 
+			console.log(currentPolygonCoordinates);
+
 			const { isClosing, isPreviousClosing } =
 				this.closingPoints.isClosingPoint(event);
 
+			console.log(
+				"isClosing",
+				isClosing,
+				"isPreviousClosing",
+				isPreviousClosing,
+			);
+
 			if (isPreviousClosing || isClosing) {
+				console.log("this.close");
 				this.close();
 			} else {
 				const snappedCoordinate = this.snapCoordinate(event);

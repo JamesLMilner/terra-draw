@@ -103,10 +103,6 @@ export class TerraDrawPointMode extends TerraDrawBaseDrawMode<PointModeStyling> 
 
 	/** @internal */
 	onClick(event: TerraDrawMouseEvent) {
-		if (!this.store) {
-			throw new Error("Mode must be registered first");
-		}
-
 		if (
 			(event.button === "right" &&
 				this.allowPointerEvent(this.pointerEvents.rightClick, event)) ||

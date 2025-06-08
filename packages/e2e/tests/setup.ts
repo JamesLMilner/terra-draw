@@ -98,6 +98,12 @@ export const changeMode = async ({
 	).toBe("rgb(39, 204, 255)"); // We set hex but it gets computed to rgb
 };
 
+/** Click the toggle button to turn Terra Draw on or off */
+export const clickToggleOnOff = async ({ page }: { page: Page }) => {
+	const button = page.getByTestId("toggle");
+	await button.click();
+};
+
 export const expectPaths = async ({
 	page,
 	count,

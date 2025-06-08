@@ -722,6 +722,11 @@ class TerraDraw {
 	 * in registers the passed adapter giving it all the callbacks required to operate.
 	 */
 	start() {
+		// If the instance is already enabled, we do nothing
+		if (this._enabled) {
+			return;
+		}
+
 		this._enabled = true;
 		this._adapter.register({
 			onReady: () => {
@@ -812,6 +817,11 @@ class TerraDraw {
 	 * remove any rendered layers in the process.
 	 */
 	stop() {
+		// If the instance is already stopped, we do nothing
+		if (!this._enabled) {
+			return;
+		}
+
 		this._enabled = false;
 		this._adapter.unregister();
 	}

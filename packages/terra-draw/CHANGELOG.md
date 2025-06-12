@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.8.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.7.0...terra-draw@1.8.0) (2025-06-12)
+
+
+### feat
+
+* **terra-draw:** unify snapping functionality across polygon, linestring and select modes (#565) ([](https://github.com/JamesLMilner/terra-draw/commit/59884159c971fcfbcf16475f0ae4fff8db8f5faa)), closes [#565](https://github.com/JamesLMilner/terra-draw/issues/565)
+
 ## [1.7.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.6.3...terra-draw@1.7.0) (2025-06-08)
 
 

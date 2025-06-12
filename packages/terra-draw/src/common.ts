@@ -1,3 +1,4 @@
+import { LineString, Polygon, Position } from "geojson";
 import {
 	StoreChangeHandler,
 	GeoJSONStore,
@@ -117,6 +118,21 @@ export type Validation = (
 	valid: boolean;
 	reason?: string;
 };
+
+export interface Snapping {
+	toLine?: boolean;
+	toCoordinate?: boolean;
+	toCustom?: (
+		event: TerraDrawMouseEvent,
+		context: {
+			currentId?: FeatureId;
+			currentCoordinate?: number;
+			getCurrentGeometrySnapshot: () => (Polygon | LineString) | null;
+			project: Project;
+			unproject: Unproject;
+		},
+	) => Position | undefined;
+}
 
 export type TerraDrawModeState =
 	| "unregistered"

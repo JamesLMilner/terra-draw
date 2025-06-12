@@ -9,6 +9,7 @@ import {
 	CartesianPoint,
 	COMMON_PROPERTIES,
 	Z_INDEX,
+	Snapping,
 } from "../../common";
 import { Feature, LineString, Point, Position } from "geojson";
 import {
@@ -71,11 +72,6 @@ const defaultCursors = {
 interface InertCoordinates {
 	strategy: "amount"; // In future this could be extended
 	value: number;
-}
-
-interface Snapping {
-	toCoordinate?: boolean;
-	toCustom?: (event: TerraDrawMouseEvent) => Position | undefined;
 }
 
 interface TerraDrawLineStringModeOptions<T extends CustomStyling>
@@ -991,6 +987,22 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 	private snapCoordinate(event: TerraDrawMouseEvent) {
 		let snappedCoordinate: Position | undefined;
 
+		if (this.snapping?.toLine) {
+			let snapped: Position | undefined;
+			if (this.currentId) {
+				snapped = this.lineSnapping.getSnappableCoordinate(
+					event,
+					this.currentId,
+				);
+			} else {
+				snapped = this.lineSnapping.getSnappableCoordinateFirstClick(event);
+			}
+
+			if (snapped) {
+				snappedCoordinate = snapped;
+			}
+		}
+
 		if (this.snapping?.toCoordinate) {
 			if (this.currentId) {
 				snappedCoordinate = this.coordinateSnapping.getSnappableCoordinate(
@@ -1004,7 +1016,18 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 		}
 
 		if (this.snapping?.toCustom) {
-			snappedCoordinate = this.snapping.toCustom(event);
+			snappedCoordinate = this.snapping.toCustom(event, {
+				currentCoordinate: this.currentCoordinate,
+				currentId: this.currentId,
+				getCurrentGeometrySnapshot: this.currentId
+					? () =>
+							this.store.getGeometryCopy<LineString>(
+								this.currentId as FeatureId,
+							)
+					: () => null,
+				project: this.project,
+				unproject: this.unproject,
+			});
 		}
 
 		return snappedCoordinate;

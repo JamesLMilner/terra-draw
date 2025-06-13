@@ -3,6 +3,8 @@ import { MockModeConfig } from "../../test/mock-mode-config";
 import { TerraDrawPointMode } from "./point.mode";
 import { MockCursorEvent } from "../../test/mock-cursor-event";
 import { DefaultPointerEvents } from "../base.mode";
+import { MockPoint } from "../../test/mock-features";
+import { GeoJSONStoreFeatures, JSONObject } from "../../store/store";
 
 describe("TerraDrawPointMode", () => {
 	describe("constructor", () => {
@@ -719,6 +721,66 @@ describe("TerraDrawPointMode", () => {
 			).toEqual({
 				valid: false,
 			});
+		});
+	});
+
+	describe("afterFeatureUpdated", () => {
+		it("does nothing if the updated feature is not currently being dragged", () => {
+			const pointMode = new TerraDrawPointMode();
+
+			const mockConfig = MockModeConfig(pointMode.mode);
+
+			pointMode.register(mockConfig);
+			pointMode.start();
+
+			// Create an initial square to snap to
+			const mockPoint = MockPoint();
+			const [featureId] = mockConfig.store.create([
+				{
+					geometry: mockPoint.geometry,
+					properties: mockPoint.properties as JSONObject,
+				},
+			]);
+
+			// Set the onChange count to 0
+			mockConfig.onChange.mockClear();
+
+			expect(mockConfig.store.has(featureId)).toBe(true);
+
+			mockConfig.setCursor.mockClear();
+
+			pointMode.afterFeatureUpdated({
+				...(mockPoint as GeoJSONStoreFeatures),
+				id: featureId,
+			});
+
+			expect(mockConfig.setCursor).toHaveBeenCalledTimes(0);
+			expect(mockConfig.onChange).toHaveBeenCalledTimes(0);
+		});
+
+		it("resets the editable state if feature was being dragged", () => {
+			const pointMode = new TerraDrawPointMode();
+			pointMode.updateOptions({ editable: true });
+
+			const mockConfig = MockModeConfig(pointMode.mode);
+			pointMode.register(mockConfig);
+			pointMode.start();
+
+			pointMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+			pointMode.onDragStart(MockCursorEvent({ lng: 0, lat: 0 }), jest.fn());
+
+			const point = mockConfig.store.copyAll()[0];
+
+			mockConfig.setCursor.mockClear();
+
+			pointMode.afterFeatureUpdated({
+				...point,
+				geometry: { type: "Point", coordinates: [2, 2] },
+			});
+
+			// We gp back to the create cursor when the editing (dragging) is interrupted by afterFeatureUpdated
+			expect(mockConfig.setCursor).toHaveBeenCalledTimes(1);
 		});
 	});
 });

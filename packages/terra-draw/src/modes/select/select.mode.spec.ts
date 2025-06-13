@@ -2992,4 +2992,183 @@ describe("TerraDrawSelectMode", () => {
 			});
 		});
 	});
+
+	describe("afterFeatureUpdated", () => {
+		it("does nothing if a feature is not selected", () => {
+			const selectMode = new TerraDrawSelectMode();
+
+			const mockConfig = MockModeConfig(selectMode.mode);
+			selectMode.register(mockConfig);
+
+			selectMode.afterFeatureUpdated({
+				id: "test-id",
+				type: "Feature",
+				geometry: { type: "Point", coordinates: [0, 0] },
+				properties: { mode: "point" },
+			});
+
+			expect(mockConfig.onChange).toHaveBeenCalledTimes(0);
+		});
+
+		it("recreates selection points", () => {
+			const selectMode = new TerraDrawSelectMode({
+				flags: { polygon: { feature: { coordinates: { draggable: true } } } },
+			});
+
+			const mockConfig = MockModeConfig(selectMode.mode);
+			selectMode.register(mockConfig);
+
+			// Create a polygon to select
+			const [id] = mockConfig.store.create([
+				{
+					geometry: {
+						type: "Polygon",
+						coordinates: [
+							[
+								[0, 0],
+								[1, 0],
+								[1, 1],
+								[0, 1],
+								[0, 0],
+							],
+						],
+					},
+					properties: { mode: "polygon" },
+				},
+			]);
+
+			selectMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+			expect(mockConfig.onSelect).toHaveBeenCalledWith(id);
+
+			mockConfig.onChange.mockClear();
+
+			selectMode.afterFeatureUpdated({
+				id,
+				type: "Feature",
+				geometry: {
+					type: "Polygon",
+					coordinates: [
+						[
+							[0, 0],
+							[1, 0],
+							[0, 1],
+							[0, 0],
+						],
+					],
+				},
+				properties: { mode: "polygon" },
+			});
+
+			expect(mockConfig.onChange).toHaveBeenCalledTimes(2);
+			expect(mockConfig.onChange).toHaveBeenNthCalledWith(
+				1,
+				[
+					expect.any(String),
+					expect.any(String),
+					expect.any(String),
+					expect.any(String),
+				],
+				"delete",
+				undefined,
+			);
+			expect(mockConfig.onChange).toHaveBeenNthCalledWith(
+				2,
+				[expect.any(String), expect.any(String), expect.any(String)],
+				"create",
+				undefined,
+			);
+		});
+
+		it("recreates selection and midpoints points", () => {
+			const selectMode = new TerraDrawSelectMode({
+				flags: {
+					polygon: {
+						feature: { coordinates: { draggable: true, midpoints: true } },
+					},
+				},
+			});
+
+			const mockConfig = MockModeConfig(selectMode.mode);
+			selectMode.register(mockConfig);
+
+			// Create a polygon to select
+			const [id] = mockConfig.store.create([
+				{
+					geometry: {
+						type: "Polygon",
+						coordinates: [
+							[
+								[0, 0],
+								[1, 0],
+								[1, 1],
+								[0, 1],
+								[0, 0],
+							],
+						],
+					},
+					properties: { mode: "polygon" },
+				},
+			]);
+
+			selectMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+			expect(mockConfig.onSelect).toHaveBeenCalledWith(id);
+
+			mockConfig.onChange.mockClear();
+
+			selectMode.afterFeatureUpdated({
+				id,
+				type: "Feature",
+				geometry: {
+					type: "Polygon",
+					coordinates: [
+						[
+							[0, 0],
+							[1, 0],
+							[0, 1],
+							[0, 0],
+						],
+					],
+				},
+				properties: { mode: "polygon" },
+			});
+
+			expect(mockConfig.onChange).toHaveBeenCalledTimes(4);
+			expect(mockConfig.onChange).toHaveBeenNthCalledWith(
+				1,
+				[
+					expect.any(String),
+					expect.any(String),
+					expect.any(String),
+					expect.any(String),
+				],
+				"delete",
+				undefined,
+			);
+			expect(mockConfig.onChange).toHaveBeenNthCalledWith(
+				2,
+				[
+					expect.any(String),
+					expect.any(String),
+					expect.any(String),
+					expect.any(String),
+				],
+				"delete",
+				undefined,
+			);
+			expect(mockConfig.onChange).toHaveBeenNthCalledWith(
+				3,
+				[expect.any(String), expect.any(String), expect.any(String)],
+				"create",
+				undefined,
+			);
+			expect(mockConfig.onChange).toHaveBeenNthCalledWith(
+				4,
+				[expect.any(String), expect.any(String), expect.any(String)],
+				"create",
+				undefined,
+			);
+		});
+	});
 });

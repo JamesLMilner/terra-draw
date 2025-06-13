@@ -95,8 +95,9 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 	private cursors: Required<Cursors> = defaultCursors;
 	private mouseMove = false;
 	private insertCoordinates: InertCoordinates | undefined;
-	private lastCommitedCoordinates: Position[] | undefined;
+	private lastCommittedCoordinates: Position[] | undefined;
 	private snappedPointId: FeatureId | undefined;
+	private lastMouseMoveEvent: TerraDrawMouseEvent | undefined;
 
 	// Editable properties
 	private editable: boolean = false;
@@ -146,6 +147,47 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 		}
 	}
 
+	private updateSnappedCoordinate(event: TerraDrawMouseEvent) {
+		const snappedCoordinate = this.snapCoordinate(event);
+
+		if (snappedCoordinate) {
+			if (this.snappedPointId) {
+				this.store.updateGeometry([
+					{
+						id: this.snappedPointId,
+						geometry: {
+							type: "Point",
+							coordinates: snappedCoordinate,
+						},
+					},
+				]);
+			} else {
+				const [snappedPointId] = this.store.create([
+					{
+						geometry: {
+							type: "Point",
+							coordinates: snappedCoordinate,
+						},
+						properties: {
+							mode: this.mode,
+							[COMMON_PROPERTIES.SNAPPING_POINT]: true,
+						},
+					},
+				]);
+
+				this.snappedPointId = snappedPointId;
+			}
+
+			event.lng = snappedCoordinate[0];
+			event.lat = snappedCoordinate[1];
+		} else if (this.snappedPointId) {
+			this.store.delete([this.snappedPointId]);
+			this.snappedPointId = undefined;
+		}
+
+		return snappedCoordinate;
+	}
+
 	private close() {
 		if (this.currentId === undefined) {
 			return;
@@ -179,7 +221,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 		this.currentId = undefined;
 		this.closingPointId = undefined;
 		this.snappedPointId = undefined;
-		this.lastCommitedCoordinates = undefined;
+		this.lastCommittedCoordinates = undefined;
 
 		// Go back to started state
 		if (this.state === "drawing") {
@@ -241,14 +283,14 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 		}
 
 		if (updateType === "commit") {
-			this.lastCommitedCoordinates = updatedGeometry.coordinates;
+			this.lastCommittedCoordinates = updatedGeometry.coordinates;
 		}
 
 		this.store.updateGeometry(geometries);
 	}
 
 	private generateInsertCoordinates(startCoord: Position, endCoord: Position) {
-		if (!this.insertCoordinates || !this.lastCommitedCoordinates) {
+		if (!this.insertCoordinates || !this.lastCommittedCoordinates) {
 			throw new Error("Not able to insert coordinates");
 		}
 
@@ -292,7 +334,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 				properties: { mode: this.mode },
 			},
 		]);
-		this.lastCommitedCoordinates = [startingCoord, startingCoord];
+		this.lastCommittedCoordinates = [startingCoord, startingCoord];
 		this.currentId = createdId;
 		this.currentCoordinate++;
 		this.setDrawing();
@@ -347,8 +389,8 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 		const currentCoordinates = currentLineGeometry.coordinates;
 
 		// If we are not inserting points we can get the penultimate coordinated
-		const [previousLng, previousLat] = this.lastCommitedCoordinates
-			? this.lastCommitedCoordinates[this.lastCommitedCoordinates.length - 1]
+		const [previousLng, previousLat] = this.lastCommittedCoordinates
+			? this.lastCommittedCoordinates[this.lastCommittedCoordinates.length - 1]
 			: currentCoordinates[currentCoordinates.length - 2];
 
 		// Determine if the click closes the line and finished drawing
@@ -422,43 +464,9 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 	onMouseMove(event: TerraDrawMouseEvent) {
 		this.mouseMove = true;
 		this.setCursor(this.cursors.start);
+		this.lastMouseMoveEvent = event;
 
-		const snappedCoordinate = this.snapCoordinate(event);
-
-		if (snappedCoordinate) {
-			if (this.snappedPointId) {
-				this.store.updateGeometry([
-					{
-						id: this.snappedPointId,
-						geometry: {
-							type: "Point",
-							coordinates: snappedCoordinate,
-						},
-					},
-				]);
-			} else {
-				const [snappedPointId] = this.store.create([
-					{
-						geometry: {
-							type: "Point",
-							coordinates: snappedCoordinate,
-						},
-						properties: {
-							mode: this.mode,
-							[COMMON_PROPERTIES.SNAPPING_POINT]: true,
-						},
-					},
-				]);
-
-				this.snappedPointId = snappedPointId;
-			}
-
-			event.lng = snappedCoordinate[0];
-			event.lat = snappedCoordinate[1];
-		} else if (this.snappedPointId) {
-			this.store.delete([this.snappedPointId]);
-			this.snappedPointId = undefined;
-		}
+		const snappedCoordinate = this.updateSnappedCoordinate(event);
 
 		const updatedCoord = snappedCoordinate
 			? snappedCoordinate
@@ -500,10 +508,10 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 		if (
 			this.insertCoordinates &&
 			this.currentId &&
-			this.lastCommitedCoordinates
+			this.lastCommittedCoordinates
 		) {
 			const startCoord =
-				this.lastCommitedCoordinates[this.lastCommitedCoordinates.length - 1];
+				this.lastCommittedCoordinates[this.lastCommittedCoordinates.length - 1];
 			const endCoord = updatedCoord;
 			if (!coordinatesIdentical(startCoord, endCoord)) {
 				const insertedCoordinates = this.generateInsertCoordinates(
@@ -511,7 +519,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 					endCoord,
 				);
 				line = [
-					...this.lastCommitedCoordinates.slice(0, -1),
+					...this.lastCommittedCoordinates.slice(0, -1),
 					...insertedCoordinates,
 					updatedCoord,
 				];
@@ -1031,5 +1039,46 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 		}
 
 		return snappedCoordinate;
+	}
+
+	afterFeatureUpdated(feature: GeoJSONStoreFeatures) {
+		// Clean up here is important to get right as we need to make a best effort to avoid erroneous
+		// internal state.
+
+		// If we are editing a feature by dragging one of its points
+		// we want to clear that state up as new polygon might be completely
+		// different in terms of it's coordinates
+		if (this.editedFeatureId === feature.id && this.editedPointId) {
+			this.store.delete([this.editedPointId]);
+			this.editedPointId = undefined;
+			this.editedFeatureId = undefined;
+			this.editedFeatureCoordinateIndex = undefined;
+			this.editedSnapType = undefined;
+		}
+
+		// We can recalculate the snapped point from the last mouse event if there was one
+		if (this.snappedPointId && this.lastMouseMoveEvent) {
+			this.updateSnappedCoordinate(
+				this.lastMouseMoveEvent as TerraDrawMouseEvent,
+			);
+		}
+
+		// NOTE: This handles the case we are currently drawing a polygon
+		// We need to reset the drawing state because it is very complicated (impossible?)
+		// to recover the drawing state after a feature update
+		if (this.currentId === feature.id) {
+			if (this.closingPointId) {
+				this.store.delete([this.closingPointId]);
+				this.closingPointId = undefined;
+			}
+
+			this.currentCoordinate = 0;
+			this.currentId = undefined;
+
+			// Go back to started state
+			if (this.state === "drawing") {
+				this.setStarted();
+			}
+		}
 	}
 }

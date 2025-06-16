@@ -226,7 +226,11 @@ export class GeoJSONStore<
 	}
 
 	updateProperty(
-		propertiesToUpdate: { id: FeatureId; property: string; value: JSON }[],
+		propertiesToUpdate: {
+			id: FeatureId;
+			property: string;
+			value: JSON | undefined;
+		}[],
 		context?: OnChangeContext,
 	): void {
 		const ids: FeatureId[] = [];
@@ -241,7 +245,11 @@ export class GeoJSONStore<
 
 			ids.push(id);
 
-			feature.properties[property] = value;
+			if (value === undefined) {
+				delete feature.properties[property];
+			} else {
+				feature.properties[property] = value;
+			}
 
 			// Update the time the feature was updated
 			if (this.tracked) {

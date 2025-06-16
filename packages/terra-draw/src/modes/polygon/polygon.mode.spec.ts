@@ -1,4 +1,8 @@
-import { TerraDrawGeoJSONStore, Validation } from "../../common";
+import {
+	COMMON_PROPERTIES,
+	TerraDrawGeoJSONStore,
+	Validation,
+} from "../../common";
 import {
 	FeatureId,
 	GeoJSONStore,
@@ -598,6 +602,12 @@ describe("TerraDrawPolygonMode", () => {
 
 			polygonMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
 
+			let features = store.copyAll();
+			expect(features.length).toBe(1);
+			expect(features[0].properties[COMMON_PROPERTIES.CURRENTLY_DRAWING]).toBe(
+				true,
+			);
+
 			polygonMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
 
 			polygonMode.onMouseMove(MockCursorEvent({ lng: 2, lat: 2 }));
@@ -610,8 +620,11 @@ describe("TerraDrawPolygonMode", () => {
 
 			polygonMode.onClick(MockCursorEvent({ lng: 3, lat: 3 }));
 
-			let features = store.copyAll();
+			features = store.copyAll();
 			expect(features.length).toBe(1);
+			expect(features[0].properties[COMMON_PROPERTIES.CURRENTLY_DRAWING]).toBe(
+				undefined,
+			);
 
 			// Create a new polygon
 			polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
@@ -897,13 +910,13 @@ describe("TerraDrawPolygonMode", () => {
 
 			expect(onFinish).toHaveBeenCalledTimes(1);
 			// Extra call because of the right hand rule fixing
-			expect(onChange).toHaveBeenCalledTimes(13);
+			expect(onChange).toHaveBeenCalledTimes(14);
 
 			// Delete a coordinate
 			polygonMode.onClick(MockCursorEvent({ lng: 1, lat: 1, button: "right" }));
 
 			expect(onChange).toHaveBeenNthCalledWith(
-				13,
+				14,
 				[expect.any(String), expect.any(String)],
 				"delete",
 				undefined,
@@ -948,7 +961,7 @@ describe("TerraDrawPolygonMode", () => {
 
 			expect(onFinish).toHaveBeenCalledTimes(1);
 			// Extra call because of the right hand rule fixing
-			expect(onChange).toHaveBeenCalledTimes(13);
+			expect(onChange).toHaveBeenCalledTimes(14);
 
 			// Delete a coordinate
 			polygonMode.onClick(
@@ -961,7 +974,7 @@ describe("TerraDrawPolygonMode", () => {
 			);
 
 			expect(onChange).toHaveBeenNthCalledWith(
-				13,
+				14,
 				[expect.any(String), expect.any(String)],
 				"delete",
 				undefined,
@@ -1215,6 +1228,9 @@ describe("TerraDrawPolygonMode", () => {
 
 				let features = store.copyAll();
 				expect(features.length).toBe(1);
+				expect(
+					features[0].properties[COMMON_PROPERTIES.CURRENTLY_DRAWING],
+				).toBe(undefined);
 
 				// Finish drawing the polygon
 				polygonMode.onKeyUp(MockKeyboardEvent({ key: "Escape" }));

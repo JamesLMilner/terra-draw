@@ -7,6 +7,7 @@ import {
 	Cursor,
 	UpdateTypes,
 	Z_INDEX,
+	COMMON_PROPERTIES,
 } from "../../common";
 import { LineString, Point, Polygon, Position } from "geojson";
 import {
@@ -138,6 +139,13 @@ export class TerraDrawSensorMode extends TerraDrawBaseDrawMode<SensorPolygonStyl
 					{ id: this.currentId, geometry: correctedGeometry },
 				]);
 			}
+			this.store.updateProperty([
+				{
+					id: this.currentId,
+					property: COMMON_PROPERTIES.CURRENTLY_DRAWING,
+					value: undefined,
+				},
+			]);
 		}
 
 		this.currentCoordinate = 0;
@@ -421,7 +429,10 @@ export class TerraDrawSensorMode extends TerraDrawBaseDrawMode<SensorPolygonStyl
 							type: "Polygon",
 							coordinates: [coordinates],
 						},
-						properties: { mode: this.mode },
+						properties: {
+							mode: this.mode,
+							[COMMON_PROPERTIES.CURRENTLY_DRAWING]: true,
+						},
 					},
 				]);
 			} else {

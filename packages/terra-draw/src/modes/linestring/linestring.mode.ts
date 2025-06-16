@@ -7,9 +7,9 @@ import {
 	Cursor,
 	UpdateTypes,
 	CartesianPoint,
-	COMMON_PROPERTIES,
 	Z_INDEX,
 	Snapping,
+	COMMON_PROPERTIES,
 } from "../../common";
 import { Feature, LineString, Point, Position } from "geojson";
 import {
@@ -164,6 +164,14 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 			UpdateTypes.Commit,
 		);
 
+		this.store.updateProperty([
+			{
+				id: this.currentId,
+				property: COMMON_PROPERTIES.CURRENTLY_DRAWING,
+				value: undefined,
+			},
+		]);
+
 		const finishedId = this.currentId;
 
 		// Reset the state back to starting state
@@ -289,7 +297,10 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 						startingCoord, // This is the 'live' point that changes on mouse move
 					],
 				},
-				properties: { mode: this.mode },
+				properties: {
+					mode: this.mode,
+					[COMMON_PROPERTIES.CURRENTLY_DRAWING]: true, // This is the current line being drawn
+				},
 			},
 		]);
 		this.lastCommitedCoordinates = [startingCoord, startingCoord];

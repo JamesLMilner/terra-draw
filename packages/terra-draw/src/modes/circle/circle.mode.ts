@@ -9,6 +9,7 @@ import {
 	UpdateTypes,
 	Projection,
 	Z_INDEX,
+	COMMON_PROPERTIES,
 } from "../../common";
 import { haversineDistanceKilometers } from "../../geometry/measure/haversine-distance";
 import { circle, circleWebMercator } from "../../geometry/shape/create-circle";
@@ -105,6 +106,14 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 			return;
 		}
 
+		this.store.updateProperty([
+			{
+				id: this.currentCircleId,
+				property: COMMON_PROPERTIES.CURRENTLY_DRAWING,
+				value: undefined,
+			},
+		]);
+
 		const finishedId = this.currentCircleId;
 
 		if (this.validate && finishedId) {
@@ -180,6 +189,7 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 						properties: {
 							mode: this.mode,
 							radiusKilometers: this.startingRadiusKilometers,
+							[COMMON_PROPERTIES.CURRENTLY_DRAWING]: true,
 						},
 					},
 				]);

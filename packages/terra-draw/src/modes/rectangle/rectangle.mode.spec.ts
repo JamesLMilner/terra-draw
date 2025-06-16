@@ -5,7 +5,7 @@ import { TerraDrawRectangleMode } from "./rectangle.mode";
 import { MockKeyboardEvent } from "../../test/mock-keyboard-event";
 import { Polygon } from "geojson";
 import { followsRightHandRule } from "../../geometry/boolean/right-hand-rule";
-import { TerraDrawGeoJSONStore } from "../../common";
+import { COMMON_PROPERTIES, TerraDrawGeoJSONStore } from "../../common";
 import { DefaultPointerEvents } from "../base.mode";
 
 describe("TerraDrawRectangleMode", () => {
@@ -156,17 +156,23 @@ describe("TerraDrawRectangleMode", () => {
 
 				let features = store.copyAll();
 				expect(features.length).toBe(1);
+				expect(
+					features[0].properties[COMMON_PROPERTIES.CURRENTLY_DRAWING],
+				).toBe(true);
 
 				rectangleMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
 
 				features = store.copyAll();
 				expect(features.length).toBe(1);
+				expect(
+					features[0].properties[COMMON_PROPERTIES.CURRENTLY_DRAWING],
+				).toBe(undefined);
 
 				expect(followsRightHandRule(features[0].geometry as Polygon)).toBe(
 					true,
 				);
 
-				expect(onChange).toHaveBeenCalledTimes(2);
+				expect(onChange).toHaveBeenCalledTimes(3);
 				expect(onChange).toHaveBeenCalledWith(
 					[expect.any(String)],
 					"create",
@@ -225,6 +231,9 @@ describe("TerraDrawRectangleMode", () => {
 
 			let features = store.copyAll();
 			expect(features.length).toBe(1);
+			expect(features[0].properties[COMMON_PROPERTIES.CURRENTLY_DRAWING]).toBe(
+				true,
+			);
 
 			rectangleMode.onKeyUp(MockKeyboardEvent({ key: "Enter" }));
 
@@ -233,9 +242,12 @@ describe("TerraDrawRectangleMode", () => {
 			features = store.copyAll();
 			// Two as the rectangle has been closed via enter
 			expect(features.length).toBe(2);
+			expect(features[0].properties[COMMON_PROPERTIES.CURRENTLY_DRAWING]).toBe(
+				undefined,
+			);
 
 			// close calls onChange an extra time because of the right hand rule fixing
-			expect(onChange).toHaveBeenCalledTimes(3);
+			expect(onChange).toHaveBeenCalledTimes(4);
 			expect(onChange).toHaveBeenCalledWith(
 				[expect.any(String)],
 				"create",

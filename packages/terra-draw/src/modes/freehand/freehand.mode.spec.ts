@@ -5,7 +5,7 @@ import { TerraDrawFreehandMode } from "./freehand.mode";
 import { MockKeyboardEvent } from "../../test/mock-keyboard-event";
 import { Polygon } from "geojson";
 import { followsRightHandRule } from "../../geometry/boolean/right-hand-rule";
-import { TerraDrawGeoJSONStore } from "../../common";
+import { COMMON_PROPERTIES, TerraDrawGeoJSONStore } from "../../common";
 import { DefaultPointerEvents } from "../base.mode";
 
 describe("TerraDrawFreehandMode", () => {
@@ -222,14 +222,20 @@ describe("TerraDrawFreehandMode", () => {
 
 				let features = store.copyAll();
 				expect(features.length).toBe(2);
+				expect(
+					features[0].properties[COMMON_PROPERTIES.CURRENTLY_DRAWING],
+				).toBe(true);
 
 				freehandMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
 
 				// No more closing coordinate so we drop to 1 feature
 				features = store.copyAll();
 				expect(features.length).toBe(1);
+				expect(
+					features[0].properties[COMMON_PROPERTIES.CURRENTLY_DRAWING],
+				).toBe(undefined);
 
-				expect(onChange).toHaveBeenCalledTimes(4);
+				expect(onChange).toHaveBeenCalledTimes(5);
 				expect(onChange).toHaveBeenCalledWith(
 					[expect.any(String), expect.any(String)],
 					"create",
@@ -298,7 +304,7 @@ describe("TerraDrawFreehandMode", () => {
 				features = store.copyAll();
 				expect(features.length).toBe(2);
 
-				expect(onChange).toHaveBeenCalledTimes(2);
+				expect(onChange).toHaveBeenCalledTimes(3);
 				expect(onFinish).not.toHaveBeenCalled();
 			});
 
@@ -317,7 +323,7 @@ describe("TerraDrawFreehandMode", () => {
 				expect(features.length).toBe(1);
 				expect(features[0].geometry.type).toBe("Polygon");
 
-				expect(onChange).toHaveBeenCalledTimes(3);
+				expect(onChange).toHaveBeenCalledTimes(4);
 				expect(onFinish).toHaveBeenCalledTimes(1);
 				expect(onFinish).toHaveBeenNthCalledWith(1, expect.any(String), {
 					action: "draw",
@@ -433,7 +439,7 @@ describe("TerraDrawFreehandMode", () => {
 					}),
 				);
 
-				expect(onChange).toHaveBeenCalledTimes(4);
+				expect(onChange).toHaveBeenCalledTimes(5);
 
 				expect(onFinish).toHaveBeenCalledTimes(1);
 
@@ -499,7 +505,7 @@ describe("TerraDrawFreehandMode", () => {
 					}),
 				);
 
-				expect(onChange).toHaveBeenCalledTimes(4);
+				expect(onChange).toHaveBeenCalledTimes(5);
 
 				expect(onFinish).toHaveBeenCalledTimes(1);
 
@@ -510,7 +516,7 @@ describe("TerraDrawFreehandMode", () => {
 					}),
 				);
 
-				expect(onChange).toHaveBeenCalledTimes(4);
+				expect(onChange).toHaveBeenCalledTimes(5);
 
 				const updatedFeature = store.copyAll()[0];
 
@@ -580,7 +586,7 @@ describe("TerraDrawFreehandMode", () => {
 				}),
 			);
 
-			expect(onChange).toHaveBeenCalledTimes(4);
+			expect(onChange).toHaveBeenCalledTimes(5);
 
 			expect(onFinish).toHaveBeenCalledTimes(1);
 
@@ -692,14 +698,20 @@ describe("TerraDrawFreehandMode", () => {
 
 				let features = store.copyAll();
 				expect(features.length).toBe(2);
+				expect(
+					features[0].properties[COMMON_PROPERTIES.CURRENTLY_DRAWING],
+				).toBe(true);
 
 				freehandMode.onKeyUp(MockKeyboardEvent({ key: "Enter" }));
 
 				features = store.copyAll();
 
 				expect(features.length).toBe(1);
+				expect(
+					features[0].properties[COMMON_PROPERTIES.CURRENTLY_DRAWING],
+				).toBe(undefined);
 
-				expect(onChange).toHaveBeenCalledTimes(4);
+				expect(onChange).toHaveBeenCalledTimes(5);
 				expect(onChange).toHaveBeenNthCalledWith(
 					1,
 					[expect.any(String), expect.any(String)],
@@ -720,6 +732,12 @@ describe("TerraDrawFreehandMode", () => {
 				);
 				expect(onChange).toHaveBeenNthCalledWith(
 					4,
+					[expect.any(String)],
+					"update",
+					undefined,
+				);
+				expect(onChange).toHaveBeenNthCalledWith(
+					5,
 					[expect.any(String)],
 					"delete",
 					undefined,

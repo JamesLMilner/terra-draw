@@ -5,7 +5,7 @@ import { TerraDrawCircleMode } from "./circle.mode";
 import { Polygon } from "geojson";
 import { followsRightHandRule } from "../../geometry/boolean/right-hand-rule";
 import { MockKeyboardEvent } from "../../test/mock-keyboard-event";
-import { TerraDrawGeoJSONStore } from "../../common";
+import { COMMON_PROPERTIES, TerraDrawGeoJSONStore } from "../../common";
 import { DefaultPointerEvents } from "../base.mode";
 
 describe("TerraDrawCircleMode", () => {
@@ -222,18 +222,25 @@ describe("TerraDrawCircleMode", () => {
 
 					let features = store.copyAll();
 					expect(features.length).toBe(1);
+					expect(
+						features[0].properties[COMMON_PROPERTIES.CURRENTLY_DRAWING],
+					).toBe(true);
 
 					circleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
 					features = store.copyAll();
 					expect(features.length).toBe(1);
 
+					expect(
+						features[0].properties[COMMON_PROPERTIES.CURRENTLY_DRAWING],
+					).toBe(undefined);
+
 					expect(followsRightHandRule(features[0].geometry as Polygon)).toBe(
 						true,
 					);
 
 					// We don't expect any changes if there is no cursor movement
-					expect(onChange).toHaveBeenCalledTimes(1);
+					expect(onChange).toHaveBeenCalledTimes(2);
 					expect(onChange).toHaveBeenCalledWith(
 						[expect.any(String)],
 						"create",
@@ -260,7 +267,7 @@ describe("TerraDrawCircleMode", () => {
 						true,
 					);
 
-					expect(onChange).toHaveBeenCalledTimes(5);
+					expect(onChange).toHaveBeenCalledTimes(6);
 					expect(onChange).toHaveBeenCalledWith(
 						[expect.any(String)],
 						"create",
@@ -331,7 +338,7 @@ describe("TerraDrawCircleMode", () => {
 					features = store.copyAll();
 					expect(features.length).toBe(1);
 
-					expect(onChange).toHaveBeenCalledTimes(1);
+					expect(onChange).toHaveBeenCalledTimes(2);
 					expect(onChange).toHaveBeenCalledWith(
 						[expect.any(String)],
 						"create",
@@ -354,7 +361,7 @@ describe("TerraDrawCircleMode", () => {
 					features = store.copyAll();
 					expect(features.length).toBe(1);
 
-					expect(onChange).toHaveBeenCalledTimes(1);
+					expect(onChange).toHaveBeenCalledTimes(2);
 					expect(onChange).toHaveBeenCalledWith(
 						[expect.any(String)],
 						"create",
@@ -431,7 +438,11 @@ describe("TerraDrawCircleMode", () => {
 			features = store.copyAll();
 			expect(features.length).toBe(1);
 
-			expect(onChange).toHaveBeenCalledTimes(1);
+			expect(features[0].properties[COMMON_PROPERTIES.CURRENTLY_DRAWING]).toBe(
+				undefined,
+			);
+
+			expect(onChange).toHaveBeenCalledTimes(2);
 			expect(onChange).toHaveBeenCalledWith(
 				[expect.any(String)],
 				"create",

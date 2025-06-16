@@ -8,6 +8,7 @@ import {
 	Cursor,
 	UpdateTypes,
 	Z_INDEX,
+	COMMON_PROPERTIES,
 } from "../../common";
 import {
 	FeatureId,
@@ -142,6 +143,13 @@ export class TerraDrawRectangleMode extends TerraDrawBaseDrawMode<RectanglePolyg
 					{ id: finishedId, geometry: correctedGeometry },
 				]);
 			}
+			this.store.updateProperty([
+				{
+					id: finishedId,
+					property: COMMON_PROPERTIES.CURRENTLY_DRAWING,
+					value: undefined,
+				},
+			]);
 		}
 
 		this.center = undefined;
@@ -197,6 +205,7 @@ export class TerraDrawRectangleMode extends TerraDrawBaseDrawMode<RectanglePolyg
 						},
 						properties: {
 							mode: this.mode,
+							[COMMON_PROPERTIES.CURRENTLY_DRAWING]: true,
 						},
 					},
 				]);

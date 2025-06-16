@@ -5,7 +5,7 @@ import { TerraDrawSectorMode } from "./sector.mode";
 import { MockCursorEvent } from "../../test/mock-cursor-event";
 import { MockKeyboardEvent } from "../../test/mock-keyboard-event";
 import { followsRightHandRule } from "../../geometry/boolean/right-hand-rule";
-import { TerraDrawGeoJSONStore } from "../../common";
+import { COMMON_PROPERTIES, TerraDrawGeoJSONStore } from "../../common";
 
 describe("TerraDrawSectorMode", () => {
 	describe("constructor", () => {
@@ -283,24 +283,33 @@ describe("TerraDrawSectorMode", () => {
 					MockCursorEvent({ lng: -0.128673315, lat: 51.500349947 }),
 				);
 
-				sectorMode.onMouseMove(
-					MockCursorEvent({ lng: -0.092495679, lat: 51.515995286 }),
-				);
-
-				sectorMode.onClick(
-					MockCursorEvent({ lng: -0.092495679, lat: 51.515995286 }),
-				);
-
-				sectorMode.onMouseMove(
-					MockCursorEvent({ lng: -0.087491348, lat: 51.490132315 }),
-				);
-
-				sectorMode.onClick(
-					MockCursorEvent({ lng: -0.087491348, lat: 51.490132315 }),
-				);
-
 				let features = store.copyAll();
 				expect(features.length).toBe(1);
+				expect(
+					features[0].properties[COMMON_PROPERTIES.CURRENTLY_DRAWING],
+				).toBe(true);
+
+				sectorMode.onMouseMove(
+					MockCursorEvent({ lng: -0.092495679, lat: 51.515995286 }),
+				);
+
+				sectorMode.onClick(
+					MockCursorEvent({ lng: -0.092495679, lat: 51.515995286 }),
+				);
+
+				sectorMode.onMouseMove(
+					MockCursorEvent({ lng: -0.087491348, lat: 51.490132315 }),
+				);
+
+				sectorMode.onClick(
+					MockCursorEvent({ lng: -0.087491348, lat: 51.490132315 }),
+				);
+
+				features = store.copyAll();
+				expect(features.length).toBe(1);
+				expect(
+					features[0].properties[COMMON_PROPERTIES.CURRENTLY_DRAWING],
+				).toBe(undefined);
 
 				expect(features[0].geometry.type).toBe("Polygon");
 
@@ -430,6 +439,9 @@ describe("TerraDrawSectorMode", () => {
 			const features = store.copyAll();
 			expect(features.length).toBe(1);
 			expect(features[0].geometry.type).toBe("Polygon");
+			expect(features[0].properties[COMMON_PROPERTIES.CURRENTLY_DRAWING]).toBe(
+				undefined,
+			);
 			expect(followsRightHandRule(features[0].geometry as Polygon)).toBe(true);
 		});
 

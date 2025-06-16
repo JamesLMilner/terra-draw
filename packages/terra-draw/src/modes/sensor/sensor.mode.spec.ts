@@ -5,7 +5,7 @@ import { TerraDrawSensorMode } from "./sensor.mode";
 import { MockKeyboardEvent } from "../../test/mock-keyboard-event";
 import { Polygon } from "geojson";
 import { followsRightHandRule } from "../../geometry/boolean/right-hand-rule";
-import { TerraDrawGeoJSONStore } from "../../common";
+import { COMMON_PROPERTIES, TerraDrawGeoJSONStore } from "../../common";
 import { DefaultPointerEvents } from "../base.mode";
 
 describe("TerraDrawSensorMode", () => {
@@ -307,12 +307,19 @@ describe("TerraDrawSensorMode", () => {
 				sensorMode.onMouseMove(MockCursorEvent({ lng: 1.5, lat: 1.5 }));
 
 				const features = store.copyAll();
-
 				expect(features.length).toBe(3);
+				expect(
+					features[2].properties[COMMON_PROPERTIES.CURRENTLY_DRAWING],
+				).toBe(true);
 
 				sensorMode.onClick(MockCursorEvent({ lng: 1.5, lat: 1.5 }));
 
 				const featuresAfterFinalClick = store.copyAll();
+				expect(
+					featuresAfterFinalClick[0].properties[
+						COMMON_PROPERTIES.CURRENTLY_DRAWING
+					],
+				).toBe(undefined);
 
 				expect(featuresAfterFinalClick.length).toBe(1);
 				expect(onFinish).toHaveBeenCalledTimes(1);
@@ -424,9 +431,11 @@ describe("TerraDrawSensorMode", () => {
 			sensorMode.onMouseMove(
 				MockCursorEvent({ lng: -0.073104649, lat: 51.524295939 }),
 			);
-			// sensorMode.onClick(MockCursorEvent({ lng: -0.073104649, lat: 51.524295939 }));
 
 			const features = store.copyAll();
+			expect(features[2].properties[COMMON_PROPERTIES.CURRENTLY_DRAWING]).toBe(
+				true,
+			);
 
 			expect(features.length).toBe(3);
 
@@ -436,6 +445,11 @@ describe("TerraDrawSensorMode", () => {
 
 			expect(featuresAfterFinalClick.length).toBe(1);
 			expect(featuresAfterFinalClick[0].geometry.type).toBe("Polygon");
+			expect(
+				featuresAfterFinalClick[0].properties[
+					COMMON_PROPERTIES.CURRENTLY_DRAWING
+				],
+			).toBe(undefined);
 
 			expect(
 				followsRightHandRule(featuresAfterFinalClick[0].geometry as Polygon),

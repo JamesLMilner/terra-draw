@@ -7,6 +7,7 @@ import {
 	Cursor,
 	UpdateTypes,
 	Z_INDEX,
+	COMMON_PROPERTIES,
 } from "../../common";
 import { Polygon } from "geojson";
 import {
@@ -101,6 +102,14 @@ export class TerraDrawAngledRectangleMode extends TerraDrawBaseDrawMode<PolygonS
 		if (this.currentId === undefined) {
 			return;
 		}
+
+		this.store.updateProperty([
+			{
+				id: this.currentId,
+				property: COMMON_PROPERTIES.CURRENTLY_DRAWING,
+				value: undefined,
+			},
+		]);
 
 		const finishedId = this.currentId;
 
@@ -306,7 +315,10 @@ export class TerraDrawAngledRectangleMode extends TerraDrawBaseDrawMode<PolygonS
 								],
 							],
 						},
-						properties: { mode: this.mode },
+						properties: {
+							mode: this.mode,
+							[COMMON_PROPERTIES.CURRENTLY_DRAWING]: true,
+						},
 					},
 				]);
 				this.currentId = newId;

@@ -131,6 +131,13 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 					{ id: this.currentId, geometry: correctedGeometry },
 				]);
 			}
+			this.store.updateProperty([
+				{
+					id: this.currentId,
+					property: COMMON_PROPERTIES.CURRENTLY_DRAWING,
+					value: undefined,
+				},
+			]);
 		}
 
 		const finishedId = this.currentId;
@@ -315,7 +322,10 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 								],
 							],
 						},
-						properties: { mode: this.mode },
+						properties: {
+							mode: this.mode,
+							[COMMON_PROPERTIES.CURRENTLY_DRAWING]: true,
+						},
 					},
 					{
 						geometry: {

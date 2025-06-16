@@ -4,7 +4,7 @@ import { MockCursorEvent } from "../../test/mock-cursor-event";
 import { ValidateNotSelfIntersecting } from "../../validations/not-self-intersecting.validation";
 import { TerraDrawLineStringMode } from "./linestring.mode";
 import { MockKeyboardEvent } from "../../test/mock-keyboard-event";
-import { TerraDrawGeoJSONStore } from "../../common";
+import { COMMON_PROPERTIES, TerraDrawGeoJSONStore } from "../../common";
 import { DefaultPointerEvents } from "../base.mode";
 
 describe("TerraDrawLineStringMode", () => {
@@ -284,10 +284,10 @@ describe("TerraDrawLineStringMode", () => {
 
 			lineStringMode.onClick(MockCursorEvent({ lng: 2, lat: 2 }));
 
-			expect(onChange).toHaveBeenCalledTimes(9);
+			expect(onChange).toHaveBeenCalledTimes(10);
 
 			expect(onChange).toHaveBeenNthCalledWith(
-				9,
+				10,
 				[expect.any(String)],
 				"delete",
 				undefined,
@@ -334,6 +334,10 @@ describe("TerraDrawLineStringMode", () => {
 				[1, 1],
 			]);
 
+			expect(features[0].properties[COMMON_PROPERTIES.CURRENTLY_DRAWING]).toBe(
+				true,
+			);
+
 			expect(features[1].geometry.coordinates).toStrictEqual([1, 1]);
 
 			lineStringMode.onMouseMove(MockCursorEvent({ lng: 2, lat: 2 }));
@@ -344,10 +348,10 @@ describe("TerraDrawLineStringMode", () => {
 
 			lineStringMode.onClick(MockCursorEvent({ lng: 2, lat: 2 }));
 
-			expect(onChange).toHaveBeenCalledTimes(9);
+			expect(onChange).toHaveBeenCalledTimes(10);
 
 			expect(onChange).toHaveBeenNthCalledWith(
-				9,
+				10,
 				[expect.any(String)],
 				"delete",
 				undefined,
@@ -357,6 +361,10 @@ describe("TerraDrawLineStringMode", () => {
 
 			features = store.copyAll();
 			expect(features.length).toBe(1);
+
+			expect(features[0].properties[COMMON_PROPERTIES.CURRENTLY_DRAWING]).toBe(
+				undefined,
+			);
 
 			expect(features[0].geometry.coordinates).toStrictEqual([
 				[0, 0],
@@ -515,10 +523,10 @@ describe("TerraDrawLineStringMode", () => {
 
 			lineStringMode.onClick(MockCursorEvent({ lng: 2, lat: 2 }));
 
-			expect(onChange).toHaveBeenCalledTimes(9);
+			expect(onChange).toHaveBeenCalledTimes(10);
 
 			expect(onChange).toHaveBeenNthCalledWith(
-				9,
+				10,
 				[expect.any(String)],
 				"delete",
 				undefined,
@@ -535,16 +543,16 @@ describe("TerraDrawLineStringMode", () => {
 				[2, 2],
 			]);
 
-			expect(onChange).toHaveBeenCalledTimes(9);
+			expect(onChange).toHaveBeenCalledTimes(10);
 
 			// Delete a coordinate
 			lineStringMode.onClick(
 				MockCursorEvent({ lng: 1, lat: 1, button: "right" }),
 			);
 
-			expect(onChange).toHaveBeenCalledTimes(10);
+			expect(onChange).toHaveBeenCalledTimes(11);
 			expect(onChange).toHaveBeenNthCalledWith(
-				10,
+				11,
 				[expect.any(String)],
 				"update",
 				undefined,
@@ -774,10 +782,10 @@ describe("TerraDrawLineStringMode", () => {
 
 				lineStringMode.onClick(MockCursorEvent({ lng: 2, lat: 2 }));
 
-				expect(onChange).toHaveBeenCalledTimes(9);
+				expect(onChange).toHaveBeenCalledTimes(10);
 
 				expect(onChange).toHaveBeenNthCalledWith(
-					9,
+					10,
 					[expect.any(String)],
 					"delete",
 					undefined,
@@ -841,6 +849,9 @@ describe("TerraDrawLineStringMode", () => {
 
 				// Drawn LineString and Closing point
 				expect(features.length).toBe(2);
+				expect(
+					features[0].properties[COMMON_PROPERTIES.CURRENTLY_DRAWING],
+				).toBe(true);
 
 				expect(features[0].geometry.coordinates).toStrictEqual([
 					[0, 0],
@@ -862,10 +873,10 @@ describe("TerraDrawLineStringMode", () => {
 
 				lineStringMode.onKeyUp(MockKeyboardEvent({ key: "Enter" }));
 
-				expect(onChange).toHaveBeenCalledTimes(8);
+				expect(onChange).toHaveBeenCalledTimes(9);
 
 				expect(onChange).toHaveBeenNthCalledWith(
-					8,
+					9,
 					[expect.any(String)],
 					"delete",
 					undefined,
@@ -873,6 +884,9 @@ describe("TerraDrawLineStringMode", () => {
 
 				features = store.copyAll();
 				expect(features.length).toBe(1);
+				expect(
+					features[0].properties[COMMON_PROPERTIES.CURRENTLY_DRAWING],
+				).toBe(undefined);
 
 				expect(features[0].geometry.coordinates).toStrictEqual([
 					[0, 0],

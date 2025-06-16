@@ -220,6 +220,14 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 					{ id: this.currentId, geometry: correctedGeometry },
 				]);
 			}
+
+			this.store.updateProperty([
+				{
+					id: this.currentId,
+					property: COMMON_PROPERTIES.CURRENTLY_DRAWING,
+					value: undefined,
+				},
+			]);
 		}
 
 		if (this.snappedPointId) {
@@ -588,7 +596,10 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 							],
 						],
 					},
-					properties: { mode: this.mode },
+					properties: {
+						mode: this.mode,
+						[COMMON_PROPERTIES.CURRENTLY_DRAWING]: true,
+					},
 				},
 			]);
 			this.currentId = newId;

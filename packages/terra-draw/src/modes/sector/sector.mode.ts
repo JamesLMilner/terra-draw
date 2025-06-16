@@ -7,6 +7,7 @@ import {
 	Cursor,
 	UpdateTypes,
 	Z_INDEX,
+	COMMON_PROPERTIES,
 } from "../../common";
 import { Polygon, Position } from "geojson";
 import {
@@ -120,6 +121,13 @@ export class TerraDrawSectorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 				{ id: this.currentId, geometry: correctedGeometry },
 			]);
 		}
+		this.store.updateProperty([
+			{
+				id: this.currentId,
+				property: COMMON_PROPERTIES.CURRENTLY_DRAWING,
+				value: undefined,
+			},
+		]);
 
 		const finishedId = this.currentId;
 
@@ -352,7 +360,10 @@ export class TerraDrawSectorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 								],
 							],
 						},
-						properties: { mode: this.mode },
+						properties: {
+							mode: this.mode,
+							[COMMON_PROPERTIES.CURRENTLY_DRAWING]: true,
+						},
 					},
 				]);
 				this.currentId = newId;

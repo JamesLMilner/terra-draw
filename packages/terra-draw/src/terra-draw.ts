@@ -83,6 +83,15 @@ interface TerraDrawEventListeners {
 	deselect: DeselectListener;
 }
 
+type GetFeatureOptions = {
+	pointerDistance?: number;
+	includePolygonsWithinPointerDistance?: boolean;
+	ignoreSelectFeatures?: boolean;
+	ignoreCoordinatePoints?: boolean;
+	ignoreCurrentlyDrawing?: boolean;
+	ignoreClosingPoints?: boolean;
+};
+
 type TerraDrawEvents = keyof TerraDrawEventListeners;
 
 class TerraDraw {
@@ -342,7 +351,7 @@ class TerraDraw {
 			lng: number;
 			lat: number;
 		},
-		options?: { pointerDistance?: number; ignoreSelectFeatures?: boolean },
+		options?: GetFeatureOptions,
 	) {
 		const pointerDistance =
 			options && options.pointerDistance !== undefined
@@ -353,6 +362,21 @@ class TerraDraw {
 			options && options.ignoreSelectFeatures !== undefined
 				? options.ignoreSelectFeatures
 				: true;
+
+		const ignoreCoordinatePoints =
+			options && options.ignoreCoordinatePoints !== undefined
+				? options.ignoreCoordinatePoints
+				: false;
+
+		const ignoreCurrentlyDrawing =
+			options && options.ignoreCurrentlyDrawing !== undefined
+				? options.ignoreCurrentlyDrawing
+				: false;
+
+		const ignoreClosingPoints =
+			options && options.ignoreClosingPoints !== undefined
+				? options.ignoreClosingPoints
+				: false;
 
 		const unproject = this._adapter.unproject.bind(this._adapter);
 		const project = this._adapter.project.bind(this._adapter);
@@ -367,13 +391,32 @@ class TerraDraw {
 
 		const features = this._store.search(bbox as BBoxPolygon);
 
-		// TODO: This is designed to work in a similar way as FeatureAtPointerEvent
-		// perhaps at some point we could figure out how to unify them
 		return features.filter((feature) => {
 			if (
 				ignoreSelectFeatures &&
 				(feature.properties[SELECT_PROPERTIES.MID_POINT] ||
 					feature.properties[SELECT_PROPERTIES.SELECTION_POINT])
+			) {
+				return false;
+			}
+
+			if (
+				ignoreCoordinatePoints &&
+				feature.properties[COMMON_PROPERTIES.COORDINATE_POINT]
+			) {
+				return false;
+			}
+
+			if (
+				ignoreClosingPoints &&
+				feature.properties[COMMON_PROPERTIES.CLOSING_POINT]
+			) {
+				return false;
+			}
+
+			if (
+				ignoreCurrentlyDrawing &&
+				feature.properties[COMMON_PROPERTIES.CURRENTLY_DRAWING]
 			) {
 				return false;
 			}
@@ -409,6 +452,30 @@ class TerraDraw {
 				if (lngLatInsidePolygon) {
 					return true;
 				}
+
+				const rings: Position[][] = feature.geometry.coordinates;
+
+				for (const ring of rings) {
+					for (let i = 0; i < ring.length - 1; i++) {
+						const coord = ring[i];
+						const nextCoord = ring[i + 1];
+
+						const projectedStart = project(coord[0], coord[1]);
+						const projectedEnd = project(nextCoord[0], nextCoord[1]);
+
+						const distanceToEdge = pixelDistanceToLine(
+							inputPoint,
+							projectedStart,
+							projectedEnd,
+						);
+
+						if (distanceToEdge < pointerDistance) {
+							return true;
+						}
+					}
+				}
+
+				return false;
 			}
 		});
 	}
@@ -776,7 +843,7 @@ class TerraDraw {
 	 */
 	getFeaturesAtLngLat(
 		lngLat: { lng: number; lat: number },
-		options?: { pointerDistance: number; ignoreSelectFeatures: boolean },
+		options?: GetFeatureOptions,
 	) {
 		const { lng, lat } = lngLat;
 
@@ -795,7 +862,7 @@ class TerraDraw {
 	 */
 	getFeaturesAtPointerEvent(
 		event: PointerEvent | MouseEvent,
-		options?: { pointerDistance?: number; ignoreSelectFeatures?: boolean },
+		options?: GetFeatureOptions,
 	) {
 		const getLngLatFromEvent = this._adapter.getLngLatFromEvent.bind(
 			this._adapter,

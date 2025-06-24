@@ -1234,10 +1234,338 @@ describe("Terra Draw", () => {
 
 			expect(features).toHaveLength(3);
 		});
+
+		it("filters out points and linestrings that are not within the pointer distance", () => {
+			const draw = new TerraDraw({
+				adapter,
+				modes: [new TerraDrawPointMode(), new TerraDrawLineStringMode()],
+			});
+
+			draw.start();
+			draw.addFeatures([
+				{
+					type: "Feature",
+					geometry: {
+						type: "Point",
+						coordinates: [0, 0],
+					},
+					properties: {
+						mode: "point",
+					},
+				},
+				{
+					type: "Feature",
+					geometry: {
+						type: "LineString",
+						coordinates: [
+							[0, 0],
+							[1, 1],
+						],
+					},
+					properties: {
+						mode: "linestring",
+					},
+				},
+			]);
+
+			const features = draw.getFeaturesAtLngLat({ lng: 50, lat: 50 });
+
+			expect(features).toHaveLength(0);
+		});
+
+		it("filters out coordinate points if ignoreCoordinatePoints set to true", () => {
+			const draw = new TerraDraw({
+				adapter,
+				modes: [
+					new TerraDrawPolygonMode({
+						showCoordinatePoints: true,
+					}),
+				],
+			});
+
+			draw.start();
+			draw.addFeatures([
+				{
+					type: "Feature",
+					geometry: {
+						type: "Polygon",
+						coordinates: [
+							[
+								[0, 0],
+								[0, 1],
+								[1, 1],
+								[1, 0],
+								[0, 0],
+							],
+						],
+					},
+					properties: {
+						mode: "polygon",
+					},
+				},
+			]);
+
+			const features = draw.getFeaturesAtLngLat(
+				{ lng: 0, lat: 0 },
+				{
+					ignoreCoordinatePoints: true,
+				},
+			);
+
+			expect(features).toHaveLength(1);
+		});
+
+		it("does not filter out coordinate points if ignoreCoordinatePoints set to false", () => {
+			const draw = new TerraDraw({
+				adapter,
+				modes: [
+					new TerraDrawPolygonMode({
+						showCoordinatePoints: true,
+					}),
+				],
+			});
+
+			draw.start();
+			draw.addFeatures([
+				{
+					type: "Feature",
+					geometry: {
+						type: "Polygon",
+						coordinates: [
+							[
+								[0, 0],
+								[0, 1],
+								[1, 1],
+								[1, 0],
+								[0, 0],
+							],
+						],
+					},
+					properties: {
+						mode: "polygon",
+					},
+				},
+			]);
+
+			const features = draw.getFeaturesAtLngLat(
+				{ lng: 0, lat: 0 },
+				{
+					ignoreCoordinatePoints: false,
+				},
+			);
+
+			expect(features).toHaveLength(5);
+		});
+
+		it("filters out selection points if ignoreSelectFeatures set to true", () => {
+			const draw = new TerraDraw({
+				adapter,
+				modes: [
+					new TerraDrawPolygonMode(),
+					new TerraDrawSelectMode({
+						flags: {
+							polygon: {
+								feature: {
+									coordinates: {
+										draggable: true,
+									},
+								},
+							},
+						},
+					}),
+				],
+			});
+
+			draw.start();
+			const [{ id }] = draw.addFeatures([
+				{
+					type: "Feature",
+					geometry: {
+						type: "Polygon",
+						coordinates: [
+							[
+								[0, 0],
+								[0, 1],
+								[1, 1],
+								[1, 0],
+								[0, 0],
+							],
+						],
+					},
+					properties: {
+						mode: "polygon",
+					},
+				},
+			]);
+
+			draw.selectFeature(id as FeatureId);
+
+			const features = draw.getFeaturesAtLngLat(
+				{ lng: 0, lat: 0 },
+				{
+					ignoreSelectFeatures: true,
+				},
+			);
+
+			expect(features).toHaveLength(1);
+		});
+
+		it("does not filter out selection points if ignoreSelectFeatures set to false", () => {
+			const draw = new TerraDraw({
+				adapter,
+				modes: [
+					new TerraDrawPolygonMode(),
+					new TerraDrawSelectMode({
+						flags: {
+							polygon: {
+								feature: {
+									coordinates: {
+										draggable: true,
+									},
+								},
+							},
+						},
+					}),
+				],
+			});
+
+			draw.start();
+			const [{ id }] = draw.addFeatures([
+				{
+					type: "Feature",
+					geometry: {
+						type: "Polygon",
+						coordinates: [
+							[
+								[0, 0],
+								[0, 1],
+								[1, 1],
+								[1, 0],
+								[0, 0],
+							],
+						],
+					},
+					properties: {
+						mode: "polygon",
+					},
+				},
+			]);
+
+			draw.selectFeature(id as FeatureId);
+
+			const features = draw.getFeaturesAtLngLat(
+				{ lng: 0, lat: 0 },
+				{
+					ignoreSelectFeatures: false,
+				},
+			);
+
+			expect(features).toHaveLength(5);
+		});
+
+		it("filters out currently drawn features if ignoreCurrentlyDrawing set to true", () => {
+			const polygonMode = new TerraDrawPolygonMode();
+
+			const draw = new TerraDraw({
+				adapter,
+				modes: [polygonMode],
+			});
+
+			draw.start();
+			draw.setMode("polygon");
+
+			// NOTE: we shouldn't call a mode's onClick directly, but this is a test
+			polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+			const features = draw.getFeaturesAtLngLat(
+				{ lng: 0, lat: 0 },
+				{
+					ignoreCurrentlyDrawing: true,
+				},
+			);
+
+			expect(features).toHaveLength(0);
+		});
+
+		it("filters out currently drawn features if ignoreCurrentlyDrawing set to true", () => {
+			const polygonMode = new TerraDrawPolygonMode();
+
+			const draw = new TerraDraw({
+				adapter,
+				modes: [polygonMode],
+			});
+
+			draw.start();
+			draw.setMode("polygon");
+
+			// NOTE: we shouldn't call a mode's onClick directly, but this is a test
+			polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+			const features = draw.getFeaturesAtLngLat(
+				{ lng: 0, lat: 0 },
+				{
+					ignoreCurrentlyDrawing: false,
+				},
+			);
+
+			expect(features).toHaveLength(1);
+		});
+
+		it("does not filter out closing point features if ignoreClosingPoints set to false", () => {
+			const polygonMode = new TerraDrawPolygonMode();
+
+			const draw = new TerraDraw({
+				adapter,
+				modes: [polygonMode],
+			});
+
+			draw.start();
+			draw.setMode("polygon");
+
+			// NOTE: we shouldn't call a mode's onClick directly, but this is a test
+			polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			polygonMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
+			polygonMode.onClick(MockCursorEvent({ lng: 2, lat: 2 }));
+
+			const features = draw.getFeaturesAtLngLat(
+				{ lng: 0, lat: 0 },
+				{
+					ignoreClosingPoints: false,
+				},
+			);
+
+			expect(features).toHaveLength(3);
+		});
+
+		it("filers closing point features if ignoreClosingPoints set to true", () => {
+			const polygonMode = new TerraDrawPolygonMode();
+
+			const draw = new TerraDraw({
+				adapter,
+				modes: [polygonMode],
+			});
+
+			draw.start();
+			draw.setMode("polygon");
+
+			// NOTE: we shouldn't call a mode's onClick directly, but this is a test
+			polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			polygonMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
+			polygonMode.onClick(MockCursorEvent({ lng: 2, lat: 2 }));
+
+			const features = draw.getFeaturesAtLngLat(
+				{ lng: 0, lat: 0 },
+				{
+					ignoreClosingPoints: true,
+				},
+			);
+
+			expect(features).toHaveLength(1);
+		});
 	});
 
 	describe("getFeaturesAtPointerEvent", () => {
-		it("gets features at a given longitude and latitude", () => {
+		it("gets features at a given clientX and clientY", () => {
 			const draw = new TerraDraw({
 				adapter,
 				modes: [new TerraDrawPointMode()],
@@ -1266,7 +1594,7 @@ describe("Terra Draw", () => {
 			expect(features).toHaveLength(1);
 		});
 
-		it("gets features at a given longitude and latitude within a given pointer distance", () => {
+		it("gets features at a given clientX and clientY within a given pointer distance", () => {
 			const draw = new TerraDraw({
 				adapter,
 				modes: [new TerraDrawPointMode()],
@@ -1312,6 +1640,8 @@ describe("Terra Draw", () => {
 			expect(features).toHaveLength(1);
 			expect(features[0].geometry.coordinates).toEqual([50, 50]);
 		});
+
+		// Underlying code does not change from getFeaturesAtLngLat, so we can skip testing filtering etc
 	});
 
 	describe("start and stop", () => {

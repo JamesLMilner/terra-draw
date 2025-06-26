@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.9.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.8.0...terra-draw@1.9.0) (2025-06-24)
+
+
+### feat
+
+* **terra-draw:** add property that is applied on features that are being drawn (#575) ([](https://github.com/JamesLMilner/terra-draw/commit/cddf7d82cb56492af427ec1f6dba839b99c5f86f)), closes [#575](https://github.com/JamesLMilner/terra-draw/issues/575)
+* **terra-draw:** get nearby polygons with getFeaturesAtLngLat/getFeaturesAtPointerEvent (#576) ([](https://github.com/JamesLMilner/terra-draw/commit/ef363f60e014e2f84e2232545583d8c601c6e291)), closes [#576](https://github.com/JamesLMilner/terra-draw/issues/576)
+
 ## [1.8.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.7.0...terra-draw@1.8.0) (2025-06-12)
 
 

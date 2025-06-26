@@ -23,6 +23,7 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawExtend.TerraDrawBaseAdapt
 		config: {
 			map: mapboxgl.Map;
 			renderBelowLayerId?: string;
+			prefixId?: string;
 		} & TerraDrawExtend.BaseAdapterConfig,
 	) {
 		super(config);
@@ -34,9 +35,11 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawExtend.TerraDrawBaseAdapt
 		this._initialDragRotate = this._map.dragRotate.isEnabled();
 		this._initialDragPan = this._map.dragPan.isEnabled();
 		this._renderBeforeLayerId = config.renderBelowLayerId;
+		this._prefixId = config.prefixId || "td";
 	}
 
 	private _renderBeforeLayerId: string | undefined;
+	private _prefixId: string;
 	private _initialDragPan: boolean;
 	private _initialDragRotate: boolean;
 	private _nextRender: number | undefined;
@@ -146,7 +149,7 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawExtend.TerraDrawBaseAdapt
 		featureType: Feature<T>["geometry"]["type"],
 		features: Feature<T>[],
 	) {
-		const id = `td-${featureType.toLowerCase()}`;
+		const id = `${this._prefixId}-${featureType.toLowerCase()}`;
 		this._addGeoJSONSource(id, features);
 		this._addLayer(id, featureType);
 
@@ -157,7 +160,7 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawExtend.TerraDrawBaseAdapt
 		featureType: Feature<T>["geometry"]["type"],
 		features: Feature<T>[],
 	) {
-		const id = `td-${featureType.toLowerCase()}`;
+		const id = `${this._prefixId}-${featureType.toLowerCase()}`;
 		(this._map.getSource(id) as GeoJSONSource).setData({
 			type: "FeatureCollection",
 			features: features,
@@ -420,13 +423,13 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawExtend.TerraDrawBaseAdapt
 	public unregister(): void {
 		super.unregister();
 
-		this._map.removeLayer("td-point");
-		this._map.removeSource("td-point");
-		this._map.removeLayer("td-linestring");
-		this._map.removeSource("td-linestring");
-		this._map.removeLayer("td-polygon");
-		this._map.removeLayer("td-polygon-outline");
-		this._map.removeSource("td-polygon");
+		this._map.removeLayer(`${this._prefixId}-point`);
+		this._map.removeSource(`${this._prefixId}-point`);
+		this._map.removeLayer(`${this._prefixId}-linestring`);
+		this._map.removeSource(`${this._prefixId}-linestring`);
+		this._map.removeLayer(`${this._prefixId}-polygon`);
+		this._map.removeLayer(`${this._prefixId}-polygon-outline`);
+		this._map.removeSource(`${this._prefixId}-polygon`);
 	}
 
 	public register(callbacks: TerraDrawExtend.TerraDrawCallbacks) {

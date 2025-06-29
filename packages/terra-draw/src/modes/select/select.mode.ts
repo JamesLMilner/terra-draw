@@ -70,7 +70,11 @@ type ModeFlags = {
 				  };
 			draggable?: boolean;
 			resizable?: ResizeOptions;
-			deletable?: boolean;
+			deletable?:
+				| boolean
+				| {
+						featureDeletable?: boolean;
+				  };
 		};
 	};
 };

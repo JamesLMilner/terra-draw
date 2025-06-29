@@ -88,7 +88,11 @@ interface TerraDrawPolygonModeOptions<T extends CustomStyling>
 	keyEvents?: TerraDrawPolygonModeKeyEvents | null;
 	pointerEvents?: PointerEvents;
 	cursors?: Cursors;
-	editable?: boolean;
+	editable?:
+		| boolean
+		| {
+				featureDeletable?: boolean;
+		  };
 	showCoordinatePoints?: boolean;
 }
 
@@ -107,7 +111,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 	private snappedPointId: FeatureId | undefined;
 
 	// Editable
-	private editable: boolean = false;
+	private editable: boolean | { featureDeletable?: boolean } = false;
 	private editedFeatureId: FeatureId | undefined;
 	private editedFeatureCoordinateIndex: number | undefined;
 	private editedSnapType: "line" | "coordinate" | undefined;
@@ -488,6 +492,9 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 			return;
 		}
 
+		const featureDeletable =
+			typeof this.editable === "object" && this.editable.featureDeletable;
+
 		const { featureId, featureCoordinateIndex: coordinateIndex } =
 			this.coordinateSnapping.getSnappable(event, (feature) =>
 				this.polygonFilter(feature),
@@ -499,12 +506,20 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 
 		const geometry = this.store.getGeometryCopy(featureId);
 
-		let coordinates;
+		let coordinates: Polygon["coordinates"][0];
+
 		if (geometry.type === "Polygon") {
 			coordinates = geometry.coordinates[0];
 
 			// Prevent creating an invalid polygon
 			if (coordinates.length <= 4) {
+				if (featureDeletable) {
+					if (this.showCoordinatePoints) {
+						this.coordinatePoints.deletePointsByFeatureIds([featureId]);
+					}
+					this.store.delete([featureId]);
+				}
+
 				return;
 			}
 		} else {

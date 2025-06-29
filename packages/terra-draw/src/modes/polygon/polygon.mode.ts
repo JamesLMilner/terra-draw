@@ -484,7 +484,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 
 	private onRightClick(event: TerraDrawMouseEvent) {
 		// Right click is only relevant when editable is true
-		if (!this.editable) {
+		if (!this.editable || this.state !== "started") {
 			return;
 		}
 

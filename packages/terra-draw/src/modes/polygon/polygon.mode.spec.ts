@@ -989,6 +989,78 @@ describe("TerraDrawPolygonMode", () => {
 			expect(onFinish).toHaveBeenCalledTimes(2);
 		});
 
+		it("context menu click cannot delete a point whilst currently drawing if editable is true", () => {
+			polygonMode.updateOptions({
+				showCoordinatePoints: true,
+				pointerEvents: {
+					...DefaultPointerEvents,
+					contextMenu: true,
+					rightClick: false,
+				},
+			});
+
+			polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+			polygonMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
+
+			polygonMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
+
+			polygonMode.onMouseMove(MockCursorEvent({ lng: 2, lat: 2 }));
+
+			polygonMode.onClick(MockCursorEvent({ lng: 2, lat: 2 }));
+
+			polygonMode.onMouseMove(MockCursorEvent({ lng: 3, lat: 3 }));
+
+			polygonMode.onClick(MockCursorEvent({ lng: 3, lat: 3 }));
+
+			let features = store
+				.copyAll()
+				.find(
+					(feature) => feature.properties[COMMON_PROPERTIES.CURRENTLY_DRAWING],
+				);
+			expect(features?.geometry.coordinates[0]).toEqual([
+				[0, 0],
+				[1, 1],
+				[2, 2],
+				[3, 3],
+				[3, 3],
+				[0, 0],
+			]);
+
+			// Delete a coordinate
+			polygonMode.onClick(
+				MockCursorEvent({
+					lng: 3,
+					lat: 3,
+					button: "right",
+					isContextMenu: true,
+				}),
+			);
+
+			features = store
+				.copyAll()
+				.find(
+					(feature) => feature.properties[COMMON_PROPERTIES.CURRENTLY_DRAWING],
+				);
+
+			// TODO: This probably should not mutate the coordinates when context/right clicking?
+			expect(features?.geometry.coordinates[0]).toEqual([
+				[0, 0],
+				[1, 1],
+				[2, 2],
+				[3, 3],
+				[0, 0],
+				[0, 0],
+			]);
+
+			expect(onChange).not.toHaveBeenCalledWith(
+				[expect.any(String)],
+				"delete",
+				undefined,
+			);
+			expect(onFinish).toHaveBeenCalledTimes(0);
+		});
+
 		it("creates an initial coordinate points on first click when showCoordinatePoints is true", () => {
 			polygonMode.updateOptions({
 				showCoordinatePoints: true,

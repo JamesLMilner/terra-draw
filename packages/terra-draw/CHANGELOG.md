@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.9.1](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.9.0...terra-draw@1.9.1) (2025-07-01)
+
+
+### fix
+
+* **terra-draw:** avoid allowing editing currently drawn polygon in polygon mode (#582) ([](https://github.com/JamesLMilner/terra-draw/commit/fa46b021161c4848fb2baede9c9e7c31d636ea3f)), closes [#582](https://github.com/JamesLMilner/terra-draw/issues/582)
+* **terra-draw:** ensure includePolygonsWithinPointerDistance works correctly (#583) ([](https://github.com/JamesLMilner/terra-draw/commit/1c481c4fbebf23c01ebc73e3fae8e3b1d168d0b5)), closes [#583](https://github.com/JamesLMilner/terra-draw/issues/583)
+* **terra-draw:** ensure snapping respects the configured coordinate precision (#586) ([](https://github.com/JamesLMilner/terra-draw/commit/9d8f3802d08b779281cc134d0128b0d0bbe61f44)), closes [#586](https://github.com/JamesLMilner/terra-draw/issues/586)
+
 ## [1.9.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.8.0...terra-draw@1.9.0) (2025-06-24)
 
 

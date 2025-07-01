@@ -442,9 +442,7 @@ describe("TerraDrawLineStringMode", () => {
 
 			expect(features[1].geometry.type).toBe("Point");
 			expect(features[1].properties.snappingPoint).toBe(true);
-			expect(features[1].geometry.coordinates).toStrictEqual([
-				2, 2.0000000000000027,
-			]);
+			expect(features[1].geometry.coordinates).toStrictEqual([2, 2]);
 		});
 
 		it("can snap from existing line once finished with snapping toCustom enabled", () => {

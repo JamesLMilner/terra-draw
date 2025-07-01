@@ -2101,7 +2101,7 @@ describe("TerraDrawSelectMode", () => {
 								[
 									[0, 0],
 									[0, 1],
-									[2, 2.0000000000000027],
+									[2, 2],
 									[1, 0],
 									[0, 0],
 								],
@@ -2112,7 +2112,7 @@ describe("TerraDrawSelectMode", () => {
 					},
 					{
 						geometry: {
-							coordinates: [2, 2.0000000000000027],
+							coordinates: [2, 2],
 							type: "Point",
 						},
 						id: expect.any(String),
@@ -2211,7 +2211,7 @@ describe("TerraDrawSelectMode", () => {
 							coordinates: [
 								[0, 0],
 								[0, 1],
-								[2, 2.0000000000000027],
+								[2, 2],
 								[1, 0],
 							],
 							type: "LineString",
@@ -2220,7 +2220,7 @@ describe("TerraDrawSelectMode", () => {
 					},
 					{
 						geometry: {
-							coordinates: [2, 2.0000000000000027],
+							coordinates: [2, 2],
 							type: "Point",
 						},
 						id: expect.any(String),

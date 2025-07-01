@@ -384,11 +384,11 @@ describe("DragCoordinateBehavior", () => {
 						geometry: {
 							coordinates: [
 								[
-									[1, 1.0000000000000013],
+									[1, 1],
 									[0, 1],
 									[1, 1],
 									[1, 0],
-									[1, 1.0000000000000013],
+									[1, 1],
 								],
 							],
 							type: "Polygon",

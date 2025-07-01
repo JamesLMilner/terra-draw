@@ -6,6 +6,7 @@ import { BBoxPolygon, FeatureId } from "../store/store";
 import { PixelDistanceBehavior } from "./pixel-distance.behavior";
 import { nearestPointOnLine } from "../geometry/point-on-line";
 import { webMercatorNearestPointOnLine } from "../geometry/web-mercator-point-on-line";
+import { limitPrecision } from "../geometry/limit-decimal-precision";
 
 export class LineSnappingBehavior extends TerraDrawModeBehavior {
 	constructor(
@@ -24,7 +25,18 @@ export class LineSnappingBehavior extends TerraDrawModeBehavior {
 			);
 		});
 
-		return snappable.coordinate;
+		return snappable.coordinate
+			? [
+					limitPrecision(
+						snappable.coordinate[0],
+						this.config.coordinatePrecision,
+					),
+					limitPrecision(
+						snappable.coordinate[1],
+						this.config.coordinatePrecision,
+					),
+				]
+			: undefined;
 	};
 
 	public getSnappableCoordinate = (
@@ -39,7 +51,18 @@ export class LineSnappingBehavior extends TerraDrawModeBehavior {
 			);
 		});
 
-		return snappable.coordinate;
+		return snappable.coordinate
+			? [
+					limitPrecision(
+						snappable.coordinate[0],
+						this.config.coordinatePrecision,
+					),
+					limitPrecision(
+						snappable.coordinate[1],
+						this.config.coordinatePrecision,
+					),
+				]
+			: undefined;
 	};
 
 	public getSnappable(
@@ -98,7 +121,16 @@ export class LineSnappingBehavior extends TerraDrawModeBehavior {
 			const distance = this.pixelDistance.measure(event, nearest.coordinate);
 			if (distance < closest.minDistance && distance < this.pointerDistance) {
 				closest.featureId = feature.id;
-				closest.coordinate = nearest.coordinate;
+				closest.coordinate = [
+					limitPrecision(
+						nearest.coordinate[0],
+						this.config.coordinatePrecision,
+					),
+					limitPrecision(
+						nearest.coordinate[1],
+						this.config.coordinatePrecision,
+					),
+				];
 				closest.featureCoordinateIndex = nearest.lineIndex;
 				closest.minDistance = distance;
 			}

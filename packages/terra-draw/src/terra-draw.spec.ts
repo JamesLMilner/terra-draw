@@ -1487,7 +1487,7 @@ describe("Terra Draw", () => {
 			expect(features).toHaveLength(0);
 		});
 
-		it("filters out currently drawn features if ignoreCurrentlyDrawing set to true", () => {
+		it("filters out currently drawn features if ignoreCurrentlyDrawing set to false", () => {
 			const polygonMode = new TerraDrawPolygonMode();
 
 			const draw = new TerraDraw({
@@ -1505,6 +1505,7 @@ describe("Terra Draw", () => {
 				{ lng: 0, lat: 0 },
 				{
 					ignoreCurrentlyDrawing: false,
+					includePolygonsWithinPointerDistance: true,
 				},
 			);
 
@@ -1534,10 +1535,12 @@ describe("Terra Draw", () => {
 				},
 			);
 
-			expect(features).toHaveLength(3);
+			expect(features).toHaveLength(2);
+			expect(features[0].geometry.type).toBe("Point");
+			expect(features[1].geometry.type).toBe("Point");
 		});
 
-		it("filers closing point features if ignoreClosingPoints set to true", () => {
+		it("filters closing point features if ignoreClosingPoints set to true", () => {
 			const polygonMode = new TerraDrawPolygonMode();
 
 			const draw = new TerraDraw({
@@ -1560,7 +1563,72 @@ describe("Terra Draw", () => {
 				},
 			);
 
+			expect(features).toHaveLength(0);
+		});
+
+		it("includes polygons features within pointer distance if includePolygonsWithinPointerDistance set to true", () => {
+			const polygonMode = new TerraDrawPolygonMode();
+
+			const draw = new TerraDraw({
+				adapter,
+				modes: [polygonMode],
+			});
+
+			draw.start();
+			draw.setMode("polygon");
+
+			let features = draw.getFeaturesAtLngLat(
+				{ lng: -0.5, lat: -0.5 },
+				{
+					includePolygonsWithinPointerDistance: true,
+				},
+			);
+
+			expect(features).toHaveLength(0);
+
+			// NOTE: we shouldn't call a mode's onClick directly, but this is a test
+			polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 1 }));
+			polygonMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
+			polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+			features = draw.getFeaturesAtLngLat(
+				{ lng: -0.5, lat: -0.5 },
+				{
+					includePolygonsWithinPointerDistance: true,
+				},
+			);
+
 			expect(features).toHaveLength(1);
+			expect(features[0].geometry.type).toBe("Polygon");
+		});
+
+		it("ignores polygons features within pointer distance if includePolygonsWithinPointerDistance set to false", () => {
+			const polygonMode = new TerraDrawPolygonMode();
+
+			const draw = new TerraDraw({
+				adapter,
+				modes: [polygonMode],
+			});
+
+			draw.start();
+			draw.setMode("polygon");
+
+			// NOTE: we shouldn't call a mode's onClick directly, but this is a test
+			// Draw a square
+			polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 1 }));
+			polygonMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
+			polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+			const features = draw.getFeaturesAtLngLat(
+				{ lng: -0.5, lat: -0.5 },
+				{
+					includePolygonsWithinPointerDistance: false,
+				},
+			);
+
+			expect(features).toHaveLength(0);
 		});
 	});
 

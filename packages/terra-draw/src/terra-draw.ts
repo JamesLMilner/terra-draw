@@ -453,24 +453,26 @@ class TerraDraw {
 					return true;
 				}
 
-				const rings: Position[][] = feature.geometry.coordinates;
+				if (options?.includePolygonsWithinPointerDistance) {
+					const rings: Position[][] = feature.geometry.coordinates;
 
-				for (const ring of rings) {
-					for (let i = 0; i < ring.length - 1; i++) {
-						const coord = ring[i];
-						const nextCoord = ring[i + 1];
+					for (const ring of rings) {
+						for (let i = 0; i < ring.length - 1; i++) {
+							const coord = ring[i];
+							const nextCoord = ring[i + 1];
 
-						const projectedStart = project(coord[0], coord[1]);
-						const projectedEnd = project(nextCoord[0], nextCoord[1]);
+							const projectedStart = project(coord[0], coord[1]);
+							const projectedEnd = project(nextCoord[0], nextCoord[1]);
 
-						const distanceToEdge = pixelDistanceToLine(
-							inputPoint,
-							projectedStart,
-							projectedEnd,
-						);
+							const distanceToEdge = pixelDistanceToLine(
+								inputPoint,
+								projectedStart,
+								projectedEnd,
+							);
 
-						if (distanceToEdge < pointerDistance) {
-							return true;
+							if (distanceToEdge < pointerDistance) {
+								return true;
+							}
 						}
 					}
 				}

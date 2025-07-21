@@ -1,4 +1,8 @@
-import { GeoJSONStore } from "../../store/store";
+import {
+	GeoJSONStore,
+	GeoJSONStoreFeatures,
+	JSONObject,
+} from "../../store/store";
 import { MockModeConfig } from "../../test/mock-mode-config";
 import { MockCursorEvent } from "../../test/mock-cursor-event";
 import { TerraDrawCircleMode } from "./circle.mode";
@@ -7,6 +11,7 @@ import { followsRightHandRule } from "../../geometry/boolean/right-hand-rule";
 import { MockKeyboardEvent } from "../../test/mock-keyboard-event";
 import { COMMON_PROPERTIES, TerraDrawGeoJSONStore } from "../../common";
 import { DefaultPointerEvents } from "../base.mode";
+import { MockPolygonSquare } from "../../test/mock-features";
 
 describe("TerraDrawCircleMode", () => {
 	describe("constructor", () => {
@@ -913,6 +918,69 @@ describe("TerraDrawCircleMode", () => {
 			).toEqual({
 				valid: false,
 			});
+		});
+	});
+
+	describe("afterFeatureUpdated", () => {
+		it("does nothing when update is not for the currently drawn polygon", () => {
+			const circleMode = new TerraDrawCircleMode();
+			const mockConfig = MockModeConfig(circleMode.mode);
+			circleMode.register(mockConfig);
+			circleMode.start();
+
+			jest.spyOn(mockConfig.store, "delete");
+
+			circleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+			let features = mockConfig.store.copyAll();
+			expect(features.length).toBe(1);
+
+			const firstCircle = features[0];
+
+			circleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+			expect(mockConfig.onFinish).toHaveBeenCalledTimes(1);
+
+			// Second circle started
+			circleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+			features = mockConfig.store.copyAll();
+			expect(features.length).toBe(2);
+
+			// Set the onChange count to 0
+			mockConfig.onChange.mockClear();
+			mockConfig.setDoubleClickToZoom.mockClear();
+
+			circleMode.afterFeatureUpdated({
+				...firstCircle,
+			});
+
+			expect(mockConfig.setDoubleClickToZoom).toHaveBeenCalledTimes(0);
+			expect(mockConfig.store.delete).toHaveBeenCalledTimes(0);
+			expect(mockConfig.onChange).toHaveBeenCalledTimes(0);
+		});
+
+		it("sets drawing back to started", () => {
+			const circleMode = new TerraDrawCircleMode();
+			const mockConfig = MockModeConfig(circleMode.mode);
+			circleMode.register(mockConfig);
+			circleMode.start();
+
+			circleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			circleMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
+
+			const features = mockConfig.store.copyAll();
+			expect(features.length).toBe(1);
+			const feature = features[0];
+
+			// Set the onChange count to 0
+			mockConfig.setDoubleClickToZoom.mockClear();
+
+			circleMode.afterFeatureUpdated({
+				...feature,
+			});
+
+			expect(mockConfig.setDoubleClickToZoom).toHaveBeenCalledTimes(1);
 		});
 	});
 });

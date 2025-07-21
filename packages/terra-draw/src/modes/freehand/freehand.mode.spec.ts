@@ -1,4 +1,8 @@
-import { GeoJSONStore } from "../../store/store";
+import {
+	GeoJSONStore,
+	GeoJSONStoreFeatures,
+	JSONObject,
+} from "../../store/store";
 import { MockModeConfig } from "../../test/mock-mode-config";
 import { MockCursorEvent } from "../../test/mock-cursor-event";
 import { TerraDrawFreehandMode } from "./freehand.mode";
@@ -7,6 +11,7 @@ import { Polygon } from "geojson";
 import { followsRightHandRule } from "../../geometry/boolean/right-hand-rule";
 import { COMMON_PROPERTIES, TerraDrawGeoJSONStore } from "../../common";
 import { DefaultPointerEvents } from "../base.mode";
+import { MockPolygonSquare } from "../../test/mock-features";
 
 describe("TerraDrawFreehandMode", () => {
 	describe("constructor", () => {
@@ -980,6 +985,81 @@ describe("TerraDrawFreehandMode", () => {
 			).toEqual({
 				valid: false,
 			});
+		});
+	});
+
+	describe("afterFeatureUpdated", () => {
+		it("does nothing when update is not for the currently drawn polygon", () => {
+			const freehandMode = new TerraDrawFreehandMode();
+			const mockConfig = MockModeConfig(freehandMode.mode);
+			freehandMode.register(mockConfig);
+			freehandMode.start();
+
+			jest.spyOn(mockConfig.store, "delete");
+
+			// Create an initial square to snap to
+			const mockPolygon = MockPolygonSquare();
+			const [featureId] = mockConfig.store.create([
+				{
+					geometry: mockPolygon.geometry,
+					properties: mockPolygon.properties as JSONObject,
+				},
+			]);
+
+			// Set the onChange count to 0
+			mockConfig.onChange.mockClear();
+
+			expect(mockConfig.store.has(featureId)).toBe(true);
+
+			freehandMode.afterFeatureUpdated({
+				...(mockPolygon as GeoJSONStoreFeatures),
+				id: featureId,
+			});
+
+			expect(mockConfig.store.delete).toHaveBeenCalledTimes(0);
+			expect(mockConfig.onChange).toHaveBeenCalledTimes(0);
+		});
+
+		it("removes the closing point correctly when drawing has started", () => {
+			const freehandMode = new TerraDrawFreehandMode();
+			const mockConfig = MockModeConfig(freehandMode.mode);
+			freehandMode.register(mockConfig);
+			freehandMode.start();
+
+			freehandMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+			expect(mockConfig.onChange).toHaveBeenCalledTimes(1);
+			expect(mockConfig.onChange).toHaveBeenNthCalledWith(
+				1,
+				[expect.any(String), expect.any(String)],
+				"create",
+				undefined,
+			);
+
+			const freehandPolygonFeature = mockConfig.store.copyAll()[0];
+			const freehandClosingPointFeature = mockConfig.store.copyAll()[1];
+
+			freehandMode.onMouseMove(
+				MockCursorEvent({
+					lng: 1,
+					lat: 1,
+				}),
+			);
+
+			mockConfig.onChange.mockClear();
+
+			freehandMode.afterFeatureUpdated({
+				...(MockPolygonSquare() as GeoJSONStoreFeatures),
+				id: freehandPolygonFeature.id,
+			});
+
+			expect(mockConfig.onChange).toHaveBeenCalledTimes(1);
+			expect(mockConfig.onChange).toHaveBeenNthCalledWith(
+				1,
+				[freehandClosingPointFeature.id],
+				"delete",
+				undefined,
+			);
 		});
 	});
 });

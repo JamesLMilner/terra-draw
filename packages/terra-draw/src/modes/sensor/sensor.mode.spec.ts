@@ -1,4 +1,4 @@
-import { GeoJSONStore } from "../../store/store";
+import { GeoJSONStore, GeoJSONStoreFeatures } from "../../store/store";
 import { MockModeConfig } from "../../test/mock-mode-config";
 import { MockCursorEvent } from "../../test/mock-cursor-event";
 import { TerraDrawSensorMode } from "./sensor.mode";
@@ -713,6 +713,98 @@ describe("TerraDrawSensorMode", () => {
 				polygonOutlineWidth: 2,
 				polygonFillOpacity: 0.5,
 			});
+		});
+	});
+
+	describe("afterFeatureUpdated", () => {
+		it("does nothing when update is not for the currently drawn polygon", () => {
+			const sensorMode = new TerraDrawSensorMode();
+			const mockConfig = MockModeConfig(sensorMode.mode);
+			sensorMode.register(mockConfig);
+			sensorMode.start();
+
+			sensorMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+			sensorMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
+
+			sensorMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
+
+			sensorMode.onMouseMove(MockCursorEvent({ lng: 2, lat: 2 }));
+
+			sensorMode.onClick(MockCursorEvent({ lng: 3, lat: 3 }));
+
+			sensorMode.onMouseMove(MockCursorEvent({ lng: 1.5, lat: 1.5 }));
+
+			// Move again to ensure the update path works
+			sensorMode.onMouseMove(MockCursorEvent({ lng: 1.5, lat: 1.5 }));
+
+			sensorMode.onClick(MockCursorEvent({ lng: 1.5, lat: 1.5 }));
+
+			let features = mockConfig.store.copyAll();
+			expect(features.length).toBe(1);
+
+			const createdPolygon = features[0] as GeoJSONStoreFeatures;
+
+			// Ensure the onChange count to 0
+			mockConfig.onChange.mockClear();
+			mockConfig.setDoubleClickToZoom.mockClear();
+
+			sensorMode.afterFeatureUpdated({
+				...createdPolygon,
+			});
+
+			expect(mockConfig.setDoubleClickToZoom).toHaveBeenCalledTimes(0);
+			expect(mockConfig.onChange).toHaveBeenCalledTimes(0);
+		});
+
+		it("sets drawing back to started", () => {
+			const sensorMode = new TerraDrawSensorMode();
+			const mockConfig = MockModeConfig(sensorMode.mode);
+			sensorMode.register(mockConfig);
+			sensorMode.start();
+
+			sensorMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+			sensorMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
+
+			sensorMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
+
+			sensorMode.onMouseMove(MockCursorEvent({ lng: 2, lat: 2 }));
+
+			sensorMode.onClick(MockCursorEvent({ lng: 3, lat: 3 }));
+
+			sensorMode.onMouseMove(MockCursorEvent({ lng: 1.5, lat: 1.5 }));
+
+			// Move again to ensure the update path works
+			sensorMode.onMouseMove(MockCursorEvent({ lng: 1.5, lat: 1.5 }));
+
+			const features = mockConfig.store.copyAll();
+
+			const sensor = features.find((f) => f.geometry.type === "Polygon")!;
+
+			// Ensure the onChange count to 0
+			mockConfig.onChange.mockClear();
+			mockConfig.setDoubleClickToZoom.mockClear();
+
+			sensorMode.afterFeatureUpdated({
+				...sensor,
+			});
+
+			expect(mockConfig.setDoubleClickToZoom).toHaveBeenCalledTimes(1);
+			expect(mockConfig.onChange).toHaveBeenCalledTimes(2);
+			expect(mockConfig.onChange).toHaveBeenNthCalledWith(
+				1,
+				[expect.any(String)],
+				"delete",
+				undefined,
+			);
+
+			expect(mockConfig.onChange).toHaveBeenNthCalledWith(
+				1,
+				[expect.any(String)],
+				"delete",
+				undefined,
+			);
 		});
 	});
 });

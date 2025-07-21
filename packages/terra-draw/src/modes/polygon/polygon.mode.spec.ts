@@ -16,6 +16,7 @@ import { TerraDrawPolygonMode } from "./polygon.mode";
 import { MockKeyboardEvent } from "../../test/mock-keyboard-event";
 import { MockPolygonSquare } from "../../test/mock-features";
 import { DefaultPointerEvents } from "../base.mode";
+import { Feature } from "geojson";
 
 describe("TerraDrawPolygonMode", () => {
 	describe("constructor", () => {
@@ -117,9 +118,17 @@ describe("TerraDrawPolygonMode", () => {
 			polygonMode.register(mockConfig);
 			polygonMode.start();
 
+			// This creates the snapping point
+			polygonMode.onMouseMove(MockCursorEvent({ lng: 0.5, lat: 0.5 }));
+
+			// This is the snapping point
+			let features = mockConfig.store.copyAll();
+			expect(features.length).toBe(2);
+			expect(features[1].geometry.coordinates).toStrictEqual([0, 0]);
+
 			polygonMode.onClick(MockCursorEvent({ lng: -0.5, lat: 0.5 }));
 
-			let features = mockConfig.store.copyAll();
+			features = mockConfig.store.copyAll();
 			expect(features.length).toBe(2);
 
 			expect(features[1].geometry.coordinates).toStrictEqual([
@@ -387,6 +396,275 @@ describe("TerraDrawPolygonMode", () => {
 			});
 
 			expect(mockConfig.onChange).toHaveBeenCalledTimes(0);
+		});
+	});
+
+	describe("afterFeatureUpdated", () => {
+		it("adds coordinate points when showCoordinatePoints is true", () => {
+			const polygonMode = new TerraDrawPolygonMode({
+				showCoordinatePoints: true,
+			});
+
+			const mockConfig = MockModeConfig(polygonMode.mode);
+
+			polygonMode.register(mockConfig);
+			polygonMode.start();
+
+			// Create an initial square to snap to
+			const mockPolygon = MockPolygonSquare();
+			const [featureId] = mockConfig.store.create([
+				{
+					geometry: mockPolygon.geometry,
+					properties: mockPolygon.properties as JSONObject,
+				},
+			]);
+
+			// Set the onChange count to 0
+			mockConfig.onChange.mockClear();
+
+			expect(mockConfig.store.has(featureId)).toBe(true);
+
+			polygonMode.afterFeatureUpdated({
+				...(mockPolygon as GeoJSONStoreFeatures),
+				id: featureId,
+			});
+
+			expect(mockConfig.onChange).toHaveBeenCalledTimes(2);
+			expect(mockConfig.onChange).toHaveBeenNthCalledWith(
+				1,
+				[
+					expect.any(String),
+					expect.any(String),
+					expect.any(String),
+					expect.any(String),
+				],
+				"create",
+				undefined,
+			);
+			expect(mockConfig.onChange).toHaveBeenNthCalledWith(
+				2,
+				[featureId],
+				"update",
+				undefined,
+			);
+		});
+
+		it("does nothing if showCoordinatePoints is false", () => {
+			const polygonMode = new TerraDrawPolygonMode({
+				showCoordinatePoints: false,
+			});
+
+			const mockConfig = MockModeConfig(polygonMode.mode);
+
+			polygonMode.register(mockConfig);
+			polygonMode.start();
+
+			// Create an initial square to snap to
+			const mockPolygon = MockPolygonSquare();
+			const [featureId] = mockConfig.store.create([
+				{
+					geometry: mockPolygon.geometry,
+					properties: mockPolygon.properties as JSONObject,
+				},
+			]);
+
+			// Set the onChange count to 0
+			mockConfig.onChange.mockClear();
+
+			expect(mockConfig.store.has(featureId)).toBe(true);
+
+			polygonMode.afterFeatureUpdated({
+				...(mockPolygon as GeoJSONStoreFeatures),
+				id: featureId,
+			});
+
+			expect(mockConfig.onChange).toHaveBeenCalledTimes(0);
+		});
+
+		it("removes edit points if a user is currently dragging the updated feature", () => {
+			const polygonMode = new TerraDrawPolygonMode({ editable: true });
+			const mockConfig = MockModeConfig(polygonMode.mode);
+			polygonMode.register(mockConfig);
+			polygonMode.start();
+
+			// Create a polygon to edit
+			polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+			polygonMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
+
+			polygonMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
+
+			polygonMode.onMouseMove(MockCursorEvent({ lng: 2, lat: 2 }));
+
+			polygonMode.onClick(MockCursorEvent({ lng: 2, lat: 2 }));
+
+			polygonMode.onMouseMove(MockCursorEvent({ lng: 3, lat: 3 }));
+
+			polygonMode.onClick(MockCursorEvent({ lng: 3, lat: 3 }));
+
+			polygonMode.onClick(MockCursorEvent({ lng: 3, lat: 3 }));
+
+			const mockPolygon = mockConfig.store.copyAll()[0];
+
+			mockConfig.onChange.mockClear();
+
+			polygonMode.onDragStart(MockCursorEvent({ lng: 0, lat: 0 }), () => {});
+
+			expect(mockConfig.onChange).toHaveBeenCalledTimes(1);
+			expect(mockConfig.onChange).toHaveBeenNthCalledWith(
+				1,
+				[expect.any(String)],
+				"create",
+				undefined,
+			);
+
+			mockConfig.onChange.mockClear();
+
+			const editPoint = mockConfig.store
+				.copyAll()
+				.find(
+					(f) =>
+						f.geometry.type === "Point" &&
+						f.properties[COMMON_PROPERTIES.EDITED],
+				);
+
+			expect(editPoint).toBeDefined();
+
+			polygonMode.afterFeatureUpdated(mockPolygon);
+
+			expect(mockConfig.onChange).toHaveBeenCalledTimes(1);
+			expect(mockConfig.onChange).toHaveBeenNthCalledWith(
+				1,
+				[editPoint!.id],
+				"delete",
+				undefined,
+			);
+		});
+
+		it("updates the snapping point if the user is current editing and the edited polygon is snappable", () => {
+			const polygonMode = new TerraDrawPolygonMode();
+			polygonMode.updateOptions({
+				snapping: {
+					toCoordinate: true,
+				},
+			});
+			const mockConfig = MockModeConfig(polygonMode.mode);
+
+			// Create an initial square to snap to
+			const mockPolygon = MockPolygonSquare();
+			mockConfig.store.create([
+				{
+					geometry: mockPolygon.geometry,
+					properties: mockPolygon.properties as JSONObject,
+				},
+			]);
+
+			polygonMode.register(mockConfig);
+			polygonMode.start();
+
+			// This creates the snapping point
+			polygonMode.onMouseMove(MockCursorEvent({ lng: 0.5, lat: 0.5 }));
+
+			mockConfig.onChange.mockClear();
+
+			// This is the snapping point
+			let features = mockConfig.store.copyAll();
+			expect(features.length).toBe(2);
+
+			const snapPoint = features[1];
+			expect(snapPoint.geometry.coordinates).toStrictEqual([0, 0]);
+
+			polygonMode.afterFeatureUpdated(mockPolygon as GeoJSONStoreFeatures);
+
+			expect(mockConfig.onChange).toHaveBeenCalledTimes(1);
+			expect(mockConfig.onChange).toHaveBeenNthCalledWith(
+				1,
+				[snapPoint!.id],
+				"update",
+				undefined,
+			);
+
+			expect(mockConfig.store.has(snapPoint!.id as FeatureId)).toBe(true);
+		});
+
+		it("deletes the snapping point if the user is current editing and the edited polygon is not snappable", () => {
+			const polygonMode = new TerraDrawPolygonMode();
+			polygonMode.updateOptions({
+				snapping: {
+					toCoordinate: true,
+				},
+			});
+			const mockConfig = MockModeConfig(polygonMode.mode);
+
+			// Create an initial square to snap to
+			const mockPolygon = MockPolygonSquare();
+			const [id] = mockConfig.store.create([
+				{
+					geometry: mockPolygon.geometry,
+					properties: mockPolygon.properties as JSONObject,
+				},
+			]);
+
+			polygonMode.register(mockConfig);
+			polygonMode.start();
+
+			// This creates the snapping point
+			polygonMode.onMouseMove(MockCursorEvent({ lng: 0.5, lat: 0.5 }));
+
+			mockConfig.onChange.mockClear();
+
+			// This is the snapping point
+			let features = mockConfig.store.copyAll();
+			expect(features.length).toBe(2);
+
+			const snapPoint = features[1];
+			expect(snapPoint.geometry.coordinates).toStrictEqual([0, 0]);
+
+			mockConfig.store.updateGeometry([
+				{
+					id,
+					geometry: {
+						type: "Polygon",
+						coordinates: [
+							[
+								[-100, -100],
+								[-100, -99],
+								[-99, -99],
+								[-99, -100],
+								[-100, -100],
+							],
+						],
+					},
+				},
+			]);
+
+			mockConfig.onChange.mockClear();
+
+			polygonMode.afterFeatureUpdated({
+				...(mockPolygon as GeoJSONStoreFeatures),
+				geometry: {
+					type: "Polygon",
+					coordinates: [
+						[
+							[-100, -100],
+							[-100, -99],
+							[-99, -99],
+							[-99, -100],
+							[-100, -100],
+						],
+					],
+				},
+			});
+
+			expect(mockConfig.onChange).toHaveBeenCalledTimes(1);
+			expect(mockConfig.onChange).toHaveBeenNthCalledWith(
+				1,
+				[snapPoint!.id],
+				"delete",
+				undefined,
+			);
+
+			expect(mockConfig.store.has(snapPoint!.id as FeatureId)).toBe(false);
 		});
 	});
 

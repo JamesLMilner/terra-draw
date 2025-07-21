@@ -1,4 +1,9 @@
-import { GeoJSONStore } from "../../store/store";
+import {
+	FeatureId,
+	GeoJSONStore,
+	GeoJSONStoreFeatures,
+	JSONObject,
+} from "../../store/store";
 import { MockModeConfig } from "../../test/mock-mode-config";
 import { MockCursorEvent } from "../../test/mock-cursor-event";
 import { ValidateNotSelfIntersecting } from "../../validations/not-self-intersecting.validation";
@@ -6,6 +11,8 @@ import { TerraDrawLineStringMode } from "./linestring.mode";
 import { MockKeyboardEvent } from "../../test/mock-keyboard-event";
 import { COMMON_PROPERTIES, TerraDrawGeoJSONStore } from "../../common";
 import { DefaultPointerEvents } from "../base.mode";
+import { MockLineString } from "../../test/mock-features";
+import { LineString } from "geojson";
 
 describe("TerraDrawLineStringMode", () => {
 	describe("constructor", () => {
@@ -1472,6 +1479,205 @@ describe("TerraDrawLineStringMode", () => {
 			).toEqual({
 				valid: false,
 			});
+		});
+	});
+
+	describe("afterFeatureUpdated", () => {
+		it("does nothing if the updated feature is not currently being drawn", () => {
+			const lineStringMode = new TerraDrawLineStringMode();
+
+			const mockConfig = MockModeConfig(lineStringMode.mode);
+
+			lineStringMode.register(mockConfig);
+			lineStringMode.start();
+
+			// Create an initial square to snap to
+			const mockLineString = MockLineString();
+			const [featureId] = mockConfig.store.create([
+				{
+					geometry: mockLineString.geometry,
+					properties: mockLineString.properties as JSONObject,
+				},
+			]);
+
+			// Set the onChange count to 0
+			mockConfig.onChange.mockClear();
+
+			expect(mockConfig.store.has(featureId)).toBe(true);
+
+			lineStringMode.afterFeatureUpdated({
+				...(mockLineString as GeoJSONStoreFeatures),
+				id: featureId,
+			});
+
+			expect(mockConfig.onChange).toHaveBeenCalledTimes(0);
+		});
+
+		it("ends the current drawing session if the updated feature is the current drawn linestring", () => {
+			const lineStringMode = new TerraDrawLineStringMode();
+
+			const mockConfig = MockModeConfig(lineStringMode.mode);
+
+			lineStringMode.register(mockConfig);
+			lineStringMode.start();
+
+			lineStringMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+			lineStringMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
+
+			lineStringMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
+
+			const features = mockConfig.store.copyAll();
+
+			// Drawn LineString and Closing point
+			expect(features.length).toBe(2);
+
+			const lineString = features[0];
+			const closingPoint = features[1];
+
+			expect(lineString.geometry.coordinates).toStrictEqual([
+				[0, 0],
+				[1, 1],
+				[1, 1],
+			]);
+
+			// Set the onChange count to 0
+			mockConfig.onChange.mockClear();
+
+			lineStringMode.afterFeatureUpdated({
+				...lineString,
+				geometry: {
+					type: "LineString",
+					coordinates: [
+						[0, 0],
+						[1, 1],
+						[2, 2],
+					],
+				},
+			});
+
+			expect(mockConfig.onChange).toHaveBeenCalledTimes(1);
+			expect(mockConfig.onChange).toHaveBeenNthCalledWith(
+				1,
+				[closingPoint.id],
+				"delete",
+				undefined,
+			);
+		});
+
+		it("updates the snapping point if the user is current editing and the edited linestring is snappable", () => {
+			const lineStringMode = new TerraDrawLineStringMode({
+				snapping: {
+					toCoordinate: true,
+				},
+			});
+
+			const mockConfig = MockModeConfig(lineStringMode.mode);
+
+			lineStringMode.register(mockConfig);
+			lineStringMode.start();
+
+			// Create an initial square to snap to
+			const mockLineString = MockLineString();
+			const [featureId] = mockConfig.store.create([
+				{
+					geometry: mockLineString.geometry,
+					properties: mockLineString.properties as JSONObject,
+				},
+			]);
+
+			// This creates the snapping point
+			lineStringMode.onMouseMove(MockCursorEvent({ lng: 0.5, lat: 0.5 }));
+
+			mockConfig.onChange.mockClear();
+
+			// This is the snapping point
+			let features = mockConfig.store.copyAll();
+			expect(features.length).toBe(2);
+
+			const snapPoint = features[1];
+			expect(snapPoint.geometry.coordinates).toStrictEqual([0, 0]);
+
+			lineStringMode.afterFeatureUpdated(
+				mockLineString as GeoJSONStoreFeatures,
+			);
+
+			expect(mockConfig.onChange).toHaveBeenCalledTimes(1);
+			expect(mockConfig.onChange).toHaveBeenNthCalledWith(
+				1,
+				[snapPoint!.id],
+				"update",
+				undefined,
+			);
+
+			expect(mockConfig.store.has(snapPoint!.id as FeatureId)).toBe(true);
+		});
+
+		it("deletes the snapping point if the user is current editing and the edited linestring is not snappable", () => {
+			const lineStringMode = new TerraDrawLineStringMode({
+				snapping: {
+					toCoordinate: true,
+				},
+			});
+
+			const mockConfig = MockModeConfig(lineStringMode.mode);
+
+			lineStringMode.register(mockConfig);
+			lineStringMode.start();
+
+			// Create an initial square to snap to
+			const mockLineString = MockLineString();
+			const [featureId] = mockConfig.store.create([
+				{
+					geometry: mockLineString.geometry,
+					properties: mockLineString.properties as JSONObject,
+				},
+			]);
+
+			// This creates the snapping point
+			lineStringMode.onMouseMove(MockCursorEvent({ lng: 0.5, lat: 0.5 }));
+
+			mockConfig.onChange.mockClear();
+
+			// This is the snapping point
+			let features = mockConfig.store.copyAll();
+			expect(features.length).toBe(2);
+
+			const snapPoint = features[1];
+			expect(snapPoint.geometry.coordinates).toStrictEqual([0, 0]);
+
+			// Points will be too far away to snap
+			const updatedGeometry = {
+				type: "LineString",
+				coordinates: [
+					[50, 50],
+					[51, 51],
+				],
+			} as LineString;
+
+			mockConfig.store.updateGeometry([
+				{
+					id: featureId,
+					geometry: updatedGeometry,
+				},
+			]);
+
+			mockConfig.onChange.mockClear();
+
+			lineStringMode.afterFeatureUpdated({
+				...(mockLineString as GeoJSONStoreFeatures),
+				geometry: updatedGeometry,
+			});
+
+			expect(mockConfig.onChange).toHaveBeenCalledTimes(1);
+			expect(mockConfig.onChange).toHaveBeenNthCalledWith(
+				1,
+				[snapPoint!.id],
+				"delete",
+				undefined,
+			);
+
+			expect(mockConfig.store.has(snapPoint!.id as FeatureId)).toBe(false);
 		});
 	});
 });

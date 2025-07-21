@@ -628,4 +628,55 @@ describe("TerraDrawRectangleMode", () => {
 			});
 		});
 	});
+
+	describe("afterFeatureUpdated", () => {
+		it("does nothing when update is not for the currently drawn polygon", () => {
+			const rectangleMode = new TerraDrawRectangleMode();
+			const mockConfig = MockModeConfig(rectangleMode.mode);
+			rectangleMode.register(mockConfig);
+			rectangleMode.start();
+
+			rectangleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			rectangleMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
+			rectangleMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
+
+			expect(mockConfig.onFinish).toHaveBeenCalledTimes(1);
+
+			const feature = mockConfig.store.copyAll()[0];
+
+			// Set the onChange count to 0
+			mockConfig.onChange.mockClear();
+			mockConfig.setDoubleClickToZoom.mockClear();
+
+			rectangleMode.afterFeatureUpdated({
+				...feature,
+			});
+
+			expect(mockConfig.onChange).toHaveBeenCalledTimes(0);
+			expect(mockConfig.setDoubleClickToZoom).toHaveBeenCalledTimes(0);
+		});
+
+		it("sets drawing back to started", () => {
+			const rectangleMode = new TerraDrawRectangleMode();
+			const mockConfig = MockModeConfig(rectangleMode.mode);
+			rectangleMode.register(mockConfig);
+			rectangleMode.start();
+
+			rectangleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			rectangleMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
+
+			const features = mockConfig.store.copyAll();
+			expect(features.length).toBe(1);
+			const feature = features[0];
+
+			// Set the onChange count to 0
+			mockConfig.setDoubleClickToZoom.mockClear();
+
+			rectangleMode.afterFeatureUpdated({
+				...feature,
+			});
+
+			expect(mockConfig.setDoubleClickToZoom).toHaveBeenCalledTimes(1);
+		});
+	});
 });

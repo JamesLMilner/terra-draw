@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.10.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.9.1...terra-draw@1.10.0) (2025-07-21)
+
+
+### feat
+
+* **terra-draw:** add updateFeatureGeometry to the API (#560) ([](https://github.com/JamesLMilner/terra-draw/commit/acb2e684a90b11b41fc02df891eed296e931d0cd)), closes [#560](https://github.com/JamesLMilner/terra-draw/issues/560)
+
 ## [1.9.1](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.9.0...terra-draw@1.9.1) (2025-07-01)
 
 

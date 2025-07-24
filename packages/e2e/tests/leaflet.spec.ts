@@ -24,7 +24,12 @@ test.describe("page setup", () => {
 		await page.goto(pageUrl);
 
 		await expect(page.getByText("Point")).toBeVisible();
-		await expect(page.getByText("Linestring")).toBeVisible();
+		await expect(page.getByText("Linestring", { exact: true })).toBeVisible();
+		await expect(page.getByText("Polygon", { exact: true })).toBeVisible();
+		await expect(page.getByText("Freehand", { exact: true })).toBeVisible();
+		await expect(
+			page.getByText("Freehand Linestring", { exact: true }),
+		).toBeVisible();
 		await expect(page.getByText("Polygon")).toBeVisible();
 		await expect(page.getByText("Select")).toBeVisible();
 		await expect(page.getByText("Clear")).toBeVisible();
@@ -852,6 +857,60 @@ test.describe("polygon mode", () => {
 		await page.mouse.click(topLeft.x, topLeft.y);
 
 		await expectPaths({ page, count: 0 });
+	});
+});
+
+test.describe("freehand mode", () => {
+	const mode = "freehand";
+
+	test("mode can set and used to create a freehand path", async ({ page }) => {
+		const mapDiv = await setupMap({ page });
+		await changeMode({ page, mode });
+		await page.mouse.click(mapDiv.width / 2, mapDiv.height / 2);
+
+		await page.mouse.move(mapDiv.width / 2 + 50, mapDiv.height / 2 + 50, {
+			steps: 30,
+		});
+
+		await page.mouse.move(mapDiv.width / 2 + 50, mapDiv.height / 2 - 50, {
+			steps: 30,
+		});
+
+		await page.mouse.move(mapDiv.width / 2 - 50, mapDiv.height / 2 - 50, {
+			steps: 30,
+		});
+
+		await page.mouse.move(mapDiv.width / 2 - 50, mapDiv.height / 2 + 50, {
+			steps: 30,
+		});
+
+		await page.mouse.up();
+
+		await expectPaths({ page, count: 1 });
+		await expectPathDimensions({ page, width: 104, height: 104 }); // Stroke width of 4
+	});
+});
+
+test.describe("freehand linestring mode", () => {
+	const mode = "freehand-linestring";
+
+	test("mode can set and used to create a freehand path", async ({ page }) => {
+		const mapDiv = await setupMap({ page });
+		await changeMode({ page, mode });
+		await page.mouse.click(mapDiv.width / 2, mapDiv.height / 2);
+
+		await page.mouse.move(mapDiv.width / 2 + 50, mapDiv.height / 2 + 50, {
+			steps: 30,
+		});
+
+		await page.mouse.move(mapDiv.width / 2 + 50, mapDiv.height / 2 - 50, {
+			steps: 30,
+		});
+
+		await page.mouse.up();
+
+		await expectPaths({ page, count: 1 });
+		await expectPathDimensions({ page, width: 54, height: 94 }); // Stroke width of 4
 	});
 });
 

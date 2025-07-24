@@ -70,6 +70,8 @@ export const changeMode = async ({
 		| "circle"
 		| "angled-rectangle"
 		| "sector"
+		| "freehand"
+		| "freehand-linestring"
 		| "sensor";
 }) => {
 	let modeText = mode.charAt(0).toUpperCase() + mode.slice(1);

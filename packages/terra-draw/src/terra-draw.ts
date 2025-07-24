@@ -58,6 +58,7 @@ import { TerraDrawSensorMode } from "./modes/sensor/sensor.mode";
 import * as TerraDrawExtend from "./extend";
 import { hasModeProperty } from "./store/store-feature-validation";
 import { ValidationReasons } from "./validation-reasons";
+import { TerraDrawFreehandLineStringMode } from "./modes/freehand-linestring/freehand-linestring.mode";
 
 // Helper type to determine the instance type of a class
 type InstanceType<T extends new (...args: any[]) => any> = T extends new (
@@ -1038,6 +1039,7 @@ export {
 	TerraDrawPolygonMode,
 	TerraDrawCircleMode,
 	TerraDrawFreehandMode,
+	TerraDrawFreehandLineStringMode,
 	TerraDrawRenderMode,
 	TerraDrawRectangleMode,
 	TerraDrawAngledRectangleMode,

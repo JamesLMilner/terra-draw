@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.11.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.10.0...terra-draw@1.11.0) (2025-07-24)
+
+
+### feat
+
+* **terra-draw:** add TerraDrawFreehandLineStringMode as a built in mode (#595) ([](https://github.com/JamesLMilner/terra-draw/commit/9ff9025a16eb264347869b9197bfad95961e8f64)), closes [#595](https://github.com/JamesLMilner/terra-draw/issues/595)
+
 ## [1.10.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.9.1...terra-draw@1.10.0) (2025-07-21)
 
 

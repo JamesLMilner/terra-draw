@@ -1028,9 +1028,9 @@ class TerraDraw {
 
 export {
 	TerraDraw,
-	IdStrategy,
-	TerraDrawEvents,
-	TerraDrawEventListeners,
+	type IdStrategy,
+	type TerraDrawEvents,
+	type TerraDrawEventListeners,
 
 	// Modes
 	TerraDrawSelectMode,
@@ -1050,21 +1050,21 @@ export {
 	TerraDrawExtend,
 
 	// TerraDrawBaseMode
-	BehaviorConfig,
-	GeoJSONStoreFeatures,
-	GeoJSONStoreGeometries,
-	HexColor,
-	TerraDrawMouseEvent,
-	TerraDrawAdapterStyling,
-	TerraDrawKeyboardEvent,
+	type BehaviorConfig,
+	type GeoJSONStoreFeatures,
+	type GeoJSONStoreGeometries,
+	type HexColor,
+	type TerraDrawMouseEvent,
+	type TerraDrawAdapterStyling,
+	type TerraDrawKeyboardEvent,
 
 	// TerraDrawBaseAdapter
-	TerraDrawChanges,
-	TerraDrawStylingFunction,
-	Project,
-	Unproject,
-	SetCursor,
-	GetLngLatFromEvent,
+	type TerraDrawChanges,
+	type TerraDrawStylingFunction,
+	type Project,
+	type Unproject,
+	type SetCursor,
+	type GetLngLatFromEvent,
 
 	// Validations
 	ValidateMinAreaSquareMeters,

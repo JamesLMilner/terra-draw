@@ -27,12 +27,12 @@ export {
 	SELECT_PROPERTIES,
 
 	// Types
-	FeatureId,
-	Cursor,
-	BaseModeOptions,
-	CustomStyling,
-	NumericStyling,
-	HexColorStyling,
-	TerraDrawCallbacks,
-	BaseAdapterConfig,
+	type FeatureId,
+	type Cursor,
+	type BaseModeOptions,
+	type CustomStyling,
+	type NumericStyling,
+	type HexColorStyling,
+	type TerraDrawCallbacks,
+	type BaseAdapterConfig,
 };

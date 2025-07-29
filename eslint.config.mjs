@@ -5,7 +5,21 @@ import prettierConfig from "eslint-config-prettier";
 import json from "@eslint/json";
 import markdown from "@eslint/markdown";
 
-const ignores = ["**/node_modules", "**/dist", "**/docs", ".github", ".husky", ".vscode", "**/public", "**/coverage", "packages/e2e/playwright-report"];
+const ignores = [
+	"packages/storybook/.storybook/manager-head.html",
+	"packages/storybook/storybook-static/",
+	"packages/storybook/dist/",
+	"packages/storybook/node_modules/",
+	"**/node_modules",
+	"**/dist",
+	"**/docs",
+	".github",
+	".husky",
+	".vscode",
+	"**/public",
+	"**/coverage",
+	"packages/e2e/playwright-report"
+];
 
 export default [
 	{

@@ -1,0 +1,27 @@
+import { AllStories } from "../../common/stories";
+import { DefaultMeta } from "../../common/meta";
+import { SetupArcGIS } from "./setup";
+
+const meta = {
+	...DefaultMeta,
+	title: "Terra Draw/ArcGIS",
+	render: SetupArcGIS,
+};
+
+export default meta;
+
+// Ensure the names are set correctly for the stories
+export const Point = AllStories.Point;
+export const Polygon = AllStories.Polygon;
+export const PolygonWithCoordinateSnapping =
+	AllStories.PolygonWithCoordinateSnapping;
+export const PolygonWithLineSnapping = AllStories.PolygonWithLineSnapping;
+export const PolygonWithEditableEnabled = AllStories.PolygonWithEditableEnabled;
+export const Circle = AllStories.Circle;
+export const Rectangle = AllStories.Rectangle;
+export const AngledRectangle = AllStories.AngledRectangle;
+export const Sector = AllStories.Sector;
+export const LineString = AllStories.LineString;
+export const FreehandLineString = AllStories.FreehandLineString;
+export const Freehand = AllStories.Freehand;
+export const Sensor = AllStories.Sensor;

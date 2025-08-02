@@ -4,6 +4,9 @@ import { StoryArgs } from "./config";
 export const DefaultMeta = {
 	title: `Terra Draw`,
 	argTypes: {
+		id: {
+			table: { disable: true },
+		},
 		width: {
 			control: { type: "text" },
 			description: "Width of the map container",
@@ -23,6 +26,9 @@ export const DefaultMeta = {
 		zoom: {
 			control: { type: "number", min: 1, max: 18, step: 1 },
 			description: "Initial zoom level",
+		},
+		modes: {
+			table: { disable: true },
 		},
 	},
 	parameters: {

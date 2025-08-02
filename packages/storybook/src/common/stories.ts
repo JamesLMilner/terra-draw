@@ -19,7 +19,7 @@ const Point: Story = {
 		...DefaultSize,
 		...LocationNewYork,
 		...DefaultZoom,
-		modes: [new TerraDrawPointMode()],
+		modes: [() => new TerraDrawPointMode()],
 	},
 };
 
@@ -30,7 +30,7 @@ const Polygon: Story = {
 		...DefaultSize,
 		...LocationNewYork,
 		...DefaultZoom,
-		modes: [new TerraDrawPolygonMode()],
+		modes: [() => new TerraDrawPolygonMode()],
 	},
 };
 
@@ -41,11 +41,12 @@ const PolygonWithCoordinateSnapping: Story = {
 		...LocationNewYork,
 		...DefaultZoom,
 		modes: [
-			new TerraDrawPolygonMode({
-				snapping: {
-					toCoordinate: true,
-				},
-			}),
+			() =>
+				new TerraDrawPolygonMode({
+					snapping: {
+						toCoordinate: true,
+					},
+				}),
 		],
 	},
 };
@@ -57,11 +58,12 @@ const PolygonWithLineSnapping: Story = {
 		...LocationNewYork,
 		...DefaultZoom,
 		modes: [
-			new TerraDrawPolygonMode({
-				snapping: {
-					toLine: true,
-				},
-			}),
+			() =>
+				new TerraDrawPolygonMode({
+					snapping: {
+						toLine: true,
+					},
+				}),
 		],
 	},
 };
@@ -73,9 +75,10 @@ const PolygonWithEditableEnabled: Story = {
 		...LocationNewYork,
 		...DefaultZoom,
 		modes: [
-			new TerraDrawPolygonMode({
-				editable: true,
-			}),
+			() =>
+				new TerraDrawPolygonMode({
+					editable: true,
+				}),
 		],
 	},
 };
@@ -87,7 +90,7 @@ const Circle: Story = {
 		...DefaultSize,
 		...LocationNewYork,
 		...DefaultZoom,
-		modes: [new TerraDrawCircleMode()],
+		modes: [() => new TerraDrawCircleMode()],
 	},
 };
 
@@ -98,7 +101,7 @@ const Rectangle: Story = {
 		...DefaultSize,
 		...LocationNewYork,
 		...DefaultZoom,
-		modes: [new TerraDrawRectangleMode()],
+		modes: [() => new TerraDrawRectangleMode()],
 	},
 };
 
@@ -109,7 +112,7 @@ const AngledRectangle: Story = {
 		...DefaultSize,
 		...LocationNewYork,
 		...DefaultZoom,
-		modes: [new TerraDrawAngledRectangleMode()],
+		modes: [() => new TerraDrawAngledRectangleMode()],
 	},
 };
 
@@ -120,7 +123,7 @@ const Sector: Story = {
 		...DefaultSize,
 		...LocationNewYork,
 		...DefaultZoom,
-		modes: [new TerraDrawSectorMode()],
+		modes: [() => new TerraDrawSectorMode()],
 	},
 };
 
@@ -131,7 +134,7 @@ const LineString: Story = {
 		...DefaultSize,
 		...LocationNewYork,
 		...DefaultZoom,
-		modes: [new TerraDrawLineStringMode()],
+		modes: [() => new TerraDrawLineStringMode()],
 	},
 };
 
@@ -142,7 +145,7 @@ const FreehandLineString: Story = {
 		...DefaultSize,
 		...LocationNewYork,
 		...DefaultZoom,
-		modes: [new TerraDrawFreehandLineStringMode()],
+		modes: [() => new TerraDrawFreehandLineStringMode()],
 	},
 };
 
@@ -153,7 +156,7 @@ const Freehand: Story = {
 		...DefaultSize,
 		...LocationNewYork,
 		...DefaultZoom,
-		modes: [new TerraDrawFreehandMode()],
+		modes: [() => new TerraDrawFreehandMode()],
 	},
 };
 
@@ -164,7 +167,7 @@ const Sensor: Story = {
 		...DefaultSize,
 		...LocationNewYork,
 		...DefaultZoom,
-		modes: [new TerraDrawSensorMode()],
+		modes: [() => new TerraDrawSensorMode()],
 	},
 };
 

@@ -49,7 +49,7 @@ jobs:
       - name: Build terra-draw
         run: cd packages/terra-draw && npm run build
       - name: Build storybook
-        run: cd packages/storybook && npm run build-storybook
+        run: cd packages/storybook && npm run storybook:build
 
   build:
     runs-on: ubuntu-latest

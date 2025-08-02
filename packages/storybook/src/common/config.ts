@@ -3,7 +3,7 @@ import { TerraDraw } from "../../../terra-draw/src/terra-draw";
 
 export type Story = StoryObj<StoryArgs>;
 
-type Modes = ConstructorParameters<typeof TerraDraw>[0]["modes"];
+type Modes = ConstructorParameters<typeof TerraDraw>[0]["modes"][0];
 
 // Interface for our story args
 export interface StoryArgs {
@@ -13,7 +13,7 @@ export interface StoryArgs {
 	centerLat: number;
 	centerLng: number;
 	zoom: number;
-	modes: Modes;
+	modes: (() => Modes)[];
 }
 
 export const DefaultZoom = {

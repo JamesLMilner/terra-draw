@@ -54,18 +54,34 @@ export const initialiseArcGISMap = ({
 	};
 };
 
-const renderCheck: Record<string, HTMLElement> = {};
+const current = {
+	map: null as MapView | null,
+	draw: null as TerraDraw | null,
+	container: null as HTMLElement | null,
+};
 
 export function SetupArcGIS(args: StoryArgs): HTMLElement {
-	// Ensure that the map is only rendered once per story
-	if (renderCheck[args.id]) {
-		return renderCheck[args.id];
+	if (current.draw) {
+		if (current.draw.enabled) {
+			current.draw.stop();
+		}
+		current.draw = null;
+	}
+	if (current.map) {
+		current.map.destroy();
+		current.map = null;
+	}
+	if (current.container) {
+		current.container.remove();
+		current.container = null;
 	}
 
 	const { container, controls, mapContainer } = getElements({
 		width: args.width,
 		height: args.height,
 	});
+
+	const modes = args.modes.map((mode) => mode());
 
 	try {
 		const mapConfig = initialiseArcGISMap({
@@ -80,14 +96,18 @@ export function SetupArcGIS(args: StoryArgs): HTMLElement {
 				lib: mapConfig.lib,
 				map: mapConfig.map,
 			}),
-			modes: args.modes,
+			modes,
 		});
 
 		draw.start();
 
+		current.map = mapConfig.map;
+		current.container = container;
+		current.draw = draw;
+
 		setupControls({
 			draw,
-			modes: args.modes,
+			modes,
 			controls,
 		});
 	} catch (error) {
@@ -107,10 +127,6 @@ export function SetupArcGIS(args: StoryArgs): HTMLElement {
 			<p><small>Check console for details</small></p>
 		`;
 		mapContainer.appendChild(errorDiv);
-	}
-
-	if (!renderCheck[args.id]) {
-		renderCheck[args.id] = container;
 	}
 
 	return container;

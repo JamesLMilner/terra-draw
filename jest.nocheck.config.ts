@@ -17,6 +17,6 @@ module.exports = {
 	coveragePathIgnorePatterns: [
 		"<rootDir>/packages/.*/src/test",
 		"<rootDir>/packages/e2e/",
-		"<rootDir>/packages/development/",
+		"<rootDir>/packages/storybook/",
 	],
 };

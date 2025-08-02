@@ -47,18 +47,34 @@ export const initialiseGoogleMap = async ({
 	};
 };
 
-const renderCheck: Record<string, HTMLElement> = {};
+const current = {
+	map: null as google.maps.Map | null,
+	draw: null as TerraDraw | null,
+	container: null as HTMLElement | null,
+};
 
 export function SetupGoogle(args: StoryArgs): HTMLElement {
-	// Ensure that the map is only rendered once per story
-	if (renderCheck[args.id]) {
-		return renderCheck[args.id];
+	if (current.draw) {
+		// TODO: Investigation why this can't run
+		// if (current.draw.enabled) {
+		//     current.draw.stop();
+		// }
+		current.draw = null;
+	}
+	if (current.map) {
+		current.map = null;
+	}
+	if (current.container) {
+		current.container.remove();
+		current.container = null;
 	}
 
 	const { container, controls, mapContainer } = getElements({
 		width: args.width,
 		height: args.height,
 	});
+
+	const modes = args.modes.map((mode) => mode());
 
 	// Initialize Google Maps asynchronously
 	initialiseGoogleMap({
@@ -78,16 +94,20 @@ export function SetupGoogle(args: StoryArgs): HTMLElement {
 
 				const draw = new TerraDraw({
 					adapter,
-					modes: args.modes,
+					modes,
 				});
 
 				draw.start();
+
+				current.map = mapConfig.map;
+				current.container = container;
+				current.draw = draw;
 
 				// Wait for TerraDraw to be ready before setting up controls
 				draw.on("ready", () => {
 					setupControls({
 						draw,
-						modes: args.modes,
+						modes,
 						controls,
 					});
 				});
@@ -111,10 +131,6 @@ export function SetupGoogle(args: StoryArgs): HTMLElement {
 		`;
 			mapContainer.appendChild(errorDiv);
 		});
-
-	if (!renderCheck[args.id]) {
-		renderCheck[args.id] = container;
-	}
 
 	return container;
 }

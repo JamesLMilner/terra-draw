@@ -4,27 +4,6 @@ import { TerraDraw } from "../../../../terra-draw/src/terra-draw";
 import { TerraDrawMapLibreGLAdapter } from "../../../../terra-draw-maplibre-gl-adapter/src/terra-draw-maplibre-gl-adapter";
 import { StoryArgs } from "../../common/config";
 
-// OpenStreetMap style for MapLibre
-const OSMStyle: StyleSpecification = {
-	version: 8,
-	sources: {
-		"osm-tiles": {
-			type: "raster",
-			tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
-			tileSize: 256,
-			attribution:
-				'&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-		},
-	},
-	layers: [
-		{
-			id: "osm-tiles",
-			type: "raster",
-			source: "osm-tiles",
-		},
-	],
-};
-
 export const initialiseMapLibreMap = ({
 	mapContainer,
 	centerLat,
@@ -36,6 +15,27 @@ export const initialiseMapLibreMap = ({
 	centerLng: number;
 	zoom: number;
 }) => {
+	// OpenStreetMap style for MapLibre
+	const OSMStyle: StyleSpecification = {
+		version: 8,
+		sources: {
+			"osm-tiles": {
+				type: "raster",
+				tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
+				tileSize: 256,
+				attribution:
+					'&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+			},
+		},
+		layers: [
+			{
+				id: "osm-tiles",
+				type: "raster",
+				source: "osm-tiles",
+			},
+		],
+	};
+
 	// Initialize MapLibre map
 	const map = new maplibregl.Map({
 		container: mapContainer.id,
@@ -49,42 +49,61 @@ export const initialiseMapLibreMap = ({
 	};
 };
 
-const renderCheck: Record<string, HTMLElement> = {};
+const current = {
+	map: null as maplibregl.Map | null,
+	draw: null as TerraDraw | null,
+	container: null as HTMLElement | null,
+};
 
 export function SetupMapLibre(args: StoryArgs): HTMLElement {
-	// Ensure that the map is only rendered once per story
-	if (renderCheck[args.id]) {
-		return renderCheck[args.id];
+	if (current.draw) {
+		if (current.draw.enabled) {
+			current.draw.stop();
+		}
+		current.draw = null;
 	}
+	if (current.map) {
+		current.map.remove();
+		current.map = null;
+	}
+	if (current.container) {
+		current.container.remove();
+		current.container = null;
+	}
+	const modes = args.modes.map((mode) => mode());
 
 	const { container, controls, mapContainer } = getElements({
 		width: args.width,
 		height: args.height,
 	});
 
-	const draw = new TerraDraw({
-		adapter: new TerraDrawMapLibreGLAdapter({
-			...initialiseMapLibreMap({
-				mapContainer,
-				centerLat: args.centerLat,
-				centerLng: args.centerLng,
-				zoom: args.zoom,
+	const { map } = initialiseMapLibreMap({
+		mapContainer,
+		centerLat: args.centerLat,
+		centerLng: args.centerLng,
+		zoom: args.zoom,
+	});
+
+	map.once("style.load", () => {
+		const draw = new TerraDraw({
+			adapter: new TerraDrawMapLibreGLAdapter({
+				map,
 			}),
-		}),
-		modes: args.modes,
+			modes,
+		});
+
+		draw.start();
+
+		current.map = map;
+		current.container = container;
+		current.draw = draw;
+
+		setupControls({
+			draw,
+			modes,
+			controls,
+		});
 	});
-
-	draw.start();
-
-	setupControls({
-		draw,
-		modes: args.modes,
-		controls,
-	});
-
-	if (!renderCheck[args.id]) {
-		renderCheck[args.id] = container;
-	}
 
 	return container;
 }

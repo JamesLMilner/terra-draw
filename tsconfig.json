@@ -36,7 +36,7 @@
 		],
 		"excludeExternals": true,
 		"exclude": [
-			"packages/development/",
+			"packages/storybook/",
 			"packages/e2e",
 			"packages/terra-draw/src/geometry/**/*.ts",
 			"packages/terra-draw/src/test/**/*.ts",

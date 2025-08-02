@@ -1,15 +1,15 @@
 import dotenv from "dotenv";
-// import { mergeConfig, defineConfig } from 'vite';
 
-dotenv.config();
+dotenv.config({ quiet: true });
 
 const config = {
 	stories: ["../src/**/*.stories.@(js|jsx|mjs|ts|tsx)"],
 	addons: [
 		"@storybook/addon-links",
 		"@storybook/addon-essentials",
-		"@storybook/addon-interactions",
+		// "@storybook/addon-interactions",
 	],
+	features: { interactions: false, actions: false },
 	framework: {
 		name: "@storybook/html-vite",
 		options: {},

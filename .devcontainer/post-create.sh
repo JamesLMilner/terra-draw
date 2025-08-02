@@ -10,7 +10,7 @@ if [ -n "${REMOTE_CONTAINERS}" ] || [ -n "${CODESPACES}" ]; then
 	# perform additional one-time setup just after
 	# the devcontainer is created
 	npm ci --prefix "${workspace_root}"             # install lib node dependencies
-	npm ci --prefix "${workspace_root}/development" # install dev node dependencies
-	touch "${workspace_root}/development/.env"      # ensure dev .env file exists
+	npm ci --prefix "${workspace_root}/storybook" # install dev node dependencies
+	touch "${workspace_root}/storybook/.env"      # ensure dev .env file exists
 
 fi

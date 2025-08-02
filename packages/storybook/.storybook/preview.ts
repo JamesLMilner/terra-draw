@@ -11,7 +11,11 @@ import "@arcgis/core/assets/esri/themes/light/main.css";
 
 const preview = {
 	parameters: {
-		actions: { argTypesRegex: "^on[A-Z].*" },
+		actions: { disable: false },
+		previewTabs: {
+			actions: { hidden: true },
+			interactions: { hidden: true },
+		},
 		controls: {
 			matchers: {
 				color: /(background|color)$/i,

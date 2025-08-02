@@ -60,13 +60,28 @@ export const initialiseOpenLayersMap = ({
 	};
 };
 
-const renderCheck: Record<string, HTMLElement> = {};
+const current = {
+	map: null as Map | null,
+	draw: null as TerraDraw | null,
+	container: null as HTMLElement | null,
+};
 
 export function SetupOpenLayers(args: StoryArgs): HTMLElement {
-	// Ensure that the map is only rendered once per story
-	if (renderCheck[args.id]) {
-		return renderCheck[args.id];
+	if (current.draw) {
+		if (current.draw.enabled) {
+			current.draw.stop();
+		}
+		current.draw = null;
 	}
+	if (current.map) {
+		current.map = null;
+	}
+	if (current.container) {
+		current.container.remove();
+		current.container = null;
+	}
+
+	const modes = args.modes.map((mode) => mode());
 
 	const { container, controls, mapContainer } = getElements({
 		width: args.width,
@@ -87,21 +102,17 @@ export function SetupOpenLayers(args: StoryArgs): HTMLElement {
 				...mapConfig,
 				coordinatePrecision: 9,
 			}),
-			modes: args.modes,
+			modes,
 		});
 
 		draw.start();
 
 		setupControls({
 			draw,
-			modes: args.modes,
+			modes,
 			controls,
 		});
 	});
-
-	if (!renderCheck[args.id]) {
-		renderCheck[args.id] = container;
-	}
 
 	return container;
 }

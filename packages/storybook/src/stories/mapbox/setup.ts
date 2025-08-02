@@ -70,12 +70,26 @@ export const initialiseMapboxMap = ({
 	};
 };
 
-const renderCheck: Record<string, HTMLElement> = {};
+const current = {
+	map: null as mapboxgl.Map | null,
+	draw: null as TerraDraw | null,
+	container: null as HTMLElement | null,
+};
 
 export function SetupMapbox(args: StoryArgs): HTMLElement {
-	// Ensure that the map is only rendered once per story
-	if (renderCheck[args.id]) {
-		return renderCheck[args.id];
+	if (current.draw) {
+		if (current.draw.enabled) {
+			current.draw.stop();
+		}
+		current.draw = null;
+	}
+	if (current.map) {
+		current.map.remove();
+		current.map = null;
+	}
+	if (current.container) {
+		current.container.remove();
+		current.container = null;
 	}
 
 	const { container, controls, mapContainer } = getElements({
@@ -83,35 +97,36 @@ export function SetupMapbox(args: StoryArgs): HTMLElement {
 		height: args.height,
 	});
 
-	const mapConfig = initialiseMapboxMap({
+	const { map } = initialiseMapboxMap({
 		mapContainer,
 		centerLat: args.centerLat,
 		centerLng: args.centerLng,
 		zoom: args.zoom,
 	});
 
+	const modes = args.modes.map((mode) => mode());
+
 	// Wait for style to load before initializing TerraDraw
-	mapConfig.map.on("style.load", () => {
+	map.once("style.load", () => {
 		const draw = new TerraDraw({
 			adapter: new TerraDrawMapboxGLAdapter({
-				map: mapConfig.map,
-				coordinatePrecision: 9,
+				map,
 			}),
-			modes: args.modes,
+			modes,
 		});
 
 		draw.start();
 
+		current.map = map;
+		current.container = container;
+		current.draw = draw;
+
 		setupControls({
 			draw,
-			modes: args.modes,
+			modes,
 			controls,
 		});
 	});
-
-	if (!renderCheck[args.id]) {
-		renderCheck[args.id] = container;
-	}
 
 	return container;
 }

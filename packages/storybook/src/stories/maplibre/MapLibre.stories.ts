@@ -12,7 +12,7 @@ export default meta;
 
 // Ensure the names are set correctly for the stories
 export const Point = AllStories.Point;
-export const Polygon = AllStories.Polygon;
+// export const Polygon = AllStories.Polygon;
 export const PolygonWithCoordinateSnapping =
 	AllStories.PolygonWithCoordinateSnapping;
 export const PolygonWithLineSnapping = AllStories.PolygonWithLineSnapping;

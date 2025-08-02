@@ -60,8 +60,10 @@ export function setupControls({
 			draw.setMode(mode.mode);
 			// Update button styles to show active state
 			controls.querySelectorAll("button").forEach((btn) => {
-				btn.style.background = "#fff";
-				btn.style.color = "#000";
+				if (btn.id !== "clear") {
+					btn.style.background = "#fff";
+					btn.style.color = "#000";
+				}
 			});
 			button.style.background = "#007cba";
 			button.style.color = "#fff";
@@ -72,6 +74,7 @@ export function setupControls({
 
 	// Add clear button
 	const clearButton = document.createElement("button");
+	clearButton.id = "clear";
 	clearButton.textContent = "Clear";
 	clearButton.style.padding = "8px 16px";
 	clearButton.style.margin = "0 4px";

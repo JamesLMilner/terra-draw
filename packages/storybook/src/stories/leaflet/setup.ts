@@ -35,42 +35,61 @@ export const initialiseLeafletMap = ({
 	};
 };
 
-const renderCheck: Record<string, HTMLElement> = {};
+const current = {
+	map: null as L.Map | null,
+	draw: null as TerraDraw | null,
+	container: null as HTMLElement | null,
+};
 
 export function SetupLeaflet(args: StoryArgs): HTMLElement {
-	// Ensure that the map is only rendered once per story
-	if (renderCheck[args.id]) {
-		return renderCheck[args.id];
+	if (current.draw) {
+		if (current.draw.enabled) {
+			current.draw.stop();
+		}
+		current.draw = null;
 	}
+	if (current.map) {
+		current.map.remove();
+		current.map = null;
+	}
+	if (current.container) {
+		current.container.remove();
+		current.container = null;
+	}
+
+	const modes = args.modes.map((mode) => mode());
 
 	const { container, controls, mapContainer } = getElements({
 		width: args.width,
 		height: args.height,
 	});
 
+	const { lib, map } = initialiseLeafletMap({
+		mapContainer,
+		centerLat: args.centerLat,
+		centerLng: args.centerLng,
+		zoom: args.zoom,
+	});
+
 	const draw = new TerraDraw({
 		adapter: new TerraDrawLeafletAdapter({
-			...initialiseLeafletMap({
-				mapContainer,
-				centerLat: args.centerLat,
-				centerLng: args.centerLng,
-				zoom: args.zoom,
-			}),
+			lib,
+			map,
 		}),
-		modes: args.modes,
+		modes,
 	});
 
 	draw.start();
 
+	current.map = map;
+	current.container = container;
+	current.draw = draw;
+
 	setupControls({
 		draw,
-		modes: args.modes,
+		modes,
 		controls,
 	});
-
-	if (!renderCheck[args.id]) {
-		renderCheck[args.id] = container;
-	}
 
 	return container;
 }

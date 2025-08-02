@@ -12,7 +12,9 @@ export default meta;
 
 // Ensure the names are set correctly for the stories
 export const Point = AllStories.Point;
-// export const Polygon = AllStories.Polygon;
+export const Polygon = AllStories.Polygon;
+export const PolygonWithCoordinatePoints =
+	AllStories.PolygonWithCoordinatePoints;
 export const PolygonWithCoordinateSnapping =
 	AllStories.PolygonWithCoordinateSnapping;
 export const PolygonWithLineSnapping = AllStories.PolygonWithLineSnapping;
@@ -22,6 +24,11 @@ export const Rectangle = AllStories.Rectangle;
 export const AngledRectangle = AllStories.AngledRectangle;
 export const Sector = AllStories.Sector;
 export const LineString = AllStories.LineString;
+export const LineStringWithCoordinateSnapping =
+	AllStories.LineStringWithCoordinateSnapping;
+export const LineStringWithLineSnapping = AllStories.LineStringWithLineSnapping;
+export const LineStringEditable = AllStories.LineStringEditable;
 export const FreehandLineString = AllStories.FreehandLineString;
 export const Freehand = AllStories.Freehand;
+export const FreehandWithAutoClose = AllStories.FreehandWithAutoClose;
 export const Sensor = AllStories.Sensor;

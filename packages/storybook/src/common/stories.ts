@@ -34,6 +34,23 @@ const Polygon: Story = {
 	},
 };
 
+// Polygon with coordinate points story
+const PolygonWithCoordinatePoints: Story = {
+	args: {
+		id: "polygon-coordinate-points",
+		...DefaultSize,
+		...LocationNewYork,
+		...DefaultZoom,
+		modes: [
+			() =>
+				new TerraDrawPolygonMode({
+					showCoordinatePoints: true,
+				}),
+		],
+	},
+};
+
+// Polygon with coordinate snapping story
 const PolygonWithCoordinateSnapping: Story = {
 	args: {
 		id: "polygon-coordinate-snapping",
@@ -51,6 +68,7 @@ const PolygonWithCoordinateSnapping: Story = {
 	},
 };
 
+// Polygon with line snapping story
 const PolygonWithLineSnapping: Story = {
 	args: {
 		id: "polygon-line-snapping",
@@ -68,6 +86,7 @@ const PolygonWithLineSnapping: Story = {
 	},
 };
 
+// Polygon with editable enabled story
 const PolygonWithEditableEnabled: Story = {
 	args: {
 		id: "polygon-editable",
@@ -138,6 +157,58 @@ const LineString: Story = {
 	},
 };
 
+// Linestring drawing story
+const LineStringEditable: Story = {
+	args: {
+		id: "linestring-editable",
+		...DefaultSize,
+		...LocationNewYork,
+		...DefaultZoom,
+		modes: [
+			() =>
+				new TerraDrawLineStringMode({
+					editable: true,
+				}),
+		],
+	},
+};
+
+// Linestring with coordinate snapping  story
+const LineStringWithCoordinateSnapping: Story = {
+	args: {
+		id: "linestring-coordinate-snapping",
+		...DefaultSize,
+		...LocationNewYork,
+		...DefaultZoom,
+		modes: [
+			() =>
+				new TerraDrawLineStringMode({
+					snapping: {
+						toCoordinate: true,
+					},
+				}),
+		],
+	},
+};
+
+// Linestring with linestring snapping  story
+const LineStringWithLineSnapping: Story = {
+	args: {
+		id: "linestring-line-snapping",
+		...DefaultSize,
+		...LocationNewYork,
+		...DefaultZoom,
+		modes: [
+			() =>
+				new TerraDrawLineStringMode({
+					snapping: {
+						toLine: true,
+					},
+				}),
+		],
+	},
+};
+
 // Freehand linestring drawing story
 const FreehandLineString: Story = {
 	args: {
@@ -160,6 +231,22 @@ const Freehand: Story = {
 	},
 };
 
+// Freehand autoclose drawing story
+const FreehandWithAutoClose: Story = {
+	args: {
+		id: "freehand-autoclose",
+		...DefaultSize,
+		...LocationNewYork,
+		...DefaultZoom,
+		modes: [
+			() =>
+				new TerraDrawFreehandMode({
+					autoClose: true,
+				}),
+		],
+	},
+};
+
 // Sensor drawing story
 const Sensor: Story = {
 	args: {
@@ -174,6 +261,7 @@ const Sensor: Story = {
 const AllStories = {
 	Point,
 	Polygon,
+	PolygonWithCoordinatePoints,
 	PolygonWithCoordinateSnapping,
 	PolygonWithLineSnapping,
 	PolygonWithEditableEnabled,
@@ -182,8 +270,12 @@ const AllStories = {
 	AngledRectangle,
 	Sector,
 	LineString,
+	LineStringEditable,
+	LineStringWithCoordinateSnapping,
+	LineStringWithLineSnapping,
 	FreehandLineString,
 	Freehand,
+	FreehandWithAutoClose,
 	Sensor,
 };
 

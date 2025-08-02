@@ -11,8 +11,8 @@
 		"3000": {
 			"label": "Docs"
 		},
-		"9000": {
-			"label": "Development"
+		"6006": {
+			"label": "Storybook"
 		}
 	},
 	"customizations": {

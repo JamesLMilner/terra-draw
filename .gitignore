@@ -16,3 +16,9 @@ packages/e2e/test-results/
 packages/e2e/playwright-report/
 packages/e2e/blob-report/
 packages/e2e/playwright/.cache/
+packages/storybook/node_modules/
+packages/storybook/storybook-static/
+packages/storybook/dist/
+packages/storybook/.env
+packages/storybook/.env.local
+packages/storybook/.DS_Store

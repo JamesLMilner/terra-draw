@@ -1,0 +1,19 @@
+<style>
+    /* Hide default Storybook logo */
+    .sidebar-header a[title="Storybook"] {
+        background-image: url('logo.png');
+        /* or .png */
+        background-size: contain;
+        background-repeat: no-repeat;
+        height: 40px;
+        width: 100%;
+        display: block;
+        text-indent: -9999px;
+        /* hide text */
+    }
+
+    .sidebar-header a[title="Storybook"] svg {
+        display: none;
+        /* hide original SVG */
+    }
+</style>

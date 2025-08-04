@@ -76,10 +76,7 @@ export function SetupArcGIS(args: StoryArgs): HTMLElement {
 		current.container = null;
 	}
 
-	const { container, controls, mapContainer } = getElements({
-		width: args.width,
-		height: args.height,
-	});
+	const { container, controls, mapContainer } = getElements(args);
 
 	const modes = args.modes.map((mode) => mode());
 
@@ -110,6 +107,8 @@ export function SetupArcGIS(args: StoryArgs): HTMLElement {
 			modes,
 			controls,
 		});
+
+		args.afterRender?.(draw);
 	} catch (error) {
 		// Add error message to container
 		const errorDiv = document.createElement("div");

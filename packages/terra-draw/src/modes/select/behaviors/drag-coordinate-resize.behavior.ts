@@ -19,6 +19,7 @@ import {
 } from "../../../geometry/project/web-mercator";
 import { webMercatorCentroid } from "../../../geometry/web-mercator-centroid";
 import { CoordinatePointBehavior } from "./coordinate-point.behavior";
+import { transformScaleWebMercatorCoordinates } from "../../../geometry/transform/scale";
 
 export type ResizeOptions =
 	| "center"
@@ -310,13 +311,21 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 			scale = this.minimumScale;
 		}
 
-		this.performWebMercatorScale(
-			updatedCoords,
-			webMercatorOrigin.x,
-			webMercatorOrigin.y,
-			scale,
-			scale,
-		);
+		transformScaleWebMercatorCoordinates({
+			coordinates: updatedCoords,
+			originX: webMercatorOrigin.x,
+			originY: webMercatorOrigin.y,
+			xScale: scale,
+			yScale: scale,
+		});
+
+		// this.performWebMercatorScale(
+		// 	updatedCoords,
+		// 	webMercatorOrigin.x,
+		// 	webMercatorOrigin.y,
+		// 	scale,
+		// 	scale,
+		// );
 
 		return updatedCoords;
 	}

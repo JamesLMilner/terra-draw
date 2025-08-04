@@ -1,7 +1,8 @@
 import { TerraDrawBaseDrawMode } from "../../../terra-draw/src/extend";
 import { TerraDraw } from "../../../terra-draw/src/terra-draw";
+import { StoryArgs } from "./config";
 
-export function getElements(args: { width: string; height: string }) {
+export function getElements(args: StoryArgs) {
 	const container = document.createElement("div");
 	container.style.display = "flex";
 	container.style.flexDirection = "column";
@@ -11,19 +12,32 @@ export function getElements(args: { width: string; height: string }) {
 
 	// Create controls
 	const controls = document.createElement("div");
+
 	controls.style.display = "flex";
 	controls.style.gap = "10px";
 	controls.style.marginBottom = "10px";
 
 	// Create map container
 	const mapContainer = document.createElement("div");
-	mapContainer.id = `map-${Math.random().toString(36).substr(2, 9)}`;
+	mapContainer.id = `map-${args.id}`;
 	mapContainer.style.width = args.width;
 	mapContainer.style.height = args.height;
 	mapContainer.style.border = "1px solid #ccc";
 
-	container.appendChild(controls);
+	if (args.showButtons !== false) {
+		container.appendChild(controls);
+	}
+
 	container.appendChild(mapContainer);
+
+	if (args.instructions) {
+		const instructions = document.createElement("h3");
+		instructions.style.margin = "0";
+		instructions.style.width = `${args.width}`;
+		instructions.textContent = args.instructions;
+
+		container.appendChild(instructions);
+	}
 
 	return {
 		container,
@@ -54,7 +68,8 @@ export function setupControls({
 		button.style.borderRadius = "4px";
 		button.style.background = "#fff";
 		button.style.cursor = "pointer";
-		button.style.width = "140px";
+		button.style.width = "180px";
+		button.style.fontWeight = "bold";
 
 		button.addEventListener("click", () => {
 			draw.setMode(mode.mode);
@@ -83,7 +98,8 @@ export function setupControls({
 	clearButton.style.background = "#dc3545";
 	clearButton.style.color = "#fff";
 	clearButton.style.cursor = "pointer";
-	clearButton.style.width = "140px";
+	clearButton.style.width = "180px";
+	clearButton.style.fontWeight = "bold";
 
 	clearButton.addEventListener("click", () => {
 		draw.clear();

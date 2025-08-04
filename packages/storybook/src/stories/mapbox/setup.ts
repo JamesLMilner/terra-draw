@@ -92,10 +92,7 @@ export function SetupMapbox(args: StoryArgs): HTMLElement {
 		current.container = null;
 	}
 
-	const { container, controls, mapContainer } = getElements({
-		width: args.width,
-		height: args.height,
-	});
+	const { container, controls, mapContainer } = getElements(args);
 
 	const { map } = initialiseMapboxMap({
 		mapContainer,
@@ -126,6 +123,8 @@ export function SetupMapbox(args: StoryArgs): HTMLElement {
 			modes,
 			controls,
 		});
+
+		args.afterRender?.(draw);
 	});
 
 	return container;

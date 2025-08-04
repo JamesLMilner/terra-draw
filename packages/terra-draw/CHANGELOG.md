@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.12.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.11.0...terra-draw@1.12.0) (2025-08-04)
+
+
+### feat
+
+* **terra-draw:** add Storybook to the repository and remove development folder (#597) ([](https://github.com/JamesLMilner/terra-draw/commit/b5ba9a08c895f4c6da933158d6064b342c19c6a7)), closes [#597](https://github.com/JamesLMilner/terra-draw/issues/597)
+* **terra-draw:** add transformFeatureGeometry to the API (#603) ([](https://github.com/JamesLMilner/terra-draw/commit/1e76e095e81caab2b7898be7d4b87eab21e6591d)), closes [#603](https://github.com/JamesLMilner/terra-draw/issues/603)
+
+
+### docs
+
+* **terra-draw:** add additional examples to Storybook (#602) ([](https://github.com/JamesLMilner/terra-draw/commit/2ebd32e9885a2183d7699dec90c8dd52c518252c)), closes [#602](https://github.com/JamesLMilner/terra-draw/issues/602)
+* **terra-draw:** update documentation to make Storybook usage clearer (#601) ([](https://github.com/JamesLMilner/terra-draw/commit/66a3c47fd256cb2fc9a3f1c692fe428bd2b8c90b)), closes [#601](https://github.com/JamesLMilner/terra-draw/issues/601)
+
+
+### fix
+
+* **terra-draw:** export Terra Draw types using type keyword when exporting (#598) ([](https://github.com/JamesLMilner/terra-draw/commit/9e7f49826c1152e1ebdd9a932569a69ceeac5f70)), closes [#598](https://github.com/JamesLMilner/terra-draw/issues/598)
+
 ## [1.11.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.10.0...terra-draw@1.11.0) (2025-07-24)
 
 

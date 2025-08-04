@@ -14,6 +14,9 @@ export interface StoryArgs {
 	centerLng: number;
 	zoom: number;
 	modes: (() => Modes)[];
+	instructions?: string;
+	afterRender?: (draw: TerraDraw) => void;
+	showButtons?: boolean;
 }
 
 export const DefaultZoom = {

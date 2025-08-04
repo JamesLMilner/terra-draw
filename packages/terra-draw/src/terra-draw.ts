@@ -18,6 +18,7 @@ import {
 	COMMON_PROPERTIES,
 	TerraDrawGeoJSONStore,
 	OnChangeContext,
+	Projection,
 } from "./common";
 import {
 	ModeTypes,
@@ -46,7 +47,7 @@ import {
 import { BehaviorConfig } from "./modes/base.behavior";
 import { cartesianDistance } from "./geometry/measure/pixel-distance";
 import { pixelDistanceToLine } from "./geometry/measure/pixel-distance-to-line";
-import { Position } from "geojson";
+import { Feature, LineString, Polygon, Position } from "geojson";
 import { pointInPolygon } from "./geometry/boolean/point-in-polygon";
 import { createBBoxFromPoint } from "./geometry/shape/create-bbox";
 import { ValidateMinAreaSquareMeters } from "./validations/min-size.validation";
@@ -59,6 +60,19 @@ import * as TerraDrawExtend from "./extend";
 import { hasModeProperty } from "./store/store-feature-validation";
 import { ValidationReasons } from "./validation-reasons";
 import { TerraDrawFreehandLineStringMode } from "./modes/freehand-linestring/freehand-linestring.mode";
+import { ScaleFeatureBehavior } from "./modes/select/behaviors/scale-feature.behavior";
+import { DragCoordinateResizeBehavior } from "./modes/select/behaviors/drag-coordinate-resize.behavior";
+import { PixelDistanceBehavior } from "./modes/pixel-distance.behavior";
+import { SelectionPointBehavior } from "./modes/select/behaviors/selection-point.behavior";
+import { MidPointBehavior } from "./modes/select/behaviors/midpoint.behavior";
+import { CoordinatePointBehavior } from "./modes/select/behaviors/coordinate-point.behavior";
+import {
+	lngLatToWebMercatorXY,
+	webMercatorXYToLngLat,
+} from "./geometry/project/web-mercator";
+import { transformRotateWebMercator } from "./geometry/transform/rotate";
+import { transformScaleWebMercatorCoordinates } from "./geometry/transform/scale";
+import { limitPrecision } from "./geometry/limit-decimal-precision";
 
 // Helper type to determine the instance type of a class
 type InstanceType<T extends new (...args: any[]) => any> = T extends new (
@@ -807,6 +821,125 @@ class TerraDraw {
 
 			if (selectModePresent && featureIsSelected) {
 				selectModePresent.afterFeatureUpdated(updatedFeature);
+			}
+		}
+	}
+
+	/**
+	 * A method for transforming a feature's geometry. This can be used to rotate or scale a feature's geometry.
+	 * This matches the functionality of the scale and rotate behaviors in the select mode.
+	 * @param id - the id of the feature to transform
+	 * @param transformation - the transformation to apply to the feature's geometry
+	 */
+	transformFeatureGeometry(
+		id: FeatureId,
+		transformation:
+			| {
+					projection?: Exclude<Projection, "globe">;
+					origin: Position;
+					type: "rotate";
+					options: {
+						angle: number;
+					};
+			  }
+			| {
+					projection?: Exclude<Projection, "globe">;
+					origin: Position;
+					type: "scale";
+					options: {
+						xScale: number;
+						yScale: number;
+					};
+			  },
+	) {
+		if (!this._store.has(id)) {
+			throw new Error(`No feature with id ${id} present in store`);
+		}
+
+		let feature = this._store.copy(id);
+
+		// We don't want users to be able to update guidance features directly
+		if (this.isGuidanceFeature(feature)) {
+			throw new Error(
+				`Guidance features are not allowed to be updated directly.`,
+			);
+		}
+
+		const mode = feature.properties.mode;
+		const modeToUpdate = this._modes[mode as string];
+
+		if (!modeToUpdate) {
+			throw new Error(`No mode with name ${mode} present in instance`);
+		}
+
+		let coordinates: Position[];
+		if (feature.geometry.type === "Polygon") {
+			coordinates = feature.geometry.coordinates[0];
+		} else if (feature.geometry.type === "LineString") {
+			coordinates = feature.geometry.coordinates;
+		} else {
+			throw new Error(
+				`Feature geometry type ${feature.geometry.type} is not supported for transformation`,
+			);
+		}
+
+		if (transformation.projection == "web-mercator") {
+			if (transformation.type === "scale") {
+				const { x: originX, y: originY } = lngLatToWebMercatorXY(
+					transformation.origin[0],
+					transformation.origin[1],
+				);
+
+				const xScale = transformation.options.xScale || 1;
+				const yScale = transformation.options.yScale || 1;
+
+				transformScaleWebMercatorCoordinates({
+					coordinates,
+					originX,
+					originY,
+					xScale,
+					yScale,
+				});
+			} else if (transformation.type === "rotate") {
+				const angle = transformation.options.angle || 0;
+				feature = transformRotateWebMercator(
+					feature as Feature<Polygon> | Feature<LineString>,
+					angle,
+				) as GeoJSONStoreFeatures;
+
+				coordinates =
+					feature.geometry.type === "Polygon"
+						? (feature.geometry as Polygon).coordinates[0]
+						: (feature.geometry as LineString).coordinates;
+			}
+
+			coordinates = coordinates.map((coord) => [
+				limitPrecision(coord[0], this._adapter.getCoordinatePrecision()),
+				limitPrecision(coord[1], this._adapter.getCoordinatePrecision()),
+			]);
+
+			feature.geometry.coordinates =
+				feature.geometry.type === "Polygon" ? [coordinates] : coordinates;
+		} else {
+			throw new Error(
+				`Projection ${transformation.projection} is not currently supported for transformation`,
+			);
+		}
+
+		this._store.updateGeometry(
+			[{ id: feature.id as FeatureId, geometry: feature.geometry }],
+			{ origin: "api" }, // origin is used to indicate that this update has come from an API call
+		);
+
+		if (modeToUpdate.afterFeatureUpdated) {
+			modeToUpdate.afterFeatureUpdated(feature);
+			const featureIsSelected = feature.properties[SELECT_PROPERTIES.SELECTED];
+			const selectModePresent = this.getSelectMode({
+				switchToSelectMode: false,
+			});
+
+			if (selectModePresent && featureIsSelected) {
+				selectModePresent.afterFeatureUpdated(feature);
 			}
 		}
 	}

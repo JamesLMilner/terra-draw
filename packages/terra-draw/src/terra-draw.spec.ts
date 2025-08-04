@@ -1404,6 +1404,451 @@ describe("Terra Draw", () => {
 		});
 	});
 
+	describe("transformFeatureGeometry", () => {
+		describe.each(["rotate", "scale"] as const)(
+			"called with %s transform",
+			(transformType) => {
+				const options = {
+					rotate: {
+						angle: 90,
+					},
+					scale: {
+						xScale: 2,
+						yScale: 2,
+					},
+				}[transformType];
+
+				it("throws an error for globe projection", () => {
+					const draw = new TerraDraw({
+						adapter: new TerraDrawTestAdapter({
+							lib: {},
+							coordinatePrecision: 3,
+						}),
+						modes: [new TerraDrawPolygonMode(), new TerraDrawSelectMode()],
+					});
+
+					const onChange = jest.fn();
+					draw.on("change", onChange);
+
+					draw.start();
+					const [result] = draw.addFeatures([
+						{
+							id: "f8e5a38d-ecfa-4294-8461-d9cff0e0d7f8",
+							type: "Feature",
+							geometry: {
+								type: "Polygon",
+								coordinates: [
+									[
+										[25, 34],
+										[26, 35],
+										[27, 34],
+										[25, 34],
+									],
+								],
+							},
+							properties: {
+								mode: "polygon",
+							},
+						},
+					]);
+
+					expect(result.valid).toBe(true);
+
+					onChange.mockClear();
+
+					draw.transformFeatureGeometry(result.id as FeatureId, {
+						type: transformType,
+						projection: "web-mercator",
+						origin: [25, 34],
+						options: options as any,
+					});
+
+					expect(result.valid).toBe(true);
+
+					onChange.mockClear();
+
+					expect(() => {
+						draw.transformFeatureGeometry(result.id as FeatureId, {
+							type: transformType,
+							projection: "globe" as any,
+							origin: [25, 34],
+							options: options as any,
+						});
+					}).toThrow(
+						`Projection globe is not currently supported for transformation`,
+					);
+
+					expect(onChange).toHaveBeenCalledTimes(0);
+				});
+
+				it("throws an error for a point geometry", () => {
+					const draw = new TerraDraw({
+						adapter: new TerraDrawTestAdapter({
+							lib: {},
+							coordinatePrecision: 3,
+						}),
+						modes: [new TerraDrawPointMode(), new TerraDrawSelectMode()],
+					});
+
+					const onChange = jest.fn();
+					draw.on("change", onChange);
+
+					draw.start();
+					const [result] = draw.addFeatures([
+						{
+							id: "f8e5a38d-ecfa-4294-8461-d9cff0e0d7f8",
+							type: "Feature",
+							geometry: {
+								type: "Point",
+								coordinates: [25, 34],
+							},
+							properties: {
+								mode: "point",
+							},
+						},
+					]);
+
+					expect(result.valid).toBe(true);
+
+					onChange.mockClear();
+
+					expect(() => {
+						draw.transformFeatureGeometry(result.id as FeatureId, {
+							type: transformType,
+							projection: "web-mercator",
+							origin: [25, 34],
+							options: options as any,
+						});
+					}).toThrow(
+						`Feature geometry type Point is not supported for transformation`,
+					);
+
+					expect(onChange).toHaveBeenCalledTimes(0);
+				});
+
+				it("correctly updates a linestring geometry", () => {
+					const draw = new TerraDraw({
+						adapter: new TerraDrawTestAdapter({
+							lib: {},
+							coordinatePrecision: 3,
+						}),
+						modes: [new TerraDrawLineStringMode(), new TerraDrawSelectMode()],
+					});
+
+					const onChange = jest.fn();
+					draw.on("change", onChange);
+
+					draw.start();
+					const [result] = draw.addFeatures([
+						{
+							id: "f8e5a38d-ecfa-4294-8461-d9cff0e0d7f8",
+							type: "Feature",
+							geometry: {
+								type: "LineString",
+								coordinates: [
+									[25, 34],
+									[26, 35],
+								],
+							},
+							properties: {
+								mode: "linestring",
+							},
+						},
+					]);
+
+					expect(result.valid).toBe(true);
+
+					onChange.mockClear();
+
+					draw.transformFeatureGeometry(result.id as FeatureId, {
+						type: transformType,
+						projection: "web-mercator",
+						origin: [25, 34],
+						options: options as any,
+					});
+
+					expect(onChange).toHaveBeenCalledTimes(1);
+					expect(onChange).toHaveBeenCalledWith([result.id], "update", {
+						origin: "api",
+					});
+
+					const snapshot = draw.getSnapshot();
+					expect(snapshot).toHaveLength(1);
+
+					const updatedFeature = snapshot[0];
+					expect(updatedFeature.id).toBe(result.id);
+
+					expect(updatedFeature.geometry.coordinates).toEqual(
+						transformType === "rotate"
+							? [
+									[26.107, 34.088],
+									[24.893, 34.913],
+								]
+							: [
+									[25, 34],
+									[27, 35.988],
+								],
+					);
+				});
+
+				it("correctly updates a polygon geometry", () => {
+					const draw = new TerraDraw({
+						adapter: new TerraDrawTestAdapter({
+							lib: {},
+							coordinatePrecision: 3,
+						}),
+						modes: [new TerraDrawPolygonMode(), new TerraDrawSelectMode()],
+					});
+
+					const onChange = jest.fn();
+					draw.on("change", onChange);
+
+					draw.start();
+					const [result] = draw.addFeatures([
+						{
+							id: "f8e5a38d-ecfa-4294-8461-d9cff0e0d7f8",
+							type: "Feature",
+							geometry: {
+								type: "Polygon",
+								coordinates: [
+									[
+										[25, 34],
+										[26, 35],
+										[27, 34],
+										[25, 34],
+									],
+								],
+							},
+							properties: {
+								mode: "polygon",
+							},
+						},
+					]);
+
+					expect(result.valid).toBe(true);
+
+					onChange.mockClear();
+
+					draw.transformFeatureGeometry(result.id as FeatureId, {
+						type: transformType,
+						projection: "web-mercator",
+						origin: [25, 34],
+						options: options as any,
+					});
+
+					expect(onChange).toHaveBeenCalledTimes(1);
+					expect(onChange).toHaveBeenCalledWith([result.id], "update", {
+						origin: "api",
+					});
+
+					const snapshot = draw.getSnapshot();
+					expect(snapshot).toHaveLength(1);
+
+					const updatedFeature = snapshot[0];
+					expect(updatedFeature.id).toBe(result.id);
+
+					expect(updatedFeature.geometry.coordinates).toEqual(
+						transformType === "rotate"
+							? [
+									[
+										[26.053, 33.629],
+										[24.84, 34.458],
+										[26.053, 35.278],
+										[26.053, 33.629],
+									],
+								]
+							: [
+									[
+										[25, 34],
+										[27.0, 35.988],
+										[29, 34],
+										[25, 34],
+									],
+								],
+					);
+				});
+
+				it("correctly updates a polygon geometry when it is selected", () => {
+					const draw = new TerraDraw({
+						adapter: new TerraDrawTestAdapter({
+							lib: {},
+							coordinatePrecision: 3,
+						}),
+						modes: [
+							new TerraDrawPolygonMode(),
+							new TerraDrawSelectMode({
+								flags: {
+									polygon: {
+										feature: {
+											draggable: true,
+											coordinates: {},
+										},
+									},
+								},
+							}),
+						],
+					});
+
+					const onChange = jest.fn();
+					draw.on("change", onChange);
+
+					draw.start();
+					const [result] = draw.addFeatures([
+						{
+							id: "f8e5a38d-ecfa-4294-8461-d9cff0e0d7f8",
+							type: "Feature",
+							geometry: {
+								type: "Polygon",
+								coordinates: [
+									[
+										[25, 34],
+										[26, 35],
+										[27, 34],
+										[25, 34],
+									],
+								],
+							},
+							properties: {
+								mode: "polygon",
+							},
+						},
+					]);
+
+					expect(result.valid).toBe(true);
+
+					draw.selectFeature(result.id as FeatureId);
+
+					const snapshotBefore = draw.getSnapshot();
+					expect(snapshotBefore).toHaveLength(4);
+
+					onChange.mockClear();
+
+					draw.transformFeatureGeometry(result.id as FeatureId, {
+						type: transformType,
+						projection: "web-mercator",
+						origin: [25, 34],
+						options: options as any,
+					});
+
+					expect(onChange).toHaveBeenCalledTimes(3);
+					expect(onChange).toHaveBeenCalledWith([result.id], "update", {
+						origin: "api",
+					});
+
+					const snapshot = draw.getSnapshot();
+					expect(snapshot).toHaveLength(4);
+
+					const updatedFeature = snapshot[0];
+					expect(updatedFeature.id).toBe(result.id);
+
+					expect(updatedFeature.geometry.coordinates).toEqual(
+						transformType === "rotate"
+							? [
+									[
+										[26.053, 33.629],
+										[24.84, 34.458],
+										[26.053, 35.278],
+										[26.053, 33.629],
+									],
+								]
+							: [
+									[
+										[25, 34],
+										[27.0, 35.988],
+										[29, 34],
+										[25, 34],
+									],
+								],
+					);
+
+					// Coordinate points are also updated
+					const coordinatePoints = snapshot.filter(
+						(f) => f.properties[SELECT_PROPERTIES.SELECTION_POINT],
+					);
+					expect(coordinatePoints).toHaveLength(3);
+					expect(coordinatePoints[0].geometry.coordinates).toEqual(
+						transformType === "rotate" ? [26.053, 33.629] : [25, 34],
+					);
+					expect(coordinatePoints[1].geometry.coordinates).toEqual(
+						transformType === "rotate" ? [24.84, 34.458] : [27.0, 35.988],
+					);
+					expect(coordinatePoints[2].geometry.coordinates).toEqual(
+						transformType === "rotate" ? [26.053, 35.278] : [29, 34],
+					);
+				});
+
+				it("fails when feature is guidance feature", () => {
+					const draw = new TerraDraw({
+						adapter: new TerraDrawTestAdapter({
+							lib: {},
+							coordinatePrecision: 3,
+						}),
+						modes: [
+							new TerraDrawPolygonMode(),
+							new TerraDrawSelectMode({
+								flags: {
+									polygon: {
+										feature: {
+											coordinates: {
+												draggable: true,
+											},
+										},
+									},
+								},
+							}),
+						],
+					});
+
+					const onChange = jest.fn();
+					draw.on("change", onChange);
+
+					draw.start();
+					const [result] = draw.addFeatures([
+						{
+							id: "f8e5a38d-ecfa-4294-8461-d9cff0e0d7f8",
+							type: "Feature",
+							geometry: {
+								type: "Polygon",
+								coordinates: [
+									[
+										[25, 34],
+										[26, 35],
+										[27, 34],
+										[25, 34],
+									],
+								],
+							},
+							properties: {
+								mode: "polygon",
+							},
+						},
+					]);
+
+					draw.selectFeature(result.id as FeatureId);
+
+					onChange.mockClear();
+
+					const guidanceFeature = draw
+						.getSnapshot()
+						.find((f) => f.properties[SELECT_PROPERTIES.SELECTION_POINT]);
+
+					expect(guidanceFeature).toBeDefined();
+
+					expect(() => {
+						draw.transformFeatureGeometry(guidanceFeature!.id as FeatureId, {
+							type: transformType,
+							projection: "web-mercator",
+							origin: [25, 34],
+							options: options as any,
+						});
+					}).toThrow(
+						"Guidance features are not allowed to be updated directly",
+					);
+				});
+			},
+		);
+	});
+
 	describe("deselectFeature", () => {
 		it("throws an error if there is no select moded", () => {
 			const draw = new TerraDraw({

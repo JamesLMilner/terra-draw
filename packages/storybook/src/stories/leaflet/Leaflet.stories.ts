@@ -32,3 +32,6 @@ export const FreehandLineString = AllStories.FreehandLineString;
 export const Freehand = AllStories.Freehand;
 export const FreehandWithAutoClose = AllStories.FreehandWithAutoClose;
 export const Sensor = AllStories.Sensor;
+export const ProgrammaticRotate = AllStories.ProgrammaticRotate;
+export const ProgrammaticScale = AllStories.ProgrammaticScale;
+export const ProgrammaticUpdate = AllStories.ProgrammaticUpdate;

@@ -9,6 +9,7 @@ import {
 	TerraDrawFreehandLineStringMode,
 	TerraDrawFreehandMode,
 	TerraDrawSensorMode,
+	TerraDraw,
 } from "../../../terra-draw/src/terra-draw";
 import { DefaultSize, LocationNewYork, DefaultZoom, Story } from "./config";
 
@@ -258,6 +259,153 @@ const Sensor: Story = {
 	},
 };
 
+// Programmatic update geometry story
+const ProgrammaticUpdate: Story = {
+	args: {
+		id: "programmatic-update",
+		...DefaultSize,
+		...LocationNewYork,
+		...DefaultZoom,
+		modes: [() => new TerraDrawPolygonMode()],
+		showButtons: false,
+		instructions:
+			"After 2 seconds, the pre-added polygon will be updated to a new geometry in the same space.",
+		afterRender: (draw: TerraDraw) => {
+			const [{ id }] = draw.addFeatures([
+				{
+					type: "Feature",
+					properties: {
+						mode: "polygon",
+					},
+					geometry: {
+						type: "Polygon",
+						coordinates: [
+							[
+								[-74.006, 40.7128],
+								[-73.996, 40.7128],
+								[-73.996, 40.7228],
+								[-74.006, 40.7228],
+								[-74.006, 40.7128],
+							],
+						],
+					},
+				},
+			]);
+
+			setTimeout(() => {
+				draw.updateFeatureGeometry(id!, {
+					type: "Polygon",
+					coordinates: [
+						// Update to a new polygon in the same space
+						[
+							[-74.006, 40.7128],
+							[-73.996, 40.7128],
+							[-73.996, 40.7228],
+							[-74.036, 40.7228],
+							[-74.006, 40.7128],
+						],
+					],
+				});
+			}, 2000);
+		},
+	},
+};
+
+// Programmatic scale story
+const ProgrammaticScale: Story = {
+	args: {
+		id: "programmatic-scale",
+		...DefaultSize,
+		...LocationNewYork,
+		...DefaultZoom,
+		modes: [() => new TerraDrawPolygonMode()],
+		showButtons: false,
+		instructions:
+			"After 2 seconds, the pre-added polygon will be updated to a scaled geometry in the same space.",
+		afterRender: (draw: TerraDraw) => {
+			const [{ id }] = draw.addFeatures([
+				{
+					type: "Feature",
+					properties: {
+						mode: "polygon",
+					},
+					geometry: {
+						type: "Polygon",
+						coordinates: [
+							[
+								[-74.006, 40.7128],
+								[-73.996, 40.7128],
+								[-73.996, 40.7228],
+								[-74.006, 40.7228],
+								[-74.006, 40.7128],
+							],
+						],
+					},
+				},
+			]);
+
+			setTimeout(() => {
+				draw.transformFeatureGeometry(id!, {
+					projection: "web-mercator",
+					origin: [LocationNewYork.centerLng, LocationNewYork.centerLat],
+					type: "scale",
+					options: {
+						xScale: 2,
+						yScale: 2,
+					},
+				});
+			}, 2000);
+		},
+	},
+};
+
+// Programmatic scale story
+const ProgrammaticRotate: Story = {
+	args: {
+		id: "programmatic-rotate",
+		...DefaultSize,
+		...LocationNewYork,
+		...DefaultZoom,
+		modes: [() => new TerraDrawPolygonMode()],
+		showButtons: false,
+		instructions:
+			"After 2 seconds, the pre-added polygon will be updated to a rotated geometry in the same space.",
+		afterRender: (draw: TerraDraw) => {
+			const [{ id }] = draw.addFeatures([
+				{
+					type: "Feature",
+					properties: {
+						mode: "polygon",
+					},
+					geometry: {
+						type: "Polygon",
+						coordinates: [
+							[
+								[-74.006, 40.7128],
+								[-73.996, 40.7128],
+								[-73.996, 40.7228],
+								[-74.006, 40.7228],
+								[-74.006, 40.7128],
+							],
+						],
+					},
+				},
+			]);
+
+			setTimeout(() => {
+				draw.transformFeatureGeometry(id!, {
+					projection: "web-mercator",
+					origin: [LocationNewYork.centerLng, LocationNewYork.centerLat],
+					type: "rotate",
+					options: {
+						angle: 45,
+					},
+				});
+			}, 2000);
+		},
+	},
+};
+
 const AllStories = {
 	Point,
 	Polygon,
@@ -277,6 +425,9 @@ const AllStories = {
 	Freehand,
 	FreehandWithAutoClose,
 	Sensor,
+	ProgrammaticScale,
+	ProgrammaticRotate,
+	ProgrammaticUpdate,
 };
 
 export { AllStories };

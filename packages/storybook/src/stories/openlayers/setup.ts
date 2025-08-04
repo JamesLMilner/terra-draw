@@ -83,10 +83,7 @@ export function SetupOpenLayers(args: StoryArgs): HTMLElement {
 
 	const modes = args.modes.map((mode) => mode());
 
-	const { container, controls, mapContainer } = getElements({
-		width: args.width,
-		height: args.height,
-	});
+	const { container, controls, mapContainer } = getElements(args);
 
 	const mapConfig = initialiseOpenLayersMap({
 		mapContainer,
@@ -112,6 +109,8 @@ export function SetupOpenLayers(args: StoryArgs): HTMLElement {
 			modes,
 			controls,
 		});
+
+		args.afterRender?.(draw);
 	});
 
 	return container;

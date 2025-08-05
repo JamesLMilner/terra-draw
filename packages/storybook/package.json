@@ -14,6 +14,7 @@
 	"dependencies": {
 		"@arcgis/core": "4.31.6",
 		"@googlemaps/js-api-loader": "1.14.3",
+		"@storybook/mdx2-csf": "^1.1.0",
 		"@types/leaflet": "1.9.15",
 		"leaflet": "1.9.4",
 		"mapbox-gl": "3.9.2",

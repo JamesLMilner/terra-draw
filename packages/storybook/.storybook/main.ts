@@ -3,12 +3,8 @@ import dotenv from "dotenv";
 dotenv.config({ quiet: true });
 
 const config = {
-	stories: ["../src/**/*.stories.@(js|jsx|mjs|ts|tsx)"],
-	addons: [
-		"@storybook/addon-links",
-		"@storybook/addon-essentials",
-		// "@storybook/addon-interactions",
-	],
+	stories: ["../src/**/*.stories.@(js|jsx|mjs|ts|tsx|md|mdx)"],
+	addons: ["@storybook/addon-links", "@storybook/addon-essentials"],
 	features: { interactions: false, actions: false },
 	framework: {
 		name: "@storybook/html-vite",
@@ -19,6 +15,9 @@ const config = {
 	},
 	typescript: {
 		reactDocgen: false,
+	},
+	core: {
+		disableTelemetry: true,
 	},
 	viteFinal: async (config) => {
 		return {

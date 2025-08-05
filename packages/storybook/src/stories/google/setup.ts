@@ -1,5 +1,5 @@
 import { Loader } from "@googlemaps/js-api-loader";
-import { getElements, setupControls } from "../../common/container";
+import { setupMapContainer, setupControls } from "../../common/setup";
 import { TerraDraw } from "../../../../terra-draw/src/terra-draw";
 import { TerraDrawGoogleMapsAdapter } from "../../../../terra-draw-google-maps-adapter/src/terra-draw-google-maps-adapter";
 import { StoryArgs } from "../../common/config";
@@ -69,7 +69,7 @@ export function SetupGoogle(args: StoryArgs): HTMLElement {
 		current.container = null;
 	}
 
-	const { container, controls, mapContainer } = getElements(args);
+	const { container, controls, mapContainer } = setupMapContainer(args);
 
 	const modes = args.modes.map((mode) => mode());
 
@@ -86,7 +86,6 @@ export function SetupGoogle(args: StoryArgs): HTMLElement {
 				const adapter = new TerraDrawGoogleMapsAdapter({
 					lib: mapConfig.lib,
 					map: mapConfig.map,
-					coordinatePrecision: 9,
 				});
 
 				const draw = new TerraDraw({
@@ -103,7 +102,8 @@ export function SetupGoogle(args: StoryArgs): HTMLElement {
 				// Wait for TerraDraw to be ready before setting up controls
 				draw.on("ready", () => {
 					setupControls({
-						draw,
+						changeMode: (mode) => draw.setMode(mode),
+						clear: () => draw.clear(),
 						modes,
 						controls,
 					});

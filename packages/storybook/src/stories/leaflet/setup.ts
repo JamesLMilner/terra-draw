@@ -1,5 +1,5 @@
 import * as L from "leaflet";
-import { getElements, setupControls } from "../../common/container";
+import { setupMapContainer, setupControls } from "../../common/setup";
 import { TerraDraw } from "../../../../terra-draw/src/terra-draw";
 import { TerraDrawLeafletAdapter } from "../../../../terra-draw-leaflet-adapter/src/terra-draw-leaflet-adapter";
 import { StoryArgs } from "../../common/config";
@@ -59,7 +59,7 @@ export function SetupLeaflet(args: StoryArgs): HTMLElement {
 
 	const modes = args.modes.map((mode) => mode());
 
-	const { container, controls, mapContainer } = getElements(args);
+	const { container, controls, mapContainer } = setupMapContainer(args);
 
 	const { lib, map } = initialiseLeafletMap({
 		mapContainer,
@@ -83,7 +83,8 @@ export function SetupLeaflet(args: StoryArgs): HTMLElement {
 	current.draw = draw;
 
 	setupControls({
-		draw,
+		changeMode: (mode) => draw.setMode(mode),
+		clear: () => draw.clear(),
 		modes,
 		controls,
 	});

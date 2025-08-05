@@ -9,7 +9,7 @@ import SimpleFillSymbol from "@arcgis/core/symbols/SimpleFillSymbol";
 import SimpleLineSymbol from "@arcgis/core/symbols/SimpleLineSymbol";
 import Color from "@arcgis/core/Color";
 import SimpleMarkerSymbol from "@arcgis/core/symbols/SimpleMarkerSymbol";
-import { getElements, setupControls } from "../../common/container";
+import { setupMapContainer, setupControls } from "../../common/setup";
 import { TerraDraw } from "../../../../terra-draw/src/terra-draw";
 import { TerraDrawArcGISMapsSDKAdapter } from "../../../../terra-draw-arcgis-adapter/src/terra-draw-arcgis-adapter";
 import { StoryArgs } from "../../common/config";
@@ -76,7 +76,7 @@ export function SetupArcGIS(args: StoryArgs): HTMLElement {
 		current.container = null;
 	}
 
-	const { container, controls, mapContainer } = getElements(args);
+	const { container, controls, mapContainer } = setupMapContainer(args);
 
 	const modes = args.modes.map((mode) => mode());
 
@@ -103,7 +103,8 @@ export function SetupArcGIS(args: StoryArgs): HTMLElement {
 		current.draw = draw;
 
 		setupControls({
-			draw,
+			changeMode: (mode) => draw.setMode(mode),
+			clear: () => draw.clear(),
 			modes,
 			controls,
 		});

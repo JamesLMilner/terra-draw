@@ -1,3 +1,4 @@
+import { polygon } from "leaflet";
 import {
 	TerraDrawPointMode,
 	TerraDrawPolygonMode,
@@ -10,6 +11,7 @@ import {
 	TerraDrawFreehandMode,
 	TerraDrawSensorMode,
 	TerraDraw,
+	TerraDrawSelectMode,
 } from "../../../terra-draw/src/terra-draw";
 import { DefaultSize, LocationNewYork, DefaultZoom, Story } from "./config";
 
@@ -259,6 +261,77 @@ const Sensor: Story = {
 	},
 };
 
+// Sensor drawing story
+const Select: Story = {
+	args: {
+		id: "select",
+		...DefaultSize,
+		...LocationNewYork,
+		...DefaultZoom,
+		modes: [
+			() => new TerraDrawPolygonMode(),
+			() =>
+				new TerraDrawSelectMode({
+					flags: {
+						polygon: {
+							feature: {
+								draggable: true,
+							},
+						},
+					},
+				}),
+		],
+	},
+};
+
+const SelectWithSelectionPoints: Story = {
+	args: {
+		id: "select",
+		...DefaultSize,
+		...LocationNewYork,
+		...DefaultZoom,
+		modes: [
+			() => new TerraDrawPolygonMode(),
+			() =>
+				new TerraDrawSelectMode({
+					flags: {
+						polygon: {
+							feature: {
+								draggable: true,
+								coordinates: {},
+							},
+						},
+					},
+				}),
+		],
+	},
+};
+
+const SelectWithMidPoints: Story = {
+	args: {
+		id: "select",
+		...DefaultSize,
+		...LocationNewYork,
+		...DefaultZoom,
+		modes: [
+			() => new TerraDrawPolygonMode(),
+			() =>
+				new TerraDrawSelectMode({
+					flags: {
+						polygon: {
+							feature: {
+								draggable: true,
+								coordinates: {
+									midpoints: true,
+								},
+							},
+						},
+					},
+				}),
+		],
+	},
+};
+
 // Programmatic update geometry story
 const ProgrammaticUpdate: Story = {
 	args: {
@@ -428,6 +501,9 @@ const AllStories = {
 	ProgrammaticScale,
 	ProgrammaticRotate,
 	ProgrammaticUpdate,
+	Select,
+	SelectWithSelectionPoints,
+	SelectWithMidPoints,
 };
 
 export { AllStories };

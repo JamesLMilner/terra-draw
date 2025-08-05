@@ -7,7 +7,7 @@ import { OSM, Vector as VectorSource } from "ol/source";
 import { Tile as TileLayer, Vector as VectorLayer } from "ol/layer";
 import { toLonLat, fromLonLat, getUserProjection } from "ol/proj";
 import Projection from "ol/proj/Projection";
-import { getElements, setupControls } from "../../common/container";
+import { setupMapContainer, setupControls } from "../../common/setup";
 import { TerraDraw } from "../../../../terra-draw/src/terra-draw";
 import { TerraDrawOpenLayersAdapter } from "../../../../terra-draw-openlayers-adapter/src/terra-draw-openlayers-adapter";
 import { StoryArgs } from "../../common/config";
@@ -83,7 +83,7 @@ export function SetupOpenLayers(args: StoryArgs): HTMLElement {
 
 	const modes = args.modes.map((mode) => mode());
 
-	const { container, controls, mapContainer } = getElements(args);
+	const { container, controls, mapContainer } = setupMapContainer(args);
 
 	const mapConfig = initialiseOpenLayersMap({
 		mapContainer,
@@ -97,7 +97,6 @@ export function SetupOpenLayers(args: StoryArgs): HTMLElement {
 		const draw = new TerraDraw({
 			adapter: new TerraDrawOpenLayersAdapter({
 				...mapConfig,
-				coordinatePrecision: 9,
 			}),
 			modes,
 		});
@@ -105,7 +104,8 @@ export function SetupOpenLayers(args: StoryArgs): HTMLElement {
 		draw.start();
 
 		setupControls({
-			draw,
+			changeMode: (mode) => draw.setMode(mode),
+			clear: () => draw.clear(),
 			modes,
 			controls,
 		});

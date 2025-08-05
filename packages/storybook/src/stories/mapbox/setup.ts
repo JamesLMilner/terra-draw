@@ -1,5 +1,5 @@
 import mapboxgl from "mapbox-gl";
-import { getElements, setupControls } from "../../common/container";
+import { setupMapContainer, setupControls } from "../../common/setup";
 import { TerraDraw } from "../../../../terra-draw/src/terra-draw";
 import { TerraDrawMapboxGLAdapter } from "../../../../terra-draw-mapbox-gl-adapter/src/terra-draw-mapbox-gl-adapter";
 import { StoryArgs } from "../../common/config";
@@ -92,7 +92,7 @@ export function SetupMapbox(args: StoryArgs): HTMLElement {
 		current.container = null;
 	}
 
-	const { container, controls, mapContainer } = getElements(args);
+	const { container, controls, mapContainer } = setupMapContainer(args);
 
 	const { map } = initialiseMapboxMap({
 		mapContainer,
@@ -119,7 +119,8 @@ export function SetupMapbox(args: StoryArgs): HTMLElement {
 		current.draw = draw;
 
 		setupControls({
-			draw,
+			changeMode: (mode) => draw.setMode(mode),
+			clear: () => draw.clear(),
 			modes,
 			controls,
 		});

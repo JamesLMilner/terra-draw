@@ -1,5 +1,5 @@
 import maplibregl, { StyleSpecification } from "maplibre-gl";
-import { getElements, setupControls } from "../../common/container";
+import { setupMapContainer, setupControls } from "../../common/setup";
 import { TerraDraw } from "../../../../terra-draw/src/terra-draw";
 import { TerraDrawMapLibreGLAdapter } from "../../../../terra-draw-maplibre-gl-adapter/src/terra-draw-maplibre-gl-adapter";
 import { StoryArgs } from "../../common/config";
@@ -72,7 +72,7 @@ export function SetupMapLibre(args: StoryArgs): HTMLElement {
 	}
 	const modes = args.modes.map((mode) => mode());
 
-	const { container, controls, mapContainer } = getElements(args);
+	const { container, controls, mapContainer } = setupMapContainer(args);
 
 	const { map } = initialiseMapLibreMap({
 		mapContainer,
@@ -96,7 +96,8 @@ export function SetupMapLibre(args: StoryArgs): HTMLElement {
 		current.draw = draw;
 
 		setupControls({
-			draw,
+			changeMode: (mode) => draw.setMode(mode),
+			clear: () => draw.clear(),
 			modes,
 			controls,
 		});

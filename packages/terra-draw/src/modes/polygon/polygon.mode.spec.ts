@@ -16,7 +16,6 @@ import { TerraDrawPolygonMode } from "./polygon.mode";
 import { MockKeyboardEvent } from "../../test/mock-keyboard-event";
 import { MockPolygonSquare } from "../../test/mock-features";
 import { DefaultPointerEvents } from "../base.mode";
-import { Feature } from "geojson";
 
 describe("TerraDrawPolygonMode", () => {
 	describe("constructor", () => {
@@ -1006,7 +1005,34 @@ describe("TerraDrawPolygonMode", () => {
 			]);
 		});
 
-		it("can update polygon past 3 coordinates", () => {
+		it("can update polygon past 3 coordinates, for right hand rule abiding polygon", () => {
+			polygonMode.onMouseMove(MockCursorEvent({ lng: 0, lat: 0 }));
+			polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+			polygonMode.onMouseMove(MockCursorEvent({ lng: 3, lat: 3 }));
+			polygonMode.onClick(MockCursorEvent({ lng: 3, lat: 3 }));
+
+			polygonMode.onMouseMove(MockCursorEvent({ lng: 2, lat: 2 }));
+			polygonMode.onClick(MockCursorEvent({ lng: 2, lat: 2 }));
+
+			polygonMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
+			polygonMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
+			polygonMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
+
+			const features = store.copyAll();
+			expect(features.length).toBe(1);
+			expect(features[0].geometry.coordinates).toStrictEqual([
+				[
+					[0, 0],
+					[1, 1],
+					[2, 2],
+					[3, 3],
+					[0, 0],
+				],
+			]);
+		});
+
+		it("can update polygon past 3 coordinates, correcting to ensure the right hand rule", () => {
 			polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
 			polygonMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
@@ -1086,6 +1112,57 @@ describe("TerraDrawPolygonMode", () => {
 					[0, 0],
 				].reverse(), // Reverse to make it right hand rule valid
 			]);
+		});
+
+		it("can update polygon past 3 coordinates with showCoordinatePoints, correcting to ensure the right hand rule", () => {
+			polygonMode.updateOptions({
+				showCoordinatePoints: true,
+			});
+
+			polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+			polygonMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
+
+			polygonMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
+
+			polygonMode.onMouseMove(MockCursorEvent({ lng: 2, lat: 2 }));
+
+			polygonMode.onClick(MockCursorEvent({ lng: 2, lat: 2 }));
+
+			polygonMode.onMouseMove(MockCursorEvent({ lng: 3, lat: 3 }));
+
+			polygonMode.onClick(MockCursorEvent({ lng: 3, lat: 3 }));
+
+			// Close off the polygon
+			polygonMode.onClick(MockCursorEvent({ lng: 4, lat: 4 }));
+			polygonMode.onClick(MockCursorEvent({ lng: 4, lat: 4 }));
+
+			const features = store.copyAll();
+
+			expect(features.length).toBe(6);
+
+			expect(features[0].geometry.coordinates).toStrictEqual([
+				[
+					[0, 0],
+					[1, 1],
+					[2, 2],
+					[3, 3],
+					[4, 4],
+					[0, 0],
+				].reverse(), // Reverse to make it right hand rule valid
+			]);
+
+			// Ensure the coordinate points are created in the right order
+			expect(features[1].geometry.coordinates).toStrictEqual([0, 0]);
+			expect(features[1].properties.index).toBe(0);
+			expect(features[2].geometry.coordinates).toStrictEqual([4, 4]);
+			expect(features[2].properties.index).toBe(1);
+			expect(features[3].geometry.coordinates).toStrictEqual([3, 3]);
+			expect(features[3].properties.index).toBe(2);
+			expect(features[4].geometry.coordinates).toStrictEqual([2, 2]);
+			expect(features[4].properties.index).toBe(3);
+			expect(features[5].geometry.coordinates).toStrictEqual([1, 1]);
+			expect(features[5].properties.index).toBe(4);
 		});
 
 		it("it early returns early if a duplicate coordinate is provided", () => {

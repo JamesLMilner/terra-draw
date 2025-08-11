@@ -9,7 +9,11 @@ import SimpleFillSymbol from "@arcgis/core/symbols/SimpleFillSymbol";
 import SimpleLineSymbol from "@arcgis/core/symbols/SimpleLineSymbol";
 import Color from "@arcgis/core/Color";
 import SimpleMarkerSymbol from "@arcgis/core/symbols/SimpleMarkerSymbol";
-import { setupMapContainer, setupControls } from "../../common/setup";
+import {
+	setupMapContainer,
+	setupControls,
+	onNextFrame,
+} from "../../common/setup";
 import { TerraDraw } from "../../../../terra-draw/src/terra-draw";
 import { TerraDrawArcGISMapsSDKAdapter } from "../../../../terra-draw-arcgis-adapter/src/terra-draw-arcgis-adapter";
 import { StoryArgs } from "../../common/config";
@@ -54,69 +58,55 @@ export const initialiseArcGISMap = ({
 	};
 };
 
-const current = {
-	map: null as MapView | null,
-	draw: null as TerraDraw | null,
-	container: null as HTMLElement | null,
-};
+const rendered: { [key: string]: HTMLElement } = {};
 
 export function SetupArcGIS(args: StoryArgs): HTMLElement {
-	if (current.draw) {
-		if (current.draw.enabled) {
-			current.draw.stop();
-		}
-		current.draw = null;
-	}
-	if (current.map) {
-		current.map.destroy();
-		current.map = null;
-	}
-	if (current.container) {
-		current.container.remove();
-		current.container = null;
+	if (rendered[args.id]) {
+		return rendered[args.id];
 	}
 
-	const { container, controls, mapContainer } = setupMapContainer(args);
+	const { container, controls, mapContainer, modes, modeButtons, clearButton } =
+		setupMapContainer(args);
 
-	const modes = args.modes.map((mode) => mode());
+	onNextFrame(() => {
+		try {
+			const mapConfig = initialiseArcGISMap({
+				mapContainer,
+				centerLat: args.centerLat,
+				centerLng: args.centerLng,
+				zoom: args.zoom,
+			});
 
-	try {
-		const mapConfig = initialiseArcGISMap({
-			mapContainer,
-			centerLat: args.centerLat,
-			centerLng: args.centerLng,
-			zoom: args.zoom,
-		});
+			const draw = new TerraDraw({
+				adapter: new TerraDrawArcGISMapsSDKAdapter({
+					lib: mapConfig.lib,
+					map: mapConfig.map,
+				}),
+				modes,
+			});
 
-		const draw = new TerraDraw({
-			adapter: new TerraDrawArcGISMapsSDKAdapter({
-				lib: mapConfig.lib,
-				map: mapConfig.map,
-			}),
-			modes,
-		});
+			draw.start();
 
-		draw.start();
+			setupControls({
+				show: args.showButtons,
+				changeMode: (mode) => draw.setMode(mode),
+				clear: () => draw.clear(),
+				modeButtons,
+				clearButton,
+				controls,
+			});
 
-		current.map = mapConfig.map;
-		current.container = container;
-		current.draw = draw;
+			args.afterRender?.(draw);
+		} catch (error) {
+			// eslint-disable-next-line no-console
+			console.error("Error initializing ArcGIS Map:", error);
 
-		setupControls({
-			changeMode: (mode) => draw.setMode(mode),
-			clear: () => draw.clear(),
-			modes,
-			controls,
-		});
-
-		args.afterRender?.(draw);
-	} catch (error) {
-		// Add error message to container
-		const errorDiv = document.createElement("div");
-		errorDiv.style.padding = "20px";
-		errorDiv.style.textAlign = "center";
-		errorDiv.style.color = "#d32f2f";
-		errorDiv.innerHTML = `
+			// Add error message to container
+			const errorDiv = document.createElement("div");
+			errorDiv.style.padding = "20px";
+			errorDiv.style.textAlign = "center";
+			errorDiv.style.color = "#d32f2f";
+			errorDiv.innerHTML = `
 			<h3>ArcGIS Map Load Error</h3>
 			<p>Failed to initialize ArcGIS JavaScript SDK. This might be due to:</p>
 			<ul style="text-align: left; display: inline-block;">
@@ -126,8 +116,9 @@ export function SetupArcGIS(args: StoryArgs): HTMLElement {
 			</ul>
 			<p><small>Check console for details</small></p>
 		`;
-		mapContainer.appendChild(errorDiv);
-	}
+			mapContainer.appendChild(errorDiv);
+		}
+	});
 
 	return container;
 }

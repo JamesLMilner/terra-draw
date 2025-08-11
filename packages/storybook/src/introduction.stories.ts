@@ -1,5 +1,6 @@
 export default {
 	title: "Introduction",
+	tags: ["exclude"],
 };
 
 export const Welcome = () => `

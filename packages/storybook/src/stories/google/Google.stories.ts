@@ -5,6 +5,7 @@ import { SetupGoogle } from "./setup";
 const meta = {
 	...DefaultMeta,
 	title: "Terra Draw/Google Maps",
+	tags: ["googlemaps"],
 	render: SetupGoogle,
 };
 

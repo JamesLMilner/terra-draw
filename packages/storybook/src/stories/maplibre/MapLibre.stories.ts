@@ -5,6 +5,7 @@ import { SetupMapLibre } from "./setup";
 const meta = {
 	...DefaultMeta,
 	title: "Terra Draw/MapLibre",
+	tags: ["maplibre"],
 	render: SetupMapLibre,
 };
 

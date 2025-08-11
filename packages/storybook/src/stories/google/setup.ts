@@ -1,5 +1,9 @@
 import { Loader } from "@googlemaps/js-api-loader";
-import { setupMapContainer, setupControls } from "../../common/setup";
+import {
+	setupMapContainer,
+	setupControls,
+	onNextFrame,
+} from "../../common/setup";
 import { TerraDraw } from "../../../../terra-draw/src/terra-draw";
 import { TerraDrawGoogleMapsAdapter } from "../../../../terra-draw-google-maps-adapter/src/terra-draw-google-maps-adapter";
 import { StoryArgs } from "../../common/config";
@@ -47,78 +51,64 @@ export const initialiseGoogleMap = async ({
 	};
 };
 
-const current = {
-	map: null as google.maps.Map | null,
-	draw: null as TerraDraw | null,
-	container: null as HTMLElement | null,
-};
+const rendered: { [key: string]: HTMLElement } = {};
 
 export function SetupGoogle(args: StoryArgs): HTMLElement {
-	if (current.draw) {
-		// TODO: Investigation why this can't run
-		// if (current.draw.enabled) {
-		//     current.draw.stop();
-		// }
-		current.draw = null;
-	}
-	if (current.map) {
-		current.map = null;
-	}
-	if (current.container) {
-		current.container.remove();
-		current.container = null;
+	if (rendered[args.id]) {
+		return rendered[args.id];
 	}
 
-	const { container, controls, mapContainer } = setupMapContainer(args);
+	const { container, controls, mapContainer, modeButtons, clearButton, modes } =
+		setupMapContainer(args);
 
-	const modes = args.modes.map((mode) => mode());
-
-	// Initialize Google Maps asynchronously
-	initialiseGoogleMap({
-		mapContainer,
-		centerLat: args.centerLat,
-		centerLng: args.centerLng,
-		zoom: args.zoom,
-	})
-		.then((mapConfig) => {
-			// Wait for projection to be ready
-			mapConfig.map.addListener("projection_changed", () => {
-				const adapter = new TerraDrawGoogleMapsAdapter({
-					lib: mapConfig.lib,
-					map: mapConfig.map,
-				});
-
-				const draw = new TerraDraw({
-					adapter,
-					modes,
-				});
-
-				draw.start();
-
-				current.map = mapConfig.map;
-				current.container = container;
-				current.draw = draw;
-
-				// Wait for TerraDraw to be ready before setting up controls
-				draw.on("ready", () => {
-					setupControls({
-						changeMode: (mode) => draw.setMode(mode),
-						clear: () => draw.clear(),
-						modes,
-						controls,
+	onNextFrame(() => {
+		// Initialize Google Maps asynchronously
+		initialiseGoogleMap({
+			mapContainer,
+			centerLat: args.centerLat,
+			centerLng: args.centerLng,
+			zoom: args.zoom,
+		})
+			.then((mapConfig) => {
+				// Wait for projection to be ready
+				mapConfig.map.addListener("projection_changed", () => {
+					const adapter = new TerraDrawGoogleMapsAdapter({
+						lib: mapConfig.lib,
+						map: mapConfig.map,
 					});
 
-					args.afterRender?.(draw);
+					const draw = new TerraDraw({
+						adapter,
+						modes,
+					});
+
+					draw.start();
+
+					// Wait for TerraDraw to be ready before setting up controls
+					draw.on("ready", () => {
+						setupControls({
+							show: args.showButtons,
+							changeMode: (mode) => draw.setMode(mode),
+							clear: () => draw.clear(),
+							modeButtons,
+							clearButton,
+							controls,
+						});
+
+						args.afterRender?.(draw);
+					});
 				});
-			});
-		})
-		.catch((error) => {
-			// Add error message to container
-			const errorDiv = document.createElement("div");
-			errorDiv.style.padding = "20px";
-			errorDiv.style.textAlign = "center";
-			errorDiv.style.color = "#d32f2f";
-			errorDiv.innerHTML = `
+			})
+			.catch((error) => {
+				// eslint-disable-next-line no-console
+				console.error("Error initializing Google Maps:", error);
+
+				// Add error message to container
+				const errorDiv = document.createElement("div");
+				errorDiv.style.padding = "20px";
+				errorDiv.style.textAlign = "center";
+				errorDiv.style.color = "#d32f2f";
+				errorDiv.innerHTML = `
 			<h3>Google Maps Load Error</h3>
 			<p>Failed to load Google Maps API. This might be due to:</p>
 			<ul style="text-align: left; display: inline-block;">
@@ -128,8 +118,11 @@ export function SetupGoogle(args: StoryArgs): HTMLElement {
 			</ul>
 			<p><small>Check console for details</small></p>
 		`;
-			mapContainer.appendChild(errorDiv);
-		});
+				mapContainer.appendChild(errorDiv);
+			});
+	});
+
+	rendered[args.id] = container;
 
 	return container;
 }

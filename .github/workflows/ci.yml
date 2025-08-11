@@ -50,6 +50,30 @@ jobs:
         run: cd packages/terra-draw && npm run build
       - name: Build storybook
         run: cd packages/storybook && npm run storybook:build
+    
+  storybook-smoke-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22.x"
+      - name: Install Parent Folder
+        run: npm ci
+      - name: Build terra-draw
+        run: cd packages/terra-draw && npm run build
+      - name: Install Playwright
+        run: cd packages/storybook && npx playwright install
+      - name: Build Storybook
+        run: cd packages/storybook && npm run storybook:build
+        env:
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+          MAPBOX_ACCESS_TOKEN: ${{ secrets.MAPBOX_ACCESS_TOKEN }}
+      - name: Run static Storybook build in the background
+        run: cd packages/storybook && npm run storybook:serve &
+      - name: Run storybook smoke tests
+        run: cd packages/storybook && npm run storybook:test
 
   build:
     runs-on: ubuntu-latest

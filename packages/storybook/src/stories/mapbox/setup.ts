@@ -1,5 +1,9 @@
 import mapboxgl from "mapbox-gl";
-import { setupMapContainer, setupControls } from "../../common/setup";
+import {
+	setupMapContainer,
+	setupControls,
+	onNextFrame,
+} from "../../common/setup";
 import { TerraDraw } from "../../../../terra-draw/src/terra-draw";
 import { TerraDrawMapboxGLAdapter } from "../../../../terra-draw-mapbox-gl-adapter/src/terra-draw-mapbox-gl-adapter";
 import { StoryArgs } from "../../common/config";
@@ -23,7 +27,7 @@ const OSMStyle = {
 			source: "osm-tiles",
 		},
 	],
-};
+} as mapboxgl.Style;
 
 export const initialiseMapboxMap = ({
 	mapContainer,
@@ -54,79 +58,59 @@ export const initialiseMapboxMap = ({
 		container: mapContainer.id,
 		center: [centerLng, centerLat], // Mapbox uses [lng, lat] format
 		zoom: zoom,
+		style: mapboxgl.accessToken
+			? "mapbox://styles/mapbox/streets-v11"
+			: OSMStyle,
 	});
-
-	// Set style based on token availability
-	if (accessToken) {
-		// Use Mapbox Streets style with valid token
-		map.setStyle("mapbox://styles/mapbox/streets-v11");
-	} else {
-		// Use OpenStreetMap style as fallback
-		map.setStyle(OSMStyle as mapboxgl.Style);
-	}
 
 	return {
 		map,
 	};
 };
 
-const current = {
-	map: null as mapboxgl.Map | null,
-	draw: null as TerraDraw | null,
-	container: null as HTMLElement | null,
-};
+const rendered: { [key: string]: HTMLElement } = {};
 
 export function SetupMapbox(args: StoryArgs): HTMLElement {
-	if (current.draw) {
-		if (current.draw.enabled) {
-			current.draw.stop();
-		}
-		current.draw = null;
-	}
-	if (current.map) {
-		current.map.remove();
-		current.map = null;
-	}
-	if (current.container) {
-		current.container.remove();
-		current.container = null;
+	if (rendered[args.id]) {
+		return rendered[args.id];
 	}
 
-	const { container, controls, mapContainer } = setupMapContainer(args);
+	const { container, controls, mapContainer, modeButtons, clearButton, modes } =
+		setupMapContainer(args);
 
-	const { map } = initialiseMapboxMap({
-		mapContainer,
-		centerLat: args.centerLat,
-		centerLng: args.centerLng,
-		zoom: args.zoom,
-	});
-
-	const modes = args.modes.map((mode) => mode());
-
-	// Wait for style to load before initializing TerraDraw
-	map.once("style.load", () => {
-		const draw = new TerraDraw({
-			adapter: new TerraDrawMapboxGLAdapter({
-				map,
-			}),
-			modes,
+	onNextFrame(() => {
+		const { map } = initialiseMapboxMap({
+			mapContainer,
+			centerLat: args.centerLat,
+			centerLng: args.centerLng,
+			zoom: args.zoom,
 		});
 
-		draw.start();
+		// Wait for style to load before initializing TerraDraw
+		map.once("style.load", () => {
+			const draw = new TerraDraw({
+				adapter: new TerraDrawMapboxGLAdapter({
+					map,
+				}),
+				modes,
+			});
 
-		current.map = map;
-		current.container = container;
-		current.draw = draw;
+			draw.start();
 
-		setupControls({
-			changeMode: (mode) => draw.setMode(mode),
-			clear: () => draw.clear(),
-			modes,
-			controls,
+			setupControls({
+				show: args.showButtons,
+				changeMode: (mode) => draw.setMode(mode),
+				clear: () => draw.clear(),
+				modeButtons,
+				clearButton,
+				controls,
+			});
+
+			args.afterRender?.(draw);
 		});
-
-		args.afterRender?.(draw);
 	});
+
+	rendered[args.id] = container;
 
 	return container;
 }

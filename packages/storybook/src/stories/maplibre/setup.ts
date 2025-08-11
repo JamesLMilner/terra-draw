@@ -1,5 +1,9 @@
 import maplibregl, { StyleSpecification } from "maplibre-gl";
-import { setupMapContainer, setupControls } from "../../common/setup";
+import {
+	setupMapContainer,
+	setupControls,
+	onNextFrame,
+} from "../../common/setup";
 import { TerraDraw } from "../../../../terra-draw/src/terra-draw";
 import { TerraDrawMapLibreGLAdapter } from "../../../../terra-draw-maplibre-gl-adapter/src/terra-draw-maplibre-gl-adapter";
 import { StoryArgs } from "../../common/config";
@@ -49,61 +53,54 @@ export const initialiseMapLibreMap = ({
 	};
 };
 
-const current = {
-	map: null as maplibregl.Map | null,
-	draw: null as TerraDraw | null,
-	container: null as HTMLElement | null,
-};
+const rendered: { [key: string]: HTMLElement } = {};
 
 export function SetupMapLibre(args: StoryArgs): HTMLElement {
-	if (current.draw) {
-		if (current.draw.enabled) {
-			current.draw.stop();
+	if (rendered[args.id]) {
+		return rendered[args.id];
+	}
+
+	const { container, controls, mapContainer, modeButtons, clearButton, modes } =
+		setupMapContainer(args);
+
+	onNextFrame(() => {
+		try {
+			const mapConfig = initialiseMapLibreMap({
+				mapContainer,
+				centerLat: args.centerLat,
+				centerLng: args.centerLng,
+				zoom: args.zoom,
+			});
+
+			// Wait for style to load before initializing TerraDraw
+			mapConfig.map.once("style.load", () => {
+				const draw = new TerraDraw({
+					adapter: new TerraDrawMapLibreGLAdapter({
+						map: mapConfig.map,
+					}),
+					modes,
+				});
+
+				draw.start();
+
+				setupControls({
+					show: args.showButtons,
+					changeMode: (mode) => draw.setMode(mode),
+					clear: () => draw.clear(),
+					modeButtons,
+					clearButton,
+					controls,
+				});
+
+				args.afterRender?.(draw);
+			});
+		} catch (error) {
+			// eslint-disable-next-line no-console
+			console.error("Error initializing MapLibre:", error);
 		}
-		current.draw = null;
-	}
-	if (current.map) {
-		current.map.remove();
-		current.map = null;
-	}
-	if (current.container) {
-		current.container.remove();
-		current.container = null;
-	}
-	const modes = args.modes.map((mode) => mode());
-
-	const { container, controls, mapContainer } = setupMapContainer(args);
-
-	const { map } = initialiseMapLibreMap({
-		mapContainer,
-		centerLat: args.centerLat,
-		centerLng: args.centerLng,
-		zoom: args.zoom,
 	});
 
-	map.once("style.load", () => {
-		const draw = new TerraDraw({
-			adapter: new TerraDrawMapLibreGLAdapter({
-				map,
-			}),
-			modes,
-		});
-
-		draw.start();
-
-		current.map = map;
-		current.container = container;
-		current.draw = draw;
-
-		setupControls({
-			changeMode: (mode) => draw.setMode(mode),
-			clear: () => draw.clear(),
-			modes,
-			controls,
-		});
-
-		args.afterRender?.(draw);
-	});
+	rendered[args.id] = container;
 
 	return container;
 }

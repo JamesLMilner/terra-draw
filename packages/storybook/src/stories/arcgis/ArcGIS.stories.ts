@@ -5,6 +5,7 @@ import { SetupArcGIS } from "./setup";
 const meta = {
 	...DefaultMeta,
 	title: "Terra Draw/ArcGIS",
+	tags: ["arcgis"],
 	render: SetupArcGIS,
 };
 

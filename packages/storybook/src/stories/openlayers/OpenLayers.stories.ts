@@ -5,6 +5,7 @@ import { SetupOpenLayers } from "./setup";
 const meta = {
 	...DefaultMeta,
 	title: "Terra Draw/OpenLayers",
+	tags: ["openlayers"],
 	render: SetupOpenLayers,
 };
 

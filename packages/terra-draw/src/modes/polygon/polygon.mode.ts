@@ -216,10 +216,16 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 			const correctedGeometry = ensureRightHandRule(
 				this.store.getGeometryCopy<Polygon>(this.currentId),
 			);
+
 			if (correctedGeometry) {
 				this.store.updateGeometry([
 					{ id: this.currentId, geometry: correctedGeometry },
 				]);
+
+				// Create or update coordinate points to reflect the new geometry
+				if (this.showCoordinatePoints) {
+					this.coordinatePoints.createOrUpdate(this.currentId);
+				}
 			}
 
 			this.store.updateProperty([

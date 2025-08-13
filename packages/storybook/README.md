@@ -29,3 +29,12 @@ You can run a build of Storybook like so:
 npm run storybook:build
 ```
 
+Finally you can run a series of smoke tests against the Storybook stories using:
+
+```shell
+npm run storybook:test
+```
+
+## CI
+
+Storybook build and the smoke tests run on CI via GitHub Actions. This ensures that all stories can be built and also load without any error. These two practices in conjunction with broader CI steps help ensure that that Terra Draw is working as intended and regressions have not been introduced.

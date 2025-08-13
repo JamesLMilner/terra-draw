@@ -5,6 +5,7 @@ import { SetupLeaflet } from "./setup";
 const meta = {
 	...DefaultMeta,
 	title: "Terra Draw/Leaflet",
+	tags: ["leaflet"],
 	render: SetupLeaflet,
 };
 

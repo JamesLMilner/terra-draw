@@ -11,12 +11,16 @@ const COLORS = {
 };
 
 export function setupMapContainer(args: StoryArgs) {
+	const modes = args.modes.map((mode) => mode());
+
+	const modeButtons: HTMLButtonElement[] = [];
+
 	const container = document.createElement("div");
+
+	container.setAttribute("data-testid", `container`);
 	container.style.display = "flex";
 	container.style.flexDirection = "column";
 	container.style.gap = "10px";
-
-	document.body.appendChild(container);
 
 	// Create controls
 	const controls = document.createElement("div");
@@ -24,6 +28,7 @@ export function setupMapContainer(args: StoryArgs) {
 	controls.style.display = "flex";
 	controls.style.gap = "10px";
 	controls.style.marginBottom = "10px";
+	controls.style.height = "40px";
 
 	// Create map container
 	const mapContainer = document.createElement("div");
@@ -47,10 +52,36 @@ export function setupMapContainer(args: StoryArgs) {
 		container.appendChild(instructions);
 	}
 
+	// Create mode buttons
+	modes.forEach((mode) => {
+		// Create a button for each mode available
+		const buttonLabel = modeToLabel(mode);
+		const buttonId = getModeId(mode);
+		const button = createButton({ label: buttonLabel, id: buttonId });
+		controls.appendChild(button);
+		button.disabled = true;
+		controls.appendChild(button);
+
+		modeButtons.push(button);
+	});
+
+	// Add clear button
+	const clearButton = createButton({
+		label: "Clear",
+		id: "clear",
+		background: COLORS.warning,
+		color: COLORS.lightText,
+	});
+
+	controls.appendChild(clearButton);
+
 	return {
 		container,
 		controls,
 		mapContainer,
+		modes,
+		clearButton,
+		modeButtons,
 	};
 }
 
@@ -108,49 +139,38 @@ function setButtonActive(button: HTMLButtonElement) {
 	button.style.border = `solid 2px ${COLORS.primary}`;
 }
 
-function setupClearButton({
-	controls,
-	clear,
-}: {
-	controls: HTMLElement;
-	clear: () => void;
-}) {
-	// Add clear button
-	const clearButton = createButton({
-		label: "Clear",
-		id: "clear",
-		background: COLORS.warning,
-		color: COLORS.lightText,
-	});
-
-	clearButton.addEventListener("click", () => {
-		clear();
-	});
-
-	controls.appendChild(clearButton);
+function getModeId(mode: TerraDrawBaseDrawMode<any>) {
+	return `mode-button-${mode.mode}`;
 }
 
+/** This function applies the event handlers to the created button elements */
 export function setupControls({
+	show,
 	changeMode,
 	clear,
-	modes,
+	clearButton,
+	modeButtons,
 	controls,
 }: {
+	modeButtons: HTMLButtonElement[];
+	clearButton: HTMLButtonElement;
+	show?: boolean;
 	clear: () => void;
 	changeMode: (mode: string) => void;
-	modes: TerraDrawBaseDrawMode<any>[];
 	controls: HTMLElement;
 }) {
+	if (show === false) {
+		return;
+	}
+
 	// Create mode buttons
-	modes.forEach((mode, i) => {
-		// Create a button for each mode available
-		const buttonLabel = modeToLabel(mode);
-		const buttonId = `mode-${mode.mode.toLowerCase().replace(/\s+/g, "-")}`;
-		const button = createButton({ label: buttonLabel, id: buttonId });
+	modeButtons.forEach((button, i) => {
+		// Extract the mode from the button ID
+		const mode = button.id.split("mode-button-")[1];
 
 		button.addEventListener("click", () => {
 			// Set the mode in TerraDraw
-			changeMode(mode.mode);
+			changeMode(mode);
 
 			// Reset styles of all buttons
 			resetButtonStyles(controls);
@@ -159,17 +179,20 @@ export function setupControls({
 			setButtonActive(button);
 		});
 
+		button.disabled = false;
+
 		// Activate the first mode button by default
 		if (i === 0) {
-			changeMode(mode.mode);
+			changeMode(mode);
 			setButtonActive(button);
 		}
-
-		controls.appendChild(button);
 	});
 
-	setupClearButton({
-		controls,
-		clear,
+	clearButton.addEventListener("click", () => {
+		clear();
 	});
+}
+
+export function onNextFrame(fn: any) {
+	requestAnimationFrame(() => requestAnimationFrame(fn));
 }

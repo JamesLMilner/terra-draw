@@ -1,4 +1,3 @@
-import { polygon } from "leaflet";
 import {
 	TerraDrawPointMode,
 	TerraDrawPolygonMode,
@@ -13,27 +12,40 @@ import {
 	TerraDraw,
 	TerraDrawSelectMode,
 } from "../../../terra-draw/src/terra-draw";
-import { DefaultSize, LocationNewYork, DefaultZoom, Story } from "./config";
+import {
+	DefaultSize,
+	LocationNewYork,
+	DefaultZoom,
+	Story,
+	DefaultPlay,
+} from "./config";
 
-// Point drawing only story
-const Point: Story = {
+const DefaultStory = {
 	args: {
-		id: "point",
 		...DefaultSize,
 		...LocationNewYork,
 		...DefaultZoom,
+	},
+	...DefaultPlay,
+};
+
+// Point drawing only story
+const Point: Story = {
+	...DefaultStory,
+	args: {
+		id: "point",
 		modes: [() => new TerraDrawPointMode()],
+		...DefaultStory.args,
 	},
 };
 
 // Polygon drawing story
 const Polygon: Story = {
+	...DefaultStory,
 	args: {
 		id: "polygon",
-		...DefaultSize,
-		...LocationNewYork,
-		...DefaultZoom,
 		modes: [() => new TerraDrawPolygonMode()],
+		...DefaultStory.args,
 	},
 };
 
@@ -51,6 +63,7 @@ const PolygonWithCoordinatePoints: Story = {
 				}),
 		],
 	},
+	...DefaultPlay,
 };
 
 // Polygon with coordinate snapping story
@@ -69,6 +82,7 @@ const PolygonWithCoordinateSnapping: Story = {
 				}),
 		],
 	},
+	...DefaultPlay,
 };
 
 // Polygon with line snapping story
@@ -87,6 +101,7 @@ const PolygonWithLineSnapping: Story = {
 				}),
 		],
 	},
+	...DefaultPlay,
 };
 
 // Polygon with editable enabled story
@@ -103,86 +118,79 @@ const PolygonWithEditableEnabled: Story = {
 				}),
 		],
 	},
+	...DefaultPlay,
 };
 
 // Circle drawing story
 const Circle: Story = {
+	...DefaultStory,
 	args: {
 		id: "circle",
-		...DefaultSize,
-		...LocationNewYork,
-		...DefaultZoom,
 		modes: [() => new TerraDrawCircleMode()],
+		...DefaultStory.args,
 	},
 };
 
 // Rectangle drawing story
 const Rectangle: Story = {
+	...DefaultStory,
 	args: {
 		id: "rectangle",
-		...DefaultSize,
-		...LocationNewYork,
-		...DefaultZoom,
 		modes: [() => new TerraDrawRectangleMode()],
+		...DefaultStory.args,
 	},
 };
 
 // Angled rectangle drawing story
 const AngledRectangle: Story = {
+	...DefaultStory,
 	args: {
 		id: "angled-rectangle",
-		...DefaultSize,
-		...LocationNewYork,
-		...DefaultZoom,
 		modes: [() => new TerraDrawAngledRectangleMode()],
+		...DefaultStory.args,
 	},
 };
 
 // Sector drawing story
 const Sector: Story = {
+	...DefaultStory,
 	args: {
 		id: "sector",
-		...DefaultSize,
-		...LocationNewYork,
-		...DefaultZoom,
 		modes: [() => new TerraDrawSectorMode()],
+		...DefaultStory.args,
 	},
 };
 
 // Linestring drawing story
 const LineString: Story = {
+	...DefaultStory,
 	args: {
 		id: "linestring",
-		...DefaultSize,
-		...LocationNewYork,
-		...DefaultZoom,
 		modes: [() => new TerraDrawLineStringMode()],
+		...DefaultStory.args,
 	},
 };
 
 // Linestring drawing story
 const LineStringEditable: Story = {
+	...DefaultStory,
 	args: {
 		id: "linestring-editable",
-		...DefaultSize,
-		...LocationNewYork,
-		...DefaultZoom,
 		modes: [
 			() =>
 				new TerraDrawLineStringMode({
 					editable: true,
 				}),
 		],
+		...DefaultStory.args,
 	},
 };
 
 // Linestring with coordinate snapping  story
 const LineStringWithCoordinateSnapping: Story = {
+	...DefaultStory,
 	args: {
 		id: "linestring-coordinate-snapping",
-		...DefaultSize,
-		...LocationNewYork,
-		...DefaultZoom,
 		modes: [
 			() =>
 				new TerraDrawLineStringMode({
@@ -191,16 +199,15 @@ const LineStringWithCoordinateSnapping: Story = {
 					},
 				}),
 		],
+		...DefaultStory.args,
 	},
 };
 
 // Linestring with linestring snapping  story
 const LineStringWithLineSnapping: Story = {
+	...DefaultStory,
 	args: {
 		id: "linestring-line-snapping",
-		...DefaultSize,
-		...LocationNewYork,
-		...DefaultZoom,
 		modes: [
 			() =>
 				new TerraDrawLineStringMode({
@@ -209,65 +216,60 @@ const LineStringWithLineSnapping: Story = {
 					},
 				}),
 		],
+		...DefaultStory.args,
 	},
 };
 
 // Freehand linestring drawing story
 const FreehandLineString: Story = {
+	...DefaultStory,
 	args: {
 		id: "freehand-linestring",
-		...DefaultSize,
-		...LocationNewYork,
-		...DefaultZoom,
 		modes: [() => new TerraDrawFreehandLineStringMode()],
+		...DefaultStory.args,
 	},
 };
 
 // Freehand drawing story
 const Freehand: Story = {
+	...DefaultStory,
 	args: {
 		id: "freehand",
-		...DefaultSize,
-		...LocationNewYork,
-		...DefaultZoom,
 		modes: [() => new TerraDrawFreehandMode()],
+		...DefaultStory.args,
 	},
 };
 
 // Freehand autoclose drawing story
 const FreehandWithAutoClose: Story = {
+	...DefaultStory,
 	args: {
 		id: "freehand-autoclose",
-		...DefaultSize,
-		...LocationNewYork,
-		...DefaultZoom,
 		modes: [
 			() =>
 				new TerraDrawFreehandMode({
 					autoClose: true,
 				}),
 		],
+		...DefaultStory.args,
 	},
 };
 
 // Sensor drawing story
 const Sensor: Story = {
+	...DefaultStory,
 	args: {
 		id: "sensor",
-		...DefaultSize,
-		...LocationNewYork,
-		...DefaultZoom,
 		modes: [() => new TerraDrawSensorMode()],
+		...DefaultStory.args,
 	},
 };
 
 // Sensor drawing story
 const Select: Story = {
+	...DefaultStory,
 	args: {
 		id: "select",
-		...DefaultSize,
-		...LocationNewYork,
-		...DefaultZoom,
 		modes: [
 			() => new TerraDrawPolygonMode(),
 			() =>
@@ -281,15 +283,14 @@ const Select: Story = {
 					},
 				}),
 		],
+		...DefaultStory.args,
 	},
 };
 
 const SelectWithSelectionPoints: Story = {
+	...DefaultStory,
 	args: {
 		id: "select",
-		...DefaultSize,
-		...LocationNewYork,
-		...DefaultZoom,
 		modes: [
 			() => new TerraDrawPolygonMode(),
 			() =>
@@ -304,15 +305,14 @@ const SelectWithSelectionPoints: Story = {
 					},
 				}),
 		],
+		...DefaultStory.args,
 	},
 };
 
 const SelectWithMidPoints: Story = {
+	...DefaultStory,
 	args: {
 		id: "select",
-		...DefaultSize,
-		...LocationNewYork,
-		...DefaultZoom,
 		modes: [
 			() => new TerraDrawPolygonMode(),
 			() =>
@@ -329,16 +329,15 @@ const SelectWithMidPoints: Story = {
 					},
 				}),
 		],
+		...DefaultStory.args,
 	},
 };
 
 // Programmatic update geometry story
 const ProgrammaticUpdate: Story = {
+	...DefaultStory,
 	args: {
 		id: "programmatic-update",
-		...DefaultSize,
-		...LocationNewYork,
-		...DefaultZoom,
 		modes: [() => new TerraDrawPolygonMode()],
 		showButtons: false,
 		instructions:
@@ -381,16 +380,15 @@ const ProgrammaticUpdate: Story = {
 				});
 			}, 2000);
 		},
+		...DefaultStory.args,
 	},
 };
 
 // Programmatic scale story
 const ProgrammaticScale: Story = {
+	...DefaultStory,
 	args: {
 		id: "programmatic-scale",
-		...DefaultSize,
-		...LocationNewYork,
-		...DefaultZoom,
 		modes: [() => new TerraDrawPolygonMode()],
 		showButtons: false,
 		instructions:
@@ -429,16 +427,15 @@ const ProgrammaticScale: Story = {
 				});
 			}, 2000);
 		},
+		...DefaultStory.args,
 	},
 };
 
 // Programmatic scale story
 const ProgrammaticRotate: Story = {
+	...DefaultStory,
 	args: {
 		id: "programmatic-rotate",
-		...DefaultSize,
-		...LocationNewYork,
-		...DefaultZoom,
 		modes: [() => new TerraDrawPolygonMode()],
 		showButtons: false,
 		instructions:
@@ -476,6 +473,7 @@ const ProgrammaticRotate: Story = {
 				});
 			}, 2000);
 		},
+		...DefaultStory.args,
 	},
 };
 

@@ -1,5 +1,6 @@
 import { StoryObj } from "@storybook/html";
 import { TerraDraw } from "../../../terra-draw/src/terra-draw";
+import { waitFor, within, expect } from "@storybook/test";
 
 export type Story = StoryObj<StoryArgs>;
 
@@ -21,6 +22,30 @@ export interface StoryArgs {
 
 export const DefaultZoom = {
 	zoom: 12,
+};
+
+export const DefaultPlay = {
+	play: (async ({ canvasElement, args }) => {
+		await within(canvasElement).findByTestId("container");
+
+		if (args.showButtons === false) {
+			return;
+		}
+
+		await waitFor(
+			async () => {
+				const buttons = await within(canvasElement).findAllByRole("button");
+
+				buttons.forEach((button) => {
+					expect(button).not.toBeDisabled();
+				});
+			},
+			{
+				timeout: 5000,
+				interval: 100,
+			},
+		);
+	}) as Story["play"],
 };
 
 export const DefaultSize = {

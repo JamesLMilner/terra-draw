@@ -1,5 +1,9 @@
 import * as L from "leaflet";
-import { setupMapContainer, setupControls } from "../../common/setup";
+import {
+	setupMapContainer,
+	setupControls,
+	onNextFrame,
+} from "../../common/setup";
 import { TerraDraw } from "../../../../terra-draw/src/terra-draw";
 import { TerraDrawLeafletAdapter } from "../../../../terra-draw-leaflet-adapter/src/terra-draw-leaflet-adapter";
 import { StoryArgs } from "../../common/config";
@@ -35,61 +39,45 @@ export const initialiseLeafletMap = ({
 	};
 };
 
-const current = {
-	map: null as L.Map | null,
-	draw: null as TerraDraw | null,
-	container: null as HTMLElement | null,
-};
+const rendered: { [key: string]: HTMLElement } = {};
 
 export function SetupLeaflet(args: StoryArgs): HTMLElement {
-	if (current.draw) {
-		if (current.draw.enabled) {
-			current.draw.stop();
-		}
-		current.draw = null;
-	}
-	if (current.map) {
-		current.map.remove();
-		current.map = null;
-	}
-	if (current.container) {
-		current.container.remove();
-		current.container = null;
+	if (rendered[args.id]) {
+		return rendered[args.id];
 	}
 
-	const modes = args.modes.map((mode) => mode());
+	const { container, controls, mapContainer, modeButtons, clearButton, modes } =
+		setupMapContainer(args);
 
-	const { container, controls, mapContainer } = setupMapContainer(args);
+	onNextFrame(() => {
+		const { lib, map } = initialiseLeafletMap({
+			mapContainer,
+			centerLat: args.centerLat,
+			centerLng: args.centerLng,
+			zoom: args.zoom,
+		});
 
-	const { lib, map } = initialiseLeafletMap({
-		mapContainer,
-		centerLat: args.centerLat,
-		centerLng: args.centerLng,
-		zoom: args.zoom,
+		const draw = new TerraDraw({
+			adapter: new TerraDrawLeafletAdapter({
+				lib,
+				map,
+			}),
+			modes,
+		});
+
+		draw.start();
+
+		setupControls({
+			show: args.showButtons,
+			changeMode: (mode) => draw.setMode(mode),
+			clear: () => draw.clear(),
+			modeButtons,
+			clearButton,
+			controls,
+		});
+
+		args.afterRender?.(draw);
 	});
-
-	const draw = new TerraDraw({
-		adapter: new TerraDrawLeafletAdapter({
-			lib,
-			map,
-		}),
-		modes,
-	});
-
-	draw.start();
-
-	current.map = map;
-	current.container = container;
-	current.draw = draw;
-
-	setupControls({
-		changeMode: (mode) => draw.setMode(mode),
-		clear: () => draw.clear(),
-		modes,
-		controls,
-	});
-
-	args.afterRender?.(draw);
 
 	return container;
 }

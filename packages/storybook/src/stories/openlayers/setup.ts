@@ -7,7 +7,11 @@ import { OSM, Vector as VectorSource } from "ol/source";
 import { Tile as TileLayer, Vector as VectorLayer } from "ol/layer";
 import { toLonLat, fromLonLat, getUserProjection } from "ol/proj";
 import Projection from "ol/proj/Projection";
-import { setupMapContainer, setupControls } from "../../common/setup";
+import {
+	setupMapContainer,
+	setupControls,
+	onNextFrame,
+} from "../../common/setup";
 import { TerraDraw } from "../../../../terra-draw/src/terra-draw";
 import { TerraDrawOpenLayersAdapter } from "../../../../terra-draw-openlayers-adapter/src/terra-draw-openlayers-adapter";
 import { StoryArgs } from "../../common/config";
@@ -60,58 +64,49 @@ export const initialiseOpenLayersMap = ({
 	};
 };
 
-const current = {
-	map: null as Map | null,
-	draw: null as TerraDraw | null,
-	container: null as HTMLElement | null,
-};
+const rendered: { [key: string]: HTMLElement } = {};
 
 export function SetupOpenLayers(args: StoryArgs): HTMLElement {
-	if (current.draw) {
-		if (current.draw.enabled) {
-			current.draw.stop();
-		}
-		current.draw = null;
-	}
-	if (current.map) {
-		current.map = null;
-	}
-	if (current.container) {
-		current.container.remove();
-		current.container = null;
+	if (rendered[args.id]) {
+		return rendered[args.id];
 	}
 
-	const modes = args.modes.map((mode) => mode());
+	const { container, controls, mapContainer, modeButtons, clearButton, modes } =
+		setupMapContainer(args);
 
-	const { container, controls, mapContainer } = setupMapContainer(args);
-
-	const mapConfig = initialiseOpenLayersMap({
-		mapContainer,
-		centerLat: args.centerLat,
-		centerLng: args.centerLng,
-		zoom: args.zoom,
-	});
-
-	// Wait for the map to be rendered before initializing TerraDraw
-	mapConfig.map.once("rendercomplete", () => {
-		const draw = new TerraDraw({
-			adapter: new TerraDrawOpenLayersAdapter({
-				...mapConfig,
-			}),
-			modes,
+	onNextFrame(() => {
+		const mapConfig = initialiseOpenLayersMap({
+			mapContainer,
+			centerLat: args.centerLat,
+			centerLng: args.centerLng,
+			zoom: args.zoom,
 		});
 
-		draw.start();
+		// Wait for the map to be rendered before initializing TerraDraw
+		mapConfig.map.once("rendercomplete", () => {
+			const draw = new TerraDraw({
+				adapter: new TerraDrawOpenLayersAdapter({
+					...mapConfig,
+				}),
+				modes,
+			});
 
-		setupControls({
-			changeMode: (mode) => draw.setMode(mode),
-			clear: () => draw.clear(),
-			modes,
-			controls,
+			draw.start();
+
+			setupControls({
+				show: args.showButtons,
+				changeMode: (mode) => draw.setMode(mode),
+				clear: () => draw.clear(),
+				modeButtons,
+				clearButton,
+				controls,
+			});
+
+			args.afterRender?.(draw);
 		});
-
-		args.afterRender?.(draw);
 	});
+
+	rendered[args.id] = container;
 
 	return container;
 }

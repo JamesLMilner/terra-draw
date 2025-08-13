@@ -5,6 +5,7 @@ import { SetupMapbox } from "./setup";
 const meta = {
 	...DefaultMeta,
 	title: "Terra Draw/Mapbox",
+	tags: ["mapbox"],
 	render: SetupMapbox,
 };
 

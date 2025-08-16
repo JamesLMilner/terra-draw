@@ -20,6 +20,7 @@ export const PolygonWithCoordinateSnapping =
 	AllStories.PolygonWithCoordinateSnapping;
 export const PolygonWithLineSnapping = AllStories.PolygonWithLineSnapping;
 export const PolygonWithEditableEnabled = AllStories.PolygonWithEditableEnabled;
+export const ZIndexOrdering = AllStories.ZIndexOrdering;
 export const Circle = AllStories.Circle;
 export const Rectangle = AllStories.Rectangle;
 export const AngledRectangle = AllStories.AngledRectangle;

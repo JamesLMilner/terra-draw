@@ -206,6 +206,11 @@ export const COMMON_PROPERTIES = {
 	COORDINATE_POINT_IDS: "coordinatePointIds",
 } as const;
 
+/**
+ * Lower z-index represents layers that are lower in the stack
+ * and higher z-index represents layers that are higher in the stack
+ * i.e. a layer with z-index 10 will be rendered below a layer with z-index 20
+ */
 export const Z_INDEX = {
 	LAYER_ONE: 10,
 	LAYER_TWO: 20,

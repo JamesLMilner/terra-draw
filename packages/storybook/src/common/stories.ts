@@ -104,6 +104,30 @@ const PolygonWithLineSnapping: Story = {
 	...DefaultPlay,
 };
 
+// Z Index ordering story
+const ZIndexOrdering: Story = {
+	...DefaultStory,
+	args: {
+		id: "polygon-z-index",
+		modes: [
+			() =>
+				new TerraDrawPolygonMode({
+					showCoordinatePoints: true,
+					editable: true,
+					styles: {
+						coordinatePointColor: "#ff0000",
+						closingPointColor: "#00ff00",
+					},
+				}),
+			() => new TerraDrawLineStringMode(),
+			() => new TerraDrawPointMode(),
+		],
+		...DefaultStory.args,
+		instructions:
+			"Different mode features have different z-indexes, you can experiment by drawing different features on top of each other.",
+	},
+};
+
 // Polygon with editable enabled story
 const PolygonWithEditableEnabled: Story = {
 	args: {
@@ -484,6 +508,7 @@ const AllStories = {
 	PolygonWithCoordinateSnapping,
 	PolygonWithLineSnapping,
 	PolygonWithEditableEnabled,
+	ZIndexOrdering,
 	Circle,
 	Rectangle,
 	AngledRectangle,

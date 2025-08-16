@@ -333,12 +333,18 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawExtend.TerraDrawBaseAdapt
 				const mode = properties.mode as string;
 				const styles = styling[mode](feature);
 
+				// Set the zIndex property for the feature regardless of geometry type
+				// NOTE: Render ordering is predominately controlled by the layer order.
+				// In this instance we are only controlling the zIndex order in relation to the layer itself. Since we have a
+				// layer for each geometry type, the zIndex is only used to control the order of features within that layer.
+				// Long term we need to consider how to handle zIndex ordering across multiple geometry types.
+				properties.zIndex = styles.zIndex;
+
 				if (feature.geometry.type === "Point") {
 					properties.pointColor = styles.pointColor;
 					properties.pointOutlineColor = styles.pointOutlineColor;
 					properties.pointOutlineWidth = styles.pointOutlineWidth;
 					properties.pointWidth = styles.pointWidth;
-					properties.zIndex = styles.zIndex;
 					points.push(feature);
 				} else if (feature.geometry.type === "LineString") {
 					properties.lineStringColor = styles.lineStringColor;

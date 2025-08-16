@@ -16,9 +16,18 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "22.x"
-      - name: Install packages
-        run: npm ci
+
+      - name: Extract @commitlint/cli version
+        id: commitlint-version
+        run: |
+          echo "COMMITLINT_VERSION=$(node -p "require('./package.json').devDependencies['@commitlint/cli']")" >> $GITHUB_ENV
+
+      - name: Extract @commitlint/config-conventional version
+        id: commitlint-config-version
+        run: |
+          echo "COMMITLINT_CONFIG_VERSION=$(node -p "require('./package.json').devDependencies['@commitlint/config-conventional']")" >> $GITHUB_ENV
+
       - name: PR Conventional Commit Validation Against Commit Lint Config
         env:
             TITLE: ${{ github.event.pull_request.title }}
-        run: echo "$TITLE" | npx commitlint
+        run: echo "$TITLE" | npx --package @commitlint/cli@$COMMITLINT_VERSION --package @commitlint/config-conventional@$COMMITLINT_CONFIG_VERSION commitlint

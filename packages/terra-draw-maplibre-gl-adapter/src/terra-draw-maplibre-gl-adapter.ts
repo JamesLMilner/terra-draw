@@ -340,6 +340,7 @@ export class TerraDrawMapLibreGLAdapter<
 				const { properties } = feature;
 				const mode = properties.mode as string;
 				const styles = styling[mode](feature);
+				properties.zIndex = styles.zIndex;
 
 				// Set the zIndex property for the feature regardless of geometry type
 				// NOTE: Render ordering is predominately controlled by the layer order.

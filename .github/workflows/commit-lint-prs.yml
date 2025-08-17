@@ -1,6 +1,6 @@
 name: PR Conventional Commit Validation
 
-permissions: 
+permissions:
   pull-requests: read
 
 on:
@@ -12,6 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - name: Use Node
         uses: actions/setup-node@v4
         with:
@@ -27,7 +28,46 @@ jobs:
         run: |
           echo "COMMITLINT_CONFIG_VERSION=$(node -p "require('./package.json').devDependencies['@commitlint/config-conventional']")" >> $GITHUB_ENV
 
-      - name: PR Conventional Commit Validation Against Commit Lint Config
-        env:
-            TITLE: ${{ github.event.pull_request.title }}
-        run: echo "$TITLE" | npx --package @commitlint/cli@$COMMITLINT_VERSION --package @commitlint/config-conventional@$COMMITLINT_CONFIG_VERSION commitlint
+      - name: Create temporary directory
+        id: mktemp
+        run: |
+          echo "TMP_DIR=$(mktemp -d)" >> "$GITHUB_ENV"
+          echo "Created temp dir: $TMP_DIR"
+
+      - name: Create temp package.json with copied commitlint config
+        run: |
+          node -e "
+            const fs = require('fs');
+            const path = require('path');
+            const rootPkg = require('./package.json');
+            const outDir = process.env.TMP_DIR;
+            if (!rootPkg.commitlint) {
+              console.error('No \"commitlint\" property found in root package.json');
+              process.exit(1);
+            }
+            const tempPkg = {
+              name: 'tmp-commitlint-runner',
+              private: true,
+              version: '0.0.0',
+              scripts: {
+                'lint-pr': 'commitlint'
+              },
+              commitlint: rootPkg.commitlint
+            };
+            fs.writeFileSync(path.join(outDir, 'package.json'), JSON.stringify(tempPkg, null, 2));
+          "
+          echo "Temp package.json written to $TMP_DIR/package.json"
+
+      - name: Install Commitlint (exact versions) in temp directory
+        run: |
+          npm --prefix "$TMP_DIR" install -D \
+            "@commitlint/cli@${COMMITLINT_VERSION}" \
+            "@commitlint/config-conventional@${COMMITLINT_CONFIG_VERSION}"
+
+      - name: Validate PR title with Commitlint (from temp package.json)
+        run: |
+          echo "Validating PR title:"
+          echo "  \"${{ github.event.pull_request.title }}\""
+          # Pipe the PR title into the npm script defined in the temp package.json
+          echo "${{ github.event.pull_request.title }}" | \
+            npm --prefix "$TMP_DIR" run -s lint-pr -- --verbose

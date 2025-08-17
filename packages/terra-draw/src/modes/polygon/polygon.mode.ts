@@ -234,6 +234,16 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 					property: COMMON_PROPERTIES.CURRENTLY_DRAWING,
 					value: undefined,
 				},
+				{
+					id: this.currentId,
+					property: COMMON_PROPERTIES.COMMITTED_COORDINATE_COUNT,
+					value: undefined,
+				},
+				{
+					id: this.currentId,
+					property: COMMON_PROPERTIES.PROVISIONAL_COORDINATE_COUNT,
+					value: undefined,
+				},
 			]);
 		}
 
@@ -387,6 +397,14 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 				];
 			}
 		}
+
+		this.store.updateProperty([
+			{
+				id: this.currentId,
+				property: COMMON_PROPERTIES.PROVISIONAL_COORDINATE_COUNT,
+				value: this.currentCoordinate + 1,
+			},
+		]);
 
 		this.updatePolygonGeometry(updatedCoordinates, UpdateTypes.Provisional);
 	}
@@ -611,6 +629,10 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 					properties: {
 						mode: this.mode,
 						[COMMON_PROPERTIES.CURRENTLY_DRAWING]: true,
+						[COMMON_PROPERTIES.COMMITTED_COORDINATE_COUNT]:
+							this.currentCoordinate + 1,
+						[COMMON_PROPERTIES.PROVISIONAL_COORDINATE_COUNT]:
+							this.currentCoordinate + 1,
 					},
 				},
 			]);
@@ -659,6 +681,14 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 				return;
 			}
 
+			this.store.updateProperty([
+				{
+					id: this.currentId,
+					property: COMMON_PROPERTIES.COMMITTED_COORDINATE_COUNT,
+					value: this.currentCoordinate + 1,
+				},
+			]);
+
 			this.currentCoordinate++;
 		} else if (this.currentCoordinate === 2 && this.currentId) {
 			const snappedCoordinate = this.snapCoordinate(event);
@@ -700,6 +730,14 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 			if (this.currentCoordinate === 2) {
 				this.closingPoints.create(currentPolygonCoordinates, "polygon");
 			}
+
+			this.store.updateProperty([
+				{
+					id: this.currentId,
+					property: COMMON_PROPERTIES.COMMITTED_COORDINATE_COUNT,
+					value: this.currentCoordinate + 1,
+				},
+			]);
 
 			this.currentCoordinate++;
 		} else if (this.currentId) {
@@ -747,6 +785,14 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 				if (!updated) {
 					return;
 				}
+
+				this.store.updateProperty([
+					{
+						id: this.currentId,
+						property: COMMON_PROPERTIES.COMMITTED_COORDINATE_COUNT,
+						value: this.currentCoordinate + 1,
+					},
+				]);
 				this.currentCoordinate++;
 
 				// Update closing points straight away

@@ -740,6 +740,7 @@ describe("TerraDrawPolygonMode", () => {
 		let polygonMode: TerraDrawPolygonMode;
 		let store: TerraDrawGeoJSONStore;
 		let onChange: jest.Mock;
+		let onFinish: jest.Mock;
 
 		beforeEach(() => {
 			store = new GeoJSONStore();
@@ -747,6 +748,7 @@ describe("TerraDrawPolygonMode", () => {
 			const mockConfig = MockModeConfig(polygonMode.mode);
 
 			store = mockConfig.store;
+			onFinish = mockConfig.onFinish;
 			onChange = mockConfig.onChange;
 			polygonMode.register(mockConfig);
 			polygonMode.start();
@@ -762,8 +764,6 @@ describe("TerraDrawPolygonMode", () => {
 			polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
 			polygonMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
-
-			// expect(onChange).toHaveBeenCalledTimes(2);
 
 			const features = store.copyAll();
 			expect(features.length).toBe(1);
@@ -787,10 +787,10 @@ describe("TerraDrawPolygonMode", () => {
 
 			polygonMode.onMouseMove(MockCursorEvent({ lng: 2, lat: 2 }));
 
-			expect(onChange).toHaveBeenCalledTimes(4);
-
 			const features = store.copyAll();
 			expect(features.length).toBe(1);
+
+			expect(onFinish).not.toHaveBeenCalled();
 
 			expect(features[0].geometry.coordinates).toStrictEqual([
 				[
@@ -816,8 +816,6 @@ describe("TerraDrawPolygonMode", () => {
 			// Snapping branch
 			polygonMode.onMouseMove(MockCursorEvent({ lng: 2.5, lat: 2.5 }));
 
-			expect(onChange).toHaveBeenCalledTimes(7);
-
 			// 1 times for the polygon
 			// 2 times for the closing points
 			let features = store.copyAll();
@@ -835,6 +833,8 @@ describe("TerraDrawPolygonMode", () => {
 
 			// No snapping branch
 			polygonMode.onMouseMove(MockCursorEvent({ lng: 4, lat: 4 }));
+
+			expect(onFinish).not.toHaveBeenCalled();
 
 			features = store.copyAll();
 
@@ -1264,18 +1264,9 @@ describe("TerraDrawPolygonMode", () => {
 			expect(features.length).toBe(1);
 
 			expect(onFinish).toHaveBeenCalledTimes(1);
-			// Extra call because of the right hand rule fixing
-			expect(onChange).toHaveBeenCalledTimes(14);
 
 			// Delete a coordinate
 			polygonMode.onClick(MockCursorEvent({ lng: 1, lat: 1, button: "right" }));
-
-			expect(onChange).toHaveBeenNthCalledWith(
-				14,
-				[expect.any(String), expect.any(String)],
-				"delete",
-				undefined,
-			);
 
 			const featuresAfter = store.copyAll();
 			expect(featuresAfter.length).toBe(1);
@@ -1315,8 +1306,6 @@ describe("TerraDrawPolygonMode", () => {
 			expect(features.length).toBe(1);
 
 			expect(onFinish).toHaveBeenCalledTimes(1);
-			// Extra call because of the right hand rule fixing
-			expect(onChange).toHaveBeenCalledTimes(14);
 
 			// Delete a coordinate
 			polygonMode.onClick(
@@ -1326,13 +1315,6 @@ describe("TerraDrawPolygonMode", () => {
 					button: "left",
 					isContextMenu: true,
 				}),
-			);
-
-			expect(onChange).toHaveBeenNthCalledWith(
-				14,
-				[expect.any(String), expect.any(String)],
-				"delete",
-				undefined,
 			);
 
 			const featuresAfter = store.copyAll();
@@ -1435,6 +1417,61 @@ describe("TerraDrawPolygonMode", () => {
 			expect(features[1].geometry.type).toBe("Point");
 			expect(features[2].geometry.type).toBe("Point");
 			expect(features[3].geometry.type).toBe("Point");
+		});
+
+		it("updates the properties for committed coordinate count and provisional coordinate counts", () => {
+			polygonMode.onMouseMove(MockCursorEvent({ lng: 0, lat: 0 }));
+			polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+			let features = store.copyAll();
+			expect(features.length).toBe(1);
+			expect(
+				features[0].properties[COMMON_PROPERTIES.COMMITTED_COORDINATE_COUNT],
+			).toBe(1);
+			expect(
+				features[0].properties[COMMON_PROPERTIES.PROVISIONAL_COORDINATE_COUNT],
+			).toBe(1);
+
+			polygonMode.onMouseMove(MockCursorEvent({ lng: 3, lat: 3 }));
+			polygonMode.onClick(MockCursorEvent({ lng: 3, lat: 3 }));
+
+			features = store.copyAll();
+			expect(features.length).toBe(1);
+			expect(
+				features[0].properties[COMMON_PROPERTIES.COMMITTED_COORDINATE_COUNT],
+			).toBe(2);
+			expect(
+				features[0].properties[COMMON_PROPERTIES.PROVISIONAL_COORDINATE_COUNT],
+			).toBe(2);
+
+			polygonMode.onMouseMove(MockCursorEvent({ lng: 2, lat: 2 }));
+			polygonMode.onClick(MockCursorEvent({ lng: 2, lat: 2 }));
+
+			features = store.copyAll();
+			expect(features.length).toBe(3); // 2 closing points are created
+			expect(
+				features[0].properties[COMMON_PROPERTIES.COMMITTED_COORDINATE_COUNT],
+			).toBe(3);
+			expect(
+				features[0].properties[COMMON_PROPERTIES.PROVISIONAL_COORDINATE_COUNT],
+			).toBe(3);
+
+			expect(onFinish).toHaveBeenCalledTimes(0);
+
+			// Close the polygon
+			polygonMode.onMouseMove(MockCursorEvent({ lng: 0, lat: 0 }));
+			polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+			features = store.copyAll();
+			expect(features.length).toBe(1);
+			expect(
+				features[0].properties[COMMON_PROPERTIES.COMMITTED_COORDINATE_COUNT],
+			).toBe(undefined);
+			expect(
+				features[0].properties[COMMON_PROPERTIES.PROVISIONAL_COORDINATE_COUNT],
+			).toBe(undefined);
+
+			expect(onFinish).toHaveBeenCalledTimes(1);
 		});
 
 		describe("with leftClick pointer event set to false", () => {

@@ -49,6 +49,45 @@ const Polygon: Story = {
 	},
 };
 
+// Polygon coordinate count story
+const PolygonWithCoordinateCounts: Story = {
+	...DefaultStory,
+	args: {
+		id: "polygon",
+		modes: [() => new TerraDrawPolygonMode()],
+		instructions:
+			"Click to add points, the provisional and committed coordinate counts will appear here",
+		afterRender: (draw: TerraDraw) => {
+			draw.on("change", (ids) => {
+				const feature = draw.getSnapshotFeature(ids[0]);
+				if (feature) {
+					const provisionalCount =
+						feature.properties["provisionalCoordinateCount"];
+					const committedCount = feature.properties["committedCoordinateCount"];
+					if (provisionalCount === undefined || committedCount === undefined) {
+						return;
+					}
+
+					const instructions = document.getElementById("instructions");
+					if (!instructions) {
+						return;
+					}
+					instructions.textContent = `Provisional Coordinates: ${provisionalCount}, Committed Coordinates: ${committedCount}`;
+				}
+			});
+
+			draw.on("finish", (_ids) => {
+				const instructions = document.getElementById("instructions");
+				if (!instructions) {
+					return;
+				}
+				instructions.textContent = `Finished drawing polygon`;
+			});
+		},
+		...DefaultStory.args,
+	},
+};
+
 // Polygon with coordinate points story
 const PolygonWithCoordinatePoints: Story = {
 	args: {
@@ -508,6 +547,7 @@ const AllStories = {
 	PolygonWithCoordinateSnapping,
 	PolygonWithLineSnapping,
 	PolygonWithEditableEnabled,
+	PolygonWithCoordinateCounts,
 	ZIndexOrdering,
 	Circle,
 	Rectangle,

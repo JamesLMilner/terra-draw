@@ -45,6 +45,7 @@ export function setupMapContainer(args: StoryArgs) {
 
 	if (args.instructions) {
 		const instructions = document.createElement("h3");
+		instructions.id = `instructions`;
 		instructions.style.margin = "0";
 		instructions.style.width = `${args.width}`;
 		instructions.textContent = args.instructions;

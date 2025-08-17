@@ -204,6 +204,8 @@ export const COMMON_PROPERTIES = {
 	COORDINATE_POINT: "coordinatePoint",
 	COORDINATE_POINT_FEATURE_ID: "coordinatePointFeatureId",
 	COORDINATE_POINT_IDS: "coordinatePointIds",
+	PROVISIONAL_COORDINATE_COUNT: "provisionalCoordinateCount",
+	COMMITTED_COORDINATE_COUNT: "committedCoordinateCount",
 } as const;
 
 /**

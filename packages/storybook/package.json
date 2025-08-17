@@ -9,7 +9,7 @@
 		"storybook:build": "storybook build",
 		"storybook:build:memory": "NODE_OPTIONS=--max-old-space-size=4096 storybook build",
 		"storybook:serve": "http-server storybook-static --port 6006 --silent",
-		"storybook:test": "test-storybook --no-cache --ci --disable-telemetry --failOnConsole --excludeTags exclude",
+		"storybook:test": "test-storybook --ci --disable-telemetry --failOnConsole --excludeTags exclude",
 		"storybook:help": "test-storybook --help"
 	},
 	"author": "James Milner",

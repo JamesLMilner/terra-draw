@@ -64,7 +64,9 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawExtend.TerraDrawBaseAda
 		// get the projection, which in turn allows us to
 		// go through lng/lat to pixel space and vice versa
 		this._overlay = new this._lib.OverlayView();
-		this._overlay.draw = function () {};
+		this._overlay.draw = function () {
+			// No-op
+		};
 
 		// Unfortunately it is only ready after the onAdd
 		// method is called, which is why we need to use the 'ready'
@@ -75,6 +77,11 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawExtend.TerraDrawBaseAda
 			}
 		};
 		this._overlay.setMap(this._map);
+
+		// Required to avoid runtime error in Google Maps API
+		this._overlay.onRemove = () => {
+			// No-op
+		};
 
 		// Clicking on data geometries triggers
 		// swallows the map onclick event,
@@ -116,7 +123,10 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawExtend.TerraDrawBaseAda
 		super.unregister();
 		this._clickEventListener?.remove();
 		this._mouseMoveEventListener?.remove();
-		this._overlay?.setMap(null);
+
+		if (this._overlay && this._overlay.getMap()) {
+			this._overlay.setMap(null);
+		}
 		this._overlay = undefined;
 	}
 

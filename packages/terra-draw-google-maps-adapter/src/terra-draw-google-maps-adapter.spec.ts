@@ -292,6 +292,7 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 				lib: {
 					OverlayView: jest.fn(() => ({
 						setMap: jest.fn(),
+						getMap: jest.fn(() => ({})),
 					})),
 				} as any,
 				map: mockMap,

@@ -4,7 +4,7 @@ import { SpatialIndex } from "./spatial-index/spatial-index";
 import { isValidTimestamp } from "./store-feature-validation";
 import { Validation } from "../common";
 
-type JSON = string | number | boolean | null | JSONArray | JSONObject;
+export type JSON = string | number | boolean | null | JSONArray | JSONObject;
 
 export interface JSONObject {
 	[member: string]: JSON;

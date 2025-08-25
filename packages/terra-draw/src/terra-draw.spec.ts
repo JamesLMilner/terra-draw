@@ -1,6 +1,7 @@
 /**
  * @jest-environment jsdom
  */
+import { Feature } from "geojson";
 import { COMMON_PROPERTIES, SELECT_PROPERTIES } from "./common";
 import { FeatureId } from "./extend";
 import {
@@ -873,6 +874,188 @@ describe("Terra Draw", () => {
 			draw.addFeatures([polygon]);
 
 			expect(draw.getSnapshot()).toHaveLength(5);
+		});
+	});
+
+	describe("updateFeatureProperty", () => {
+		const baseFeature = {
+			id: "f8e5a38d-ecfa-4294-8461-d9cff0e0d7f8",
+			type: "Feature",
+			geometry: {
+				type: "Polygon",
+				coordinates: [
+					[
+						[25, 34],
+						[26, 35],
+						[27, 34],
+						[25, 34],
+					],
+				],
+			},
+			properties: {
+				mode: "polygon",
+			},
+		} as GeoJSONStoreFeatures;
+
+		it("correctly updates a feature property", () => {
+			const draw = new TerraDraw({
+				adapter: new TerraDrawTestAdapter({
+					lib: {},
+					coordinatePrecision: 3,
+				}),
+				modes: [new TerraDrawPolygonMode()],
+			});
+
+			draw.start();
+
+			draw.addFeatures([{ ...baseFeature }]);
+
+			draw.updateFeatureProperty(
+				baseFeature.id as FeatureId,
+				"customProperty",
+				"customValue",
+			);
+
+			expect(
+				draw.getSnapshotFeature(baseFeature.id as FeatureId)?.properties
+					.customProperty,
+			).toBe("customValue");
+		});
+
+		it("correctly updates a feature property multiple times", () => {
+			const draw = new TerraDraw({
+				adapter: new TerraDrawTestAdapter({
+					lib: {},
+					coordinatePrecision: 3,
+				}),
+				modes: [new TerraDrawPolygonMode()],
+			});
+
+			draw.start();
+
+			draw.addFeatures([{ ...baseFeature }]);
+
+			draw.updateFeatureProperty(
+				baseFeature.id as FeatureId,
+				"customProperty",
+				"customValue",
+			);
+
+			draw.updateFeatureProperty(
+				baseFeature.id as FeatureId,
+				"customProperty",
+				"newCustomValue",
+			);
+
+			expect(
+				draw.getSnapshotFeature(baseFeature.id as FeatureId)?.properties
+					.customProperty,
+			).toBe("newCustomValue");
+		});
+
+		it("unsets a feature property if undefined is passed", () => {
+			const draw = new TerraDraw({
+				adapter: new TerraDrawTestAdapter({
+					lib: {},
+					coordinatePrecision: 3,
+				}),
+				modes: [new TerraDrawPolygonMode()],
+			});
+
+			draw.start();
+
+			draw.addFeatures([{ ...baseFeature }]);
+
+			draw.updateFeatureProperty(
+				baseFeature.id as FeatureId,
+				"customProperty",
+				"customValue",
+			);
+
+			expect(
+				draw.getSnapshotFeature(baseFeature.id as FeatureId)?.properties
+					.customProperty,
+			).toBe("customValue");
+
+			draw.updateFeatureProperty(
+				baseFeature.id as FeatureId,
+				"customProperty",
+				undefined,
+			);
+
+			expect(baseFeature.hasOwnProperty("customProperty")).toBe(false);
+		});
+
+		it("fails to update a feature property if the property is a reserved internal property", () => {
+			const draw = new TerraDraw({
+				adapter: new TerraDrawTestAdapter({
+					lib: {},
+					coordinatePrecision: 3,
+				}),
+				modes: [new TerraDrawPolygonMode()],
+			});
+
+			draw.start();
+
+			draw.addFeatures([{ ...baseFeature }]);
+
+			[
+				...Object.values(COMMON_PROPERTIES),
+				...Object.values(SELECT_PROPERTIES),
+			].forEach((property) => {
+				expect(() => {
+					draw.updateFeatureProperty(
+						baseFeature.id as FeatureId,
+						property,
+						"customValue",
+					);
+				}).toThrow(
+					`You are trying to update a reserved property name: ${property}. Please choose another name.`,
+				);
+			});
+		});
+
+		it("fails to update a feature property if the passed value is not valid JSON", () => {
+			const draw = new TerraDraw({
+				adapter: new TerraDrawTestAdapter({
+					lib: {},
+					coordinatePrecision: 3,
+				}),
+				modes: [new TerraDrawPolygonMode()],
+			});
+
+			draw.start();
+
+			draw.addFeatures([{ ...baseFeature }]);
+
+			[
+				Symbol(),
+				new Map(),
+				new Set(),
+				new Date(),
+				new Int32Array(),
+				new WeakMap(),
+				new ArrayBuffer(0),
+				new Float32Array(),
+				new Uint8Array(),
+				new BigInt64Array(),
+				() => {},
+				NaN,
+				Infinity,
+				-Infinity,
+				{ a: () => {} },
+				{ a: undefined },
+				{ a: Symbol() },
+				[undefined],
+			].forEach((value) => {
+				expect(() => {
+					draw.updateFeatureProperty(
+						baseFeature.id as FeatureId,
+						"customProperty",
+						value as unknown as string,
+					);
+				}).toThrow(`Invalid JSON value provided for property customProperty`);
+			});
 		});
 	});
 

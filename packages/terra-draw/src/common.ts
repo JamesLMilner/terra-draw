@@ -197,6 +197,7 @@ export const SELECT_PROPERTIES = {
 } as const;
 
 export const COMMON_PROPERTIES = {
+	MODE: "mode",
 	CURRENTLY_DRAWING: "currentlyDrawing",
 	EDITED: "edited",
 	CLOSING_POINT: "closingPoint",

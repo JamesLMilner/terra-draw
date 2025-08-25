@@ -23,6 +23,7 @@ export const PolygonWithEditableEnabled = AllStories.PolygonWithEditableEnabled;
 export const PolygonWithCoordinateCounts =
 	AllStories.PolygonWithCoordinateCounts;
 export const ZIndexOrdering = AllStories.ZIndexOrdering;
+export const Styling = AllStories.Styling;
 export const Circle = AllStories.Circle;
 export const Rectangle = AllStories.Rectangle;
 export const AngledRectangle = AllStories.AngledRectangle;

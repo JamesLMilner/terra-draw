@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.0.1](https://github.com/JamesLMilner/terra-draw/compare/terra-draw-google-maps-adapter@1.0.0...terra-draw-google-maps-adapter@1.0.1) (2025-08-25)
+
+
+### fix
+
+* **terra-draw-google-maps-adapter:** fix stop throwing an error when called (#628) ([](https://github.com/JamesLMilner/terra-draw/commit/a6349b52d87a73f7a0d7b142f9ee11a7a2a942c2)), closes [#628](https://github.com/JamesLMilner/terra-draw/issues/628)
+* **terra-draw-google-maps-adapter:** initial handling of zIndexes in the render function (#512) ([](https://github.com/JamesLMilner/terra-draw/commit/7448794348f119f174248aba40ce8e199a256603)), closes [#512](https://github.com/JamesLMilner/terra-draw/issues/512)
+
 ## 1.0.0 (2025-01-12)
 
 

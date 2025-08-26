@@ -282,6 +282,9 @@ describe("TerraDrawLineStringMode", () => {
 			]);
 
 			expect(features[1].geometry.coordinates).toStrictEqual([1, 1]);
+			expect(features[1].properties[COMMON_PROPERTIES.CLOSING_POINT]).toBe(
+				true,
+			);
 
 			lineStringMode.onMouseMove(MockCursorEvent({ lng: 2, lat: 2 }));
 

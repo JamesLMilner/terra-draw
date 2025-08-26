@@ -368,7 +368,10 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 					type: "Point",
 					coordinates: [...updatedCoord],
 				},
-				properties: { mode: this.mode },
+				properties: {
+					mode: this.mode,
+					[COMMON_PROPERTIES.CLOSING_POINT]: true,
+				},
 			},
 		]);
 		this.closingPointId = pointId;

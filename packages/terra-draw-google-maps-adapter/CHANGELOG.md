@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.0.2](https://github.com/JamesLMilner/terra-draw/compare/terra-draw-google-maps-adapter@1.0.1...terra-draw-google-maps-adapter@1.0.2) (2025-08-26)
+
+
+### fix
+
+* **terra-draw-google-maps-adapter:** ensure onAdd is only called once per adapter registration (#631) ([](https://github.com/JamesLMilner/terra-draw/commit/03b0b5e1246c80ae74da3ccb956d553f139e50be)), closes [#631](https://github.com/JamesLMilner/terra-draw/issues/631)
+
 ## [1.0.1](https://github.com/JamesLMilner/terra-draw/compare/terra-draw-google-maps-adapter@1.0.0...terra-draw-google-maps-adapter@1.0.1) (2025-08-25)
 
 

@@ -39,6 +39,7 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawExtend.TerraDrawBaseAda
 	private _overlay: google.maps.OverlayView | undefined;
 	private _clickEventListener: google.maps.MapsEventListener | undefined;
 	private _mouseMoveEventListener: google.maps.MapsEventListener | undefined;
+	private _readyCalled = false;
 
 	private get _layers(): boolean {
 		return Boolean(this.renderedFeatureIds?.size > 0);
@@ -72,8 +73,9 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawExtend.TerraDrawBaseAda
 		// method is called, which is why we need to use the 'ready'
 		// listener with the Google Maps adapter
 		this._overlay.onAdd = () => {
-			if (this._currentModeCallbacks?.onReady) {
+			if (this._currentModeCallbacks?.onReady && !this._readyCalled) {
 				this._currentModeCallbacks.onReady();
+				this._readyCalled = true;
 			}
 		};
 		this._overlay.setMap(this._map);
@@ -128,6 +130,7 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawExtend.TerraDrawBaseAda
 			this._overlay.setMap(null);
 		}
 		this._overlay = undefined;
+		this._readyCalled = false;
 	}
 
 	/**

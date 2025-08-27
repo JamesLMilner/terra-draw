@@ -2,6 +2,30 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.13.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.12.0...terra-draw@1.13.0) (2025-08-27)
+
+
+### fix
+
+* **terra-draw:** ensure closing points for linestring mode are styleable (#634) ([](https://github.com/JamesLMilner/terra-draw/commit/bbc80a47f2cbe215f430460ff4c8f88ce2a3bcb1)), closes [#634](https://github.com/JamesLMilner/terra-draw/issues/634)
+* **terra-draw:** ensure polygon coordinate points respect right hand rule (#612) ([](https://github.com/JamesLMilner/terra-draw/commit/2b90c08489c6c03d77442fc202ee41e78121f8db)), closes [#612](https://github.com/JamesLMilner/terra-draw/issues/612)
+
+
+### feat
+
+* **terra-draw:** provide properties in polygon mode for determining current coordinate count (#620) ([](https://github.com/JamesLMilner/terra-draw/commit/e4c57f21b1d48ad1f2fb90c02b36eb3a9ceff125)), closes [#620](https://github.com/JamesLMilner/terra-draw/issues/620)
+
+
+### docs
+
+* **terra-draw:** add Select mode stories to Storybook (#605) ([](https://github.com/JamesLMilner/terra-draw/commit/00ea6141b5f3f73892a1493f818c6d5b1c12d51e)), closes [#605](https://github.com/JamesLMilner/terra-draw/issues/605)
+* **terra-draw:** add Storybook examples for zIndexing (#616) ([](https://github.com/JamesLMilner/terra-draw/commit/36ee0ac19f1bca888fd530610478d5887b5dc93e)), closes [#616](https://github.com/JamesLMilner/terra-draw/issues/616)
+
+
+### chore
+
+* **terra-draw:** add smoke tests for Storybook examples (#614) ([](https://github.com/JamesLMilner/terra-draw/commit/76af791a2e6705c2254ad1c4aa22d9ff4ffe564e)), closes [#614](https://github.com/JamesLMilner/terra-draw/issues/614)
+
 ## [1.12.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.11.0...terra-draw@1.12.0) (2025-08-04)
 
 

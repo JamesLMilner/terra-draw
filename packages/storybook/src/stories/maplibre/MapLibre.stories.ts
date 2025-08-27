@@ -1,6 +1,14 @@
 import { AllStories } from "../../common/stories";
 import { DefaultMeta } from "../../common/meta";
 import { SetupMapLibre } from "./setup";
+import { TerraDrawPolygonMode } from "../../../../terra-draw/src/terra-draw";
+import {
+	Story,
+	DefaultSize,
+	LocationNewYork,
+	DefaultZoom,
+	DefaultPlay,
+} from "../../common/config";
 
 const meta = {
 	...DefaultMeta,
@@ -10,6 +18,18 @@ const meta = {
 };
 
 export default meta;
+
+// Polygon with coordinate points story
+export const PolygonWithChangeLayer: Story = {
+	args: {
+		id: "polygon-layer-change",
+		...DefaultSize,
+		...LocationNewYork,
+		...DefaultZoom,
+		modes: [() => new TerraDrawPolygonMode()],
+	},
+	...DefaultPlay,
+};
 
 // Ensure the names are set correctly for the stories
 export const Point = AllStories.Point;
@@ -23,6 +43,7 @@ export const PolygonWithEditableEnabled = AllStories.PolygonWithEditableEnabled;
 export const PolygonWithCoordinateCounts =
 	AllStories.PolygonWithCoordinateCounts;
 export const ZIndexOrdering = AllStories.ZIndexOrdering;
+export const Styling = AllStories.Styling;
 export const Circle = AllStories.Circle;
 export const Rectangle = AllStories.Rectangle;
 export const AngledRectangle = AllStories.AngledRectangle;

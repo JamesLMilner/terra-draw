@@ -7,8 +7,8 @@
 <p></p>
 
 ![Terra Draw CI Badge](https://github.com/JamesLMilner/terra-draw/actions/workflows/ci.yml/badge.svg)
-[![npm Version](https://img.shields.io/npm/v/terra-draw)](https://www.npmjs.com/package/terra-draw)
-[![GitHub Sponsors](https://img.shields.io/github/sponsors/JamesLMilner?color=%23f66fb8)](https://github.com/sponsors/JamesLMilner)
+[![npm Version](https://img.shields.io/npm/v/terra-draw?labelColor=rgb(61%2070%2078))](https://www.npmjs.com/package/terra-draw)
+[![GitHub Sponsors](https://img.shields.io/github/sponsors/JamesLMilner?color=%23f66fb8&labelColor=rgb(61%2070%2078))](https://github.com/sponsors/JamesLMilner)
 
 Frictionless map drawing across mapping libraries.
 

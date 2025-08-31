@@ -33,7 +33,6 @@ type RenderModeStyling = {
 
 interface TerraDrawRenderModeOptions<T extends CustomStyling>
 	extends BaseModeOptions<T> {
-	// modeName?: string;
 	// styles need to be there else we could fall back to BaseModeOptions
 	styles: Partial<T>;
 }

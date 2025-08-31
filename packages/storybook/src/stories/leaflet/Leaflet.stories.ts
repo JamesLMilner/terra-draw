@@ -39,6 +39,8 @@ export const Sensor = AllStories.Sensor;
 export const Select = AllStories.Select;
 export const SelectWithSelectionPoints = AllStories.SelectWithSelectionPoints;
 export const SelectWithMidPoints = AllStories.SelectWithMidPoints;
+export const SelectWithMultipleOfSameModes =
+	AllStories.SelectWithMultipleOfSameModes;
 export const ProgrammaticRotate = AllStories.ProgrammaticRotate;
 export const ProgrammaticScale = AllStories.ProgrammaticScale;
 export const ProgrammaticUpdate = AllStories.ProgrammaticUpdate;

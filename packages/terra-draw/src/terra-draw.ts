@@ -768,17 +768,15 @@ class TerraDraw {
 	}
 
 	/**
-	 * Updates a features property. This can be used to programmatically change a property of a feature.
-	 * Certain properties are reserved and cannot be updated.
+	 * Updates a features properties. This can be used to programmatically change the properties of a feature.
+	 * The update is a shallow merge so only the properties you provide will be updated. Certain internal properties
+	 * are reserved and cannot be updated.
 	 * @param id - the id of the feature to update the property for
-	 * @param propertyName - the property name to update
-	 * @param value - the new value for the property
-	 * @throws error if the property name is reserved or if the feature does not exist
+	 * @param properties - an object of key value pairs that will be shallowly merged in to the features properties
 	 */
-	updateFeatureProperty(
+	updateFeatureProperties(
 		id: FeatureId,
-		propertyName: string,
-		value: JSON | undefined,
+		properties: Record<string, JSON | undefined>,
 	) {
 		if (!this._store.has(id)) {
 			throw new Error(`No feature with id ${id} present in store`);
@@ -793,19 +791,6 @@ class TerraDraw {
 			);
 		}
 
-		// Ensure that the property is valid
-		if (!propertyName) {
-			throw new Error("Invalid property name provided");
-		}
-
-		const isReservedProperty = this.checkIsReservedProperty(propertyName);
-
-		if (!isReservedProperty) {
-			throw new Error(
-				`You are trying to update a reserved property name: ${propertyName}. Please choose another name.`,
-			);
-		}
-
 		const mode = feature.properties.mode;
 		const modeToUpdate = this._modes[mode as string];
 
@@ -813,16 +798,31 @@ class TerraDraw {
 			throw new Error(`No mode with name ${mode} present in instance`);
 		}
 
-		// Check if is allowed JSON value - if value is undefined, we allow this as it means the property will be deleted
-		// We do not however allow nested undefined values in objects or arrays.
-		if (value !== undefined && !isValidJSONValue(value)) {
-			throw new Error(
-				`Invalid JSON value provided for property ${propertyName}`,
-			);
-		}
+		const entries = Object.entries(properties);
+
+		// Check that none of the properties are reserved
+		entries.forEach(([propertyName, value]) => {
+			const isReservedProperty = this.checkIsReservedProperty(propertyName);
+
+			if (!isReservedProperty) {
+				throw new Error(
+					`You are trying to update a reserved property name: ${propertyName}. Please choose another name.`,
+				);
+			}
+
+			if (value !== undefined && !isValidJSONValue(value)) {
+				throw new Error(
+					`Invalid JSON value provided for property ${propertyName}`,
+				);
+			}
+		});
 
 		this._store.updateProperty(
-			[{ id: feature.id as FeatureId, property: propertyName, value }],
+			entries.map(([propertyName, value]) => ({
+				id: feature.id as FeatureId,
+				property: propertyName,
+				value,
+			})),
 			{ origin: "api" }, // origin is used to indicate that this update has come from an API call
 		);
 	}

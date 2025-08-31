@@ -1,7 +1,6 @@
 /**
  * @jest-environment jsdom
  */
-import { Feature } from "geojson";
 import { COMMON_PROPERTIES, SELECT_PROPERTIES } from "./common";
 import { FeatureId } from "./extend";
 import {
@@ -877,7 +876,7 @@ describe("Terra Draw", () => {
 		});
 	});
 
-	describe("updateFeatureProperty", () => {
+	describe("updateFeatureProperties", () => {
 		const baseFeature = {
 			id: "f8e5a38d-ecfa-4294-8461-d9cff0e0d7f8",
 			type: "Feature",
@@ -910,11 +909,9 @@ describe("Terra Draw", () => {
 
 			draw.addFeatures([{ ...baseFeature }]);
 
-			draw.updateFeatureProperty(
-				baseFeature.id as FeatureId,
-				"customProperty",
-				"customValue",
-			);
+			draw.updateFeatureProperties(baseFeature.id as FeatureId, {
+				customProperty: "customValue",
+			});
 
 			expect(
 				draw.getSnapshotFeature(baseFeature.id as FeatureId)?.properties
@@ -935,17 +932,13 @@ describe("Terra Draw", () => {
 
 			draw.addFeatures([{ ...baseFeature }]);
 
-			draw.updateFeatureProperty(
-				baseFeature.id as FeatureId,
-				"customProperty",
-				"customValue",
-			);
+			draw.updateFeatureProperties(baseFeature.id as FeatureId, {
+				customProperty: "customValue",
+			});
 
-			draw.updateFeatureProperty(
-				baseFeature.id as FeatureId,
-				"customProperty",
-				"newCustomValue",
-			);
+			draw.updateFeatureProperties(baseFeature.id as FeatureId, {
+				customProperty: "newCustomValue",
+			});
 
 			expect(
 				draw.getSnapshotFeature(baseFeature.id as FeatureId)?.properties
@@ -966,22 +959,18 @@ describe("Terra Draw", () => {
 
 			draw.addFeatures([{ ...baseFeature }]);
 
-			draw.updateFeatureProperty(
-				baseFeature.id as FeatureId,
-				"customProperty",
-				"customValue",
-			);
+			draw.updateFeatureProperties(baseFeature.id as FeatureId, {
+				customProperty: "customValue",
+			});
 
 			expect(
 				draw.getSnapshotFeature(baseFeature.id as FeatureId)?.properties
 					.customProperty,
 			).toBe("customValue");
 
-			draw.updateFeatureProperty(
-				baseFeature.id as FeatureId,
-				"customProperty",
-				undefined,
-			);
+			draw.updateFeatureProperties(baseFeature.id as FeatureId, {
+				customProperty: undefined,
+			});
 
 			expect(baseFeature.hasOwnProperty("customProperty")).toBe(false);
 		});
@@ -1004,11 +993,9 @@ describe("Terra Draw", () => {
 				...Object.values(SELECT_PROPERTIES),
 			].forEach((property) => {
 				expect(() => {
-					draw.updateFeatureProperty(
-						baseFeature.id as FeatureId,
-						property,
-						"customValue",
-					);
+					draw.updateFeatureProperties(baseFeature.id as FeatureId, {
+						[property]: "customValue",
+					});
 				}).toThrow(
 					`You are trying to update a reserved property name: ${property}. Please choose another name.`,
 				);
@@ -1049,13 +1036,80 @@ describe("Terra Draw", () => {
 				[undefined],
 			].forEach((value) => {
 				expect(() => {
-					draw.updateFeatureProperty(
-						baseFeature.id as FeatureId,
-						"customProperty",
-						value as unknown as string,
-					);
+					draw.updateFeatureProperties(baseFeature.id as FeatureId, {
+						customProperty: value as unknown as string,
+					});
+				}).toThrow(`Invalid JSON value provided for property customProperty`);
+
+				expect(() => {
+					draw.updateFeatureProperties(baseFeature.id as FeatureId, {
+						customProperty: {
+							nestedCustomProperty: value as unknown as string,
+						},
+					});
 				}).toThrow(`Invalid JSON value provided for property customProperty`);
 			});
+		});
+
+		it("correctly updates multiple feature properties", () => {
+			const draw = new TerraDraw({
+				adapter: new TerraDrawTestAdapter({
+					lib: {},
+					coordinatePrecision: 3,
+				}),
+				modes: [new TerraDrawPolygonMode()],
+			});
+
+			draw.start();
+
+			draw.addFeatures([{ ...baseFeature }]);
+
+			draw.updateFeatureProperties(baseFeature.id as FeatureId, {
+				customProperty: "customValue",
+				anotherProperty: "anotherValue",
+			});
+
+			expect(
+				draw.getSnapshotFeature(baseFeature.id as FeatureId)?.properties
+					.customProperty,
+			).toBe("customValue");
+			expect(
+				draw.getSnapshotFeature(baseFeature.id as FeatureId)?.properties
+					.anotherProperty,
+			).toBe("anotherValue");
+		});
+
+		it("fails to update multiple feature properties if any property is reserved", () => {
+			const draw = new TerraDraw({
+				adapter: new TerraDrawTestAdapter({
+					lib: {},
+					coordinatePrecision: 3,
+				}),
+				modes: [new TerraDrawPolygonMode()],
+			});
+
+			draw.start();
+
+			draw.addFeatures([{ ...baseFeature }]);
+
+			expect(() => {
+				draw.updateFeatureProperties(baseFeature.id as FeatureId, {
+					customProperty: "customValue",
+					anotherProperty: "anotherValue",
+					[COMMON_PROPERTIES.MODE]: "point",
+				});
+			}).toThrow(
+				`You are trying to update a reserved property name: ${COMMON_PROPERTIES.MODE}. Please choose another name.`,
+			);
+
+			expect(
+				draw.getSnapshotFeature(baseFeature.id as FeatureId)?.properties
+					.customProperty,
+			).toBe(undefined);
+			expect(
+				draw.getSnapshotFeature(baseFeature.id as FeatureId)?.properties
+					.anotherProperty,
+			).toBe(undefined);
 		});
 	});
 

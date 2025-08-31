@@ -166,11 +166,9 @@ const Styling: Story = {
 				const features = draw.getSnapshot();
 				if (features.length === 0) return;
 				features.forEach((feature) => {
-					draw.updateFeatureProperty(
-						feature.id!,
-						"randomColor",
-						`#${Math.floor(Math.random() * 16777215).toString(16)}`,
-					);
+					draw.updateFeatureProperties(feature.id!, {
+						randomColor: `#${Math.floor(Math.random() * 16777215).toString(16)}`,
+					});
 				});
 			}, 2000);
 		},

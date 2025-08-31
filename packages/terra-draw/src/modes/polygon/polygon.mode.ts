@@ -93,7 +93,7 @@ interface TerraDrawPolygonModeOptions<T extends CustomStyling>
 }
 
 export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> {
-	mode = "polygon" as const;
+	mode = "polygon";
 
 	private currentCoordinate = 0;
 	private currentId: FeatureId | undefined;

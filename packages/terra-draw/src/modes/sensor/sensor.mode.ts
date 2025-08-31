@@ -73,7 +73,7 @@ interface TerraDrawSensorModeOptions<T extends CustomStyling>
 }
 
 export class TerraDrawSensorMode extends TerraDrawBaseDrawMode<SensorPolygonStyling> {
-	mode = "sensor" as const;
+	mode = "sensor";
 
 	private currentCoordinate = 0;
 	private currentId: FeatureId | undefined;

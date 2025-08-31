@@ -43,6 +43,13 @@ describe("TerraDrawLineStringMode", () => {
 				keyEvents: { cancel: null, finish: null },
 			});
 		});
+
+		it("constructs with custom mode name", () => {
+			const lineStringMode = new TerraDrawLineStringMode({
+				modeName: "custom",
+			});
+			expect(lineStringMode.mode).toBe("custom");
+		});
 	});
 
 	describe("lifecycle", () => {

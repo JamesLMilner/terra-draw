@@ -41,6 +41,8 @@ import {
 	GeoJSONStoreFeatures,
 	GeoJSONStoreGeometries,
 	IdStrategy,
+	JSON,
+	JSONObject,
 	StoreChangeHandler,
 	StoreValidation,
 } from "./store/store";
@@ -60,19 +62,11 @@ import * as TerraDrawExtend from "./extend";
 import { hasModeProperty } from "./store/store-feature-validation";
 import { ValidationReasons } from "./validation-reasons";
 import { TerraDrawFreehandLineStringMode } from "./modes/freehand-linestring/freehand-linestring.mode";
-import { ScaleFeatureBehavior } from "./modes/select/behaviors/scale-feature.behavior";
-import { DragCoordinateResizeBehavior } from "./modes/select/behaviors/drag-coordinate-resize.behavior";
-import { PixelDistanceBehavior } from "./modes/pixel-distance.behavior";
-import { SelectionPointBehavior } from "./modes/select/behaviors/selection-point.behavior";
-import { MidPointBehavior } from "./modes/select/behaviors/midpoint.behavior";
-import { CoordinatePointBehavior } from "./modes/select/behaviors/coordinate-point.behavior";
-import {
-	lngLatToWebMercatorXY,
-	webMercatorXYToLngLat,
-} from "./geometry/project/web-mercator";
+import { lngLatToWebMercatorXY } from "./geometry/project/web-mercator";
 import { transformRotateWebMercator } from "./geometry/transform/rotate";
 import { transformScaleWebMercatorCoordinates } from "./geometry/transform/scale";
 import { limitPrecision } from "./geometry/limit-decimal-precision";
+import { isValidJSONValue } from "./store/valid-json";
 
 // Helper type to determine the instance type of a class
 type InstanceType<T extends new (...args: any[]) => any> = T extends new (
@@ -755,6 +749,82 @@ class TerraDraw {
 	 */
 	hasFeature(id: FeatureId): boolean {
 		return this._store.has(id);
+	}
+
+	/**
+	 * Checks if a property name is reserved and cannot be used.
+	 * @param propertyName - the property name to check
+	 * @returns
+	 */
+	private checkIsReservedProperty(propertyName: string) {
+		const UNAVAILABLE_PROPERTIES = [
+			...Object.values(SELECT_PROPERTIES),
+			...Object.values(COMMON_PROPERTIES),
+		] as const;
+
+		return !UNAVAILABLE_PROPERTIES.includes(
+			propertyName as unknown as (typeof UNAVAILABLE_PROPERTIES)[number],
+		);
+	}
+
+	/**
+	 * Updates a features properties. This can be used to programmatically change the properties of a feature.
+	 * The update is a shallow merge so only the properties you provide will be updated. Certain internal properties
+	 * are reserved and cannot be updated.
+	 * @param id - the id of the feature to update the property for
+	 * @param properties - an object of key value pairs that will be shallowly merged in to the features properties
+	 */
+	updateFeatureProperties(
+		id: FeatureId,
+		properties: Record<string, JSON | undefined>,
+	) {
+		if (!this._store.has(id)) {
+			throw new Error(`No feature with id ${id} present in store`);
+		}
+
+		const feature = this._store.copy(id);
+
+		// We don't want users to be able to update guidance features directly
+		if (this.isGuidanceFeature(feature)) {
+			throw new Error(
+				`Guidance features are not allowed to be updated directly.`,
+			);
+		}
+
+		const mode = feature.properties.mode;
+		const modeToUpdate = this._modes[mode as string];
+
+		if (!modeToUpdate) {
+			throw new Error(`No mode with name ${mode} present in instance`);
+		}
+
+		const entries = Object.entries(properties);
+
+		// Check that none of the properties are reserved
+		entries.forEach(([propertyName, value]) => {
+			const isReservedProperty = this.checkIsReservedProperty(propertyName);
+
+			if (!isReservedProperty) {
+				throw new Error(
+					`You are trying to update a reserved property name: ${propertyName}. Please choose another name.`,
+				);
+			}
+
+			if (value !== undefined && !isValidJSONValue(value)) {
+				throw new Error(
+					`Invalid JSON value provided for property ${propertyName}`,
+				);
+			}
+		});
+
+		this._store.updateProperty(
+			entries.map(([propertyName, value]) => ({
+				id: feature.id as FeatureId,
+				property: propertyName,
+				value,
+			})),
+			{ origin: "api" }, // origin is used to indicate that this update has come from an API call
+		);
 	}
 
 	/**

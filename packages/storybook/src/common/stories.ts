@@ -11,6 +11,8 @@ import {
 	TerraDrawSensorMode,
 	TerraDraw,
 	TerraDrawSelectMode,
+	GeoJSONStoreFeatures,
+	HexColor,
 } from "../../../terra-draw/src/terra-draw";
 import {
 	DefaultSize,
@@ -20,7 +22,7 @@ import {
 	DefaultPlay,
 } from "./config";
 
-const DefaultStory = {
+export const DefaultStory = {
 	args: {
 		...DefaultSize,
 		...LocationNewYork,
@@ -141,6 +143,38 @@ const PolygonWithLineSnapping: Story = {
 		],
 	},
 	...DefaultPlay,
+};
+
+// Polygon styling story - changes fill color based on a property on the feature
+const Styling: Story = {
+	...DefaultStory,
+	args: {
+		id: "polygon-styling",
+		modes: [
+			() =>
+				new TerraDrawPolygonMode({
+					styles: {
+						fillColor: (feature: GeoJSONStoreFeatures) =>
+							(feature.properties.randomColor as HexColor) ||
+							("#ff0000" as HexColor),
+					},
+				}),
+		],
+		...DefaultStory.args,
+		afterRender: (draw: TerraDraw) => {
+			setInterval(() => {
+				const features = draw.getSnapshot();
+				if (features.length === 0) return;
+				features.forEach((feature) => {
+					draw.updateFeatureProperties(feature.id!, {
+						randomColor: `#${Math.floor(Math.random() * 16777215).toString(16)}`,
+					});
+				});
+			}, 2000);
+		},
+		instructions:
+			"Random colors will be applied to each polygon every two seconds based on the 'randomColor' property on the feature.",
+	},
 };
 
 // Z Index ordering story
@@ -548,6 +582,7 @@ const AllStories = {
 	PolygonWithLineSnapping,
 	PolygonWithEditableEnabled,
 	PolygonWithCoordinateCounts,
+	Styling,
 	ZIndexOrdering,
 	Circle,
 	Rectangle,

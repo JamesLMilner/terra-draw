@@ -1084,6 +1084,7 @@ const getStyleAppliedToAddedFeature = (
 	// looks up mode
 	Object.assign(feature, { getProperty: () => "test" });
 	Object.assign(feature, { forEachProperty: () => {} });
+	Object.assign(feature, { getId: () => feature.id });
 
 	const addGeoJsonMock = jest.fn();
 	let setStyleResult;

@@ -418,6 +418,7 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawExtend.TerraDrawBaseAda
 			}
 			const type = gmGeometry.getType();
 			const properties: Record<string, any> = {};
+			const id = feature.getId();
 
 			feature.forEachProperty((value, property) => {
 				properties[property] = value;
@@ -425,6 +426,7 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawExtend.TerraDrawBaseAda
 
 			const calculatedStyles = styling[mode]({
 				type: "Feature",
+				id,
 				geometry: {
 					type: type as "Point" | "LineString" | "Polygon",
 					coordinates: [],

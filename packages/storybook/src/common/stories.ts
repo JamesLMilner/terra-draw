@@ -574,6 +574,37 @@ const ProgrammaticRotate: Story = {
 	},
 };
 
+const SelectWithMultipleOfSameModes: Story = {
+	...DefaultStory,
+	args: {
+		id: "select-with-multiple-of-same-modes",
+		modes: [
+			() => new TerraDrawPolygonMode(),
+			() => new TerraDrawPolygonMode({ modeName: "polygon2" }),
+			() =>
+				new TerraDrawSelectMode({
+					flags: {
+						polygon: {
+							feature: {
+								draggable: true,
+							},
+						},
+						polygon2: {
+							feature: {
+								draggable: true,
+								coordinates: {
+									midpoints: true,
+									draggable: true,
+								},
+							},
+						},
+					},
+				}),
+		],
+		...DefaultStory.args,
+	},
+};
+
 const AllStories = {
 	Point,
 	Polygon,
@@ -602,6 +633,7 @@ const AllStories = {
 	Select,
 	SelectWithSelectionPoints,
 	SelectWithMidPoints,
+	SelectWithMultipleOfSameModes,
 };
 
 export { AllStories };

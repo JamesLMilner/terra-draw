@@ -67,7 +67,7 @@ interface TerraDrawPolygonModeOptions<T extends CustomStyling>
 }
 
 export class TerraDrawAngledRectangleMode extends TerraDrawBaseDrawMode<PolygonStyling> {
-	mode = "angled-rectangle" as const;
+	mode = "angled-rectangle";
 
 	private currentCoordinate = 0;
 	private currentId: FeatureId | undefined;

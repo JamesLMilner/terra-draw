@@ -85,7 +85,7 @@ interface TerraDrawLineStringModeOptions<T extends CustomStyling>
 }
 
 export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringStyling> {
-	mode = "linestring" as const;
+	mode = "linestring";
 
 	private currentCoordinate = 0;
 	private currentId: FeatureId | undefined;

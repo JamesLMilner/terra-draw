@@ -57,6 +57,7 @@ export interface PointerEvents {
 }
 
 export type BaseModeOptions<Styling extends CustomStyling> = {
+	modeName?: string;
 	styles?: Partial<Styling>;
 	pointerDistance?: number;
 	validation?: Validation;
@@ -136,6 +137,10 @@ export abstract class TerraDrawBaseDrawMode<Styling extends CustomStyling> {
 
 		if (options?.pointerEvents !== undefined) {
 			this.pointerEvents = options.pointerEvents;
+		}
+
+		if (options?.modeName) {
+			this.mode = options.modeName;
 		}
 	}
 

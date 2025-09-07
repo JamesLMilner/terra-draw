@@ -2840,6 +2840,160 @@ describe("Terra Draw", () => {
 
 			expect(features).toHaveLength(0);
 		});
+
+		it("add closest coordinate index to pointer event to polygon features properties when addClosestCoordinateInfoToProperties is true", () => {
+			const polygonMode = new TerraDrawPolygonMode();
+
+			const draw = new TerraDraw({
+				adapter,
+				modes: [polygonMode],
+			});
+
+			draw.start();
+			draw.setMode("polygon");
+
+			let features = draw.getFeaturesAtLngLat(
+				{ lng: 0.00000001, lat: 0 },
+				{
+					addClosestCoordinateInfoToProperties: true,
+					includePolygonsWithinPointerDistance: true,
+				},
+			);
+
+			expect(features).toHaveLength(0);
+
+			// NOTE: we shouldn't call a mode's onClick directly, but this is a test
+			polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			polygonMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
+			polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 1 }));
+			polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 0 })); // closing click
+
+			features = draw.getFeaturesAtLngLat(
+				{ lng: 1.00000001, lat: 1 },
+				{
+					addClosestCoordinateInfoToProperties: true,
+					includePolygonsWithinPointerDistance: true,
+				},
+			);
+
+			expect(features).toHaveLength(1);
+			expect(features[0].properties.closestCoordinateIndexToEvent).toBe(1);
+
+			features = draw.getFeaturesAtLngLat(
+				{ lng: 0, lat: 1.00000001 },
+				{
+					addClosestCoordinateInfoToProperties: true,
+					includePolygonsWithinPointerDistance: true,
+				},
+			);
+
+			expect(features).toHaveLength(1);
+			expect(features[0].properties.closestCoordinateIndexToEvent).toBe(2);
+			expect(
+				features[0].properties.closestCoordinatePixelDistanceToEvent,
+			).toBeGreaterThan(0);
+			expect(
+				features[0].properties.closestCoordinateDistanceKmToEvent,
+			).toBeCloseTo(0.00000001);
+
+			// Ensure not present if flag not set
+			features = draw.getFeaturesAtLngLat(
+				{ lng: 0, lat: 1.00000001 },
+				{
+					addClosestCoordinateInfoToProperties: false,
+					includePolygonsWithinPointerDistance: true,
+				},
+			);
+
+			expect(features).toHaveLength(1);
+			expect(
+				features[0].properties.closestCoordinateIndexToEvent,
+			).toBeUndefined();
+			expect(
+				features[0].properties.closestCoordinatePixelDistanceToEvent,
+			).toBeUndefined();
+			expect(
+				features[0].properties.closestCoordinateDistanceKmToEvent,
+			).toBeUndefined();
+		});
+
+		it("add closest coordinate index to pointer event to linestring features properties when addClosestCoordinateInfoToProperties is true", () => {
+			const lineStringMode = new TerraDrawLineStringMode();
+
+			const draw = new TerraDraw({
+				adapter,
+				modes: [lineStringMode],
+			});
+
+			draw.start();
+			draw.setMode("linestring");
+
+			let features = draw.getFeaturesAtLngLat(
+				{ lng: 0.00000001, lat: 0 },
+				{
+					addClosestCoordinateInfoToProperties: true,
+				},
+			);
+
+			expect(features).toHaveLength(0);
+
+			// NOTE: we shouldn't call a mode's onClick directly, but this is a test
+			lineStringMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			lineStringMode.onClick(MockCursorEvent({ lng: 25, lat: 25 }));
+			lineStringMode.onClick(MockCursorEvent({ lng: 50, lat: 50 }));
+
+			features = draw.getFeaturesAtLngLat(
+				{ lng: 0.000001, lat: 0 },
+				{
+					addClosestCoordinateInfoToProperties: true,
+				},
+			);
+
+			expect(features).toHaveLength(1);
+			expect(features[0].properties.closestCoordinateIndexToEvent).toBe(0);
+			expect(
+				features[0].properties.closestCoordinatePixelDistanceToEvent,
+			).toBeGreaterThan(0);
+			expect(
+				features[0].properties.closestCoordinateDistanceKmToEvent,
+			).toBeCloseTo(0.00000001);
+
+			features = draw.getFeaturesAtLngLat(
+				{ lng: 25, lat: 25.00000001 },
+				{
+					addClosestCoordinateInfoToProperties: true,
+				},
+			);
+
+			expect(features).toHaveLength(1);
+			expect(features[0].properties.closestCoordinateIndexToEvent).toBe(1);
+			expect(
+				features[0].properties.closestCoordinatePixelDistanceToEvent,
+			).toBeGreaterThan(0);
+			expect(
+				features[0].properties.closestCoordinateDistanceKmToEvent,
+			).toBeCloseTo(0.00000001);
+
+			// Ensure not present if flag not set
+			features = draw.getFeaturesAtLngLat(
+				{ lng: 25, lat: 25.00000001 },
+				{
+					addClosestCoordinateInfoToProperties: false,
+					includePolygonsWithinPointerDistance: true,
+				},
+			);
+
+			expect(features).toHaveLength(1);
+			expect(
+				features[0].properties.closestCoordinateIndexToEvent,
+			).toBeUndefined();
+			expect(
+				features[0].properties.closestCoordinatePixelDistanceToEvent,
+			).toBeUndefined();
+			expect(
+				features[0].properties.closestCoordinateDistanceKmToEvent,
+			).toBeUndefined();
+		});
 	});
 
 	describe("getFeaturesAtPointerEvent", () => {

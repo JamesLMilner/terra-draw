@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.14.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.13.0...terra-draw@1.14.0) (2025-09-07)
+
+
+### feat
+
+* **terra-draw:** allow setting of custom properties with updateFeatureProperties (#629) ([](https://github.com/JamesLMilner/terra-draw/commit/7f5286e1edab98549cfa5bb7870a5286573032b6)), closes [#629](https://github.com/JamesLMilner/terra-draw/issues/629)
+
+
+### chore
+
+* **terra-draw:** ensure badge colors in README are consistent (#636) ([](https://github.com/JamesLMilner/terra-draw/commit/216b1fbe70f4eadf8b19d1729575200a98352704)), closes [#636](https://github.com/JamesLMilner/terra-draw/issues/636)
+* **terra-draw:** update badges in the README, add sponsors link (#635) ([](https://github.com/JamesLMilner/terra-draw/commit/8a81313cfbd9cbf3f378f13a6743472d5882792f)), closes [#635](https://github.com/JamesLMilner/terra-draw/issues/635)
+
 ## [1.13.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.12.0...terra-draw@1.13.0) (2025-08-27)
 
 

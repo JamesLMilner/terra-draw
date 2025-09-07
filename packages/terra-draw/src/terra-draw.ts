@@ -67,6 +67,7 @@ import { transformRotateWebMercator } from "./geometry/transform/rotate";
 import { transformScaleWebMercatorCoordinates } from "./geometry/transform/scale";
 import { limitPrecision } from "./geometry/limit-decimal-precision";
 import { isValidJSONValue } from "./store/valid-json";
+import { haversineDistanceKilometers } from "./geometry/measure/haversine-distance";
 
 // Helper type to determine the instance type of a class
 type InstanceType<T extends new (...args: any[]) => any> = T extends new (
@@ -99,6 +100,7 @@ type GetFeatureOptions = {
 	ignoreCoordinatePoints?: boolean;
 	ignoreCurrentlyDrawing?: boolean;
 	ignoreClosingPoints?: boolean;
+	addClosestCoordinateInfoToProperties?: boolean;
 };
 
 type TerraDrawEvents = keyof TerraDrawEventListeners;
@@ -400,95 +402,139 @@ class TerraDraw {
 
 		const features = this._store.search(bbox as BBoxPolygon);
 
-		return features.filter((feature) => {
-			if (
-				ignoreSelectFeatures &&
-				(feature.properties[SELECT_PROPERTIES.MID_POINT] ||
-					feature.properties[SELECT_PROPERTIES.SELECTION_POINT])
-			) {
-				return false;
-			}
+		return features
+			.filter((feature) => {
+				if (
+					ignoreSelectFeatures &&
+					(feature.properties[SELECT_PROPERTIES.MID_POINT] ||
+						feature.properties[SELECT_PROPERTIES.SELECTION_POINT])
+				) {
+					return false;
+				}
 
-			if (
-				ignoreCoordinatePoints &&
-				feature.properties[COMMON_PROPERTIES.COORDINATE_POINT]
-			) {
-				return false;
-			}
+				if (
+					ignoreCoordinatePoints &&
+					feature.properties[COMMON_PROPERTIES.COORDINATE_POINT]
+				) {
+					return false;
+				}
 
-			if (
-				ignoreClosingPoints &&
-				feature.properties[COMMON_PROPERTIES.CLOSING_POINT]
-			) {
-				return false;
-			}
+				if (
+					ignoreClosingPoints &&
+					feature.properties[COMMON_PROPERTIES.CLOSING_POINT]
+				) {
+					return false;
+				}
 
-			if (
-				ignoreCurrentlyDrawing &&
-				feature.properties[COMMON_PROPERTIES.CURRENTLY_DRAWING]
-			) {
-				return false;
-			}
+				if (
+					ignoreCurrentlyDrawing &&
+					feature.properties[COMMON_PROPERTIES.CURRENTLY_DRAWING]
+				) {
+					return false;
+				}
 
-			if (feature.geometry.type === "Point") {
-				const pointCoordinates = feature.geometry.coordinates;
-				const pointXY = project(pointCoordinates[0], pointCoordinates[1]);
-				const distance = cartesianDistance(inputPoint, pointXY);
-				return distance < pointerDistance;
-			} else if (feature.geometry.type === "LineString") {
-				const coordinates: Position[] = feature.geometry.coordinates;
+				if (feature.geometry.type === "Point") {
+					const pointCoordinates = feature.geometry.coordinates;
+					const pointXY = project(pointCoordinates[0], pointCoordinates[1]);
+					const distance = cartesianDistance(inputPoint, pointXY);
+					return distance < pointerDistance;
+				} else if (feature.geometry.type === "LineString") {
+					const coordinates: Position[] = feature.geometry.coordinates;
 
-				for (let i = 0; i < coordinates.length - 1; i++) {
-					const coord = coordinates[i];
-					const nextCoord = coordinates[i + 1];
-					const distanceToLine = pixelDistanceToLine(
-						inputPoint,
-						project(coord[0], coord[1]),
-						project(nextCoord[0], nextCoord[1]),
+					for (let i = 0; i < coordinates.length - 1; i++) {
+						const coord = coordinates[i];
+						const nextCoord = coordinates[i + 1];
+						const distanceToLine = pixelDistanceToLine(
+							inputPoint,
+							project(coord[0], coord[1]),
+							project(nextCoord[0], nextCoord[1]),
+						);
+
+						if (distanceToLine < pointerDistance) {
+							return true;
+						}
+					}
+					return false;
+				} else {
+					const lngLatInsidePolygon = pointInPolygon(
+						[lng, lat],
+						feature.geometry.coordinates,
 					);
 
-					if (distanceToLine < pointerDistance) {
+					if (lngLatInsidePolygon) {
 						return true;
 					}
-				}
-				return false;
-			} else {
-				const lngLatInsidePolygon = pointInPolygon(
-					[lng, lat],
-					feature.geometry.coordinates,
-				);
 
-				if (lngLatInsidePolygon) {
-					return true;
-				}
+					if (options?.includePolygonsWithinPointerDistance) {
+						const rings: Position[][] = feature.geometry.coordinates;
 
-				if (options?.includePolygonsWithinPointerDistance) {
-					const rings: Position[][] = feature.geometry.coordinates;
+						for (const ring of rings) {
+							for (let i = 0; i < ring.length - 1; i++) {
+								const coord = ring[i];
+								const nextCoord = ring[i + 1];
 
-					for (const ring of rings) {
-						for (let i = 0; i < ring.length - 1; i++) {
-							const coord = ring[i];
-							const nextCoord = ring[i + 1];
+								const projectedStart = project(coord[0], coord[1]);
+								const projectedEnd = project(nextCoord[0], nextCoord[1]);
 
-							const projectedStart = project(coord[0], coord[1]);
-							const projectedEnd = project(nextCoord[0], nextCoord[1]);
+								const distanceToEdge = pixelDistanceToLine(
+									inputPoint,
+									projectedStart,
+									projectedEnd,
+								);
 
-							const distanceToEdge = pixelDistanceToLine(
-								inputPoint,
-								projectedStart,
-								projectedEnd,
-							);
-
-							if (distanceToEdge < pointerDistance) {
-								return true;
+								if (distanceToEdge < pointerDistance) {
+									return true;
+								}
 							}
 						}
 					}
+
+					return false;
+				}
+			})
+			.map((feature) => {
+				if (!options?.addClosestCoordinateInfoToProperties) {
+					return feature;
 				}
 
-				return false;
-			}
-		});
+				let coordinates;
+				if (feature.geometry.type === "Polygon") {
+					coordinates = feature.geometry.coordinates[0];
+					coordinates.pop(); // Remove duplicate end coordinate
+				} else if (feature.geometry.type === "LineString") {
+					coordinates = feature.geometry.coordinates;
+				} else {
+					// Ignore points
+					return feature;
+				}
+
+				let closestIndex = -1;
+				let closestDistance = Infinity;
+				let closestCoordinate;
+
+				// Find the closest coordinate in the polygon/linestring to the pointer event
+				for (let i = 0; i < coordinates.length; i++) {
+					const coordinate = coordinates[i];
+					const distance = cartesianDistance(
+						project(coordinate[0], coordinate[1]),
+						inputPoint,
+					);
+
+					if (distance < closestDistance) {
+						closestIndex = i;
+						closestDistance = distance;
+						closestCoordinate = coordinate;
+					}
+				}
+
+				feature.properties.closestCoordinateIndexToEvent = closestIndex;
+				feature.properties.closestCoordinatePixelDistanceToEvent =
+					closestDistance;
+				feature.properties.closestCoordinateDistanceKmToEvent =
+					haversineDistanceKilometers(closestCoordinate!, [lng, lat]);
+
+				return feature;
+			});
 	}
 
 	private getSelectModeOrThrow() {

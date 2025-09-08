@@ -43,6 +43,11 @@ describe("TerraDrawSectorMode", () => {
 				keyEvents: { cancel: null, finish: null },
 			});
 		});
+
+		it("constructs with custom mode name", () => {
+			const sectorMode = new TerraDrawSectorMode({ modeName: "custom" });
+			expect(sectorMode.mode).toBe("custom");
+		});
 	});
 
 	describe("lifecycle", () => {

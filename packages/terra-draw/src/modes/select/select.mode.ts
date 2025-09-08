@@ -130,7 +130,7 @@ interface TerraDrawSelectModeOptions<T extends CustomStyling>
 }
 
 export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStyling> {
-	public mode = "select" as const;
+	public mode = "select";
 
 	private allowManualDeselection = true;
 	private dragEventThrottle = 5;

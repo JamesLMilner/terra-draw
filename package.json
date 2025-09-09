@@ -1,5 +1,5 @@
 {
-	"name": "terra-draw-monorepo",
+	"name": "@blocktype-co-uk/terra-draw",
 	"version": "1.0.0",
 	"description": "The monorepo for all core Terra Draw packages",
 	"private": true,
@@ -22,7 +22,10 @@
 		"test:nocheck": "jest --config jest.nocheck.config.ts",
 		"test:nocheck:coverage": "jest --config jest.nocheck.config.ts --coverage"
 	},
-	"repository": "JamesLMilner/terra-draw",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/blocktype-co-uk/terra-draw.git"
+	},
 	"devDependencies": {
 		"@commitlint/cli": "17.1.2",
 		"@commitlint/config-conventional": "17.1.0",

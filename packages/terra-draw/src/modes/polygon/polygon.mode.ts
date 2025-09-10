@@ -65,6 +65,8 @@ type PolygonStyling = {
 	coordinatePointColor: HexColorStyling;
 	coordinatePointOutlineWidth: NumericStyling;
 	coordinatePointOutlineColor: HexColorStyling;
+
+	zIndex: NumericStyling;
 };
 
 interface Cursors {
@@ -1149,7 +1151,12 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 					feature,
 				);
 
-				styles.zIndex = Z_INDEX.LAYER_ONE;
+				styles.zIndex = this.getNumericStylingValue(
+					this.styles.zIndex,
+					Z_INDEX.LAYER_ONE,
+					feature,
+				);
+
 				return styles;
 			} else if (feature.geometry.type === "Point") {
 				const editedPoint = feature.properties[COMMON_PROPERTIES.EDITED];
@@ -1226,11 +1233,23 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 				);
 
 				if (editedPoint) {
-					styles.zIndex = Z_INDEX.LAYER_FOUR;
+					styles.zIndex = this.getNumericStylingValue(
+						this.styles.zIndex,
+						Z_INDEX.LAYER_FOUR,
+						feature,
+					);
 				} else if (coordinatePoint) {
-					styles.zIndex = Z_INDEX.LAYER_TWO;
+					styles.zIndex = this.getNumericStylingValue(
+						this.styles.zIndex,
+						Z_INDEX.LAYER_TWO,
+						feature,
+					);
 				} else {
-					styles.zIndex = Z_INDEX.LAYER_THREE;
+					styles.zIndex = this.getNumericStylingValue(
+						this.styles.zIndex,
+						Z_INDEX.LAYER_THREE,
+						feature,
+					);
 				}
 
 				return styles;

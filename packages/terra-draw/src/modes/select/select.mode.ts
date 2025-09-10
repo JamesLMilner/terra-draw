@@ -103,6 +103,8 @@ type SelectionStyling = {
 	midPointOutlineColor: HexColorStyling;
 	midPointWidth: NumericStyling;
 	midPointOutlineWidth: NumericStyling;
+
+	zIndex: NumericStyling;
 };
 
 interface Cursors {
@@ -999,7 +1001,11 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 					feature,
 				);
 
-				styles.zIndex = Z_INDEX.LAYER_THREE;
+				styles.zIndex = this.getNumericStylingValue(
+					this.styles.zIndex,
+					Z_INDEX.LAYER_THREE,
+					feature,
+				);
 
 				return styles;
 			}
@@ -1029,7 +1035,11 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 					feature,
 				);
 
-				styles.zIndex = Z_INDEX.LAYER_FIVE;
+				styles.zIndex = this.getNumericStylingValue(
+					this.styles.zIndex,
+					Z_INDEX.LAYER_FIVE,
+					feature,
+				);
 
 				return styles;
 			}
@@ -1062,7 +1072,11 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 					feature,
 				);
 
-				styles.zIndex = Z_INDEX.LAYER_ONE;
+				styles.zIndex = this.getNumericStylingValue(
+					this.styles.zIndex,
+					Z_INDEX.LAYER_ONE,
+					feature,
+				);
 				return styles;
 			} else if (feature.geometry.type === "LineString") {
 				styles.lineStringColor = this.getHexColorStylingValue(
@@ -1077,7 +1091,11 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 					feature,
 				);
 
-				styles.zIndex = Z_INDEX.LAYER_ONE;
+				styles.zIndex = this.getNumericStylingValue(
+					this.styles.zIndex,
+					Z_INDEX.LAYER_ONE,
+					feature,
+				);
 				return styles;
 			} else if (feature.geometry.type === "Point") {
 				styles.pointWidth = this.getNumericStylingValue(
@@ -1104,7 +1122,11 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 					feature,
 				);
 
-				styles.zIndex = Z_INDEX.LAYER_ONE;
+				styles.zIndex = this.getNumericStylingValue(
+					this.styles.zIndex,
+					Z_INDEX.LAYER_ONE,
+					feature,
+				);
 				return styles;
 			}
 		}

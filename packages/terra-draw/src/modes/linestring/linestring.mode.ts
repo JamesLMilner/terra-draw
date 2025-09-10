@@ -53,6 +53,8 @@ type LineStringStyling = {
 	snappingPointWidth: NumericStyling;
 	snappingPointOutlineColor: HexColorStyling;
 	snappingPointOutlineWidth: NumericStyling;
+
+	zIndex: NumericStyling;
 };
 
 interface Cursors {
@@ -941,7 +943,11 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 				feature,
 			);
 
-			styles.zIndex = Z_INDEX.LAYER_ONE;
+			styles.zIndex = this.getNumericStylingValue(
+				this.styles.zIndex,
+				Z_INDEX.LAYER_ONE,
+				feature,
+			);
 
 			return styles;
 		} else if (
@@ -984,7 +990,11 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 				feature,
 			);
 
-			styles.zIndex = Z_INDEX.LAYER_FIVE;
+			styles.zIndex = this.getNumericStylingValue(
+				this.styles.zIndex,
+				Z_INDEX.LAYER_FIVE,
+				feature,
+			);
 
 			return styles;
 		}

@@ -2041,6 +2041,7 @@ describe("styleFeature", () => {
 				closingPointColor: "#dddddd",
 				closingPointOutlineWidth: 1,
 				closingPointOutlineColor: "#222222",
+				zIndex: 42,
 			},
 		});
 
@@ -2055,6 +2056,7 @@ describe("styleFeature", () => {
 			polygonOutlineColor: "#111111",
 			polygonOutlineWidth: 2,
 			polygonFillOpacity: 0.5,
+			zIndex: 42,
 		});
 	});
 
@@ -2069,6 +2071,7 @@ describe("styleFeature", () => {
 				closingPointColor: () => "#dddddd",
 				closingPointOutlineWidth: () => 1,
 				closingPointOutlineColor: () => "#222222",
+				zIndex: () => 42,
 			},
 		});
 
@@ -2085,6 +2088,7 @@ describe("styleFeature", () => {
 			polygonOutlineColor: "#111111",
 			polygonOutlineWidth: 2,
 			polygonFillOpacity: 0.5,
+			zIndex: 42,
 		});
 	});
 
@@ -2113,6 +2117,7 @@ describe("styleFeature", () => {
 			pointColor: "#dddddd",
 			pointOutlineColor: "#222222",
 			pointOutlineWidth: 1,
+			zIndex: 30,
 		});
 	});
 
@@ -2141,6 +2146,7 @@ describe("styleFeature", () => {
 			pointColor: "#dddddd",
 			pointOutlineColor: "#222222",
 			pointOutlineWidth: 1,
+			zIndex: 30,
 		});
 	});
 });

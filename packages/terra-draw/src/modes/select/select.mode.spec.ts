@@ -2927,6 +2927,7 @@ describe("TerraDrawSelectMode", () => {
 					selectedPolygonColor: "#222222",
 					selectedPolygonOutlineColor: "#111111",
 					selectedPolygonFillOpacity: 1,
+					zIndex: 42,
 				},
 			});
 
@@ -2941,6 +2942,7 @@ describe("TerraDrawSelectMode", () => {
 				polygonOutlineColor: "#111111",
 				polygonOutlineWidth: 4,
 				polygonFillOpacity: 1,
+				zIndex: 42,
 			});
 
 			expect(
@@ -2953,6 +2955,7 @@ describe("TerraDrawSelectMode", () => {
 				polygonFillColor: "#3f97e0",
 				polygonFillOpacity: 0.3,
 				polygonOutlineColor: "#3f97e0",
+				zIndex: 0,
 			});
 		});
 
@@ -2963,6 +2966,7 @@ describe("TerraDrawSelectMode", () => {
 					selectedPolygonColor: () => "#222222",
 					selectedPolygonOutlineColor: () => "#111111",
 					selectedPolygonFillOpacity: () => 1,
+					zIndex: () => 42,
 				},
 			});
 
@@ -2977,6 +2981,7 @@ describe("TerraDrawSelectMode", () => {
 				polygonOutlineColor: "#111111",
 				polygonOutlineWidth: 4,
 				polygonFillOpacity: 1,
+				zIndex: 42,
 			});
 
 			expect(
@@ -2989,6 +2994,20 @@ describe("TerraDrawSelectMode", () => {
 				polygonFillColor: "#3f97e0",
 				polygonFillOpacity: 0.3,
 				polygonOutlineColor: "#3f97e0",
+				zIndex: 0,
+			});
+		});
+
+		it("it returns default zIndex when not customized", () => {
+			const polygonMode = new TerraDrawSelectMode({ styles: {} });
+			expect(
+				polygonMode.styleFeature({
+					type: "Feature",
+					geometry: { type: "Polygon", coordinates: [] },
+					properties: { mode: "polygon", selected: true },
+				}),
+			).toMatchObject({
+				zIndex: 10,
 			});
 		});
 	});

@@ -1274,6 +1274,7 @@ describe("TerraDrawLineStringMode", () => {
 					closingPointWidth: 3,
 					closingPointOutlineColor: "#222222",
 					closingPointOutlineWidth: 2,
+					zIndex: 42,
 				},
 			});
 
@@ -1288,6 +1289,7 @@ describe("TerraDrawLineStringMode", () => {
 				pointWidth: 3,
 				pointOutlineColor: "#222222",
 				pointOutlineWidth: 2,
+				zIndex: 42,
 			});
 		});
 
@@ -1300,6 +1302,7 @@ describe("TerraDrawLineStringMode", () => {
 					snappingPointWidth: 3,
 					snappingPointOutlineColor: "#222222",
 					snappingPointOutlineWidth: 2,
+					zIndex: 42,
 				},
 			});
 
@@ -1314,6 +1317,7 @@ describe("TerraDrawLineStringMode", () => {
 				pointWidth: 3,
 				pointOutlineColor: "#222222",
 				pointOutlineWidth: 2,
+				zIndex: 42,
 			});
 		});
 
@@ -1326,6 +1330,7 @@ describe("TerraDrawLineStringMode", () => {
 					closingPointWidth: () => 3,
 					closingPointOutlineColor: () => "#222222",
 					closingPointOutlineWidth: () => 2,
+					zIndex: () => 42,
 				},
 			});
 
@@ -1340,6 +1345,7 @@ describe("TerraDrawLineStringMode", () => {
 				pointWidth: 3,
 				pointOutlineColor: "#222222",
 				pointOutlineWidth: 2,
+				zIndex: 42,
 			});
 		});
 
@@ -1352,6 +1358,7 @@ describe("TerraDrawLineStringMode", () => {
 					closingPointWidth: 3,
 					closingPointOutlineColor: "#222222",
 					closingPointOutlineWidth: 2,
+					zIndex: 42,
 				},
 			});
 
@@ -1364,6 +1371,7 @@ describe("TerraDrawLineStringMode", () => {
 			).toMatchObject({
 				lineStringColor: "#ffffff",
 				lineStringWidth: 4,
+				zIndex: 42,
 			});
 		});
 
@@ -1376,6 +1384,7 @@ describe("TerraDrawLineStringMode", () => {
 					closingPointWidth: () => 3,
 					closingPointOutlineColor: () => "#222222",
 					closingPointOutlineWidth: () => 2,
+					zIndex: () => 42,
 				},
 			});
 
@@ -1388,6 +1397,7 @@ describe("TerraDrawLineStringMode", () => {
 			).toMatchObject({
 				lineStringColor: "#ffffff",
 				lineStringWidth: 4,
+				zIndex: 42,
 			});
 		});
 	});

@@ -480,5 +480,26 @@ describe("TerraDrawMapboxGLAdapter", () => {
 			expect(map.removeLayer).toHaveBeenCalledTimes(4);
 			expect(map.removeSource).toHaveBeenCalledTimes(3);
 		});
+
+		it("moves layers respecting the renderBelowLayerId properties", () => {
+			const map = createMapboxGLMap();
+			const adapter = new TerraDrawMapboxGLAdapter({
+				map: map as mapboxgl.Map,
+				renderPointsBelowLayerId: "101",
+				renderLinesBelowLayerId: "102",
+				renderPolygonsBelowLayerId: "103",
+			});
+
+			adapter.register(MockCallbacks());
+
+			expect(map.moveLayer).toHaveBeenCalledTimes(4);
+			expect(map.moveLayer).toHaveBeenCalledWith(
+				"td-polygon-outline",
+				"td-linestring",
+			);
+			expect(map.moveLayer).toHaveBeenCalledWith("td-polygon", "103");
+			expect(map.moveLayer).toHaveBeenCalledWith("td-linestring", "102");
+			expect(map.moveLayer).toHaveBeenCalledWith("td-point", "101");
+		});
 	});
 });

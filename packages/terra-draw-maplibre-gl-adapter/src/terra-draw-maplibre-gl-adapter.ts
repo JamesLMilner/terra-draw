@@ -25,6 +25,9 @@ export class TerraDrawMapLibreGLAdapter<
 		config: {
 			map: MapType;
 			renderBelowLayerId?: string;
+			renderPointsBelowLayerId?: string;
+			renderLinesBelowLayerId?: string;
+			renderPolygonsBelowLayerId?: string;
 			prefixId?: string;
 		} & TerraDrawExtend.BaseAdapterConfig,
 	) {
@@ -36,11 +39,19 @@ export class TerraDrawMapLibreGLAdapter<
 		// We want to respect the initial map settings
 		this._initialDragRotate = this._map.dragRotate.isEnabled();
 		this._initialDragPan = this._map.dragPan.isEnabled();
-		this._renderBeforeLayerId = config.renderBelowLayerId;
+		this._renderLinesBeforeLayerId =
+			config.renderLinesBelowLayerId ?? config.renderBelowLayerId;
+		this._renderPointsBeforeLayerId =
+			config.renderPointsBelowLayerId ?? config.renderBelowLayerId;
+		this._renderPolygonsBeforeLayerId =
+			config.renderPolygonsBelowLayerId ?? config.renderBelowLayerId;
+
 		this._prefixId = config.prefixId || "td";
 	}
 
-	private _renderBeforeLayerId: string | undefined;
+	private _renderPolygonsBeforeLayerId: string | undefined;
+	private _renderPointsBeforeLayerId: string | undefined;
+	private _renderLinesBeforeLayerId: string | undefined;
 	private _prefixId: string;
 	private _initialDragPan: boolean;
 	private _initialDragRotate: boolean;
@@ -476,11 +487,17 @@ export class TerraDrawMapLibreGLAdapter<
 			[] as Feature<Point>[],
 		);
 
-		if (this._renderBeforeLayerId) {
-			this._map.moveLayer(pointId, this._renderBeforeLayerId);
-			this._map.moveLayer(lineStringId, pointId);
+		if (this._renderPointsBeforeLayerId) {
+			this._map.moveLayer(pointId, this._renderPointsBeforeLayerId);
+		}
+
+		if (this._renderLinesBeforeLayerId) {
+			this._map.moveLayer(lineStringId, this._renderLinesBeforeLayerId);
 			this._map.moveLayer(polygonStringId + "-outline", lineStringId);
-			this._map.moveLayer(polygonStringId, lineStringId);
+		}
+
+		if (this._renderPolygonsBeforeLayerId) {
+			this._map.moveLayer(polygonStringId, this._renderPolygonsBeforeLayerId);
 		}
 
 		if (this._currentModeCallbacks?.onReady) {

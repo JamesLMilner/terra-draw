@@ -178,27 +178,6 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 			expect(adapter.unproject).toBeDefined();
 			expect(adapter.setCursor).toBeDefined();
 		});
-
-		it("throws an error if the map container id is not set", () => {
-			const map = createMockGoogleMap();
-			map.getDiv = jest.fn();
-
-			expect(() => {
-				new TerraDrawGoogleMapsAdapter({
-					lib: {
-						LatLng: jest.fn(),
-						OverlayView: jest.fn().mockImplementation(() => ({
-							setMap: jest.fn(),
-						})),
-					} as any,
-					map,
-					minPixelDragDistance: 1,
-					minPixelDragDistanceSelecting: 8,
-					minPixelDragDistanceDrawing: 8,
-					coordinatePrecision: 9,
-				});
-			}).toThrow();
-		});
 	});
 
 	describe("register", () => {

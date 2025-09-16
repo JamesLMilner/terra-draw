@@ -254,7 +254,7 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawExtend.TerraDrawBaseAda
 			// TODO: We could cache these individually per cursor
 
 			const div = this._map.getDiv();
-			const styleDiv = div.querySelector('.gm-style > div');
+			const styleDiv = div.querySelector(".gm-style > div");
 
 			if (styleDiv) {
 				styleDiv.classList.add("terra-draw-google-maps");

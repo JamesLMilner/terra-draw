@@ -105,13 +105,13 @@ export class GeoJSONStore<
 		}
 
 		// We don't want to update the original data
-		let clonedData = this.clone(data);
+		let clonedInputFeatures = this.clone(data);
 
-		const changes: FeatureId[] = []; // The list of changes that we will trigger to onChange
 		const validations: StoreValidation[] = []; // The list of validations that we will return
+		const createdFeatures: GeoJSONStoreFeatures[] = []; // Keep track of the features we created
 
 		// We filter out the features that are not valid and do not add them to the store
-		clonedData = clonedData.filter((feature) => {
+		clonedInputFeatures = clonedInputFeatures.filter((feature) => {
 			if (feature.id === undefined || feature.id === null) {
 				feature.id = this.idStrategy.getId();
 			}
@@ -169,19 +169,29 @@ export class GeoJSONStore<
 			}
 
 			this.store[id] = feature;
-			changes.push(id);
 
-			afterFeatureAdded && afterFeatureAdded(feature);
+			createdFeatures.push(feature);
 
 			validations.push({ id, valid: true });
 
+			// Feature is valid so keep it in the list
 			return true;
 		});
-		this.spatialIndex.load(clonedData);
 
-		// Only trigger onChange if we have changes
+		this.spatialIndex.load(clonedInputFeatures);
+
+		// The list of changes that we will trigger to onChange
+		const changes = createdFeatures.map(({ id }) => id as FeatureId);
+
+		// Only trigger onChange with a 'create' change type if we have actually created features
 		if (changes.length > 0) {
 			this._onChange(changes, "create", context);
+
+			if (afterFeatureAdded) {
+				createdFeatures.forEach((feature) => {
+					afterFeatureAdded(feature);
+				});
+			}
 		}
 
 		return validations;

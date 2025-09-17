@@ -1,6 +1,6 @@
 {
 	"name": "terra-draw-google-maps-adapter",
-	"version": "1.0.3",
+	"version": "1.0.4",
 	"description": "Terra Draw Adapter for Google Maps JavaScript API",
 	"peerDependencies": {
 		"terra-draw": "^1.0.0",

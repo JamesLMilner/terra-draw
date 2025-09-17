@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.0.4](https://github.com/JamesLMilner/terra-draw/compare/terra-draw-google-maps-adapter@1.0.3...terra-draw-google-maps-adapter@1.0.4) (2025-09-17)
+
+
+### fix
+
+* **terra-draw-google-maps-adapter:** remove id requirement (#650) ([](https://github.com/JamesLMilner/terra-draw/commit/1c7cbe1f06e3c9779b38885f9789cba76f5ff1b8)), closes [#650](https://github.com/JamesLMilner/terra-draw/issues/650)
+
 ## [1.0.3](https://github.com/JamesLMilner/terra-draw/compare/terra-draw-google-maps-adapter@1.0.2...terra-draw-google-maps-adapter@1.0.3) (2025-09-01)
 
 

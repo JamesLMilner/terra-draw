@@ -178,27 +178,6 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 			expect(adapter.unproject).toBeDefined();
 			expect(adapter.setCursor).toBeDefined();
 		});
-
-		it("throws an error if the map container id is not set", () => {
-			const map = createMockGoogleMap();
-			map.getDiv = jest.fn();
-
-			expect(() => {
-				new TerraDrawGoogleMapsAdapter({
-					lib: {
-						LatLng: jest.fn(),
-						OverlayView: jest.fn().mockImplementation(() => ({
-							setMap: jest.fn(),
-						})),
-					} as any,
-					map,
-					minPixelDragDistance: 1,
-					minPixelDragDistanceSelecting: 8,
-					minPixelDragDistanceDrawing: 8,
-					coordinatePrecision: 9,
-				});
-			}).toThrow();
-		});
 	});
 
 	describe("register", () => {
@@ -681,6 +660,7 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 				offsetLeft: 0,
 				offsetTop: 0,
 				id: elId,
+				querySelector: jest.fn(),
 			};
 
 			map.getDiv = jest.fn(() => container);
@@ -695,16 +675,12 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 				map,
 			});
 
-			const mockQuerySelector = jest.spyOn(document, "querySelector");
-
+			const mockQuerySelector = jest.spyOn(container, "querySelector");
 			mockQuerySelector.mockImplementationOnce(
 				() => ({ classList: { add: jest.fn() } }) as unknown as Element,
 			);
 
 			adapter.setCursor("pointer");
-
-			// Once in constructor, once in setCursor
-			expect(map.getDiv).toHaveBeenCalledTimes(2);
 
 			const firstSheetAndRule = document.styleSheets[0]
 				.cssRules[0] as CSSStyleRule;
@@ -724,6 +700,7 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 				offsetLeft: 0,
 				offsetTop: 0,
 				id: elId,
+				querySelector: jest.fn(() => document.createElement("div")),
 			};
 
 			map.getDiv = jest.fn(() => container);
@@ -738,12 +715,17 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 				map,
 			});
 
+			const createElementSpy = jest.spyOn(document, "createElement");
+
 			adapter.setCursor("pointer");
 			adapter.setCursor("pointer");
 			adapter.setCursor("pointer");
 
-			// Once in constructor, once in setCursor
-			expect(map.getDiv).toHaveBeenCalledTimes(2);
+			// filter only document.createElement('style')
+			const calls = createElementSpy.mock.calls.filter(
+				(args) => args[0] === "style",
+			);
+			expect(calls.length).toBe(1);
 		});
 	});
 

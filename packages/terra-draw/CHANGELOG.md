@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.15.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.14.0...terra-draw@1.15.0) (2025-09-17)
+
+
+### fix
+
+* **terra-draw:** ensure afterFeatureAdded is called after onChange (#652) ([](https://github.com/JamesLMilner/terra-draw/commit/2f3e1ec5d8b0347e70cb7ae887e585acb71dadfd)), closes [#652](https://github.com/JamesLMilner/terra-draw/issues/652)
+
+
+### feat
+
+* **terra-draw:** allow returning of closest coordinate information for getFeaturesAtLngLat (#645) ([](https://github.com/JamesLMilner/terra-draw/commit/b3b60f67710be38f5d882393d3e2035ec58d21d7)), closes [#645](https://github.com/JamesLMilner/terra-draw/issues/645)
+
+
+### docs
+
+* **terra-draw:** add editable and pointerDistance documentation (#643) ([](https://github.com/JamesLMilner/terra-draw/commit/b237ada776e62134098b90cbba5b905e4e2e7929)), closes [#643](https://github.com/JamesLMilner/terra-draw/issues/643)
+
 ## [1.14.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.13.0...terra-draw@1.14.0) (2025-09-07)
 
 

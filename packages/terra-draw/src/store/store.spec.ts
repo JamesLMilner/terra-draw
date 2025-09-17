@@ -1,4 +1,4 @@
-import { GeoJSONStore } from "./store";
+import { GeoJSONStore, GeoJSONStoreFeatures } from "./store";
 
 describe("GeoJSONStore", () => {
 	const UUIDV4 = new RegExp(
@@ -484,6 +484,256 @@ describe("GeoJSONStore", () => {
 					valid: false,
 				},
 			]);
+		});
+
+		it("calls onChange with created features and context if features are valid", () => {
+			const store = new GeoJSONStore({ tracked: false });
+
+			const mockChangeCallback = jest.fn();
+			store.registerOnChange(mockChangeCallback);
+
+			const result = store.load(
+				[
+					{
+						type: "Feature",
+						properties: {
+							mode: "point",
+						},
+						geometry: { type: "Point", coordinates: [0, 0] },
+					},
+					{
+						type: "Feature",
+						properties: {
+							mode: "point",
+						},
+						geometry: { type: "Point", coordinates: [1, 1] },
+					},
+				],
+				(feature) => ({
+					valid: Boolean(
+						feature &&
+							typeof feature === "object" &&
+							"type" in feature &&
+							(feature as GeoJSONStoreFeatures).geometry.type === "Point",
+					),
+				}),
+			);
+
+			expect(result).toStrictEqual([
+				{
+					id: expect.any(String),
+					valid: true,
+				},
+				{
+					id: expect.any(String),
+					valid: true,
+				},
+			]);
+
+			expect(mockChangeCallback).toHaveBeenCalledTimes(1);
+			expect(mockChangeCallback).toHaveBeenNthCalledWith(
+				1,
+				[result[0].id, result[1].id],
+				"create",
+				undefined,
+			);
+		});
+
+		it("does not call onChange if no features are valid", () => {
+			const store = new GeoJSONStore({ tracked: false });
+
+			const mockChangeCallback = jest.fn();
+			store.registerOnChange(mockChangeCallback);
+
+			const result = store.load(
+				[
+					{
+						type: "Feature",
+						properties: {
+							mode: "point",
+						},
+						geometry: {
+							type: "LineString",
+							coordinates: [
+								[0, 0],
+								[1, 1],
+							],
+						},
+					},
+					{
+						type: "Feature",
+						properties: {
+							mode: "point",
+						},
+						geometry: {
+							type: "LineString",
+							coordinates: [
+								[1, 1],
+								[2, 2],
+							],
+						},
+					},
+				],
+				(feature) => ({
+					valid: Boolean(
+						feature &&
+							typeof feature === "object" &&
+							"type" in feature &&
+							(feature as GeoJSONStoreFeatures).geometry.type === "Point", // Must be Point to be valid
+					),
+					reason: "Feature must be valid Point",
+				}),
+			);
+
+			expect(result).toStrictEqual([
+				{
+					id: expect.any(String),
+					valid: false,
+					reason: "Feature must be valid Point",
+				},
+				{
+					id: expect.any(String),
+					valid: false,
+					reason: "Feature must be valid Point",
+				},
+			]);
+
+			expect(mockChangeCallback).toHaveBeenCalledTimes(0);
+		});
+
+		it("calls afterFeatureAdded for each created feature when function is provided and passed features are valid", () => {
+			const store = new GeoJSONStore({ tracked: false });
+
+			const mockChangeCallback = jest.fn();
+			store.registerOnChange(mockChangeCallback);
+			const afterFeatureAddedMock = jest.fn();
+
+			const result = store.load(
+				[
+					{
+						type: "Feature",
+						properties: {
+							mode: "point",
+						},
+						geometry: { type: "Point", coordinates: [0, 0] },
+					},
+					{
+						type: "Feature",
+						properties: {
+							mode: "point",
+						},
+						geometry: { type: "Point", coordinates: [1, 1] },
+					},
+				],
+				(feature) => ({
+					valid: Boolean(
+						feature &&
+							typeof feature === "object" &&
+							"type" in feature &&
+							(feature as GeoJSONStoreFeatures).geometry.type === "Point",
+					),
+				}),
+				afterFeatureAddedMock,
+			);
+
+			expect(result).toStrictEqual([
+				{
+					id: expect.any(String),
+					valid: true,
+				},
+				{
+					id: expect.any(String),
+					valid: true,
+				},
+			]);
+
+			expect(mockChangeCallback).toHaveBeenCalledTimes(1);
+			expect(mockChangeCallback).toHaveBeenNthCalledWith(
+				1,
+				[result[0].id, result[1].id],
+				"create",
+				undefined,
+			);
+
+			expect(afterFeatureAddedMock).toHaveBeenCalledTimes(2);
+			expect(afterFeatureAddedMock).toHaveBeenNthCalledWith(
+				1,
+				expect.objectContaining({ id: result[0].id }),
+			);
+			expect(afterFeatureAddedMock).toHaveBeenNthCalledWith(
+				2,
+				expect.objectContaining({ id: result[1].id }),
+			);
+
+			// Ensure onChange is called before afterFeatureAdded
+			expect(mockChangeCallback.mock.invocationCallOrder[0]).toBeLessThan(
+				afterFeatureAddedMock.mock.invocationCallOrder[0],
+			);
+		});
+
+		it("does not call afterFeatureAdded when function is provided if passed features are invalid", () => {
+			const store = new GeoJSONStore({ tracked: false });
+
+			const mockChangeCallback = jest.fn();
+			store.registerOnChange(mockChangeCallback);
+			const afterFeatureAddedMock = jest.fn();
+
+			const result = store.load(
+				[
+					{
+						type: "Feature",
+						properties: {
+							mode: "point",
+						},
+						geometry: {
+							type: "LineString",
+							coordinates: [
+								[0, 0],
+								[1, 1],
+							],
+						},
+					},
+					{
+						type: "Feature",
+						properties: {
+							mode: "point",
+						},
+						geometry: {
+							type: "LineString",
+							coordinates: [
+								[1, 1],
+								[2, 2],
+							],
+						},
+					},
+				],
+				(feature) => ({
+					valid: Boolean(
+						feature &&
+							typeof feature === "object" &&
+							"type" in feature &&
+							(feature as GeoJSONStoreFeatures).geometry.type === "Point", // Must be Point to be valid
+					),
+					reason: "Feature must be valid Point",
+				}),
+				afterFeatureAddedMock,
+			);
+
+			expect(result).toStrictEqual([
+				{
+					id: expect.any(String),
+					valid: false,
+					reason: "Feature must be valid Point",
+				},
+				{
+					id: expect.any(String),
+					valid: false,
+					reason: "Feature must be valid Point",
+				},
+			]);
+
+			expect(mockChangeCallback).toHaveBeenCalledTimes(0);
+			expect(afterFeatureAddedMock).toHaveBeenCalledTimes(0);
 		});
 	});
 

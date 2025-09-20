@@ -54,6 +54,11 @@ describe("TerraDrawPolygonMode", () => {
 				keyEvents: { cancel: null, finish: null },
 			});
 		});
+
+		it("constructs with custom mode name", () => {
+			const polygonMode = new TerraDrawPolygonMode({ modeName: "custom" });
+			expect(polygonMode.mode).toBe("custom");
+		});
 	});
 
 	describe("updateOptions", () => {

@@ -44,6 +44,11 @@ describe("TerraDrawSensorMode", () => {
 				keyEvents: { cancel: null, finish: null },
 			});
 		});
+
+		it("constructs with custom mode name", () => {
+			const sensorMode = new TerraDrawSensorMode({ modeName: "custom" });
+			expect(sensorMode.mode).toBe("custom");
+		});
 	});
 
 	describe("lifecycle", () => {

@@ -100,6 +100,7 @@ type GetFeatureOptions = {
 	ignoreCoordinatePoints?: boolean;
 	ignoreCurrentlyDrawing?: boolean;
 	ignoreClosingPoints?: boolean;
+	ignoreSnappingPoints?: boolean;
 	addClosestCoordinateInfoToProperties?: boolean;
 };
 
@@ -389,6 +390,11 @@ class TerraDraw {
 				? options.ignoreClosingPoints
 				: false;
 
+		const ignoreSnappingPoints =
+			options && options.ignoreSnappingPoints !== undefined
+				? options.ignoreSnappingPoints
+				: false;
+
 		const unproject = this._adapter.unproject.bind(this._adapter);
 		const project = this._adapter.project.bind(this._adapter);
 
@@ -429,6 +435,13 @@ class TerraDraw {
 				if (
 					ignoreCurrentlyDrawing &&
 					feature.properties[COMMON_PROPERTIES.CURRENTLY_DRAWING]
+				) {
+					return false;
+				}
+
+				if (
+					ignoreSnappingPoints &&
+					feature.properties[COMMON_PROPERTIES.SNAPPING_POINT]
 				) {
 					return false;
 				}

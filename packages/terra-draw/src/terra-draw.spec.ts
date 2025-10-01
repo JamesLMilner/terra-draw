@@ -2445,6 +2445,99 @@ describe("Terra Draw", () => {
 			expect(features).toHaveLength(3);
 		});
 
+		it("filters out coordinate points if ignoreSnappingPoints set to true", () => {
+			const draw = new TerraDraw({
+				adapter,
+				modes: [
+					new TerraDrawPolygonMode({
+						snapping: {
+							toCoordinate: true,
+						},
+					}),
+				],
+			});
+
+			draw.start();
+			draw.addFeatures([
+				{
+					type: "Feature",
+					geometry: {
+						type: "Polygon",
+						coordinates: [
+							[
+								[0, 0],
+								[0, 1],
+								[1, 1],
+								[1, 0],
+								[0, 0],
+							],
+						],
+					},
+					properties: {
+						mode: "polygon",
+					},
+				},
+			]);
+
+			const features = draw.getFeaturesAtLngLat(
+				{ lng: 0, lat: 0 },
+				{
+					ignoreSnappingPoints: true,
+				},
+			);
+
+			expect(features).toHaveLength(1);
+			expect(features[0].geometry.type).toBe("Polygon");
+		});
+
+		it("filters out coordinate points if ignoreSnappingPoints set to false", () => {
+			const polygonMode = new TerraDrawPolygonMode({
+				snapping: {
+					toCoordinate: true,
+				},
+			});
+
+			const draw = new TerraDraw({
+				adapter,
+				modes: [polygonMode],
+			});
+
+			draw.start();
+			draw.addFeatures([
+				{
+					type: "Feature",
+					geometry: {
+						type: "Polygon",
+						coordinates: [
+							[
+								[0, 0],
+								[0, 1],
+								[1, 1],
+								[1, 0],
+								[0, 0],
+							],
+						],
+					},
+					properties: {
+						mode: "polygon",
+					},
+				},
+			]);
+
+			polygonMode.onMouseMove(MockCursorEvent({ lng: 0, lat: 0 }));
+
+			const features = draw.getFeaturesAtLngLat(
+				{ lng: 0, lat: 0 },
+				{
+					ignoreSnappingPoints: false,
+				},
+			);
+
+			expect(features).toHaveLength(2);
+			expect(features[0].geometry.type).toBe("Polygon");
+			expect(features[1].geometry.type).toBe("Point");
+		});
+
 		it("filters out points and linestrings that are not within the pointer distance", () => {
 			const draw = new TerraDraw({
 				adapter,

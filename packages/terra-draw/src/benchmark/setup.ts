@@ -36,7 +36,7 @@ export const createDraw = () => {
 	return draw;
 };
 
-export type BenchmarkProps = {
+type BenchmarkProps = {
 	draw: TerraDraw;
 	features: GeoJSONStoreFeatures[];
 	featureIds: FeatureId[];

@@ -167,9 +167,5 @@ jobs:
           node-version: "22.x"
       - name: Install Parent Folder
         run: npm ci
-      - name: Build terra-draw
-        run: cd packages/terra-draw && npm run build
-      - name: Test
-        run: npm run benchmark
-        env:
-          CI: true
+      - name: Benchmark
+        run: cd packages/terra-draw && npm run benchmark

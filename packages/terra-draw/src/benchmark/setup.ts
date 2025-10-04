@@ -130,6 +130,7 @@ export const processBenchmarks = (
 export const logBenchmarkResults = (
 	results: { name: string; opsPerSecond: number; averageTimeMs: number }[],
 ) => {
+	// eslint-disable-next-line no-console
 	console.table(
 		results.sort(
 			(resultOne, resultTwo) => resultOne.opsPerSecond - resultTwo.opsPerSecond,

@@ -136,14 +136,19 @@ export const processBenchmarks = (
 };
 
 export function writeBenchmarkSummary(results: BenchmarkResult[]) {
+	const sortedResults = results.sort(
+		(resultOne, resultTwo) => resultOne.opsPerSecond - resultTwo.opsPerSecond,
+	);
+
 	let markdown = `## ⚡ Benchmark Results\n\n`;
 	markdown += `|  Method | Ops/sec | Avg time (ms) |\n`;
 	markdown += `|---------|---------|---------------|\n`;
 
-	for (const r of results) {
+	for (const r of sortedResults) {
 		markdown += `| \`${r.name}\` | ${r.opsPerSecond.toLocaleString()} | ${r.averageTimeMs} |\n`;
 	}
 
+	console.log("Writing benchmark summary to GITHUB_STEP_SUMMARY");
 	fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY!, markdown);
 }
 

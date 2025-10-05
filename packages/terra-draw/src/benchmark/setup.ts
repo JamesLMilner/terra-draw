@@ -10,6 +10,14 @@ import { TerraDrawTestAdapter } from "../test/test-adapter";
 import { uuid4 } from "../util/id";
 import { Bench } from "tinybench";
 
+import fs from "fs";
+
+type BenchmarkResult = {
+	name: string;
+	opsPerSecond: number;
+	averageTimeMs: number;
+};
+
 export const createPointFeatures = (n: number) =>
 	new Array(n).fill({}).map((_, i) => ({
 		id: uuid4(),
@@ -105,7 +113,7 @@ export const createBenchmark = (
 export const processBenchmarks = (
 	bench: Bench,
 	benchmarkTasks: BenchmarkTask[],
-) => {
+): BenchmarkResult[] => {
 	const results = bench.results.map((result, i) => {
 		return {
 			name: benchmarkTasks[i].name,
@@ -126,6 +134,18 @@ export const processBenchmarks = (
 
 	return results;
 };
+
+export function writeBenchmarkSummary(results: BenchmarkResult[]) {
+	let markdown = `## ⚡ Benchmark Results\n\n`;
+	markdown += `|  Method | Ops/sec | Avg time (ms) |\n`;
+	markdown += `|---------|---------|---------------|\n`;
+
+	for (const r of results) {
+		markdown += `| \`${r.name}\` | ${r.opsPerSecond.toLocaleString()} | ${r.averageTimeMs} |\n`;
+	}
+
+	fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY!, markdown);
+}
 
 export const logBenchmarkResults = (
 	results: { name: string; opsPerSecond: number; averageTimeMs: number }[],

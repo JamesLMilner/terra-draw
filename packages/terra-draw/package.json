@@ -18,7 +18,8 @@
 		"lint:fix:quiet": "eslint --fix --quiet src/",
 		"format": "prettier --ignore-path .gitignore --write \"**/*.+(js|ts|json)\"",
 		"format:quiet": "prettier --ignore-path .gitignore --write \"**/*.+(js|ts|json)\" --log-level=silent",
-		"benchmark": "tsx ./src/terra-draw.benchmark.ts"
+		"benchmark": "tsx ./src/terra-draw.benchmark.ts",
+		"benchmark:ci": "tsx ./src/terra-draw.benchmark.ts"
 	},
 	"type": "module",
 	"source": "src/terra-draw.ts",

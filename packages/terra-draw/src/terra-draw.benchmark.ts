@@ -10,6 +10,7 @@ import {
 	createDraw,
 	logBenchmarkResults,
 	processBenchmarks,
+	writeBenchmarkSummary,
 } from "./benchmark/setup";
 
 (async () => {
@@ -281,5 +282,9 @@ import {
 
 	const results = processBenchmarks(bench, benchmarkTasks);
 
-	logBenchmarkResults(results);
+	if (process.env.CI) {
+		writeBenchmarkSummary(results);
+	} else {
+		logBenchmarkResults(results);
+	}
 })();

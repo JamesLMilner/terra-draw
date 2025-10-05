@@ -148,6 +148,9 @@ export function writeBenchmarkSummary(results: BenchmarkResult[]) {
 		markdown += `| \`${r.name}\` | ${r.opsPerSecond.toLocaleString()} | ${r.averageTimeMs} |\n`;
 	}
 
+	logBenchmarkResults(results);
+
+	// eslint-disable-next-line no-console
 	console.log("Writing benchmark summary to GITHUB_STEP_SUMMARY");
 	fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY!, markdown);
 }

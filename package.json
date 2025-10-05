@@ -47,6 +47,7 @@
 		"knip": "5.30.2",
 		"microbundle": "0.15.0",
 		"serve": "14.2.4",
+		"tinybench": "^5.0.1",
 		"ts-jest": "29.1.2",
 		"ts-loader": "9.5.1",
 		"tsx": "4.7.2",

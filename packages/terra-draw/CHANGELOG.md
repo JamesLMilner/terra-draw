@@ -2,6 +2,29 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.16.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.15.0...terra-draw@1.16.0) (2025-10-06)
+
+
+### fix
+
+* **terra-draw:** ensure addClosestCoordinateInfoToProperties does not break polygon coordinates (#664) ([](https://github.com/JamesLMilner/terra-draw/commit/f71f00791b8c2facf364d9ba978ea15ac6440521)), closes [#664](https://github.com/JamesLMilner/terra-draw/issues/664)
+* **terra-draw:** ensure precision is respected for TerraDrawAngledRectangleMode (#661) ([](https://github.com/JamesLMilner/terra-draw/commit/0d969b1341db927f3a0890134cb08139e384f668)), closes [#661](https://github.com/JamesLMilner/terra-draw/issues/661)
+
+
+### chore
+
+* **terra-draw:** add benchmarking for the public Terra Draw API (#663) ([](https://github.com/JamesLMilner/terra-draw/commit/d19f03486136ac6b1e55490c949c0a22a77600a4)), closes [#663](https://github.com/JamesLMilner/terra-draw/issues/663)
+
+
+### test
+
+* **terra-draw:** add unit tests for ignoreSnappingPoints (#660) ([](https://github.com/JamesLMilner/terra-draw/commit/965fc625007e0451c07cda3b00a64d740f4a5cb0)), closes [#660](https://github.com/JamesLMilner/terra-draw/issues/660)
+
+
+### feat
+
+* **terra-draw:** provide a option for getFeaturesAt methods to ignore snapping points ([](https://github.com/JamesLMilner/terra-draw/commit/6dce5e70c0a4c064b4ebd8b70824fdea69db69fe))
+
 ## [1.15.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.14.0...terra-draw@1.15.0) (2025-09-17)
 
 

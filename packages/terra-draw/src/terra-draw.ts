@@ -512,8 +512,7 @@ class TerraDraw {
 
 				let coordinates;
 				if (feature.geometry.type === "Polygon") {
-					coordinates = feature.geometry.coordinates[0];
-					coordinates.pop(); // Remove duplicate end coordinate
+					coordinates = feature.geometry.coordinates[0].slice(0, -1); // Remove the closing coordinate as it's always the same as the first
 				} else if (feature.geometry.type === "LineString") {
 					coordinates = feature.geometry.coordinates;
 				} else {

@@ -2443,6 +2443,23 @@ describe("Terra Draw", () => {
 			const features = draw.getFeaturesAtLngLat({ lng: 0, lat: 0 });
 
 			expect(features).toHaveLength(3);
+			expect(features[0].geometry.type).toBe("Point");
+			expect(features[0].geometry.coordinates).toEqual([0, 0]);
+			expect(features[1].geometry.type).toBe("LineString");
+			expect(features[1].geometry.coordinates).toEqual([
+				[0, 0],
+				[1, 1],
+			]);
+			expect(features[2].geometry.type).toBe("Polygon");
+			expect(features[2].geometry.coordinates).toEqual([
+				[
+					[0, 0],
+					[0, 1],
+					[1, 1],
+					[1, 0],
+					[0, 0],
+				],
+			]);
 		});
 
 		it("filters out coordinate points if ignoreSnappingPoints set to true", () => {
@@ -2488,6 +2505,15 @@ describe("Terra Draw", () => {
 
 			expect(features).toHaveLength(1);
 			expect(features[0].geometry.type).toBe("Polygon");
+			expect(features[0].geometry.coordinates).toEqual([
+				[
+					[0, 0],
+					[0, 1],
+					[1, 1],
+					[1, 0],
+					[0, 0],
+				],
+			]);
 		});
 
 		it("filters out coordinate points if ignoreSnappingPoints set to false", () => {
@@ -2535,7 +2561,17 @@ describe("Terra Draw", () => {
 
 			expect(features).toHaveLength(2);
 			expect(features[0].geometry.type).toBe("Polygon");
+			expect(features[0].geometry.coordinates).toEqual([
+				[
+					[0, 0],
+					[0, 1],
+					[1, 1],
+					[1, 0],
+					[0, 0],
+				],
+			]);
 			expect(features[1].geometry.type).toBe("Point");
+			expect(features[1].geometry.coordinates).toEqual([0, 0]);
 		});
 
 		it("filters out points and linestrings that are not within the pointer distance", () => {
@@ -2981,6 +3017,15 @@ describe("Terra Draw", () => {
 			);
 
 			expect(features).toHaveLength(1);
+			expect(features[0].geometry.type).toBe("Polygon");
+			expect(features[0].geometry.coordinates).toEqual([
+				[
+					[0, 0],
+					[1, 1],
+					[0, 1],
+					[0, 0],
+				],
+			]);
 			expect(features[0].properties.closestCoordinateIndexToEvent).toBe(2);
 			expect(
 				features[0].properties.closestCoordinatePixelDistanceToEvent,

@@ -7,6 +7,7 @@ import {
 	TerraDrawStylingFunction,
 	TerraDrawExtend,
 	GeoJSONStoreGeometries,
+	GeoJSONStoreFeatures,
 } from "terra-draw";
 import {
 	CircleLayerSpecification,
@@ -25,6 +26,7 @@ export class TerraDrawMapLibreGLAdapter<
 		config: {
 			map: MapType;
 			renderBelowLayerId?: string;
+			reorderOnStyleChange?: boolean;
 			prefixId?: string;
 		} & TerraDrawExtend.BaseAdapterConfig,
 	) {
@@ -38,8 +40,12 @@ export class TerraDrawMapLibreGLAdapter<
 		this._initialDragPan = this._map.dragPan.isEnabled();
 		this._renderBeforeLayerId = config.renderBelowLayerId;
 		this._prefixId = config.prefixId || "td";
+		this._reorderOnStyleChange = config.reorderOnStyleChange
+			? config.reorderOnStyleChange
+			: false;
 	}
 
+	private _reorderOnStyleChange: boolean;
 	private _renderBeforeLayerId: string | undefined;
 	private _prefixId: string;
 	private _initialDragPan: boolean;
@@ -300,6 +306,14 @@ export class TerraDrawMapLibreGLAdapter<
 		}
 	}
 
+	private cacheLastRender = {
+		features: [],
+		styles: {},
+	} as {
+		features: GeoJSONStoreFeatures[];
+		styles: TerraDrawStylingFunction;
+	};
+
 	/**
 	 * Renders GeoJSON features on the map using the provided styling configuration.
 	 * @param changes An object containing arrays of created, updated, and unchanged features to render.
@@ -330,6 +344,11 @@ export class TerraDrawMapLibreGLAdapter<
 				...changes.updated,
 				...changes.unchanged,
 			];
+
+			if (this._reorderOnStyleChange) {
+				this.cacheLastRender.features = features;
+				this.cacheLastRender.styles = styling;
+			}
 
 			const points = [];
 			const linestrings = [];
@@ -458,9 +477,9 @@ export class TerraDrawMapLibreGLAdapter<
 		this._map.removeSource(`${this._prefixId}-polygon`);
 	}
 
-	public register(callbacks: TerraDrawExtend.TerraDrawCallbacks) {
-		super.register(callbacks);
+	private styledataEventCount = 0;
 
+	private addEmptyLayers() {
 		const polygonStringId = this._addGeoJSONLayer<Polygon>(
 			"Polygon",
 			[] as Feature<Polygon>[],
@@ -481,6 +500,32 @@ export class TerraDrawMapLibreGLAdapter<
 			this._map.moveLayer(lineStringId, pointId);
 			this._map.moveLayer(polygonStringId + "-outline", lineStringId);
 			this._map.moveLayer(polygonStringId, lineStringId);
+		}
+	}
+
+	public register(callbacks: TerraDrawExtend.TerraDrawCallbacks) {
+		super.register(callbacks);
+
+		this.addEmptyLayers();
+
+		if (this._reorderOnStyleChange) {
+			this._map.on("styledata", () => {
+				// Don't re-render on the first styledata event (basemap load)
+				if (this.styledataEventCount > 0) {
+					this.addEmptyLayers();
+
+					this.render(
+						{
+							unchanged: this.cacheLastRender.features,
+							created: [],
+							updated: [],
+							deletedIds: [],
+						},
+						this.cacheLastRender.styles,
+					);
+				}
+				this.styledataEventCount++;
+			});
 		}
 
 		if (this._currentModeCallbacks?.onReady) {

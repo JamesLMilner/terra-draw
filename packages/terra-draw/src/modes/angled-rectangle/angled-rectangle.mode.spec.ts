@@ -44,6 +44,13 @@ describe("TerraDrawAngledRectangleMode", () => {
 				keyEvents: { cancel: null, finish: null },
 			});
 		});
+
+		it("constructs with custom mode name", () => {
+			const angledRectangleMode = new TerraDrawAngledRectangleMode({
+				modeName: "custom",
+			});
+			expect(angledRectangleMode.mode).toBe("custom");
+		});
 	});
 
 	describe("lifecycle", () => {

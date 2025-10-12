@@ -2,7 +2,7 @@ import Feature from "ol/Feature";
 import GeoJSON from "ol/format/GeoJSON";
 import Map from "ol/Map";
 import View from "ol/View";
-import { Circle, Fill, Stroke, Style } from "ol/style";
+import { Circle, Fill, Icon, Stroke, Style } from "ol/style";
 import { OSM, Vector as VectorSource } from "ol/source";
 import { Tile as TileLayer, Vector as VectorLayer } from "ol/layer";
 import { toLonLat, fromLonLat, getUserProjection } from "ol/proj";
@@ -59,6 +59,7 @@ export const initialiseOpenLayersMap = ({
 			Projection,
 			fromLonLat,
 			toLonLat,
+			Icon,
 		},
 		map,
 	};

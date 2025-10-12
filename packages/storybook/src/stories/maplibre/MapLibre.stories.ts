@@ -33,6 +33,7 @@ export const PolygonWithChangeLayer: Story = {
 
 // Ensure the names are set correctly for the stories
 export const Point = AllStories.Point;
+export const Marker = AllStories.Marker;
 export const Polygon = AllStories.Polygon;
 export const PolygonWithCoordinatePoints =
 	AllStories.PolygonWithCoordinatePoints;

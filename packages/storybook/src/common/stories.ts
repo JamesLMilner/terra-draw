@@ -13,6 +13,7 @@ import {
 	TerraDrawSelectMode,
 	GeoJSONStoreFeatures,
 	HexColor,
+	TerraDrawMarkerMode,
 } from "../../../terra-draw/src/terra-draw";
 import {
 	DefaultSize,
@@ -37,6 +38,25 @@ const Point: Story = {
 	args: {
 		id: "point",
 		modes: [() => new TerraDrawPointMode()],
+		...DefaultStory.args,
+	},
+};
+
+const Marker: Story = {
+	...DefaultStory,
+	args: {
+		id: "marker",
+		modes: [
+			() =>
+				new TerraDrawMarkerMode({
+					styles: {
+						markerUrl:
+							"https://leafletjs.com/examples/custom-icons/leaf-green.png",
+						markerWidth: 25,
+						markerHeight: 60,
+					},
+				}),
+		],
 		...DefaultStory.args,
 	},
 };
@@ -368,7 +388,10 @@ const Select: Story = {
 	args: {
 		id: "select",
 		modes: [
-			() => new TerraDrawPolygonMode(),
+			() =>
+				new TerraDrawPolygonMode({
+					showCoordinatePoints: true,
+				}),
 			() =>
 				new TerraDrawSelectMode({
 					flags: {
@@ -380,6 +403,29 @@ const Select: Story = {
 					},
 				}),
 		],
+		afterRender: (draw: TerraDraw) => {
+			const geojson: GeoJSONStoreFeatures = {
+				type: "Feature",
+				geometry: {
+					type: "Polygon",
+					coordinates: [
+						[
+							[-121.88549933, 37.324198749],
+							[-121.87084441, 37.31043443],
+							[-121.871628621, 37.326774763],
+							[-121.88549933, 37.324198749],
+						],
+					],
+				},
+				properties: {
+					mode: "polygon",
+				},
+			};
+
+			const res = draw.addFeatures([geojson]);
+
+			console.log("Added feature", res);
+		},
 		...DefaultStory.args,
 	},
 };
@@ -576,6 +622,7 @@ const ProgrammaticRotate: Story = {
 
 const AllStories = {
 	Point,
+	Marker,
 	Polygon,
 	PolygonWithCoordinatePoints,
 	PolygonWithCoordinateSnapping,

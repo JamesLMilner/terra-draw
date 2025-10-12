@@ -18,32 +18,6 @@ import {
 	PointLike,
 } from "mapbox-gl";
 
-// MapLibre/Mapbox GL do not support sizing icons on both the X and Y axis independently
-// To maintain compatibility we resize the image to the desired dimensions and then
-// pass that to MapLibre/Mapbox GL as a base64 string
-function resizeImage(
-	imageUrl: string,
-	width: number,
-	height: number,
-	callback: (resizedDataURL: string) => void,
-) {
-	const img = new Image();
-	img.crossOrigin = "anonymous"; // if loading from remote source
-	img.onload = () => {
-		const canvas = document.createElement("canvas");
-		canvas.width = width;
-		canvas.height = height;
-		const ctx = canvas.getContext("2d");
-		if (!ctx) {
-			throw new Error("Could not get canvas context");
-		}
-		ctx.drawImage(img, 0, 0, width, height);
-		const resizedDataURL = canvas.toDataURL(); // base64 string
-		callback(resizedDataURL);
-	};
-	img.src = imageUrl;
-}
-
 export class TerraDrawMapboxGLAdapter extends TerraDrawExtend.TerraDrawBaseAdapter {
 	constructor(
 		config: {
@@ -75,7 +49,32 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawExtend.TerraDrawBaseAdapt
 	// Marker state
 	private markerCounter = 0;
 	private markerMap = new Map<string, string>();
-	private markerScaleMap = new Map<string, number>();
+
+	// MapLibre/Mapbox GL do not support sizing icons on both the X and Y axis independently
+	// To maintain compatibility we resize the image to the desired dimensions and then
+	// pass that to MapLibre/Mapbox GL as a base64 string
+	private resizeImage(
+		imageUrl: string,
+		width: number,
+		height: number,
+		callback: (resizedDataURL: string) => void,
+	) {
+		const img = new Image();
+		img.crossOrigin = "anonymous"; // if loading from remote source
+		img.onload = () => {
+			const canvas = document.createElement("canvas");
+			canvas.width = width;
+			canvas.height = height;
+			const ctx = canvas.getContext("2d");
+			if (!ctx) {
+				throw new Error("Could not get canvas context");
+			}
+			ctx.drawImage(img, 0, 0, width, height);
+			const resizedDataURL = canvas.toDataURL(); // base64 string
+			callback(resizedDataURL);
+		};
+		img.src = imageUrl;
+	}
 
 	private _addGeoJSONSource(id: string, features: Feature[]) {
 		this._map.addSource(id, {
@@ -168,7 +167,6 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawExtend.TerraDrawBaseAdapt
 			filter: ["has", "markerId"],
 			layout: {
 				"icon-image": ["get", "markerId"],
-				"icon-size": ["get", "iconScale"],
 				"icon-anchor": "bottom", // bottom center of icon will be aligned to point
 				"icon-allow-overlap": true,
 			},
@@ -399,17 +397,11 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawExtend.TerraDrawBaseAdapt
 						styles.markerUrl &&
 						styles.markerWidth &&
 						styles.markerHeight &&
-						!this.markerMap.has(styles.markerUrl as string)
+						!this.markerMap.has(styles.markerUrl)
 					) {
 						const id = `marker-${this.markerCounter++}`;
 
-						this._map.setLayoutProperty(
-							`${this._prefixId}-point-marker`,
-							"visibility",
-							"none",
-						);
-
-						resizeImage(
+						this.resizeImage(
 							styles.markerUrl,
 							styles.markerWidth,
 							styles.markerHeight,
@@ -424,12 +416,6 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawExtend.TerraDrawBaseAdapt
 										return;
 									}
 
-									const width = (image as ImageData).width;
-									const desiredSize = styles.markerWidth as number;
-									const scale = desiredSize / width; // assuming square icon
-
-									this.markerScaleMap.set(styles.markerUrl as string, scale);
-
 									this._map.addImage(id, image);
 
 									// We have to set these all explicitly as loadImage is async
@@ -440,18 +426,6 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawExtend.TerraDrawBaseAdapt
 										"icon-image",
 										id,
 									);
-									this._map.setLayoutProperty(
-										`${this._prefixId}-point-marker`,
-										"icon-size",
-										scale,
-									);
-									this._map.setLayoutProperty(
-										`${this._prefixId}-point-marker`,
-										"visibility",
-										"visible",
-									);
-
-									this._map.triggerRepaint();
 								});
 							},
 						);
@@ -460,18 +434,14 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawExtend.TerraDrawBaseAdapt
 						properties.markerId = id;
 						properties.pointWidth = 0; // Make circle invisible
 					} else if (
-						properties.markerUrl &&
-						this.markerMap.has(properties.markerUrl as string)
+						styles.markerUrl &&
+						this.markerMap.has(styles.markerUrl as string)
 					) {
 						// Image already loaded
 						properties.markerId = this.markerMap.get(
-							properties.markerUrl as string,
+							styles.markerUrl,
 						) as string;
 
-						const scale = this.markerScaleMap.get(
-							properties.markerUrl as string,
-						) as number;
-						properties.iconScale = scale;
 						properties.pointWidth = 0;
 					}
 

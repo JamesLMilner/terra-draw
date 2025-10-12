@@ -126,6 +126,9 @@ export class TerraDrawTestMode extends TerraDrawBaseDrawMode<TestModeStyling> {
 			lineStringColor: "#B90E0A",
 			lineStringWidth: 4,
 			zIndex: 0,
+			markerUrl: undefined,
+			markerHeight: undefined,
+			markerWidth: undefined,
 		};
 	}
 

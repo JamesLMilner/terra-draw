@@ -17,7 +17,10 @@ import GraphicsLayer from "@arcgis/core/layers/GraphicsLayer";
 import Graphic from "@arcgis/core/Graphic";
 import SimpleMarkerSymbol from "@arcgis/core/symbols/SimpleMarkerSymbol";
 
-import { Symbol as ArcGISSymbol } from "@arcgis/core/symbols";
+import {
+	Symbol as ArcGISSymbol,
+	PictureMarkerSymbol,
+} from "@arcgis/core/symbols";
 import SimpleLineSymbol from "@arcgis/core/symbols/SimpleLineSymbol";
 import SimpleFillSymbol from "@arcgis/core/symbols/SimpleFillSymbol";
 import Color from "@arcgis/core/Color";
@@ -33,6 +36,7 @@ type InjectableArcGISMapsSDK = {
 	SimpleFillSymbol: typeof SimpleFillSymbol;
 	Graphic: typeof Graphic;
 	Color: typeof Color;
+	PictureMarkerSymbol: typeof PictureMarkerSymbol;
 };
 
 export class TerraDrawArcGISMapsSDKAdapter extends TerraDrawExtend.TerraDrawBaseAdapter {
@@ -219,18 +223,33 @@ export class TerraDrawArcGISMapsSDKAdapter extends TerraDrawExtend.TerraDrawBase
 
 		switch (type) {
 			case "Point":
-				geometry = new this._lib.Point({
-					latitude: coordinates[1],
-					longitude: coordinates[0],
-				});
-				symbol = new this._lib.SimpleMarkerSymbol({
-					color: this.getColorFromHex(style.pointColor),
-					size: style.pointWidth * 2 + "px",
-					outline: {
-						color: this.getColorFromHex(style.pointOutlineColor),
-						width: style.pointOutlineWidth + "px",
-					},
-				});
+				if (style.markerUrl && style.markerHeight && style.markerWidth) {
+					geometry = new this._lib.Point({
+						latitude: coordinates[1],
+						longitude: coordinates[0],
+					});
+					symbol = new this._lib.PictureMarkerSymbol({
+						url: style.markerUrl,
+						width: style.markerWidth + "px",
+						height: style.markerHeight + "px",
+						xoffset: 0, // center horizontally
+						yoffset: ((style.markerHeight as number) ?? 0) / 2, // anchor bottom center
+					});
+				} else {
+					geometry = new this._lib.Point({
+						latitude: coordinates[1],
+						longitude: coordinates[0],
+					});
+					symbol = new this._lib.SimpleMarkerSymbol({
+						color: this.getColorFromHex(style.pointColor),
+						size: style.pointWidth * 2 + "px",
+						outline: {
+							color: this.getColorFromHex(style.pointOutlineColor),
+							width: style.pointOutlineWidth + "px",
+						},
+					});
+				}
+
 				break;
 			case "LineString":
 				geometry = new this._lib.Polyline({ paths: [coordinates] });

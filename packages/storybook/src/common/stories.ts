@@ -13,6 +13,7 @@ import {
 	TerraDrawSelectMode,
 	GeoJSONStoreFeatures,
 	HexColor,
+	TerraDrawMarkerMode,
 } from "../../../terra-draw/src/terra-draw";
 import {
 	DefaultSize,
@@ -37,6 +38,25 @@ const Point: Story = {
 	args: {
 		id: "point",
 		modes: [() => new TerraDrawPointMode()],
+		...DefaultStory.args,
+	},
+};
+
+const Marker: Story = {
+	...DefaultStory,
+	args: {
+		id: "marker",
+		modes: [
+			() =>
+				new TerraDrawMarkerMode({
+					styles: {
+						markerUrl:
+							"https://leafletjs.com/examples/custom-icons/leaf-green.png",
+						markerWidth: 25,
+						markerHeight: 60,
+					},
+				}),
+		],
 		...DefaultStory.args,
 	},
 };
@@ -362,13 +382,16 @@ const Sensor: Story = {
 	},
 };
 
-// Sensor drawing story
+// Select mode story
 const Select: Story = {
 	...DefaultStory,
 	args: {
 		id: "select",
 		modes: [
-			() => new TerraDrawPolygonMode(),
+			() =>
+				new TerraDrawPolygonMode({
+					showCoordinatePoints: true,
+				}),
 			() =>
 				new TerraDrawSelectMode({
 					flags: {
@@ -576,6 +599,7 @@ const ProgrammaticRotate: Story = {
 
 const AllStories = {
 	Point,
+	Marker,
 	Polygon,
 	PolygonWithCoordinatePoints,
 	PolygonWithCoordinateSnapping,

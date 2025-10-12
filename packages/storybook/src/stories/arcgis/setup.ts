@@ -17,6 +17,7 @@ import {
 import { TerraDraw } from "../../../../terra-draw/src/terra-draw";
 import { TerraDrawArcGISMapsSDKAdapter } from "../../../../terra-draw-arcgis-adapter/src/terra-draw-arcgis-adapter";
 import { StoryArgs } from "../../common/config";
+import { PictureMarkerSymbol } from "@arcgis/core/symbols";
 
 export const initialiseArcGISMap = ({
 	mapContainer,
@@ -44,6 +45,7 @@ export const initialiseArcGISMap = ({
 
 	return {
 		lib: {
+			PictureMarkerSymbol,
 			GraphicsLayer,
 			Point,
 			Polyline,

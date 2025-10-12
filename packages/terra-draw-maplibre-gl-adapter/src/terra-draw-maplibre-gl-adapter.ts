@@ -18,32 +18,6 @@ import {
 } from "maplibre-gl";
 import { Feature, LineString, Point, Polygon } from "geojson";
 
-// MapLibre/Mapbox GL do not support sizing icons on both the X and Y axis independently
-// To maintain compatibility we resize the image to the desired dimensions and then
-// pass that to MapLibre/Mapbox GL as a base64 string
-function resizeImage(
-	imageUrl: string,
-	width: number,
-	height: number,
-	callback: (resizedDataURL: string) => void,
-) {
-	const img = new Image();
-	img.crossOrigin = "anonymous"; // if loading from remote source
-	img.onload = () => {
-		const canvas = document.createElement("canvas");
-		canvas.width = width;
-		canvas.height = height;
-		const ctx = canvas.getContext("2d");
-		if (!ctx) {
-			throw new Error("Could not get canvas context");
-		}
-		ctx.drawImage(img, 0, 0, width, height);
-		const resizedDataURL = canvas.toDataURL(); // base64 string
-		callback(resizedDataURL);
-	};
-	img.src = imageUrl;
-}
-
 export class TerraDrawMapLibreGLAdapter<
 	MapType,
 > extends TerraDrawExtend.TerraDrawBaseAdapter {
@@ -66,6 +40,32 @@ export class TerraDrawMapLibreGLAdapter<
 		this._prefixId = config.prefixId || "td";
 	}
 
+	// MapLibre/Mapbox GL do not support sizing icons on both the X and Y axis independently
+	// To maintain compatibility we resize the image to the desired dimensions and then
+	// pass that to MapLibre/Mapbox GL as a base64 string
+	private resizeImage(
+		imageUrl: string,
+		width: number,
+		height: number,
+		callback: (resizedDataURL: string) => void,
+	) {
+		const img = new Image();
+		img.crossOrigin = "anonymous"; // if loading from remote source
+		img.onload = () => {
+			const canvas = document.createElement("canvas");
+			canvas.width = width;
+			canvas.height = height;
+			const ctx = canvas.getContext("2d");
+			if (!ctx) {
+				throw new Error("Could not get canvas context");
+			}
+			ctx.drawImage(img, 0, 0, width, height);
+			const resizedDataURL = canvas.toDataURL(); // base64 string
+			callback(resizedDataURL);
+		};
+		img.src = imageUrl;
+	}
+
 	private _renderBeforeLayerId: string | undefined;
 	private _prefixId: string;
 	private _initialDragPan: boolean;
@@ -77,7 +77,6 @@ export class TerraDrawMapLibreGLAdapter<
 	// Marker state
 	private markerCounter = 0;
 	private markerMap = new Map<string, string>();
-	private markerScaleMap = new Map<string, number>();
 
 	private _addGeoJSONSource(id: string, features: Feature[]) {
 		this._map.addSource(id, {
@@ -170,7 +169,6 @@ export class TerraDrawMapLibreGLAdapter<
 			filter: ["has", "markerId"],
 			layout: {
 				"icon-image": ["get", "markerId"],
-				"icon-size": ["get", "iconScale"],
 				"icon-anchor": "bottom", // bottom center of icon will be aligned to point
 				"icon-allow-overlap": true,
 			},
@@ -412,31 +410,19 @@ export class TerraDrawMapLibreGLAdapter<
 					) {
 						const id = `marker-${this.markerCounter++}`;
 
-						resizeImage(
+						this.resizeImage(
 							styles.markerUrl,
 							styles.markerWidth,
 							styles.markerHeight,
 							(resizedDataURL) => {
 								this._map.loadImage(resizedDataURL).then((image) => {
-									const width = image.data.width;
-
-									const desiredSize = styles.markerWidth as number;
-									const scale = desiredSize / width; // assuming square icon
-
 									this._map.addImage(id, image.data);
-
-									this.markerScaleMap.set(styles.markerUrl as string, scale);
 
 									// We have to do this explicity as it's async
 									this._map.setLayoutProperty(
 										`${this._prefixId}-point-marker`,
 										"icon-image",
 										id,
-									);
-									this._map.setLayoutProperty(
-										`${this._prefixId}-point-marker`,
-										"icon-size",
-										scale,
 									);
 								});
 							},
@@ -454,10 +440,6 @@ export class TerraDrawMapLibreGLAdapter<
 							styles.markerUrl as string,
 						) as string;
 
-						const scale = this.markerScaleMap.get(
-							styles.markerUrl as string,
-						) as number;
-						properties.iconScale = scale;
 						properties.pointWidth = 0; // Make circle invisible
 					}
 

@@ -23,8 +23,10 @@ import Projection from "ol/proj/Projection";
 import { fromLonLat, toLonLat, getUserProjection } from "ol/proj";
 import { Coordinate } from "ol/coordinate";
 import { Pixel } from "ol/pixel";
+import { Icon } from "ol/style";
 
 export type InjectableOL = {
+	Icon: typeof Icon;
 	Fill: typeof Fill;
 	Feature: typeof Feature;
 	GeoJSON: typeof GeoJSON;
@@ -119,6 +121,19 @@ export class TerraDrawOpenLayersAdapter extends TerraDrawExtend.TerraDrawBaseAda
 					geometry: { type: "Point", coordinates: [] },
 					properties,
 				});
+
+				if (style.markerUrl && style.markerWidth && style.markerHeight) {
+					return new this._lib.Style({
+						zIndex: this.baseZIndex + style.zIndex,
+						image: new this._lib.Icon({
+							src: style.markerUrl as string,
+							width: style.markerWidth,
+							height: style.markerHeight,
+							anchor: [0.5, 1], // Anchor the icon at the bottom center
+						}),
+					});
+				}
+
 				return new this._lib.Style({
 					zIndex: this.baseZIndex + style.zIndex,
 					image: new this._lib.Circle({

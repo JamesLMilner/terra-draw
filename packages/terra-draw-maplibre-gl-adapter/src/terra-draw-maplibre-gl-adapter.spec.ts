@@ -302,7 +302,7 @@ describe("TerraDrawMapLibreGLAdapter", () => {
 			rAFCallback();
 
 			expect(map.addSource).toHaveBeenCalledTimes(3);
-			expect(map.addLayer).toHaveBeenCalledTimes(4);
+			expect(map.addLayer).toHaveBeenCalledTimes(5);
 			expect(map.getSource).toHaveBeenCalledTimes(3);
 
 			adapter.clear();
@@ -325,7 +325,7 @@ describe("TerraDrawMapLibreGLAdapter", () => {
 			adapter.register(MockCallbacks());
 
 			expect(map.addSource).toHaveBeenCalledTimes(3);
-			expect(map.addLayer).toHaveBeenCalledTimes(4);
+			expect(map.addLayer).toHaveBeenCalledTimes(5);
 
 			adapter.render(
 				{
@@ -344,7 +344,7 @@ describe("TerraDrawMapLibreGLAdapter", () => {
 			rAFCallback();
 
 			expect(map.addSource).toHaveBeenCalledTimes(3);
-			expect(map.addLayer).toHaveBeenCalledTimes(4);
+			expect(map.addLayer).toHaveBeenCalledTimes(5);
 		});
 
 		it("updates layers and sources when data is passed", () => {
@@ -361,7 +361,7 @@ describe("TerraDrawMapLibreGLAdapter", () => {
 			adapter.register(MockCallbacks());
 
 			expect(map.addSource).toHaveBeenCalledTimes(3);
-			expect(map.addLayer).toHaveBeenCalledTimes(4);
+			expect(map.addLayer).toHaveBeenCalledTimes(5);
 
 			expect(map.getSource).toHaveBeenCalledTimes(0);
 
@@ -383,7 +383,7 @@ describe("TerraDrawMapLibreGLAdapter", () => {
 
 			// No additional sources or layers should be added
 			expect(map.addSource).toHaveBeenCalledTimes(3);
-			expect(map.addLayer).toHaveBeenCalledTimes(4);
+			expect(map.addLayer).toHaveBeenCalledTimes(5);
 
 			expect(map.getSource).toHaveBeenCalledTimes(3);
 
@@ -488,7 +488,7 @@ describe("TerraDrawMapLibreGLAdapter", () => {
 			adapter.register(MockCallbacks());
 
 			expect(map.addSource).toHaveBeenCalledTimes(3);
-			expect(map.addLayer).toHaveBeenCalledTimes(4);
+			expect(map.addLayer).toHaveBeenCalledTimes(5);
 
 			adapter.render(
 				{
@@ -507,7 +507,7 @@ describe("TerraDrawMapLibreGLAdapter", () => {
 			rAFCallback();
 
 			expect(map.addSource).toHaveBeenCalledTimes(3);
-			expect(map.addLayer).toHaveBeenCalledTimes(4);
+			expect(map.addLayer).toHaveBeenCalledTimes(5);
 
 			adapter.render(
 				{
@@ -574,7 +574,7 @@ describe("TerraDrawMapLibreGLAdapter", () => {
 
 			adapter.unregister();
 
-			expect(map.removeLayer).toHaveBeenCalledTimes(4);
+			expect(map.removeLayer).toHaveBeenCalledTimes(5);
 			expect(map.removeSource).toHaveBeenCalledTimes(3);
 
 			// Clear updates the sources to empty
@@ -641,7 +641,7 @@ describe("TerraDrawMapLibreGLAdapter", () => {
 			adapter.unregister();
 
 			// Clears any set data
-			expect(map.removeLayer).toHaveBeenCalledTimes(4);
+			expect(map.removeLayer).toHaveBeenCalledTimes(5);
 			expect(map.removeSource).toHaveBeenCalledTimes(3);
 		});
 
@@ -666,7 +666,7 @@ describe("TerraDrawMapLibreGLAdapter", () => {
 			adapter.unregister();
 
 			// Clears any set data
-			expect(map.removeLayer).toHaveBeenCalledTimes(4);
+			expect(map.removeLayer).toHaveBeenCalledTimes(5);
 			expect(map.removeSource).toHaveBeenCalledTimes(3);
 
 			// Re-register

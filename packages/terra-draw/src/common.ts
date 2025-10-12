@@ -16,6 +16,8 @@ export type NumericStyling =
 	| number
 	| ((feature: GeoJSONStoreFeatures) => number);
 
+export type UrlStyling = string | ((feature: GeoJSONStoreFeatures) => string);
+
 export interface TerraDrawAdapterStyling {
 	pointColor: HexColor;
 	pointWidth: number;
@@ -28,6 +30,9 @@ export interface TerraDrawAdapterStyling {
 	lineStringWidth: number;
 	lineStringColor: HexColor;
 	zIndex: number;
+	markerUrl?: string;
+	markerHeight?: number;
+	markerWidth?: number;
 }
 
 export type CartesianPoint = { x: number; y: number };

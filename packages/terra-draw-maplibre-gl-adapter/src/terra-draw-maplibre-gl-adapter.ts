@@ -13,10 +13,36 @@ import {
 	FillLayerSpecification,
 	GeoJSONSource,
 	LineLayerSpecification,
-	Map,
+	Map as MaplibreMap,
 	PointLike,
 } from "maplibre-gl";
 import { Feature, LineString, Point, Polygon } from "geojson";
+
+// MapLibre/Mapbox GL do not support sizing icons on both the X and Y axis independently
+// To maintain compatibility we resize the image to the desired dimensions and then
+// pass that to MapLibre/Mapbox GL as a base64 string
+function resizeImage(
+	imageUrl: string,
+	width: number,
+	height: number,
+	callback: (resizedDataURL: string) => void,
+) {
+	const img = new Image();
+	img.crossOrigin = "anonymous"; // if loading from remote source
+	img.onload = () => {
+		const canvas = document.createElement("canvas");
+		canvas.width = width;
+		canvas.height = height;
+		const ctx = canvas.getContext("2d");
+		if (!ctx) {
+			throw new Error("Could not get canvas context");
+		}
+		ctx.drawImage(img, 0, 0, width, height);
+		const resizedDataURL = canvas.toDataURL(); // base64 string
+		callback(resizedDataURL);
+	};
+	img.src = imageUrl;
+}
 
 export class TerraDrawMapLibreGLAdapter<
 	MapType,
@@ -30,7 +56,7 @@ export class TerraDrawMapLibreGLAdapter<
 	) {
 		super(config);
 
-		this._map = config.map as Map;
+		this._map = config.map as MaplibreMap;
 		this._container = this._map.getContainer();
 
 		// We want to respect the initial map settings
@@ -45,8 +71,13 @@ export class TerraDrawMapLibreGLAdapter<
 	private _initialDragPan: boolean;
 	private _initialDragRotate: boolean;
 	private _nextRender: number | undefined;
-	private _map: Map;
+	private _map: MaplibreMap;
 	private _container: HTMLElement;
+
+	// Marker state
+	private markerCounter = 0;
+	private markerMap = new Map<string, string>();
+	private markerScaleMap = new Map<string, number>();
 
 	private _addGeoJSONSource(id: string, features: Feature[]) {
 		this._map.addSource(id, {
@@ -131,12 +162,30 @@ export class TerraDrawMapLibreGLAdapter<
 		return layer;
 	}
 
+	private _addMarkerLayer(id: string) {
+		const layer = this._map.addLayer({
+			id: id + "-marker",
+			source: id,
+			type: "symbol",
+			filter: ["has", "markerId"],
+			layout: {
+				"icon-image": ["get", "markerId"],
+				"icon-size": ["get", "iconScale"],
+				"icon-anchor": "bottom", // bottom center of icon will be aligned to point
+				"icon-allow-overlap": true,
+			},
+		});
+
+		return layer;
+	}
+
 	private _addLayer(
 		id: string,
 		featureType: "Point" | "LineString" | "Polygon",
 	) {
 		if (featureType === "Point") {
 			this._addPointLayer(id);
+			this._addMarkerLayer(id);
 		}
 		if (featureType === "LineString") {
 			this._addLineLayer(id);
@@ -354,6 +403,64 @@ export class TerraDrawMapLibreGLAdapter<
 					properties.pointOutlineColor = styles.pointOutlineColor;
 					properties.pointOutlineWidth = styles.pointOutlineWidth;
 					properties.pointWidth = styles.pointWidth;
+
+					if (
+						styles.markerUrl &&
+						styles.markerWidth &&
+						styles.markerHeight &&
+						!this.markerMap.has(styles.markerUrl as string)
+					) {
+						const id = `marker-${this.markerCounter++}`;
+
+						resizeImage(
+							styles.markerUrl,
+							styles.markerWidth,
+							styles.markerHeight,
+							(resizedDataURL) => {
+								this._map.loadImage(resizedDataURL).then((image) => {
+									const width = image.data.width;
+
+									const desiredSize = styles.markerWidth as number;
+									const scale = desiredSize / width; // assuming square icon
+
+									this._map.addImage(id, image.data);
+
+									this.markerScaleMap.set(styles.markerUrl as string, scale);
+
+									// We have to do this explicity as it's async
+									this._map.setLayoutProperty(
+										`${this._prefixId}-point-marker`,
+										"icon-image",
+										id,
+									);
+									this._map.setLayoutProperty(
+										`${this._prefixId}-point-marker`,
+										"icon-size",
+										scale,
+									);
+								});
+							},
+						);
+
+						this.markerMap.set(styles.markerUrl as string, id);
+						properties.markerId = id;
+						properties.pointWidth = 0; // Make circle invisible
+					} else if (
+						styles.markerUrl &&
+						this.markerMap.has(styles.markerUrl as string)
+					) {
+						// Image already loaded
+						properties.markerId = this.markerMap.get(
+							styles.markerUrl as string,
+						) as string;
+
+						const scale = this.markerScaleMap.get(
+							styles.markerUrl as string,
+						) as number;
+						properties.iconScale = scale;
+						properties.pointWidth = 0; // Make circle invisible
+					}
+
 					points.push(feature);
 				} else if (feature.geometry.type === "LineString") {
 					properties.lineStringColor = styles.lineStringColor;
@@ -450,6 +557,7 @@ export class TerraDrawMapLibreGLAdapter<
 		};
 
 		this._map.removeLayer(`${this._prefixId}-point`);
+		this._map.removeLayer(`${this._prefixId}-point-marker`);
 		this._map.removeSource(`${this._prefixId}-point`);
 		this._map.removeLayer(`${this._prefixId}-linestring`);
 		this._map.removeSource(`${this._prefixId}-linestring`);
@@ -483,8 +591,9 @@ export class TerraDrawMapLibreGLAdapter<
 			this._map.moveLayer(polygonStringId, lineStringId);
 		}
 
+		// console.log('image added', image.data)
 		if (this._currentModeCallbacks?.onReady) {
-			this._currentModeCallbacks.onReady();
+			this._currentModeCallbacks?.onReady();
 		}
 	}
 }

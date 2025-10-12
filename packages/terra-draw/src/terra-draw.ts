@@ -68,6 +68,7 @@ import { transformScaleWebMercatorCoordinates } from "./geometry/transform/scale
 import { limitPrecision } from "./geometry/limit-decimal-precision";
 import { isValidJSONValue } from "./store/valid-json";
 import { haversineDistanceKilometers } from "./geometry/measure/haversine-distance";
+import { TerraDrawMarkerMode } from "./modes/marker/marker.mode";
 
 // Helper type to determine the instance type of a class
 type InstanceType<T extends new (...args: any[]) => any> = T extends new (
@@ -1306,6 +1307,7 @@ export {
 	TerraDrawAngledRectangleMode,
 	TerraDrawSectorMode,
 	TerraDrawSensorMode,
+	TerraDrawMarkerMode,
 
 	// Types that are required for 3rd party developers to extend
 	TerraDrawExtend,

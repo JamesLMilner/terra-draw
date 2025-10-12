@@ -12,6 +12,9 @@ import {
 	TerraDrawMouseEvent,
 	UpdateTypes,
 	Validation,
+	HexColorStyling,
+	NumericStyling,
+	UrlStyling,
 } from "../common";
 import {
 	FeatureId,
@@ -23,10 +26,7 @@ import { ValidationReasonModeMismatch } from "../validations/common-validations"
 
 export type CustomStyling = Record<
 	string,
-	| string
-	| number
-	| ((feature: GeoJSONStoreFeatures) => HexColor)
-	| ((feature: GeoJSONStoreFeatures) => number)
+	string | number | HexColorStyling | NumericStyling | UrlStyling
 >;
 
 export enum ModeTypes {
@@ -318,6 +318,14 @@ export abstract class TerraDrawBaseDrawMode<Styling extends CustomStyling> {
 		defaultValue: number,
 		feature: GeoJSONStoreFeatures,
 	): number {
+		return this.getStylingValue(value, defaultValue, feature);
+	}
+
+	protected getUrlStylingValue(
+		value: UrlStyling | undefined,
+		defaultValue: string,
+		feature: GeoJSONStoreFeatures,
+	): string {
 		return this.getStylingValue(value, defaultValue, feature);
 	}
 

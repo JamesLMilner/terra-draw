@@ -429,6 +429,23 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawExtend.TerraDrawBaseAda
 
 			switch (type) {
 				case "Point":
+					if (calculatedStyles.markerUrl) {
+						return {
+							clickable: false,
+							icon: {
+								url: calculatedStyles.markerUrl as string,
+								scaledSize:
+									calculatedStyles.markerWidth && calculatedStyles.markerHeight
+										? new this._lib.Size(
+												calculatedStyles.markerWidth,
+												calculatedStyles.markerHeight,
+											)
+										: undefined,
+							},
+							zIndex: calculatedStyles.zIndex,
+						};
+					}
+
 					const path = this.circlePath(0, 0, calculatedStyles.pointWidth);
 
 					return {

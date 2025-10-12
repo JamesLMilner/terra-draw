@@ -382,7 +382,7 @@ const Sensor: Story = {
 	},
 };
 
-// Sensor drawing story
+// Select mode story
 const Select: Story = {
 	...DefaultStory,
 	args: {
@@ -403,29 +403,6 @@ const Select: Story = {
 					},
 				}),
 		],
-		afterRender: (draw: TerraDraw) => {
-			const geojson: GeoJSONStoreFeatures = {
-				type: "Feature",
-				geometry: {
-					type: "Polygon",
-					coordinates: [
-						[
-							[-121.88549933, 37.324198749],
-							[-121.87084441, 37.31043443],
-							[-121.871628621, 37.326774763],
-							[-121.88549933, 37.324198749],
-						],
-					],
-				},
-				properties: {
-					mode: "polygon",
-				},
-			};
-
-			const res = draw.addFeatures([geojson]);
-
-			console.log("Added feature", res);
-		},
 		...DefaultStory.args,
 	},
 };

@@ -53,7 +53,7 @@ const Marker: Story = {
 						markerUrl:
 							"https://leafletjs.com/examples/custom-icons/leaf-green.png",
 						markerWidth: 25,
-						markerHeight: 100,
+						markerHeight: 60,
 					},
 				}),
 		],

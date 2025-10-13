@@ -393,56 +393,39 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawExtend.TerraDrawBaseAdapt
 					properties.pointOutlineWidth = styles.pointOutlineWidth;
 					properties.pointWidth = styles.pointWidth;
 
-					if (
-						styles.markerUrl &&
-						styles.markerWidth &&
-						styles.markerHeight &&
-						!this.markerMap.has(styles.markerUrl)
-					) {
-						const id = `marker-${this.markerCounter++}`;
+					if (styles.markerUrl && styles.markerWidth && styles.markerHeight) {
+						if (!this.markerMap.has(styles.markerUrl)) {
+							const id = `marker-${this.markerCounter++}`;
 
-						this.resizeImage(
-							styles.markerUrl,
-							styles.markerWidth,
-							styles.markerHeight,
-							(resizedDataURL) => {
-								this._map.loadImage(resizedDataURL, (error, image) => {
-									if (!image || error) {
-										// eslint-disable-next-line no-console
-										console.error(
-											`Error loading marker image: ${styles.markerUrl}`,
-											error,
-										);
-										return;
-									}
+							this.resizeImage(
+								styles.markerUrl,
+								styles.markerWidth,
+								styles.markerHeight,
+								(resizedDataURL) => {
+									this._map.loadImage(resizedDataURL, (error, image) => {
+										if (!image || error) {
+											// eslint-disable-next-line no-console
+											console.error(
+												`Error loading marker image: ${styles.markerUrl}`,
+												error,
+											);
+											return;
+										}
 
-									this._map.addImage(id, image);
+										this._map.addImage(id, image);
+									});
+								},
+							);
 
-									// We have to set these all explicitly as loadImage is async
-									// and the render will have already happened at this point
+							this.markerMap.set(styles.markerUrl, id);
+							properties.markerId = id;
+							properties.pointWidth = 0; // Make circle invisible
+						} else {
+							// Image already loaded
+							properties.markerId = this.markerMap.get(styles.markerUrl)!;
 
-									this._map.setLayoutProperty(
-										`${this._prefixId}-point-marker`,
-										"icon-image",
-										id,
-									);
-								});
-							},
-						);
-
-						this.markerMap.set(styles.markerUrl as string, id);
-						properties.markerId = id;
-						properties.pointWidth = 0; // Make circle invisible
-					} else if (
-						styles.markerUrl &&
-						this.markerMap.has(styles.markerUrl as string)
-					) {
-						// Image already loaded
-						properties.markerId = this.markerMap.get(
-							styles.markerUrl,
-						) as string;
-
-						properties.pointWidth = 0;
+							properties.pointWidth = 0;
+						}
 					}
 
 					points.push(feature);

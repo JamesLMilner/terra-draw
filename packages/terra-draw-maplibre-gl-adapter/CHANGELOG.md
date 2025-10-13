@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.2.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw-maplibre-gl-adapter@1.1.2...terra-draw-maplibre-gl-adapter@1.2.0) (2025-10-12)
+
+
+### fix
+
+* **terra-draw-maplibre-gl-adapter:** ensure zIndex is set for all geometry types (#619) ([](https://github.com/JamesLMilner/terra-draw/commit/b34cee9d7eb5d70cc8dd73b13f31835627d2b3b3)), closes [#619](https://github.com/JamesLMilner/terra-draw/issues/619)
+* **terra-draw-maplibre-gl-adapter:** remove unused scaling for markers (#679) ([](https://github.com/JamesLMilner/terra-draw/commit/504276ad5a9af20418c83be2b3f8ebe17184f40c)), closes [#679](https://github.com/JamesLMilner/terra-draw/issues/679)
+
+
+### feat
+
+* **terra-draw-maplibre-gl-adapter:** add support for markers (#674) ([](https://github.com/JamesLMilner/terra-draw/commit/8aebe3b9ec3e2b42bb6b5b18617d6d755a950435)), closes [#674](https://github.com/JamesLMilner/terra-draw/issues/674)
+
 ## [1.1.2](https://github.com/JamesLMilner/terra-draw/compare/terra-draw-maplibre-gl-adapter@1.1.1...terra-draw-maplibre-gl-adapter@1.1.2) (2025-08-05)
 
 

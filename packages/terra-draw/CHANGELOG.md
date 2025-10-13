@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.17.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.16.0...terra-draw@1.17.0) (2025-10-12)
+
+
+### docs
+
+* **terra-draw:** add story to Storybook for new marker mode (#677) ([](https://github.com/JamesLMilner/terra-draw/commit/b892eb68f69bda79723e12cdf92fc6caa3cbd0ea)), closes [#677](https://github.com/JamesLMilner/terra-draw/issues/677)
+* **terra-draw:** update guide docs to reflect new features (#669) ([](https://github.com/JamesLMilner/terra-draw/commit/f37d4db57a124521924a9e71ac79e7b2a217d0f8)), closes [#669](https://github.com/JamesLMilner/terra-draw/issues/669)
+* **terra-draw:** update outdated link in 4.MODES.md (#666) ([](https://github.com/JamesLMilner/terra-draw/commit/4cadc66ce4e566e0d98d8e856e256c08f974c477)), closes [#666](https://github.com/JamesLMilner/terra-draw/issues/666)
+
+
+### feat
+
+* **terra-draw:** add initial support for markers and a built in marker mode (#670) ([](https://github.com/JamesLMilner/terra-draw/commit/dff272dfbea16467ad23daa28456adc23e40736c)), closes [#670](https://github.com/JamesLMilner/terra-draw/issues/670)
+
 ## [1.16.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.15.0...terra-draw@1.16.0) (2025-10-06)
 
 

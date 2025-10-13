@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.2.1](https://github.com/JamesLMilner/terra-draw/compare/terra-draw-maplibre-gl-adapter@1.2.0...terra-draw-maplibre-gl-adapter@1.2.1) (2025-10-13)
+
+
+### fix
+
+* **terra-draw-maplibre-gl-adapter:** fix raised issue with multiple markers (#681) ([](https://github.com/JamesLMilner/terra-draw/commit/5d86fe89cd8a517a5cc66be53c8b4c1eb2153ea3)), closes [#681](https://github.com/JamesLMilner/terra-draw/issues/681)
+
 ## [1.2.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw-maplibre-gl-adapter@1.1.2...terra-draw-maplibre-gl-adapter@1.2.0) (2025-10-12)
 
 

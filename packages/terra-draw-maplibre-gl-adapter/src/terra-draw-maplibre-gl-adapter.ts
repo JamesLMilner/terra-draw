@@ -40,6 +40,15 @@ export class TerraDrawMapLibreGLAdapter<
 		this._prefixId = config.prefixId || "td";
 	}
 
+	private hashCode(str: string): number {
+		let hash = 0;
+		for (let i = 0; i < str.length; i++) {
+			hash = (hash << 5) - hash + str.charCodeAt(i);
+			hash |= 0; // Force to 32-bit integer
+		}
+		return Math.abs(hash);
+	}
+
 	// MapLibre/Mapbox GL do not support sizing icons on both the X and Y axis independently
 	// To maintain compatibility we resize the image to the desired dimensions and then
 	// pass that to MapLibre/Mapbox GL as a base64 string
@@ -404,7 +413,7 @@ export class TerraDrawMapLibreGLAdapter<
 
 					if (styles.markerUrl && styles.markerWidth && styles.markerHeight) {
 						if (!this.markerMap.has(styles.markerUrl)) {
-							const id = `marker-${this.markerCounter++}`;
+							const id = `marker-${this.hashCode(styles.markerUrl)}`;
 
 							this.resizeImage(
 								styles.markerUrl,

@@ -40,6 +40,15 @@ export class TerraDrawMapLibreGLAdapter<
 		this._prefixId = config.prefixId || "td";
 	}
 
+	private hashCode(str: string): number {
+		let hash = 0;
+		for (let i = 0; i < str.length; i++) {
+			hash = (hash << 5) - hash + str.charCodeAt(i);
+			hash |= 0; // Force to 32-bit integer
+		}
+		return Math.abs(hash);
+	}
+
 	// MapLibre/Mapbox GL do not support sizing icons on both the X and Y axis independently
 	// To maintain compatibility we resize the image to the desired dimensions and then
 	// pass that to MapLibre/Mapbox GL as a base64 string
@@ -168,7 +177,7 @@ export class TerraDrawMapLibreGLAdapter<
 			type: "symbol",
 			filter: ["has", "markerId"],
 			layout: {
-				"icon-image": ["get", "markerId"],
+				"icon-image": ["image", ["get", "markerId"]],
 				"icon-anchor": "bottom", // bottom center of icon will be aligned to point
 				"icon-allow-overlap": true,
 			},
@@ -402,45 +411,29 @@ export class TerraDrawMapLibreGLAdapter<
 					properties.pointOutlineWidth = styles.pointOutlineWidth;
 					properties.pointWidth = styles.pointWidth;
 
-					if (
-						styles.markerUrl &&
-						styles.markerWidth &&
-						styles.markerHeight &&
-						!this.markerMap.has(styles.markerUrl as string)
-					) {
-						const id = `marker-${this.markerCounter++}`;
+					if (styles.markerUrl && styles.markerWidth && styles.markerHeight) {
+						if (!this.markerMap.has(styles.markerUrl)) {
+							const id = `marker-${this.hashCode(styles.markerUrl)}`;
 
-						this.resizeImage(
-							styles.markerUrl,
-							styles.markerWidth,
-							styles.markerHeight,
-							(resizedDataURL) => {
-								this._map.loadImage(resizedDataURL).then((image) => {
-									this._map.addImage(id, image.data);
+							this.resizeImage(
+								styles.markerUrl,
+								styles.markerWidth,
+								styles.markerHeight,
+								(resizedDataURL) => {
+									this._map.loadImage(resizedDataURL).then((image) => {
+										this._map.addImage(id, image.data);
+									});
+								},
+							);
 
-									// We have to do this explicity as it's async
-									this._map.setLayoutProperty(
-										`${this._prefixId}-point-marker`,
-										"icon-image",
-										id,
-									);
-								});
-							},
-						);
+							this.markerMap.set(styles.markerUrl, id);
 
-						this.markerMap.set(styles.markerUrl as string, id);
-						properties.markerId = id;
-						properties.pointWidth = 0; // Make circle invisible
-					} else if (
-						styles.markerUrl &&
-						this.markerMap.has(styles.markerUrl as string)
-					) {
-						// Image already loaded
-						properties.markerId = this.markerMap.get(
-							styles.markerUrl as string,
-						) as string;
-
-						properties.pointWidth = 0; // Make circle invisible
+							properties.markerId = id;
+							properties.pointWidth = 0; // Make circle invisible
+						} else {
+							properties.markerId = this.markerMap.get(styles.markerUrl)!;
+							properties.pointWidth = 0; // Make circle invisible
+						}
 					}
 
 					points.push(feature);

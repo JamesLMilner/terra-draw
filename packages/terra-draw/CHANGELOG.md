@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.18.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.17.0...terra-draw@1.18.0) (2025-10-14)
+
+
+### feat
+
+* **terra-draw:** provide ignoreMismatchedPointerEvents option in adapters (#685) ([](https://github.com/JamesLMilner/terra-draw/commit/ace08dc48e54796691bead4a4a3ad51db2dabaee)), closes [#685](https://github.com/JamesLMilner/terra-draw/issues/685)
+
 ## [1.17.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.16.0...terra-draw@1.17.0) (2025-10-12)
 
 

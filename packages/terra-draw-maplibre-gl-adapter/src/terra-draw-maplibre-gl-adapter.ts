@@ -83,10 +83,6 @@ export class TerraDrawMapLibreGLAdapter<
 	private _map: MaplibreMap;
 	private _container: HTMLElement;
 
-	// Marker state
-	private markerCounter = 0;
-	private markerMap = new Map<string, string>();
-
 	private _addGeoJSONSource(id: string, features: Feature[]) {
 		this._map.addSource(id, {
 			type: "geojson",
@@ -412,28 +408,26 @@ export class TerraDrawMapLibreGLAdapter<
 					properties.pointWidth = styles.pointWidth;
 
 					if (styles.markerUrl && styles.markerWidth && styles.markerHeight) {
-						if (!this.markerMap.has(styles.markerUrl)) {
-							const id = `marker-${this.hashCode(styles.markerUrl)}`;
+						const id = `marker-${this.hashCode(styles.markerUrl)}`;
 
+						if (!this._map.hasImage(id)) {
 							this.resizeImage(
 								styles.markerUrl,
 								styles.markerWidth,
 								styles.markerHeight,
 								(resizedDataURL) => {
 									this._map.loadImage(resizedDataURL).then((image) => {
-										this._map.addImage(id, image.data);
+										// Async so we check again if the image has been added
+										if (!this._map.hasImage(id)) {
+											this._map.addImage(id, image.data);
+										}
 									});
 								},
 							);
-
-							this.markerMap.set(styles.markerUrl, id);
-
-							properties.markerId = id;
-							properties.pointWidth = 0; // Make circle invisible
-						} else {
-							properties.markerId = this.markerMap.get(styles.markerUrl)!;
-							properties.pointWidth = 0; // Make circle invisible
 						}
+
+						properties.markerId = id;
+						properties.pointWidth = 0; // Make circle invisible
 					}
 
 					points.push(feature);

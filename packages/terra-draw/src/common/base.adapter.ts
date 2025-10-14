@@ -18,6 +18,7 @@ type BaseKeyboardListener = (event: KeyboardEvent) => void;
 type BaseMouseListener = (event: MouseEvent) => void;
 
 export type BaseAdapterConfig = {
+	ignoreMismatchedPointerEvents?: boolean;
 	coordinatePrecision?: number;
 	minPixelDragDistanceDrawing?: number;
 	minPixelDragDistance?: number;
@@ -26,6 +27,11 @@ export type BaseAdapterConfig = {
 
 export abstract class TerraDrawBaseAdapter implements TerraDrawAdapter {
 	constructor(config: BaseAdapterConfig) {
+		this._ignoreMismatchedPointerEvents =
+			typeof config.ignoreMismatchedPointerEvents === "boolean"
+				? config.ignoreMismatchedPointerEvents
+				: false;
+
 		this._minPixelDragDistance =
 			typeof config.minPixelDragDistance === "number"
 				? config.minPixelDragDistance
@@ -48,7 +54,9 @@ export abstract class TerraDrawBaseAdapter implements TerraDrawAdapter {
 	}
 
 	private _nextKeyUpIsContextMenu = false;
+	private _lastPointerDownEventTarget: EventTarget | undefined;
 
+	protected _ignoreMismatchedPointerEvents = false;
 	protected _minPixelDragDistance: number;
 	protected _minPixelDragDistanceDrawing: number;
 	protected _minPixelDragDistanceSelecting: number;
@@ -165,6 +173,10 @@ export abstract class TerraDrawBaseAdapter implements TerraDrawAdapter {
 					// triggered so this._lastDrawEvent will not get set in
 					// pointermove listener, so we must set it here.
 					this._lastDrawEvent = drawEvent;
+
+					this._lastPointerDownEventTarget = event.target
+						? event.target
+						: undefined;
 				},
 				register: (callback) => {
 					this.getMapEventElement().addEventListener("pointerdown", callback);
@@ -304,6 +316,16 @@ export abstract class TerraDrawBaseAdapter implements TerraDrawAdapter {
 						return;
 					}
 
+					// We want to ignore pointer up events where the down event was not on the map element
+					if (
+						this._ignoreMismatchedPointerEvents &&
+						this._lastPointerDownEventTarget !== event.target
+					) {
+						return;
+					}
+
+					this._lastPointerDownEventTarget = undefined;
+
 					// We don't support multitouch as this point in time
 					if (!event.isPrimary) {
 						return;
@@ -413,6 +435,9 @@ export abstract class TerraDrawBaseAdapter implements TerraDrawAdapter {
 
 		// This has to come last because we call this._currentModeCallbacks.onClear()
 		this._currentModeCallbacks = undefined;
+		this._lastDrawEvent = undefined;
+		this._lastPointerDownEventTarget = undefined;
+		this._nextKeyUpIsContextMenu = false;
 	}
 
 	public abstract clear(): void;

@@ -42,7 +42,7 @@ const Point: Story = {
 	},
 };
 
-const Marker: Story = {
+const MarkerPNG: Story = {
 	...DefaultStory,
 	args: {
 		id: "marker",
@@ -54,6 +54,25 @@ const Marker: Story = {
 							"https://leafletjs.com/examples/custom-icons/leaf-green.png",
 						markerWidth: 25,
 						markerHeight: 60,
+					},
+				}),
+		],
+		...DefaultStory.args,
+	},
+};
+
+const MarkerJPG: Story = {
+	...DefaultStory,
+	args: {
+		id: "marker",
+		modes: [
+			() =>
+				new TerraDrawMarkerMode({
+					styles: {
+						markerUrl:
+							"https://upload.wikimedia.org/wikipedia/commons/1/1e/Marker_location.jpg",
+						markerWidth: 226 / 10,
+						markerHeight: 393 / 10,
 					},
 				}),
 		],
@@ -599,7 +618,8 @@ const ProgrammaticRotate: Story = {
 
 const AllStories = {
 	Point,
-	Marker,
+	MarkerPNG,
+	MarkerJPG,
 	Polygon,
 	PolygonWithCoordinatePoints,
 	PolygonWithCoordinateSnapping,

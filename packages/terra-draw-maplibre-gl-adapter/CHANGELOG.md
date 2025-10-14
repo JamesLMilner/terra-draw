@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.2.2](https://github.com/JamesLMilner/terra-draw/compare/terra-draw-maplibre-gl-adapter@1.2.1...terra-draw-maplibre-gl-adapter@1.2.2) (2025-10-14)
+
+
+### fix
+
+* **terra-draw-maplibre-gl-adapter:** use hasImage to determine if marker is loaded (#684) ([](https://github.com/JamesLMilner/terra-draw/commit/936df1b37ae5149e24d3feb02410da322903f2da)), closes [#684](https://github.com/JamesLMilner/terra-draw/issues/684)
+
 ## [1.2.1](https://github.com/JamesLMilner/terra-draw/compare/terra-draw-maplibre-gl-adapter@1.2.0...terra-draw-maplibre-gl-adapter@1.2.1) (2025-10-13)
 
 

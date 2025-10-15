@@ -27,6 +27,7 @@ import { ClickBoundingBoxBehavior } from "../click-bounding-box.behavior";
 import { PixelDistanceBehavior } from "../pixel-distance.behavior";
 
 type MarkerModeStyling = {
+	/** Marker must be a PNG or JPG  */
 	markerUrl: UrlStyling;
 	markerHeight: NumericStyling;
 	markerWidth: NumericStyling;

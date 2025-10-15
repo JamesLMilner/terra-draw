@@ -13,7 +13,8 @@ export default meta;
 
 // Ensure the names are set correctly for the stories
 export const Point = AllStories.Point;
-export const Marker = AllStories.Marker;
+export const MarkerPNG = AllStories.MarkerPNG;
+export const MarkerJPG = AllStories.MarkerJPG;
 export const Polygon = AllStories.Polygon;
 export const PolygonWithCoordinatePoints =
 	AllStories.PolygonWithCoordinatePoints;

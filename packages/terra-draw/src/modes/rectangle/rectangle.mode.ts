@@ -53,7 +53,7 @@ interface TerraDrawRectangleModeOptions<T extends CustomStyling>
 }
 
 export class TerraDrawRectangleMode extends TerraDrawBaseDrawMode<RectanglePolygonStyling> {
-	mode = "rectangle" as const;
+	mode = "rectangle";
 	private center: Position | undefined;
 	private clickCount = 0;
 	private currentRectangleId: FeatureId | undefined;

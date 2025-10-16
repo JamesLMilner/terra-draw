@@ -56,7 +56,7 @@ interface TerraDrawPointModeOptions<T extends CustomStyling>
 }
 
 export class TerraDrawPointMode extends TerraDrawBaseDrawMode<PointModeStyling> {
-	mode = "point" as const;
+	mode = "point";
 
 	// Options
 	private cursors: Required<Cursors> = defaultCursors;

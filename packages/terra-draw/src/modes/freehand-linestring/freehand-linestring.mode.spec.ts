@@ -44,6 +44,13 @@ describe("TerraDrawFreehandLineStringMode", () => {
 				keyEvents: { cancel: null, finish: null },
 			});
 		});
+
+		it("constructs with custom mode name", () => {
+			const freehandMode = new TerraDrawFreehandLineStringMode({
+				modeName: "custom",
+			});
+			expect(freehandMode.mode).toBe("custom");
+		});
 	});
 
 	describe("lifecycle", () => {

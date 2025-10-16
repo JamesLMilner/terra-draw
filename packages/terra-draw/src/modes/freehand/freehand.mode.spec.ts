@@ -46,6 +46,13 @@ describe("TerraDrawFreehandMode", () => {
 				keyEvents: { cancel: null, finish: null },
 			});
 		});
+
+		it("constructs with custom mode name", () => {
+			const freehandMode = new TerraDrawFreehandMode({
+				modeName: "custom",
+			});
+			expect(freehandMode.mode).toBe("custom");
+		});
 	});
 
 	describe("lifecycle", () => {

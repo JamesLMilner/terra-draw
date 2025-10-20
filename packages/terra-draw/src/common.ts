@@ -194,8 +194,10 @@ export interface TerraDrawAdapter {
 	getCoordinatePrecision(): number;
 }
 
-export const MARKER_URL_DEFAULT =
-	"https://github.com/JamesLMilner/terra-draw/blob/main/assets/markers/marker-blue.png?raw=true";
+const MARKER_URL_BASE =
+	"https://raw.githubusercontent.com/JamesLMilner/terra-draw/refs/heads/main/assets/markers";
+
+export const MARKER_URL_DEFAULT = `${MARKER_URL_BASE}/marker-blue.png`;
 
 export const SELECT_PROPERTIES = {
 	SELECTED: "selected",

@@ -212,6 +212,7 @@ export const COMMON_PROPERTIES = {
 	COORDINATE_POINT_IDS: "coordinatePointIds",
 	PROVISIONAL_COORDINATE_COUNT: "provisionalCoordinateCount",
 	COMMITTED_COORDINATE_COUNT: "committedCoordinateCount",
+	MARKER: "marker",
 } as const;
 
 /**

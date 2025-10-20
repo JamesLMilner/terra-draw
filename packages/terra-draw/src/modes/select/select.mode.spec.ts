@@ -3,7 +3,11 @@ import { MockModeConfig } from "../../test/mock-mode-config";
 import { TerraDrawSelectMode } from "./select.mode";
 import { MockCursorEvent } from "../../test/mock-cursor-event";
 import { MockKeyboardEvent } from "../../test/mock-keyboard-event";
-import { TerraDrawGeoJSONStore, TerraDrawMouseEvent } from "../../common";
+import {
+	COMMON_PROPERTIES,
+	TerraDrawGeoJSONStore,
+	TerraDrawMouseEvent,
+} from "../../common";
 import { DefaultPointerEvents } from "../base.mode";
 
 describe("TerraDrawSelectMode", () => {
@@ -2921,7 +2925,7 @@ describe("TerraDrawSelectMode", () => {
 
 	describe("styleFeature", () => {
 		it("returns the correct styles for polygon from polygon mode", () => {
-			const polygonMode = new TerraDrawSelectMode({
+			const selectMode = new TerraDrawSelectMode({
 				styles: {
 					selectedPolygonOutlineWidth: 4,
 					selectedPolygonColor: "#222222",
@@ -2931,7 +2935,7 @@ describe("TerraDrawSelectMode", () => {
 			});
 
 			expect(
-				polygonMode.styleFeature({
+				selectMode.styleFeature({
 					type: "Feature",
 					geometry: { type: "Polygon", coordinates: [] },
 					properties: { mode: "polygon", selected: true },
@@ -2944,7 +2948,7 @@ describe("TerraDrawSelectMode", () => {
 			});
 
 			expect(
-				polygonMode.styleFeature({
+				selectMode.styleFeature({
 					type: "Feature",
 					geometry: { type: "Polygon", coordinates: [] },
 					properties: { mode: "polygon" },
@@ -2989,6 +2993,82 @@ describe("TerraDrawSelectMode", () => {
 				polygonFillColor: "#3f97e0",
 				polygonFillOpacity: 0.3,
 				polygonOutlineColor: "#3f97e0",
+			});
+		});
+
+		it("returns correct styles for marker from marker mode", () => {
+			const selectMode = new TerraDrawSelectMode({
+				styles: {
+					selectedMarkerUrl: "https://www.example.com/selected.png",
+					selectedMarkerHeight: 40,
+					selectedMarkerWidth: 40,
+				},
+			});
+
+			expect(
+				selectMode.styleFeature({
+					type: "Feature",
+					geometry: { type: "Point", coordinates: [0, 0] },
+					properties: {
+						mode: "marker",
+						[COMMON_PROPERTIES.MARKER]: true,
+						selected: true,
+					},
+				}),
+			).toMatchObject({
+				markerUrl: "https://www.example.com/selected.png",
+				markerHeight: 40,
+				markerWidth: 40,
+			});
+
+			expect(
+				selectMode.styleFeature({
+					type: "Feature",
+					geometry: { type: "Point", coordinates: [0, 0] },
+					properties: { mode: "marker", [COMMON_PROPERTIES.MARKER]: true },
+				}),
+			).toMatchObject({
+				markerUrl: undefined,
+				markerHeight: undefined,
+				markerWidth: undefined,
+			});
+		});
+
+		it("returns correct styles for marker from marker mode when using a function", () => {
+			const selectMode = new TerraDrawSelectMode({
+				styles: {
+					selectedMarkerUrl: () => "https://www.example.com/selected.png",
+					selectedMarkerHeight: () => 40,
+					selectedMarkerWidth: () => 40,
+				},
+			});
+
+			expect(
+				selectMode.styleFeature({
+					type: "Feature",
+					geometry: { type: "Point", coordinates: [0, 0] },
+					properties: {
+						mode: "marker",
+						[COMMON_PROPERTIES.MARKER]: true,
+						selected: true,
+					},
+				}),
+			).toMatchObject({
+				markerUrl: "https://www.example.com/selected.png",
+				markerHeight: 40,
+				markerWidth: 40,
+			});
+
+			expect(
+				selectMode.styleFeature({
+					type: "Feature",
+					geometry: { type: "Point", coordinates: [0, 0] },
+					properties: { mode: "marker", [COMMON_PROPERTIES.MARKER]: true },
+				}),
+			).toMatchObject({
+				markerUrl: undefined,
+				markerHeight: undefined,
+				markerWidth: undefined,
 			});
 		});
 	});

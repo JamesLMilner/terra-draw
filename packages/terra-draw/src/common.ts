@@ -194,6 +194,9 @@ export interface TerraDrawAdapter {
 	getCoordinatePrecision(): number;
 }
 
+export const MARKER_URL_DEFAULT =
+	"https://github.com/JamesLMilner/terra-draw/blob/main/assets/markers/marker-blue.png?raw=true";
+
 export const SELECT_PROPERTIES = {
 	SELECTED: "selected",
 	MID_POINT: "midPoint",

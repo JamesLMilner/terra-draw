@@ -12,6 +12,7 @@ import {
 	Snapping,
 	UrlStyling,
 	COMMON_PROPERTIES,
+	MARKER_URL_DEFAULT,
 } from "../../common";
 import { Point, Position } from "geojson";
 import {
@@ -1050,17 +1051,17 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 			) {
 				styles.markerUrl = this.getUrlStylingValue(
 					this.styles.selectedMarkerUrl,
-					"",
+					MARKER_URL_DEFAULT,
 					feature,
 				);
 				styles.markerHeight = this.getNumericStylingValue(
 					this.styles.selectedMarkerHeight,
-					30,
+					40,
 					feature,
 				);
 				styles.markerWidth = this.getNumericStylingValue(
 					this.styles.selectedMarkerWidth,
-					30,
+					32,
 					feature,
 				);
 				return styles;

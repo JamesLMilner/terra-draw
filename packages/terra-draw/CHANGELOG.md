@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.18.1](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.18.0...terra-draw@1.18.1) (2025-10-20)
+
+
+### fix
+
+* **terra-draw:** add default marker url for marker mode (#696) ([](https://github.com/JamesLMilner/terra-draw/commit/b8ae458cb281b20a159b7b9dec7ba09fe34fd4d5)), closes [#696](https://github.com/JamesLMilner/terra-draw/issues/696)
+* **terra-draw:** ensure default marker url path is correct (#697) ([](https://github.com/JamesLMilner/terra-draw/commit/dc407860fdb3bf08308a39a675f981ed3170d0f1)), closes [#697](https://github.com/JamesLMilner/terra-draw/issues/697)
+* **terra-draw:** ensure markers are styleable in select mode (#695) ([](https://github.com/JamesLMilner/terra-draw/commit/bd6b7f56a1deeaf9affc24d937a8a885fb621a37)), closes [#695](https://github.com/JamesLMilner/terra-draw/issues/695)
+
+
+### docs
+
+* **terra-draw:** document supported image formats for markers (#686) ([](https://github.com/JamesLMilner/terra-draw/commit/19c8552950d42b54c6fb94190878bdc48bfc06c3)), closes [#686](https://github.com/JamesLMilner/terra-draw/issues/686)
+
 ## [1.18.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.17.0...terra-draw@1.18.0) (2025-10-14)
 
 

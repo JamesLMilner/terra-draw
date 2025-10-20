@@ -5,6 +5,7 @@ import { MockCursorEvent } from "../../test/mock-cursor-event";
 import { DefaultPointerEvents } from "../base.mode";
 import { MockPoint } from "../../test/mock-features";
 import { GeoJSONStoreFeatures, JSONObject } from "../../store/store";
+import { COMMON_PROPERTIES } from "../../common";
 
 describe("TerraDrawMarkerMode", () => {
 	describe("constructor", () => {
@@ -164,6 +165,22 @@ describe("TerraDrawMarkerMode", () => {
 				"create",
 				undefined,
 			);
+			expect(mockConfig.onFinish).toHaveBeenCalledTimes(1);
+
+			expect(mockConfig.store.copyAll()[0]).toEqual({
+				id: expect.any(String),
+				type: "Feature",
+				geometry: {
+					type: "Point",
+					coordinates: [0, 0],
+				},
+				properties: {
+					mode: markerMode.mode,
+					[COMMON_PROPERTIES.MARKER]: true,
+					createdAt: expect.any(Number),
+					updatedAt: expect.any(Number),
+				},
+			});
 		});
 
 		it("right click can delete a point if editable is true", () => {

@@ -296,9 +296,7 @@ export class TerraDrawMarkerMode extends TerraDrawBaseDrawMode<MarkerModeStyling
 
 		const properties = {
 			mode: this.mode,
-			markerUrl: this.markerUrl as string,
-			markerHeight: this.markerHeight as number,
-			markerWidth: this.markerWidth as number,
+			[COMMON_PROPERTIES.MARKER]: true,
 		};
 
 		if (this.validate) {

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <script src="https://unpkg.com/terra-draw@1.2.0/dist/terra-draw.umd.js"></script>
+  <script
+    src="https://unpkg.com/terra-draw-maplibre-gl-adapter@1.3.0/dist/terra-draw-maplibre-gl-adapter.umd.js"></script>
+
+  <script type="text/javascript">
+    let _map;
+    let _draw;
+
+
+    _draw = new terraDraw.TerraDraw({
+      adapter: new terraDrawMapLibreGLAdapter.TerraDrawMapLibreGLAdapter({
+        map: _map,
+        lib: google.maps,
+        coordinatePrecision: 9,
+      }),
+      modes: [new terraDraw.TerraDrawPolygonMode()],
+    });
+
+    _draw.start();
+
+
+  </script>
+  <style type="text/css">
+    #map {
+      width: 800px;
+      height: 600px;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="map"></div>
+</body>
+
+</html>

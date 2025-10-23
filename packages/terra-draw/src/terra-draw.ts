@@ -69,6 +69,7 @@ import { limitPrecision } from "./geometry/limit-decimal-precision";
 import { isValidJSONValue } from "./store/valid-json";
 import { haversineDistanceKilometers } from "./geometry/measure/haversine-distance";
 import { TerraDrawMarkerMode } from "./modes/marker/marker.mode";
+import { setupUndoRedo } from "./undo-redo";
 
 // Helper type to determine the instance type of a class
 type InstanceType<T extends new (...args: any[]) => any> = T extends new (
@@ -1187,7 +1188,7 @@ class TerraDraw {
 				this._mode.cleanUp();
 
 				// Remove all features from the store
-				this._store.clear();
+				this._store.clear({ origin: "api" });
 			},
 		});
 	}
@@ -1334,4 +1335,5 @@ export {
 	ValidateMaxAreaSquareMeters,
 	ValidateNotSelfIntersecting,
 	ValidationReasons,
+	setupUndoRedo,
 };

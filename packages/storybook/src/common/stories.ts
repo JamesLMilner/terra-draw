@@ -1,3 +1,4 @@
+import { FeatureId } from "../../../terra-draw/src/extend";
 import {
 	TerraDrawPointMode,
 	TerraDrawPolygonMode,
@@ -14,6 +15,7 @@ import {
 	GeoJSONStoreFeatures,
 	HexColor,
 	TerraDrawMarkerMode,
+	setupUndoRedo,
 } from "../../../terra-draw/src/terra-draw";
 import {
 	DefaultSize,
@@ -417,11 +419,46 @@ const Select: Story = {
 						polygon: {
 							feature: {
 								draggable: true,
+								coordinates: {
+									draggable: true,
+									midpoints: {
+										draggable: true,
+									},
+								},
 							},
 						},
 					},
 				}),
 		],
+		afterRender: (draw: TerraDraw) => {
+			const undoButton = document.createElement("button");
+			undoButton.textContent = "Undo";
+
+			const redoButton = document.createElement("button");
+			redoButton.textContent = "Redo";
+
+			redoButton.disabled = true;
+			undoButton.disabled = true;
+
+			const { undo, redo } = setupUndoRedo(draw, {
+				onStackChange: (undoStackSize: number, redoStackSize: number) => {
+					console.log("undoSize", undoStackSize, "redoSize", redoStackSize);
+					undoButton.disabled = undoStackSize === 0;
+					redoButton.disabled = redoStackSize === 0;
+				},
+			});
+
+			const element = document.querySelector('[data-testid="container"]');
+
+			undoButton.onclick = () => {
+				undo();
+			};
+			redoButton.onclick = () => {
+				redo();
+			};
+			element?.appendChild(undoButton);
+			element?.appendChild(redoButton);
+		},
 		...DefaultStory.args,
 	},
 };

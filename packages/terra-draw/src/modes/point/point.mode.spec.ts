@@ -28,6 +28,11 @@ describe("TerraDrawPointMode", () => {
 				pointOutlineColor: "#ffffff",
 			});
 		});
+
+		it("constructs with custom mode name", () => {
+			const pointMode = new TerraDrawPointMode({ modeName: "custom" });
+			expect(pointMode.mode).toBe("custom");
+		});
 	});
 
 	describe("lifecycle", () => {

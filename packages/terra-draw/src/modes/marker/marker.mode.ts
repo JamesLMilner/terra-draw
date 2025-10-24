@@ -7,6 +7,7 @@ import {
 	COMMON_PROPERTIES,
 	Z_INDEX,
 	UrlStyling,
+	MARKER_URL_DEFAULT,
 } from "../../common";
 import {
 	BBoxPolygon,
@@ -264,17 +265,17 @@ export class TerraDrawMarkerMode extends TerraDrawBaseDrawMode<MarkerModeStyling
 			styles.zIndex = Z_INDEX.LAYER_THREE;
 			styles.markerHeight = this.getNumericStylingValue(
 				this.styles?.markerHeight,
-				30,
+				40,
 				feature,
 			);
 			styles.markerWidth = this.getNumericStylingValue(
 				this.styles?.markerWidth,
-				30,
+				32,
 				feature,
 			);
 			styles.markerUrl = this.getUrlStylingValue(
 				this.styles?.markerUrl,
-				"", // TODO: we will provide a default marker icon in future
+				MARKER_URL_DEFAULT,
 				feature,
 			);
 		}
@@ -296,9 +297,7 @@ export class TerraDrawMarkerMode extends TerraDrawBaseDrawMode<MarkerModeStyling
 
 		const properties = {
 			mode: this.mode,
-			markerUrl: this.markerUrl as string,
-			markerHeight: this.markerHeight as number,
-			markerWidth: this.markerWidth as number,
+			[COMMON_PROPERTIES.MARKER]: true,
 		};
 
 		if (this.validate) {

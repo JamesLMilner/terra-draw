@@ -194,6 +194,11 @@ export interface TerraDrawAdapter {
 	getCoordinatePrecision(): number;
 }
 
+const MARKER_URL_BASE =
+	"https://raw.githubusercontent.com/JamesLMilner/terra-draw/refs/heads/main/assets/markers";
+
+export const MARKER_URL_DEFAULT = `${MARKER_URL_BASE}/marker-blue.png`;
+
 export const SELECT_PROPERTIES = {
 	SELECTED: "selected",
 	MID_POINT: "midPoint",
@@ -212,6 +217,7 @@ export const COMMON_PROPERTIES = {
 	COORDINATE_POINT_IDS: "coordinatePointIds",
 	PROVISIONAL_COORDINATE_COUNT: "provisionalCoordinateCount",
 	COMMITTED_COORDINATE_COUNT: "committedCoordinateCount",
+	MARKER: "marker",
 } as const;
 
 /**

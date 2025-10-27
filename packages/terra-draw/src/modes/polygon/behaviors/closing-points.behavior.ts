@@ -103,7 +103,6 @@ export class ClosingPointsBehavior extends TerraDrawModeBehavior {
 			event,
 			closing.coordinates as Position,
 		);
-
 		const isClosing = distance < this.pointerDistance;
 		const isPreviousClosing = distancePrevious < this.pointerDistance;
 

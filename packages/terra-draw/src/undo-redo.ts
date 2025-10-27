@@ -3,10 +3,14 @@ import { GeoJSONStoreFeatures, TerraDraw } from "./terra-draw";
 
 export const setupUndoRedo = (
 	draw: TerraDraw,
-	options: {
-		onStackChange: (undoStackSize: number, redoStackSize: number) => void;
+	options?: {
+		onStackChange?: (undoStackSize: number, redoStackSize: number) => void;
 	},
 ) => {
+	const onStackChange =
+		options?.onStackChange ||
+		((undoStackSize: number, redoStackSize: number) => {});
+
 	// Keep per-feature history and a global action stack to support undo across multiple features
 	const historyById: { [key: string]: GeoJSONStoreFeatures[] } = {};
 	const actionStack: FeatureId[] = [];
@@ -33,13 +37,13 @@ export const setupUndoRedo = (
 		for (const id of deleted) {
 			const key = String(id);
 
-			console.log("ignoring programmatic delete", ignoreProgrammaticDelete, id);
+			// console.log("ignoring programmatic delete", ignoreProgrammaticDelete, id);
 
 			if (!historyById[key] || ignoreProgrammaticDelete[id]) {
 				continue;
 			}
 
-			console.log("deleting", id);
+			// console.log("deleting", id);
 		}
 	});
 
@@ -59,7 +63,7 @@ export const setupUndoRedo = (
 			// Record both the id and the index in that feature's history for robust undo
 			actionStack.push(id);
 			actionIndexStack.push(historyById[key].length - 1);
-			options.onStackChange(actionStack.length, redoStack.length);
+			onStackChange(actionStack.length, redoStack.length);
 		}
 
 		// Any new finished action invalidates the redo history
@@ -71,7 +75,7 @@ export const setupUndoRedo = (
 
 		const id = actionStack.pop() as FeatureId;
 		const idx = actionIndexStack.pop() as number | undefined;
-		options.onStackChange(actionStack.length, redoStack.length);
+		onStackChange(actionStack.length, redoStack.length);
 		if (idx === undefined) return;
 
 		const key = String(id);
@@ -85,7 +89,7 @@ export const setupUndoRedo = (
 		if (currentIdx <= 0) {
 			// Record redo info so we can recreate the feature
 			redoStack.push({ id, toIdx: 0 });
-			options.onStackChange(actionStack.length, redoStack.length);
+			onStackChange(actionStack.length, redoStack.length);
 
 			draw.removeFeatures([id]);
 			ignoreProgrammaticDelete[id] = true;
@@ -96,7 +100,7 @@ export const setupUndoRedo = (
 				if (actionStack[i] === id) {
 					actionStack.splice(i, 1);
 					actionIndexStack.splice(i, 1);
-					options.onStackChange(actionStack.length, redoStack.length);
+					onStackChange(actionStack.length, redoStack.length);
 				}
 			}
 			return;
@@ -109,7 +113,7 @@ export const setupUndoRedo = (
 		// Save redo info before truncating the stack
 		if (nextSnapshot) {
 			redoStack.push({ id, toIdx: currentIdx, snapshot: nextSnapshot });
-			options.onStackChange(actionStack.length, redoStack.length);
+			onStackChange(actionStack.length, redoStack.length);
 		}
 
 		draw.updateFeatureGeometry(id, prev.geometry);
@@ -132,7 +136,7 @@ export const setupUndoRedo = (
 			// Restore the action into the history stacks
 			actionStack.push(id);
 			actionIndexStack.push(0);
-			options.onStackChange(actionStack.length, redoStack.length);
+			onStackChange(actionStack.length, redoStack.length);
 			return;
 		}
 
@@ -156,7 +160,7 @@ export const setupUndoRedo = (
 		// Restore the action into the history stacks so it can be undone again
 		actionStack.push(id);
 		actionIndexStack.push(toIdx);
-		options.onStackChange(actionStack.length, redoStack.length);
+		onStackChange(actionStack.length, redoStack.length);
 	};
 
 	return {

@@ -26,7 +26,7 @@ export const setupUndoRedo = (
 	// Stack of undone actions we can reapply
 	const redoStack: {
 		id: FeatureId;
-		toIdx: number;
+		toIndex: number;
 		snapshot?: GeoJSONStoreFeatures;
 		action?: "create" | "update" | "delete" | "restore";
 	}[] = [];
@@ -53,10 +53,10 @@ export const setupUndoRedo = (
 			}
 
 			// Treat deletes (including clear) as actions that can be undone by re-adding the last snapshot
-			const lastIdx = historyById[key].length - 1;
-			if (lastIdx >= 0) {
+			const lastIndex = historyById[key].length - 1;
+			if (lastIndex >= 0) {
 				actionStack.push(id);
-				actionIndexStack.push(lastIdx);
+				actionIndexStack.push(lastIndex);
 				recorded = true;
 			}
 		}
@@ -95,28 +95,28 @@ export const setupUndoRedo = (
 		if (actionStack.length === 0) return;
 
 		const id = actionStack.pop() as FeatureId;
-		const idx = actionIndexStack.pop() as number | undefined;
+		const index = actionIndexStack.pop() as number | undefined;
 		onStackChange(actionStack.length, redoStack.length);
-		if (idx === undefined) return;
+		if (index === undefined) return;
 
 		const key = String(id);
 		const stack = historyById[key];
 		if (!stack || stack.length === 0) return;
 
 		// Clamp index in case of any out-of-sync situations
-		const currentIdx = Math.min(idx, stack.length - 1);
+		const currentIndex = Math.min(index, stack.length - 1);
 
 		// If the feature currently does not exist (e.g., after a clear/delete), restore it
 		const featureExists = draw.hasFeature(id);
 		if (!featureExists) {
-			const snapshotToRestore = stack[currentIdx];
+			const snapshotToRestore = stack[currentIndex];
 			if (!snapshotToRestore) return;
 			draw.addFeatures([snapshotToRestore]);
 
 			// Allow redo to re-delete the feature; do not change undo stack size here
 			redoStack.push({
 				id,
-				toIdx: currentIdx,
+				toIndex: currentIndex,
 				action: "delete",
 				snapshot: snapshotToRestore,
 			});
@@ -125,9 +125,9 @@ export const setupUndoRedo = (
 		}
 
 		// If there is no previous state, the action was creation -> remove the feature
-		if (currentIdx <= 0) {
+		if (currentIndex <= 0) {
 			// Record redo info so we can recreate the feature
-			redoStack.push({ id, toIdx: 0, action: "create" });
+			redoStack.push({ id, toIndex: 0, action: "create" });
 			onStackChange(actionStack.length, redoStack.length);
 
 			ignoreProgrammaticDelete[id] = true;
@@ -145,14 +145,14 @@ export const setupUndoRedo = (
 		}
 
 		// Revert to the previous geometry for this action and truncate history to that point
-		const nextSnapshot = stack[currentIdx]; // the state we are undoing
-		const prev = stack[currentIdx - 1];
+		const nextSnapshot = stack[currentIndex]; // the state we are undoing
+		const prev = stack[currentIndex - 1];
 
 		// Save redo info before truncating the stack
 		if (nextSnapshot) {
 			redoStack.push({
 				id,
-				toIdx: currentIdx,
+				toIndex: currentIndex,
 				snapshot: nextSnapshot,
 				action: "update",
 			});
@@ -160,13 +160,13 @@ export const setupUndoRedo = (
 		}
 
 		draw.updateFeatureGeometry(id, prev.geometry);
-		stack.length = currentIdx; // drop the state we just undid
+		stack.length = currentIndex; // drop the state we just undid
 	};
 
 	const redo = () => {
 		if (redoStack.length === 0) return;
 
-		const { id, toIdx, snapshot, action } = redoStack.pop()!;
+		const { id, toIndex, snapshot, action } = redoStack.pop()!;
 		const key = String(id);
 		const stack = historyById[key] || (historyById[key] = []);
 
@@ -176,24 +176,24 @@ export const setupUndoRedo = (
 			draw.removeFeatures([id]);
 			// Reflect that the delete action has been reapplied by pushing back onto the undo stack
 			actionStack.push(id);
-			actionIndexStack.push(toIdx);
+			actionIndexStack.push(toIndex);
 			onStackChange(actionStack.length, redoStack.length);
 			return;
 		}
 
 		// If the redo action is to restore (undo a delete), re-add the snapshot
 		if (action === "restore") {
-			const next = snapshot || stack[toIdx];
+			const next = snapshot || stack[toIndex];
 			if (!next) return;
 			draw.addFeatures([next]);
 			// Reflect that the restore has been reapplied by pushing back onto the undo stack
 			actionStack.push(id);
-			actionIndexStack.push(toIdx);
+			actionIndexStack.push(toIndex);
 			onStackChange(actionStack.length, redoStack.length);
 			return;
 		}
 
-		if (toIdx <= 0) {
+		if (toIndex <= 0) {
 			// Redo creation - recreate the initial feature
 			const initial = stack[0];
 			if (!initial) return;
@@ -207,25 +207,25 @@ export const setupUndoRedo = (
 		}
 
 		// Redo an update - reapply the geometry and restore the snapshot in history
-		const next = snapshot || stack[toIdx];
+		const next = snapshot || stack[toIndex];
 		if (!next) return;
 
 		// Ensure the history includes the redone snapshot at the correct index
-		if (stack.length === toIdx) {
+		if (stack.length === toIndex) {
 			stack.push(next);
-		} else if (stack.length < toIdx) {
-			stack[toIdx] = next;
-			stack.length = toIdx + 1;
+		} else if (stack.length < toIndex) {
+			stack[toIndex] = next;
+			stack.length = toIndex + 1;
 		} else {
-			stack[toIdx] = next;
-			stack.length = toIdx + 1;
+			stack[toIndex] = next;
+			stack.length = toIndex + 1;
 		}
 
 		draw.updateFeatureGeometry(id, next.geometry);
 
 		// Restore the action into the history stacks so it can be undone again
 		actionStack.push(id);
-		actionIndexStack.push(toIdx);
+		actionIndexStack.push(toIndex);
 		onStackChange(actionStack.length, redoStack.length);
 	};
 

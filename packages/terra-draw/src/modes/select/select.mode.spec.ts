@@ -129,6 +129,11 @@ describe("TerraDrawSelectMode", () => {
 				},
 			});
 		});
+
+		it("constructs with custom mode name", () => {
+			const selectMode = new TerraDrawSelectMode({ modeName: "custom" });
+			expect(selectMode.mode).toBe("custom");
+		});
 	});
 
 	describe("lifecycle", () => {

@@ -107,6 +107,8 @@ export abstract class TerraDrawBaseDrawMode<Styling extends CustomStyling> {
 	protected setCursor!: TerraDrawModeRegisterConfig["setCursor"];
 	protected registerBehaviors(behaviorConfig: BehaviorConfig): void {}
 
+	private isInitialUpdate = false;
+
 	constructor(
 		options?: BaseModeOptions<Styling>,
 		willCallUpdateOptionsInParentClass = false,
@@ -114,11 +116,16 @@ export abstract class TerraDrawBaseDrawMode<Styling extends CustomStyling> {
 		// Note: We want to updateOptions on the base class by default, but we don't want it to be
 		// called twice if the extending class is going to call it as well
 		if (!willCallUpdateOptionsInParentClass) {
-			this.updateOptions(options);
+			this.updateOptions({ ...options });
+		} else {
+			// Indicates we are about to have updateOptions called in the parent class
+			this.isInitialUpdate = true;
 		}
 	}
 
-	updateOptions(options?: BaseModeOptions<Styling>) {
+	updateOptions(
+		options?: BaseModeOptions<Styling> & { isConstructorCall?: boolean },
+	) {
 		if (options?.styles) {
 			// Note: we are updating this.styles and not this._styles - this is because
 			// once registered we want to trigger the onStyleChange
@@ -139,9 +146,11 @@ export abstract class TerraDrawBaseDrawMode<Styling extends CustomStyling> {
 			this.pointerEvents = options.pointerEvents;
 		}
 
-		if (options?.modeName) {
+		if (options?.modeName && this.isInitialUpdate === true) {
 			this.mode = options.modeName;
 		}
+
+		this.isInitialUpdate = false;
 	}
 
 	protected allowPointerEvent(

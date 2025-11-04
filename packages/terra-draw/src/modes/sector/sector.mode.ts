@@ -88,7 +88,10 @@ export class TerraDrawSectorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 	}
 
 	override updateOptions(
-		options?: TerraDrawSectorModeOptions<SectorPolygonStyling>,
+		options?: Omit<
+			TerraDrawSectorModeOptions<SectorPolygonStyling>,
+			"modeName"
+		>,
 	) {
 		super.updateOptions(options);
 

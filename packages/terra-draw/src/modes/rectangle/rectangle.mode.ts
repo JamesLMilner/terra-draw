@@ -68,7 +68,10 @@ export class TerraDrawRectangleMode extends TerraDrawBaseDrawMode<RectanglePolyg
 	}
 
 	override updateOptions(
-		options?: TerraDrawRectangleModeOptions<RectanglePolygonStyling>,
+		options?: Omit<
+			TerraDrawRectangleModeOptions<RectanglePolygonStyling>,
+			"modeName"
+		>,
 	) {
 		super.updateOptions(options);
 

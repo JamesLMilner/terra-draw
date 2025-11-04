@@ -75,7 +75,7 @@ export class TerraDrawPointMode extends TerraDrawBaseDrawMode<PointModeStyling> 
 	}
 
 	updateOptions(
-		options?: TerraDrawPointModeOptions<PointModeStyling> | undefined,
+		options?: Omit<TerraDrawPointModeOptions<PointModeStyling>, "modeName">,
 	): void {
 		super.updateOptions(options);
 

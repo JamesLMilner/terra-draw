@@ -643,6 +643,11 @@ const SelectWithMultipleOfSameModes: Story = {
 					},
 				}),
 		],
+		afterRender: (draw: TerraDraw) => {
+			draw.updateModeOptions<typeof TerraDrawPolygonMode>("polygon2", {
+				modeName: "polygon3",
+			} as any);
+		},
 		...DefaultStory.args,
 	},
 };

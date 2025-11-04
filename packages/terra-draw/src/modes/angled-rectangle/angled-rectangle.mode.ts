@@ -60,7 +60,7 @@ const defaultCursors = {
 	close: "pointer",
 } as Required<Cursors>;
 
-interface TerraDrawPolygonModeOptions<T extends CustomStyling>
+interface TerraDrawAngledRectangleModeOptions<T extends CustomStyling>
 	extends BaseModeOptions<T> {
 	pointerDistance?: number;
 	keyEvents?: TerraDrawPolygonModeKeyEvents | null;
@@ -78,13 +78,16 @@ export class TerraDrawAngledRectangleMode extends TerraDrawBaseDrawMode<PolygonS
 	private cursors: Required<Cursors> = defaultCursors;
 	private mouseMove = false;
 
-	constructor(options?: TerraDrawPolygonModeOptions<PolygonStyling>) {
+	constructor(options?: TerraDrawAngledRectangleModeOptions<PolygonStyling>) {
 		super(options, true);
 		this.updateOptions(options);
 	}
 
 	override updateOptions(
-		options?: TerraDrawPolygonModeOptions<PolygonStyling>,
+		options?: Omit<
+			TerraDrawAngledRectangleModeOptions<PolygonStyling>,
+			"modeName"
+		>,
 	) {
 		super.updateOptions(options);
 

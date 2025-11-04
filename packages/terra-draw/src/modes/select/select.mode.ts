@@ -171,7 +171,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 	}
 
 	override updateOptions(
-		options?: TerraDrawSelectModeOptions<SelectionStyling>,
+		options?: Omit<TerraDrawSelectModeOptions<SelectionStyling>, "modeName">,
 	) {
 		super.updateOptions(options);
 

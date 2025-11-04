@@ -74,25 +74,32 @@ export function SetupMapLibre(args: StoryArgs): HTMLElement {
 
 			// Wait for style to load before initializing TerraDraw
 			mapConfig.map.once("style.load", () => {
-				const draw = new TerraDraw({
-					adapter: new TerraDrawMapLibreGLAdapter({
-						map: mapConfig.map,
-					}),
-					modes,
-				});
+				console.log("MapLibre style loaded");
 
-				draw.start();
+				try {
+					const draw = new TerraDraw({
+						adapter: new TerraDrawMapLibreGLAdapter({
+							map: mapConfig.map,
+						}),
+						modes,
+					});
+					draw.start();
 
-				setupControls({
-					show: args.showButtons,
-					changeMode: (mode) => draw.setMode(mode),
-					clear: () => draw.clear(),
-					modeButtons,
-					clearButton,
-					controls,
-				});
+					console.log("MapLibre map and Terra Draw initialized");
 
-				args.afterRender?.(draw);
+					setupControls({
+						show: args.showButtons,
+						changeMode: (mode) => draw.setMode(mode),
+						clear: () => draw.clear(),
+						modeButtons,
+						clearButton,
+						controls,
+					});
+
+					args.afterRender?.(draw);
+				} catch (error) {
+					console.error("Error initializing Terra Draw:", error);
+				}
 			});
 		} catch (error) {
 			// eslint-disable-next-line no-console

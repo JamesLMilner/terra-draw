@@ -51,7 +51,7 @@ export class TerraDrawRenderMode extends TerraDrawBaseDrawMode<RenderModeStyling
 	}
 
 	updateOptions(
-		options?: TerraDrawRenderModeOptions<RenderModeStyling> | undefined,
+		options?: Omit<TerraDrawRenderModeOptions<RenderModeStyling>, "modeName">,
 	): void {
 		super.updateOptions(options);
 	}

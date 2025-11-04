@@ -85,7 +85,10 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 	}
 
 	public updateOptions(
-		options?: TerraDrawFreehandModeOptions<FreehandPolygonStyling> | undefined,
+		options?: Omit<
+			TerraDrawFreehandModeOptions<FreehandPolygonStyling>,
+			"modeName"
+		>,
 	): void {
 		super.updateOptions(options);
 

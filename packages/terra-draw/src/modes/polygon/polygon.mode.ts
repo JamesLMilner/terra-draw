@@ -129,7 +129,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 	}
 
 	override updateOptions(
-		options?: TerraDrawPolygonModeOptions<PolygonStyling>,
+		options?: Omit<TerraDrawPolygonModeOptions<PolygonStyling>, "modeName">,
 	) {
 		super.updateOptions(options);
 

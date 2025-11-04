@@ -120,7 +120,10 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 	}
 
 	updateOptions(
-		options?: TerraDrawLineStringModeOptions<LineStringStyling> | undefined,
+		options?: Omit<
+			TerraDrawLineStringModeOptions<LineStringStyling>,
+			"modeName"
+		>,
 	) {
 		super.updateOptions(options);
 

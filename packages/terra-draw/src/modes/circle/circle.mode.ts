@@ -82,7 +82,10 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 	}
 
 	override updateOptions(
-		options?: TerraDrawCircleModeOptions<CirclePolygonStyling>,
+		options?: Omit<
+			TerraDrawCircleModeOptions<CirclePolygonStyling>,
+			"modeName"
+		>,
 	) {
 		super.updateOptions(options);
 

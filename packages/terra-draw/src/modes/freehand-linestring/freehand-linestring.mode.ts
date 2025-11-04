@@ -78,9 +78,10 @@ export class TerraDrawFreehandLineStringMode extends TerraDrawBaseDrawMode<Freeh
 	}
 
 	public updateOptions(
-		options?:
-			| TerraDrawFreehandLineStringModeOptions<FreehandLineStringStyling>
-			| undefined,
+		options?: Omit<
+			TerraDrawFreehandLineStringModeOptions<FreehandLineStringStyling>,
+			"modeName"
+		>,
 	): void {
 		super.updateOptions(options);
 

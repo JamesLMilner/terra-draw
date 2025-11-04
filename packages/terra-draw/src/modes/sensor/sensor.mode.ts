@@ -93,7 +93,10 @@ export class TerraDrawSensorMode extends TerraDrawBaseDrawMode<SensorPolygonStyl
 	}
 
 	override updateOptions(
-		options?: TerraDrawSensorModeOptions<SensorPolygonStyling>,
+		options?: Omit<
+			TerraDrawSensorModeOptions<SensorPolygonStyling>,
+			"modeName"
+		>,
 	): void {
 		super.updateOptions(options);
 

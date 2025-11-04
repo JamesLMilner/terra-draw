@@ -59,7 +59,7 @@ interface TerraDrawFreehandLineStringModeOptions<T extends CustomStyling>
 }
 
 export class TerraDrawFreehandLineStringMode extends TerraDrawBaseDrawMode<FreehandLineStringStyling> {
-	mode = "freehand-linestring" as const;
+	mode = "freehand-linestring";
 
 	private startingClick = false;
 	private currentId: FeatureId | undefined;
@@ -78,9 +78,10 @@ export class TerraDrawFreehandLineStringMode extends TerraDrawBaseDrawMode<Freeh
 	}
 
 	public updateOptions(
-		options?:
-			| TerraDrawFreehandLineStringModeOptions<FreehandLineStringStyling>
-			| undefined,
+		options?: Omit<
+			TerraDrawFreehandLineStringModeOptions<FreehandLineStringStyling>,
+			"modeName"
+		>,
 	): void {
 		super.updateOptions(options);
 

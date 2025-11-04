@@ -51,6 +51,13 @@ describe("TerraDrawCircleMode", () => {
 				startingRadiusKilometers: 0.00001,
 			});
 		});
+
+		it("constructs with custom mode name", () => {
+			const circleMode = new TerraDrawCircleMode({
+				modeName: "custom",
+			});
+			expect(circleMode.mode).toBe("custom");
+		});
 	});
 
 	describe("lifecycle", () => {

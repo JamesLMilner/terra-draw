@@ -653,6 +653,42 @@ const ProgrammaticRotate: Story = {
 	},
 };
 
+const SelectWithMultipleOfSameModes: Story = {
+	...DefaultStory,
+	args: {
+		id: "select-with-multiple-of-same-modes",
+		modes: [
+			() => new TerraDrawPolygonMode(),
+			() => new TerraDrawPolygonMode({ modeName: "polygon2" }),
+			() =>
+				new TerraDrawSelectMode({
+					flags: {
+						polygon: {
+							feature: {
+								draggable: true,
+							},
+						},
+						polygon2: {
+							feature: {
+								draggable: true,
+								coordinates: {
+									midpoints: true,
+									draggable: true,
+								},
+							},
+						},
+					},
+				}),
+		],
+		afterRender: (draw: TerraDraw) => {
+			draw.updateModeOptions<typeof TerraDrawPolygonMode>("polygon2", {
+				modeName: "polygon3",
+			} as any);
+		},
+		...DefaultStory.args,
+	},
+};
+
 const AllStories = {
 	Point,
 	MarkerPNG,
@@ -683,6 +719,7 @@ const AllStories = {
 	Select,
 	SelectWithSelectionPoints,
 	SelectWithMidPoints,
+	SelectWithMultipleOfSameModes,
 };
 
 export { AllStories };

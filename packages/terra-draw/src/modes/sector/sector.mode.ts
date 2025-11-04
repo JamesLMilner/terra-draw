@@ -70,7 +70,7 @@ interface TerraDrawSectorModeOptions<T extends CustomStyling>
 }
 
 export class TerraDrawSectorMode extends TerraDrawBaseDrawMode<SectorPolygonStyling> {
-	mode = "sector" as const;
+	mode = "sector";
 
 	private currentCoordinate = 0;
 	private currentId: FeatureId | undefined;
@@ -88,7 +88,10 @@ export class TerraDrawSectorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 	}
 
 	override updateOptions(
-		options?: TerraDrawSectorModeOptions<SectorPolygonStyling>,
+		options?: Omit<
+			TerraDrawSectorModeOptions<SectorPolygonStyling>,
+			"modeName"
+		>,
 	) {
 		super.updateOptions(options);
 

@@ -626,7 +626,7 @@ class TerraDraw {
 	 */
 	updateModeOptions<Mode extends { new (...args: any[]): any }>(
 		mode: InstanceType<Mode>["mode"],
-		options: ConstructorParameters<Mode>[0],
+		options: Omit<NonNullable<ConstructorParameters<Mode>[0]>, "modeName">,
 	) {
 		this.checkEnabled();
 		if (!this._modes[mode]) {

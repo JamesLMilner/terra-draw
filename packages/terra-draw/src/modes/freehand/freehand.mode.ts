@@ -65,7 +65,7 @@ interface TerraDrawFreehandModeOptions<T extends CustomStyling>
 }
 
 export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygonStyling> {
-	mode = "freehand" as const;
+	mode = "freehand";
 
 	private startingClick = false;
 	private currentId: FeatureId | undefined;
@@ -85,7 +85,10 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 	}
 
 	public updateOptions(
-		options?: TerraDrawFreehandModeOptions<FreehandPolygonStyling> | undefined,
+		options?: Omit<
+			TerraDrawFreehandModeOptions<FreehandPolygonStyling>,
+			"modeName"
+		>,
 	): void {
 		super.updateOptions(options);
 

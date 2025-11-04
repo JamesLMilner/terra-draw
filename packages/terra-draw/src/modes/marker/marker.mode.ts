@@ -77,7 +77,7 @@ export class TerraDrawMarkerMode extends TerraDrawBaseDrawMode<MarkerModeStyling
 	}
 
 	updateOptions(
-		options?: TerraDrawMarkerModeOptions<MarkerModeStyling> | undefined,
+		options?: Omit<TerraDrawMarkerModeOptions<MarkerModeStyling>, "modeName">,
 	): void {
 		super.updateOptions(options);
 

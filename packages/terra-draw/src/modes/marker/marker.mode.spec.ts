@@ -35,6 +35,13 @@ describe("TerraDrawMarkerMode", () => {
 				markerUrl: "https://example.com/marker.png",
 			});
 		});
+
+		it("constructs with custom mode name", () => {
+			const markerMode = new TerraDrawMarkerMode({
+				modeName: "custom-marker",
+			});
+			expect(markerMode.mode).toBe("custom-marker");
+		});
 	});
 
 	describe("lifecycle", () => {
@@ -138,6 +145,13 @@ describe("TerraDrawMarkerMode", () => {
 			expect(mockConfig.store.copyAll()[0].geometry.coordinates).toEqual([
 				0, 1,
 			]);
+		});
+
+		it("does not update mode name if passed", () => {
+			const markerMode = new TerraDrawMarkerMode();
+			markerMode.updateOptions({ modeName: "custom-marker" } as any);
+
+			expect(markerMode.mode).toBe("marker");
 		});
 	});
 

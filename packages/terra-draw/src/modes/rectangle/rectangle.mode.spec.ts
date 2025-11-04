@@ -40,6 +40,11 @@ describe("TerraDrawRectangleMode", () => {
 				keyEvents: { cancel: null, finish: null },
 			});
 		});
+
+		it("constructs with custom mode name", () => {
+			const rectangleMode = new TerraDrawRectangleMode({ modeName: "custom" });
+			expect(rectangleMode.mode).toBe("custom");
+		});
 	});
 
 	describe("lifecycle", () => {

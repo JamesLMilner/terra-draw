@@ -59,7 +59,7 @@ interface TerraDrawCircleModeOptions<T extends CustomStyling>
 }
 
 export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyling> {
-	mode = "circle" as const;
+	mode = "circle";
 	private center: Position | undefined;
 	private clickCount = 0;
 	private currentCircleId: FeatureId | undefined;
@@ -82,7 +82,10 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 	}
 
 	override updateOptions(
-		options?: TerraDrawCircleModeOptions<CirclePolygonStyling>,
+		options?: Omit<
+			TerraDrawCircleModeOptions<CirclePolygonStyling>,
+			"modeName"
+		>,
 	) {
 		super.updateOptions(options);
 

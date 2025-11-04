@@ -11,6 +11,9 @@ import {
 	TerraDrawSensorMode,
 	TerraDraw,
 	TerraDrawSelectMode,
+	GeoJSONStoreFeatures,
+	HexColor,
+	TerraDrawMarkerMode,
 } from "../../../terra-draw/src/terra-draw";
 import {
 	DefaultSize,
@@ -20,7 +23,7 @@ import {
 	DefaultPlay,
 } from "./config";
 
-const DefaultStory = {
+export const DefaultStory = {
 	args: {
 		...DefaultSize,
 		...LocationNewYork,
@@ -35,6 +38,44 @@ const Point: Story = {
 	args: {
 		id: "point",
 		modes: [() => new TerraDrawPointMode()],
+		...DefaultStory.args,
+	},
+};
+
+const MarkerPNG: Story = {
+	...DefaultStory,
+	args: {
+		id: "marker",
+		modes: [
+			() =>
+				new TerraDrawMarkerMode({
+					styles: {
+						markerUrl:
+							"https://leafletjs.com/examples/custom-icons/leaf-green.png",
+						markerWidth: 25,
+						markerHeight: 60,
+					},
+				}),
+		],
+		...DefaultStory.args,
+	},
+};
+
+const MarkerJPG: Story = {
+	...DefaultStory,
+	args: {
+		id: "marker",
+		modes: [
+			() =>
+				new TerraDrawMarkerMode({
+					styles: {
+						markerUrl:
+							"https://upload.wikimedia.org/wikipedia/commons/1/1e/Marker_location.jpg",
+						markerWidth: 226 / 10,
+						markerHeight: 393 / 10,
+					},
+				}),
+		],
 		...DefaultStory.args,
 	},
 };
@@ -141,6 +182,38 @@ const PolygonWithLineSnapping: Story = {
 		],
 	},
 	...DefaultPlay,
+};
+
+// Polygon styling story - changes fill color based on a property on the feature
+const Styling: Story = {
+	...DefaultStory,
+	args: {
+		id: "polygon-styling",
+		modes: [
+			() =>
+				new TerraDrawPolygonMode({
+					styles: {
+						fillColor: (feature: GeoJSONStoreFeatures) =>
+							(feature.properties.randomColor as HexColor) ||
+							("#ff0000" as HexColor),
+					},
+				}),
+		],
+		...DefaultStory.args,
+		afterRender: (draw: TerraDraw) => {
+			setInterval(() => {
+				const features = draw.getSnapshot();
+				if (features.length === 0) return;
+				features.forEach((feature) => {
+					draw.updateFeatureProperties(feature.id!, {
+						randomColor: `#${Math.floor(Math.random() * 16777215).toString(16)}`,
+					});
+				});
+			}, 2000);
+		},
+		instructions:
+			"Random colors will be applied to each polygon every two seconds based on the 'randomColor' property on the feature.",
+	},
 };
 
 // Z Index ordering story
@@ -328,13 +401,16 @@ const Sensor: Story = {
 	},
 };
 
-// Sensor drawing story
+// Select mode story
 const Select: Story = {
 	...DefaultStory,
 	args: {
 		id: "select",
 		modes: [
-			() => new TerraDrawPolygonMode(),
+			() =>
+				new TerraDrawPolygonMode({
+					showCoordinatePoints: true,
+				}),
 			() =>
 				new TerraDrawSelectMode({
 					flags: {
@@ -573,12 +649,15 @@ const SelectWithMultipleOfSameModes: Story = {
 
 const AllStories = {
 	Point,
+	MarkerPNG,
+	MarkerJPG,
 	Polygon,
 	PolygonWithCoordinatePoints,
 	PolygonWithCoordinateSnapping,
 	PolygonWithLineSnapping,
 	PolygonWithEditableEnabled,
 	PolygonWithCoordinateCounts,
+	Styling,
 	ZIndexOrdering,
 	Circle,
 	Rectangle,

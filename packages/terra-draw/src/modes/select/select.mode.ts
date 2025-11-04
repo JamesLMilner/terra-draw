@@ -10,6 +10,9 @@ import {
 	UpdateTypes,
 	Z_INDEX,
 	Snapping,
+	UrlStyling,
+	COMMON_PROPERTIES,
+	MARKER_URL_DEFAULT,
 } from "../../common";
 import { Point, Position } from "geojson";
 import {
@@ -81,6 +84,11 @@ type SelectionStyling = {
 	selectedPointWidth: NumericStyling;
 	selectedPointOutlineColor: HexColorStyling;
 	selectedPointOutlineWidth: NumericStyling;
+
+	// Marker
+	selectedMarkerUrl: UrlStyling;
+	selectedMarkerHeight: NumericStyling;
+	selectedMarkerWidth: NumericStyling;
 
 	// LineString
 	selectedLineStringColor: HexColorStyling;
@@ -974,7 +982,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 			feature.properties.mode === this.mode &&
 			feature.geometry.type === "Point"
 		) {
-			if (feature.properties.selectionPoint) {
+			if (feature.properties[SELECT_PROPERTIES.SELECTION_POINT]) {
 				styles.pointColor = this.getHexColorStylingValue(
 					this.styles.selectionPointColor,
 					styles.pointColor,
@@ -1004,7 +1012,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 				return styles;
 			}
 
-			if (feature.properties.midPoint) {
+			if (feature.properties[SELECT_PROPERTIES.MID_POINT]) {
 				styles.pointColor = this.getHexColorStylingValue(
 					this.styles.midPointColor,
 					styles.pointColor,
@@ -1037,7 +1045,27 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 			// Select mode shortcuts the styling of a feature if it is selected
 			// A selected feature from another mode will end up in this block
 
-			if (feature.geometry.type === "Polygon") {
+			if (
+				feature.geometry.type === "Point" &&
+				feature.properties[COMMON_PROPERTIES.MARKER]
+			) {
+				styles.markerUrl = this.getUrlStylingValue(
+					this.styles.selectedMarkerUrl,
+					MARKER_URL_DEFAULT,
+					feature,
+				);
+				styles.markerHeight = this.getNumericStylingValue(
+					this.styles.selectedMarkerHeight,
+					40,
+					feature,
+				);
+				styles.markerWidth = this.getNumericStylingValue(
+					this.styles.selectedMarkerWidth,
+					32,
+					feature,
+				);
+				return styles;
+			} else if (feature.geometry.type === "Polygon") {
 				styles.polygonFillColor = this.getHexColorStylingValue(
 					this.styles.selectedPolygonColor,
 					styles.polygonFillColor,

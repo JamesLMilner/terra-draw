@@ -876,6 +876,243 @@ describe("Terra Draw", () => {
 		});
 	});
 
+	describe("updateFeatureProperties", () => {
+		const baseFeature = {
+			id: "f8e5a38d-ecfa-4294-8461-d9cff0e0d7f8",
+			type: "Feature",
+			geometry: {
+				type: "Polygon",
+				coordinates: [
+					[
+						[25, 34],
+						[26, 35],
+						[27, 34],
+						[25, 34],
+					],
+				],
+			},
+			properties: {
+				mode: "polygon",
+			},
+		} as GeoJSONStoreFeatures;
+
+		it("correctly updates a feature property", () => {
+			const draw = new TerraDraw({
+				adapter: new TerraDrawTestAdapter({
+					lib: {},
+					coordinatePrecision: 3,
+				}),
+				modes: [new TerraDrawPolygonMode()],
+			});
+
+			draw.start();
+
+			draw.addFeatures([{ ...baseFeature }]);
+
+			draw.updateFeatureProperties(baseFeature.id as FeatureId, {
+				customProperty: "customValue",
+			});
+
+			expect(
+				draw.getSnapshotFeature(baseFeature.id as FeatureId)?.properties
+					.customProperty,
+			).toBe("customValue");
+		});
+
+		it("correctly updates a feature property multiple times", () => {
+			const draw = new TerraDraw({
+				adapter: new TerraDrawTestAdapter({
+					lib: {},
+					coordinatePrecision: 3,
+				}),
+				modes: [new TerraDrawPolygonMode()],
+			});
+
+			draw.start();
+
+			draw.addFeatures([{ ...baseFeature }]);
+
+			draw.updateFeatureProperties(baseFeature.id as FeatureId, {
+				customProperty: "customValue",
+			});
+
+			draw.updateFeatureProperties(baseFeature.id as FeatureId, {
+				customProperty: "newCustomValue",
+			});
+
+			expect(
+				draw.getSnapshotFeature(baseFeature.id as FeatureId)?.properties
+					.customProperty,
+			).toBe("newCustomValue");
+		});
+
+		it("unsets a feature property if undefined is passed", () => {
+			const draw = new TerraDraw({
+				adapter: new TerraDrawTestAdapter({
+					lib: {},
+					coordinatePrecision: 3,
+				}),
+				modes: [new TerraDrawPolygonMode()],
+			});
+
+			draw.start();
+
+			draw.addFeatures([{ ...baseFeature }]);
+
+			draw.updateFeatureProperties(baseFeature.id as FeatureId, {
+				customProperty: "customValue",
+			});
+
+			expect(
+				draw.getSnapshotFeature(baseFeature.id as FeatureId)?.properties
+					.customProperty,
+			).toBe("customValue");
+
+			draw.updateFeatureProperties(baseFeature.id as FeatureId, {
+				customProperty: undefined,
+			});
+
+			expect(baseFeature.hasOwnProperty("customProperty")).toBe(false);
+		});
+
+		it("fails to update a feature property if the property is a reserved internal property", () => {
+			const draw = new TerraDraw({
+				adapter: new TerraDrawTestAdapter({
+					lib: {},
+					coordinatePrecision: 3,
+				}),
+				modes: [new TerraDrawPolygonMode()],
+			});
+
+			draw.start();
+
+			draw.addFeatures([{ ...baseFeature }]);
+
+			[
+				...Object.values(COMMON_PROPERTIES),
+				...Object.values(SELECT_PROPERTIES),
+			].forEach((property) => {
+				expect(() => {
+					draw.updateFeatureProperties(baseFeature.id as FeatureId, {
+						[property]: "customValue",
+					});
+				}).toThrow(
+					`You are trying to update a reserved property name: ${property}. Please choose another name.`,
+				);
+			});
+		});
+
+		it("fails to update a feature property if the passed value is not valid JSON", () => {
+			const draw = new TerraDraw({
+				adapter: new TerraDrawTestAdapter({
+					lib: {},
+					coordinatePrecision: 3,
+				}),
+				modes: [new TerraDrawPolygonMode()],
+			});
+
+			draw.start();
+
+			draw.addFeatures([{ ...baseFeature }]);
+
+			[
+				Symbol(),
+				new Map(),
+				new Set(),
+				new Date(),
+				new Int32Array(),
+				new WeakMap(),
+				new ArrayBuffer(0),
+				new Float32Array(),
+				new Uint8Array(),
+				new BigInt64Array(),
+				() => {},
+				NaN,
+				Infinity,
+				-Infinity,
+				{ a: () => {} },
+				{ a: undefined },
+				{ a: Symbol() },
+				[undefined],
+			].forEach((value) => {
+				expect(() => {
+					draw.updateFeatureProperties(baseFeature.id as FeatureId, {
+						customProperty: value as unknown as string,
+					});
+				}).toThrow(`Invalid JSON value provided for property customProperty`);
+
+				expect(() => {
+					draw.updateFeatureProperties(baseFeature.id as FeatureId, {
+						customProperty: {
+							nestedCustomProperty: value as unknown as string,
+						},
+					});
+				}).toThrow(`Invalid JSON value provided for property customProperty`);
+			});
+		});
+
+		it("correctly updates multiple feature properties", () => {
+			const draw = new TerraDraw({
+				adapter: new TerraDrawTestAdapter({
+					lib: {},
+					coordinatePrecision: 3,
+				}),
+				modes: [new TerraDrawPolygonMode()],
+			});
+
+			draw.start();
+
+			draw.addFeatures([{ ...baseFeature }]);
+
+			draw.updateFeatureProperties(baseFeature.id as FeatureId, {
+				customProperty: "customValue",
+				anotherProperty: "anotherValue",
+			});
+
+			expect(
+				draw.getSnapshotFeature(baseFeature.id as FeatureId)?.properties
+					.customProperty,
+			).toBe("customValue");
+			expect(
+				draw.getSnapshotFeature(baseFeature.id as FeatureId)?.properties
+					.anotherProperty,
+			).toBe("anotherValue");
+		});
+
+		it("fails to update multiple feature properties if any property is reserved", () => {
+			const draw = new TerraDraw({
+				adapter: new TerraDrawTestAdapter({
+					lib: {},
+					coordinatePrecision: 3,
+				}),
+				modes: [new TerraDrawPolygonMode()],
+			});
+
+			draw.start();
+
+			draw.addFeatures([{ ...baseFeature }]);
+
+			expect(() => {
+				draw.updateFeatureProperties(baseFeature.id as FeatureId, {
+					customProperty: "customValue",
+					anotherProperty: "anotherValue",
+					[COMMON_PROPERTIES.MODE]: "point",
+				});
+			}).toThrow(
+				`You are trying to update a reserved property name: ${COMMON_PROPERTIES.MODE}. Please choose another name.`,
+			);
+
+			expect(
+				draw.getSnapshotFeature(baseFeature.id as FeatureId)?.properties
+					.customProperty,
+			).toBe(undefined);
+			expect(
+				draw.getSnapshotFeature(baseFeature.id as FeatureId)?.properties
+					.anotherProperty,
+			).toBe(undefined);
+		});
+	});
+
 	describe("updateFeatureGeometry", () => {
 		it("correctly updates a point geometry", () => {
 			const draw = new TerraDraw({
@@ -2206,6 +2443,135 @@ describe("Terra Draw", () => {
 			const features = draw.getFeaturesAtLngLat({ lng: 0, lat: 0 });
 
 			expect(features).toHaveLength(3);
+			expect(features[0].geometry.type).toBe("Point");
+			expect(features[0].geometry.coordinates).toEqual([0, 0]);
+			expect(features[1].geometry.type).toBe("LineString");
+			expect(features[1].geometry.coordinates).toEqual([
+				[0, 0],
+				[1, 1],
+			]);
+			expect(features[2].geometry.type).toBe("Polygon");
+			expect(features[2].geometry.coordinates).toEqual([
+				[
+					[0, 0],
+					[0, 1],
+					[1, 1],
+					[1, 0],
+					[0, 0],
+				],
+			]);
+		});
+
+		it("filters out coordinate points if ignoreSnappingPoints set to true", () => {
+			const draw = new TerraDraw({
+				adapter,
+				modes: [
+					new TerraDrawPolygonMode({
+						snapping: {
+							toCoordinate: true,
+						},
+					}),
+				],
+			});
+
+			draw.start();
+			draw.addFeatures([
+				{
+					type: "Feature",
+					geometry: {
+						type: "Polygon",
+						coordinates: [
+							[
+								[0, 0],
+								[0, 1],
+								[1, 1],
+								[1, 0],
+								[0, 0],
+							],
+						],
+					},
+					properties: {
+						mode: "polygon",
+					},
+				},
+			]);
+
+			const features = draw.getFeaturesAtLngLat(
+				{ lng: 0, lat: 0 },
+				{
+					ignoreSnappingPoints: true,
+				},
+			);
+
+			expect(features).toHaveLength(1);
+			expect(features[0].geometry.type).toBe("Polygon");
+			expect(features[0].geometry.coordinates).toEqual([
+				[
+					[0, 0],
+					[0, 1],
+					[1, 1],
+					[1, 0],
+					[0, 0],
+				],
+			]);
+		});
+
+		it("filters out coordinate points if ignoreSnappingPoints set to false", () => {
+			const polygonMode = new TerraDrawPolygonMode({
+				snapping: {
+					toCoordinate: true,
+				},
+			});
+
+			const draw = new TerraDraw({
+				adapter,
+				modes: [polygonMode],
+			});
+
+			draw.start();
+			draw.addFeatures([
+				{
+					type: "Feature",
+					geometry: {
+						type: "Polygon",
+						coordinates: [
+							[
+								[0, 0],
+								[0, 1],
+								[1, 1],
+								[1, 0],
+								[0, 0],
+							],
+						],
+					},
+					properties: {
+						mode: "polygon",
+					},
+				},
+			]);
+
+			polygonMode.onMouseMove(MockCursorEvent({ lng: 0, lat: 0 }));
+
+			const features = draw.getFeaturesAtLngLat(
+				{ lng: 0, lat: 0 },
+				{
+					ignoreSnappingPoints: false,
+				},
+			);
+
+			expect(features).toHaveLength(2);
+			expect(features[0].geometry.type).toBe("Polygon");
+			expect(features[0].geometry.coordinates).toEqual([
+				[
+					[0, 0],
+					[0, 1],
+					[1, 1],
+					[1, 0],
+					[0, 0],
+				],
+			]);
+			expect(features[1].geometry.type).toBe("Point");
+			expect(features[1].geometry.coordinates).toEqual([0, 0]);
 		});
 
 		it("filters out points and linestrings that are not within the pointer distance", () => {
@@ -2602,6 +2968,169 @@ describe("Terra Draw", () => {
 			);
 
 			expect(features).toHaveLength(0);
+		});
+
+		it("add closest coordinate index to pointer event to polygon features properties when addClosestCoordinateInfoToProperties is true", () => {
+			const polygonMode = new TerraDrawPolygonMode();
+
+			const draw = new TerraDraw({
+				adapter,
+				modes: [polygonMode],
+			});
+
+			draw.start();
+			draw.setMode("polygon");
+
+			let features = draw.getFeaturesAtLngLat(
+				{ lng: 0.00000001, lat: 0 },
+				{
+					addClosestCoordinateInfoToProperties: true,
+					includePolygonsWithinPointerDistance: true,
+				},
+			);
+
+			expect(features).toHaveLength(0);
+
+			// NOTE: we shouldn't call a mode's onClick directly, but this is a test
+			polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			polygonMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
+			polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 1 }));
+			polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 0 })); // closing click
+
+			features = draw.getFeaturesAtLngLat(
+				{ lng: 1.00000001, lat: 1 },
+				{
+					addClosestCoordinateInfoToProperties: true,
+					includePolygonsWithinPointerDistance: true,
+				},
+			);
+
+			expect(features).toHaveLength(1);
+			expect(features[0].properties.closestCoordinateIndexToEvent).toBe(1);
+
+			features = draw.getFeaturesAtLngLat(
+				{ lng: 0, lat: 1.00000001 },
+				{
+					addClosestCoordinateInfoToProperties: true,
+					includePolygonsWithinPointerDistance: true,
+				},
+			);
+
+			expect(features).toHaveLength(1);
+			expect(features[0].geometry.type).toBe("Polygon");
+			expect(features[0].geometry.coordinates).toEqual([
+				[
+					[0, 0],
+					[1, 1],
+					[0, 1],
+					[0, 0],
+				],
+			]);
+			expect(features[0].properties.closestCoordinateIndexToEvent).toBe(2);
+			expect(
+				features[0].properties.closestCoordinatePixelDistanceToEvent,
+			).toBeGreaterThan(0);
+			expect(
+				features[0].properties.closestCoordinateDistanceKmToEvent,
+			).toBeCloseTo(0.00000001);
+
+			// Ensure not present if flag not set
+			features = draw.getFeaturesAtLngLat(
+				{ lng: 0, lat: 1.00000001 },
+				{
+					addClosestCoordinateInfoToProperties: false,
+					includePolygonsWithinPointerDistance: true,
+				},
+			);
+
+			expect(features).toHaveLength(1);
+			expect(
+				features[0].properties.closestCoordinateIndexToEvent,
+			).toBeUndefined();
+			expect(
+				features[0].properties.closestCoordinatePixelDistanceToEvent,
+			).toBeUndefined();
+			expect(
+				features[0].properties.closestCoordinateDistanceKmToEvent,
+			).toBeUndefined();
+		});
+
+		it("add closest coordinate index to pointer event to linestring features properties when addClosestCoordinateInfoToProperties is true", () => {
+			const lineStringMode = new TerraDrawLineStringMode();
+
+			const draw = new TerraDraw({
+				adapter,
+				modes: [lineStringMode],
+			});
+
+			draw.start();
+			draw.setMode("linestring");
+
+			let features = draw.getFeaturesAtLngLat(
+				{ lng: 0.00000001, lat: 0 },
+				{
+					addClosestCoordinateInfoToProperties: true,
+				},
+			);
+
+			expect(features).toHaveLength(0);
+
+			// NOTE: we shouldn't call a mode's onClick directly, but this is a test
+			lineStringMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			lineStringMode.onClick(MockCursorEvent({ lng: 25, lat: 25 }));
+			lineStringMode.onClick(MockCursorEvent({ lng: 50, lat: 50 }));
+
+			features = draw.getFeaturesAtLngLat(
+				{ lng: 0.000001, lat: 0 },
+				{
+					addClosestCoordinateInfoToProperties: true,
+				},
+			);
+
+			expect(features).toHaveLength(1);
+			expect(features[0].properties.closestCoordinateIndexToEvent).toBe(0);
+			expect(
+				features[0].properties.closestCoordinatePixelDistanceToEvent,
+			).toBeGreaterThan(0);
+			expect(
+				features[0].properties.closestCoordinateDistanceKmToEvent,
+			).toBeCloseTo(0.00000001);
+
+			features = draw.getFeaturesAtLngLat(
+				{ lng: 25, lat: 25.00000001 },
+				{
+					addClosestCoordinateInfoToProperties: true,
+				},
+			);
+
+			expect(features).toHaveLength(1);
+			expect(features[0].properties.closestCoordinateIndexToEvent).toBe(1);
+			expect(
+				features[0].properties.closestCoordinatePixelDistanceToEvent,
+			).toBeGreaterThan(0);
+			expect(
+				features[0].properties.closestCoordinateDistanceKmToEvent,
+			).toBeCloseTo(0.00000001);
+
+			// Ensure not present if flag not set
+			features = draw.getFeaturesAtLngLat(
+				{ lng: 25, lat: 25.00000001 },
+				{
+					addClosestCoordinateInfoToProperties: false,
+					includePolygonsWithinPointerDistance: true,
+				},
+			);
+
+			expect(features).toHaveLength(1);
+			expect(
+				features[0].properties.closestCoordinateIndexToEvent,
+			).toBeUndefined();
+			expect(
+				features[0].properties.closestCoordinatePixelDistanceToEvent,
+			).toBeUndefined();
+			expect(
+				features[0].properties.closestCoordinateDistanceKmToEvent,
+			).toBeUndefined();
 		});
 	});
 

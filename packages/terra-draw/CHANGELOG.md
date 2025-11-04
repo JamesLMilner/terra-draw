@@ -2,6 +2,94 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.18.1](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.18.0...terra-draw@1.18.1) (2025-10-20)
+
+
+### fix
+
+* **terra-draw:** add default marker url for marker mode (#696) ([](https://github.com/JamesLMilner/terra-draw/commit/b8ae458cb281b20a159b7b9dec7ba09fe34fd4d5)), closes [#696](https://github.com/JamesLMilner/terra-draw/issues/696)
+* **terra-draw:** ensure default marker url path is correct (#697) ([](https://github.com/JamesLMilner/terra-draw/commit/dc407860fdb3bf08308a39a675f981ed3170d0f1)), closes [#697](https://github.com/JamesLMilner/terra-draw/issues/697)
+* **terra-draw:** ensure markers are styleable in select mode (#695) ([](https://github.com/JamesLMilner/terra-draw/commit/bd6b7f56a1deeaf9affc24d937a8a885fb621a37)), closes [#695](https://github.com/JamesLMilner/terra-draw/issues/695)
+
+
+### docs
+
+* **terra-draw:** document supported image formats for markers (#686) ([](https://github.com/JamesLMilner/terra-draw/commit/19c8552950d42b54c6fb94190878bdc48bfc06c3)), closes [#686](https://github.com/JamesLMilner/terra-draw/issues/686)
+
+## [1.18.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.17.0...terra-draw@1.18.0) (2025-10-14)
+
+
+### feat
+
+* **terra-draw:** provide ignoreMismatchedPointerEvents option in adapters (#685) ([](https://github.com/JamesLMilner/terra-draw/commit/ace08dc48e54796691bead4a4a3ad51db2dabaee)), closes [#685](https://github.com/JamesLMilner/terra-draw/issues/685)
+
+## [1.17.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.16.0...terra-draw@1.17.0) (2025-10-12)
+
+
+### docs
+
+* **terra-draw:** add story to Storybook for new marker mode (#677) ([](https://github.com/JamesLMilner/terra-draw/commit/b892eb68f69bda79723e12cdf92fc6caa3cbd0ea)), closes [#677](https://github.com/JamesLMilner/terra-draw/issues/677)
+* **terra-draw:** update guide docs to reflect new features (#669) ([](https://github.com/JamesLMilner/terra-draw/commit/f37d4db57a124521924a9e71ac79e7b2a217d0f8)), closes [#669](https://github.com/JamesLMilner/terra-draw/issues/669)
+* **terra-draw:** update outdated link in 4.MODES.md (#666) ([](https://github.com/JamesLMilner/terra-draw/commit/4cadc66ce4e566e0d98d8e856e256c08f974c477)), closes [#666](https://github.com/JamesLMilner/terra-draw/issues/666)
+
+
+### feat
+
+* **terra-draw:** add initial support for markers and a built in marker mode (#670) ([](https://github.com/JamesLMilner/terra-draw/commit/dff272dfbea16467ad23daa28456adc23e40736c)), closes [#670](https://github.com/JamesLMilner/terra-draw/issues/670)
+
+## [1.16.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.15.0...terra-draw@1.16.0) (2025-10-06)
+
+
+### fix
+
+* **terra-draw:** ensure addClosestCoordinateInfoToProperties does not break polygon coordinates (#664) ([](https://github.com/JamesLMilner/terra-draw/commit/f71f00791b8c2facf364d9ba978ea15ac6440521)), closes [#664](https://github.com/JamesLMilner/terra-draw/issues/664)
+* **terra-draw:** ensure precision is respected for TerraDrawAngledRectangleMode (#661) ([](https://github.com/JamesLMilner/terra-draw/commit/0d969b1341db927f3a0890134cb08139e384f668)), closes [#661](https://github.com/JamesLMilner/terra-draw/issues/661)
+
+
+### chore
+
+* **terra-draw:** add benchmarking for the public Terra Draw API (#663) ([](https://github.com/JamesLMilner/terra-draw/commit/d19f03486136ac6b1e55490c949c0a22a77600a4)), closes [#663](https://github.com/JamesLMilner/terra-draw/issues/663)
+
+
+### test
+
+* **terra-draw:** add unit tests for ignoreSnappingPoints (#660) ([](https://github.com/JamesLMilner/terra-draw/commit/965fc625007e0451c07cda3b00a64d740f4a5cb0)), closes [#660](https://github.com/JamesLMilner/terra-draw/issues/660)
+
+
+### feat
+
+* **terra-draw:** provide a option for getFeaturesAt methods to ignore snapping points ([](https://github.com/JamesLMilner/terra-draw/commit/6dce5e70c0a4c064b4ebd8b70824fdea69db69fe))
+
+## [1.15.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.14.0...terra-draw@1.15.0) (2025-09-17)
+
+
+### fix
+
+* **terra-draw:** ensure afterFeatureAdded is called after onChange (#652) ([](https://github.com/JamesLMilner/terra-draw/commit/2f3e1ec5d8b0347e70cb7ae887e585acb71dadfd)), closes [#652](https://github.com/JamesLMilner/terra-draw/issues/652)
+
+
+### feat
+
+* **terra-draw:** allow returning of closest coordinate information for getFeaturesAtLngLat (#645) ([](https://github.com/JamesLMilner/terra-draw/commit/b3b60f67710be38f5d882393d3e2035ec58d21d7)), closes [#645](https://github.com/JamesLMilner/terra-draw/issues/645)
+
+
+### docs
+
+* **terra-draw:** add editable and pointerDistance documentation (#643) ([](https://github.com/JamesLMilner/terra-draw/commit/b237ada776e62134098b90cbba5b905e4e2e7929)), closes [#643](https://github.com/JamesLMilner/terra-draw/issues/643)
+
+## [1.14.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.13.0...terra-draw@1.14.0) (2025-09-07)
+
+
+### feat
+
+* **terra-draw:** allow setting of custom properties with updateFeatureProperties (#629) ([](https://github.com/JamesLMilner/terra-draw/commit/7f5286e1edab98549cfa5bb7870a5286573032b6)), closes [#629](https://github.com/JamesLMilner/terra-draw/issues/629)
+
+
+### chore
+
+* **terra-draw:** ensure badge colors in README are consistent (#636) ([](https://github.com/JamesLMilner/terra-draw/commit/216b1fbe70f4eadf8b19d1729575200a98352704)), closes [#636](https://github.com/JamesLMilner/terra-draw/issues/636)
+* **terra-draw:** update badges in the README, add sponsors link (#635) ([](https://github.com/JamesLMilner/terra-draw/commit/8a81313cfbd9cbf3f378f13a6743472d5882792f)), closes [#635](https://github.com/JamesLMilner/terra-draw/issues/635)
+
 ## [1.13.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.12.0...terra-draw@1.13.0) (2025-08-27)
 
 

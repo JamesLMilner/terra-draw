@@ -13,6 +13,8 @@ export default meta;
 
 // Ensure the names are set correctly for the stories
 export const Point = AllStories.Point;
+export const MarkerPNG = AllStories.MarkerPNG;
+export const MarkerJPG = AllStories.MarkerJPG;
 export const Polygon = AllStories.Polygon;
 export const PolygonWithCoordinatePoints =
 	AllStories.PolygonWithCoordinatePoints;
@@ -23,6 +25,7 @@ export const PolygonWithEditableEnabled = AllStories.PolygonWithEditableEnabled;
 export const PolygonWithCoordinateCounts =
 	AllStories.PolygonWithCoordinateCounts;
 export const ZIndexOrdering = AllStories.ZIndexOrdering;
+export const Styling = AllStories.Styling;
 export const Circle = AllStories.Circle;
 export const Rectangle = AllStories.Rectangle;
 export const AngledRectangle = AllStories.AngledRectangle;

@@ -46,6 +46,36 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawExtend.TerraDrawBaseAdapt
 	private _map: mapboxgl.Map;
 	private _container: HTMLElement;
 
+	// Marker state
+	private markerCounter = 0;
+	private markerMap = new Map<string, string>();
+
+	// MapLibre/Mapbox GL do not support sizing icons on both the X and Y axis independently
+	// To maintain compatibility we resize the image to the desired dimensions and then
+	// pass that to MapLibre/Mapbox GL as a base64 string
+	private resizeImage(
+		imageUrl: string,
+		width: number,
+		height: number,
+		callback: (resizedDataURL: string) => void,
+	) {
+		const img = new Image();
+		img.crossOrigin = "anonymous"; // if loading from remote source
+		img.onload = () => {
+			const canvas = document.createElement("canvas");
+			canvas.width = width;
+			canvas.height = height;
+			const ctx = canvas.getContext("2d");
+			if (!ctx) {
+				throw new Error("Could not get canvas context");
+			}
+			ctx.drawImage(img, 0, 0, width, height);
+			const resizedDataURL = canvas.toDataURL(); // base64 string
+			callback(resizedDataURL);
+		};
+		img.src = imageUrl;
+	}
+
 	private _addGeoJSONSource(id: string, features: Feature[]) {
 		this._map.addSource(id, {
 			type: "geojson",
@@ -129,12 +159,29 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawExtend.TerraDrawBaseAdapt
 		return layer;
 	}
 
+	private _addMarkerLayer(id: string) {
+		const layer = this._map.addLayer({
+			id: id + "-marker",
+			source: id,
+			type: "symbol",
+			filter: ["has", "markerId"],
+			layout: {
+				"icon-image": ["get", "markerId"],
+				"icon-anchor": "bottom", // bottom center of icon will be aligned to point
+				"icon-allow-overlap": true,
+			},
+		});
+
+		return layer;
+	}
+
 	private _addLayer(
 		id: string,
 		featureType: "Point" | "LineString" | "Polygon",
 	) {
 		if (featureType === "Point") {
 			this._addPointLayer(id);
+			this._addMarkerLayer(id);
 		}
 		if (featureType === "LineString") {
 			this._addLineLayer(id);
@@ -345,6 +392,59 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawExtend.TerraDrawBaseAdapt
 					properties.pointOutlineColor = styles.pointOutlineColor;
 					properties.pointOutlineWidth = styles.pointOutlineWidth;
 					properties.pointWidth = styles.pointWidth;
+
+					if (
+						styles.markerUrl &&
+						styles.markerWidth &&
+						styles.markerHeight &&
+						!this.markerMap.has(styles.markerUrl)
+					) {
+						const id = `marker-${this.markerCounter++}`;
+
+						this.resizeImage(
+							styles.markerUrl,
+							styles.markerWidth,
+							styles.markerHeight,
+							(resizedDataURL) => {
+								this._map.loadImage(resizedDataURL, (error, image) => {
+									if (!image || error) {
+										// eslint-disable-next-line no-console
+										console.error(
+											`Error loading marker image: ${styles.markerUrl}`,
+											error,
+										);
+										return;
+									}
+
+									this._map.addImage(id, image);
+
+									// We have to set these all explicitly as loadImage is async
+									// and the render will have already happened at this point
+
+									this._map.setLayoutProperty(
+										`${this._prefixId}-point-marker`,
+										"icon-image",
+										id,
+									);
+								});
+							},
+						);
+
+						this.markerMap.set(styles.markerUrl as string, id);
+						properties.markerId = id;
+						properties.pointWidth = 0; // Make circle invisible
+					} else if (
+						styles.markerUrl &&
+						this.markerMap.has(styles.markerUrl as string)
+					) {
+						// Image already loaded
+						properties.markerId = this.markerMap.get(
+							styles.markerUrl,
+						) as string;
+
+						properties.pointWidth = 0;
+					}
+
 					points.push(feature);
 				} else if (feature.geometry.type === "LineString") {
 					properties.lineStringColor = styles.lineStringColor;
@@ -430,6 +530,7 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawExtend.TerraDrawBaseAdapt
 		super.unregister();
 
 		this._map.removeLayer(`${this._prefixId}-point`);
+		this._map.removeLayer(`${this._prefixId}-point-marker`);
 		this._map.removeSource(`${this._prefixId}-point`);
 		this._map.removeLayer(`${this._prefixId}-linestring`);
 		this._map.removeSource(`${this._prefixId}-linestring`);

@@ -1,6 +1,6 @@
 {
 	"name": "terra-draw-openlayers-adapter",
-	"version": "1.0.1",
+	"version": "1.1.0",
 	"description": "Terra Draw Adapter to OpenLayers",
 	"peerDependencies": {
 		"terra-draw": "^1.0.0",

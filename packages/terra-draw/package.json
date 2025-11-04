@@ -1,6 +1,6 @@
 {
 	"name": "terra-draw",
-	"version": "1.13.0",
+	"version": "1.18.1",
 	"description": "Frictionless map drawing across mapping provider",
 	"scripts": {
 		"release": "TYPE=$(node ../../bump.mjs) && commit-and-tag-version .versionrc.cjs -t terra-draw@ --release-as $TYPE",
@@ -17,7 +17,8 @@
 		"lint:fix": "eslint --fix src/",
 		"lint:fix:quiet": "eslint --fix --quiet src/",
 		"format": "prettier --ignore-path .gitignore --write \"**/*.+(js|ts|json)\"",
-		"format:quiet": "prettier --ignore-path .gitignore --write \"**/*.+(js|ts|json)\" --log-level=silent"
+		"format:quiet": "prettier --ignore-path .gitignore --write \"**/*.+(js|ts|json)\" --log-level=silent",
+		"benchmark": "tsx ./src/terra-draw.benchmark.ts"
 	},
 	"type": "module",
 	"source": "src/terra-draw.ts",

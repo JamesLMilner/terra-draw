@@ -1,8 +1,4 @@
-import {
-	GeoJSONStore,
-	GeoJSONStoreFeatures,
-	JSONObject,
-} from "../../store/store";
+import { GeoJSONStore } from "../../store/store";
 import { MockModeConfig } from "../../test/mock-mode-config";
 import { MockCursorEvent } from "../../test/mock-cursor-event";
 import { TerraDrawAngledRectangleMode } from "./angled-rectangle.mode";
@@ -11,7 +7,6 @@ import { followsRightHandRule } from "../../geometry/boolean/right-hand-rule";
 import { MockKeyboardEvent } from "../../test/mock-keyboard-event";
 import { COMMON_PROPERTIES, TerraDrawGeoJSONStore } from "../../common";
 import { DefaultPointerEvents } from "../base.mode";
-import { MockPolygonSquare } from "../../test/mock-features";
 
 describe("TerraDrawAngledRectangleMode", () => {
 	describe("constructor", () => {
@@ -251,8 +246,45 @@ describe("TerraDrawAngledRectangleMode", () => {
 				[
 					[0, 0],
 					[1, 1],
-					[1.5000158660846816, 0.5000539452154588],
-					[0.5000158660846818, -0.4999841341367969],
+					[1.500015866, 0.500053945],
+					[0.500015866, -0.499984134],
+					[0, 0],
+				],
+			]);
+		});
+
+		it("updates the coordinate to the mouse position after second click, respecting coordinate precision", () => {
+			angledRectangleMode = new TerraDrawAngledRectangleMode({
+				validation: () => ({ valid: true }),
+			});
+			const mockConfig = MockModeConfig(angledRectangleMode.mode);
+			onChange = mockConfig.onChange;
+
+			mockConfig.coordinatePrecision = 6;
+
+			store = mockConfig.store;
+			angledRectangleMode.register(mockConfig);
+			angledRectangleMode.start();
+
+			angledRectangleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+			angledRectangleMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
+
+			angledRectangleMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
+
+			angledRectangleMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 0 }));
+
+			expect(onChange).toHaveBeenCalledTimes(4);
+
+			const features = store.copyAll();
+			expect(features.length).toBe(1);
+
+			expect(features[0].geometry.coordinates).toStrictEqual([
+				[
+					[0, 0],
+					[1, 1],
+					[1.500016, 0.500054],
+					[0.500016, -0.499984],
 					[0, 0],
 				],
 			]);

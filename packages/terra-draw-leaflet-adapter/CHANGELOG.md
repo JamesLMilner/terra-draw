@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.1.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw-leaflet-adapter@1.0.3...terra-draw-leaflet-adapter@1.1.0) (2025-10-12)
+
+
+### feat
+
+* **terra-draw-leaflet-adapter:** add support for markers (#673) ([](https://github.com/JamesLMilner/terra-draw/commit/d9c4377d1a2d6fef134132e9aa332073fa5a576c)), closes [#673](https://github.com/JamesLMilner/terra-draw/issues/673)
+
 ## [1.0.3](https://github.com/JamesLMilner/terra-draw/compare/terra-draw-leaflet-adapter@1.0.2...terra-draw-leaflet-adapter@1.0.3) (2025-03-13)
 
 

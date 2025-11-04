@@ -13,5 +13,8 @@ export const getDefaultStyling = (): TerraDrawAdapterStyling => {
 		lineStringColor: "#3f97e0",
 		lineStringWidth: 4,
 		zIndex: 0,
+		markerUrl: undefined,
+		markerHeight: undefined,
+		markerWidth: undefined,
 	};
 };

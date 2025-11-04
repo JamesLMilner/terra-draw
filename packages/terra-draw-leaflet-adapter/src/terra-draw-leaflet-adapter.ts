@@ -103,6 +103,26 @@ export class TerraDrawLeafletAdapter extends TerraDrawExtend.TerraDrawBaseAdapte
 					);
 				}
 
+				const markerUrl = featureStyles.markerUrl;
+				const markerHeight = featureStyles.markerHeight;
+				const markerWidth = featureStyles.markerWidth;
+
+				if (markerUrl && markerHeight && markerWidth) {
+					// If a markerUrl is provided, use a divIcon to render the image
+					const icon = L.divIcon({
+						className: "",
+						html: `<img src="${markerUrl}" style="width: ${markerWidth}px; height: ${markerHeight}px;" />`,
+						iconSize: [markerWidth, markerHeight],
+						iconAnchor: [markerWidth / 2, markerHeight],
+					});
+
+					return L.marker(latlng, {
+						icon,
+						pane: paneId,
+						interactive: false, // Removes mouse hover cursor styles
+					});
+				}
+
 				const styles = {
 					radius: featureStyles.pointWidth,
 					stroke: featureStyles.pointOutlineWidth || false,

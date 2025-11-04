@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.1.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw-google-maps-adapter@1.0.4...terra-draw-google-maps-adapter@1.1.0) (2025-10-12)
+
+
+### feat
+
+* **terra-draw-google-maps-adapter:** add marker support (#672) ([](https://github.com/JamesLMilner/terra-draw/commit/92ca10fa294fb21b148e4e630640b3ef2c239662)), closes [#672](https://github.com/JamesLMilner/terra-draw/issues/672)
+
+## [1.0.4](https://github.com/JamesLMilner/terra-draw/compare/terra-draw-google-maps-adapter@1.0.3...terra-draw-google-maps-adapter@1.0.4) (2025-09-17)
+
+
+### fix
+
+* **terra-draw-google-maps-adapter:** remove id requirement (#650) ([](https://github.com/JamesLMilner/terra-draw/commit/1c7cbe1f06e3c9779b38885f9789cba76f5ff1b8)), closes [#650](https://github.com/JamesLMilner/terra-draw/issues/650)
+
+## [1.0.3](https://github.com/JamesLMilner/terra-draw/compare/terra-draw-google-maps-adapter@1.0.2...terra-draw-google-maps-adapter@1.0.3) (2025-09-01)
+
+
+### fix
+
+* **terra-draw-google-maps-adapter:** feature id was not set in the style rendering functions (#640) ([](https://github.com/JamesLMilner/terra-draw/commit/b43a4aad6679adc2542147cbebc6dd276675307a)), closes [#640](https://github.com/JamesLMilner/terra-draw/issues/640)
+
 ## [1.0.2](https://github.com/JamesLMilner/terra-draw/compare/terra-draw-google-maps-adapter@1.0.1...terra-draw-google-maps-adapter@1.0.2) (2025-08-26)
 
 

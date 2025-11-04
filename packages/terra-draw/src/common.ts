@@ -16,6 +16,8 @@ export type NumericStyling =
 	| number
 	| ((feature: GeoJSONStoreFeatures) => number);
 
+export type UrlStyling = string | ((feature: GeoJSONStoreFeatures) => string);
+
 export interface TerraDrawAdapterStyling {
 	pointColor: HexColor;
 	pointWidth: number;
@@ -28,6 +30,9 @@ export interface TerraDrawAdapterStyling {
 	lineStringWidth: number;
 	lineStringColor: HexColor;
 	zIndex: number;
+	markerUrl?: string;
+	markerHeight?: number;
+	markerWidth?: number;
 }
 
 export type CartesianPoint = { x: number; y: number };
@@ -189,6 +194,11 @@ export interface TerraDrawAdapter {
 	getCoordinatePrecision(): number;
 }
 
+const MARKER_URL_BASE =
+	"https://raw.githubusercontent.com/JamesLMilner/terra-draw/refs/heads/main/assets/markers";
+
+export const MARKER_URL_DEFAULT = `${MARKER_URL_BASE}/marker-blue.png`;
+
 export const SELECT_PROPERTIES = {
 	SELECTED: "selected",
 	MID_POINT: "midPoint",
@@ -197,6 +207,7 @@ export const SELECT_PROPERTIES = {
 } as const;
 
 export const COMMON_PROPERTIES = {
+	MODE: "mode",
 	CURRENTLY_DRAWING: "currentlyDrawing",
 	EDITED: "edited",
 	CLOSING_POINT: "closingPoint",
@@ -206,6 +217,7 @@ export const COMMON_PROPERTIES = {
 	COORDINATE_POINT_IDS: "coordinatePointIds",
 	PROVISIONAL_COORDINATE_COUNT: "provisionalCoordinateCount",
 	COMMITTED_COORDINATE_COUNT: "committedCoordinateCount",
+	MARKER: "marker",
 } as const;
 
 /**

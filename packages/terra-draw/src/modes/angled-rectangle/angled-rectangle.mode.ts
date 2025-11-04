@@ -34,6 +34,7 @@ import { degreesToRadians } from "../../geometry/helpers";
 import { determineHalfPlane } from "../../geometry/determine-halfplane";
 import { cartesianDistance } from "../../geometry/measure/pixel-distance";
 import { calculateRelativeAngle } from "../../geometry/calculate-relative-angle";
+import { limitPrecision } from "../../geometry/limit-decimal-precision";
 
 type TerraDrawPolygonModeKeyEvents = {
 	cancel?: KeyboardEvent["key"] | null;
@@ -233,8 +234,14 @@ export class TerraDrawAngledRectangleMode extends TerraDrawBaseDrawMode<PolygonS
 			updatedCoordinates = [
 				currentPolygonCoordinates[0],
 				currentPolygonCoordinates[1],
-				[fourthCoordinate.lng, fourthCoordinate.lat],
-				[thirdCoordinate.lng, thirdCoordinate.lat],
+				[
+					limitPrecision(fourthCoordinate.lng, this.coordinatePrecision),
+					limitPrecision(fourthCoordinate.lat, this.coordinatePrecision),
+				],
+				[
+					limitPrecision(thirdCoordinate.lng, this.coordinatePrecision),
+					limitPrecision(thirdCoordinate.lat, this.coordinatePrecision),
+				],
 				currentPolygonCoordinates[0],
 			];
 		}

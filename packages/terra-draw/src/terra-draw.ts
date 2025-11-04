@@ -41,6 +41,8 @@ import {
 	GeoJSONStoreFeatures,
 	GeoJSONStoreGeometries,
 	IdStrategy,
+	JSON,
+	JSONObject,
 	StoreChangeHandler,
 	StoreValidation,
 } from "./store/store";
@@ -60,19 +62,13 @@ import * as TerraDrawExtend from "./extend";
 import { hasModeProperty } from "./store/store-feature-validation";
 import { ValidationReasons } from "./validation-reasons";
 import { TerraDrawFreehandLineStringMode } from "./modes/freehand-linestring/freehand-linestring.mode";
-import { ScaleFeatureBehavior } from "./modes/select/behaviors/scale-feature.behavior";
-import { DragCoordinateResizeBehavior } from "./modes/select/behaviors/drag-coordinate-resize.behavior";
-import { PixelDistanceBehavior } from "./modes/pixel-distance.behavior";
-import { SelectionPointBehavior } from "./modes/select/behaviors/selection-point.behavior";
-import { MidPointBehavior } from "./modes/select/behaviors/midpoint.behavior";
-import { CoordinatePointBehavior } from "./modes/select/behaviors/coordinate-point.behavior";
-import {
-	lngLatToWebMercatorXY,
-	webMercatorXYToLngLat,
-} from "./geometry/project/web-mercator";
+import { lngLatToWebMercatorXY } from "./geometry/project/web-mercator";
 import { transformRotateWebMercator } from "./geometry/transform/rotate";
 import { transformScaleWebMercatorCoordinates } from "./geometry/transform/scale";
 import { limitPrecision } from "./geometry/limit-decimal-precision";
+import { isValidJSONValue } from "./store/valid-json";
+import { haversineDistanceKilometers } from "./geometry/measure/haversine-distance";
+import { TerraDrawMarkerMode } from "./modes/marker/marker.mode";
 
 // Helper type to determine the instance type of a class
 type InstanceType<T extends new (...args: any[]) => any> = T extends new (
@@ -105,6 +101,8 @@ type GetFeatureOptions = {
 	ignoreCoordinatePoints?: boolean;
 	ignoreCurrentlyDrawing?: boolean;
 	ignoreClosingPoints?: boolean;
+	ignoreSnappingPoints?: boolean;
+	addClosestCoordinateInfoToProperties?: boolean;
 };
 
 type TerraDrawEvents = keyof TerraDrawEventListeners;
@@ -393,6 +391,11 @@ class TerraDraw {
 				? options.ignoreClosingPoints
 				: false;
 
+		const ignoreSnappingPoints =
+			options && options.ignoreSnappingPoints !== undefined
+				? options.ignoreSnappingPoints
+				: false;
+
 		const unproject = this._adapter.unproject.bind(this._adapter);
 		const project = this._adapter.project.bind(this._adapter);
 
@@ -406,95 +409,145 @@ class TerraDraw {
 
 		const features = this._store.search(bbox as BBoxPolygon);
 
-		return features.filter((feature) => {
-			if (
-				ignoreSelectFeatures &&
-				(feature.properties[SELECT_PROPERTIES.MID_POINT] ||
-					feature.properties[SELECT_PROPERTIES.SELECTION_POINT])
-			) {
-				return false;
-			}
+		return features
+			.filter((feature) => {
+				if (
+					ignoreSelectFeatures &&
+					(feature.properties[SELECT_PROPERTIES.MID_POINT] ||
+						feature.properties[SELECT_PROPERTIES.SELECTION_POINT])
+				) {
+					return false;
+				}
 
-			if (
-				ignoreCoordinatePoints &&
-				feature.properties[COMMON_PROPERTIES.COORDINATE_POINT]
-			) {
-				return false;
-			}
+				if (
+					ignoreCoordinatePoints &&
+					feature.properties[COMMON_PROPERTIES.COORDINATE_POINT]
+				) {
+					return false;
+				}
 
-			if (
-				ignoreClosingPoints &&
-				feature.properties[COMMON_PROPERTIES.CLOSING_POINT]
-			) {
-				return false;
-			}
+				if (
+					ignoreClosingPoints &&
+					feature.properties[COMMON_PROPERTIES.CLOSING_POINT]
+				) {
+					return false;
+				}
 
-			if (
-				ignoreCurrentlyDrawing &&
-				feature.properties[COMMON_PROPERTIES.CURRENTLY_DRAWING]
-			) {
-				return false;
-			}
+				if (
+					ignoreCurrentlyDrawing &&
+					feature.properties[COMMON_PROPERTIES.CURRENTLY_DRAWING]
+				) {
+					return false;
+				}
 
-			if (feature.geometry.type === "Point") {
-				const pointCoordinates = feature.geometry.coordinates;
-				const pointXY = project(pointCoordinates[0], pointCoordinates[1]);
-				const distance = cartesianDistance(inputPoint, pointXY);
-				return distance < pointerDistance;
-			} else if (feature.geometry.type === "LineString") {
-				const coordinates: Position[] = feature.geometry.coordinates;
+				if (
+					ignoreSnappingPoints &&
+					feature.properties[COMMON_PROPERTIES.SNAPPING_POINT]
+				) {
+					return false;
+				}
 
-				for (let i = 0; i < coordinates.length - 1; i++) {
-					const coord = coordinates[i];
-					const nextCoord = coordinates[i + 1];
-					const distanceToLine = pixelDistanceToLine(
-						inputPoint,
-						project(coord[0], coord[1]),
-						project(nextCoord[0], nextCoord[1]),
+				if (feature.geometry.type === "Point") {
+					const pointCoordinates = feature.geometry.coordinates;
+					const pointXY = project(pointCoordinates[0], pointCoordinates[1]);
+					const distance = cartesianDistance(inputPoint, pointXY);
+					return distance < pointerDistance;
+				} else if (feature.geometry.type === "LineString") {
+					const coordinates: Position[] = feature.geometry.coordinates;
+
+					for (let i = 0; i < coordinates.length - 1; i++) {
+						const coord = coordinates[i];
+						const nextCoord = coordinates[i + 1];
+						const distanceToLine = pixelDistanceToLine(
+							inputPoint,
+							project(coord[0], coord[1]),
+							project(nextCoord[0], nextCoord[1]),
+						);
+
+						if (distanceToLine < pointerDistance) {
+							return true;
+						}
+					}
+					return false;
+				} else {
+					const lngLatInsidePolygon = pointInPolygon(
+						[lng, lat],
+						feature.geometry.coordinates,
 					);
 
-					if (distanceToLine < pointerDistance) {
+					if (lngLatInsidePolygon) {
 						return true;
 					}
-				}
-				return false;
-			} else {
-				const lngLatInsidePolygon = pointInPolygon(
-					[lng, lat],
-					feature.geometry.coordinates,
-				);
 
-				if (lngLatInsidePolygon) {
-					return true;
-				}
+					if (options?.includePolygonsWithinPointerDistance) {
+						const rings: Position[][] = feature.geometry.coordinates;
 
-				if (options?.includePolygonsWithinPointerDistance) {
-					const rings: Position[][] = feature.geometry.coordinates;
+						for (const ring of rings) {
+							for (let i = 0; i < ring.length - 1; i++) {
+								const coord = ring[i];
+								const nextCoord = ring[i + 1];
 
-					for (const ring of rings) {
-						for (let i = 0; i < ring.length - 1; i++) {
-							const coord = ring[i];
-							const nextCoord = ring[i + 1];
+								const projectedStart = project(coord[0], coord[1]);
+								const projectedEnd = project(nextCoord[0], nextCoord[1]);
 
-							const projectedStart = project(coord[0], coord[1]);
-							const projectedEnd = project(nextCoord[0], nextCoord[1]);
+								const distanceToEdge = pixelDistanceToLine(
+									inputPoint,
+									projectedStart,
+									projectedEnd,
+								);
 
-							const distanceToEdge = pixelDistanceToLine(
-								inputPoint,
-								projectedStart,
-								projectedEnd,
-							);
-
-							if (distanceToEdge < pointerDistance) {
-								return true;
+								if (distanceToEdge < pointerDistance) {
+									return true;
+								}
 							}
 						}
 					}
+
+					return false;
+				}
+			})
+			.map((feature) => {
+				if (!options?.addClosestCoordinateInfoToProperties) {
+					return feature;
 				}
 
-				return false;
-			}
-		});
+				let coordinates;
+				if (feature.geometry.type === "Polygon") {
+					coordinates = feature.geometry.coordinates[0].slice(0, -1); // Remove the closing coordinate as it's always the same as the first
+				} else if (feature.geometry.type === "LineString") {
+					coordinates = feature.geometry.coordinates;
+				} else {
+					// Ignore points
+					return feature;
+				}
+
+				let closestIndex = -1;
+				let closestDistance = Infinity;
+				let closestCoordinate;
+
+				// Find the closest coordinate in the polygon/linestring to the pointer event
+				for (let i = 0; i < coordinates.length; i++) {
+					const coordinate = coordinates[i];
+					const distance = cartesianDistance(
+						project(coordinate[0], coordinate[1]),
+						inputPoint,
+					);
+
+					if (distance < closestDistance) {
+						closestIndex = i;
+						closestDistance = distance;
+						closestCoordinate = coordinate;
+					}
+				}
+
+				feature.properties.closestCoordinateIndexToEvent = closestIndex;
+				feature.properties.closestCoordinatePixelDistanceToEvent =
+					closestDistance;
+				feature.properties.closestCoordinateDistanceKmToEvent =
+					haversineDistanceKilometers(closestCoordinate!, [lng, lat]);
+
+				return feature;
+			});
 	}
 
 	private getSelectModeOrThrow() {
@@ -755,6 +808,82 @@ class TerraDraw {
 	 */
 	hasFeature(id: FeatureId): boolean {
 		return this._store.has(id);
+	}
+
+	/**
+	 * Checks if a property name is reserved and cannot be used.
+	 * @param propertyName - the property name to check
+	 * @returns
+	 */
+	private checkIsReservedProperty(propertyName: string) {
+		const UNAVAILABLE_PROPERTIES = [
+			...Object.values(SELECT_PROPERTIES),
+			...Object.values(COMMON_PROPERTIES),
+		] as const;
+
+		return !UNAVAILABLE_PROPERTIES.includes(
+			propertyName as unknown as (typeof UNAVAILABLE_PROPERTIES)[number],
+		);
+	}
+
+	/**
+	 * Updates a features properties. This can be used to programmatically change the properties of a feature.
+	 * The update is a shallow merge so only the properties you provide will be updated. Certain internal properties
+	 * are reserved and cannot be updated.
+	 * @param id - the id of the feature to update the property for
+	 * @param properties - an object of key value pairs that will be shallowly merged in to the features properties
+	 */
+	updateFeatureProperties(
+		id: FeatureId,
+		properties: Record<string, JSON | undefined>,
+	) {
+		if (!this._store.has(id)) {
+			throw new Error(`No feature with id ${id} present in store`);
+		}
+
+		const feature = this._store.copy(id);
+
+		// We don't want users to be able to update guidance features directly
+		if (this.isGuidanceFeature(feature)) {
+			throw new Error(
+				`Guidance features are not allowed to be updated directly.`,
+			);
+		}
+
+		const mode = feature.properties.mode;
+		const modeToUpdate = this._modes[mode as string];
+
+		if (!modeToUpdate) {
+			throw new Error(`No mode with name ${mode} present in instance`);
+		}
+
+		const entries = Object.entries(properties);
+
+		// Check that none of the properties are reserved
+		entries.forEach(([propertyName, value]) => {
+			const isReservedProperty = this.checkIsReservedProperty(propertyName);
+
+			if (!isReservedProperty) {
+				throw new Error(
+					`You are trying to update a reserved property name: ${propertyName}. Please choose another name.`,
+				);
+			}
+
+			if (value !== undefined && !isValidJSONValue(value)) {
+				throw new Error(
+					`Invalid JSON value provided for property ${propertyName}`,
+				);
+			}
+		});
+
+		this._store.updateProperty(
+			entries.map(([propertyName, value]) => ({
+				id: feature.id as FeatureId,
+				property: propertyName,
+				value,
+			})),
+			{ origin: "api" }, // origin is used to indicate that this update has come from an API call
+		);
 	}
 
 	/**
@@ -1178,6 +1307,7 @@ export {
 	TerraDrawAngledRectangleMode,
 	TerraDrawSectorMode,
 	TerraDrawSensorMode,
+	TerraDrawMarkerMode,
 
 	// Types that are required for 3rd party developers to extend
 	TerraDrawExtend,

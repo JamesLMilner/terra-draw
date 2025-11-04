@@ -123,9 +123,7 @@ export abstract class TerraDrawBaseDrawMode<Styling extends CustomStyling> {
 		}
 	}
 
-	updateOptions(
-		options?: BaseModeOptions<Styling> & { isConstructorCall?: boolean },
-	) {
+	updateOptions(options?: BaseModeOptions<Styling>) {
 		if (options?.styles) {
 			// Note: we are updating this.styles and not this._styles - this is because
 			// once registered we want to trigger the onStyleChange

@@ -14,6 +14,7 @@ import { LineString } from "geojson";
 import {
 	BaseModeOptions,
 	CustomStyling,
+	ModeUpdateOptions,
 	TerraDrawBaseDrawMode,
 } from "../base.mode";
 import { getDefaultStyling } from "../../util/styling";
@@ -78,9 +79,8 @@ export class TerraDrawFreehandLineStringMode extends TerraDrawBaseDrawMode<Freeh
 	}
 
 	public updateOptions(
-		options?: Omit<
-			TerraDrawFreehandLineStringModeOptions<FreehandLineStringStyling>,
-			"modeName"
+		options?: ModeUpdateOptions<
+			TerraDrawFreehandLineStringModeOptions<FreehandLineStringStyling>
 		>,
 	): void {
 		super.updateOptions(options);

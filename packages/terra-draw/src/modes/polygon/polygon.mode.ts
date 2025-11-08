@@ -18,6 +18,7 @@ import {
 	BaseModeOptions,
 	CustomStyling,
 	PointerEvents,
+	ModeUpdateOptions,
 } from "../base.mode";
 import { PixelDistanceBehavior } from "../pixel-distance.behavior";
 import { ClickBoundingBoxBehavior } from "../click-bounding-box.behavior";
@@ -129,7 +130,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 	}
 
 	override updateOptions(
-		options?: Omit<TerraDrawPolygonModeOptions<PolygonStyling>, "modeName">,
+		options?: ModeUpdateOptions<TerraDrawPolygonModeOptions<PolygonStyling>>,
 	) {
 		super.updateOptions(options);
 

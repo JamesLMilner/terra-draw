@@ -14,6 +14,7 @@ import {
 	TerraDrawBaseDrawMode,
 	BaseModeOptions,
 	CustomStyling,
+	ModeUpdateOptions,
 } from "../base.mode";
 import { coordinatesIdentical } from "../../geometry/coordinates-identical";
 import { getDefaultStyling } from "../../util/styling";
@@ -84,9 +85,8 @@ export class TerraDrawAngledRectangleMode extends TerraDrawBaseDrawMode<PolygonS
 	}
 
 	override updateOptions(
-		options?: Omit<
-			TerraDrawAngledRectangleModeOptions<PolygonStyling>,
-			"modeName"
+		options?: ModeUpdateOptions<
+			TerraDrawAngledRectangleModeOptions<PolygonStyling>
 		>,
 	) {
 		super.updateOptions(options);

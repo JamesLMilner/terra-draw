@@ -14,6 +14,7 @@ import {
 	TerraDrawBaseDrawMode,
 	BaseModeOptions,
 	CustomStyling,
+	ModeUpdateOptions,
 } from "../base.mode";
 import { coordinatesIdentical } from "../../geometry/coordinates-identical";
 import { getDefaultStyling } from "../../util/styling";
@@ -88,9 +89,8 @@ export class TerraDrawSectorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 	}
 
 	override updateOptions(
-		options?: Omit<
-			TerraDrawSectorModeOptions<SectorPolygonStyling>,
-			"modeName"
+		options?: ModeUpdateOptions<
+			TerraDrawSectorModeOptions<SectorPolygonStyling>
 		>,
 	) {
 		super.updateOptions(options);

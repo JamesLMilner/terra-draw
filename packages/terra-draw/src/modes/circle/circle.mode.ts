@@ -22,6 +22,7 @@ import { getDefaultStyling } from "../../util/styling";
 import {
 	BaseModeOptions,
 	CustomStyling,
+	ModeUpdateOptions,
 	TerraDrawBaseDrawMode,
 } from "../base.mode";
 import { ValidateNonIntersectingPolygonFeature } from "../../validations/polygon.validation";
@@ -82,9 +83,8 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 	}
 
 	override updateOptions(
-		options?: Omit<
-			TerraDrawCircleModeOptions<CirclePolygonStyling>,
-			"modeName"
+		options?: ModeUpdateOptions<
+			TerraDrawCircleModeOptions<CirclePolygonStyling>
 		>,
 	) {
 		super.updateOptions(options);

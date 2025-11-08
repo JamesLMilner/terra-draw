@@ -47,6 +47,8 @@ export const DefaultPointerEvents = {
 
 type AllowPointerEvent = boolean | ((event: TerraDrawMouseEvent) => boolean);
 
+export type ModeUpdateOptions<Mode> = Omit<Mode, "modeName">;
+
 export interface PointerEvents {
 	leftClick: AllowPointerEvent;
 	rightClick: AllowPointerEvent;

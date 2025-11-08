@@ -19,6 +19,7 @@ import { getDefaultStyling } from "../../util/styling";
 import {
 	BaseModeOptions,
 	CustomStyling,
+	ModeUpdateOptions,
 	TerraDrawBaseDrawMode,
 } from "../base.mode";
 import { ValidatePointFeature } from "../../validations/point.validation";
@@ -77,7 +78,7 @@ export class TerraDrawMarkerMode extends TerraDrawBaseDrawMode<MarkerModeStyling
 	}
 
 	updateOptions(
-		options?: Omit<TerraDrawMarkerModeOptions<MarkerModeStyling>, "modeName">,
+		options?: ModeUpdateOptions<TerraDrawMarkerModeOptions<MarkerModeStyling>>,
 	): void {
 		super.updateOptions(options);
 

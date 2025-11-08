@@ -19,6 +19,7 @@ import { getDefaultStyling } from "../../util/styling";
 import {
 	BaseModeOptions,
 	CustomStyling,
+	ModeUpdateOptions,
 	TerraDrawBaseDrawMode,
 } from "../base.mode";
 import { ValidateNonIntersectingPolygonFeature } from "../../validations/polygon.validation";
@@ -68,9 +69,8 @@ export class TerraDrawRectangleMode extends TerraDrawBaseDrawMode<RectanglePolyg
 	}
 
 	override updateOptions(
-		options?: Omit<
-			TerraDrawRectangleModeOptions<RectanglePolygonStyling>,
-			"modeName"
+		options?: ModeUpdateOptions<
+			TerraDrawRectangleModeOptions<RectanglePolygonStyling>
 		>,
 	) {
 		super.updateOptions(options);

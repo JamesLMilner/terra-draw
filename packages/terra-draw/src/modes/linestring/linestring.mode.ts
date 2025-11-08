@@ -15,6 +15,7 @@ import { Feature, LineString, Point, Position } from "geojson";
 import {
 	BaseModeOptions,
 	CustomStyling,
+	ModeUpdateOptions,
 	TerraDrawBaseDrawMode,
 } from "../base.mode";
 import { cartesianDistance } from "../../geometry/measure/pixel-distance";
@@ -120,9 +121,8 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 	}
 
 	updateOptions(
-		options?: Omit<
-			TerraDrawLineStringModeOptions<LineStringStyling>,
-			"modeName"
+		options?: ModeUpdateOptions<
+			TerraDrawLineStringModeOptions<LineStringStyling>
 		>,
 	) {
 		super.updateOptions(options);

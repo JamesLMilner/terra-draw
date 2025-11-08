@@ -7,6 +7,7 @@ import {
 	BaseModeOptions,
 	CustomStyling,
 	ModeTypes,
+	ModeUpdateOptions,
 	TerraDrawBaseDrawMode,
 } from "../base.mode";
 import { BehaviorConfig } from "../base.behavior";
@@ -51,7 +52,7 @@ export class TerraDrawRenderMode extends TerraDrawBaseDrawMode<RenderModeStyling
 	}
 
 	updateOptions(
-		options?: Omit<TerraDrawRenderModeOptions<RenderModeStyling>, "modeName">,
+		options?: ModeUpdateOptions<TerraDrawRenderModeOptions<RenderModeStyling>>,
 	): void {
 		super.updateOptions(options);
 	}

@@ -14,6 +14,7 @@ import {
 	TerraDrawBaseDrawMode,
 	BaseModeOptions,
 	CustomStyling,
+	ModeUpdateOptions,
 } from "../base.mode";
 import { getDefaultStyling } from "../../util/styling";
 import {
@@ -93,9 +94,8 @@ export class TerraDrawSensorMode extends TerraDrawBaseDrawMode<SensorPolygonStyl
 	}
 
 	override updateOptions(
-		options?: Omit<
-			TerraDrawSensorModeOptions<SensorPolygonStyling>,
-			"modeName"
+		options?: ModeUpdateOptions<
+			TerraDrawSensorModeOptions<SensorPolygonStyling>
 		>,
 	): void {
 		super.updateOptions(options);

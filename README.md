@@ -32,7 +32,7 @@ Terra Draw uses the concept of 'adapters' to allow it to work with a host of dif
 
 ### Getting Started
 
-Please see the [the getting started guide](./guides/1.GETTING_STARTED.md) - this provides a host of information on how to get up and running with Terra Draw.
+Please see the [the getting started guide](./guides/1.GETTING_STARTED.md) - this provides a host of information on how to get up and running with Terra Draw. You can see the auto generated [API docs on the Terra Draw website](https://terradraw.io/#/api).
 
 ### Development & Contributing
 

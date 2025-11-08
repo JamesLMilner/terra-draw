@@ -14,6 +14,7 @@ import { Polygon } from "geojson";
 import {
 	BaseModeOptions,
 	CustomStyling,
+	ModeUpdateOptions,
 	TerraDrawBaseDrawMode,
 } from "../base.mode";
 import { getDefaultStyling } from "../../util/styling";
@@ -85,9 +86,8 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 	}
 
 	public updateOptions(
-		options?: Omit<
-			TerraDrawFreehandModeOptions<FreehandPolygonStyling>,
-			"modeName"
+		options?: ModeUpdateOptions<
+			TerraDrawFreehandModeOptions<FreehandPolygonStyling>
 		>,
 	): void {
 		super.updateOptions(options);

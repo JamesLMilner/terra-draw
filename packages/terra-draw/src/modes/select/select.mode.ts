@@ -18,6 +18,7 @@ import { Point, Position } from "geojson";
 import {
 	BaseModeOptions,
 	CustomStyling,
+	ModeUpdateOptions,
 	TerraDrawBaseSelectMode,
 } from "../base.mode";
 import { MidPointBehavior } from "./behaviors/midpoint.behavior";
@@ -171,7 +172,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 	}
 
 	override updateOptions(
-		options?: Omit<TerraDrawSelectModeOptions<SelectionStyling>, "modeName">,
+		options?: ModeUpdateOptions<TerraDrawSelectModeOptions<SelectionStyling>>,
 	) {
 		super.updateOptions(options);
 

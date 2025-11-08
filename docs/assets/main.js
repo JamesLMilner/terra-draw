@@ -2071,10 +2071,7 @@ window.translations = {
 			super(e),
 				(this.summary = this.el.querySelector(".tsd-accordion-summary")),
 				(this.icon = this.summary.querySelector("svg")),
-				(this.key = `tsd-accordion-${
-					this.summary.dataset.key ??
-					this.summary.textContent.trim().replace(/\s+/g, "-").toLowerCase()
-				}`);
+				(this.key = `tsd-accordion-${this.summary.dataset.key ?? this.summary.textContent.trim().replace(/\s+/g, "-").toLowerCase()}`);
 			let n = Q.getItem(this.key);
 			(this.el.open = n ? n === "true" : this.el.open),
 				this.el.addEventListener("toggle", () => this.update());

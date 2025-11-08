@@ -1,3 +1,4 @@
+import { COMMON_PROPERTIES } from "./common";
 import { FeatureId } from "./extend";
 import { GeoJSONStoreFeatures, TerraDraw } from "./terra-draw";
 
@@ -31,7 +32,26 @@ export const setupUndoRedo = (
 		action?: "create" | "update" | "delete" | "restore";
 	}[] = [];
 
-	draw.on("change", (ids: FeatureId[] | FeatureId, type, context) => {
+	draw.on("change", (ids: FeatureId[], type, context) => {
+		if (draw.getModeState() === "drawing") {
+			console.log("drawing", ids);
+
+			const features = ids
+				.map((id) => draw.getSnapshotFeature(id))
+				.filter(
+					(f) =>
+						f &&
+						f!.properties.mode === draw.getMode() &&
+						!f.properties[COMMON_PROPERTIES.CLOSING_POINT] &&
+						!f.properties[COMMON_PROPERTIES.COORDINATE_POINT] &&
+						!f.properties[COMMON_PROPERTIES.SNAPPING_POINT],
+				);
+
+			console.log(features);
+
+			return;
+		}
+
 		if (type !== "delete") {
 			return;
 		}
@@ -92,6 +112,10 @@ export const setupUndoRedo = (
 	});
 
 	const undo = () => {
+		if (draw.getModeState() === "drawing") {
+			return;
+		}
+
 		if (actionStack.length === 0) return;
 
 		const id = actionStack.pop() as FeatureId;
@@ -164,6 +188,10 @@ export const setupUndoRedo = (
 	};
 
 	const redo = () => {
+		if (draw.getModeState() === "drawing") {
+			return;
+		}
+
 		if (redoStack.length === 0) return;
 
 		const { id, toIndex, snapshot, action } = redoStack.pop()!;

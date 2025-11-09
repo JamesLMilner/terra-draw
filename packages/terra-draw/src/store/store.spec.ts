@@ -277,6 +277,22 @@ describe("GeoJSONStore", () => {
 			});
 		});
 
+		it("does not call onChange if property value is identical", () => {
+			const store = new GeoJSONStore();
+			const mockCallback = jest.fn();
+			store.registerOnChange(mockCallback);
+
+			const [id] = store.create<string>([
+				{ geometry: { type: "Point", coordinates: [0, 0] } },
+			]);
+			mockCallback.mockClear();
+
+			store.updateProperty([{ id, property: "test", value: 1 }]);
+			store.updateProperty([{ id, property: "test", value: 1 }]); // identical value
+
+			expect(mockCallback).toHaveBeenCalledTimes(1); // only called for create and first update
+		});
+
 		it("throws error on missing feature", () => {
 			const store = new GeoJSONStore();
 

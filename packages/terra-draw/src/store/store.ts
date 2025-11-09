@@ -243,7 +243,7 @@ export class GeoJSONStore<
 		}[],
 		context?: OnChangeContext,
 	): void {
-		const ids: FeatureId[] = [];
+		const ids: Set<FeatureId> = new Set();
 		propertiesToUpdate.forEach(({ id, property, value }) => {
 			const feature = this.store[id];
 
@@ -253,7 +253,12 @@ export class GeoJSONStore<
 				);
 			}
 
-			ids.push(id);
+			if (feature.properties[property] === value) {
+				// If the value is the same, we don't need to update
+				return;
+			}
+
+			ids.add(id);
 
 			if (value === undefined) {
 				delete feature.properties[property];
@@ -267,8 +272,8 @@ export class GeoJSONStore<
 			}
 		});
 
-		if (this._onChange) {
-			this._onChange(ids, "update", context);
+		if (this._onChange && ids.size > 0) {
+			this._onChange([...ids], "update", context);
 		}
 	}
 
@@ -276,9 +281,9 @@ export class GeoJSONStore<
 		geometriesToUpdate: { id: FeatureId; geometry: GeoJSONStoreGeometries }[],
 		context?: OnChangeContext,
 	): void {
-		const ids: FeatureId[] = [];
+		const ids: Set<FeatureId> = new Set();
 		geometriesToUpdate.forEach(({ id, geometry }) => {
-			ids.push(id);
+			ids.add(id);
 
 			const feature = this.store[id];
 
@@ -298,8 +303,8 @@ export class GeoJSONStore<
 			}
 		});
 
-		if (this._onChange) {
-			this._onChange(ids, "update", context);
+		if (this._onChange && ids.size > 0) {
+			this._onChange([...ids], "update", context);
 		}
 	}
 

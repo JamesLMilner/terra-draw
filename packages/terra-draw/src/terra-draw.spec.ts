@@ -2200,6 +2200,30 @@ describe("Terra Draw", () => {
 			expect(snapshot).toHaveLength(0);
 		});
 
+		it('calls "change" event when cleared', () => {
+			const draw = new TerraDraw({
+				adapter,
+				modes: [new TerraDrawPointMode()],
+			});
+
+			const onChange = jest.fn();
+			draw.on("change", onChange);
+			expect(draw.enabled).toBe(false);
+
+			draw.start();
+
+			draw.addFeatures([point]);
+
+			onChange.mockClear();
+
+			draw.clear();
+
+			expect(onChange).toHaveBeenCalledTimes(1);
+			expect(onChange).toHaveBeenCalledWith(expect.any(Array), "delete", {
+				origin: "api",
+			});
+		});
+
 		it("does not throw if called multiple times in point mode", () => {
 			const draw = new TerraDraw({
 				adapter,

@@ -665,7 +665,7 @@ class TerraDraw {
 	 * Removes all data from the current store and ensures any rendered data is cleared
 	 * from the map.
 	 */
-	clear() {
+	clear(context?: OnChangeContext) {
 		this.checkEnabled();
 		this._adapter.clear();
 	}
@@ -1187,7 +1187,7 @@ class TerraDraw {
 				this._mode.cleanUp();
 
 				// Remove all features from the store
-				this._store.clear();
+				this._store.clear({ origin: "api" });
 			},
 		});
 	}

@@ -388,9 +388,13 @@ export class GeoJSONStore<
 		);
 	}
 
-	clear(): void {
+	clear(context?: OnChangeContext): void {
+		const ids = Object.keys(this.store) as FeatureId[];
 		this.store = {};
 		this.spatialIndex.clear();
+		if (this._onChange) {
+			this._onChange([...ids], "delete", context);
+		}
 	}
 
 	size(): number {

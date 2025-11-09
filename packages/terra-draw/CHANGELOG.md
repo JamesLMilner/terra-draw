@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.19.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.18.1...terra-draw@1.19.0) (2025-11-09)
+
+
+### docs
+
+* **terra-draw:** added required args to OpenLayers Adapter docs (#690) ([](https://github.com/JamesLMilner/terra-draw/commit/35caea04274fc1fcb35051ac52b7e644244a5f5b)), closes [#690](https://github.com/JamesLMilner/terra-draw/issues/690)
+* **terra-draw:** fix console log syntax error in 4.MODES.md  ([](https://github.com/JamesLMilner/terra-draw/commit/a3d87c489f2404d5b2589644b7185e5c07bbdd62))
+* **terra-draw:** update the API docs (#704) ([](https://github.com/JamesLMilner/terra-draw/commit/eebed8227352deefa766333d8f757d3707f09c6e)), closes [#704](https://github.com/JamesLMilner/terra-draw/issues/704)
+
+
+### chore
+
+* **terra-draw:** use a centralised type for updateOptions argument (#705) ([](https://github.com/JamesLMilner/terra-draw/commit/51d004b845db6edf9068b5c8da9c442290c2f191)), closes [#705](https://github.com/JamesLMilner/terra-draw/issues/705)
+
+
+### feat
+
+* **terra-draw:** allow multiple instances of a mode via modeName constructor property (#701) ([](https://github.com/JamesLMilner/terra-draw/commit/855413c450b08ec66ed77e66d2a4eab44793f33d)), closes [#701](https://github.com/JamesLMilner/terra-draw/issues/701)
+
 ## [1.18.1](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.18.0...terra-draw@1.18.1) (2025-10-20)
 
 

@@ -82,10 +82,12 @@ export type Projection = "web-mercator" | "globe";
 
 export type OnFinishContext = { mode: string; action: string };
 
-export type OnChangeContext = { origin: "api" };
+export type TerraDrawOnChangeContext =
+	| { origin: "api"; target?: "geometry" | "properties" }
+	| { target?: "geometry" | "properties" };
 
 export type TerraDrawGeoJSONStore = GeoJSONStore<
-	OnChangeContext | undefined,
+	TerraDrawOnChangeContext | undefined,
 	FeatureId
 >;
 
@@ -94,7 +96,7 @@ export interface TerraDrawModeRegisterConfig {
 	store: TerraDrawGeoJSONStore;
 	setDoubleClickToZoom: (enabled: boolean) => void;
 	setCursor: SetCursor;
-	onChange: StoreChangeHandler<OnChangeContext | undefined>;
+	onChange: StoreChangeHandler<TerraDrawOnChangeContext | undefined>;
 	onSelect: (selectedId: string) => void;
 	onDeselect: (deselectedId: string) => void;
 	onFinish: (finishedId: string, context: OnFinishContext) => void;

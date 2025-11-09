@@ -51,8 +51,11 @@ export const defaultIdStrategy = {
 	isValidId: (id: FeatureId) => typeof id === "string" && id.length === 36,
 };
 
+const geometryContext: JSONObject = { target: "geometry" };
+const propertiesContext: JSONObject = { target: "properties" };
+
 export class GeoJSONStore<
-	OnChangeContext extends Record<string, JSON> | undefined,
+	OnChangeContext extends JSONObject | undefined,
 	Id extends FeatureId = FeatureId,
 > {
 	constructor(config?: GeoJSONStoreConfig<Id>) {
@@ -77,7 +80,7 @@ export class GeoJSONStore<
 	};
 
 	// Default to no-op
-	private _onChange: StoreChangeHandler<OnChangeContext | undefined> = () => {};
+	private _onChange: StoreChangeHandler<OnChangeContext | undefined> = () => { };
 
 	private clone<T>(obj: T): T {
 		return JSON.parse(JSON.stringify(obj));
@@ -273,7 +276,13 @@ export class GeoJSONStore<
 		});
 
 		if (this._onChange && ids.size > 0) {
-			this._onChange([...ids], "update", context);
+			this._onChange(
+				[...ids],
+				"update",
+				context
+					? { ...context, ...propertiesContext }
+					: (propertiesContext as OnChangeContext),
+			);
 		}
 	}
 
@@ -304,7 +313,13 @@ export class GeoJSONStore<
 		});
 
 		if (this._onChange && ids.size > 0) {
-			this._onChange([...ids], "update", context);
+			this._onChange(
+				[...ids],
+				"update",
+				context
+					? { ...context, ...geometryContext }
+					: (geometryContext as OnChangeContext),
+			);
 		}
 	}
 

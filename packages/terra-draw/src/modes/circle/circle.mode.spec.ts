@@ -279,7 +279,7 @@ describe("TerraDrawCircleMode", () => {
 						true,
 					);
 
-					expect(onChange).toHaveBeenCalledTimes(6);
+					expect(onChange).toHaveBeenCalledTimes(5);
 					expect(onChange).toHaveBeenCalledWith(
 						[expect.any(String)],
 						"create",

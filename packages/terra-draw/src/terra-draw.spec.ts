@@ -1153,6 +1153,7 @@ describe("Terra Draw", () => {
 			expect(onChange).toHaveBeenCalledTimes(1);
 			expect(onChange).toHaveBeenCalledWith([result.id], "update", {
 				origin: "api",
+				target: "geometry",
 			});
 
 			const snapshot = draw.getSnapshot();
@@ -1209,6 +1210,7 @@ describe("Terra Draw", () => {
 			expect(onChange).toHaveBeenCalledTimes(1);
 			expect(onChange).toHaveBeenCalledWith([result.id], "update", {
 				origin: "api",
+				target: "geometry",
 			});
 
 			const snapshot = draw.getSnapshot();
@@ -1276,6 +1278,7 @@ describe("Terra Draw", () => {
 			expect(onChange).toHaveBeenCalledTimes(1);
 			expect(onChange).toHaveBeenCalledWith([result.id], "update", {
 				origin: "api",
+				target: "geometry",
 			});
 
 			const snapshot = draw.getSnapshot();
@@ -1364,6 +1367,7 @@ describe("Terra Draw", () => {
 			expect(onChange).toHaveBeenCalledTimes(3);
 			expect(onChange).toHaveBeenCalledWith([result.id], "update", {
 				origin: "api",
+				target: "geometry",
 			});
 
 			const snapshot = draw.getSnapshot();
@@ -1807,6 +1811,7 @@ describe("Terra Draw", () => {
 					expect(onChange).toHaveBeenCalledTimes(1);
 					expect(onChange).toHaveBeenCalledWith([result.id], "update", {
 						origin: "api",
+						target: "geometry",
 					});
 
 					const snapshot = draw.getSnapshot();
@@ -1876,6 +1881,7 @@ describe("Terra Draw", () => {
 					expect(onChange).toHaveBeenCalledTimes(1);
 					expect(onChange).toHaveBeenCalledWith([result.id], "update", {
 						origin: "api",
+						target: "geometry",
 					});
 
 					const snapshot = draw.getSnapshot();
@@ -1970,6 +1976,7 @@ describe("Terra Draw", () => {
 					expect(onChange).toHaveBeenCalledTimes(3);
 					expect(onChange).toHaveBeenCalledWith([result.id], "update", {
 						origin: "api",
+						target: "geometry",
 					});
 
 					const snapshot = draw.getSnapshot();

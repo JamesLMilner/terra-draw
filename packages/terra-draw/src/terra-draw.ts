@@ -17,7 +17,7 @@ import {
 	OnFinishContext,
 	COMMON_PROPERTIES,
 	TerraDrawGeoJSONStore,
-	OnChangeContext,
+	TerraDrawOnChangeContext,
 	Projection,
 } from "./common";
 import {
@@ -81,7 +81,7 @@ type FinishListener = (id: FeatureId, context: OnFinishContext) => void;
 type ChangeListener = (
 	ids: FeatureId[],
 	type: string,
-	context?: OnChangeContext,
+	context?: TerraDrawOnChangeContext,
 ) => void;
 type SelectListener = (id: FeatureId) => void;
 type DeselectListener = () => void;
@@ -179,7 +179,10 @@ class TerraDraw {
 			finish: [],
 			ready: [],
 		};
-		this._store = new GeoJSONStore<OnChangeContext | undefined, FeatureId>({
+		this._store = new GeoJSONStore<
+			TerraDrawOnChangeContext | undefined,
+			FeatureId
+		>({
 			tracked: options.tracked ? true : false,
 			idStrategy: options.idStrategy ? options.idStrategy : undefined,
 		});
@@ -214,7 +217,7 @@ class TerraDraw {
 			});
 		};
 
-		const onChange: StoreChangeHandler<OnChangeContext | undefined> = (
+		const onChange: StoreChangeHandler<TerraDrawOnChangeContext | undefined> = (
 			ids,
 			event,
 			context,

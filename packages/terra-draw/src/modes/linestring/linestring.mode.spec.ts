@@ -570,7 +570,7 @@ describe("TerraDrawLineStringMode", () => {
 				11,
 				[expect.any(String)],
 				"update",
-				undefined,
+				{ target: "geometry" },
 			);
 
 			const featuresAfter = store.copyAll();
@@ -1132,19 +1132,19 @@ describe("TerraDrawLineStringMode", () => {
 				1,
 				[expect.any(String)],
 				"update",
-				undefined,
+				{ target: "geometry" },
 			);
 			expect(mockConfig.onChange).toHaveBeenNthCalledWith(
 				2,
 				[expect.any(String)],
 				"update",
-				undefined,
+				{ target: "geometry" },
 			);
 			expect(mockConfig.onChange).toHaveBeenNthCalledWith(
 				3,
 				[expect.any(String)],
 				"update",
-				undefined,
+				{ target: "properties" },
 			);
 
 			const allFeatures = mockConfig.store.copyAll();
@@ -1232,7 +1232,7 @@ describe("TerraDrawLineStringMode", () => {
 				2,
 				[expect.any(String)],
 				"update",
-				undefined,
+				{ target: "properties" },
 			);
 
 			expect(mockConfig.onFinish).toHaveBeenCalledTimes(1);
@@ -1617,7 +1617,7 @@ describe("TerraDrawLineStringMode", () => {
 				1,
 				[snapPoint!.id],
 				"update",
-				undefined,
+				{ target: "geometry" },
 			);
 
 			expect(mockConfig.store.has(snapPoint!.id as FeatureId)).toBe(true);

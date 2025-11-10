@@ -409,7 +409,7 @@ describe("TerraDrawPointMode", () => {
 				2,
 				[expect.any(String)],
 				"update",
-				undefined,
+				{ target: "geometry" },
 			);
 
 			// On finished called from onClick and is then only called after onDragEnd

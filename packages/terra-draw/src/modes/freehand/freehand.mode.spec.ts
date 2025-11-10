@@ -734,19 +734,19 @@ describe("TerraDrawFreehandMode", () => {
 					2,
 					[expect.any(String)],
 					"update",
-					undefined,
+					{ target: "geometry" },
 				);
 				expect(onChange).toHaveBeenNthCalledWith(
 					3,
 					[expect.any(String)],
 					"update",
-					undefined,
+					{ target: "geometry" },
 				);
 				expect(onChange).toHaveBeenNthCalledWith(
 					4,
 					[expect.any(String)],
 					"update",
-					undefined,
+					{ target: "properties" },
 				);
 				expect(onChange).toHaveBeenNthCalledWith(
 					5,

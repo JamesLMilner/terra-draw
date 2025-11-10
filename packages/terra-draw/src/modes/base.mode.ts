@@ -1,6 +1,6 @@
 import { BehaviorConfig, TerraDrawModeBehavior } from "./base.behavior";
 import {
-	OnChangeContext,
+	TerraDrawOnChangeContext,
 	HexColor,
 	OnFinishContext,
 	Projection,
@@ -99,7 +99,9 @@ export abstract class TerraDrawBaseDrawMode<Styling extends CustomStyling> {
 	protected validate: Validation | undefined;
 	protected pointerDistance: number = 40;
 	protected coordinatePrecision!: number;
-	protected onStyleChange!: StoreChangeHandler<OnChangeContext | undefined>;
+	protected onStyleChange!: StoreChangeHandler<
+		TerraDrawOnChangeContext | undefined
+	>;
 	protected store!: TerraDrawGeoJSONStore;
 	protected projection: Projection = "web-mercator";
 

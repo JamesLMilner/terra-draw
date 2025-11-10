@@ -1,10 +1,10 @@
-import { OnChangeContext } from "../common";
+import { TerraDrawOnChangeContext } from "../common";
 import { GeoJSONStore } from "../store/store";
 
 export function MockModeConfig(mode: string) {
 	return {
 		mode,
-		store: new GeoJSONStore<OnChangeContext | undefined>(),
+		store: new GeoJSONStore<TerraDrawOnChangeContext | undefined>(),
 		setCursor: jest.fn(),
 		onChange: jest.fn(),
 		onSelect: jest.fn(),

@@ -315,7 +315,7 @@ describe("TerraDrawPolygonMode", () => {
 				2,
 				[featureId],
 				"update",
-				undefined,
+				{ target: "properties" },
 			);
 		});
 	});
@@ -366,7 +366,7 @@ describe("TerraDrawPolygonMode", () => {
 				2,
 				[featureId],
 				"update",
-				undefined,
+				{ target: "properties" },
 			);
 		});
 
@@ -449,7 +449,7 @@ describe("TerraDrawPolygonMode", () => {
 				2,
 				[featureId],
 				"update",
-				undefined,
+				{ target: "properties" },
 			);
 		});
 
@@ -585,7 +585,7 @@ describe("TerraDrawPolygonMode", () => {
 				1,
 				[snapPoint!.id],
 				"update",
-				undefined,
+				{ target: "geometry" },
 			);
 
 			expect(mockConfig.store.has(snapPoint!.id as FeatureId)).toBe(true);
@@ -1898,19 +1898,19 @@ describe("onDrag", () => {
 			1,
 			[expect.any(String)],
 			"update",
-			undefined,
+			{ target: "geometry" },
 		);
 		expect(mockConfig.onChange).toHaveBeenNthCalledWith(
 			2,
 			[expect.any(String)],
 			"update",
-			undefined,
+			{ target: "geometry" },
 		);
 		expect(mockConfig.onChange).toHaveBeenNthCalledWith(
 			3,
 			[expect.any(String)],
 			"update",
-			undefined,
+			{ target: "properties" },
 		);
 
 		const allFeatures = mockConfig.store.copyAll();
@@ -1995,7 +1995,7 @@ describe("onDragEnd", () => {
 			2,
 			[expect.any(String)],
 			"update",
-			undefined,
+			{ target: "properties" },
 		);
 
 		expect(mockConfig.onFinish).toHaveBeenCalledTimes(1);

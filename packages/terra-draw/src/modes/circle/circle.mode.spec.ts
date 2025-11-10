@@ -504,7 +504,7 @@ describe("TerraDrawCircleMode", () => {
 				2,
 				[expect.any(String)],
 				"update",
-				undefined,
+				{ target: "geometry" },
 			);
 
 			const updatedFeature = store.copyAll()[0];

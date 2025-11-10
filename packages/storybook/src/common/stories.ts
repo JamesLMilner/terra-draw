@@ -422,13 +422,6 @@ const Select: Story = {
 					},
 				}),
 		],
-		afterRender: (draw: TerraDraw) => {
-			draw.on("change", (ids, type, context) => {
-				if (context) {
-					console.log(type, "Geometry changed for features:", context);
-				}
-			});
-		},
 		...DefaultStory.args,
 	},
 };

@@ -437,7 +437,7 @@ describe("TerraDrawSelectMode", () => {
 					);
 				});
 
-				it("creates midpoints when flag enabled", () => {
+				it("creates midpoints when flag enabled and feature selected", () => {
 					setSelectMode({
 						flags: {
 							polygon: {
@@ -505,6 +505,57 @@ describe("TerraDrawSelectMode", () => {
 						"create",
 						undefined,
 					);
+				});
+
+				it("inserts a midpoint coordinate when flag enabled and midpoint clicked", () => {
+					setSelectMode({
+						flags: {
+							polygon: {
+								feature: {
+									draggable: false,
+									coordinates: { draggable: false, midpoints: true },
+								},
+							},
+						},
+					});
+
+					addPolygonToStore([
+						[0, 0],
+						[0, 1],
+						[1, 1],
+						[1, 0],
+						[0, 0],
+					]);
+
+					expect(onChange).toHaveBeenNthCalledWith(
+						1,
+						[expect.any(String)],
+						"create",
+						undefined,
+					);
+
+					// Store the ids of the created feature
+					const idOne = onChange.mock.calls[0][0] as string[];
+
+					// Select polygon
+					selectMode.onClick(MockCursorEvent({ lng: 0.5, lat: 0.5 }));
+
+					expect(onSelect).toHaveBeenCalledTimes(1);
+					expect(onSelect).toHaveBeenNthCalledWith(1, idOne[0]);
+
+					// Polygon selected set to true
+					expect(onChange).toHaveBeenNthCalledWith(2, idOne, "update", {
+						target: "properties",
+					});
+
+					// Create midpoint by clicking on it
+					selectMode.onClick(MockCursorEvent({ lng: 0, lat: 0.5 }));
+
+					expect(onFinish).toHaveBeenCalledTimes(1);
+					expect(onFinish).toHaveBeenNthCalledWith(1, idOne[0], {
+						action: "insertMidpoint",
+						mode: "select",
+					});
 				});
 
 				describe("switch selected", () => {
@@ -987,6 +1038,8 @@ describe("TerraDrawSelectMode", () => {
 				// Only called for checking distance to selection points,
 				// should hit early return otherwise
 				expect(store.getGeometryCopy).toHaveBeenCalledTimes(4);
+
+				expect(onFinish).not.toHaveBeenCalled();
 			});
 
 			it("returns early if creates a invalid polygon by deleting coordinate", () => {
@@ -1087,6 +1140,11 @@ describe("TerraDrawSelectMode", () => {
 
 				expect(store.delete).toHaveBeenCalledTimes(1);
 				expect(store.updateGeometry).toHaveBeenCalledTimes(1);
+				expect(onFinish).toHaveBeenCalledTimes(1);
+				expect(onFinish).toHaveBeenCalledWith(expect.any(String), {
+					action: "deleteCoordinate",
+					mode: "select",
+				});
 			});
 		});
 
@@ -2618,6 +2676,12 @@ describe("TerraDrawSelectMode", () => {
 					MockCursorEvent({ lng: 0, lat: 0.5 }),
 					setMapDraggability,
 				);
+
+				expect(onFinish).toHaveBeenCalledTimes(1);
+				expect(onFinish).toHaveBeenCalledWith(expect.any(String), {
+					action: "insertMidpoint",
+					mode: "select",
+				});
 			});
 		});
 	});

@@ -1929,6 +1929,90 @@ describe("onDrag", () => {
 		// We don't change the cursor in onDrag
 		expect(mockConfig.setCursor).toHaveBeenCalledTimes(0);
 	});
+
+	it("creates a drag point if none exists on a line", () => {
+		const polygonMode = new TerraDrawPolygonMode({ editable: true });
+		const mockConfig = MockModeConfig(polygonMode.mode);
+		polygonMode.register(mockConfig);
+		polygonMode.start();
+
+		// Create a polygon to edit
+		polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+		polygonMode.onMouseMove(MockCursorEvent({ lng: 2, lat: 0 }));
+
+		polygonMode.onClick(MockCursorEvent({ lng: 2, lat: 0 }));
+
+		polygonMode.onMouseMove(MockCursorEvent({ lng: 2, lat: 2 }));
+
+		polygonMode.onClick(MockCursorEvent({ lng: 2, lat: 2 }));
+
+		polygonMode.onMouseMove(MockCursorEvent({ lng: 0, lat: 2 }));
+
+		polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 2 }));
+
+		polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 2 }));
+
+		// Ensure it's there
+		let features = mockConfig.store.copyAll();
+		expect(features.length).toBe(1);
+
+		// Reset to make it easier to track for onDragStart
+		mockConfig.onChange.mockClear();
+		mockConfig.setCursor.mockClear();
+
+		polygonMode.onDragStart(MockCursorEvent({ lng: 1, lat: 0 }), () => {});
+		polygonMode.onDrag(MockCursorEvent({ lng: 1, lat: 1 }), () => {});
+
+		expect(mockConfig.onChange).toHaveBeenCalledTimes(4);
+		expect(mockConfig.onChange).toHaveBeenNthCalledWith(
+			1,
+			[expect.any(String)],
+			"create",
+			undefined,
+		);
+		expect(mockConfig.onChange).toHaveBeenNthCalledWith(
+			2,
+			[expect.any(String)],
+			"update",
+			{ target: "geometry" },
+		);
+		expect(mockConfig.onChange).toHaveBeenNthCalledWith(
+			3,
+			[expect.any(String)],
+			"update",
+			{ target: "properties" },
+		);
+		expect(mockConfig.onChange).toHaveBeenNthCalledWith(
+			4,
+			[expect.any(String)],
+			"update",
+			{ target: "geometry" },
+		);
+
+		const allFeatures = mockConfig.store.copyAll();
+
+		expect(allFeatures.length).toBe(2);
+
+		// Edited polygon
+		expect(allFeatures[0].geometry.type).toBe("Polygon");
+		expect(allFeatures[0].properties.edited).toBe(true);
+		expect(allFeatures[0].geometry.coordinates).toEqual([
+			[
+				[0, 0],
+				[1, 1],
+				[2, 0],
+				[2, 2],
+				[0, 2],
+				[0, 0],
+			],
+		]);
+
+		// Edit point
+		expect(allFeatures[1].geometry.type).toBe("Point");
+		expect(allFeatures[1].properties.edited).toBe(true);
+		expect(allFeatures[1].geometry.coordinates).toEqual([1, 1]);
+	});
 });
 
 describe("onDragEnd", () => {

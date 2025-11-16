@@ -7,8 +7,6 @@ import {
 	Cursor,
 	UpdateTypes,
 	COMMON_PROPERTIES,
-	Project,
-	Unproject,
 	Z_INDEX,
 	Snapping,
 } from "../../common";
@@ -23,8 +21,6 @@ import {
 import { PixelDistanceBehavior } from "../pixel-distance.behavior";
 import { ClickBoundingBoxBehavior } from "../click-bounding-box.behavior";
 import { BehaviorConfig } from "../base.behavior";
-import { createPolygon } from "../../util/geoms";
-import { coordinatesIdentical } from "../../geometry/coordinates-identical";
 import { ClosingPointsBehavior } from "./behaviors/closing-points.behavior";
 import { getDefaultStyling } from "../../util/styling";
 import {
@@ -37,6 +33,10 @@ import { LineSnappingBehavior } from "../line-snapping.behavior";
 import { CoordinateSnappingBehavior } from "../coordinate-snapping.behavior";
 import { ensureRightHandRule } from "../../geometry/ensure-right-hand-rule";
 import { CoordinatePointBehavior } from "../select/behaviors/coordinate-point.behavior";
+import {
+	CoordinateMutation,
+	ManipulateGeometryBehavior,
+} from "../manipulate-geometry";
 
 type TerraDrawPolygonModeKeyEvents = {
 	cancel?: KeyboardEvent["key"] | null;
@@ -123,6 +123,12 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 	private pixelDistance!: PixelDistanceBehavior;
 	private closingPoints!: ClosingPointsBehavior;
 	private clickBoundingBox!: ClickBoundingBoxBehavior;
+	private manipulateGeometry!: ManipulateGeometryBehavior<{
+		[COMMON_PROPERTIES.CURRENTLY_DRAWING]?: boolean | undefined;
+		[COMMON_PROPERTIES.COMMITTED_COORDINATE_COUNT]?: number | undefined;
+		[COMMON_PROPERTIES.PROVISIONAL_COORDINATE_COUNT]?: number | undefined;
+		[COMMON_PROPERTIES.EDITED]?: boolean | undefined;
+	}>;
 
 	constructor(options?: TerraDrawPolygonModeOptions<PolygonStyling>) {
 		super(options, true);
@@ -201,10 +207,11 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 			return;
 		}
 
-		const updated = this.updatePolygonGeometry(
-			[...currentPolygonCoordinates.slice(0, -2), currentPolygonCoordinates[0]],
-			UpdateTypes.Finish,
-		);
+		const updated = this.manipulateGeometry.updatePolygon({
+			featureId: this.currentId,
+			coordinateMutations: [{ type: "delete", index: -2 }],
+			updateType: UpdateTypes.Finish,
+		});
 
 		if (!updated) {
 			return;
@@ -212,40 +219,19 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 
 		const finishedId = this.currentId;
 
-		// Fix right hand rule if necessary
 		if (this.currentId) {
-			const correctedGeometry = ensureRightHandRule(
-				this.store.getGeometryCopy<Polygon>(this.currentId),
-			);
+			// Fix right hand rule if necessary
+			this.manipulateGeometry.correctPolygon(finishedId);
 
-			if (correctedGeometry) {
-				this.store.updateGeometry([
-					{ id: this.currentId, geometry: correctedGeometry },
-				]);
-
-				// Create or update coordinate points to reflect the new geometry
-				if (this.showCoordinatePoints) {
-					this.coordinatePoints.createOrUpdate(this.currentId);
-				}
-			}
-
-			this.store.updateProperty([
-				{
-					id: this.currentId,
-					property: COMMON_PROPERTIES.CURRENTLY_DRAWING,
-					value: undefined,
+			this.manipulateGeometry.updatePolygon({
+				featureId: this.currentId,
+				propertyMutations: {
+					[COMMON_PROPERTIES.CURRENTLY_DRAWING]: undefined,
+					[COMMON_PROPERTIES.COMMITTED_COORDINATE_COUNT]: undefined,
+					[COMMON_PROPERTIES.PROVISIONAL_COORDINATE_COUNT]: undefined,
 				},
-				{
-					id: this.currentId,
-					property: COMMON_PROPERTIES.COMMITTED_COORDINATE_COUNT,
-					value: undefined,
-				},
-				{
-					id: this.currentId,
-					property: COMMON_PROPERTIES.PROVISIONAL_COORDINATE_COUNT,
-					value: undefined,
-				},
-			]);
+				updateType: UpdateTypes.Finish,
+			});
 		}
 
 		if (this.snappedPointId) {
@@ -282,6 +268,12 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 		this.closingPoints = new ClosingPointsBehavior(config, this.pixelDistance);
 
 		this.coordinatePoints = new CoordinatePointBehavior(config);
+		this.manipulateGeometry = new ManipulateGeometryBehavior(config, {
+			validate: this.validate,
+			onSuccess: this.updateGuidanceFeatures as (
+				feature: GeoJSONStoreFeatures,
+			) => void,
+		});
 	}
 
 	/** @internal */
@@ -348,30 +340,27 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 			return;
 		}
 
-		const currentPolygonCoordinates = this.store.getGeometryCopy<Polygon>(
-			this.currentId,
-		).coordinates[0];
+		const firstCoordinate = this.store.getGeometryCopy<Polygon>(this.currentId)
+			.coordinates[0][0];
+		const eventCoordinate = [event.lng, event.lat];
 
-		let updatedCoordinates;
+		let coordinateMutations: CoordinateMutation[];
 
 		if (this.currentCoordinate === 1) {
-			// We must add a very small epsilon value so that Mapbox GL
-			// renders the polygon - There might be a cleaner solution?
-			const epsilon = 1 / Math.pow(10, this.coordinatePrecision - 1);
-			const offset = Math.max(0.000001, epsilon);
-
-			updatedCoordinates = [
-				currentPolygonCoordinates[0],
-				[event.lng, event.lat],
-				[event.lng, event.lat - offset],
-				currentPolygonCoordinates[0],
+			coordinateMutations = [
+				{ type: "update", index: 1, coordinate: eventCoordinate },
+				{
+					type: "update",
+					index: 2,
+					coordinate: [
+						event.lng,
+						event.lat - this.manipulateGeometry.epsilonOffset(),
+					],
+				},
 			];
 		} else if (this.currentCoordinate === 2) {
-			updatedCoordinates = [
-				currentPolygonCoordinates[0],
-				currentPolygonCoordinates[1],
-				[event.lng, event.lat],
-				currentPolygonCoordinates[0],
+			coordinateMutations = [
+				{ type: "update", index: 2, coordinate: eventCoordinate },
 			];
 		} else {
 			const { isClosing, isPreviousClosing } =
@@ -385,72 +374,27 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 
 				this.setCursor(this.cursors.close);
 
-				updatedCoordinates = [
-					...currentPolygonCoordinates.slice(0, -2),
-					currentPolygonCoordinates[0],
-					currentPolygonCoordinates[0],
+				coordinateMutations = [
+					{ type: "update", index: -1, coordinate: firstCoordinate },
+					{ type: "update", index: -2, coordinate: firstCoordinate },
 				];
 			} else {
-				updatedCoordinates = [
-					...currentPolygonCoordinates.slice(0, -2),
-					[event.lng, event.lat],
-					currentPolygonCoordinates[0],
+				coordinateMutations = [
+					{ type: "update", index: -2, coordinate: eventCoordinate },
+					{ type: "update", index: -1, coordinate: firstCoordinate },
 				];
 			}
 		}
 
-		this.store.updateProperty([
-			{
-				id: this.currentId,
-				property: COMMON_PROPERTIES.PROVISIONAL_COORDINATE_COUNT,
-				value: this.currentCoordinate + 1,
+		this.manipulateGeometry.updatePolygon({
+			featureId: this.currentId,
+			coordinateMutations,
+			propertyMutations: {
+				[COMMON_PROPERTIES.PROVISIONAL_COORDINATE_COUNT]:
+					this.currentCoordinate + 1,
 			},
-		]);
-
-		this.updatePolygonGeometry(updatedCoordinates, UpdateTypes.Provisional);
-	}
-
-	private updatePolygonGeometry(
-		coordinates: Polygon["coordinates"][0],
-		updateType: UpdateTypes,
-	) {
-		if (!this.currentId) {
-			return false;
-		}
-
-		const updatedGeometry = {
-			type: "Polygon",
-			coordinates: [coordinates],
-		} as Polygon;
-
-		if (this.validate) {
-			const validationResult = this.validate(
-				{
-					type: "Feature",
-					geometry: updatedGeometry,
-				} as GeoJSONStoreFeatures,
-				{
-					project: this.project,
-					unproject: this.unproject,
-					coordinatePrecision: this.coordinatePrecision,
-					updateType,
-				},
-			);
-
-			if (!validationResult.valid) {
-				return false;
-			}
-		}
-
-		this.store.updateGeometry([
-			{ id: this.currentId, geometry: updatedGeometry },
-		]);
-
-		if (this.showCoordinatePoints) {
-			this.coordinatePoints.createOrUpdate(this.currentId);
-		}
-
-		return true;
+			updateType: UpdateTypes.Provisional,
+		});
 	}
 
 	private snapCoordinate(event: TerraDrawMouseEvent): undefined | Position {
@@ -550,33 +494,27 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 			// Deleting the final coordinate in a polygon breaks it
 			// because GeoJSON expects a duplicate, so we need to fix
 			// it by adding the new first coordinate to the end
-			coordinates.shift();
-			coordinates.pop();
-			coordinates.push([coordinates[0][0], coordinates[0][1]]);
+
+			this.manipulateGeometry.updatePolygon({
+				featureId: featureId,
+				coordinateMutations: [
+					{ type: "delete", index: 0 },
+					{ type: "delete", index: -1 },
+					{
+						type: "insert",
+						index: -1,
+						coordinate: [coordinates[1][0], coordinates[1][1]],
+					},
+				],
+				updateType: UpdateTypes.Commit,
+			});
 		} else {
 			// Remove coordinate from array
-			coordinates.splice(coordinateIndex, 1);
-		}
-
-		// Validate the new geometry
-		if (this.validate) {
-			const validationResult = this.validate(
-				{
-					id: featureId,
-					type: "Feature",
-					geometry,
-					properties: {},
-				},
-				{
-					project: this.project,
-					unproject: this.unproject,
-					coordinatePrecision: this.coordinatePrecision,
-					updateType: UpdateTypes.Commit,
-				},
-			);
-			if (!validationResult.valid) {
-				return;
-			}
+			this.manipulateGeometry.updatePolygon({
+				featureId,
+				coordinateMutations: [{ type: "delete", index: coordinateIndex }],
+				updateType: UpdateTypes.Commit,
+			});
 		}
 
 		// The geometry has changed, so if we were snapped to a point we need to remove it
@@ -585,19 +523,18 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 			this.snappedPointId = undefined;
 		}
 
-		this.store.updateGeometry([
-			{
-				id: featureId,
-				geometry,
-			},
-		]);
-
 		if (this.showCoordinatePoints) {
 			this.coordinatePoints.createOrUpdate(featureId);
 		}
 
 		this.onFinish(featureId, { mode: this.mode, action: "edit" });
 	}
+
+	private updateGuidanceFeatures = ({ id }: GeoJSONStoreFeatures<Polygon>) => {
+		if (id && this.showCoordinatePoints) {
+			this.coordinatePoints.createOrUpdate(id);
+		}
+	};
 
 	private onLeftClick(event: TerraDrawMouseEvent) {
 		// Reset the snapping point
@@ -614,35 +551,25 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 				event.lat = snappedCoordinate[1];
 			}
 
-			const [newId] = this.store.create([
-				{
-					geometry: {
-						type: "Polygon",
-						coordinates: [
-							[
-								[event.lng, event.lat],
-								[event.lng, event.lat],
-								[event.lng, event.lat],
-								[event.lng, event.lat],
-							],
-						],
-					},
-					properties: {
-						mode: this.mode,
-						[COMMON_PROPERTIES.CURRENTLY_DRAWING]: true,
-						[COMMON_PROPERTIES.COMMITTED_COORDINATE_COUNT]:
-							this.currentCoordinate + 1,
-						[COMMON_PROPERTIES.PROVISIONAL_COORDINATE_COUNT]:
-							this.currentCoordinate + 1,
-					},
+			const { id } = this.manipulateGeometry.createPolygonGeometry({
+				coordinates: [
+					[event.lng, event.lat],
+					[event.lng, event.lat],
+					[event.lng, event.lat],
+					[event.lng, event.lat],
+				],
+				properties: {
+					mode: this.mode,
+					[COMMON_PROPERTIES.CURRENTLY_DRAWING]: true,
+					[COMMON_PROPERTIES.COMMITTED_COORDINATE_COUNT]:
+						this.currentCoordinate + 1,
+					[COMMON_PROPERTIES.PROVISIONAL_COORDINATE_COUNT]:
+						this.currentCoordinate + 1,
 				},
-			]);
-			this.currentId = newId;
-			this.currentCoordinate++;
+			});
 
-			if (this.showCoordinatePoints) {
-				this.coordinatePoints.createOrUpdate(newId);
-			}
+			this.currentId = id;
+			this.currentCoordinate++;
 
 			// Ensure the state is updated to reflect drawing has started
 			this.setDrawing();
@@ -654,41 +581,32 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 				event.lat = snappedCoordinate[1];
 			}
 
-			const currentPolygonGeometry = this.store.getGeometryCopy<Polygon>(
-				this.currentId,
-			);
-
-			const previousCoordinate = currentPolygonGeometry.coordinates[0][0];
-			const isIdentical = coordinatesIdentical(
-				[event.lng, event.lat],
-				previousCoordinate,
-			);
+			const isIdentical = this.manipulateGeometry.coordinateAtIndexIsIdentical({
+				featureId: this.currentId,
+				newCoordinate: [event.lng, event.lat],
+				index: 0,
+			});
 
 			if (isIdentical) {
 				return;
 			}
 
-			const updated = this.updatePolygonGeometry(
-				[
-					currentPolygonGeometry.coordinates[0][0],
-					[event.lng, event.lat],
-					[event.lng, event.lat],
-					currentPolygonGeometry.coordinates[0][0],
+			const updated = this.manipulateGeometry.updatePolygon({
+				featureId: this.currentId,
+				coordinateMutations: [
+					{ type: "update", index: 1, coordinate: [event.lng, event.lat] },
+					{ type: "update", index: 2, coordinate: [event.lng, event.lat] },
 				],
-				UpdateTypes.Commit,
-			);
+				propertyMutations: {
+					[COMMON_PROPERTIES.COMMITTED_COORDINATE_COUNT]:
+						this.currentCoordinate + 1,
+				},
+				updateType: UpdateTypes.Commit,
+			});
 
 			if (!updated) {
 				return;
 			}
-
-			this.store.updateProperty([
-				{
-					id: this.currentId,
-					property: COMMON_PROPERTIES.COMMITTED_COORDINATE_COUNT,
-					value: this.currentCoordinate + 1,
-				},
-			]);
 
 			this.currentCoordinate++;
 		} else if (this.currentCoordinate === 2 && this.currentId) {
@@ -699,53 +617,39 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 				event.lat = snappedCoordinate[1];
 			}
 
-			const currentPolygonCoordinates = this.store.getGeometryCopy<Polygon>(
-				this.currentId,
-			).coordinates[0];
-
-			const previousCoordinate = currentPolygonCoordinates[1];
-			const isIdentical = coordinatesIdentical(
-				[event.lng, event.lat],
-				previousCoordinate,
-			);
+			const isIdentical = this.manipulateGeometry.coordinateAtIndexIsIdentical({
+				featureId: this.currentId,
+				newCoordinate: [event.lng, event.lat],
+				index: 1,
+			});
 
 			if (isIdentical) {
 				return;
 			}
 
-			const updated = this.updatePolygonGeometry(
-				[
-					currentPolygonCoordinates[0],
-					currentPolygonCoordinates[1],
-					[event.lng, event.lat],
-					[event.lng, event.lat],
-					currentPolygonCoordinates[0],
+			const updated = this.manipulateGeometry.updatePolygon({
+				featureId: this.currentId,
+				coordinateMutations: [
+					{ type: "insert", index: 2, coordinate: [event.lng, event.lat] },
+					{ type: "insert", index: 3, coordinate: [event.lng, event.lat] },
 				],
-				UpdateTypes.Commit,
-			);
+				propertyMutations: {
+					[COMMON_PROPERTIES.COMMITTED_COORDINATE_COUNT]:
+						this.currentCoordinate + 1,
+				},
+				updateType: UpdateTypes.Commit,
+			});
 
 			if (!updated) {
 				return;
 			}
 
 			if (this.currentCoordinate === 2) {
-				this.closingPoints.create(currentPolygonCoordinates, "polygon");
+				this.closingPoints.create(updated.geometry.coordinates[0], "polygon");
 			}
-
-			this.store.updateProperty([
-				{
-					id: this.currentId,
-					property: COMMON_PROPERTIES.COMMITTED_COORDINATE_COUNT,
-					value: this.currentCoordinate + 1,
-				},
-			]);
 
 			this.currentCoordinate++;
 		} else if (this.currentId) {
-			const currentPolygonCoordinates = this.store.getGeometryCopy<Polygon>(
-				this.currentId,
-			).coordinates[0];
-
 			const { isClosing, isPreviousClosing } =
 				this.closingPoints.isClosingPoint(event);
 
@@ -759,46 +663,39 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 					event.lat = snappedCoordinate[1];
 				}
 
-				const previousCoordinate =
-					currentPolygonCoordinates[this.currentCoordinate - 1];
-				const isIdentical = coordinatesIdentical(
-					[event.lng, event.lat],
-					previousCoordinate,
-				);
+				const isIdentical =
+					this.manipulateGeometry.coordinateAtIndexIsIdentical({
+						featureId: this.currentId,
+						newCoordinate: [event.lng, event.lat],
+						index: this.currentCoordinate - 1,
+					});
 
 				if (isIdentical) {
 					return;
 				}
 
-				const updatedPolygon = createPolygon([
-					[
-						...currentPolygonCoordinates.slice(0, -1),
-						[event.lng, event.lat], // New point that onMouseMove can manipulate
-						currentPolygonCoordinates[0],
-					],
-				]);
-
 				// If not close to the final point, keep adding points
-				const updated = this.updatePolygonGeometry(
-					updatedPolygon.geometry.coordinates[0],
-					UpdateTypes.Commit,
-				);
+				const updated = this.manipulateGeometry.updatePolygon({
+					featureId: this.currentId,
+					coordinateMutations: [
+						{ type: "insert", index: -1, coordinate: [event.lng, event.lat] },
+					],
+					propertyMutations: {
+						[COMMON_PROPERTIES.COMMITTED_COORDINATE_COUNT]:
+							this.currentCoordinate + 1,
+					},
+					updateType: UpdateTypes.Commit,
+				});
+
 				if (!updated) {
 					return;
 				}
 
-				this.store.updateProperty([
-					{
-						id: this.currentId,
-						property: COMMON_PROPERTIES.COMMITTED_COORDINATE_COUNT,
-						value: this.currentCoordinate + 1,
-					},
-				]);
 				this.currentCoordinate++;
 
 				// Update closing points straight away
 				if (this.closingPoints.ids.length) {
-					this.closingPoints.update(updatedPolygon.geometry.coordinates[0]);
+					this.closingPoints.update(updated.geometry.coordinates[0]);
 				}
 			}
 		}
@@ -937,7 +834,8 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 		const featureCopy: Polygon = this.store.getGeometryCopy(
 			this.editedFeatureId,
 		);
-		const featureCoordinates = featureCopy.coordinates[0];
+
+		let coordinateMutations: CoordinateMutation[] = [];
 
 		// Either it's a coordinate drag or a line drag where the line coordinate has already been inserted
 		if (
@@ -951,74 +849,58 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 					featureCopy.coordinates[0].length - 1;
 
 			if (isStartingOrEndingCoordinate) {
-				featureCoordinates[0] = [event.lng, event.lat];
-				featureCoordinates[featureCoordinates.length - 1] = [
-					event.lng,
-					event.lat,
-				];
+				coordinateMutations.push(
+					{
+						type: "update",
+						index: 0,
+						coordinate: [event.lng, event.lat],
+					},
+					{
+						type: "update",
+						index: -1,
+						coordinate: [event.lng, event.lat],
+					},
+				);
 			} else {
-				featureCoordinates[this.editedFeatureCoordinateIndex] = [
-					event.lng,
-					event.lat,
-				];
+				coordinateMutations.push({
+					type: "update",
+					index: this.editedFeatureCoordinateIndex,
+					coordinate: [event.lng, event.lat],
+				});
 			}
 		} else if (
 			this.editedSnapType === "line" &&
 			this.editedInsertIndex === undefined
 		) {
-			// Splice inserts _before_ the index, so we need to add 1
-			this.editedInsertIndex = this.editedFeatureCoordinateIndex + 1;
+			this.editedInsertIndex = this.editedFeatureCoordinateIndex;
 
-			// Insert the new dragged snapped line coordinate
-			featureCopy.coordinates[0].splice(this.editedInsertIndex, 0, [
-				event.lng,
-				event.lat,
-			]);
+			coordinateMutations.push({
+				type: "insert",
+				index: this.editedInsertIndex,
+				coordinate: [event.lng, event.lat],
+			});
 
 			// We have inserted a point, need to change the edit index
 			// so it can be moved correctly when it gets dragged again
 			this.editedFeatureCoordinateIndex++;
 		}
 
-		const newPolygonGeometry = {
-			type: "Polygon",
-			coordinates: featureCopy.coordinates,
-		} as Polygon;
+		const updated = this.manipulateGeometry.updatePolygon({
+			featureId: this.editedFeatureId,
+			coordinateMutations,
+			propertyMutations: {
+				[COMMON_PROPERTIES.EDITED]: true,
+			},
+			updateType: UpdateTypes.Provisional,
+		});
 
-		if (this.validate) {
-			const validationResult = this.validate(
-				{
-					type: "Feature",
-					geometry: newPolygonGeometry,
-					properties: this.store.getPropertiesCopy(this.editedFeatureId),
-				} as GeoJSONStoreFeatures,
-				{
-					project: this.project,
-					unproject: this.unproject,
-					coordinatePrecision: this.coordinatePrecision,
-					updateType: UpdateTypes.Provisional,
-				},
-			);
-
-			if (!validationResult.valid) {
-				return;
-			}
+		if (!updated) {
+			return;
 		}
 
 		if (this.snapping && this.snappedPointId) {
 			this.store.delete([this.snappedPointId]);
 			this.snappedPointId = undefined;
-		}
-
-		this.store.updateGeometry([
-			{
-				id: this.editedFeatureId,
-				geometry: newPolygonGeometry,
-			},
-		]);
-
-		if (this.showCoordinatePoints) {
-			this.coordinatePoints.createOrUpdate(this.editedFeatureId);
 		}
 
 		if (this.editedPointId) {
@@ -1032,14 +914,6 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 				},
 			]);
 		}
-
-		this.store.updateProperty([
-			{
-				id: this.editedFeatureId,
-				property: COMMON_PROPERTIES.EDITED,
-				value: true,
-			},
-		]);
 	}
 
 	/** @internal */
@@ -1062,13 +936,13 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 			this.editedPointId = undefined;
 		}
 
-		this.store.updateProperty([
-			{
-				id: this.editedFeatureId,
-				property: COMMON_PROPERTIES.EDITED,
-				value: false,
+		this.manipulateGeometry.updatePolygon({
+			featureId: this.editedFeatureId,
+			propertyMutations: {
+				[COMMON_PROPERTIES.EDITED]: false,
 			},
-		]);
+			updateType: UpdateTypes.Commit,
+		});
 
 		this.onFinish(this.editedFeatureId, { mode: this.mode, action: "edit" });
 

@@ -11,12 +11,18 @@ type ManipulateGeometryBehaviorOptions = {
 	onSuccess: (feature: GeoJSONStoreFeatures) => void;
 };
 
+export const Mutations = {
+	INSERT: "insert",
+	UPDATE: "update",
+	DELETE: "delete",
+} as const;
+
 // Coordinate mutations assume that the index is relative to the original array
 // of coordinates before any mutations are applied.
 export type CoordinateMutation =
-	| { type: "insert"; index: number; coordinate: Position }
-	| { type: "update"; index: number; coordinate: Position }
-	| { type: "delete"; index: number };
+	| { type: typeof Mutations.INSERT; index: number; coordinate: Position }
+	| { type: typeof Mutations.UPDATE; index: number; coordinate: Position }
+	| { type: typeof Mutations.DELETE; index: number };
 
 interface CoordinateMutations {
 	mutations: CoordinateMutation[];

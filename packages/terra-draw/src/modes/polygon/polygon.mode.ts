@@ -815,6 +815,8 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 			this.editedFeatureId,
 		);
 
+		const eventCoordinate: Position = [event.lng, event.lat];
+
 		let coordinateMutations: CoordinateMutation[] = [];
 
 		// Either it's a coordinate drag or a line drag where the line coordinate has already been inserted
@@ -833,12 +835,12 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 					{
 						type: Mutations.UPDATE,
 						index: 0,
-						coordinate: [event.lng, event.lat],
+						coordinate: eventCoordinate,
 					},
 					{
 						type: Mutations.UPDATE,
 						index: -1,
-						coordinate: [event.lng, event.lat],
+						coordinate: eventCoordinate,
 					},
 				];
 			} else {
@@ -846,7 +848,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 					{
 						type: Mutations.UPDATE,
 						index: this.editedFeatureCoordinateIndex,
-						coordinate: [event.lng, event.lat],
+						coordinate: eventCoordinate,
 					},
 				];
 			}
@@ -854,13 +856,13 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 			this.editedSnapType === "line" &&
 			this.editedInsertIndex === undefined
 		) {
-			this.editedInsertIndex = this.editedFeatureCoordinateIndex;
+			this.editedInsertIndex = this.editedFeatureCoordinateIndex + 1;
 
 			coordinateMutations = [
 				{
 					type: Mutations.INSERT,
 					index: this.editedInsertIndex,
-					coordinate: [event.lng, event.lat],
+					coordinate: eventCoordinate,
 				},
 			];
 
@@ -898,7 +900,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 					id: this.editedPointId,
 					geometry: {
 						type: "Point",
-						coordinates: [event.lng, event.lat],
+						coordinates: eventCoordinate,
 					},
 				},
 			]);

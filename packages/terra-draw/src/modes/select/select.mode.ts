@@ -459,6 +459,11 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 		) {
 			this.midPoints.create(coordinates, featureId, this.coordinatePrecision);
 		}
+
+		this.onFinish(featureId, {
+			action: "deleteCoordinate",
+			mode: this.mode,
+		});
 	}
 
 	private select(featureId: FeatureId, fromCursor = true) {
@@ -542,6 +547,11 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 				clickedMidPoint.id as string,
 				this.coordinatePrecision,
 			);
+
+			this.onFinish(this.selected[0], {
+				action: "insertMidpoint",
+				mode: this.mode,
+			});
 
 			return;
 		}
@@ -742,6 +752,11 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 					draggedMidPoint.id as string,
 					this.coordinatePrecision,
 				);
+
+				this.onFinish(this.selected[0], {
+					action: "insertMidpoint",
+					mode: this.mode,
+				});
 
 				const draggableCoordinateIndexAfterInsert =
 					this.dragCoordinate.getDraggableIndex(event, selectedId);

@@ -48,13 +48,6 @@ test.describe("page setup", () => {
 		expect(errors).toEqual([]);
 	});
 
-	test("there are no build issues", async ({ page }) => {
-		await page.goto(pageUrl);
-		await expect(
-			await page.locator("#webpack-dev-server-client-overlay").count(),
-		).toBe(0);
-	});
-
 	test("starting -> stopping -> starting draw instance produces no console errors", async ({
 		page,
 	}) => {

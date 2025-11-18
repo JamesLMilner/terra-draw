@@ -19,10 +19,21 @@ export const Mutations = {
 
 // Coordinate mutations assume that the index is relative to the original array
 // of coordinates before any mutations are applied.
+type InsertMutation = {
+	type: typeof Mutations.INSERT;
+	index: number;
+	coordinate: Position;
+};
+type UpdateMutation = {
+	type: typeof Mutations.UPDATE;
+	index: number;
+	coordinate: Position;
+};
+type DeleteMutation = { type: typeof Mutations.DELETE; index: number };
 export type CoordinateMutation =
-	| { type: typeof Mutations.INSERT; index: number; coordinate: Position }
-	| { type: typeof Mutations.UPDATE; index: number; coordinate: Position }
-	| { type: typeof Mutations.DELETE; index: number };
+	| InsertMutation
+	| UpdateMutation
+	| DeleteMutation;
 
 interface CoordinateMutations {
 	mutations: CoordinateMutation[];
@@ -238,36 +249,30 @@ export class ManipulateGeometryBehavior<
 			const insertsHere = insertsByIndex[i];
 			for (const ins of insertsHere) {
 				// type is guaranteed "insert" here
-				newRing.push(
-					(ins as Extract<CoordinateMutation, { type: "insert" }>).coordinate,
-				);
+				newRing.push((ins as InsertMutation).coordinate);
 			}
 
-			const m = nonInsertByIndex[i];
+			const mutation = nonInsertByIndex[i];
 
-			if (!m) {
+			if (!mutation) {
 				// No update/delete targeting this index: keep the original coordinate
 				newRing.push(ring[i]);
 				continue;
 			}
 
-			if (m.type === "delete") {
+			if (mutation.type === "delete") {
 				// Skip this original coordinate
 				continue;
 			}
 
 			// Must be update
-			newRing.push(
-				(m as Extract<CoordinateMutation, { type: "update" }>).coordinate,
-			);
+			newRing.push((mutation as UpdateMutation).coordinate);
 		}
 
 		// 3) Tail inserts (index === originalLength)
 		const tailInserts = insertsByIndex[originalLength];
 		for (const ins of tailInserts) {
-			newRing.push(
-				(ins as Extract<CoordinateMutation, { type: "insert" }>).coordinate,
-			);
+			newRing.push((ins as InsertMutation).coordinate);
 		}
 
 		// 4) Return a new geometry object (or mutate in place if you prefer)

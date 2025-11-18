@@ -18,7 +18,8 @@ const ignores = [
 	".vscode",
 	"**/public",
 	"**/coverage",
-	"packages/e2e/playwright-report"
+	"packages/e2e/playwright-report",
+	"packages/e2e/index.html" // Ignore Vite root HTML file
 ];
 
 export default [

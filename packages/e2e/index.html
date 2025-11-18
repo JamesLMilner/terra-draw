@@ -1,7 +1,22 @@
-<html>
+<!doctype html>
+<html lang="en">
 
 <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Terra Draw E2E</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.8.0/dist/leaflet.css"
+        integrity="sha512-hoalWLoI8r4UszCkZ5kL8vayOGVae1oxXe/2A4AO6J9+580uKHDO3JdHb7NzwwzK5xr/Fs0W40kiNHxM9vyTtQ=="
+        crossorigin="" />
     <style>
+        html,
+        body,
+        #app {
+            height: 100%;
+            margin: 0;
+        }
+
         .leaflet-map {
             width: 100%;
             height: 100%;
@@ -25,16 +40,12 @@
             padding: 20px;
         }
     </style>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.8.0/dist/leaflet.css"
-        integrity="sha512-hoalWLoI8r4UszCkZ5kL8vayOGVae1oxXe/2A4AO6J9+580uKHDO3JdHb7NzwwzK5xr/Fs0W40kiNHxM9vyTtQ=="
-        crossorigin="" />
 </head>
 
-<body style="width: 100%; height: 100%; margin: 0">
-    <div style="display: flex; flex-direction: row; height: 100%; width: 100%">
-        <div class="leaflet-map" id="map" tabindex="0" id="map" role="application"
-            aria-label="A leaflet map used for testing purposes">
-        </div>
+<body style="width:100%;height:100%;margin:0">
+    <div style="display:flex;flex-direction:row;height:100%;width:100%">
+        <div class="leaflet-map" id="map" tabindex="0" role="application"
+            aria-label="A leaflet map used for testing purposes"></div>
     </div>
     <div class="buttons" data-testid="buttons">
         <button id="select">Select</button>
@@ -52,8 +63,7 @@
         <button id="toggle" data-testid="toggle">Toggle On/Off</button>
     </div>
 
+    <script type="module" src="/src/index.ts"></script>
 </body>
-
-<script src="./bundle.js"></script>
 
 </html>

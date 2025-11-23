@@ -59,7 +59,7 @@ export function SetupGoogle(args: StoryArgs): HTMLElement {
 	}
 
 	const { container, controls, mapContainer, modeButtons, clearButton, modes } =
-		setupMapContainer(args);
+		setupMapContainer({ ...args, adapter: "google" });
 
 	onNextFrame(() => {
 		// Initialize Google Maps asynchronously

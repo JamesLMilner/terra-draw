@@ -68,7 +68,7 @@ export function SetupArcGIS(args: StoryArgs): HTMLElement {
 	}
 
 	const { container, controls, mapContainer, modes, modeButtons, clearButton } =
-		setupMapContainer(args);
+		setupMapContainer({ ...args, adapter: "arcgis" });
 
 	onNextFrame(() => {
 		try {

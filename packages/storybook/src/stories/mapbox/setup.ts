@@ -76,7 +76,7 @@ export function SetupMapbox(args: StoryArgs): HTMLElement {
 	}
 
 	const { container, controls, mapContainer, modeButtons, clearButton, modes } =
-		setupMapContainer(args);
+		setupMapContainer({ ...args, adapter: "mapbox" });
 
 	onNextFrame(() => {
 		const { map } = initialiseMapboxMap({

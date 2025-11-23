@@ -10,13 +10,14 @@ const COLORS = {
 	lightText: "#fff",
 };
 
-export function setupMapContainer(args: StoryArgs) {
+export function setupMapContainer(args: StoryArgs & { adapter: string }) {
 	const modes = args.modes.map((mode) => mode());
 
 	const modeButtons: HTMLButtonElement[] = [];
 
 	const container = document.createElement("div");
 
+	container.setAttribute("data-adapter", args.adapter);
 	container.setAttribute("data-testid", `container`);
 	container.style.display = "flex";
 	container.style.flexDirection = "column";

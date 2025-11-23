@@ -61,7 +61,7 @@ export function SetupMapLibre(args: StoryArgs): HTMLElement {
 	}
 
 	const { container, controls, mapContainer, modeButtons, clearButton, modes } =
-		setupMapContainer(args);
+		setupMapContainer({ ...args, adapter: "maplibre" });
 
 	onNextFrame(() => {
 		try {

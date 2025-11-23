@@ -47,7 +47,7 @@ export function SetupLeaflet(args: StoryArgs): HTMLElement {
 	}
 
 	const { container, controls, mapContainer, modeButtons, clearButton, modes } =
-		setupMapContainer(args);
+		setupMapContainer({ ...args, adapter: "leaflet" });
 
 	onNextFrame(() => {
 		const { lib, map } = initialiseLeafletMap({

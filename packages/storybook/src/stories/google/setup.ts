@@ -8,7 +8,7 @@ import { TerraDraw } from "../../../../terra-draw/src/terra-draw";
 import { TerraDrawGoogleMapsAdapter } from "../../../../terra-draw-google-maps-adapter/src/terra-draw-google-maps-adapter";
 import { StoryArgs } from "../../common/config";
 
-export const initialiseGoogleMap = async ({
+const initialiseGoogleMap = async ({
 	mapContainer,
 	centerLat,
 	centerLng,
@@ -59,7 +59,7 @@ export function SetupGoogle(args: StoryArgs): HTMLElement {
 	}
 
 	const { container, controls, mapContainer, modeButtons, clearButton, modes } =
-		setupMapContainer(args);
+		setupMapContainer({ ...args, adapter: "google" });
 
 	onNextFrame(() => {
 		// Initialize Google Maps asynchronously
@@ -100,8 +100,10 @@ export function SetupGoogle(args: StoryArgs): HTMLElement {
 				});
 			})
 			.catch((error) => {
+				// We don't use console.error as this breaks Storybook tests
+
 				// eslint-disable-next-line no-console
-				console.error("Error initializing Google Maps:", error);
+				console.warn("Error initializing Google Maps:", error);
 
 				// Add error message to container
 				const errorDiv = document.createElement("div");

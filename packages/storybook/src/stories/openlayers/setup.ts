@@ -73,7 +73,7 @@ export function SetupOpenLayers(args: StoryArgs): HTMLElement {
 	}
 
 	const { container, controls, mapContainer, modeButtons, clearButton, modes } =
-		setupMapContainer(args);
+		setupMapContainer({ ...args, adapter: "openlayers" });
 
 	onNextFrame(() => {
 		const mapConfig = initialiseOpenLayersMap({

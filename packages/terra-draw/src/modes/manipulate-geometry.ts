@@ -1,49 +1,64 @@
 import { BehaviorConfig, TerraDrawModeBehavior } from "./base.behavior";
 import { FeatureId } from "../extend";
-import { GeoJSONStoreFeatures, JSONObject, JSON } from "../store/store";
-import { Polygon, Position } from "geojson";
+import {
+	GeoJSONStoreFeatures,
+	GeoJSONStoreGeometries,
+	JSONObject,
+	JSON,
+} from "../store/store";
+import { Polygon, Position, LineString, Point } from "geojson";
 import { UpdateTypes, Validation } from "../common";
 import { coordinatesIdentical } from "../geometry/coordinates-identical";
 import { ensureRightHandRule } from "../geometry/ensure-right-hand-rule";
 
-type ManipulateGeometryBehaviorOptions = {
+type ManipulateFeatureBehaviorOptions = {
 	validate: Validation | undefined;
 	onSuccess: (feature: GeoJSONStoreFeatures) => void;
 };
 
 export const Mutations = {
-	INSERT: "insert",
+	INSERT_BEFORE: "insert-before",
+	INSERT_AFTER: "insert-after",
 	UPDATE: "update",
 	DELETE: "delete",
+	REPLACE: "replace",
 } as const;
 
 // Coordinate mutations assume that the index is relative to the original array
 // of coordinates before any mutations are applied.
-type InsertMutation = {
-	type: typeof Mutations.INSERT;
+type InsertBeforeMutation = {
+	type: typeof Mutations.INSERT_BEFORE;
 	index: number;
 	coordinate: Position;
 };
+
+type InsertAfterMutation = {
+	type: typeof Mutations.INSERT_AFTER;
+	index: number;
+	coordinate: Position;
+};
+
 type UpdateMutation = {
 	type: typeof Mutations.UPDATE;
 	index: number;
 	coordinate: Position;
 };
 type DeleteMutation = { type: typeof Mutations.DELETE; index: number };
+
+export type ReplaceMutation<ReplacedGeometry extends GeoJSONStoreGeometries> = {
+	type: typeof Mutations.REPLACE;
+	coordinates: ReplacedGeometry["coordinates"];
+};
+
 export type CoordinateMutation =
-	| InsertMutation
+	| InsertBeforeMutation
+	| InsertAfterMutation
 	| UpdateMutation
 	| DeleteMutation;
 
-interface CoordinateMutations {
-	mutations: CoordinateMutation[];
-}
-
 type ValidProperties = Record<string, JSON | undefined>;
 
-export class ManipulateGeometryBehavior<
-	Properties extends ValidProperties,
-> extends TerraDrawModeBehavior {
+export class ManipulateFeatureBehavior extends TerraDrawModeBehavior {
 	constructor(
 		config: BehaviorConfig,
 		options: {
@@ -55,7 +70,7 @@ export class ManipulateGeometryBehavior<
 		this.options = options;
 	}
 
-	private options: ManipulateGeometryBehaviorOptions;
+	private options: ManipulateFeatureBehaviorOptions;
 
 	public coordinateAtIndexIsIdentical({
 		featureId,
@@ -84,32 +99,120 @@ export class ManipulateGeometryBehavior<
 		return coordinatesIdentical(newCoordinate, coordinate);
 	}
 
-	public createPolygonGeometry({
+	public getGeometry<G extends GeoJSONStoreGeometries>(featureId: FeatureId) {
+		return this.store.getGeometryCopy<G>(featureId);
+	}
+
+	public getCoordinates<G extends Exclude<GeoJSONStoreGeometries, Point>>(
+		featureId: FeatureId,
+	) {
+		const { type, coordinates } = this.store.getGeometryCopy<G>(featureId);
+		return type === "Polygon" ? coordinates[0] : coordinates;
+	}
+
+	public getCoordinate<G extends Exclude<GeoJSONStoreGeometries, Point>>(
+		featureId: FeatureId,
+		index: number,
+	) {
+		const coords = this.getCoordinates<G>(featureId);
+		const normalizedIndex = index < 0 ? coords.length + index : index;
+
+		if (normalizedIndex < 0 || normalizedIndex >= coords.length) {
+			throw new RangeError(
+				`Index ${index} (normalized to ${normalizedIndex}) is out of bounds`,
+			);
+		}
+
+		return coords[normalizedIndex];
+	}
+
+	public createPoint({
+		coordinates,
+		properties,
+	}: {
+		coordinates: Position;
+		properties?: JSONObject;
+	}) {
+		return this.createFeatureWithGeometry<Point>({
+			geometry: { type: "Point", coordinates },
+			properties,
+		});
+	}
+
+	public deleteFeature(featureId: FeatureId) {
+		this.store.delete([featureId]);
+	}
+
+	private updateGeometry<G extends GeoJSONStoreGeometries>({
+		featureId,
+		coordinateMutations,
+		updateType,
+		propertyMutations,
+	}: {
+		featureId: FeatureId;
+		updateType: UpdateTypes;
+		coordinateMutations?: CoordinateMutation[] | ReplaceMutation<G>;
+		propertyMutations?: ValidProperties;
+	}) {
+		if (!featureId) {
+			return null;
+		}
+
+		if (coordinateMutations) {
+			const existingGeometry = this.store.getGeometryCopy(featureId);
+
+			const updatedGeometry = this.applyCoordinateMutations(
+				existingGeometry,
+				coordinateMutations,
+			);
+
+			if (!this.validateGeometryWithUpdateType(updatedGeometry, updateType)) {
+				return null;
+			}
+
+			this.store.updateGeometry([{ id: featureId, geometry: updatedGeometry }]);
+		}
+
+		if (propertyMutations) {
+			this.applyPropertyMutations(featureId, propertyMutations);
+		}
+
+		const updated = this.buildFeatureWithGeometry<G>(featureId);
+
+		this.options.onSuccess(updated);
+		return updated as GeoJSONStoreFeatures<G>;
+	}
+
+	public updatePoint({
+		featureId,
+		coordinateMutations,
+		updateType,
+		propertyMutations,
+	}: {
+		featureId: FeatureId;
+		updateType: UpdateTypes;
+		coordinateMutations?: ReplaceMutation<Point>;
+		propertyMutations?: JSONObject;
+	}) {
+		return this.updateGeometry<Point>({
+			featureId,
+			coordinateMutations,
+			updateType,
+			propertyMutations,
+		});
+	}
+
+	public createPolygon({
 		coordinates,
 		properties,
 	}: {
 		coordinates: Polygon["coordinates"][0];
 		properties?: JSONObject;
 	}) {
-		const newGeometry = {
-			type: "Polygon",
-			coordinates: [coordinates],
-		} as Polygon;
-
-		const [id] = this.store.create([
-			{ geometry: newGeometry, properties: properties ? properties : {} },
-		]);
-
-		const created = {
-			id,
-			type: "Feature",
-			properties: this.store.getPropertiesCopy(id),
-			geometry: this.store.getGeometryCopy<Polygon>(id),
-		} as GeoJSONStoreFeatures;
-
-		this.options.onSuccess(created);
-
-		return created;
+		return this.createFeatureWithGeometry<Polygon>({
+			geometry: { type: "Polygon", coordinates: [coordinates] },
+			properties,
+		});
 	}
 
 	public updatePolygon({
@@ -120,166 +223,15 @@ export class ManipulateGeometryBehavior<
 	}: {
 		featureId: FeatureId;
 		updateType: UpdateTypes;
-		coordinateMutations?: CoordinateMutation[];
-		propertyMutations?: Properties;
+		coordinateMutations?: CoordinateMutation[] | ReplaceMutation<Polygon>;
+		propertyMutations?: ValidProperties;
 	}) {
-		if (!featureId) {
-			return null;
-		}
-
-		if (coordinateMutations) {
-			const existingGeometry = this.store.getGeometryCopy(featureId);
-
-			if (existingGeometry.type !== "Polygon") {
-				return null;
-			}
-
-			const updatedGeometry = this.applyCoordinateMutations(existingGeometry, {
-				mutations: coordinateMutations,
-			});
-
-			if (this.options.validate) {
-				const validationResult = this.options.validate(
-					{
-						type: "Feature",
-						geometry: updatedGeometry,
-					} as GeoJSONStoreFeatures,
-					{
-						project: this.project,
-						unproject: this.unproject,
-						coordinatePrecision: this.coordinatePrecision,
-						updateType,
-					},
-				);
-
-				if (!validationResult.valid) {
-					return null;
-				}
-			}
-
-			this.store.updateGeometry([{ id: featureId, geometry: updatedGeometry }]);
-		}
-
-		if (propertyMutations) {
-			const properties = Object.keys(propertyMutations);
-			this.store.updateProperty(
-				properties.map((key: string) => ({
-					id: featureId,
-					property: key,
-					value: propertyMutations[key] as JSON | undefined,
-				})),
-			);
-		}
-
-		const updated = {
-			id: featureId,
-			type: "Feature",
-			properties: this.store.getPropertiesCopy(featureId),
-			geometry: this.store.getGeometryCopy<Polygon>(featureId),
-		} as GeoJSONStoreFeatures<Polygon>;
-
-		this.options.onSuccess(updated);
-
-		return updated;
-	}
-
-	private applyCoordinateMutations(
-		updatedGeometry: GeoJSON.Polygon,
-		coordinatesMutations: CoordinateMutations,
-	): GeoJSON.Polygon {
-		const ring = updatedGeometry.coordinates[0];
-		const originalLength = ring.length;
-
-		// Normalize indices relative to the original array length
-		const normalizeIndex = (idx: number): number => {
-			const n = idx < 0 ? originalLength + idx : idx;
-			if (n < 0 || n > originalLength) {
-				// for inserts, we allow n === originalLength (append)
-				throw new RangeError(
-					`Index ${idx} (normalized to ${n}) is out of bounds`,
-				);
-			}
-			return n;
-		};
-
-		// For each original index i (0..originalLength-1), store:
-		// - the last non-insert mutation (update/delete) that targets i
-		const nonInsertByIndex: (CoordinateMutation | undefined)[] = new Array(
-			originalLength,
-		).fill(undefined);
-
-		// For inserts, we allow indices 0..originalLength.
-		// insertsByIndex[i] = array of insert mutations that happen *before* original element i
-		// insertsByIndex[originalLength] = inserts that go at the end
-		const insertsByIndex: CoordinateMutation[][] = Array.from(
-			{ length: originalLength + 1 },
-			() => [],
-		);
-
-		// 1) Scan mutations in the order provided
-		for (const mutation of coordinatesMutations.mutations) {
-			const normalizedIndex = normalizeIndex(mutation.index);
-
-			if (mutation.type === "insert") {
-				// Insert "before" the element that was originally at this index.
-				// If index === originalLength, this means "append at end".
-				insertsByIndex[normalizedIndex].push(mutation);
-				continue;
-			}
-
-			// update/delete point to original elements 0..originalLength-1
-			if (normalizedIndex >= originalLength) {
-				throw new RangeError(
-					`update/delete index ${mutation.index} is out of range for original length ${originalLength}`,
-				);
-			}
-
-			// For update/delete, the *last* one wins at each original index
-			nonInsertByIndex[normalizedIndex] = {
-				...mutation,
-				index: normalizedIndex,
-			};
-		}
-
-		// 2) Build the new ring from scratch
-		const newRing: Position[] = [];
-
-		for (let i = 0; i < originalLength; i++) {
-			// inserts that go before the element originally at i
-			const insertsHere = insertsByIndex[i];
-			for (const ins of insertsHere) {
-				// type is guaranteed "insert" here
-				newRing.push((ins as InsertMutation).coordinate);
-			}
-
-			const mutation = nonInsertByIndex[i];
-
-			if (!mutation) {
-				// No update/delete targeting this index: keep the original coordinate
-				newRing.push(ring[i]);
-				continue;
-			}
-
-			if (mutation.type === "delete") {
-				// Skip this original coordinate
-				continue;
-			}
-
-			// Must be update
-			newRing.push((mutation as UpdateMutation).coordinate);
-		}
-
-		// 3) Tail inserts (index === originalLength)
-		const tailInserts = insertsByIndex[originalLength];
-		for (const ins of tailInserts) {
-			newRing.push((ins as InsertMutation).coordinate);
-		}
-
-		// 4) Return a new geometry object (or mutate in place if you prefer)
-		return {
-			...updatedGeometry,
-			coordinates: [newRing, ...updatedGeometry.coordinates.slice(1)],
-		};
+		return this.updateGeometry<Polygon>({
+			featureId,
+			coordinateMutations,
+			updateType,
+			propertyMutations,
+		});
 	}
 
 	public epsilonOffset() {
@@ -313,5 +265,274 @@ export class ManipulateGeometryBehavior<
 		} else {
 			return null;
 		}
+	}
+
+	public createLineString({
+		coordinates,
+		properties,
+	}: {
+		coordinates: LineString["coordinates"];
+		properties?: JSONObject;
+	}) {
+		return this.createFeatureWithGeometry<LineString>({
+			geometry: { type: "LineString", coordinates },
+			properties,
+		});
+	}
+
+	public updateLineString({
+		featureId,
+		coordinateMutations,
+		updateType,
+		propertyMutations,
+	}: {
+		featureId: FeatureId;
+		updateType: UpdateTypes;
+		coordinateMutations?: CoordinateMutation[] | ReplaceMutation<LineString>;
+		propertyMutations?: ValidProperties;
+	}) {
+		return this.updateGeometry<LineString>({
+			featureId,
+			coordinateMutations,
+			updateType,
+			propertyMutations,
+		});
+	}
+
+	private applyCoordinateMutations<
+		UpdatedGeometry extends LineString | Polygon | Point,
+	>(
+		updatedGeometry: UpdatedGeometry,
+		coordinatesMutations:
+			| CoordinateMutation[]
+			| ReplaceMutation<UpdatedGeometry>,
+	): UpdatedGeometry {
+		if (this.isReplaceMutation(coordinatesMutations)) {
+			return {
+				...updatedGeometry,
+				coordinates: coordinatesMutations.coordinates,
+			};
+		}
+
+		if (updatedGeometry.type === "Point") {
+			throw new Error(
+				"Coordinate mutations are not supported for Point geometries",
+			);
+		}
+
+		// Determine the original coordinates array and how to write back
+		const isPolygon = updatedGeometry.type === "Polygon";
+		const originalCoordinates: Position[] = isPolygon
+			? // work on a shallow copy of the exterior ring
+				(updatedGeometry as Polygon).coordinates[0].slice()
+			: (updatedGeometry as LineString).coordinates.slice();
+
+		const originalLength = originalCoordinates.length;
+
+		// Normalize indices relative to the original array length
+		const normalizeIndex = (index: number): number => {
+			const normalized = index < 0 ? originalLength + index : index;
+
+			if (normalized < 0 || normalized >= originalLength) {
+				throw new RangeError(
+					`Index ${index} (normalized to ${normalized}) is out of bounds`,
+				);
+			}
+
+			return normalized;
+		};
+
+		// For each original index i (0..originalLength-1), store
+		// the last non-insert mutation (update/delete) that targets i
+		const nonInsertByIndex: (CoordinateMutation | undefined)[] = new Array(
+			originalLength,
+		).fill(undefined);
+
+		// For inserts, we track before/after arrays per index, plus a tailAfter array
+		const insertsBeforeByIndex: CoordinateMutation[][] = Array.from(
+			{ length: originalLength },
+			() => [],
+		);
+		const insertsAfterByIndex: CoordinateMutation[][] = Array.from(
+			{ length: originalLength },
+			() => [],
+		);
+		const tailAfter: CoordinateMutation[] = [];
+
+		// 1) Scan mutations in the order provided
+		for (const mutation of coordinatesMutations as CoordinateMutation[]) {
+			if (
+				mutation.type === Mutations.INSERT_BEFORE ||
+				mutation.type === Mutations.INSERT_AFTER
+			) {
+				// Normalize but allow index === originalLength for INSERT_AFTER as tail append
+				const rawIndex = mutation.index;
+				const normalized = rawIndex < 0 ? originalLength + rawIndex : rawIndex;
+
+				if (normalized < 0 || normalized > originalLength) {
+					throw new RangeError(
+						`Index ${mutation.index} (normalized to ${normalized}) is out of bounds`,
+					);
+				}
+
+				if (mutation.type === Mutations.INSERT_BEFORE) {
+					if (normalized >= originalLength) {
+						throw new RangeError(
+							`INSERT_BEFORE index ${mutation.index} (normalized to ${normalized}) is out of bounds for length ${originalLength}`,
+						);
+					}
+					insertsBeforeByIndex[normalized].push(mutation);
+				} else {
+					// INSERT_AFTER
+					if (normalized === originalLength) {
+						// tail append
+						tailAfter.push(mutation);
+					} else {
+						insertsAfterByIndex[normalized].push(mutation);
+					}
+				}
+
+				continue;
+			}
+
+			// Non-insert: UPDATE/DELETE
+			const normalizedIndex = normalizeIndex(mutation.index);
+
+			// For update/delete, the *last* one wins at each original index
+			nonInsertByIndex[normalizedIndex] = {
+				...mutation,
+				index: normalizedIndex,
+			};
+		}
+
+		// 2) Build the new coordinates array from scratch
+		const newCoordinates: Position[] = [];
+
+		for (let i = 0; i < originalLength; i++) {
+			// Inserts that go before the element originally at i
+			const beforeInserts = insertsBeforeByIndex[i];
+			for (const insertMutation of beforeInserts) {
+				newCoordinates.push(
+					(insertMutation as InsertBeforeMutation).coordinate,
+				);
+			}
+
+			const mutation = nonInsertByIndex[i];
+
+			if (!mutation) {
+				// No update/delete targeting this index: keep the original coordinate
+				newCoordinates.push(originalCoordinates[i]);
+			} else if (mutation.type === Mutations.DELETE) {
+				// Skip this original coordinate
+			} else {
+				// Must be update
+				newCoordinates.push((mutation as UpdateMutation).coordinate);
+			}
+
+			// Inserts that go after the element originally at i
+			const afterInserts = insertsAfterByIndex[i];
+			for (const insertMutation of afterInserts) {
+				newCoordinates.push((insertMutation as InsertAfterMutation).coordinate);
+			}
+		}
+
+		// 3) Tail inserts (INSERT_AFTER with index === originalLength)
+		for (const insertMutation of tailAfter) {
+			newCoordinates.push((insertMutation as InsertAfterMutation).coordinate);
+		}
+
+		// 4) Return a new geometry object with the updated coordinates
+		if (isPolygon) {
+			const polygon = updatedGeometry as Polygon;
+			return {
+				...polygon,
+				coordinates: [newCoordinates, ...polygon.coordinates.slice(1)],
+			} as typeof updatedGeometry;
+		}
+
+		// Is LineString
+		return {
+			...updatedGeometry,
+			coordinates: newCoordinates,
+		} as typeof updatedGeometry;
+	}
+
+	private isReplaceMutation<G extends GeoJSONStoreGeometries>(
+		mutation: CoordinateMutation[] | ReplaceMutation<G>,
+	): mutation is ReplaceMutation<G> {
+		return (mutation as ReplaceMutation<G>).type === Mutations.REPLACE;
+	}
+
+	// Shared helpers for LineString / Polygon logic
+	private createFeatureWithGeometry<G extends GeoJSONStoreGeometries>({
+		geometry,
+		properties,
+	}: {
+		geometry: G;
+		properties?: JSONObject;
+	}) {
+		const [id] = this.store.create([
+			{ geometry, properties: properties ? properties : {} },
+		]);
+
+		const created = {
+			id,
+			type: "Feature",
+			properties: this.store.getPropertiesCopy(id),
+			geometry: this.store.getGeometryCopy<G>(id),
+		} as GeoJSONStoreFeatures<G>;
+
+		this.options.onSuccess(created as GeoJSONStoreFeatures);
+
+		return created;
+	}
+
+	private validateGeometryWithUpdateType(
+		geometry: GeoJSONStoreGeometries,
+		updateType: UpdateTypes,
+	): boolean {
+		if (!this.options.validate) {
+			return true;
+		}
+
+		const validationResult = this.options.validate(
+			{
+				type: "Feature",
+				geometry,
+			} as GeoJSONStoreFeatures,
+			{
+				project: this.project,
+				unproject: this.unproject,
+				coordinatePrecision: this.coordinatePrecision,
+				updateType,
+			},
+		);
+
+		return validationResult.valid;
+	}
+
+	private applyPropertyMutations(
+		featureId: FeatureId,
+		propertyMutations: ValidProperties,
+	) {
+		const properties = Object.keys(propertyMutations);
+		this.store.updateProperty(
+			properties.map((key: string) => ({
+				id: featureId,
+				property: key,
+				value: propertyMutations[key] as JSON | undefined,
+			})),
+		);
+	}
+
+	private buildFeatureWithGeometry<G extends GeoJSONStoreGeometries>(
+		featureId: FeatureId,
+	) {
+		return {
+			id: featureId,
+			type: "Feature",
+			properties: this.store.getPropertiesCopy(featureId),
+			geometry: this.store.getGeometryCopy<G>(featureId),
+		} as GeoJSONStoreFeatures<G>;
 	}
 }

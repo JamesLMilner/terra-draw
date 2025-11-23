@@ -27,7 +27,6 @@ import { getDefaultStyling } from "../../util/styling";
 import {
 	FeatureId,
 	GeoJSONStoreFeatures,
-	GeoJSONStoreGeometries,
 	StoreValidation,
 } from "../../store/store";
 import { InsertCoordinatesBehavior } from "../insert-coordinates.behavior";
@@ -35,6 +34,12 @@ import { haversineDistanceKilometers } from "../../geometry/measure/haversine-di
 import { coordinatesIdentical } from "../../geometry/coordinates-identical";
 import { ValidateLineStringFeature } from "../../validations/linestring.validation";
 import { LineSnappingBehavior } from "../line-snapping.behavior";
+import {
+	ManipulateFeatureBehavior,
+	Mutations,
+	ReplaceMutation,
+	type CoordinateMutation,
+} from "../manipulate-geometry";
 
 type TerraDrawLineStringModeKeyEvents = {
 	cancel: KeyboardEvent["key"] | null;
@@ -114,6 +119,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 	private lineSnapping!: LineSnappingBehavior;
 	private pixelDistance!: PixelDistanceBehavior;
 	private clickBoundingBox!: ClickBoundingBoxBehavior;
+	private manipulateFeature!: ManipulateFeatureBehavior;
 
 	constructor(options?: TerraDrawLineStringModeOptions<LineStringStyling>) {
 		super(options, true);
@@ -155,36 +161,24 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 
 		if (snappedCoordinate) {
 			if (this.snappedPointId) {
-				this.store.updateGeometry([
-					{
-						id: this.snappedPointId,
-						geometry: {
-							type: "Point",
-							coordinates: snappedCoordinate,
-						},
-					},
-				]);
+				this.manipulateFeature.updatePoint({
+					featureId: this.snappedPointId,
+					updateType: UpdateTypes.Provisional,
+				});
 			} else {
-				const [snappedPointId] = this.store.create([
-					{
-						geometry: {
-							type: "Point",
-							coordinates: snappedCoordinate,
-						},
-						properties: {
-							mode: this.mode,
-							[COMMON_PROPERTIES.SNAPPING_POINT]: true,
-						},
+				this.snappedPointId = this.manipulateFeature.createPoint({
+					coordinates: snappedCoordinate,
+					properties: {
+						mode: this.mode,
+						[COMMON_PROPERTIES.SNAPPING_POINT]: true,
 					},
-				]);
-
-				this.snappedPointId = snappedPointId;
+				}).id;
 			}
 
 			event.lng = snappedCoordinate[0];
 			event.lat = snappedCoordinate[1];
 		} else if (this.snappedPointId) {
-			this.store.delete([this.snappedPointId]);
+			this.manipulateFeature.deleteFeature(this.snappedPointId);
 			this.snappedPointId = undefined;
 		}
 
@@ -196,36 +190,29 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 			return;
 		}
 
-		const currentLineGeometry = this.store.getGeometryCopy<LineString>(
-			this.currentId,
-		);
-
-		// Finish off the drawing
-		currentLineGeometry.coordinates.pop();
-
-		this.updateGeometries(
-			[...currentLineGeometry.coordinates],
-			undefined,
-			UpdateTypes.Commit,
-		);
-
-		this.store.updateProperty([
-			{
-				id: this.currentId,
-				property: COMMON_PROPERTIES.CURRENTLY_DRAWING,
-				value: undefined,
+		this.manipulateFeature.updateLineString({
+			featureId: this.currentId,
+			updateType: UpdateTypes.Commit,
+			coordinateMutations: [
+				{
+					type: Mutations.DELETE,
+					index: -1,
+				},
+			],
+			propertyMutations: {
+				[COMMON_PROPERTIES.CURRENTLY_DRAWING]: undefined,
 			},
-		]);
+		});
 
 		const finishedId = this.currentId;
 
 		// Reset the state back to starting state
 		if (this.closingPointId) {
-			this.store.delete([this.closingPointId]);
+			this.manipulateFeature.deleteFeature(this.closingPointId);
 		}
 
 		if (this.snappedPointId) {
-			this.store.delete([this.snappedPointId]);
+			this.manipulateFeature.deleteFeature(this.snappedPointId);
 		}
 
 		this.currentCoordinate = 0;
@@ -241,63 +228,6 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 
 		// Ensure that any listeners are triggered with the main created geometry
 		this.onFinish(finishedId, { mode: this.mode, action: "draw" });
-	}
-
-	private updateGeometries(
-		coordinates: LineString["coordinates"],
-		closingPointCoordinate: Point["coordinates"] | undefined,
-		updateType: UpdateTypes,
-	) {
-		if (!this.currentId) {
-			return;
-		}
-
-		const updatedGeometry = { type: "LineString", coordinates } as LineString;
-
-		if (this.validate) {
-			const validationResult = this.validate(
-				{
-					type: "Feature",
-					geometry: updatedGeometry,
-				} as GeoJSONStoreFeatures,
-				{
-					project: this.project,
-					unproject: this.unproject,
-					coordinatePrecision: this.coordinatePrecision,
-					updateType: updateType,
-				},
-			);
-
-			if (!validationResult.valid) {
-				return;
-			}
-		}
-
-		const geometries = [
-			{
-				id: this.currentId,
-				geometry: updatedGeometry,
-			},
-		] as {
-			id: FeatureId;
-			geometry: GeoJSONStoreGeometries;
-		}[];
-
-		if (this.closingPointId && closingPointCoordinate) {
-			geometries.push({
-				id: this.closingPointId,
-				geometry: {
-					type: "Point",
-					coordinates: closingPointCoordinate,
-				},
-			});
-		}
-
-		if (updateType === "commit") {
-			this.lastCommittedCoordinates = updatedGeometry.coordinates;
-		}
-
-		this.store.updateGeometry(geometries);
 	}
 
 	private generateInsertCoordinates(startCoord: Position, endCoord: Position) {
@@ -333,23 +263,19 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 	}
 
 	private createLine(startingCoord: Position) {
-		const [createdId] = this.store.create([
-			{
-				geometry: {
-					type: "LineString",
-					coordinates: [
-						startingCoord,
-						startingCoord, // This is the 'live' point that changes on mouse move
-					],
-				},
-				properties: {
-					mode: this.mode,
-					[COMMON_PROPERTIES.CURRENTLY_DRAWING]: true, // This is the current line being drawn
-				},
+		const created = this.manipulateFeature.createLineString({
+			coordinates: [
+				startingCoord,
+				startingCoord, // This is the 'live' point that changes on mouse move
+			],
+			properties: {
+				mode: this.mode,
+				[COMMON_PROPERTIES.CURRENTLY_DRAWING]: true,
 			},
-		]);
-		this.lastCommittedCoordinates = [startingCoord, startingCoord];
-		this.currentId = createdId;
+		});
+
+		this.lastCommittedCoordinates = created.geometry.coordinates;
+		this.currentId = created.id as FeatureId;
 		this.currentCoordinate++;
 		this.setDrawing();
 	}
@@ -359,66 +285,59 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 			return;
 		}
 
-		const currentLineGeometry = this.store.getGeometryCopy<LineString>(
-			this.currentId,
-		);
-
-		const currentCoordinates = currentLineGeometry.coordinates;
-
-		const [pointId] = this.store.create([
-			{
-				geometry: {
-					type: "Point",
-					coordinates: [...updatedCoord],
-				},
-				properties: {
-					mode: this.mode,
-					[COMMON_PROPERTIES.CLOSING_POINT]: true,
-				},
+		this.closingPointId = this.manipulateFeature.createPoint({
+			coordinates: updatedCoord,
+			properties: {
+				mode: this.mode,
+				[COMMON_PROPERTIES.CLOSING_POINT]: true,
 			},
-		]);
-		this.closingPointId = pointId;
+		}).id;
 
 		// We are creating the point so we immediately want
 		// to set the point cursor to show it can be closed
 		this.setCursor(this.cursors.close);
 
-		const initialLineCoordinates = [...currentCoordinates, updatedCoord];
-		const closingPointCoordinate = undefined; // We don't need this until second click
+		const updated = this.manipulateFeature.updateLineString({
+			featureId: this.currentId,
+			updateType: UpdateTypes.Commit,
+			coordinateMutations: [
+				{
+					type: Mutations.INSERT_AFTER,
+					index: -1,
+					coordinate: updatedCoord,
+				},
+			],
+		});
 
-		this.updateGeometries(
-			initialLineCoordinates,
-			closingPointCoordinate,
-			UpdateTypes.Commit,
-		);
+		if (!updated) {
+			return;
+		}
 
+		this.lastCommittedCoordinates = updated.geometry.coordinates;
 		this.currentCoordinate++;
+	}
+
+	private updateClosingPointCoordinate(
+		closingPointCoordinate: Position | undefined,
+	) {
+		if (this.closingPointId && closingPointCoordinate) {
+			this.manipulateFeature.updatePoint({
+				featureId: this.closingPointId,
+				coordinateMutations: {
+					type: Mutations.REPLACE,
+					coordinates: closingPointCoordinate,
+				},
+				updateType: UpdateTypes.Provisional,
+			});
+		}
 	}
 
 	private updateToLine(updatedCoord: Position, cursorXY: CartesianPoint) {
 		if (!this.currentId) {
 			return;
 		}
-		const currentLineGeometry = this.store.getGeometryCopy<LineString>(
-			this.currentId,
-		);
 
-		const currentCoordinates = currentLineGeometry.coordinates;
-
-		// If we are not inserting points we can get the penultimate coordinated
-		const [previousLng, previousLat] = this.lastCommittedCoordinates
-			? this.lastCommittedCoordinates[this.lastCommittedCoordinates.length - 1]
-			: currentCoordinates[currentCoordinates.length - 2];
-
-		// Determine if the click closes the line and finished drawing
-		const { x, y } = this.project(previousLng, previousLat);
-		const distance = cartesianDistance(
-			{ x, y },
-			{ x: cursorXY.x, y: cursorXY.y },
-		);
-		const isClosingClick = distance < this.pointerDistance;
-
-		if (isClosingClick) {
+		if (this.isClosingEvent(cursorXY)) {
 			this.close();
 			return;
 		}
@@ -427,15 +346,23 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 		// closing point will be underneath the cursor
 		this.setCursor(this.cursors.close);
 
-		const updatedLineCoordinates = [...currentCoordinates, updatedCoord];
-		const updatedClosingPointCoordinate =
-			currentCoordinates[currentCoordinates.length - 1];
+		const updated = this.manipulateFeature.updateLineString({
+			featureId: this.currentId,
+			updateType: UpdateTypes.Commit,
+			coordinateMutations: [
+				{ type: Mutations.INSERT_AFTER, index: -1, coordinate: updatedCoord },
+			],
+		});
 
-		this.updateGeometries(
-			updatedLineCoordinates,
-			updatedClosingPointCoordinate,
-			UpdateTypes.Commit,
-		);
+		if (!updated) {
+			return;
+		}
+
+		const updatedClosingPointCoordinate =
+			updated.geometry.coordinates[updated.geometry.coordinates.length - 2];
+		this.updateClosingPointCoordinate(updatedClosingPointCoordinate);
+
+		this.lastCommittedCoordinates = updated.geometry.coordinates;
 
 		this.currentCoordinate++;
 	}
@@ -462,6 +389,12 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 			this.pixelDistance,
 			this.clickBoundingBox,
 		);
+
+		// New: behavior to manipulate LineString geometry
+		this.manipulateFeature = new ManipulateFeatureBehavior(config, {
+			validate: this.validate,
+			onSuccess: (_feature) => undefined,
+		});
 	}
 
 	/** @internal */
@@ -493,58 +426,97 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 			return;
 		}
 
-		const currentLineGeometry = this.store.getGeometryCopy<LineString>(
-			this.currentId,
+		// If the pointer is hovered over the closing point we show the close cursor
+		if (this.isClosingEvent({ x: event.containerX, y: event.containerY })) {
+			this.setCursor(this.cursors.close);
+		}
+
+		// Default mutation is just to update the final coordinate
+		let coordinateMutations:
+			| CoordinateMutation[]
+			| ReplaceMutation<LineString> = [
+			{
+				type: Mutations.UPDATE,
+				index: -1,
+				coordinate: updatedCoord,
+			},
+		];
+
+		if (this.insertCoordinates) {
+			const insertCoordinates = this.getInsertCoordinates(updatedCoord);
+
+			if (insertCoordinates) {
+				coordinateMutations = {
+					type: Mutations.REPLACE,
+					coordinates: insertCoordinates,
+				};
+			}
+		}
+
+		this.manipulateFeature.updateLineString({
+			coordinateMutations,
+			featureId: this.currentId,
+			updateType: UpdateTypes.Provisional,
+		});
+	}
+
+	private getInsertCoordinates(endCoord: Position) {
+		if (!this.lastCommittedCoordinates) {
+			return;
+		}
+
+		const index = this.lastCommittedCoordinates.length - 1;
+		const startCoord = this.lastCommittedCoordinates[index];
+
+		if (coordinatesIdentical(startCoord, endCoord)) {
+			return;
+		}
+
+		const insertedCoordinates = this.generateInsertCoordinates(
+			startCoord,
+			endCoord,
 		);
 
-		const currentCoordinates = currentLineGeometry.coordinates;
+		return [
+			...this.lastCommittedCoordinates.slice(0, -1),
+			...insertedCoordinates,
+			endCoord,
+		];
+	}
 
-		// Remove the 'live' point that changes on mouse move
-		currentCoordinates.pop();
+	private isClosingEvent(cursorXY: CartesianPoint) {
+		if (!this.currentId) {
+			return false;
+		}
 
 		// We want to ensure that when we are hovering over
 		// the closing point that the pointer cursor is shown
 		if (this.closingPointId) {
-			const [previousLng, previousLat] =
-				currentCoordinates[currentCoordinates.length - 1];
-			const { x, y } = this.project(previousLng, previousLat);
-			const distance = cartesianDistance(
-				{ x, y },
-				{ x: event.containerX, y: event.containerY },
-			);
+			let previousCoordinate: Position;
 
+			if (this.lastCommittedCoordinates !== undefined) {
+				const previousIndex = this.lastCommittedCoordinates.length - 1;
+				previousCoordinate = this.lastCommittedCoordinates[previousIndex];
+			} else {
+				previousCoordinate = this.manipulateFeature.getCoordinate<LineString>(
+					this.currentId,
+					-2,
+				);
+			}
+
+			const [previousLng, previousLat] = previousCoordinate;
+			const previousPoint = this.project(previousLng, previousLat);
+			const eventPoint = { x: cursorXY.x, y: cursorXY.y };
+
+			const distance = cartesianDistance(previousPoint, eventPoint);
 			const isClosingClick = distance < this.pointerDistance;
 
 			if (isClosingClick) {
-				this.setCursor(this.cursors.close);
+				return true;
 			}
 		}
 
-		let line = [...currentCoordinates, updatedCoord];
-
-		if (
-			this.insertCoordinates &&
-			this.currentId &&
-			this.lastCommittedCoordinates
-		) {
-			const startCoord =
-				this.lastCommittedCoordinates[this.lastCommittedCoordinates.length - 1];
-			const endCoord = updatedCoord;
-			if (!coordinatesIdentical(startCoord, endCoord)) {
-				const insertedCoordinates = this.generateInsertCoordinates(
-					startCoord,
-					endCoord,
-				);
-				line = [
-					...this.lastCommittedCoordinates.slice(0, -1),
-					...insertedCoordinates,
-					updatedCoord,
-				];
-			}
-		}
-
-		// Update the 'live' point
-		this.updateGeometries(line, undefined, UpdateTypes.Provisional);
+		return false;
 	}
 
 	private onRightClick(event: TerraDrawMouseEvent) {
@@ -561,7 +533,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 			return;
 		}
 
-		const geometry = this.store.getGeometryCopy(featureId);
+		const geometry = this.manipulateFeature.getGeometry(featureId);
 
 		let coordinates;
 		if (geometry.type === "LineString") {
@@ -575,42 +547,17 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 			return;
 		}
 
-		// Remove coordinate from array
-		coordinates.splice(coordinateIndex, 1);
-
-		// Validate the new geometry
-		if (this.validate) {
-			const validationResult = this.validate(
-				{
-					id: featureId,
-					type: "Feature",
-					geometry,
-					properties: {},
-				},
-				{
-					project: this.project,
-					unproject: this.unproject,
-					coordinatePrecision: this.coordinatePrecision,
-					updateType: UpdateTypes.Commit,
-				},
-			);
-			if (!validationResult.valid) {
-				return;
-			}
-		}
-
 		// The geometry has changed, so if we were snapped to a point we need to remove it
 		if (this.snappedPointId) {
-			this.store.delete([this.snappedPointId]);
+			this.manipulateFeature.deleteFeature(this.snappedPointId);
 			this.snappedPointId = undefined;
 		}
 
-		this.store.updateGeometry([
-			{
-				id: featureId,
-				geometry,
-			},
-		]);
+		this.manipulateFeature.updateLineString({
+			featureId,
+			updateType: UpdateTypes.Finish,
+			coordinateMutations: [{ type: Mutations.DELETE, index: coordinateIndex }],
+		});
 
 		this.onFinish(featureId, { mode: this.mode, action: "edit" });
 	}
@@ -618,7 +565,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 	private onLeftClick(event: TerraDrawMouseEvent) {
 		// Reset the snapping point
 		if (this.snappedPointId) {
-			this.store.delete([this.snappedPointId]);
+			this.manipulateFeature.deleteFeature(this.snappedPointId);
 			this.snappedPointId = undefined;
 		}
 
@@ -729,20 +676,13 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 
 		// Create a point to drag when editing
 		if (!this.editedPointId) {
-			const [editedPointId] = this.store.create([
-				{
-					geometry: {
-						type: "Point",
-						coordinates: snappedCoordinate,
-					},
-					properties: {
-						mode: this.mode,
-						[COMMON_PROPERTIES.EDITED]: true,
-					},
+			this.editedPointId = this.manipulateFeature.createPoint({
+				coordinates: snappedCoordinate,
+				properties: {
+					mode: this.mode,
+					[COMMON_PROPERTIES.EDITED]: true,
 				},
-			]);
-
-			this.editedPointId = editedPointId;
+			}).id;
 		}
 
 		// Drag Feature
@@ -767,20 +707,26 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 			return;
 		}
 
-		const featureCopy: LineString = this.store.getGeometryCopy(
-			this.editedFeatureId,
-		);
-		const featureCoordinates = featureCopy.coordinates;
-
 		// Either it's a coordinate drag or a line drag where the line coordinate has already been inserted
 		if (
 			this.editedSnapType === "coordinate" ||
 			(this.editedSnapType === "line" && this.editedInsertIndex !== undefined)
 		) {
-			featureCoordinates[this.editedFeatureCoordinateIndex] = [
-				event.lng,
-				event.lat,
-			];
+			const updated = this.manipulateFeature.updateLineString({
+				featureId: this.editedFeatureId,
+				updateType: UpdateTypes.Provisional,
+				coordinateMutations: [
+					{
+						type: Mutations.UPDATE,
+						index: this.editedFeatureCoordinateIndex,
+						coordinate: [event.lng, event.lat],
+					},
+				],
+			});
+
+			if (!updated) {
+				return;
+			}
 		} else if (
 			this.editedSnapType === "line" &&
 			this.editedInsertIndex === undefined
@@ -788,73 +734,48 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 			// Splice inserts _before_ the index, so we need to add 1
 			this.editedInsertIndex = this.editedFeatureCoordinateIndex + 1;
 
-			// Insert the new dragged snapped line coordinate
-			featureCopy.coordinates.splice(this.editedInsertIndex, 0, [
-				event.lng,
-				event.lat,
-			]);
+			const inserted = this.manipulateFeature.updateLineString({
+				featureId: this.editedFeatureId,
+				updateType: UpdateTypes.Provisional,
+				coordinateMutations: [
+					{
+						type: Mutations.INSERT_AFTER,
+						index: this.editedInsertIndex,
+						coordinate: [event.lng, event.lat],
+					},
+				],
+			});
+
+			if (!inserted) {
+				return;
+			}
 
 			// We have inserted a point, need to change the edit index
 			// so it can be moved correctly when it gets dragged again
 			this.editedFeatureCoordinateIndex++;
 		}
 
-		const newLineStringGeometry = {
-			type: "LineString",
-			coordinates: featureCopy.coordinates,
-		} as LineString;
-
-		if (this.validate) {
-			const validationResult = this.validate(
-				{
-					type: "Feature",
-					geometry: newLineStringGeometry,
-					properties: this.store.getPropertiesCopy(this.editedFeatureId),
-				} as GeoJSONStoreFeatures,
-				{
-					project: this.project,
-					unproject: this.unproject,
-					coordinatePrecision: this.coordinatePrecision,
-					updateType: UpdateTypes.Provisional,
-				},
-			);
-
-			if (!validationResult.valid) {
-				return;
-			}
-		}
-
 		if (this.snapping && this.snappedPointId) {
-			this.store.delete([this.snappedPointId]);
+			this.manipulateFeature.deleteFeature(this.snappedPointId);
 			this.snappedPointId = undefined;
 		}
 
-		this.store.updateGeometry([
-			{
-				id: this.editedFeatureId,
-				geometry: newLineStringGeometry,
-			},
-		]);
-
 		if (this.editedPointId) {
-			this.store.updateGeometry([
-				{
-					id: this.editedPointId,
-					geometry: {
-						type: "Point",
-						coordinates: [event.lng, event.lat],
-					},
+			this.manipulateFeature.updatePoint({
+				featureId: this.editedPointId,
+				coordinateMutations: {
+					type: Mutations.REPLACE,
+					coordinates: [event.lng, event.lat],
 				},
-			]);
+				updateType: UpdateTypes.Provisional,
+			});
 		}
 
-		this.store.updateProperty([
-			{
-				id: this.editedFeatureId,
-				property: COMMON_PROPERTIES.EDITED,
-				value: true,
-			},
-		]);
+		this.manipulateFeature.updateLineString({
+			featureId: this.editedFeatureId,
+			updateType: UpdateTypes.Provisional,
+			propertyMutations: { [COMMON_PROPERTIES.EDITED]: true },
+		});
 	}
 
 	/** @internal */
@@ -873,17 +794,15 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 		this.setCursor(this.cursors.dragEnd);
 
 		if (this.editedPointId) {
-			this.store.delete([this.editedPointId]);
+			this.manipulateFeature.deleteFeature(this.editedPointId);
 			this.editedPointId = undefined;
 		}
 
-		this.store.updateProperty([
-			{
-				id: this.editedFeatureId,
-				property: COMMON_PROPERTIES.EDITED,
-				value: false,
-			},
-		]);
+		this.manipulateFeature.updateLineString({
+			featureId: this.editedFeatureId,
+			updateType: UpdateTypes.Finish,
+			propertyMutations: { [COMMON_PROPERTIES.EDITED]: false },
+		});
 
 		this.onFinish(this.editedFeatureId, { mode: this.mode, action: "edit" });
 
@@ -912,13 +831,13 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 
 		try {
 			if (cleanUpId !== undefined) {
-				this.store.delete([cleanUpId]);
+				this.manipulateFeature.deleteFeature(cleanUpId);
 			}
 			if (snappedPointId !== undefined) {
-				this.store.delete([snappedPointId]);
+				this.manipulateFeature.deleteFeature(snappedPointId);
 			}
 			if (cleanupClosingPointId !== undefined) {
-				this.store.delete([cleanupClosingPointId]);
+				this.manipulateFeature.deleteFeature(cleanupClosingPointId);
 			}
 		} catch (error) {}
 	}
@@ -1046,7 +965,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 				currentId: this.currentId,
 				getCurrentGeometrySnapshot: this.currentId
 					? () =>
-							this.store.getGeometryCopy<LineString>(
+							this.manipulateFeature.getGeometry<LineString>(
 								this.currentId as FeatureId,
 							)
 					: () => null,
@@ -1066,7 +985,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 		// we want to clear that state up as new polygon might be completely
 		// different in terms of it's coordinates
 		if (this.editedFeatureId === feature.id && this.editedPointId) {
-			this.store.delete([this.editedPointId]);
+			this.manipulateFeature.deleteFeature(this.editedPointId);
 			this.editedPointId = undefined;
 			this.editedFeatureId = undefined;
 			this.editedFeatureCoordinateIndex = undefined;
@@ -1085,7 +1004,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 		// to recover the drawing state after a feature update
 		if (this.currentId === feature.id) {
 			if (this.closingPointId) {
-				this.store.delete([this.closingPointId]);
+				this.manipulateFeature.deleteFeature(this.closingPointId);
 				this.closingPointId = undefined;
 			}
 

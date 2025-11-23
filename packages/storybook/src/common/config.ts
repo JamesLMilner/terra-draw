@@ -18,6 +18,13 @@ export interface StoryArgs {
 	instructions?: string;
 	afterRender?: (draw: TerraDraw) => void;
 	showButtons?: boolean;
+	adapter:
+		| "google"
+		| "leaflet"
+		| "mapbox"
+		| "openlayers"
+		| "maplibre"
+		| "arcgis";
 }
 
 export const DefaultZoom = {
@@ -29,6 +36,16 @@ export const DefaultPlay = {
 		await within(canvasElement).findByTestId("container");
 
 		if (args.showButtons === false) {
+			return;
+		}
+
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		const env = (import.meta as any).env;
+
+		if (
+			(!env.GOOGLE_API_KEY && args.adapter === "google") ||
+			(!env.MAPBOX_ACCESS_TOKEN && args.adapter === "mapbox")
+		) {
 			return;
 		}
 

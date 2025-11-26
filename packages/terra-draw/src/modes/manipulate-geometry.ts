@@ -7,13 +7,14 @@ import {
 	JSON,
 } from "../store/store";
 import { Polygon, Position, LineString, Point } from "geojson";
-import { UpdateTypes, Validation } from "../common";
+import { Actions, UpdateTypes, Validation } from "../common";
 import { coordinatesIdentical } from "../geometry/coordinates-identical";
 import { ensureRightHandRule } from "../geometry/ensure-right-hand-rule";
 
 type ManipulateFeatureBehaviorOptions = {
 	validate: Validation | undefined;
 	onSuccess: (feature: GeoJSONStoreFeatures) => void;
+	onFinish: (featureId: FeatureId, context: FinishContext) => void;
 };
 
 export const Mutations = {
@@ -58,13 +59,16 @@ export type CoordinateMutation =
 
 type ValidProperties = Record<string, JSON | undefined>;
 
+type FinishContext = { updateType: UpdateTypes.Finish; action: Actions };
+
+type ManipulateContext =
+	| FinishContext
+	| { updateType: UpdateTypes.Commit | UpdateTypes.Provisional };
+
 export class ManipulateFeatureBehavior extends TerraDrawModeBehavior {
 	constructor(
 		config: BehaviorConfig,
-		options: {
-			validate: Validation | undefined;
-			onSuccess: (feature: GeoJSONStoreFeatures) => void;
-		},
+		options: ManipulateFeatureBehaviorOptions,
 	) {
 		super(config);
 		this.options = options;
@@ -144,29 +148,50 @@ export class ManipulateFeatureBehavior extends TerraDrawModeBehavior {
 	}
 
 	private updateGeometry<G extends GeoJSONStoreGeometries>({
+		type,
 		featureId,
 		coordinateMutations,
-		updateType,
 		propertyMutations,
+		context,
 	}: {
+		type: G["type"];
 		featureId: FeatureId;
-		updateType: UpdateTypes;
 		coordinateMutations?: CoordinateMutation[] | ReplaceMutation<G>;
 		propertyMutations?: ValidProperties;
+		context: ManipulateContext & { correctRightHandRule?: boolean };
 	}) {
 		if (!featureId) {
 			return null;
 		}
 
-		if (coordinateMutations) {
-			const existingGeometry = this.store.getGeometryCopy(featureId);
+		const existingGeometry = this.store.getGeometryCopy(featureId);
 
-			const updatedGeometry = this.applyCoordinateMutations(
+		if (existingGeometry.type !== type) {
+			throw new Error(
+				`${type} geometries cannot be updated on features with ${existingGeometry.type} geometries`,
+			);
+		}
+
+		if (coordinateMutations) {
+			let updatedGeometry = this.applyCoordinateMutations(
 				existingGeometry,
 				coordinateMutations,
 			);
 
-			if (!this.validateGeometryWithUpdateType(updatedGeometry, updateType)) {
+			// For polygons, we may need to enforce the right-hand rule
+			if (context.correctRightHandRule && updatedGeometry.type === "Polygon") {
+				const correctedGeometry = ensureRightHandRule(updatedGeometry);
+				if (correctedGeometry) {
+					updatedGeometry = correctedGeometry;
+				}
+			}
+
+			if (
+				!this.validateGeometryWithUpdateType(
+					updatedGeometry,
+					context.updateType,
+				)
+			) {
 				return null;
 			}
 
@@ -180,24 +205,30 @@ export class ManipulateFeatureBehavior extends TerraDrawModeBehavior {
 		const updated = this.buildFeatureWithGeometry<G>(featureId);
 
 		this.options.onSuccess(updated);
+
+		if (context.updateType === UpdateTypes.Finish) {
+			this.options.onFinish(featureId, context as FinishContext);
+		}
+
 		return updated as GeoJSONStoreFeatures<G>;
 	}
 
 	public updatePoint({
 		featureId,
 		coordinateMutations,
-		updateType,
 		propertyMutations,
+		context,
 	}: {
 		featureId: FeatureId;
-		updateType: UpdateTypes;
 		coordinateMutations?: ReplaceMutation<Point>;
 		propertyMutations?: JSONObject;
+		context: ManipulateContext;
 	}) {
 		return this.updateGeometry<Point>({
+			type: "Point",
 			featureId,
 			coordinateMutations,
-			updateType,
+			context,
 			propertyMutations,
 		});
 	}
@@ -218,19 +249,28 @@ export class ManipulateFeatureBehavior extends TerraDrawModeBehavior {
 	public updatePolygon({
 		featureId,
 		coordinateMutations,
-		updateType,
+		context,
 		propertyMutations,
 	}: {
 		featureId: FeatureId;
-		updateType: UpdateTypes;
+		context: ManipulateContext;
 		coordinateMutations?: CoordinateMutation[] | ReplaceMutation<Polygon>;
 		propertyMutations?: ValidProperties;
 	}) {
 		return this.updateGeometry<Polygon>({
+			type: "Polygon",
 			featureId,
 			coordinateMutations,
-			updateType,
 			propertyMutations,
+			context:
+				context.updateType === UpdateTypes.Finish
+					? {
+							...context,
+							correctRightHandRule: true,
+						}
+					: {
+							...context,
+						},
 		});
 	}
 
@@ -240,31 +280,6 @@ export class ManipulateFeatureBehavior extends TerraDrawModeBehavior {
 		const epsilon = 1 / Math.pow(10, this.coordinatePrecision - 1);
 		const offset = Math.max(0.000001, epsilon);
 		return offset;
-	}
-
-	public correctPolygon(featureId: FeatureId) {
-		const correctedGeometry = ensureRightHandRule(
-			this.store.getGeometryCopy<Polygon>(featureId),
-		);
-
-		if (correctedGeometry) {
-			this.store.updateGeometry([
-				{ id: featureId, geometry: correctedGeometry },
-			]);
-
-			const corrected = {
-				id: featureId,
-				type: "Feature",
-				properties: this.store.getPropertiesCopy(featureId),
-				geometry: this.store.getGeometryCopy<Polygon>(featureId),
-			} as GeoJSONStoreFeatures<Polygon>;
-
-			this.options.onSuccess(corrected);
-
-			return corrected;
-		} else {
-			return null;
-		}
 	}
 
 	public createLineString({
@@ -283,19 +298,20 @@ export class ManipulateFeatureBehavior extends TerraDrawModeBehavior {
 	public updateLineString({
 		featureId,
 		coordinateMutations,
-		updateType,
+		context,
 		propertyMutations,
 	}: {
 		featureId: FeatureId;
-		updateType: UpdateTypes;
 		coordinateMutations?: CoordinateMutation[] | ReplaceMutation<LineString>;
 		propertyMutations?: ValidProperties;
+		context: ManipulateContext;
 	}) {
 		return this.updateGeometry<LineString>({
+			type: "LineString",
 			featureId,
 			coordinateMutations,
-			updateType,
 			propertyMutations,
+			context,
 		});
 	}
 

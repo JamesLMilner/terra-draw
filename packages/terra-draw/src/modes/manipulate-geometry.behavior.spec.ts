@@ -18,6 +18,7 @@ describe("ManipulateFeatureBehavior", () => {
 			new ManipulateFeatureBehavior(MockBehaviorConfig("test"), {
 				validate: undefined,
 				onSuccess: jest.fn(),
+				onFinish: jest.fn(),
 			});
 		});
 	});
@@ -29,6 +30,7 @@ describe("ManipulateFeatureBehavior", () => {
 				const behavior = new ManipulateFeatureBehavior(config, {
 					validate: undefined,
 					onSuccess: jest.fn(),
+					onFinish: jest.fn(),
 				});
 
 				const polygonId = createStorePolygon(config); // [[0,0],[0,1],[1,1],[1,0],[0,0]]
@@ -83,7 +85,7 @@ describe("ManipulateFeatureBehavior", () => {
 						index: 1,
 						newCoordinate: [0, 0],
 					}),
-				).toThrowError("Point geometries only have one coordinate at index 0");
+				).toThrow("Point geometries only have one coordinate at index 0");
 			});
 		});
 
@@ -94,6 +96,7 @@ describe("ManipulateFeatureBehavior", () => {
 				const behavior = new ManipulateFeatureBehavior(config, {
 					validate: undefined,
 					onSuccess,
+					onFinish: jest.fn(),
 				});
 
 				const coords: Polygon["coordinates"][0] = [
@@ -123,34 +126,39 @@ describe("ManipulateFeatureBehavior", () => {
 				const behavior = new ManipulateFeatureBehavior(config, {
 					validate: undefined,
 					onSuccess,
+					onFinish: jest.fn(),
 				});
 
 				// @ts-expect-error testing missing id path
 				const updated = behavior.updatePolygon({
 					// no featureId
-					updateType: UpdateTypes.Commit,
+					context: { updateType: UpdateTypes.Commit },
 				});
 				expect(updated).toBeNull();
 				expect(onSuccess).not.toHaveBeenCalled();
 			});
 
-			it("returns null for non-Polygon geometries", () => {
+			it("throws for non-Polygon geometries", () => {
 				const config = MockBehaviorConfig("test");
 				const behavior = new ManipulateFeatureBehavior(config, {
 					validate: undefined,
 					onSuccess: jest.fn(),
+					onFinish: jest.fn(),
 				});
 
 				const pointId = createStorePoint(config);
 
-				const res = behavior.updatePolygon({
-					featureId: pointId,
-					updateType: UpdateTypes.Commit,
-					coordinateMutations: [
-						{ type: Mutations.UPDATE, index: 0, coordinate: [1, 1] },
-					],
-				});
-				expect(res).toBeNull();
+				expect(() => {
+					const res = behavior.updatePolygon({
+						featureId: pointId,
+						context: { updateType: UpdateTypes.Commit },
+						coordinateMutations: [
+							{ type: Mutations.UPDATE, index: 0, coordinate: [1, 1] },
+						],
+					});
+				}).toThrow(
+					"Polygon geometries cannot be updated on features with Point geometries",
+				);
 			});
 
 			it("applies coordinate mutations (UPDATE)", () => {
@@ -159,6 +167,7 @@ describe("ManipulateFeatureBehavior", () => {
 				const behavior = new ManipulateFeatureBehavior(config, {
 					validate: undefined,
 					onSuccess,
+					onFinish: jest.fn(),
 				});
 
 				const polygonId = createStorePolygon(config); // original ring length 5
@@ -169,7 +178,7 @@ describe("ManipulateFeatureBehavior", () => {
 
 				const updated = behavior.updatePolygon({
 					featureId: polygonId,
-					updateType: UpdateTypes.Commit,
+					context: { updateType: UpdateTypes.Commit },
 					coordinateMutations: mutations,
 				});
 
@@ -192,6 +201,7 @@ describe("ManipulateFeatureBehavior", () => {
 				const behavior = new ManipulateFeatureBehavior(config, {
 					validate: undefined,
 					onSuccess,
+					onFinish: jest.fn(),
 				});
 
 				const polygonId = createStorePolygon(config); // original ring length 5
@@ -202,7 +212,7 @@ describe("ManipulateFeatureBehavior", () => {
 
 				const updated = behavior.updatePolygon({
 					featureId: polygonId,
-					updateType: UpdateTypes.Commit,
+					context: { updateType: UpdateTypes.Commit },
 					coordinateMutations: mutations,
 				});
 
@@ -226,6 +236,7 @@ describe("ManipulateFeatureBehavior", () => {
 				const behavior = new ManipulateFeatureBehavior(config, {
 					validate: undefined,
 					onSuccess,
+					onFinish: jest.fn(),
 				});
 
 				const polygonId = createStorePolygon(config); // original ring length 5
@@ -236,7 +247,7 @@ describe("ManipulateFeatureBehavior", () => {
 
 				const updated = behavior.updatePolygon({
 					featureId: polygonId,
-					updateType: UpdateTypes.Commit,
+					context: { updateType: UpdateTypes.Commit },
 					coordinateMutations: mutations,
 				});
 
@@ -258,6 +269,7 @@ describe("ManipulateFeatureBehavior", () => {
 				const behavior = new ManipulateFeatureBehavior(config, {
 					validate: undefined,
 					onSuccess,
+					onFinish: jest.fn(),
 				});
 
 				const polygonId = createStorePolygon(config); // ring length 5
@@ -271,7 +283,7 @@ describe("ManipulateFeatureBehavior", () => {
 
 				const updated = behavior.updatePolygon({
 					featureId: polygonId,
-					updateType: UpdateTypes.Commit,
+					context: { updateType: UpdateTypes.Commit },
 					coordinateMutations: mutations,
 				});
 
@@ -296,6 +308,7 @@ describe("ManipulateFeatureBehavior", () => {
 				const behavior = new ManipulateFeatureBehavior(config, {
 					validate: undefined,
 					onSuccess,
+					onFinish: jest.fn(),
 				});
 
 				// original length 5: [ [0, 0], [0, 1], [1, 1], [1, 0], [0, 0]],
@@ -309,7 +322,7 @@ describe("ManipulateFeatureBehavior", () => {
 
 				const updated = behavior.updatePolygon({
 					featureId: polygonId,
-					updateType: UpdateTypes.Commit,
+					context: { updateType: UpdateTypes.Commit },
 					coordinateMutations: mutations,
 				});
 
@@ -333,6 +346,7 @@ describe("ManipulateFeatureBehavior", () => {
 				const behavior = new ManipulateFeatureBehavior(config, {
 					validate: undefined,
 					onSuccess: jest.fn(),
+					onFinish: jest.fn(),
 				});
 
 				const polygonId = createStorePolygon(config); // original length 5
@@ -340,7 +354,7 @@ describe("ManipulateFeatureBehavior", () => {
 				// Negative index insert (-1 => before last original element)
 				const updated = behavior.updatePolygon({
 					featureId: polygonId,
-					updateType: UpdateTypes.Commit,
+					context: { updateType: UpdateTypes.Commit },
 					coordinateMutations: [
 						{ type: Mutations.INSERT_BEFORE, index: -1, coordinate: [7, 7] },
 					],
@@ -355,6 +369,7 @@ describe("ManipulateFeatureBehavior", () => {
 				const behavior = new ManipulateFeatureBehavior(config, {
 					validate: undefined,
 					onSuccess: jest.fn(),
+					onFinish: jest.fn(),
 				});
 
 				const polygonId = createStorePolygon(config); // original length 5
@@ -363,7 +378,7 @@ describe("ManipulateFeatureBehavior", () => {
 				expect(() =>
 					behavior.updatePolygon({
 						featureId: polygonId,
-						updateType: UpdateTypes.Commit,
+						context: { updateType: UpdateTypes.Commit },
 						coordinateMutations: [
 							{ type: Mutations.UPDATE, index: 5, coordinate: [1, 1] },
 						],
@@ -374,7 +389,7 @@ describe("ManipulateFeatureBehavior", () => {
 				expect(() =>
 					behavior.updatePolygon({
 						featureId: polygonId,
-						updateType: UpdateTypes.Commit,
+						context: { updateType: UpdateTypes.Commit },
 						coordinateMutations: [{ type: Mutations.DELETE, index: -6 }],
 					}),
 				).toThrow(RangeError);
@@ -386,6 +401,7 @@ describe("ManipulateFeatureBehavior", () => {
 				const behavior = new ManipulateFeatureBehavior(config, {
 					validate: undefined,
 					onSuccess,
+					onFinish: jest.fn(),
 				});
 
 				const polygonId = createStorePolygon(config); // original ring
@@ -400,7 +416,7 @@ describe("ManipulateFeatureBehavior", () => {
 
 				const updated = behavior.updatePolygon({
 					featureId: polygonId,
-					updateType: UpdateTypes.Commit,
+					context: { updateType: UpdateTypes.Commit },
 					coordinateMutations: {
 						type: Mutations.REPLACE,
 						coordinates: [newRing],
@@ -420,6 +436,7 @@ describe("ManipulateFeatureBehavior", () => {
 				const behaviorHigh = new ManipulateFeatureBehavior(configHigh, {
 					validate: undefined,
 					onSuccess: jest.fn(),
+					onFinish: jest.fn(),
 				});
 				expect(behaviorHigh.epsilonOffset()).toBeCloseTo(0.000001, 10);
 
@@ -427,55 +444,9 @@ describe("ManipulateFeatureBehavior", () => {
 				const behaviorLow = new ManipulateFeatureBehavior(configLow, {
 					validate: undefined,
 					onSuccess: jest.fn(),
+					onFinish: jest.fn(),
 				});
 				expect(behaviorLow.epsilonOffset()).toBeCloseTo(0.0001, 10);
-			});
-		});
-
-		describe("correctPolygon", () => {
-			it("reverses clockwise rings and returns null when already correct", () => {
-				const config = MockBehaviorConfig("test");
-				const onSuccess = jest.fn();
-				const behavior = new ManipulateFeatureBehavior(config, {
-					validate: undefined,
-					onSuccess,
-				});
-
-				// Clockwise ring (fails right-hand rule), should be corrected
-				const cwId = createStorePolygon(config, [
-					[
-						[0, 0],
-						[0, 1],
-						[1, 1],
-						[1, 0],
-						[0, 0],
-					],
-				]);
-
-				const corrected = behavior.correctPolygon(cwId)!;
-				expect(corrected).not.toBeNull();
-				expect(corrected.geometry.coordinates[0]).toEqual([
-					[0, 0],
-					[1, 0],
-					[1, 1],
-					[0, 1],
-					[0, 0],
-				]);
-				expect(onSuccess).toHaveBeenCalledTimes(1);
-
-				// CCW ring (already correct), returns null
-				const ccwId = createStorePolygon(config, [
-					[
-						[0, 0],
-						[1, 0],
-						[1, 1],
-						[0, 1],
-						[0, 0],
-					],
-				]);
-
-				const notCorrected = behavior.correctPolygon(ccwId);
-				expect(notCorrected).toBeNull();
 			});
 		});
 
@@ -486,6 +457,7 @@ describe("ManipulateFeatureBehavior", () => {
 				const behavior = new ManipulateFeatureBehavior(config, {
 					validate: undefined,
 					onSuccess,
+					onFinish: jest.fn(),
 				});
 
 				const coords = [
@@ -513,36 +485,40 @@ describe("ManipulateFeatureBehavior", () => {
 				const behavior = new ManipulateFeatureBehavior(config, {
 					validate: undefined,
 					onSuccess,
+					onFinish: jest.fn(),
 				});
 
 				// @ts-expect-error testing missing id path
 				const updated = behavior.updateLineString({
 					// no featureId
-					updateType: UpdateTypes.Commit,
+					context: { updateType: UpdateTypes.Commit },
 				});
 
 				expect(updated).toBeNull();
 				expect(onSuccess).not.toHaveBeenCalled();
 			});
 
-			it("returns null for non-LineString geometries", () => {
+			it("throws for non-LineString geometries", () => {
 				const config = MockBehaviorConfig("test");
 				const behavior = new ManipulateFeatureBehavior(config, {
 					validate: undefined,
 					onSuccess: jest.fn(),
+					onFinish: jest.fn(),
 				});
 
 				const polygonId = createStorePolygon(config);
 
-				const res = behavior.updateLineString({
-					featureId: polygonId,
-					updateType: UpdateTypes.Commit,
-					coordinateMutations: [
-						{ type: Mutations.UPDATE, index: 0, coordinate: [1, 1] },
-					],
-				});
-
-				expect(res).toBeNull();
+				expect(() => {
+					behavior.updateLineString({
+						featureId: polygonId,
+						context: { updateType: UpdateTypes.Commit },
+						coordinateMutations: [
+							{ type: Mutations.UPDATE, index: 0, coordinate: [1, 1] },
+						],
+					});
+				}).toThrow(
+					`LineString geometries cannot be updated on features with Polygon geometries`,
+				);
 			});
 
 			it("applies coordinate mutations (UPDATE)", () => {
@@ -551,6 +527,7 @@ describe("ManipulateFeatureBehavior", () => {
 				const behavior = new ManipulateFeatureBehavior(config, {
 					validate: undefined,
 					onSuccess,
+					onFinish: jest.fn(),
 				});
 
 				const lineId = createStoreLineString(config); // original length 2: [[0,0],[0,1]]
@@ -561,7 +538,7 @@ describe("ManipulateFeatureBehavior", () => {
 
 				const updated = behavior.updateLineString({
 					featureId: lineId,
-					updateType: UpdateTypes.Commit,
+					context: { updateType: UpdateTypes.Commit },
 					coordinateMutations: mutations,
 				});
 
@@ -581,6 +558,7 @@ describe("ManipulateFeatureBehavior", () => {
 				const behavior = new ManipulateFeatureBehavior(config, {
 					validate: undefined,
 					onSuccess,
+					onFinish: jest.fn(),
 				});
 
 				const lineId = createStoreLineString(config); // original length 2: [[0,0],[0,1]]
@@ -591,7 +569,7 @@ describe("ManipulateFeatureBehavior", () => {
 
 				const updated = behavior.updateLineString({
 					featureId: lineId,
-					updateType: UpdateTypes.Commit,
+					context: { updateType: UpdateTypes.Commit },
 					coordinateMutations: mutations,
 				});
 
@@ -612,6 +590,7 @@ describe("ManipulateFeatureBehavior", () => {
 				const behavior = new ManipulateFeatureBehavior(config, {
 					validate: undefined,
 					onSuccess,
+					onFinish: jest.fn(),
 				});
 
 				const lineId = createStoreLineString(config); // original length 2: [[0,0],[0,1]]
@@ -622,7 +601,7 @@ describe("ManipulateFeatureBehavior", () => {
 
 				const updated = behavior.updateLineString({
 					featureId: lineId,
-					updateType: UpdateTypes.Commit,
+					context: { updateType: UpdateTypes.Commit },
 					coordinateMutations: mutations,
 				});
 
@@ -639,6 +618,7 @@ describe("ManipulateFeatureBehavior", () => {
 				const behavior = new ManipulateFeatureBehavior(config, {
 					validate: undefined,
 					onSuccess,
+					onFinish: jest.fn(),
 				});
 
 				const lineId = createStoreLineString(config); // original length 2: [[0,0],[0,1]]
@@ -651,7 +631,7 @@ describe("ManipulateFeatureBehavior", () => {
 
 				const updated = behavior.updateLineString({
 					featureId: lineId,
-					updateType: UpdateTypes.Commit,
+					context: { updateType: UpdateTypes.Commit },
 					coordinateMutations: mutations,
 				});
 
@@ -672,13 +652,14 @@ describe("ManipulateFeatureBehavior", () => {
 				const behavior = new ManipulateFeatureBehavior(config, {
 					validate: undefined,
 					onSuccess: jest.fn(),
+					onFinish: jest.fn(),
 				});
 
 				const lineId = createStoreLineString(config); // original length 2
 
 				const updated = behavior.updateLineString({
 					featureId: lineId,
-					updateType: UpdateTypes.Commit,
+					context: { updateType: UpdateTypes.Commit },
 					coordinateMutations: [
 						{ type: Mutations.INSERT_AFTER, index: -1, coordinate: [5, 5] },
 					],
@@ -696,6 +677,7 @@ describe("ManipulateFeatureBehavior", () => {
 				const behavior = new ManipulateFeatureBehavior(config, {
 					validate: undefined,
 					onSuccess: jest.fn(),
+					onFinish: jest.fn(),
 				});
 
 				const lineId = createStoreLineString(config); // original length 2
@@ -704,7 +686,7 @@ describe("ManipulateFeatureBehavior", () => {
 				expect(() =>
 					behavior.updateLineString({
 						featureId: lineId,
-						updateType: UpdateTypes.Commit,
+						context: { updateType: UpdateTypes.Commit },
 						coordinateMutations: [
 							{ type: Mutations.UPDATE, index: 2, coordinate: [1, 1] },
 						],
@@ -715,7 +697,7 @@ describe("ManipulateFeatureBehavior", () => {
 				expect(() =>
 					behavior.updateLineString({
 						featureId: lineId,
-						updateType: UpdateTypes.Commit,
+						context: { updateType: UpdateTypes.Commit },
 						coordinateMutations: [{ type: Mutations.DELETE, index: -3 }],
 					}),
 				).toThrow(RangeError);
@@ -727,6 +709,7 @@ describe("ManipulateFeatureBehavior", () => {
 				const behavior = new ManipulateFeatureBehavior(config, {
 					validate: undefined,
 					onSuccess,
+					onFinish: jest.fn(),
 				});
 
 				const lineId = createStoreLineString(config);
@@ -739,7 +722,7 @@ describe("ManipulateFeatureBehavior", () => {
 
 				const updated = behavior.updateLineString({
 					featureId: lineId,
-					updateType: UpdateTypes.Commit,
+					context: { updateType: UpdateTypes.Commit },
 					coordinateMutations: {
 						type: Mutations.REPLACE,
 						coordinates: newCoords,

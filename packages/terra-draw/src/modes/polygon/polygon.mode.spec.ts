@@ -1175,6 +1175,7 @@ describe("TerraDrawPolygonMode", () => {
 			const mockConfig = MockModeConfig(polygonMode.mode);
 
 			store = mockConfig.store;
+			onFinish = mockConfig.onFinish;
 			polygonMode.register(mockConfig);
 			polygonMode.start();
 
@@ -1226,18 +1227,18 @@ describe("TerraDrawPolygonMode", () => {
 			expect(store.updateGeometry).toHaveBeenCalledTimes(7);
 
 			polygonMode.onClick(thirdPoint);
-			// Right hand rule is not valid so extra update!
-			expect(store.updateGeometry).toHaveBeenCalledTimes(9);
 
-			// Polygon is now closed
+			polygonMode.onClick(thirdPoint);
+
+			// Polygon is now closed and corrected to right hand rule
 			expect(store.updateGeometry).toHaveBeenNthCalledWith(8, [
 				{
 					geometry: {
 						coordinates: [
 							[
 								[1, 1],
-								[2, 2],
 								[3, 3],
+								[2, 2],
 								[1, 1],
 							],
 						],
@@ -1246,6 +1247,12 @@ describe("TerraDrawPolygonMode", () => {
 					id: expect.any(String),
 				},
 			]);
+
+			expect(onFinish).toHaveBeenCalledTimes(1);
+			expect(onFinish).toHaveBeenNthCalledWith(1, expect.any(String), {
+				action: "draw",
+				mode: "polygon",
+			});
 		});
 
 		it("right click can delete a point if editable is true", () => {
@@ -1311,6 +1318,10 @@ describe("TerraDrawPolygonMode", () => {
 			expect(features.length).toBe(1);
 
 			expect(onFinish).toHaveBeenCalledTimes(1);
+			expect(onFinish).toHaveBeenNthCalledWith(1, expect.any(String), {
+				action: "draw",
+				mode: "polygon",
+			});
 
 			// Delete a coordinate
 			polygonMode.onClick(
@@ -1329,6 +1340,10 @@ describe("TerraDrawPolygonMode", () => {
 			);
 
 			expect(onFinish).toHaveBeenCalledTimes(2);
+			expect(onFinish).toHaveBeenNthCalledWith(2, expect.any(String), {
+				action: "edit",
+				mode: "polygon",
+			});
 		});
 
 		it("context menu click cannot delete a point whilst currently drawing if editable is true", () => {
@@ -1477,6 +1492,10 @@ describe("TerraDrawPolygonMode", () => {
 			).toBe(undefined);
 
 			expect(onFinish).toHaveBeenCalledTimes(1);
+			expect(onFinish).toHaveBeenNthCalledWith(1, expect.any(String), {
+				action: "draw",
+				mode: "polygon",
+			});
 		});
 
 		describe("with leftClick pointer event set to false", () => {

@@ -8,4 +8,4 @@ Terra Draw is primarily maintained by James Milner. You can find his [GitHub spo
 
 ## Current Sponsors
 
-<img src="https://www.osgeo.org/wp-content/uploads/sponsor-osgeo-uk_740x412_acf_cropped.png" alt="Description" width="300" >
+<a href="https://uk.osgeo.org/"><img alt="The OSGeo:UK logo" src="https://www.osgeo.org/wp-content/uploads/sponsor-osgeo-uk_740x412_acf_cropped.png" alt="Description" width="300" ></a>

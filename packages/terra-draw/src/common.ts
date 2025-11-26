@@ -80,7 +80,14 @@ export type GetLngLatFromEvent = (event: PointerEvent | MouseEvent) => {
 
 export type Projection = "web-mercator" | "globe";
 
-export type OnFinishContext = { mode: string; action: string };
+export const FinishActions = {
+	DRAW: "draw",
+	EDIT: "edit",
+} as const;
+
+export type Actions = (typeof FinishActions)[keyof typeof FinishActions];
+
+export type OnFinishContext = { mode: string; action: Actions };
 
 export type TerraDrawOnChangeContext =
 	| { origin: "api"; target?: "geometry" | "properties" }

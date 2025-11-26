@@ -267,6 +267,7 @@ export abstract class TerraDrawBaseAdapter implements TerraDrawAdapter {
 
 						// If it is a microdrag we do not register it by returning early
 						if (isMicroDrag) {
+							console.log("Micro drag");
 							return;
 						}
 

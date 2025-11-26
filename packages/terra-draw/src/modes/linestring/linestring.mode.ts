@@ -10,8 +10,9 @@ import {
 	Z_INDEX,
 	Snapping,
 	COMMON_PROPERTIES,
+	FinishActions,
 } from "../../common";
-import { Feature, LineString, Point, Position } from "geojson";
+import { Feature, LineString, Position } from "geojson";
 import {
 	BaseModeOptions,
 	CustomStyling,
@@ -163,7 +164,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 			if (this.snappedPointId) {
 				this.manipulateFeature.updatePoint({
 					featureId: this.snappedPointId,
-					updateType: UpdateTypes.Provisional,
+					context: { updateType: UpdateTypes.Provisional },
 				});
 			} else {
 				this.snappedPointId = this.manipulateFeature.createPoint({
@@ -192,7 +193,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 
 		this.manipulateFeature.updateLineString({
 			featureId: this.currentId,
-			updateType: UpdateTypes.Commit,
+			context: { updateType: UpdateTypes.Finish, action: FinishActions.DRAW },
 			coordinateMutations: [
 				{
 					type: Mutations.DELETE,
@@ -203,8 +204,6 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 				[COMMON_PROPERTIES.CURRENTLY_DRAWING]: undefined,
 			},
 		});
-
-		const finishedId = this.currentId;
 
 		// Reset the state back to starting state
 		if (this.closingPointId) {
@@ -225,9 +224,6 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 		if (this.state === "drawing") {
 			this.setStarted();
 		}
-
-		// Ensure that any listeners are triggered with the main created geometry
-		this.onFinish(finishedId, { mode: this.mode, action: "draw" });
 	}
 
 	private generateInsertCoordinates(startCoord: Position, endCoord: Position) {
@@ -299,7 +295,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 
 		const updated = this.manipulateFeature.updateLineString({
 			featureId: this.currentId,
-			updateType: UpdateTypes.Commit,
+			context: { updateType: UpdateTypes.Commit },
 			coordinateMutations: [
 				{
 					type: Mutations.INSERT_AFTER,
@@ -327,7 +323,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 					type: Mutations.REPLACE,
 					coordinates: closingPointCoordinate,
 				},
-				updateType: UpdateTypes.Provisional,
+				context: { updateType: UpdateTypes.Provisional },
 			});
 		}
 	}
@@ -348,7 +344,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 
 		const updated = this.manipulateFeature.updateLineString({
 			featureId: this.currentId,
-			updateType: UpdateTypes.Commit,
+			context: { updateType: UpdateTypes.Commit },
 			coordinateMutations: [
 				{ type: Mutations.INSERT_AFTER, index: -1, coordinate: updatedCoord },
 			],
@@ -369,12 +365,6 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 
 	/** @internal */
 	registerBehaviors(config: BehaviorConfig) {
-		this.coordinateSnapping = new CoordinateSnappingBehavior(
-			config,
-			new PixelDistanceBehavior(config),
-			new ClickBoundingBoxBehavior(config),
-		);
-
 		this.insertPoint = new InsertCoordinatesBehavior(config);
 
 		this.clickBoundingBox = new ClickBoundingBoxBehavior(config);
@@ -394,6 +384,8 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 		this.manipulateFeature = new ManipulateFeatureBehavior(config, {
 			validate: this.validate,
 			onSuccess: (_feature) => undefined,
+			onFinish: (featureId, context) =>
+				this.onFinish(featureId, { mode: this.mode, ...context }),
 		});
 	}
 
@@ -456,7 +448,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 		this.manipulateFeature.updateLineString({
 			coordinateMutations,
 			featureId: this.currentId,
-			updateType: UpdateTypes.Provisional,
+			context: { updateType: UpdateTypes.Provisional },
 		});
 	}
 
@@ -477,11 +469,9 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 			endCoord,
 		);
 
-		return [
-			...this.lastCommittedCoordinates.slice(0, -1),
-			...insertedCoordinates,
-			endCoord,
-		];
+		const startCoordinates = this.lastCommittedCoordinates.slice(0, -1);
+
+		return [...startCoordinates, ...insertedCoordinates, endCoord];
 	}
 
 	private isClosingEvent(cursorXY: CartesianPoint) {
@@ -547,19 +537,21 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 			return;
 		}
 
+		const updated = this.manipulateFeature.updateLineString({
+			featureId,
+			coordinateMutations: [{ type: Mutations.DELETE, index: coordinateIndex }],
+			context: { updateType: UpdateTypes.Finish, action: FinishActions.EDIT },
+		});
+
+		if (!updated) {
+			return;
+		}
+
 		// The geometry has changed, so if we were snapped to a point we need to remove it
 		if (this.snappedPointId) {
 			this.manipulateFeature.deleteFeature(this.snappedPointId);
 			this.snappedPointId = undefined;
 		}
-
-		this.manipulateFeature.updateLineString({
-			featureId,
-			updateType: UpdateTypes.Finish,
-			coordinateMutations: [{ type: Mutations.DELETE, index: coordinateIndex }],
-		});
-
-		this.onFinish(featureId, { mode: this.mode, action: "edit" });
 	}
 
 	private onLeftClick(event: TerraDrawMouseEvent) {
@@ -714,7 +706,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 		) {
 			const updated = this.manipulateFeature.updateLineString({
 				featureId: this.editedFeatureId,
-				updateType: UpdateTypes.Provisional,
+				context: { updateType: UpdateTypes.Provisional },
 				coordinateMutations: [
 					{
 						type: Mutations.UPDATE,
@@ -736,14 +728,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 
 			const inserted = this.manipulateFeature.updateLineString({
 				featureId: this.editedFeatureId,
-				updateType: UpdateTypes.Provisional,
-				coordinateMutations: [
-					{
-						type: Mutations.INSERT_AFTER,
-						index: this.editedInsertIndex,
-						coordinate: [event.lng, event.lat],
-					},
-				],
+				context: { updateType: UpdateTypes.Provisional },
 			});
 
 			if (!inserted) {
@@ -767,13 +752,13 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 					type: Mutations.REPLACE,
 					coordinates: [event.lng, event.lat],
 				},
-				updateType: UpdateTypes.Provisional,
+				context: { updateType: UpdateTypes.Provisional },
 			});
 		}
 
 		this.manipulateFeature.updateLineString({
 			featureId: this.editedFeatureId,
-			updateType: UpdateTypes.Provisional,
+			context: { updateType: UpdateTypes.Provisional },
 			propertyMutations: { [COMMON_PROPERTIES.EDITED]: true },
 		});
 	}
@@ -800,11 +785,9 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 
 		this.manipulateFeature.updateLineString({
 			featureId: this.editedFeatureId,
-			updateType: UpdateTypes.Finish,
 			propertyMutations: { [COMMON_PROPERTIES.EDITED]: false },
+			context: { updateType: UpdateTypes.Finish, action: FinishActions.EDIT },
 		});
-
-		this.onFinish(this.editedFeatureId, { mode: this.mode, action: "edit" });
 
 		// Reset edit state
 		this.editedFeatureId = undefined;

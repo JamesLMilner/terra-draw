@@ -28,6 +28,10 @@ export const ZIndexOrdering = AllStories.ZIndexOrdering;
 export const Styling = AllStories.Styling;
 export const Circle = AllStories.Circle;
 export const Rectangle = AllStories.Rectangle;
+export const RectangleWithClickDragInteraction =
+	AllStories.RectangleWithClickDragInteraction;
+export const RectangleWithClickMoveOrDragInteraction =
+	AllStories.RectangleWithClickMoveOrDragInteraction;
 export const AngledRectangle = AllStories.AngledRectangle;
 export const Sector = AllStories.Sector;
 export const LineString = AllStories.LineString;

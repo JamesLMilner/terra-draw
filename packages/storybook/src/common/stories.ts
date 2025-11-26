@@ -277,6 +277,36 @@ const Rectangle: Story = {
 	},
 };
 
+// Rectangle drawing with click-drag interaction story
+const RectangleWithClickDragInteraction: Story = {
+	...DefaultStory,
+	args: {
+		id: "rectangle-with-click-drag-interaction",
+		modes: [
+			() =>
+				new TerraDrawRectangleMode({
+					drawInteraction: "click-drag",
+				}),
+		],
+		...DefaultStory.args,
+	},
+};
+
+// Rectangle drawing with click-move-or-drag interaction story
+const RectangleWithClickMoveOrDragInteraction: Story = {
+	...DefaultStory,
+	args: {
+		id: "rectangle-with-click-move-or-drag-interaction",
+		modes: [
+			() =>
+				new TerraDrawRectangleMode({
+					drawInteraction: "click-move-or-drag",
+				}),
+		],
+		...DefaultStory.args,
+	},
+};
+
 // Angled rectangle drawing story
 const AngledRectangle: Story = {
 	...DefaultStory,
@@ -666,6 +696,8 @@ const AllStories = {
 	ZIndexOrdering,
 	Circle,
 	Rectangle,
+	RectangleWithClickDragInteraction,
+	RectangleWithClickMoveOrDragInteraction,
 	AngledRectangle,
 	Sector,
 	LineString,

@@ -21,6 +21,7 @@ const createMockGoogleMap = (overrides?: Partial<google.maps.Map>) => {
 		controls: [],
 		data: {
 			addListener: jest.fn(),
+			setStyle: jest.fn(),
 		} as any,
 		fitBounds: jest.fn(),
 		getCenter: jest.fn(),
@@ -234,7 +235,9 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 					id: "map",
 					querySelector: jest.fn(() => div),
 				})) as any,
-				data: {} as any,
+				data: {
+					setStyle: jest.fn(),
+				} as any,
 			});
 			const adapter = new TerraDrawGoogleMapsAdapter({
 				lib: {
@@ -265,6 +268,7 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 				})) as any,
 				data: {
 					addListener: addListenerMock,
+					setStyle: jest.fn(),
 				} as any,
 			});
 			const adapter = new TerraDrawGoogleMapsAdapter({
@@ -985,6 +989,26 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 			});
 
 			adapter.clear();
+		});
+		it("is clears data.setStyle function", () => {
+			const mockMap = createMockGoogleMap({
+				data: {
+					setStyle: jest.fn(),
+				} as any,
+			});
+			const adapter = new TerraDrawGoogleMapsAdapter({
+				lib: {
+					OverlayView: jest.fn(() => ({
+						setMap: jest.fn(),
+						getProjection: jest.fn(),
+					})),
+				} as any,
+				map: mockMap,
+			});
+
+			adapter.clear();
+
+			expect(mockMap.data.setStyle).toHaveBeenCalled();
 		});
 	});
 });

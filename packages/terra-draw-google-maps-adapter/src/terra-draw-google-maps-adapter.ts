@@ -507,6 +507,11 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawExtend.TerraDrawBaseAda
 			// Then clean up rendering
 			this.clearLayers();
 		}
+
+		// clean up any styles set on the default data layer
+		if (this._map.data) {
+			this._map.data.setStyle(null);
+		}
 	}
 
 	public getCoordinatePrecision(): number {

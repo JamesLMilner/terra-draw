@@ -405,6 +405,107 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 			expect(lngLatFromEvent?.lng).toEqual(testLng);
 			expect(lngLatFromEvent?.lat).toEqual(testLat);
 		});
+
+		it("returns uses the fullscreen element for boundingClientRect in fullscreen mode", () => {
+			// Mock fullscreen element with its own getBoundingClientRect
+			const fullscreenElementMock = {
+				getBoundingClientRect: jest.fn(() => ({
+					left: 0,
+					top: 0,
+				})),
+			};
+
+			// Store original document.fullscreenElement
+			const originalFullscreenElement = Object.getOwnPropertyDescriptor(
+				document,
+				"fullscreenElement",
+			);
+
+			// Mock document.fullscreenElement to return our mock element
+			Object.defineProperty(document, "fullscreenElement", {
+				configurable: true,
+				get: () => fullscreenElementMock,
+			});
+
+			const mapMock = createMockGoogleMap({
+				getBounds: jest.fn(
+					() =>
+						({
+							getNorthEast: jest.fn(),
+							getSouthWest: jest.fn(),
+						}) as unknown as google.maps.LatLngBounds,
+				),
+				getDiv: jest.fn(
+					() =>
+						({
+							id: "map",
+							querySelector: jest.fn(() => ({
+								addEventListener: jest.fn(),
+							})),
+							getBoundingClientRect: jest.fn(() => ({
+								left: 371, // we do NOT want to see these returned
+								top: 580,
+							})),
+						}) as unknown as HTMLDivElement,
+				),
+			});
+
+			const testX = 10;
+			const testY = 15;
+
+			const fromContainerPixelToLatLngMock = jest.fn((passed) => {
+				return {
+					lng: () => (passed.x === testX ? testLng : -1.01),
+					lat: () => (passed.y === testY ? testLat : -1.01),
+				};
+			});
+			const getProjectionMock = jest.fn(() => ({
+				fromContainerPixelToLatLng: fromContainerPixelToLatLngMock,
+			}));
+
+			const adapter = new TerraDrawGoogleMapsAdapter({
+				lib: {
+					LatLng: jest.fn(),
+					LatLngBounds: jest.fn(() => ({
+						contains: jest.fn(() => true),
+					})),
+					Point: jest.fn((x, y) => ({ x, y })),
+					OverlayView: jest.fn(() => ({
+						setMap: jest.fn(),
+						getProjection: getProjectionMock,
+					})),
+				} as any,
+				map: mapMock,
+			});
+
+			adapter.register(MockCallbacks());
+
+			let event = MockPointerEvent();
+			// @ts-ignore -- ok to overwrite this in tests
+			event.clientX = testX;
+			// @ts-ignore -- ok to overwrite this in tests
+			event.clientY = testY;
+
+			const lngLatFromEvent = adapter.getLngLatFromEvent(event);
+
+			// Verify that the fullscreen element's getBoundingClientRect was called
+			expect(fullscreenElementMock.getBoundingClientRect).toHaveBeenCalled();
+
+			expect(lngLatFromEvent?.lng).toEqual(testLng);
+			expect(lngLatFromEvent?.lat).toEqual(testLat);
+
+			// // Restore original document.fullscreenElement
+			if (originalFullscreenElement) {
+				Object.defineProperty(
+					document,
+					"fullscreenElement",
+					originalFullscreenElement,
+				);
+			} else {
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any
+				delete (document as any).fullscreenElement;
+			}
+		});
 	});
 
 	describe("project", () => {

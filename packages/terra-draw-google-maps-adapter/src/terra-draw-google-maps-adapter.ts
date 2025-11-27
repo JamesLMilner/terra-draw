@@ -147,9 +147,11 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawExtend.TerraDrawBaseAda
 		const sw = bounds.getSouthWest();
 		const latLngBounds = new this._lib.LatLngBounds(sw, ne);
 
-		const mapCanvas = this._map.getDiv();
-		const offsetX = event.clientX - mapCanvas.getBoundingClientRect().left;
-		const offsetY = event.clientY - mapCanvas.getBoundingClientRect().top;
+		// In fullscreen mode, use coordinates relative to the fullscreen element
+		const mapElement = document.fullscreenElement ?? this._map.getDiv();
+		const mapCanvasRect = mapElement.getBoundingClientRect();
+		const offsetX = event.clientX - mapCanvasRect.left;
+		const offsetY = event.clientY - mapCanvasRect.top;
 		const screenCoord = new this._lib.Point(offsetX, offsetY);
 
 		const projection = this._overlay.getProjection();

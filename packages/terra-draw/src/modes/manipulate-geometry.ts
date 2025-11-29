@@ -11,9 +11,9 @@ import { Actions, UpdateTypes, Validation } from "../common";
 import { coordinatesIdentical } from "../geometry/coordinates-identical";
 import { ensureRightHandRule } from "../geometry/ensure-right-hand-rule";
 
-type ManipulateFeatureBehaviorOptions = {
+type MutateFeatureBehaviorOptions = {
 	validate: Validation | undefined;
-	onSuccess: (feature: GeoJSONStoreFeatures) => void;
+	onUpdate: (feature: GeoJSONStoreFeatures) => void;
 	onFinish: (featureId: FeatureId, context: FinishContext) => void;
 };
 
@@ -61,20 +61,17 @@ type ValidProperties = Record<string, JSON | undefined>;
 
 type FinishContext = { updateType: UpdateTypes.Finish; action: Actions };
 
-type ManipulateContext =
+type MutateContext =
 	| FinishContext
 	| { updateType: UpdateTypes.Commit | UpdateTypes.Provisional };
 
-export class ManipulateFeatureBehavior extends TerraDrawModeBehavior {
-	constructor(
-		config: BehaviorConfig,
-		options: ManipulateFeatureBehaviorOptions,
-	) {
+export class MutateFeatureBehavior extends TerraDrawModeBehavior {
+	constructor(config: BehaviorConfig, options: MutateFeatureBehaviorOptions) {
 		super(config);
 		this.options = options;
 	}
 
-	private options: ManipulateFeatureBehaviorOptions;
+	private options: MutateFeatureBehaviorOptions;
 
 	public coordinateAtIndexIsIdentical({
 		featureId,
@@ -158,7 +155,7 @@ export class ManipulateFeatureBehavior extends TerraDrawModeBehavior {
 		featureId: FeatureId;
 		coordinateMutations?: CoordinateMutation[] | ReplaceMutation<G>;
 		propertyMutations?: ValidProperties;
-		context: ManipulateContext & { correctRightHandRule?: boolean };
+		context: MutateContext & { correctRightHandRule?: boolean };
 	}) {
 		if (!featureId) {
 			return null;
@@ -204,7 +201,7 @@ export class ManipulateFeatureBehavior extends TerraDrawModeBehavior {
 
 		const updated = this.buildFeatureWithGeometry<G>(featureId);
 
-		this.options.onSuccess(updated);
+		this.options.onUpdate(updated);
 
 		if (context.updateType === UpdateTypes.Finish) {
 			this.options.onFinish(featureId, context as FinishContext);
@@ -222,7 +219,7 @@ export class ManipulateFeatureBehavior extends TerraDrawModeBehavior {
 		featureId: FeatureId;
 		coordinateMutations?: ReplaceMutation<Point>;
 		propertyMutations?: JSONObject;
-		context: ManipulateContext;
+		context: MutateContext;
 	}) {
 		return this.updateGeometry<Point>({
 			type: "Point",
@@ -253,7 +250,7 @@ export class ManipulateFeatureBehavior extends TerraDrawModeBehavior {
 		propertyMutations,
 	}: {
 		featureId: FeatureId;
-		context: ManipulateContext;
+		context: MutateContext;
 		coordinateMutations?: CoordinateMutation[] | ReplaceMutation<Polygon>;
 		propertyMutations?: ValidProperties;
 	}) {
@@ -304,7 +301,7 @@ export class ManipulateFeatureBehavior extends TerraDrawModeBehavior {
 		featureId: FeatureId;
 		coordinateMutations?: CoordinateMutation[] | ReplaceMutation<LineString>;
 		propertyMutations?: ValidProperties;
-		context: ManipulateContext;
+		context: MutateContext;
 	}) {
 		return this.updateGeometry<LineString>({
 			type: "LineString",
@@ -498,7 +495,7 @@ export class ManipulateFeatureBehavior extends TerraDrawModeBehavior {
 			geometry: this.store.getGeometryCopy<G>(id),
 		} as GeoJSONStoreFeatures<G>;
 
-		this.options.onSuccess(created as GeoJSONStoreFeatures);
+		this.options.onUpdate(created as GeoJSONStoreFeatures);
 
 		return created;
 	}

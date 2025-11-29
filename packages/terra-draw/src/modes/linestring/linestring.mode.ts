@@ -36,7 +36,7 @@ import { coordinatesIdentical } from "../../geometry/coordinates-identical";
 import { ValidateLineStringFeature } from "../../validations/linestring.validation";
 import { LineSnappingBehavior } from "../line-snapping.behavior";
 import {
-	ManipulateFeatureBehavior,
+	MutateFeatureBehavior,
 	Mutations,
 	ReplaceMutation,
 	type CoordinateMutation,
@@ -120,7 +120,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 	private lineSnapping!: LineSnappingBehavior;
 	private pixelDistance!: PixelDistanceBehavior;
 	private clickBoundingBox!: ClickBoundingBoxBehavior;
-	private manipulateFeature!: ManipulateFeatureBehavior;
+	private manipulateFeature!: MutateFeatureBehavior;
 
 	constructor(options?: TerraDrawLineStringModeOptions<LineStringStyling>) {
 		super(options, true);
@@ -164,6 +164,10 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 			if (this.snappedPointId) {
 				this.manipulateFeature.updatePoint({
 					featureId: this.snappedPointId,
+					coordinateMutations: {
+						type: Mutations.REPLACE,
+						coordinates: snappedCoordinate,
+					},
 					context: { updateType: UpdateTypes.Provisional },
 				});
 			} else {
@@ -191,7 +195,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 			return;
 		}
 
-		this.manipulateFeature.updateLineString({
+		const updated = this.manipulateFeature.updateLineString({
 			featureId: this.currentId,
 			context: { updateType: UpdateTypes.Finish, action: FinishActions.DRAW },
 			coordinateMutations: [
@@ -205,19 +209,12 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 			},
 		});
 
-		// Reset the state back to starting state
-		if (this.closingPointId) {
-			this.manipulateFeature.deleteFeature(this.closingPointId);
-		}
-
-		if (this.snappedPointId) {
-			this.manipulateFeature.deleteFeature(this.snappedPointId);
+		if (!updated) {
+			return;
 		}
 
 		this.currentCoordinate = 0;
 		this.currentId = undefined;
-		this.closingPointId = undefined;
-		this.snappedPointId = undefined;
 		this.lastCommittedCoordinates = undefined;
 
 		// Go back to started state
@@ -381,11 +378,33 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 		);
 
 		// New: behavior to manipulate LineString geometry
-		this.manipulateFeature = new ManipulateFeatureBehavior(config, {
+		this.manipulateFeature = new MutateFeatureBehavior(config, {
 			validate: this.validate,
-			onSuccess: (_feature) => undefined,
-			onFinish: (featureId, context) =>
-				this.onFinish(featureId, { mode: this.mode, ...context }),
+			onUpdate: (_feature) => undefined,
+			onFinish: (featureId, context) => {
+				if (this.snappedPointId) {
+					this.manipulateFeature.deleteFeature(this.snappedPointId);
+					this.snappedPointId = undefined;
+				}
+
+				if (this.editedPointId) {
+					this.manipulateFeature.deleteFeature(this.editedPointId);
+					this.editedPointId = undefined;
+
+					// Reset edit state
+					this.editedFeatureId = undefined;
+					this.editedFeatureCoordinateIndex = undefined;
+					this.editedInsertIndex = undefined;
+					this.editedSnapType = undefined;
+				}
+
+				if (this.closingPointId) {
+					this.manipulateFeature.deleteFeature(this.closingPointId);
+					this.closingPointId = undefined;
+				}
+
+				this.onFinish(featureId, { mode: this.mode, action: context.action });
+			},
 		});
 	}
 
@@ -545,12 +564,6 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 
 		if (!updated) {
 			return;
-		}
-
-		// The geometry has changed, so if we were snapped to a point we need to remove it
-		if (this.snappedPointId) {
-			this.manipulateFeature.deleteFeature(this.snappedPointId);
-			this.snappedPointId = undefined;
 		}
 	}
 
@@ -778,22 +791,15 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 
 		this.setCursor(this.cursors.dragEnd);
 
-		if (this.editedPointId) {
-			this.manipulateFeature.deleteFeature(this.editedPointId);
-			this.editedPointId = undefined;
-		}
-
-		this.manipulateFeature.updateLineString({
+		const updated = this.manipulateFeature.updateLineString({
 			featureId: this.editedFeatureId,
 			propertyMutations: { [COMMON_PROPERTIES.EDITED]: false },
 			context: { updateType: UpdateTypes.Finish, action: FinishActions.EDIT },
 		});
 
-		// Reset edit state
-		this.editedFeatureId = undefined;
-		this.editedFeatureCoordinateIndex = undefined;
-		this.editedInsertIndex = undefined;
-		this.editedSnapType = undefined;
+		if (!updated) {
+			return;
+		}
 
 		setMapDraggability(true);
 	}

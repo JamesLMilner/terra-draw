@@ -672,5 +672,39 @@ describe("TerraDrawMapLibreGLAdapter", () => {
 			// Re-register
 			adapter.register(MockCallbacks());
 		});
+
+		it("reorders layers if renderBeforeLayerId is set", () => {
+			const map = createMapLibreGLMap();
+			const adapter = new TerraDrawMapLibreGLAdapter({
+				map: map as maplibregl.Map,
+				renderBelowLayerId: "mock-layer",
+			});
+
+			expect(map.moveLayer).toHaveBeenCalledTimes(0);
+
+			adapter.register(MockCallbacks());
+
+			expect(map.moveLayer).toHaveBeenCalledTimes(4);
+			expect(map.moveLayer).toHaveBeenNthCalledWith(
+				1,
+				"td-point",
+				"mock-layer",
+			);
+			expect(map.moveLayer).toHaveBeenNthCalledWith(
+				2,
+				"td-linestring",
+				"td-point",
+			);
+			expect(map.moveLayer).toHaveBeenNthCalledWith(
+				3,
+				"td-polygon-outline",
+				"td-linestring",
+			);
+			expect(map.moveLayer).toHaveBeenNthCalledWith(
+				4,
+				"td-polygon",
+				"td-polygon-outline",
+			);
+		});
 	});
 });

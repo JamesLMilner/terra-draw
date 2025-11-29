@@ -8,16 +8,16 @@ import {
 import { MockBehaviorConfig } from "../test/mock-behavior-config";
 import {
 	CoordinateMutation,
-	ManipulateFeatureBehavior,
+	MutateFeatureBehavior,
 	Mutations,
 } from "./manipulate-geometry";
 
 describe("ManipulateFeatureBehavior", () => {
 	describe("constructor", () => {
 		it("constructs", () => {
-			new ManipulateFeatureBehavior(MockBehaviorConfig("test"), {
+			new MutateFeatureBehavior(MockBehaviorConfig("test"), {
 				validate: undefined,
-				onSuccess: jest.fn(),
+				onUpdate: jest.fn(),
 				onFinish: jest.fn(),
 			});
 		});
@@ -27,9 +27,9 @@ describe("ManipulateFeatureBehavior", () => {
 		describe("coordinateAtIndexIsIdentical", () => {
 			it("works for Polygon/LineString and throws for invalid Point index", () => {
 				const config = MockBehaviorConfig("test");
-				const behavior = new ManipulateFeatureBehavior(config, {
+				const behavior = new MutateFeatureBehavior(config, {
 					validate: undefined,
-					onSuccess: jest.fn(),
+					onUpdate: jest.fn(),
 					onFinish: jest.fn(),
 				});
 
@@ -93,9 +93,9 @@ describe("ManipulateFeatureBehavior", () => {
 			it("creates a feature and calls onSuccess", () => {
 				const config = MockBehaviorConfig("test");
 				const onSuccess = jest.fn();
-				const behavior = new ManipulateFeatureBehavior(config, {
+				const behavior = new MutateFeatureBehavior(config, {
 					validate: undefined,
-					onSuccess,
+					onUpdate: onSuccess,
 					onFinish: jest.fn(),
 				});
 
@@ -123,9 +123,9 @@ describe("ManipulateFeatureBehavior", () => {
 			it("returns null when featureId is missing", () => {
 				const config = MockBehaviorConfig("test");
 				const onSuccess = jest.fn();
-				const behavior = new ManipulateFeatureBehavior(config, {
+				const behavior = new MutateFeatureBehavior(config, {
 					validate: undefined,
-					onSuccess,
+					onUpdate: onSuccess,
 					onFinish: jest.fn(),
 				});
 
@@ -140,9 +140,9 @@ describe("ManipulateFeatureBehavior", () => {
 
 			it("throws for non-Polygon geometries", () => {
 				const config = MockBehaviorConfig("test");
-				const behavior = new ManipulateFeatureBehavior(config, {
+				const behavior = new MutateFeatureBehavior(config, {
 					validate: undefined,
-					onSuccess: jest.fn(),
+					onUpdate: jest.fn(),
 					onFinish: jest.fn(),
 				});
 
@@ -164,9 +164,9 @@ describe("ManipulateFeatureBehavior", () => {
 			it("applies coordinate mutations (UPDATE)", () => {
 				const config = MockBehaviorConfig("test");
 				const onSuccess = jest.fn();
-				const behavior = new ManipulateFeatureBehavior(config, {
+				const behavior = new MutateFeatureBehavior(config, {
 					validate: undefined,
-					onSuccess,
+					onUpdate: onSuccess,
 					onFinish: jest.fn(),
 				});
 
@@ -198,9 +198,9 @@ describe("ManipulateFeatureBehavior", () => {
 			it("applies coordinate mutations (INSERT_BEFORE)", () => {
 				const config = MockBehaviorConfig("test");
 				const onSuccess = jest.fn();
-				const behavior = new ManipulateFeatureBehavior(config, {
+				const behavior = new MutateFeatureBehavior(config, {
 					validate: undefined,
-					onSuccess,
+					onUpdate: onSuccess,
 					onFinish: jest.fn(),
 				});
 
@@ -233,9 +233,9 @@ describe("ManipulateFeatureBehavior", () => {
 			it("applies coordinate mutations (DELETE)", () => {
 				const config = MockBehaviorConfig("test");
 				const onSuccess = jest.fn();
-				const behavior = new ManipulateFeatureBehavior(config, {
+				const behavior = new MutateFeatureBehavior(config, {
 					validate: undefined,
-					onSuccess,
+					onUpdate: onSuccess,
 					onFinish: jest.fn(),
 				});
 
@@ -266,9 +266,9 @@ describe("ManipulateFeatureBehavior", () => {
 			it("applies coordinate mutations (insert/update/delete/tail insert)", () => {
 				const config = MockBehaviorConfig("test");
 				const onSuccess = jest.fn();
-				const behavior = new ManipulateFeatureBehavior(config, {
+				const behavior = new MutateFeatureBehavior(config, {
 					validate: undefined,
-					onSuccess,
+					onUpdate: onSuccess,
 					onFinish: jest.fn(),
 				});
 
@@ -305,9 +305,9 @@ describe("ManipulateFeatureBehavior", () => {
 			it("applies coordinate mutations (insert/update/delete/tail insert)", () => {
 				const config = MockBehaviorConfig("test");
 				const onSuccess = jest.fn();
-				const behavior = new ManipulateFeatureBehavior(config, {
+				const behavior = new MutateFeatureBehavior(config, {
 					validate: undefined,
-					onSuccess,
+					onUpdate: onSuccess,
 					onFinish: jest.fn(),
 				});
 
@@ -343,9 +343,9 @@ describe("ManipulateFeatureBehavior", () => {
 
 			it("supports negative indices for inserts", () => {
 				const config = MockBehaviorConfig("test");
-				const behavior = new ManipulateFeatureBehavior(config, {
+				const behavior = new MutateFeatureBehavior(config, {
 					validate: undefined,
-					onSuccess: jest.fn(),
+					onUpdate: jest.fn(),
 					onFinish: jest.fn(),
 				});
 
@@ -366,9 +366,9 @@ describe("ManipulateFeatureBehavior", () => {
 
 			it("throws for out-of-bounds indices (positive and negative)", () => {
 				const config = MockBehaviorConfig("test");
-				const behavior = new ManipulateFeatureBehavior(config, {
+				const behavior = new MutateFeatureBehavior(config, {
 					validate: undefined,
-					onSuccess: jest.fn(),
+					onUpdate: jest.fn(),
 					onFinish: jest.fn(),
 				});
 
@@ -398,9 +398,9 @@ describe("ManipulateFeatureBehavior", () => {
 			it("replaces entire coordinates array when given a ReplaceMutation", () => {
 				const config = MockBehaviorConfig("test");
 				const onSuccess = jest.fn();
-				const behavior = new ManipulateFeatureBehavior(config, {
+				const behavior = new MutateFeatureBehavior(config, {
 					validate: undefined,
-					onSuccess,
+					onUpdate: onSuccess,
 					onFinish: jest.fn(),
 				});
 
@@ -433,17 +433,17 @@ describe("ManipulateFeatureBehavior", () => {
 		describe("epsilonOffset", () => {
 			it("returns >= 1e-6 for high precision and equals epsilon for lower precision", () => {
 				const configHigh = MockBehaviorConfig("test", "web-mercator", 9);
-				const behaviorHigh = new ManipulateFeatureBehavior(configHigh, {
+				const behaviorHigh = new MutateFeatureBehavior(configHigh, {
 					validate: undefined,
-					onSuccess: jest.fn(),
+					onUpdate: jest.fn(),
 					onFinish: jest.fn(),
 				});
 				expect(behaviorHigh.epsilonOffset()).toBeCloseTo(0.000001, 10);
 
 				const configLow = MockBehaviorConfig("test", "web-mercator", 5);
-				const behaviorLow = new ManipulateFeatureBehavior(configLow, {
+				const behaviorLow = new MutateFeatureBehavior(configLow, {
 					validate: undefined,
-					onSuccess: jest.fn(),
+					onUpdate: jest.fn(),
 					onFinish: jest.fn(),
 				});
 				expect(behaviorLow.epsilonOffset()).toBeCloseTo(0.0001, 10);
@@ -454,9 +454,9 @@ describe("ManipulateFeatureBehavior", () => {
 			it("creates a LineString feature and calls onSuccess", () => {
 				const config = MockBehaviorConfig("test");
 				const onSuccess = jest.fn();
-				const behavior = new ManipulateFeatureBehavior(config, {
+				const behavior = new MutateFeatureBehavior(config, {
 					validate: undefined,
-					onSuccess,
+					onUpdate: onSuccess,
 					onFinish: jest.fn(),
 				});
 
@@ -482,9 +482,9 @@ describe("ManipulateFeatureBehavior", () => {
 			it("returns null when featureId is missing", () => {
 				const config = MockBehaviorConfig("test");
 				const onSuccess = jest.fn();
-				const behavior = new ManipulateFeatureBehavior(config, {
+				const behavior = new MutateFeatureBehavior(config, {
 					validate: undefined,
-					onSuccess,
+					onUpdate: onSuccess,
 					onFinish: jest.fn(),
 				});
 
@@ -500,9 +500,9 @@ describe("ManipulateFeatureBehavior", () => {
 
 			it("throws for non-LineString geometries", () => {
 				const config = MockBehaviorConfig("test");
-				const behavior = new ManipulateFeatureBehavior(config, {
+				const behavior = new MutateFeatureBehavior(config, {
 					validate: undefined,
-					onSuccess: jest.fn(),
+					onUpdate: jest.fn(),
 					onFinish: jest.fn(),
 				});
 
@@ -524,9 +524,9 @@ describe("ManipulateFeatureBehavior", () => {
 			it("applies coordinate mutations (UPDATE)", () => {
 				const config = MockBehaviorConfig("test");
 				const onSuccess = jest.fn();
-				const behavior = new ManipulateFeatureBehavior(config, {
+				const behavior = new MutateFeatureBehavior(config, {
 					validate: undefined,
-					onSuccess,
+					onUpdate: onSuccess,
 					onFinish: jest.fn(),
 				});
 
@@ -555,9 +555,9 @@ describe("ManipulateFeatureBehavior", () => {
 			it("applies coordinate mutations (INSERT_BEFORE)", () => {
 				const config = MockBehaviorConfig("test");
 				const onSuccess = jest.fn();
-				const behavior = new ManipulateFeatureBehavior(config, {
+				const behavior = new MutateFeatureBehavior(config, {
 					validate: undefined,
-					onSuccess,
+					onUpdate: onSuccess,
 					onFinish: jest.fn(),
 				});
 
@@ -587,9 +587,9 @@ describe("ManipulateFeatureBehavior", () => {
 			it("applies coordinate mutations (DELETE)", () => {
 				const config = MockBehaviorConfig("test");
 				const onSuccess = jest.fn();
-				const behavior = new ManipulateFeatureBehavior(config, {
+				const behavior = new MutateFeatureBehavior(config, {
 					validate: undefined,
-					onSuccess,
+					onUpdate: onSuccess,
 					onFinish: jest.fn(),
 				});
 
@@ -615,9 +615,9 @@ describe("ManipulateFeatureBehavior", () => {
 			it("applies coordinate mutations (insert/update/delete/tail insert)", () => {
 				const config = MockBehaviorConfig("test");
 				const onSuccess = jest.fn();
-				const behavior = new ManipulateFeatureBehavior(config, {
+				const behavior = new MutateFeatureBehavior(config, {
 					validate: undefined,
-					onSuccess,
+					onUpdate: onSuccess,
 					onFinish: jest.fn(),
 				});
 
@@ -649,9 +649,9 @@ describe("ManipulateFeatureBehavior", () => {
 
 			it("supports negative indices for inserts", () => {
 				const config = MockBehaviorConfig("test");
-				const behavior = new ManipulateFeatureBehavior(config, {
+				const behavior = new MutateFeatureBehavior(config, {
 					validate: undefined,
-					onSuccess: jest.fn(),
+					onUpdate: jest.fn(),
 					onFinish: jest.fn(),
 				});
 
@@ -674,9 +674,9 @@ describe("ManipulateFeatureBehavior", () => {
 
 			it("throws for out-of-bounds indices (positive and negative)", () => {
 				const config = MockBehaviorConfig("test");
-				const behavior = new ManipulateFeatureBehavior(config, {
+				const behavior = new MutateFeatureBehavior(config, {
 					validate: undefined,
-					onSuccess: jest.fn(),
+					onUpdate: jest.fn(),
 					onFinish: jest.fn(),
 				});
 
@@ -706,9 +706,9 @@ describe("ManipulateFeatureBehavior", () => {
 			it("replaces entire coordinates array when given a ReplaceMutation", () => {
 				const config = MockBehaviorConfig("test");
 				const onSuccess = jest.fn();
-				const behavior = new ManipulateFeatureBehavior(config, {
+				const behavior = new MutateFeatureBehavior(config, {
 					validate: undefined,
-					onSuccess,
+					onUpdate: onSuccess,
 					onFinish: jest.fn(),
 				});
 

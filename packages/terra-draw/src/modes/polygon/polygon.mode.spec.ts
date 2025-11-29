@@ -2085,20 +2085,20 @@ describe("onDragEnd", () => {
 
 		expect(mockConfig.onChange).toHaveBeenCalledTimes(2);
 
-		// Remove the edit drag point
+		// Remove the edited property from the polygonux
 		expect(mockConfig.onChange).toHaveBeenNthCalledWith(
 			1,
 			[expect.any(String)],
-			"delete",
-			undefined,
+			"update",
+			{ target: "properties" },
 		);
 
-		// Remove the edited property from the polygonux
+		// Remove the edit drag point
 		expect(mockConfig.onChange).toHaveBeenNthCalledWith(
 			2,
 			[expect.any(String)],
-			"update",
-			{ target: "properties" },
+			"delete",
+			undefined,
 		);
 
 		expect(mockConfig.onFinish).toHaveBeenCalledTimes(1);

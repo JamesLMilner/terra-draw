@@ -1925,12 +1925,6 @@ describe("onDrag", () => {
 			"update",
 			{ target: "properties" },
 		);
-		// expect(mockConfig.onChange).toHaveBeenNthCalledWith(
-		// 	3,
-		// 	[expect.any(String)],
-		// 	"update",
-		// 	{ target: "properties" },
-		// );
 
 		const allFeatures = mockConfig.store.copyAll();
 
@@ -1977,13 +1971,15 @@ describe("onDrag", () => {
 		expect(features.length).toBe(1);
 
 		// Reset to make it easier to track for onDragStart
+		polygonMode.onDragStart(MockCursorEvent({ lng: 1, lat: 0 }), () => {});
+
+		// Reset to make it easier to track for onDragStart
 		mockConfig.onChange.mockClear();
 		mockConfig.setCursor.mockClear();
 
-		polygonMode.onDragStart(MockCursorEvent({ lng: 1, lat: 0 }), () => {});
 		polygonMode.onDrag(MockCursorEvent({ lng: 1, lat: 1 }), () => {});
 
-		expect(mockConfig.onChange).toHaveBeenCalledTimes(4);
+		expect(mockConfig.onChange).toHaveBeenCalledTimes(3);
 		expect(mockConfig.onChange).toHaveBeenNthCalledWith(
 			1,
 			[expect.any(String)],
@@ -2031,6 +2027,9 @@ describe("onDrag", () => {
 		expect(allFeatures[1].geometry.type).toBe("Point");
 		expect(allFeatures[1].properties.edited).toBe(true);
 		expect(allFeatures[1].geometry.coordinates).toEqual([1, 1]);
+
+		// We don't change the cursor in onDrag
+		expect(mockConfig.setCursor).toHaveBeenCalledTimes(0);
 	});
 });
 

@@ -2,6 +2,32 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.20.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.19.0...terra-draw@1.20.0) (2025-11-29)
+
+
+### chore
+
+* **terra-draw:** add sponsorship page (#722) ([](https://github.com/JamesLMilner/terra-draw/commit/5534a93436af45bbf11cf7a9a61423e2d62e0968)), closes [#722](https://github.com/JamesLMilner/terra-draw/issues/722)
+* **terra-draw:** use vite instead of webpack (#717) ([](https://github.com/JamesLMilner/terra-draw/commit/81cd10bd22ba164e900a7d46e73b911da0b1ca20)), closes [#717](https://github.com/JamesLMilner/terra-draw/issues/717)
+
+
+### docs
+
+* **terra-draw:** add Rectangle draw interaction examples to Storybook (#668) (#721) ([](https://github.com/JamesLMilner/terra-draw/commit/39c5feb8f4d8da8eb6aaa83b1da68dc72d3c8e94)), closes [#668](https://github.com/JamesLMilner/terra-draw/issues/668) [#721](https://github.com/JamesLMilner/terra-draw/issues/721)
+* **terra-draw:** document marker property requirement for marker icons (#712) ([](https://github.com/JamesLMilner/terra-draw/commit/576d15597155aad3e2e88588f5d76d4ad38429c1)), closes [#712](https://github.com/JamesLMilner/terra-draw/issues/712)
+
+
+### feat
+
+* **terra-draw:** add context to determine if update is to properties or geometry (#708) ([](https://github.com/JamesLMilner/terra-draw/commit/5f3a2e1039b3cffaf78fa80e5ddaa3dd6741644e)), closes [#708](https://github.com/JamesLMilner/terra-draw/issues/708)
+* **terra-draw:** optional click-and-drag support for TerraDrawRectangleMode (#668) (#700) ([](https://github.com/JamesLMilner/terra-draw/commit/58b9fad191debc6b499b2a3da503c3a091af5f13)), closes [#668](https://github.com/JamesLMilner/terra-draw/issues/668) [#700](https://github.com/JamesLMilner/terra-draw/issues/700) [#668](https://github.com/JamesLMilner/terra-draw/issues/668)
+
+
+### fix
+
+* **terra-draw:** avoid excessive change events and duplicate ids from property changes (#707) ([](https://github.com/JamesLMilner/terra-draw/commit/e5323b02366105b7660e37d00fa780405215b2d1)), closes [#707](https://github.com/JamesLMilner/terra-draw/issues/707)
+* **terra-draw:** trigger finish event when inserting or deleting coordinate in select mode (#709) ([](https://github.com/JamesLMilner/terra-draw/commit/b69c2c93e1c3585a63539bd63fcc742911fcccb7)), closes [#709](https://github.com/JamesLMilner/terra-draw/issues/709)
+
 ## [1.19.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.18.1...terra-draw@1.19.0) (2025-11-09)
 
 

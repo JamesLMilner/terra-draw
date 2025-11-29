@@ -556,8 +556,8 @@ export class TerraDrawMapLibreGLAdapter<
 		if (this._renderBeforeLayerId) {
 			this._map.moveLayer(pointId, this._renderBeforeLayerId);
 			this._map.moveLayer(lineStringId, pointId);
-			this._map.moveLayer(polygonStringId + "-outline", lineStringId);
-			this._map.moveLayer(polygonStringId, lineStringId);
+			this._map.moveLayer(`${polygonStringId}-outline`, lineStringId);
+			this._map.moveLayer(polygonStringId, `${polygonStringId}-outline`);
 		}
 
 		// console.log('image added', image.data)

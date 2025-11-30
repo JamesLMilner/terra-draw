@@ -7,6 +7,7 @@ import {
 	TerraDrawStylingFunction,
 	TerraDrawExtend,
 } from "terra-draw";
+
 import { GeoJsonObject } from "geojson";
 
 export class TerraDrawGoogleMapsAdapter extends TerraDrawExtend.TerraDrawBaseAdapter {
@@ -172,7 +173,19 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawExtend.TerraDrawBaseAda
 	 * Retrieves the HTML element of the Google Map element that handles interaction events
 	 * @returns The HTMLElement representing the map container.
 	 */
-	public getMapEventElement() {
+	public getMapEventElement(
+		eventType?: // TODO: Import TerraDrawHandledEvents - however is a breaking change currently
+		| "pointerdown"
+			| "pointerup"
+			| "pointermove"
+			| "contextmenu"
+			| "keyup"
+			| "keydown",
+	): HTMLElement {
+		if (eventType && (eventType === "keyup" || eventType === "keydown")) {
+			return this._map.getDiv();
+		}
+
 		// TODO: This is a bit hacky, maybe there is a better solution here
 		const selector = 'div[style*="z-index: 3;"]';
 		return this._map.getDiv().querySelector(selector) as HTMLDivElement;

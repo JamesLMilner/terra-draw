@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.1.1](https://github.com/JamesLMilner/terra-draw/compare/terra-draw-google-maps-adapter@1.1.0...terra-draw-google-maps-adapter@1.1.1) (2025-11-30)
+
+
+### fix
+
+* **terra-draw-google-maps-adapter:** ensure coordinates are accurate in fullscreen mode (#726) ([](https://github.com/JamesLMilner/terra-draw/commit/7f7faf6a0e9b472eaf51be519975d974ccd3649c)), closes [#726](https://github.com/JamesLMilner/terra-draw/issues/726)
+* **terra-draw-google-maps-adapter:** solve data.setStyle teardown issues - #724 (#725) ([](https://github.com/JamesLMilner/terra-draw/commit/ccbf1cc32fc24c22f727edaf1e0639aedf658d00)), closes [#724](https://github.com/JamesLMilner/terra-draw/issues/724) [#725](https://github.com/JamesLMilner/terra-draw/issues/725)
+
 ## [1.1.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw-google-maps-adapter@1.0.4...terra-draw-google-maps-adapter@1.1.0) (2025-10-12)
 
 

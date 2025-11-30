@@ -182,13 +182,23 @@ export type TerraDrawStylingFunction = {
 	[mode: string]: (feature: GeoJSONStoreFeatures) => TerraDrawAdapterStyling;
 };
 
+export type TerraDrawHandledEvents = Extract<
+	keyof HTMLElementEventMap,
+	| "pointerdown"
+	| "pointerup"
+	| "pointermove"
+	| "contextmenu"
+	| "keyup"
+	| "keydown"
+>;
+
 export interface TerraDrawAdapter {
 	project: Project;
 	unproject: Unproject;
 	setCursor: SetCursor;
 	getLngLatFromEvent: GetLngLatFromEvent;
 	setDoubleClickToZoom: (enabled: boolean) => void;
-	getMapEventElement: () => HTMLElement;
+	getMapEventElement: (eventType?: TerraDrawHandledEvents) => HTMLElement;
 	register(callbacks: TerraDrawCallbacks): void;
 	unregister(): void;
 	render(changes: TerraDrawChanges, styling: TerraDrawStylingFunction): void;

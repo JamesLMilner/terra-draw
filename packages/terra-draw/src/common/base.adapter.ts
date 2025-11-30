@@ -8,6 +8,7 @@ import {
 	TerraDrawStylingFunction,
 	GetLngLatFromEvent,
 	TerraDrawAdapter,
+	TerraDrawHandledEvents,
 } from "../common";
 import { limitPrecision } from "../geometry/limit-decimal-precision";
 import { cartesianDistance } from "../geometry/measure/pixel-distance";
@@ -70,7 +71,9 @@ export abstract class TerraDrawBaseAdapter implements TerraDrawAdapter {
 		"not-dragging";
 	protected _currentModeCallbacks: TerraDrawCallbacks | undefined;
 
-	public abstract getMapEventElement(): HTMLElement;
+	public abstract getMapEventElement(
+		eventType?: TerraDrawHandledEvents,
+	): HTMLElement;
 
 	protected getButton(event: PointerEvent | MouseEvent) {
 		if (event.button === -1) {
@@ -88,7 +91,12 @@ export abstract class TerraDrawBaseAdapter implements TerraDrawAdapter {
 	}
 
 	protected getMapElementXYPosition(event: PointerEvent | MouseEvent) {
-		const mapElement = this.getMapEventElement();
+		const mapElement = this.getMapEventElement(
+			event.type as Extract<
+				TerraDrawHandledEvents,
+				"pointerdown" | "pointerup" | "pointermove"
+			>,
+		);
 		const { left, top } = mapElement.getBoundingClientRect();
 
 		return {
@@ -179,10 +187,13 @@ export abstract class TerraDrawBaseAdapter implements TerraDrawAdapter {
 						: undefined;
 				},
 				register: (callback) => {
-					this.getMapEventElement().addEventListener("pointerdown", callback);
+					this.getMapEventElement("pointerdown").addEventListener(
+						"pointerdown",
+						callback,
+					);
 				},
 				unregister: (callback) => {
-					this.getMapEventElement().removeEventListener(
+					this.getMapEventElement("pointerdown").removeEventListener(
 						"pointerdown",
 						callback,
 					);
@@ -276,11 +287,11 @@ export abstract class TerraDrawBaseAdapter implements TerraDrawAdapter {
 					}
 				},
 				register: (callback) => {
-					const mapElement = this.getMapEventElement();
+					const mapElement = this.getMapEventElement("pointermove");
 					mapElement.addEventListener("pointermove", callback);
 				},
 				unregister: (callback) => {
-					const mapElement = this.getMapEventElement();
+					const mapElement = this.getMapEventElement("pointermove");
 					mapElement.removeEventListener("pointermove", callback);
 				},
 			}),
@@ -297,11 +308,11 @@ export abstract class TerraDrawBaseAdapter implements TerraDrawAdapter {
 					this._nextKeyUpIsContextMenu = true;
 				},
 				register: (callback) => {
-					const mapElement = this.getMapEventElement();
+					const mapElement = this.getMapEventElement("contextmenu");
 					mapElement.addEventListener("contextmenu", callback);
 				},
 				unregister: (callback) => {
-					const mapElement = this.getMapEventElement();
+					const mapElement = this.getMapEventElement("contextmenu");
 					mapElement.removeEventListener("contextmenu", callback);
 				},
 			}),
@@ -312,7 +323,7 @@ export abstract class TerraDrawBaseAdapter implements TerraDrawAdapter {
 						return;
 					}
 
-					if (event.target !== this.getMapEventElement()) {
+					if (event.target !== this.getMapEventElement("pointerup")) {
 						return;
 					}
 
@@ -362,11 +373,11 @@ export abstract class TerraDrawBaseAdapter implements TerraDrawAdapter {
 					this.setDraggability(true);
 				},
 				register: (callback) => {
-					const mapElement = this.getMapEventElement();
+					const mapElement = this.getMapEventElement("pointerup");
 					mapElement.addEventListener("pointerup", callback);
 				},
 				unregister: (callback) => {
-					const mapElement = this.getMapEventElement();
+					const mapElement = this.getMapEventElement("pointerup");
 					mapElement.removeEventListener("pointerup", callback);
 				},
 			}),
@@ -386,11 +397,11 @@ export abstract class TerraDrawBaseAdapter implements TerraDrawAdapter {
 					});
 				},
 				register: (callback) => {
-					const mapElement = this.getMapEventElement();
+					const mapElement = this.getMapEventElement("keyup");
 					mapElement.addEventListener("keyup", callback);
 				},
 				unregister: (callback) => {
-					const mapElement = this.getMapEventElement();
+					const mapElement = this.getMapEventElement("keyup");
 					mapElement.removeEventListener("keyup", callback);
 				},
 			}),
@@ -410,11 +421,11 @@ export abstract class TerraDrawBaseAdapter implements TerraDrawAdapter {
 					});
 				},
 				register: (callback) => {
-					const mapElement = this.getMapEventElement();
+					const mapElement = this.getMapEventElement("keydown");
 					mapElement.addEventListener("keydown", callback);
 				},
 				unregister: (callback) => {
-					const mapElement = this.getMapEventElement();
+					const mapElement = this.getMapEventElement("keydown");
 					mapElement.removeEventListener("keydown", callback);
 				},
 			}),

@@ -19,6 +19,7 @@ import {
 	TerraDrawGeoJSONStore,
 	TerraDrawOnChangeContext,
 	Projection,
+	TerraDrawHandledEvents,
 } from "./common";
 import {
 	ModeTypes,
@@ -1325,6 +1326,7 @@ export {
 	type TerraDrawKeyboardEvent,
 
 	// TerraDrawBaseAdapter
+	type TerraDrawHandledEvents,
 	type TerraDrawChanges,
 	type TerraDrawStylingFunction,
 	type Project,

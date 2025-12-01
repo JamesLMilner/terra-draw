@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.2.3](https://github.com/JamesLMilner/terra-draw/compare/terra-draw-maplibre-gl-adapter@1.2.2...terra-draw-maplibre-gl-adapter@1.2.3) (2025-12-01)
+
+
+### fix
+
+* **terra-draw-maplibre-gl-adapter:** render outline above fill layer when using renderBelowLayerId (#728) ([](https://github.com/JamesLMilner/terra-draw/commit/8a11cb1558b41c91494e8294aa9ae7f1831047d0)), closes [#728](https://github.com/JamesLMilner/terra-draw/issues/728)
+
 ## [1.2.2](https://github.com/JamesLMilner/terra-draw/compare/terra-draw-maplibre-gl-adapter@1.2.1...terra-draw-maplibre-gl-adapter@1.2.2) (2025-10-14)
 
 

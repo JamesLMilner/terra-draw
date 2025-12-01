@@ -31,6 +31,7 @@ const createMockGoogleMap = (overrides?: Partial<google.maps.Map>) => {
 			querySelector: jest.fn(() => ({
 				addEventListener: jest.fn(),
 			})),
+			addEventListener: jest.fn(),
 		})),
 		getHeading: jest.fn(),
 		getMapTypeId: jest.fn(),
@@ -188,10 +189,16 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 			const div = {
 				addEventListener: jest.fn(),
 			} as unknown as HTMLDivElement;
+			const keyboardDiv = {
+				addEventListener: jest.fn(),
+				removeEventListener: jest.fn(),
+			} as unknown as HTMLDivElement;
 			const mockMap = createMockGoogleMap({
 				getDiv: jest.fn(() => ({
 					id: "map",
 					querySelector: jest.fn(() => div),
+					addEventListener: keyboardDiv.addEventListener,
+					removeEventListener: keyboardDiv.removeEventListener,
 				})) as any,
 				data: {
 					addListener: addListenerMock,
@@ -209,7 +216,8 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 			const callbackMock = MockCallbacks();
 			adapter.register(callbackMock);
 
-			expect(div.addEventListener).toHaveBeenCalledTimes(6);
+			expect(div.addEventListener).toHaveBeenCalledTimes(4);
+			expect(keyboardDiv.addEventListener).toHaveBeenCalledTimes(2);
 
 			expect(addListenerMock).toHaveBeenNthCalledWith(
 				1,
@@ -234,6 +242,8 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 				getDiv: jest.fn(() => ({
 					id: "map",
 					querySelector: jest.fn(() => div),
+					addEventListener: jest.fn(),
+					removeEventListener: jest.fn(),
 				})) as any,
 				data: {
 					setStyle: jest.fn(),
@@ -261,10 +271,18 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 				addEventListener: jest.fn(),
 				removeEventListener: jest.fn(),
 			} as unknown as HTMLDivElement;
+
+			const keyboardDiv = {
+				addEventListener: jest.fn(),
+				removeEventListener: jest.fn(),
+			} as unknown as HTMLDivElement;
+
 			const mockMap = createMockGoogleMap({
 				getDiv: jest.fn(() => ({
 					id: "map",
 					querySelector: jest.fn(() => div),
+					addEventListener: keyboardDiv.addEventListener,
+					removeEventListener: keyboardDiv.removeEventListener,
 				})) as any,
 				data: {
 					addListener: addListenerMock,
@@ -291,7 +309,8 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 			expect(removeListenerMock).toHaveBeenCalledTimes(2);
 
 			// These are the general listeners (registered in base)
-			expect(div.removeEventListener).toHaveBeenCalledTimes(6);
+			expect(div.removeEventListener).toHaveBeenCalledTimes(4);
+			expect(keyboardDiv.removeEventListener).toHaveBeenCalledTimes(2);
 		});
 	});
 
@@ -332,6 +351,7 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 								addEventListener: jest.fn(),
 							})),
 							getBoundingClientRect: jest.fn(() => ({})),
+							addEventListener: jest.fn(),
 						}) as unknown as HTMLDivElement,
 				),
 			});
@@ -373,6 +393,7 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 								addEventListener: jest.fn(),
 							})),
 							getBoundingClientRect: jest.fn(() => ({})),
+							addEventListener: jest.fn(),
 						}) as unknown as HTMLDivElement,
 				),
 			});
@@ -446,6 +467,7 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 								left: 371, // we do NOT want to see these returned
 								top: 580,
 							})),
+							addEventListener: jest.fn(),
 						}) as unknown as HTMLDivElement,
 				),
 			});

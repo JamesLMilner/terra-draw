@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.1.2](https://github.com/JamesLMilner/terra-draw/compare/terra-draw-google-maps-adapter@1.1.1...terra-draw-google-maps-adapter@1.1.2) (2025-12-02)
+
+
+### fix
+
+* **terra-draw-google-maps-adapter:** fix keyboard events not firing when map is focused (#734) ([](https://github.com/JamesLMilner/terra-draw/commit/6ad94fc1eaea7b5a9da1d5f893d9040e4237f50c)), closes [#734](https://github.com/JamesLMilner/terra-draw/issues/734)
+
 ## [1.1.1](https://github.com/JamesLMilner/terra-draw/compare/terra-draw-google-maps-adapter@1.1.0...terra-draw-google-maps-adapter@1.1.1) (2025-11-30)
 
 

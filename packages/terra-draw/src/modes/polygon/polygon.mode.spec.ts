@@ -1966,14 +1966,15 @@ describe("onDrag", () => {
 
 		polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 2 }));
 
+		expect(mockConfig.onFinish).toHaveBeenCalledTimes(1);
+
 		// Ensure it's there
 		let features = mockConfig.store.copyAll();
 		expect(features.length).toBe(1);
 
-		// Reset to make it easier to track for onDragStart
 		polygonMode.onDragStart(MockCursorEvent({ lng: 1, lat: 0 }), () => {});
 
-		// Reset to make it easier to track for onDragStart
+		// Reset to make it easier to track for onDrag
 		mockConfig.onChange.mockClear();
 		mockConfig.setCursor.mockClear();
 
@@ -1983,23 +1984,17 @@ describe("onDrag", () => {
 		expect(mockConfig.onChange).toHaveBeenNthCalledWith(
 			1,
 			[expect.any(String)],
-			"create",
-			undefined,
+			"update",
+			{ target: "geometry" },
 		);
 		expect(mockConfig.onChange).toHaveBeenNthCalledWith(
 			2,
 			[expect.any(String)],
 			"update",
-			{ target: "geometry" },
-		);
-		expect(mockConfig.onChange).toHaveBeenNthCalledWith(
-			3,
-			[expect.any(String)],
-			"update",
 			{ target: "properties" },
 		);
 		expect(mockConfig.onChange).toHaveBeenNthCalledWith(
-			4,
+			3,
 			[expect.any(String)],
 			"update",
 			{ target: "geometry" },

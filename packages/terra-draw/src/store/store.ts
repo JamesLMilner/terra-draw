@@ -17,10 +17,9 @@ export type GeoJSONStoreGeometries = Polygon | LineString | Point;
 
 export type BBoxPolygon = Feature<Polygon, DefinedProperties>;
 
-export type GeoJSONStoreFeatures = Feature<
-	GeoJSONStoreGeometries,
-	DefinedProperties
->;
+export type GeoJSONStoreFeatures<
+	G extends GeoJSONStoreGeometries = GeoJSONStoreGeometries,
+> = Feature<G, DefinedProperties>;
 
 export type StoreValidation = {
 	id?: FeatureId;
@@ -80,7 +79,7 @@ export class GeoJSONStore<
 	};
 
 	// Default to no-op
-	private _onChange: StoreChangeHandler<OnChangeContext | undefined> = () => { };
+	private _onChange: StoreChangeHandler<OnChangeContext | undefined> = () => {};
 
 	private clone<T>(obj: T): T {
 		return JSON.parse(JSON.stringify(obj));

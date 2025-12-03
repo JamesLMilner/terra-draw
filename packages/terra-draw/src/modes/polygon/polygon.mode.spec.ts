@@ -1175,6 +1175,7 @@ describe("TerraDrawPolygonMode", () => {
 			const mockConfig = MockModeConfig(polygonMode.mode);
 
 			store = mockConfig.store;
+			onFinish = mockConfig.onFinish;
 			polygonMode.register(mockConfig);
 			polygonMode.start();
 
@@ -1226,18 +1227,18 @@ describe("TerraDrawPolygonMode", () => {
 			expect(store.updateGeometry).toHaveBeenCalledTimes(7);
 
 			polygonMode.onClick(thirdPoint);
-			// Right hand rule is not valid so extra update!
-			expect(store.updateGeometry).toHaveBeenCalledTimes(9);
 
-			// Polygon is now closed
+			polygonMode.onClick(thirdPoint);
+
+			// Polygon is now closed and corrected to right hand rule
 			expect(store.updateGeometry).toHaveBeenNthCalledWith(8, [
 				{
 					geometry: {
 						coordinates: [
 							[
 								[1, 1],
-								[2, 2],
 								[3, 3],
+								[2, 2],
 								[1, 1],
 							],
 						],
@@ -1246,6 +1247,12 @@ describe("TerraDrawPolygonMode", () => {
 					id: expect.any(String),
 				},
 			]);
+
+			expect(onFinish).toHaveBeenCalledTimes(1);
+			expect(onFinish).toHaveBeenNthCalledWith(1, expect.any(String), {
+				action: "draw",
+				mode: "polygon",
+			});
 		});
 
 		it("right click can delete a point if editable is true", () => {
@@ -1311,6 +1318,10 @@ describe("TerraDrawPolygonMode", () => {
 			expect(features.length).toBe(1);
 
 			expect(onFinish).toHaveBeenCalledTimes(1);
+			expect(onFinish).toHaveBeenNthCalledWith(1, expect.any(String), {
+				action: "draw",
+				mode: "polygon",
+			});
 
 			// Delete a coordinate
 			polygonMode.onClick(
@@ -1329,6 +1340,10 @@ describe("TerraDrawPolygonMode", () => {
 			);
 
 			expect(onFinish).toHaveBeenCalledTimes(2);
+			expect(onFinish).toHaveBeenNthCalledWith(2, expect.any(String), {
+				action: "edit",
+				mode: "polygon",
+			});
 		});
 
 		it("context menu click cannot delete a point whilst currently drawing if editable is true", () => {
@@ -1477,6 +1492,10 @@ describe("TerraDrawPolygonMode", () => {
 			).toBe(undefined);
 
 			expect(onFinish).toHaveBeenCalledTimes(1);
+			expect(onFinish).toHaveBeenNthCalledWith(1, expect.any(String), {
+				action: "draw",
+				mode: "polygon",
+			});
 		});
 
 		describe("with leftClick pointer event set to false", () => {
@@ -1904,12 +1923,6 @@ describe("onDrag", () => {
 			2,
 			[expect.any(String)],
 			"update",
-			{ target: "geometry" },
-		);
-		expect(mockConfig.onChange).toHaveBeenNthCalledWith(
-			3,
-			[expect.any(String)],
-			"update",
 			{ target: "properties" },
 		);
 
@@ -1920,6 +1933,90 @@ describe("onDrag", () => {
 		// Edited polygon
 		expect(allFeatures[0].geometry.type).toBe("Polygon");
 		expect(allFeatures[0].properties.edited).toBe(true);
+
+		// Edit point
+		expect(allFeatures[1].geometry.type).toBe("Point");
+		expect(allFeatures[1].properties.edited).toBe(true);
+		expect(allFeatures[1].geometry.coordinates).toEqual([1, 1]);
+
+		// We don't change the cursor in onDrag
+		expect(mockConfig.setCursor).toHaveBeenCalledTimes(0);
+	});
+
+	it("creates a drag point if none exists on a line", () => {
+		const polygonMode = new TerraDrawPolygonMode({ editable: true });
+		const mockConfig = MockModeConfig(polygonMode.mode);
+		polygonMode.register(mockConfig);
+		polygonMode.start();
+
+		// Create a polygon to edit
+		polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+		polygonMode.onMouseMove(MockCursorEvent({ lng: 2, lat: 0 }));
+
+		polygonMode.onClick(MockCursorEvent({ lng: 2, lat: 0 }));
+
+		polygonMode.onMouseMove(MockCursorEvent({ lng: 2, lat: 2 }));
+
+		polygonMode.onClick(MockCursorEvent({ lng: 2, lat: 2 }));
+
+		polygonMode.onMouseMove(MockCursorEvent({ lng: 0, lat: 2 }));
+
+		polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 2 }));
+
+		polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 2 }));
+
+		expect(mockConfig.onFinish).toHaveBeenCalledTimes(1);
+
+		// Ensure it's there
+		let features = mockConfig.store.copyAll();
+		expect(features.length).toBe(1);
+
+		polygonMode.onDragStart(MockCursorEvent({ lng: 1, lat: 0 }), () => {});
+
+		// Reset to make it easier to track for onDrag
+		mockConfig.onChange.mockClear();
+		mockConfig.setCursor.mockClear();
+
+		polygonMode.onDrag(MockCursorEvent({ lng: 1, lat: 1 }), () => {});
+
+		expect(mockConfig.onChange).toHaveBeenCalledTimes(3);
+		expect(mockConfig.onChange).toHaveBeenNthCalledWith(
+			1,
+			[expect.any(String)],
+			"update",
+			{ target: "geometry" },
+		);
+		expect(mockConfig.onChange).toHaveBeenNthCalledWith(
+			2,
+			[expect.any(String)],
+			"update",
+			{ target: "properties" },
+		);
+		expect(mockConfig.onChange).toHaveBeenNthCalledWith(
+			3,
+			[expect.any(String)],
+			"update",
+			{ target: "geometry" },
+		);
+
+		const allFeatures = mockConfig.store.copyAll();
+
+		expect(allFeatures.length).toBe(2);
+
+		// Edited polygon
+		expect(allFeatures[0].geometry.type).toBe("Polygon");
+		expect(allFeatures[0].properties.edited).toBe(true);
+		expect(allFeatures[0].geometry.coordinates).toEqual([
+			[
+				[0, 0],
+				[1, 1],
+				[2, 0],
+				[2, 2],
+				[0, 2],
+				[0, 0],
+			],
+		]);
 
 		// Edit point
 		expect(allFeatures[1].geometry.type).toBe("Point");
@@ -1982,20 +2079,20 @@ describe("onDragEnd", () => {
 
 		expect(mockConfig.onChange).toHaveBeenCalledTimes(2);
 
-		// Remove the edit drag point
+		// Remove the edited property from the polygonux
 		expect(mockConfig.onChange).toHaveBeenNthCalledWith(
 			1,
 			[expect.any(String)],
-			"delete",
-			undefined,
+			"update",
+			{ target: "properties" },
 		);
 
-		// Remove the edited property from the polygonux
+		// Remove the edit drag point
 		expect(mockConfig.onChange).toHaveBeenNthCalledWith(
 			2,
 			[expect.any(String)],
-			"update",
-			{ target: "properties" },
+			"delete",
+			undefined,
 		);
 
 		expect(mockConfig.onFinish).toHaveBeenCalledTimes(1);

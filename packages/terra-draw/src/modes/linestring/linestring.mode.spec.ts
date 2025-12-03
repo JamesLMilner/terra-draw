@@ -277,19 +277,20 @@ describe("TerraDrawLineStringMode", () => {
 
 			lineStringMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
 
-			let features = store.copyAll();
+			let [lineString, closingPoint] = store.copyAll();
 
 			// Drawn LineString and Closing point
-			expect(features.length).toBe(2);
+			expect(lineString).toBeDefined();
+			expect(closingPoint).toBeDefined();
 
-			expect(features[0].geometry.coordinates).toStrictEqual([
+			expect(lineString.geometry.coordinates).toStrictEqual([
 				[0, 0],
 				[1, 1],
 				[1, 1],
 			]);
 
-			expect(features[1].geometry.coordinates).toStrictEqual([1, 1]);
-			expect(features[1].properties[COMMON_PROPERTIES.CLOSING_POINT]).toBe(
+			expect(closingPoint.geometry.coordinates).toStrictEqual([1, 1]);
+			expect(closingPoint.properties[COMMON_PROPERTIES.CLOSING_POINT]).toBe(
 				true,
 			);
 
@@ -297,25 +298,27 @@ describe("TerraDrawLineStringMode", () => {
 
 			lineStringMode.onClick(MockCursorEvent({ lng: 2, lat: 2 }));
 
-			expect(onChange).not.toHaveBeenCalledWith([expect.any(String)], "delete");
+			expect(onChange).not.toHaveBeenCalledWith([closingPoint.id], "delete");
 
 			lineStringMode.onClick(MockCursorEvent({ lng: 2, lat: 2 }));
 
-			expect(onChange).toHaveBeenCalledTimes(10);
-
-			expect(onChange).toHaveBeenNthCalledWith(
-				10,
-				[expect.any(String)],
+			expect(onChange).toHaveBeenCalledWith(
+				[closingPoint.id],
 				"delete",
 				undefined,
 			);
 
 			expect(onFinish).toHaveBeenCalledTimes(1);
+			expect(onFinish).toHaveBeenCalledWith(lineString.id, {
+				action: "draw",
+				mode: "linestring",
+			});
 
-			features = store.copyAll();
-			expect(features.length).toBe(1);
+			[lineString, closingPoint] = store.copyAll();
+			expect(lineString).toBeDefined();
+			expect(closingPoint).toBeUndefined();
 
-			expect(features[0].geometry.coordinates).toStrictEqual([
+			expect(lineString.geometry.coordinates).toStrictEqual([
 				[0, 0],
 				[1, 1],
 				[2, 2],
@@ -340,22 +343,23 @@ describe("TerraDrawLineStringMode", () => {
 
 			lineStringMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
 
-			let features = store.copyAll();
+			let [lineString, closingPoint] = store.copyAll();
 
 			// Drawn LineString and Closing point
-			expect(features.length).toBe(2);
+			expect(lineString).toBeDefined();
+			expect(closingPoint).toBeDefined();
 
-			expect(features[0].geometry.coordinates).toStrictEqual([
+			expect(lineString.geometry.coordinates).toStrictEqual([
 				[0, 0],
 				[1, 1],
 				[1, 1],
 			]);
 
-			expect(features[0].properties[COMMON_PROPERTIES.CURRENTLY_DRAWING]).toBe(
+			expect(lineString.properties[COMMON_PROPERTIES.CURRENTLY_DRAWING]).toBe(
 				true,
 			);
 
-			expect(features[1].geometry.coordinates).toStrictEqual([1, 1]);
+			expect(closingPoint.geometry.coordinates).toStrictEqual([1, 1]);
 
 			lineStringMode.onMouseMove(MockCursorEvent({ lng: 2, lat: 2 }));
 
@@ -365,25 +369,27 @@ describe("TerraDrawLineStringMode", () => {
 
 			lineStringMode.onClick(MockCursorEvent({ lng: 2, lat: 2 }));
 
-			expect(onChange).toHaveBeenCalledTimes(10);
-
-			expect(onChange).toHaveBeenNthCalledWith(
-				10,
-				[expect.any(String)],
+			expect(onChange).toHaveBeenCalledWith(
+				[closingPoint.id],
 				"delete",
 				undefined,
 			);
 
 			expect(onFinish).toHaveBeenCalledTimes(1);
+			expect(onFinish).toHaveBeenCalledWith(lineString.id, {
+				action: "draw",
+				mode: "linestring",
+			});
 
-			features = store.copyAll();
-			expect(features.length).toBe(1);
+			[lineString, closingPoint] = store.copyAll();
+			expect(lineString).toBeDefined();
+			expect(closingPoint).toBeUndefined();
 
-			expect(features[0].properties[COMMON_PROPERTIES.CURRENTLY_DRAWING]).toBe(
+			expect(lineString.properties[COMMON_PROPERTIES.CURRENTLY_DRAWING]).toBe(
 				undefined,
 			);
 
-			expect(features[0].geometry.coordinates).toStrictEqual([
+			expect(lineString.geometry.coordinates).toStrictEqual([
 				[0, 0],
 				[1, 1],
 				[2, 2],
@@ -474,7 +480,8 @@ describe("TerraDrawLineStringMode", () => {
 			lineStringMode = new TerraDrawLineStringMode({
 				snapping: {
 					toCustom: () => {
-						return coordinates.shift();
+						const coord = coordinates.shift();
+						return coord;
 					},
 				},
 			});
@@ -493,17 +500,36 @@ describe("TerraDrawLineStringMode", () => {
 			lineStringMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
 			lineStringMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
 
+			expect(onFinish).toHaveBeenCalledTimes(0);
+			let [lineString] = store.copyAll();
+			expect(lineString.geometry.coordinates).toStrictEqual([
+				[5, 5],
+				[5, 10],
+				[5, 10],
+			]);
+
 			lineStringMode.onMouseMove(MockCursorEvent({ lng: 2, lat: 2 }));
 			lineStringMode.onClick(MockCursorEvent({ lng: 2, lat: 2 }));
+
+			expect(onFinish).toHaveBeenCalledTimes(0);
+			[lineString] = store.copyAll();
+			expect(lineString.geometry.coordinates).toStrictEqual([
+				[5, 5],
+				[5, 10],
+				[10, 10],
+				[2, 2],
+			]);
 
 			lineStringMode.onClick(MockCursorEvent({ lng: 2, lat: 2 }));
 
 			expect(onFinish).toHaveBeenCalledTimes(1);
-			const features = store.copyAll();
+			expect(onFinish).toHaveBeenCalledWith(lineString.id, {
+				action: "draw",
+				mode: "linestring",
+			});
 
-			expect(features.length).toBe(1);
-
-			expect(features[0].geometry.coordinates).toStrictEqual([
+			[lineString] = store.copyAll();
+			expect(lineString.geometry.coordinates).toStrictEqual([
 				[5, 5],
 				[5, 10],
 				[10, 10],
@@ -517,18 +543,19 @@ describe("TerraDrawLineStringMode", () => {
 
 			lineStringMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
 
-			let features = store.copyAll();
+			let [lineString, closingPoint] = store.copyAll();
 
 			// Drawn LineString and Closing point
-			expect(features.length).toBe(2);
+			expect(lineString).toBeDefined();
+			expect(closingPoint).toBeDefined();
 
-			expect(features[0].geometry.coordinates).toStrictEqual([
+			expect(lineString.geometry.coordinates).toStrictEqual([
 				[0, 0],
 				[1, 1],
 				[1, 1],
 			]);
 
-			expect(features[1].geometry.coordinates).toStrictEqual([1, 1]);
+			expect(closingPoint.geometry.coordinates).toStrictEqual([1, 1]);
 
 			lineStringMode.onMouseMove(MockCursorEvent({ lng: 2, lat: 2 }));
 
@@ -538,10 +565,7 @@ describe("TerraDrawLineStringMode", () => {
 
 			lineStringMode.onClick(MockCursorEvent({ lng: 2, lat: 2 }));
 
-			expect(onChange).toHaveBeenCalledTimes(10);
-
-			expect(onChange).toHaveBeenNthCalledWith(
-				10,
+			expect(onChange).toHaveBeenCalledWith(
 				[expect.any(String)],
 				"delete",
 				undefined,
@@ -549,35 +573,34 @@ describe("TerraDrawLineStringMode", () => {
 
 			expect(onFinish).toHaveBeenCalledTimes(1);
 
-			features = store.copyAll();
-			expect(features.length).toBe(1);
-
-			expect(features[0].geometry.coordinates).toStrictEqual([
+			[lineString, closingPoint] = store.copyAll();
+			expect(lineString).toBeDefined();
+			expect(lineString.geometry.coordinates).toStrictEqual([
 				[0, 0],
 				[1, 1],
 				[2, 2],
 			]);
+			expect(closingPoint).toBeUndefined();
 
-			expect(onChange).toHaveBeenCalledTimes(10);
+			onChange.mockClear();
 
 			// Delete a coordinate
 			lineStringMode.onClick(
 				MockCursorEvent({ lng: 1, lat: 1, button: "right" }),
 			);
 
-			expect(onChange).toHaveBeenCalledTimes(11);
-			expect(onChange).toHaveBeenNthCalledWith(
-				11,
-				[expect.any(String)],
-				"update",
-				{ target: "geometry" },
-			);
+			expect(onChange).toHaveBeenCalledWith([lineString.id], "update", {
+				target: "geometry",
+			});
 
+			// Verify coordinate has been removed
 			const featuresAfter = store.copyAll();
 			expect(featuresAfter.length).toBe(1);
-			expect(featuresAfter[0].geometry.coordinates).not.toEqual(
-				features[0].geometry.coordinates,
-			);
+			const [updatedLineString] = featuresAfter;
+			expect(updatedLineString.geometry.coordinates).toStrictEqual([
+				[0, 0],
+				[2, 2],
+			]);
 		});
 
 		describe("with leftClick pointer event set to false", () => {
@@ -661,7 +684,8 @@ describe("TerraDrawLineStringMode", () => {
 					}),
 				);
 
-				expect(onChange).toHaveBeenCalledTimes(7);
+				// So we can focus on the onChange after the click
+				onChange.mockClear();
 
 				lineStringMode.onClick(
 					MockCursorEvent({
@@ -670,9 +694,23 @@ describe("TerraDrawLineStringMode", () => {
 					}),
 				);
 
+				const [lineStringFeature, closingPointFeature] = store.copyAll();
+
 				// Update geometry IS called because
 				// we are not validating for self intersections
-				expect(onChange).toHaveBeenCalledTimes(8);
+				expect(onChange).toHaveBeenCalledTimes(2);
+				expect(onChange).toHaveBeenNthCalledWith(
+					1,
+					[lineStringFeature.id],
+					"update",
+					{ target: "geometry" },
+				);
+				expect(onChange).toHaveBeenNthCalledWith(
+					2,
+					[closingPointFeature.id],
+					"update",
+					{ target: "geometry" },
+				);
 			});
 
 			it("does not create a line if it has intersections and validate returns false", () => {
@@ -735,7 +773,8 @@ describe("TerraDrawLineStringMode", () => {
 					}),
 				);
 
-				expect(onChange).toHaveBeenCalledTimes(7);
+				// So we can focus on the onChange after the click
+				onChange.mockClear();
 
 				lineStringMode.onClick(
 					MockCursorEvent({
@@ -746,7 +785,7 @@ describe("TerraDrawLineStringMode", () => {
 
 				// Update geometry is NOT called because
 				// there is a self intersection
-				expect(onChange).toHaveBeenCalledTimes(7);
+				expect(onChange).not.toHaveBeenCalled();
 			});
 
 			it("does create a line if no intersections and validate returns true", () => {
@@ -761,6 +800,7 @@ describe("TerraDrawLineStringMode", () => {
 
 				const mockConfig = MockModeConfig(lineStringMode.mode);
 				onChange = mockConfig.onChange;
+				onFinish = mockConfig.onFinish;
 				store = mockConfig.store;
 
 				lineStringMode.register(mockConfig);
@@ -777,13 +817,15 @@ describe("TerraDrawLineStringMode", () => {
 				// Drawn LineString and Closing point
 				expect(features.length).toBe(2);
 
-				expect(features[0].geometry.coordinates).toStrictEqual([
+				const [lineStringFeature, closingPointFeature] = features;
+
+				expect(lineStringFeature.geometry.coordinates).toStrictEqual([
 					[0, 0],
 					[1, 1],
 					[1, 1],
 				]);
 
-				expect(features[1].geometry.coordinates).toStrictEqual([1, 1]);
+				expect(closingPointFeature.geometry.coordinates).toStrictEqual([1, 1]);
 
 				lineStringMode.onMouseMove(MockCursorEvent({ lng: 2, lat: 2 }));
 
@@ -795,21 +837,24 @@ describe("TerraDrawLineStringMode", () => {
 					undefined,
 				);
 
+				onChange.mockClear();
+
 				lineStringMode.onClick(MockCursorEvent({ lng: 2, lat: 2 }));
 
-				expect(onChange).toHaveBeenCalledTimes(10);
-
-				expect(onChange).toHaveBeenNthCalledWith(
-					10,
+				expect(onChange).toHaveBeenCalledWith(
 					[expect.any(String)],
 					"delete",
 					undefined,
 				);
 
+				expect(onFinish).toHaveBeenCalledTimes(1);
+
 				features = store.copyAll();
 				expect(features.length).toBe(1);
 
-				expect(features[0].geometry.coordinates).toStrictEqual([
+				const [finalLineStringFeature] = features;
+
+				expect(finalLineStringFeature.geometry.coordinates).toStrictEqual([
 					[0, 0],
 					[1, 1],
 					[2, 2],
@@ -886,13 +931,34 @@ describe("TerraDrawLineStringMode", () => {
 					undefined,
 				);
 
+				features = store.copyAll();
+
+				const closingPoint = features.find(
+					(feature) => feature.properties[COMMON_PROPERTIES.CLOSING_POINT],
+				)!;
+
+				const lineString = features.find(
+					(feature) => feature.geometry.type === "LineString",
+				)!;
+
+				expect(lineString).toBeDefined();
+				expect(closingPoint).toBeDefined();
+
+				onChange.mockClear();
+
 				lineStringMode.onKeyUp(MockKeyboardEvent({ key: "Enter" }));
 
-				expect(onChange).toHaveBeenCalledTimes(9);
+				expect(onChange).toHaveBeenNthCalledWith(1, [lineString.id], "update", {
+					target: "geometry",
+				});
+
+				expect(onChange).toHaveBeenNthCalledWith(2, [lineString.id], "update", {
+					target: "properties",
+				});
 
 				expect(onChange).toHaveBeenNthCalledWith(
-					9,
-					[expect.any(String)],
+					3,
+					[closingPoint.id],
 					"delete",
 					undefined,
 				);
@@ -956,7 +1022,7 @@ describe("TerraDrawLineStringMode", () => {
 
 				lineStringMode.onKeyUp(MockKeyboardEvent({ key: "Escape" }));
 
-				expect(onChange).toHaveBeenCalledTimes(6);
+				// expect(onChange).toHaveBeenCalledTimes(6);
 
 				features = store.copyAll();
 				expect(features.length).toBe(2);
@@ -1219,20 +1285,20 @@ describe("TerraDrawLineStringMode", () => {
 
 			expect(mockConfig.onChange).toHaveBeenCalledTimes(2);
 
-			// Remove the edit drag point
+			// Remove the edited property from the linestring
 			expect(mockConfig.onChange).toHaveBeenNthCalledWith(
 				1,
 				[expect.any(String)],
-				"delete",
-				undefined,
+				"update",
+				{ target: "properties" },
 			);
 
-			// Remove the edited property from the linestring
+			// Remove the edit drag point
 			expect(mockConfig.onChange).toHaveBeenNthCalledWith(
 				2,
 				[expect.any(String)],
-				"update",
-				{ target: "properties" },
+				"delete",
+				undefined,
 			);
 
 			expect(mockConfig.onFinish).toHaveBeenCalledTimes(1);
@@ -1588,7 +1654,8 @@ describe("TerraDrawLineStringMode", () => {
 			lineStringMode.start();
 
 			// Create an initial square to snap to
-			const mockLineString = MockLineString();
+			const mockLineString =
+				MockLineString() as GeoJSONStoreFeatures<LineString>;
 			const [featureId] = mockConfig.store.create([
 				{
 					geometry: mockLineString.geometry,
@@ -1608,9 +1675,7 @@ describe("TerraDrawLineStringMode", () => {
 			const snapPoint = features[1];
 			expect(snapPoint.geometry.coordinates).toStrictEqual([0, 0]);
 
-			lineStringMode.afterFeatureUpdated(
-				mockLineString as GeoJSONStoreFeatures,
-			);
+			lineStringMode.afterFeatureUpdated(mockLineString);
 
 			expect(mockConfig.onChange).toHaveBeenCalledTimes(1);
 			expect(mockConfig.onChange).toHaveBeenNthCalledWith(

@@ -13,6 +13,7 @@ import {
 	UrlStyling,
 	COMMON_PROPERTIES,
 	MARKER_URL_DEFAULT,
+	FinishActions,
 } from "../../common";
 import { Point, Position } from "geojson";
 import {
@@ -461,7 +462,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 		}
 
 		this.onFinish(featureId, {
-			action: "deleteCoordinate",
+			action: FinishActions.DELETE_COORDINATE,
 			mode: this.mode,
 		});
 	}
@@ -549,7 +550,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 			);
 
 			this.onFinish(this.selected[0], {
-				action: "insertMidpoint",
+				action: FinishActions.INSERT_MIDPOINT,
 				mode: this.mode,
 			});
 
@@ -754,7 +755,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 				);
 
 				this.onFinish(this.selected[0], {
-					action: "insertMidpoint",
+					action: FinishActions.INSERT_MIDPOINT,
 					mode: this.mode,
 				});
 
@@ -911,17 +912,17 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 		if (this.dragCoordinate.isDragging()) {
 			this.onFinish(this.selected[0], {
 				mode: this.mode,
-				action: "dragCoordinate",
+				action: FinishActions.DRAG_COORDINATE,
 			});
 		} else if (this.dragFeature.isDragging()) {
 			this.onFinish(this.selected[0], {
 				mode: this.mode,
-				action: "dragFeature",
+				action: FinishActions.DRAG_FEATURE,
 			});
 		} else if (this.dragCoordinateResizeFeature.isDragging()) {
 			this.onFinish(this.selected[0], {
 				mode: this.mode,
-				action: "dragCoordinateResize",
+				action: FinishActions.DRAG_COORDINATE_RESIZE,
 			});
 		}
 

@@ -365,7 +365,6 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 	/** @internal */
 	registerBehaviors(config: BehaviorConfig) {
 		this.insertPoint = new InsertCoordinatesBehavior(config);
-
 		this.clickBoundingBox = new ClickBoundingBoxBehavior(config);
 		this.pixelDistance = new PixelDistanceBehavior(config);
 		this.lineSnapping = new LineSnappingBehavior(
@@ -378,8 +377,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 			this.pixelDistance,
 			this.clickBoundingBox,
 		);
-
-		// New: behavior to manipulate LineString geometry
+		this.readFeature = new ReadFeatureBehavior(config);
 		this.manipulateFeature = new MutateFeatureBehavior(config, {
 			validate: this.validate,
 			onUpdate: (_feature) => undefined,

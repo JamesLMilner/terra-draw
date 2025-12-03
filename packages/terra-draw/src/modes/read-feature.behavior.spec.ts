@@ -127,7 +127,7 @@ describe("ReadFeatureBehavior", () => {
 				const behavior = new ReadFeatureBehavior(config);
 
 				const polygonId = createStorePolygon(config); // [[0,0],[0,1],[1,1],[1,0],[0,0]]
-				const lineId = createStoreLineString(config); // [[0,0],[0,1],[1,1],[1,0]]
+				const lineId = createStoreLineString(config); // [[0,0],[0,1]]
 
 				const polygonCoords = behavior.getCoordinates<Polygon>(polygonId);
 
@@ -160,8 +160,6 @@ describe("ReadFeatureBehavior", () => {
 				expect(lineCoords).toEqual([
 					[0, 0],
 					[0, 1],
-					[1, 1],
-					[1, 0],
 				]);
 
 				// Mutate the returned coordinates
@@ -173,8 +171,6 @@ describe("ReadFeatureBehavior", () => {
 				expect(lineCoords2).toEqual([
 					[0, 0],
 					[0, 1],
-					[1, 1],
-					[1, 0],
 				]);
 
 				expect(lineCoords).not.toEqual(lineCoords2);

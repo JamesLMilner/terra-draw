@@ -251,6 +251,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 		this.closingPoints = new ClosingPointsBehavior(config, this.pixelDistance);
 
 		this.coordinatePoints = new CoordinatePointBehavior(config);
+		this.readFeature = new ReadFeatureBehavior(config);
 		this.mutateFeature = new MutateFeatureBehavior(config, {
 			validate: this.validate,
 			onUpdate: ({ id }) => {

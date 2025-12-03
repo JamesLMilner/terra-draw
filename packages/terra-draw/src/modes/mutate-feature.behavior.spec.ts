@@ -10,7 +10,7 @@ import {
 	CoordinateMutation,
 	MutateFeatureBehavior,
 	Mutations,
-} from "./manipulate-geometry";
+} from "./mutate-feature.behavior";
 
 describe("ManipulateFeatureBehavior", () => {
 	describe("constructor", () => {
@@ -24,71 +24,6 @@ describe("ManipulateFeatureBehavior", () => {
 	});
 
 	describe("api", () => {
-		describe("coordinateAtIndexIsIdentical", () => {
-			it("works for Polygon/LineString and throws for invalid Point index", () => {
-				const config = MockBehaviorConfig("test");
-				const behavior = new MutateFeatureBehavior(config, {
-					validate: undefined,
-					onUpdate: jest.fn(),
-					onFinish: jest.fn(),
-				});
-
-				const polygonId = createStorePolygon(config); // [[0,0],[0,1],[1,1],[1,0],[0,0]]
-				const lineId = createStoreLineString(config);
-				const pointId = createStorePoint(config, [5, 5]);
-
-				// Polygon
-				expect(
-					behavior.coordinateAtIndexIsIdentical({
-						featureId: polygonId,
-						index: 0,
-						newCoordinate: [0, 0],
-					}),
-				).toBe(true);
-				expect(
-					behavior.coordinateAtIndexIsIdentical({
-						featureId: polygonId,
-						index: 1,
-						newCoordinate: [0, 2],
-					}),
-				).toBe(false);
-
-				// LineString
-				expect(
-					behavior.coordinateAtIndexIsIdentical({
-						featureId: lineId,
-						index: 0,
-						newCoordinate: [0, 0],
-					}),
-				).toBe(true);
-				expect(
-					behavior.coordinateAtIndexIsIdentical({
-						featureId: lineId,
-						index: 1,
-						newCoordinate: [0, 2],
-					}),
-				).toBe(false);
-
-				// Point valid index
-				expect(
-					behavior.coordinateAtIndexIsIdentical({
-						featureId: pointId,
-						index: 0,
-						newCoordinate: [5, 5],
-					}),
-				).toBe(true);
-
-				// Point invalid index throws
-				expect(() =>
-					behavior.coordinateAtIndexIsIdentical({
-						featureId: pointId,
-						index: 1,
-						newCoordinate: [0, 0],
-					}),
-				).toThrow("Point geometries only have one coordinate at index 0");
-			});
-		});
-
 		describe("createPolygonGeometry", () => {
 			it("creates a feature and calls onSuccess", () => {
 				const config = MockBehaviorConfig("test");

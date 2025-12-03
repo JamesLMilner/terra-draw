@@ -37,7 +37,8 @@ import {
 	CoordinateMutation,
 	MutateFeatureBehavior,
 	Mutations,
-} from "../manipulate-geometry";
+} from "../mutate-feature.behavior";
+import { ReadFeatureBehavior } from "../read-feature.behavior";
 
 type TerraDrawPolygonModeKeyEvents = {
 	cancel?: KeyboardEvent["key"] | null;
@@ -125,6 +126,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 	private closingPoints!: ClosingPointsBehavior;
 	private clickBoundingBox!: ClickBoundingBoxBehavior;
 	private mutateFeature!: MutateFeatureBehavior;
+	private readFeature!: ReadFeatureBehavior;
 
 	constructor(options?: TerraDrawPolygonModeOptions<PolygonStyling>) {
 		super(options, true);
@@ -192,8 +194,9 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 			return;
 		}
 
-		const currentPolygonCoordinates =
-			this.mutateFeature.getCoordinates<Polygon>(this.currentId);
+		const currentPolygonCoordinates = this.readFeature.getCoordinates<Polygon>(
+			this.currentId,
+		);
 
 		// We don't want to allow closing if there is not enough
 		// coordinates. We have extra because we insert them on mouse
@@ -330,7 +333,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 			return;
 		}
 
-		const firstCoordinate = this.mutateFeature.getCoordinate<Polygon>(
+		const firstCoordinate = this.readFeature.getCoordinate<Polygon>(
 			this.currentId,
 			0,
 		);
@@ -431,9 +434,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 				currentId: this.currentId,
 				getCurrentGeometrySnapshot: this.currentId
 					? () =>
-							this.mutateFeature.getGeometry<Polygon>(
-								this.currentId as FeatureId,
-							)
+							this.readFeature.getGeometry<Polygon>(this.currentId as FeatureId)
 					: () => null,
 				project: this.project,
 				unproject: this.unproject,
@@ -466,7 +467,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 			return;
 		}
 
-		const geometry = this.mutateFeature.getGeometry(featureId);
+		const geometry = this.readFeature.getGeometry(featureId);
 
 		if (geometry.type !== "Polygon") {
 			return;
@@ -557,7 +558,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 			// Ensure the state is updated to reflect drawing has started
 			this.setDrawing();
 		} else if (this.currentCoordinate === 1 && this.currentId) {
-			const isIdentical = this.mutateFeature.coordinateAtIndexIsIdentical({
+			const isIdentical = this.readFeature.coordinateAtIndexIsIdentical({
 				featureId: this.currentId,
 				newCoordinate: eventCoordinate,
 				index: 0,
@@ -586,7 +587,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 
 			this.currentCoordinate++;
 		} else if (this.currentCoordinate === 2 && this.currentId) {
-			const isIdentical = this.mutateFeature.coordinateAtIndexIsIdentical({
+			const isIdentical = this.readFeature.coordinateAtIndexIsIdentical({
 				featureId: this.currentId,
 				newCoordinate: eventCoordinate,
 				index: 1,
@@ -629,7 +630,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 			if (isPreviousClosing || isClosing) {
 				this.close();
 			} else {
-				const isIdentical = this.mutateFeature.coordinateAtIndexIsIdentical({
+				const isIdentical = this.readFeature.coordinateAtIndexIsIdentical({
 					featureId: this.currentId,
 					newCoordinate: eventCoordinate,
 					index: this.currentCoordinate - 1,
@@ -793,7 +794,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 			return;
 		}
 
-		const featureCopy: Polygon = this.mutateFeature.getGeometry(
+		const featureCopy: Polygon = this.readFeature.getGeometry(
 			this.editedFeatureId,
 		);
 

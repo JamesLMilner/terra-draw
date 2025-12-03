@@ -40,7 +40,8 @@ import {
 	Mutations,
 	ReplaceMutation,
 	type CoordinateMutation,
-} from "../manipulate-geometry";
+} from "../mutate-feature.behavior";
+import { ReadFeatureBehavior } from "../read-feature.behavior";
 
 type TerraDrawLineStringModeKeyEvents = {
 	cancel: KeyboardEvent["key"] | null;
@@ -121,6 +122,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 	private pixelDistance!: PixelDistanceBehavior;
 	private clickBoundingBox!: ClickBoundingBoxBehavior;
 	private manipulateFeature!: MutateFeatureBehavior;
+	private readFeature!: ReadFeatureBehavior;
 
 	constructor(options?: TerraDrawLineStringModeOptions<LineStringStyling>) {
 		super(options, true);
@@ -507,7 +509,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 				const previousIndex = this.lastCommittedCoordinates.length - 1;
 				previousCoordinate = this.lastCommittedCoordinates[previousIndex];
 			} else {
-				previousCoordinate = this.manipulateFeature.getCoordinate<LineString>(
+				previousCoordinate = this.readFeature.getCoordinate<LineString>(
 					this.currentId,
 					-2,
 				);
@@ -542,7 +544,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 			return;
 		}
 
-		const geometry = this.manipulateFeature.getGeometry(featureId);
+		const geometry = this.readFeature.getGeometry(featureId);
 
 		let coordinates;
 		if (geometry.type === "LineString") {
@@ -954,7 +956,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 				currentId: this.currentId,
 				getCurrentGeometrySnapshot: this.currentId
 					? () =>
-							this.manipulateFeature.getGeometry<LineString>(
+							this.readFeature.getGeometry<LineString>(
 								this.currentId as FeatureId,
 							)
 					: () => null,

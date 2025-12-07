@@ -207,7 +207,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 
 		const updated = this.mutateFeature.updatePolygon({
 			featureId: this.currentId,
-			coordinateMutations: [{ type: Mutations.DELETE, index: -2 }],
+			coordinateMutations: [{ type: Mutations.Delete, index: -2 }],
 			propertyMutations: {
 				[COMMON_PROPERTIES.CURRENTLY_DRAWING]: undefined,
 				[COMMON_PROPERTIES.COMMITTED_COORDINATE_COUNT]: undefined,
@@ -215,7 +215,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 			},
 			context: {
 				updateType: UpdateTypes.Finish,
-				action: FinishActions.DRAW,
+				action: FinishActions.Draw,
 			},
 		});
 
@@ -299,7 +299,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 				this.mutateFeature.updatePoint({
 					featureId: this.snappedPointId,
 					coordinateMutations: {
-						type: Mutations.REPLACE,
+						type: Mutations.Replace,
 						coordinates: snappedCoordinate,
 					},
 					context: { updateType: UpdateTypes.Provisional },
@@ -344,9 +344,9 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 
 		if (this.currentCoordinate === 1) {
 			coordinateMutations = [
-				{ type: Mutations.UPDATE, index: 1, coordinate: eventCoordinate },
+				{ type: Mutations.Update, index: 1, coordinate: eventCoordinate },
 				{
-					type: Mutations.UPDATE,
+					type: Mutations.Update,
 					index: 2,
 					coordinate: [
 						event.lng,
@@ -356,7 +356,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 			];
 		} else if (this.currentCoordinate === 2) {
 			coordinateMutations = [
-				{ type: Mutations.UPDATE, index: 2, coordinate: eventCoordinate },
+				{ type: Mutations.Update, index: 2, coordinate: eventCoordinate },
 			];
 		} else {
 			const { isClosing, isPreviousClosing } =
@@ -371,13 +371,13 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 				this.setCursor(this.cursors.close);
 
 				coordinateMutations = [
-					{ type: Mutations.UPDATE, index: -1, coordinate: firstCoordinate },
-					{ type: Mutations.UPDATE, index: -2, coordinate: firstCoordinate },
+					{ type: Mutations.Update, index: -1, coordinate: firstCoordinate },
+					{ type: Mutations.Update, index: -2, coordinate: firstCoordinate },
 				];
 			} else {
 				coordinateMutations = [
-					{ type: Mutations.UPDATE, index: -2, coordinate: eventCoordinate },
-					{ type: Mutations.UPDATE, index: -1, coordinate: firstCoordinate },
+					{ type: Mutations.Update, index: -2, coordinate: eventCoordinate },
+					{ type: Mutations.Update, index: -1, coordinate: firstCoordinate },
 				];
 			}
 		}
@@ -496,10 +496,10 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 			const secondCoordinate = coordinates[1];
 
 			coordinateMutations = [
-				{ type: Mutations.DELETE, index: 0 },
-				{ type: Mutations.DELETE, index: -1 },
+				{ type: Mutations.Delete, index: 0 },
+				{ type: Mutations.Delete, index: -1 },
 				{
-					type: Mutations.INSERT_AFTER,
+					type: Mutations.InsertAfter,
 					index: -1,
 					coordinate: secondCoordinate,
 				},
@@ -507,14 +507,14 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 		} else {
 			// Remove coordinate from array
 			coordinateMutations = [
-				{ type: Mutations.DELETE, index: coordinateIndex },
+				{ type: Mutations.Delete, index: coordinateIndex },
 			];
 		}
 
 		const updated = this.mutateFeature.updatePolygon({
 			featureId: featureId,
 			coordinateMutations,
-			context: { updateType: UpdateTypes.Finish, action: FinishActions.EDIT },
+			context: { updateType: UpdateTypes.Finish, action: FinishActions.Edit },
 		});
 
 		if (!updated) {
@@ -572,8 +572,8 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 			const updated = this.mutateFeature.updatePolygon({
 				featureId: this.currentId,
 				coordinateMutations: [
-					{ type: Mutations.UPDATE, index: 1, coordinate: eventCoordinate },
-					{ type: Mutations.UPDATE, index: 2, coordinate: eventCoordinate },
+					{ type: Mutations.Update, index: 1, coordinate: eventCoordinate },
+					{ type: Mutations.Update, index: 2, coordinate: eventCoordinate },
 				],
 				propertyMutations: {
 					[COMMON_PROPERTIES.COMMITTED_COORDINATE_COUNT]:
@@ -601,9 +601,9 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 			const updated = this.mutateFeature.updatePolygon({
 				featureId: this.currentId,
 				coordinateMutations: [
-					{ type: Mutations.UPDATE, index: 2, coordinate: eventCoordinate },
+					{ type: Mutations.Update, index: 2, coordinate: eventCoordinate },
 					{
-						type: Mutations.INSERT_AFTER,
+						type: Mutations.InsertAfter,
 						index: 2,
 						coordinate: eventCoordinate,
 					},
@@ -646,7 +646,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 					featureId: this.currentId,
 					coordinateMutations: [
 						{
-							type: Mutations.INSERT_BEFORE,
+							type: Mutations.InsertBefore,
 							index: -1,
 							coordinate: eventCoordinate,
 						},
@@ -817,12 +817,12 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 			if (isStartingOrEndingCoordinate) {
 				coordinateMutations = [
 					{
-						type: Mutations.UPDATE,
+						type: Mutations.Update,
 						index: 0,
 						coordinate: eventCoordinate,
 					},
 					{
-						type: Mutations.UPDATE,
+						type: Mutations.Update,
 						index: -1,
 						coordinate: eventCoordinate,
 					},
@@ -830,7 +830,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 			} else {
 				coordinateMutations = [
 					{
-						type: Mutations.UPDATE,
+						type: Mutations.Update,
 						index: this.editedFeatureCoordinateIndex,
 						coordinate: eventCoordinate,
 					},
@@ -844,7 +844,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 
 			coordinateMutations = [
 				{
-					type: Mutations.INSERT_BEFORE,
+					type: Mutations.InsertBefore,
 					index: this.editedInsertIndex,
 					coordinate: eventCoordinate,
 				},
@@ -882,7 +882,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 			this.mutateFeature.updatePoint({
 				featureId: this.editedPointId,
 				coordinateMutations: {
-					type: Mutations.REPLACE,
+					type: Mutations.Replace,
 					coordinates: eventCoordinate,
 				},
 				context: { updateType: UpdateTypes.Provisional },
@@ -910,7 +910,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 			propertyMutations: {
 				[COMMON_PROPERTIES.EDITED]: false,
 			},
-			context: { updateType: UpdateTypes.Finish, action: FinishActions.EDIT },
+			context: { updateType: UpdateTypes.Finish, action: FinishActions.Edit },
 		});
 
 		if (!updated) {

@@ -81,14 +81,19 @@ export type GetLngLatFromEvent = (event: PointerEvent | MouseEvent) => {
 export type Projection = "web-mercator" | "globe";
 
 export const FinishActions = {
-	DRAW: "draw",
-	EDIT: "edit",
-	DELETE_COORDINATE: "deleteCoordinate",
-	INSERT_MIDPOINT: "insertMidpoint",
-	DRAG_COORDINATE: "dragCoordinate",
-	DRAG_FEATURE: "dragFeature",
-	DRAG_COORDINATE_RESIZE: "dragCoordinateResize",
+	Draw: "draw",
+	Edit: "edit",
+	DeleteCoordinate: "deleteCoordinate",
+	InsertMidpoint: "insertMidpoint",
+	DragCoordinate: "dragCoordinate",
+	DragFeature: "dragFeature",
+	DragCoordinateResize: "dragCoordinateResize",
 } as const;
+
+export type DrawInteractions =
+	| "click-move"
+	| "click-drag"
+	| "click-move-or-drag";
 
 export type Actions = (typeof FinishActions)[keyof typeof FinishActions];
 

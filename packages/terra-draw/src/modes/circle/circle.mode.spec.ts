@@ -344,19 +344,27 @@ describe("TerraDrawCircleMode", () => {
 
 					let features = store.copyAll();
 					expect(features.length).toBe(1);
+					const beforeGeometry = features[0].geometry;
 
 					circleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
 					features = store.copyAll();
 					expect(features.length).toBe(1);
+					const afterGeometry = features[0].geometry;
 
-					expect(onChange).toHaveBeenCalledTimes(2);
-					expect(onChange).toHaveBeenCalledWith(
+					// The second click should not have changed the geometry
+					expect(afterGeometry).toStrictEqual(beforeGeometry);
+
+					// Create, but no properties changed
+					expect(onChange).toHaveBeenCalledTimes(1);
+					expect(onChange).toHaveBeenNthCalledWith(
+						1,
 						[expect.any(String)],
 						"create",
 						undefined,
 					);
 
+					// The second click should not have finished the drawing
 					expect(onFinish).toHaveBeenCalledTimes(0);
 				});
 

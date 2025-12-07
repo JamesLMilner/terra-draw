@@ -8,7 +8,6 @@ import {
 } from "../store/store";
 import { Polygon, Position, LineString, Point } from "geojson";
 import { Actions, UpdateTypes, Validation } from "../common";
-import { coordinatesIdentical } from "../geometry/coordinates-identical";
 import { ensureRightHandRule } from "../geometry/ensure-right-hand-rule";
 
 type MutateFeatureBehaviorOptions = {
@@ -18,36 +17,36 @@ type MutateFeatureBehaviorOptions = {
 };
 
 export const Mutations = {
-	INSERT_BEFORE: "insert-before",
-	INSERT_AFTER: "insert-after",
-	UPDATE: "update",
-	DELETE: "delete",
-	REPLACE: "replace",
+	InsertBefore: "insert-before",
+	InsertAfter: "insert-after",
+	Update: "update",
+	Delete: "delete",
+	Replace: "replace",
 } as const;
 
 // Coordinate mutations assume that the index is relative to the original array
 // of coordinates before any mutations are applied.
 type InsertBeforeMutation = {
-	type: typeof Mutations.INSERT_BEFORE;
+	type: typeof Mutations.InsertBefore;
 	index: number;
 	coordinate: Position;
 };
 
 type InsertAfterMutation = {
-	type: typeof Mutations.INSERT_AFTER;
+	type: typeof Mutations.InsertAfter;
 	index: number;
 	coordinate: Position;
 };
 
 type UpdateMutation = {
-	type: typeof Mutations.UPDATE;
+	type: typeof Mutations.Update;
 	index: number;
 	coordinate: Position;
 };
-type DeleteMutation = { type: typeof Mutations.DELETE; index: number };
+type DeleteMutation = { type: typeof Mutations.Delete; index: number };
 
 export type ReplaceMutation<ReplacedGeometry extends GeoJSONStoreGeometries> = {
-	type: typeof Mutations.REPLACE;
+	type: typeof Mutations.Replace;
 	coordinates: ReplacedGeometry["coordinates"];
 };
 
@@ -139,6 +138,17 @@ export class MutateFeatureBehavior extends TerraDrawModeBehavior {
 			}
 
 			this.store.updateGeometry([{ id: featureId, geometry: updatedGeometry }]);
+		} else if (context.updateType === UpdateTypes.Finish) {
+			// Even if no coordinate mutations, we may need to validate on finish
+			const existingGeometry = this.store.getGeometryCopy(featureId);
+			if (
+				!this.validateGeometryWithUpdateType(
+					existingGeometry,
+					context.updateType,
+				)
+			) {
+				return null;
+			}
 		}
 
 		if (propertyMutations) {
@@ -183,8 +193,15 @@ export class MutateFeatureBehavior extends TerraDrawModeBehavior {
 		coordinates: Polygon["coordinates"][0];
 		properties?: JSONObject;
 	}) {
+		const x = ensureRightHandRule({
+			type: "Polygon",
+			coordinates: [coordinates],
+		});
 		return this.createFeatureWithGeometry<Polygon>({
-			geometry: { type: "Polygon", coordinates: [coordinates] },
+			geometry: {
+				type: "Polygon",
+				coordinates: x ? x.coordinates : [coordinates],
+			},
 			properties,
 		});
 	}
@@ -321,8 +338,8 @@ export class MutateFeatureBehavior extends TerraDrawModeBehavior {
 		// 1) Scan mutations in the order provided
 		for (const mutation of coordinatesMutations as CoordinateMutation[]) {
 			if (
-				mutation.type === Mutations.INSERT_BEFORE ||
-				mutation.type === Mutations.INSERT_AFTER
+				mutation.type === Mutations.InsertBefore ||
+				mutation.type === Mutations.InsertAfter
 			) {
 				// Normalize but allow index === originalLength for INSERT_AFTER as tail append
 				const rawIndex = mutation.index;
@@ -334,7 +351,7 @@ export class MutateFeatureBehavior extends TerraDrawModeBehavior {
 					);
 				}
 
-				if (mutation.type === Mutations.INSERT_BEFORE) {
+				if (mutation.type === Mutations.InsertBefore) {
 					if (normalized >= originalLength) {
 						throw new RangeError(
 							`INSERT_BEFORE index ${mutation.index} (normalized to ${normalized}) is out of bounds for length ${originalLength}`,
@@ -381,7 +398,7 @@ export class MutateFeatureBehavior extends TerraDrawModeBehavior {
 			if (!mutation) {
 				// No update/delete targeting this index: keep the original coordinate
 				newCoordinates.push(originalCoordinates[i]);
-			} else if (mutation.type === Mutations.DELETE) {
+			} else if (mutation.type === Mutations.Delete) {
 				// Skip this original coordinate
 			} else {
 				// Must be update
@@ -419,7 +436,7 @@ export class MutateFeatureBehavior extends TerraDrawModeBehavior {
 	private isReplaceMutation<G extends GeoJSONStoreGeometries>(
 		mutation: CoordinateMutation[] | ReplaceMutation<G>,
 	): mutation is ReplaceMutation<G> {
-		return (mutation as ReplaceMutation<G>).type === Mutations.REPLACE;
+		return (mutation as ReplaceMutation<G>).type === Mutations.Replace;
 	}
 
 	// Shared helpers for LineString / Polygon logic

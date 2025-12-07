@@ -88,7 +88,7 @@ describe("ManipulateFeatureBehavior", () => {
 						featureId: pointId,
 						context: { updateType: UpdateTypes.Commit },
 						coordinateMutations: [
-							{ type: Mutations.UPDATE, index: 0, coordinate: [1, 1] },
+							{ type: Mutations.Update, index: 0, coordinate: [1, 1] },
 						],
 					});
 				}).toThrow(
@@ -108,7 +108,7 @@ describe("ManipulateFeatureBehavior", () => {
 				const polygonId = createStorePolygon(config); // original ring length 5
 
 				const mutations: CoordinateMutation[] = [
-					{ type: Mutations.UPDATE, index: 1, coordinate: [0, 2] },
+					{ type: Mutations.Update, index: 1, coordinate: [0, 2] },
 				];
 
 				const updated = behavior.updatePolygon({
@@ -142,7 +142,7 @@ describe("ManipulateFeatureBehavior", () => {
 				const polygonId = createStorePolygon(config); // original ring length 5
 
 				const mutations: CoordinateMutation[] = [
-					{ type: Mutations.INSERT_BEFORE, index: 1, coordinate: [0.5, 0.5] },
+					{ type: Mutations.InsertBefore, index: 1, coordinate: [0.5, 0.5] },
 				];
 
 				const updated = behavior.updatePolygon({
@@ -177,7 +177,7 @@ describe("ManipulateFeatureBehavior", () => {
 				const polygonId = createStorePolygon(config); // original ring length 5
 
 				const mutations: CoordinateMutation[] = [
-					{ type: Mutations.DELETE, index: 1 },
+					{ type: Mutations.Delete, index: 1 },
 				];
 
 				const updated = behavior.updatePolygon({
@@ -210,10 +210,10 @@ describe("ManipulateFeatureBehavior", () => {
 				const polygonId = createStorePolygon(config); // ring length 5
 
 				const mutations: CoordinateMutation[] = [
-					{ type: Mutations.INSERT_BEFORE, index: 2, coordinate: [0.5, 0.5] }, // before original index 2
-					{ type: Mutations.UPDATE, index: 1, coordinate: [0, 2] }, // update original index 1
-					{ type: Mutations.DELETE, index: 3 }, // delete original index 3
-					{ type: Mutations.INSERT_AFTER, index: 4, coordinate: [9, 9] }, // tail insert (append)
+					{ type: Mutations.InsertBefore, index: 2, coordinate: [0.5, 0.5] }, // before original index 2
+					{ type: Mutations.Update, index: 1, coordinate: [0, 2] }, // update original index 1
+					{ type: Mutations.Delete, index: 3 }, // delete original index 3
+					{ type: Mutations.InsertAfter, index: 4, coordinate: [9, 9] }, // tail insert (append)
 				];
 
 				const updated = behavior.updatePolygon({
@@ -250,9 +250,9 @@ describe("ManipulateFeatureBehavior", () => {
 				const polygonId = createStorePolygon(config);
 
 				const mutations: CoordinateMutation[] = [
-					{ type: Mutations.UPDATE, index: 0, coordinate: [0, 1] }, // update first
-					{ type: Mutations.INSERT_BEFORE, index: 1, coordinate: [0.5, 0.5] }, // between
-					{ type: Mutations.INSERT_BEFORE, index: 2, coordinate: [2, 2] },
+					{ type: Mutations.Update, index: 0, coordinate: [0, 1] }, // update first
+					{ type: Mutations.InsertBefore, index: 1, coordinate: [0.5, 0.5] }, // between
+					{ type: Mutations.InsertBefore, index: 2, coordinate: [2, 2] },
 				];
 
 				const updated = behavior.updatePolygon({
@@ -291,7 +291,7 @@ describe("ManipulateFeatureBehavior", () => {
 					featureId: polygonId,
 					context: { updateType: UpdateTypes.Commit },
 					coordinateMutations: [
-						{ type: Mutations.INSERT_BEFORE, index: -1, coordinate: [7, 7] },
+						{ type: Mutations.InsertBefore, index: -1, coordinate: [7, 7] },
 					],
 				});
 				expect(updated!.geometry.coordinates[0]).toContainEqual([
@@ -315,7 +315,7 @@ describe("ManipulateFeatureBehavior", () => {
 						featureId: polygonId,
 						context: { updateType: UpdateTypes.Commit },
 						coordinateMutations: [
-							{ type: Mutations.UPDATE, index: 5, coordinate: [1, 1] },
+							{ type: Mutations.Update, index: 5, coordinate: [1, 1] },
 						],
 					}),
 				).toThrow(RangeError);
@@ -325,7 +325,7 @@ describe("ManipulateFeatureBehavior", () => {
 					behavior.updatePolygon({
 						featureId: polygonId,
 						context: { updateType: UpdateTypes.Commit },
-						coordinateMutations: [{ type: Mutations.DELETE, index: -6 }],
+						coordinateMutations: [{ type: Mutations.Delete, index: -6 }],
 					}),
 				).toThrow(RangeError);
 			});
@@ -353,7 +353,7 @@ describe("ManipulateFeatureBehavior", () => {
 					featureId: polygonId,
 					context: { updateType: UpdateTypes.Commit },
 					coordinateMutations: {
-						type: Mutations.REPLACE,
+						type: Mutations.Replace,
 						coordinates: [newRing],
 					},
 				});
@@ -448,7 +448,7 @@ describe("ManipulateFeatureBehavior", () => {
 						featureId: polygonId,
 						context: { updateType: UpdateTypes.Commit },
 						coordinateMutations: [
-							{ type: Mutations.UPDATE, index: 0, coordinate: [1, 1] },
+							{ type: Mutations.Update, index: 0, coordinate: [1, 1] },
 						],
 					});
 				}).toThrow(
@@ -468,7 +468,7 @@ describe("ManipulateFeatureBehavior", () => {
 				const lineId = createStoreLineString(config); // original length 2: [[0,0],[0,1]]
 
 				const mutations: CoordinateMutation[] = [
-					{ type: Mutations.UPDATE, index: 1, coordinate: [2, 2] }, // update first
+					{ type: Mutations.Update, index: 1, coordinate: [2, 2] }, // update first
 				];
 
 				const updated = behavior.updateLineString({
@@ -499,7 +499,7 @@ describe("ManipulateFeatureBehavior", () => {
 				const lineId = createStoreLineString(config); // original length 2: [[0,0],[0,1]]
 
 				const mutations: CoordinateMutation[] = [
-					{ type: Mutations.INSERT_BEFORE, index: 1, coordinate: [0.5, 0.5] }, // between
+					{ type: Mutations.InsertBefore, index: 1, coordinate: [0.5, 0.5] }, // between
 				];
 
 				const updated = behavior.updateLineString({
@@ -531,7 +531,7 @@ describe("ManipulateFeatureBehavior", () => {
 				const lineId = createStoreLineString(config); // original length 2: [[0,0],[0,1]]
 
 				const mutations: CoordinateMutation[] = [
-					{ type: Mutations.DELETE, index: 1 },
+					{ type: Mutations.Delete, index: 1 },
 				];
 
 				const updated = behavior.updateLineString({
@@ -559,9 +559,9 @@ describe("ManipulateFeatureBehavior", () => {
 				const lineId = createStoreLineString(config); // original length 2: [[0,0],[0,1]]
 
 				const mutations: CoordinateMutation[] = [
-					{ type: Mutations.UPDATE, index: 0, coordinate: [0, 1] }, // update first
-					{ type: Mutations.INSERT_BEFORE, index: 1, coordinate: [0.5, 0.5] }, // between
-					{ type: Mutations.INSERT_AFTER, index: 1, coordinate: [2, 2] }, // tail insert
+					{ type: Mutations.Update, index: 0, coordinate: [0, 1] }, // update first
+					{ type: Mutations.InsertBefore, index: 1, coordinate: [0.5, 0.5] }, // between
+					{ type: Mutations.InsertAfter, index: 1, coordinate: [2, 2] }, // tail insert
 				];
 
 				const updated = behavior.updateLineString({
@@ -596,7 +596,7 @@ describe("ManipulateFeatureBehavior", () => {
 					featureId: lineId,
 					context: { updateType: UpdateTypes.Commit },
 					coordinateMutations: [
-						{ type: Mutations.INSERT_AFTER, index: -1, coordinate: [5, 5] },
+						{ type: Mutations.InsertAfter, index: -1, coordinate: [5, 5] },
 					],
 				});
 
@@ -623,7 +623,7 @@ describe("ManipulateFeatureBehavior", () => {
 						featureId: lineId,
 						context: { updateType: UpdateTypes.Commit },
 						coordinateMutations: [
-							{ type: Mutations.UPDATE, index: 2, coordinate: [1, 1] },
+							{ type: Mutations.Update, index: 2, coordinate: [1, 1] },
 						],
 					}),
 				).toThrow(RangeError);
@@ -633,7 +633,7 @@ describe("ManipulateFeatureBehavior", () => {
 					behavior.updateLineString({
 						featureId: lineId,
 						context: { updateType: UpdateTypes.Commit },
-						coordinateMutations: [{ type: Mutations.DELETE, index: -3 }],
+						coordinateMutations: [{ type: Mutations.Delete, index: -3 }],
 					}),
 				).toThrow(RangeError);
 			});
@@ -659,7 +659,7 @@ describe("ManipulateFeatureBehavior", () => {
 					featureId: lineId,
 					context: { updateType: UpdateTypes.Commit },
 					coordinateMutations: {
-						type: Mutations.REPLACE,
+						type: Mutations.Replace,
 						coordinates: newCoords,
 					},
 				});

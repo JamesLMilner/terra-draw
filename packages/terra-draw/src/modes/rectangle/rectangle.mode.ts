@@ -1,4 +1,4 @@
-import { Polygon, Position } from "geojson";
+import { Position } from "geojson";
 import {
 	TerraDrawMouseEvent,
 	TerraDrawAdapterStyling,
@@ -9,6 +9,8 @@ import {
 	UpdateTypes,
 	Z_INDEX,
 	COMMON_PROPERTIES,
+	FinishActions,
+	DrawInteractions,
 } from "../../common";
 import {
 	FeatureId,
@@ -23,7 +25,8 @@ import {
 	TerraDrawBaseDrawMode,
 } from "../base.mode";
 import { ValidateNonIntersectingPolygonFeature } from "../../validations/polygon.validation";
-import { ensureRightHandRule } from "../../geometry/ensure-right-hand-rule";
+import { BehaviorConfig } from "../base.behavior";
+import { MutateFeatureBehavior, Mutations } from "../mutate-feature.behavior";
 
 type TerraDrawRectangleModeKeyEvents = {
 	cancel: KeyboardEvent["key"] | null;
@@ -53,18 +56,21 @@ interface TerraDrawRectangleModeOptions<T extends CustomStyling>
 	extends BaseModeOptions<T> {
 	keyEvents?: TerraDrawRectangleModeKeyEvents | null;
 	cursors?: Cursors;
-	drawInteraction?: "click-move" | "click-drag" | "click-move-or-drag";
+	drawInteraction?: DrawInteractions;
 }
 
 export class TerraDrawRectangleMode extends TerraDrawBaseDrawMode<RectanglePolygonStyling> {
 	mode = "rectangle";
-	private center: Position | undefined;
-	private clickCount = 0;
+	private startPosition: Position | undefined;
+	private endPosition: Position | undefined;
 	private currentRectangleId: FeatureId | undefined;
 	private keyEvents: TerraDrawRectangleModeKeyEvents = defaultKeyEvents;
 	private cursors: Required<Cursors> = defaultCursors;
 	private drawInteraction = "click-move";
 	private drawType: DrawType | undefined;
+
+	// Behaviors
+	private mutateFeature!: MutateFeatureBehavior;
 
 	constructor(
 		options?: TerraDrawRectangleModeOptions<RectanglePolygonStyling>,
@@ -95,85 +101,63 @@ export class TerraDrawRectangleMode extends TerraDrawBaseDrawMode<RectanglePolyg
 		}
 	}
 
-	private updateRectangle(event: TerraDrawMouseEvent, updateType: UpdateTypes) {
-		if (this.clickCount === 1 && this.center && this.currentRectangleId) {
-			const geometry = this.store.getGeometryCopy(this.currentRectangleId);
-
-			const firstCoord = (geometry.coordinates as Position[][])[0][0];
-
-			const newGeometry = {
-				type: "Polygon",
-				coordinates: [
-					[
-						firstCoord,
-						[event.lng, firstCoord[1]],
-						[event.lng, event.lat],
-						[firstCoord[0], event.lat],
-						firstCoord,
-					],
-				],
-			} as Polygon;
-
-			if (this.validate) {
-				const validationResult = this.validate(
-					{
-						id: this.currentRectangleId,
-						geometry: newGeometry,
-					} as GeoJSONStoreFeatures,
-					{
-						project: this.project,
-						unproject: this.unproject,
-						coordinatePrecision: this.coordinatePrecision,
-						updateType,
-					},
-				);
-
-				if (!validationResult.valid) {
-					return;
-				}
-			}
-
-			this.store.updateGeometry([
-				{
-					id: this.currentRectangleId,
-					geometry: newGeometry,
-				},
-			]);
+	private updateRectangle(endPosition: Position, updateType: UpdateTypes) {
+		if (!this.startPosition || !this.currentRectangleId) {
+			return;
 		}
+
+		const isFinish = updateType === UpdateTypes.Finish;
+
+		return this.mutateFeature.updatePolygon({
+			featureId: this.currentRectangleId,
+			coordinateMutations: [
+				{
+					type: Mutations.Update,
+					index: 1,
+					coordinate: [endPosition[0], this.startPosition[1]],
+				},
+				{
+					type: Mutations.Update,
+					index: 2,
+					coordinate: endPosition,
+				},
+				{
+					type: Mutations.Update,
+					index: 3,
+					coordinate: [this.startPosition[0], endPosition[1]],
+				},
+			],
+			propertyMutations: isFinish
+				? {
+						[COMMON_PROPERTIES.CURRENTLY_DRAWING]: undefined,
+					}
+				: {},
+			context: isFinish
+				? {
+						updateType,
+						action: FinishActions.Draw,
+					}
+				: { updateType },
+		});
 	}
 
 	private close() {
-		const finishedId = this.currentRectangleId;
-		// Fix right hand rule if necessary
-		if (finishedId) {
-			const correctedGeometry = ensureRightHandRule(
-				this.store.getGeometryCopy<Polygon>(finishedId),
-			);
-			if (correctedGeometry) {
-				this.store.updateGeometry([
-					{ id: finishedId, geometry: correctedGeometry },
-				]);
-			}
-			this.store.updateProperty([
-				{
-					id: finishedId,
-					property: COMMON_PROPERTIES.CURRENTLY_DRAWING,
-					value: undefined,
-				},
-			]);
+		if (!this.endPosition) {
+			return;
 		}
 
-		this.center = undefined;
+		const updated = this.updateRectangle(this.endPosition, UpdateTypes.Finish);
+
+		if (!updated) {
+			return;
+		}
+
+		this.startPosition = undefined;
 		this.currentRectangleId = undefined;
-		this.clickCount = 0;
 		this.drawType = undefined;
 		// Go back to started state
 		if (this.state === "drawing") {
 			this.setStarted();
-		}
-
-		if (finishedId !== undefined) {
-			this.onFinish(finishedId, { mode: this.mode, action: "draw" });
 		}
 	}
 
@@ -181,32 +165,29 @@ export class TerraDrawRectangleMode extends TerraDrawBaseDrawMode<RectanglePolyg
 		event: TerraDrawMouseEvent,
 		drawType: DrawType = "click",
 	) {
-		this.center = [event.lng, event.lat];
-		const [createdId] = this.store.create([
-			{
-				geometry: {
-					type: "Polygon",
-					coordinates: [
-						[
-							[event.lng, event.lat],
-							[event.lng, event.lat],
-							[event.lng, event.lat],
-							[event.lng, event.lat],
-						],
-					],
-				},
-				properties: {
-					mode: this.mode,
-					[COMMON_PROPERTIES.CURRENTLY_DRAWING]: true,
-				},
+		this.startPosition = [event.lng, event.lat];
+		this.endPosition = [event.lng, event.lat];
+
+		const feature = this.mutateFeature.createPolygon({
+			coordinates: [
+				[event.lng, event.lat],
+				[event.lng, event.lat],
+				[event.lng, event.lat],
+				[event.lng, event.lat],
+				[event.lng, event.lat],
+			],
+			properties: {
+				mode: this.mode,
+				[COMMON_PROPERTIES.CURRENTLY_DRAWING]: true,
 			},
-		]);
-		this.currentRectangleId = createdId;
-		this.clickCount++;
+		});
+		this.currentRectangleId = feature.id;
+
 		this.drawType = drawType;
 		this.setDrawing();
 	}
 
+	/** TODO: Probably should be private? */
 	/** @internal */
 	moveDrawAllowed() {
 		return (
@@ -215,6 +196,7 @@ export class TerraDrawRectangleMode extends TerraDrawBaseDrawMode<RectanglePolyg
 		);
 	}
 
+	/** TODO: Probably should be private? */
 	/** @internal */
 	dragDrawAllowed() {
 		return (
@@ -247,10 +229,10 @@ export class TerraDrawRectangleMode extends TerraDrawBaseDrawMode<RectanglePolyg
 				(event.isContextMenu &&
 					this.allowPointerEvent(this.pointerEvents.contextMenu, event)))
 		) {
-			if (this.clickCount === 0) {
+			if (!this.startPosition) {
 				this.beginDrawing(event);
 			} else {
-				this.updateRectangle(event, UpdateTypes.Finish);
+				this.endPosition = [event.lng, event.lat];
 				// Finish drawing
 				this.close();
 			}
@@ -259,7 +241,8 @@ export class TerraDrawRectangleMode extends TerraDrawBaseDrawMode<RectanglePolyg
 
 	/** @internal */
 	onMouseMove(event: TerraDrawMouseEvent) {
-		this.updateRectangle(event, UpdateTypes.Provisional);
+		this.endPosition = [event.lng, event.lat];
+		this.updateRectangle(this.endPosition, UpdateTypes.Provisional);
 	}
 
 	/** @internal */
@@ -302,7 +285,8 @@ export class TerraDrawRectangleMode extends TerraDrawBaseDrawMode<RectanglePolyg
 			this.dragDrawAllowed() &&
 			this.drawType === "drag"
 		) {
-			this.updateRectangle(event, UpdateTypes.Provisional);
+			this.endPosition = [event.lng, event.lat];
+			this.updateRectangle(this.endPosition, UpdateTypes.Provisional);
 		}
 	}
 
@@ -316,7 +300,7 @@ export class TerraDrawRectangleMode extends TerraDrawBaseDrawMode<RectanglePolyg
 			this.dragDrawAllowed() &&
 			this.drawType === "drag"
 		) {
-			this.updateRectangle(event, UpdateTypes.Finish);
+			this.endPosition = [event.lng, event.lat];
 			// Finish drawing
 			this.close();
 			setMapDraggability(true);
@@ -327,9 +311,9 @@ export class TerraDrawRectangleMode extends TerraDrawBaseDrawMode<RectanglePolyg
 	cleanUp() {
 		const cleanUpId = this.currentRectangleId;
 
-		this.center = undefined;
+		this.startPosition = undefined;
 		this.currentRectangleId = undefined;
-		this.clickCount = 0;
+
 		this.drawType = undefined;
 
 		if (this.state === "drawing") {
@@ -337,7 +321,7 @@ export class TerraDrawRectangleMode extends TerraDrawBaseDrawMode<RectanglePolyg
 		}
 
 		if (cleanUpId !== undefined) {
-			this.store.delete([cleanUpId]);
+			this.mutateFeature.deleteFeature(cleanUpId);
 		}
 	}
 
@@ -395,13 +379,25 @@ export class TerraDrawRectangleMode extends TerraDrawBaseDrawMode<RectanglePolyg
 		// If we are in the middle of drawing a rectangle and the feature being updated is the current rectangle,
 		// we need to reset the drawing state
 		if (this.currentRectangleId === feature.id) {
-			this.center = undefined;
+			this.startPosition = undefined;
 			this.currentRectangleId = undefined;
-			this.clickCount = 0;
 			this.drawType = undefined;
 			if (this.state === "drawing") {
 				this.setStarted();
 			}
 		}
+	}
+
+	registerBehaviors(config: BehaviorConfig) {
+		this.mutateFeature = new MutateFeatureBehavior(config, {
+			validate: this.validate,
+			onUpdate: ({ id }) => {},
+			onFinish: (featureId, context) => {
+				this.onFinish(featureId, {
+					mode: this.mode,
+					action: context.action,
+				});
+			},
+		});
 	}
 }

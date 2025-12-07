@@ -462,7 +462,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 		}
 
 		this.onFinish(featureId, {
-			action: FinishActions.DELETE_COORDINATE,
+			action: FinishActions.DeleteCoordinate,
 			mode: this.mode,
 		});
 	}
@@ -550,7 +550,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 			);
 
 			this.onFinish(this.selected[0], {
-				action: FinishActions.INSERT_MIDPOINT,
+				action: FinishActions.InsertMidpoint,
 				mode: this.mode,
 			});
 
@@ -755,7 +755,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 				);
 
 				this.onFinish(this.selected[0], {
-					action: FinishActions.INSERT_MIDPOINT,
+					action: FinishActions.InsertMidpoint,
 					mode: this.mode,
 				});
 
@@ -912,17 +912,17 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 		if (this.dragCoordinate.isDragging()) {
 			this.onFinish(this.selected[0], {
 				mode: this.mode,
-				action: FinishActions.DRAG_COORDINATE,
+				action: FinishActions.DragCoordinate,
 			});
 		} else if (this.dragFeature.isDragging()) {
 			this.onFinish(this.selected[0], {
 				mode: this.mode,
-				action: FinishActions.DRAG_FEATURE,
+				action: FinishActions.DragFeature,
 			});
 		} else if (this.dragCoordinateResizeFeature.isDragging()) {
 			this.onFinish(this.selected[0], {
 				mode: this.mode,
-				action: FinishActions.DRAG_COORDINATE_RESIZE,
+				action: FinishActions.DragCoordinateResize,
 			});
 		}
 

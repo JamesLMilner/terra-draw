@@ -167,7 +167,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 				this.manipulateFeature.updatePoint({
 					featureId: this.snappedPointId,
 					coordinateMutations: {
-						type: Mutations.REPLACE,
+						type: Mutations.Replace,
 						coordinates: snappedCoordinate,
 					},
 					context: { updateType: UpdateTypes.Provisional },
@@ -199,10 +199,10 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 
 		const updated = this.manipulateFeature.updateLineString({
 			featureId: this.currentId,
-			context: { updateType: UpdateTypes.Finish, action: FinishActions.DRAW },
+			context: { updateType: UpdateTypes.Finish, action: FinishActions.Draw },
 			coordinateMutations: [
 				{
-					type: Mutations.DELETE,
+					type: Mutations.Delete,
 					index: -1,
 				},
 			],
@@ -297,7 +297,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 			context: { updateType: UpdateTypes.Commit },
 			coordinateMutations: [
 				{
-					type: Mutations.INSERT_AFTER,
+					type: Mutations.InsertAfter,
 					index: -1,
 					coordinate: updatedCoord,
 				},
@@ -319,7 +319,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 			this.manipulateFeature.updatePoint({
 				featureId: this.closingPointId,
 				coordinateMutations: {
-					type: Mutations.REPLACE,
+					type: Mutations.Replace,
 					coordinates: closingPointCoordinate,
 				},
 				context: { updateType: UpdateTypes.Provisional },
@@ -345,7 +345,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 			featureId: this.currentId,
 			context: { updateType: UpdateTypes.Commit },
 			coordinateMutations: [
-				{ type: Mutations.INSERT_AFTER, index: -1, coordinate: updatedCoord },
+				{ type: Mutations.InsertAfter, index: -1, coordinate: updatedCoord },
 			],
 		});
 
@@ -447,7 +447,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 			| CoordinateMutation[]
 			| ReplaceMutation<LineString> = [
 			{
-				type: Mutations.UPDATE,
+				type: Mutations.Update,
 				index: -1,
 				coordinate: updatedCoord,
 			},
@@ -458,7 +458,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 
 			if (insertCoordinates) {
 				coordinateMutations = {
-					type: Mutations.REPLACE,
+					type: Mutations.Replace,
 					coordinates: insertCoordinates,
 				};
 			}
@@ -558,8 +558,8 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 
 		const updated = this.manipulateFeature.updateLineString({
 			featureId,
-			coordinateMutations: [{ type: Mutations.DELETE, index: coordinateIndex }],
-			context: { updateType: UpdateTypes.Finish, action: FinishActions.EDIT },
+			coordinateMutations: [{ type: Mutations.Delete, index: coordinateIndex }],
+			context: { updateType: UpdateTypes.Finish, action: FinishActions.Edit },
 		});
 
 		if (!updated) {
@@ -722,7 +722,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 				context: { updateType: UpdateTypes.Provisional },
 				coordinateMutations: [
 					{
-						type: Mutations.UPDATE,
+						type: Mutations.Update,
 						index: this.editedFeatureCoordinateIndex,
 						coordinate: [event.lng, event.lat],
 					},
@@ -762,7 +762,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 			this.manipulateFeature.updatePoint({
 				featureId: this.editedPointId,
 				coordinateMutations: {
-					type: Mutations.REPLACE,
+					type: Mutations.Replace,
 					coordinates: [event.lng, event.lat],
 				},
 				context: { updateType: UpdateTypes.Provisional },
@@ -794,7 +794,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 		const updated = this.manipulateFeature.updateLineString({
 			featureId: this.editedFeatureId,
 			propertyMutations: { [COMMON_PROPERTIES.EDITED]: false },
-			context: { updateType: UpdateTypes.Finish, action: FinishActions.EDIT },
+			context: { updateType: UpdateTypes.Finish, action: FinishActions.Edit },
 		});
 
 		if (!updated) {

@@ -10,6 +10,7 @@ import {
 	Projection,
 	Z_INDEX,
 	COMMON_PROPERTIES,
+	FinishActions,
 } from "../../common";
 import { haversineDistanceKilometers } from "../../geometry/measure/haversine-distance";
 import { circle, circleWebMercator } from "../../geometry/shape/create-circle";
@@ -28,6 +29,8 @@ import {
 import { ValidateNonIntersectingPolygonFeature } from "../../validations/polygon.validation";
 import { Polygon } from "geojson";
 import { calculateWebMercatorDistortion } from "../../geometry/shape/web-mercator-distortion";
+import { BehaviorConfig } from "../base.behavior";
+import { MutateFeatureBehavior, Mutations } from "../mutate-feature.behavior";
 
 type TerraDrawCircleModeKeyEvents = {
 	cancel: KeyboardEvent["key"] | null;
@@ -62,12 +65,16 @@ interface TerraDrawCircleModeOptions<T extends CustomStyling>
 export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyling> {
 	mode = "circle";
 	private center: Position | undefined;
-	private clickCount = 0;
+	private endPosition: Position | undefined;
+
 	private currentCircleId: FeatureId | undefined;
 	private keyEvents: TerraDrawCircleModeKeyEvents = defaultKeyEvents;
 	private cursors: Required<Cursors> = defaultCursors;
 	private startingRadiusKilometers = 0.00001;
 	private cursorMovedAfterInitialCursorDown = false;
+
+	// Behaviors
+	public mutateFeature!: MutateFeatureBehavior;
 
 	/**
 	 * Create a new circle mode instance
@@ -105,54 +112,24 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 	}
 
 	private close() {
-		if (this.currentCircleId === undefined) {
+		if (this.currentCircleId === undefined || this.endPosition === undefined) {
 			return;
 		}
 
-		this.store.updateProperty([
-			{
-				id: this.currentCircleId,
-				property: COMMON_PROPERTIES.CURRENTLY_DRAWING,
-				value: undefined,
-			},
-		]);
+		const updated = this.updateCircle(this.endPosition, UpdateTypes.Finish);
 
-		const finishedId = this.currentCircleId;
-
-		if (this.validate && finishedId) {
-			const currentGeometry = this.store.getGeometryCopy<Polygon>(finishedId);
-
-			const validationResult = this.validate(
-				{
-					type: "Feature",
-					id: finishedId,
-					geometry: currentGeometry,
-					properties: {},
-				},
-				{
-					project: this.project,
-					unproject: this.unproject,
-					coordinatePrecision: this.coordinatePrecision,
-					updateType: UpdateTypes.Finish,
-				},
-			);
-
-			if (!validationResult.valid) {
-				return;
-			}
+		if (!updated) {
+			return;
 		}
 
 		this.cursorMovedAfterInitialCursorDown = false;
 		this.center = undefined;
 		this.currentCircleId = undefined;
-		this.clickCount = 0;
+
 		// Go back to started state
 		if (this.state === "drawing") {
 			this.setStarted();
 		}
-
-		// Ensure that any listerers are triggered with the main created geometry
-		this.onFinish(finishedId, { mode: this.mode, action: "draw" });
 	}
 
 	/** @internal */
@@ -178,37 +155,30 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 			(event.isContextMenu &&
 				this.allowPointerEvent(this.pointerEvents.contextMenu, event))
 		) {
-			if (this.clickCount === 0) {
+			if (!this.center) {
 				this.center = [event.lng, event.lat];
+				this.endPosition = [event.lng, event.lat];
+
 				const startingCircle = circle({
 					center: this.center,
 					radiusKilometers: this.startingRadiusKilometers,
 					coordinatePrecision: this.coordinatePrecision,
 				});
 
-				const [createdId] = this.store.create([
-					{
-						geometry: startingCircle.geometry,
-						properties: {
-							mode: this.mode,
-							radiusKilometers: this.startingRadiusKilometers,
-							[COMMON_PROPERTIES.CURRENTLY_DRAWING]: true,
-						},
+				const { id: createdId } = this.mutateFeature.createPolygon({
+					coordinates: startingCircle.geometry.coordinates[0],
+					properties: {
+						mode: this.mode,
+						radiusKilometers: this.startingRadiusKilometers,
+						[COMMON_PROPERTIES.CURRENTLY_DRAWING]: true,
 					},
-				]);
+				});
+
 				this.currentCircleId = createdId;
-				this.clickCount++;
 				this.cursorMovedAfterInitialCursorDown = false;
 				this.setDrawing();
-			} else {
-				if (
-					this.clickCount === 1 &&
-					this.center &&
-					this.currentCircleId !== undefined &&
-					this.cursorMovedAfterInitialCursorDown
-				) {
-					this.updateCircle(event);
-				}
+			} else if (this.center && this.currentCircleId !== undefined) {
+				this.endPosition = [event.lng, event.lat];
 
 				// Finish drawing
 				this.close();
@@ -219,7 +189,8 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 	/** @internal */
 	onMouseMove(event: TerraDrawMouseEvent) {
 		this.cursorMovedAfterInitialCursorDown = true;
-		this.updateCircle(event);
+		this.endPosition = [event.lng, event.lat];
+		this.updateCircle(this.endPosition, UpdateTypes.Provisional);
 	}
 
 	/** @internal */
@@ -249,14 +220,14 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 
 		this.center = undefined;
 		this.currentCircleId = undefined;
-		this.clickCount = 0;
+
 		if (this.state === "drawing") {
 			this.setStarted();
 		}
 
 		try {
 			if (cleanUpId !== undefined) {
-				this.store.delete([cleanUpId]);
+				this.mutateFeature.deleteFeature(cleanUpId);
 			}
 		} catch {}
 	}
@@ -311,22 +282,26 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 		);
 	}
 
-	private updateCircle(event: TerraDrawMouseEvent) {
-		if (this.clickCount === 1 && this.center && this.currentCircleId) {
-			const newRadius = haversineDistanceKilometers(this.center, [
-				event.lng,
-				event.lat,
-			]);
+	private updateCircle(endPosition: Position, updateType: UpdateTypes) {
+		if (this.currentCircleId === undefined || this.center === undefined) {
+			return;
+		}
 
-			let updatedCircle: Feature<Polygon>;
+		const isFinish = updateType === UpdateTypes.Finish;
+
+		let updatedCircle: Feature<Polygon> | undefined;
+		let newRadius: number | undefined;
+
+		if (this.cursorMovedAfterInitialCursorDown) {
+			newRadius = haversineDistanceKilometers(this.center, endPosition);
 
 			if (this.projection === "web-mercator") {
 				// We want to track the mouse cursor, but we need to adjust the radius based
 				// on the distortion of the web mercator projection
-				const distortion = calculateWebMercatorDistortion(this.center, [
-					event.lng,
-					event.lat,
-				]);
+				const distortion = calculateWebMercatorDistortion(
+					this.center,
+					endPosition,
+				);
 
 				updatedCircle = circleWebMercator({
 					center: this.center,
@@ -342,41 +317,37 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 			} else {
 				throw new Error("Invalid projection");
 			}
-
-			if (this.validate) {
-				const valid = this.validate(
-					{
-						type: "Feature",
-						id: this.currentCircleId,
-						geometry: updatedCircle.geometry,
-						properties: {
-							radiusKilometers: newRadius,
-						},
-					},
-					{
-						project: this.project,
-						unproject: this.unproject,
-						coordinatePrecision: this.coordinatePrecision,
-						updateType: UpdateTypes.Provisional,
-					},
-				);
-
-				if (!valid.valid) {
-					return;
-				}
-			}
-
-			this.store.updateGeometry([
-				{ id: this.currentCircleId, geometry: updatedCircle.geometry },
-			]);
-			this.store.updateProperty([
-				{
-					id: this.currentCircleId,
-					property: "radiusKilometers",
-					value: newRadius,
-				},
-			]);
 		}
+
+		const propertyMutations: {
+			radiusKilometers?: number;
+			[COMMON_PROPERTIES.CURRENTLY_DRAWING]?: boolean;
+		} = {};
+
+		if (updatedCircle && newRadius) {
+			propertyMutations.radiusKilometers = newRadius;
+		}
+
+		if (isFinish) {
+			propertyMutations[COMMON_PROPERTIES.CURRENTLY_DRAWING] = undefined;
+		}
+
+		return this.mutateFeature.updatePolygon({
+			featureId: this.currentCircleId,
+			coordinateMutations: updatedCircle
+				? {
+						type: Mutations.Replace,
+						coordinates: updatedCircle.geometry.coordinates,
+					}
+				: undefined,
+			propertyMutations,
+			context: isFinish
+				? {
+						updateType,
+						action: FinishActions.Draw,
+					}
+				: { updateType },
+		});
 	}
 
 	afterFeatureUpdated(feature: GeoJSONStoreFeatures): void {
@@ -386,10 +357,23 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 			this.cursorMovedAfterInitialCursorDown = false;
 			this.center = undefined;
 			this.currentCircleId = undefined;
-			this.clickCount = 0;
+
 			if (this.state === "drawing") {
 				this.setStarted();
 			}
 		}
+	}
+
+	registerBehaviors(config: BehaviorConfig) {
+		this.mutateFeature = new MutateFeatureBehavior(config, {
+			validate: this.validate,
+			onUpdate: ({ id }) => {},
+			onFinish: (featureId, context) => {
+				this.onFinish(featureId, {
+					mode: this.mode,
+					action: context.action,
+				});
+			},
+		});
 	}
 }

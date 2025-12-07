@@ -58,9 +58,9 @@ export type CoordinateMutation =
 
 type ValidProperties = Record<string, JSON | undefined>;
 
-export type FinishContext = { updateType: UpdateTypes.Finish; action: Actions };
+type FinishContext = { updateType: UpdateTypes.Finish; action: Actions };
 
-export type MutateContext =
+type MutateContext =
 	| FinishContext
 	| { updateType: UpdateTypes.Commit | UpdateTypes.Provisional };
 

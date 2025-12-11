@@ -9,7 +9,6 @@ import {
 	Z_INDEX,
 	COMMON_PROPERTIES,
 } from "../../common";
-import { Polygon } from "geojson";
 import {
 	TerraDrawBaseDrawMode,
 	BaseModeOptions,
@@ -36,6 +35,13 @@ import { determineHalfPlane } from "../../geometry/determine-halfplane";
 import { cartesianDistance } from "../../geometry/measure/pixel-distance";
 import { calculateRelativeAngle } from "../../geometry/calculate-relative-angle";
 import { limitPrecision } from "../../geometry/limit-decimal-precision";
+import {
+	CoordinateMutation,
+	MutateFeatureBehavior,
+	Mutations,
+} from "../mutate-feature.behavior";
+import { BehaviorConfig } from "../base.behavior";
+import { ReadFeatureBehavior } from "../read-feature.behavior";
 
 type TerraDrawPolygonModeKeyEvents = {
 	cancel?: KeyboardEvent["key"] | null;
@@ -74,10 +80,12 @@ export class TerraDrawAngledRectangleMode extends TerraDrawBaseDrawMode<PolygonS
 	private currentCoordinate = 0;
 	private currentId: FeatureId | undefined;
 	private keyEvents: TerraDrawPolygonModeKeyEvents = defaultKeyEvents;
-
-	// Behaviors
 	private cursors: Required<Cursors> = defaultCursors;
 	private mouseMove = false;
+
+	// Behaviors
+	private mutateFeature!: MutateFeatureBehavior;
+	private readFeature!: ReadFeatureBehavior;
 
 	constructor(options?: TerraDrawAngledRectangleModeOptions<PolygonStyling>) {
 		super(options, true);
@@ -107,15 +115,17 @@ export class TerraDrawAngledRectangleMode extends TerraDrawBaseDrawMode<PolygonS
 			return;
 		}
 
-		this.store.updateProperty([
-			{
-				id: this.currentId,
-				property: COMMON_PROPERTIES.CURRENTLY_DRAWING,
-				value: undefined,
+		const updated = this.mutateFeature.updatePolygon({
+			featureId: this.currentId,
+			propertyMutations: {
+				[COMMON_PROPERTIES.CURRENTLY_DRAWING]: undefined,
 			},
-		]);
+			context: { updateType: UpdateTypes.Finish } as any,
+		});
 
-		const finishedId = this.currentId;
+		if (!updated) {
+			return;
+		}
 
 		this.currentCoordinate = 0;
 		this.currentId = undefined;
@@ -124,8 +134,6 @@ export class TerraDrawAngledRectangleMode extends TerraDrawBaseDrawMode<PolygonS
 		if (this.state === "drawing") {
 			this.setStarted();
 		}
-
-		this.onFinish(finishedId, { mode: this.mode, action: "draw" });
 	}
 
 	/** @internal */
@@ -150,146 +158,135 @@ export class TerraDrawAngledRectangleMode extends TerraDrawBaseDrawMode<PolygonS
 			return;
 		}
 
-		const currentPolygonCoordinates = this.store.getGeometryCopy<Polygon>(
-			this.currentId,
-		).coordinates[0];
-
-		let updatedCoordinates;
+		let coordinateMutations: CoordinateMutation[] = [];
 
 		if (this.currentCoordinate === 1) {
-			// We must add a very small epsilon value so that Mapbox GL
-			// renders the polygon - There might be a cleaner solution?
-			const epsilon = 1 / Math.pow(10, this.coordinatePrecision - 1);
-			const offset = Math.max(0.000001, epsilon);
-
-			updatedCoordinates = [
-				currentPolygonCoordinates[0],
-				[event.lng, event.lat],
-				[event.lng, event.lat - offset],
-				currentPolygonCoordinates[0],
-			];
+			coordinateMutations = this.getUpdateForSecondCoordinate(event);
 		} else if (this.currentCoordinate === 2) {
-			const firstCoordinate = currentPolygonCoordinates[0];
-			const secondCoordinate = currentPolygonCoordinates[1];
-			const midpoint = midpointCoordinate(
-				firstCoordinate,
-				secondCoordinate,
-				this.coordinatePrecision,
-				this.project,
-				this.unproject,
-			);
+			coordinateMutations = this.getNewSecondAndThirdCoordinates(event);
+		} else {
+			return;
+		}
 
-			const A = lngLatToWebMercatorXY(firstCoordinate[0], firstCoordinate[1]);
-			const B = lngLatToWebMercatorXY(midpoint[0], midpoint[1]);
-			const C = lngLatToWebMercatorXY(secondCoordinate[0], secondCoordinate[1]);
-			const D = lngLatToWebMercatorXY(event.lng, event.lat);
+		this.mutateFeature.updatePolygon({
+			featureId: this.currentId,
+			coordinateMutations,
+			context: { updateType: UpdateTypes.Provisional },
+		});
+	}
 
-			// Determine if the cursor is closer to A or C
-			const distanceToA = cartesianDistance(D, A);
-			const distanceToB = cartesianDistance(D, C);
-			const ACloserThanC = distanceToA < distanceToB ? true : false;
+	private getUpdateForSecondCoordinate(
+		event: TerraDrawMouseEvent,
+	): CoordinateMutation[] {
+		// We must add a very small epsilon value so that Mapbox GL
+		// renders the polygon - There might be a cleaner solution?
+		const epsilon = 1 / Math.pow(10, this.coordinatePrecision - 1);
+		const offset = Math.max(0.000001, epsilon);
 
-			// We need to work out if the cursor is closer to A or C and then calculate the angle
-			// between the cursor and the opposing midpoint
-			const relativeAngle = calculateRelativeAngle(A, B, D);
-			const theta = ACloserThanC
-				? 90 - relativeAngle
-				: calculateRelativeAngle(A, B, D) - 90;
+		return [
+			{
+				type: Mutations.Update,
+				index: 1,
+				coordinate: [event.lng, event.lat],
+			},
+			{
+				type: Mutations.Update,
+				index: 2,
+				coordinate: [event.lng, event.lat - offset],
+			},
+		];
+	}
 
-			// We want to calculate the adjacent i.e. the calculated distance
-			// between the cursor and the opposing midpoint
-			const hypotenuse = cartesianDistance(B, D);
-			const adjacent = Math.cos(degreesToRadians(theta)) * hypotenuse;
+	private getNewSecondAndThirdCoordinates(
+		event: TerraDrawMouseEvent,
+	): CoordinateMutation[] {
+		if (!this.currentId) {
+			throw new Error("No current feature being drawn");
+		}
 
-			// Calculate the bearing between the first and second point
-			const firstAndSecondPointBearing = webMercatorBearing(A, C);
+		const firstCoordinate = this.readFeature.getCoordinate(this.currentId, 0);
+		const secondCoordinate = this.readFeature.getCoordinate(this.currentId, 1);
+		const midpoint = midpointCoordinate(
+			firstCoordinate,
+			secondCoordinate,
+			this.coordinatePrecision,
+			this.project,
+			this.unproject,
+		);
 
-			// Determine which side of the line the cursor is on
-			const side = determineHalfPlane(A, C, D);
+		const A = lngLatToWebMercatorXY(firstCoordinate[0], firstCoordinate[1]);
+		const B = lngLatToWebMercatorXY(midpoint[0], midpoint[1]);
+		const C = lngLatToWebMercatorXY(secondCoordinate[0], secondCoordinate[1]);
+		const D = lngLatToWebMercatorXY(event.lng, event.lat);
 
-			// Determine which direction to draw the rectangle
-			const angle = side === "right" ? -90 : 90;
+		// Determine if the cursor is closer to A or C
+		const distanceToA = cartesianDistance(D, A);
+		const distanceToB = cartesianDistance(D, C);
+		const ACloserThanC = distanceToA < distanceToB ? true : false;
 
-			// Calculate the third and fourth coordinates based on the cursor position
-			const rectangleAngle = firstAndSecondPointBearing + angle;
-			const thirdCoordinateXY = webMercatorDestination(
-				A,
-				adjacent,
-				rectangleAngle,
-			);
-			const fourthCoordinateXY = webMercatorDestination(
-				C,
-				adjacent,
-				rectangleAngle,
-			);
+		// We need to work out if the cursor is closer to A or C and then calculate the angle
+		// between the cursor and the opposing midpoint
+		const relativeAngle = calculateRelativeAngle(A, B, D);
+		const theta = ACloserThanC
+			? 90 - relativeAngle
+			: calculateRelativeAngle(A, B, D) - 90;
 
-			// Convert the third and fourth coordinates back to lng/lat
-			const thirdCoordinate = webMercatorXYToLngLat(
-				thirdCoordinateXY.x,
-				thirdCoordinateXY.y,
-			);
-			const fourthCoordinate = webMercatorXYToLngLat(
-				fourthCoordinateXY.x,
-				fourthCoordinateXY.y,
-			);
+		// We want to calculate the adjacent i.e. the calculated distance
+		// between the cursor and the opposing midpoint
+		const hypotenuse = cartesianDistance(B, D);
+		const adjacent = Math.cos(degreesToRadians(theta)) * hypotenuse;
 
-			// The final coordinates
-			updatedCoordinates = [
-				currentPolygonCoordinates[0],
-				currentPolygonCoordinates[1],
-				[
+		// Calculate the bearing between the first and second point
+		const firstAndSecondPointBearing = webMercatorBearing(A, C);
+
+		// Determine which side of the line the cursor is on
+		const side = determineHalfPlane(A, C, D);
+
+		// Determine which direction to draw the rectangle
+		const angle = side === "right" ? -90 : 90;
+
+		// Calculate the third and fourth coordinates based on the cursor position
+		const rectangleAngle = firstAndSecondPointBearing + angle;
+		const thirdCoordinateXY = webMercatorDestination(
+			A,
+			adjacent,
+			rectangleAngle,
+		);
+		const fourthCoordinateXY = webMercatorDestination(
+			C,
+			adjacent,
+			rectangleAngle,
+		);
+
+		// Convert the third and fourth coordinates back to lng/lat
+		const thirdCoordinate = webMercatorXYToLngLat(
+			thirdCoordinateXY.x,
+			thirdCoordinateXY.y,
+		);
+		const fourthCoordinate = webMercatorXYToLngLat(
+			fourthCoordinateXY.x,
+			fourthCoordinateXY.y,
+		);
+
+		// The final coordinates
+		return [
+			{
+				type: Mutations.Update,
+				index: 2,
+				coordinate: [
 					limitPrecision(fourthCoordinate.lng, this.coordinatePrecision),
 					limitPrecision(fourthCoordinate.lat, this.coordinatePrecision),
 				],
-				[
+			},
+			{
+				type: Mutations.Update,
+				index: 3,
+				coordinate: [
 					limitPrecision(thirdCoordinate.lng, this.coordinatePrecision),
 					limitPrecision(thirdCoordinate.lat, this.coordinatePrecision),
 				],
-				currentPolygonCoordinates[0],
-			];
-		}
-
-		if (updatedCoordinates) {
-			this.updatePolygonGeometry(
-				this.currentId,
-				updatedCoordinates,
-				UpdateTypes.Provisional,
-			);
-		}
-	}
-
-	private updatePolygonGeometry(
-		id: FeatureId,
-		coordinates: Polygon["coordinates"][0],
-		updateType: UpdateTypes,
-	) {
-		const updatedGeometry = {
-			type: "Polygon",
-			coordinates: [coordinates],
-		} as Polygon;
-
-		if (this.validate) {
-			const validationResult = this.validate(
-				{
-					type: "Feature",
-					geometry: updatedGeometry,
-				} as GeoJSONStoreFeatures,
-				{
-					project: this.project,
-					unproject: this.unproject,
-					coordinatePrecision: this.coordinatePrecision,
-					updateType,
-				},
-			);
-
-			if (!validationResult.valid) {
-				return false;
-			}
-		}
-
-		this.store.updateGeometry([{ id, geometry: updatedGeometry }]);
-
-		return true;
+			},
+		];
 	}
 
 	/** @internal */
@@ -312,36 +309,30 @@ export class TerraDrawAngledRectangleMode extends TerraDrawBaseDrawMode<PolygonS
 			this.mouseMove = false;
 
 			if (this.currentCoordinate === 0) {
-				const [newId] = this.store.create([
-					{
-						geometry: {
-							type: "Polygon",
-							coordinates: [
-								[
-									[event.lng, event.lat],
-									[event.lng, event.lat],
-									[event.lng, event.lat],
-									[event.lng, event.lat],
-								],
-							],
-						},
-						properties: {
-							mode: this.mode,
-							[COMMON_PROPERTIES.CURRENTLY_DRAWING]: true,
-						},
+				const { id: newId } = this.mutateFeature.createPolygon({
+					coordinates: [
+						[event.lng, event.lat],
+						[event.lng, event.lat],
+						[event.lng, event.lat],
+						[event.lng, event.lat],
+					],
+
+					properties: {
+						mode: this.mode,
+						[COMMON_PROPERTIES.CURRENTLY_DRAWING]: true,
 					},
-				]);
+				});
 				this.currentId = newId;
 				this.currentCoordinate++;
 
 				// Ensure the state is updated to reflect drawing has started
 				this.setDrawing();
 			} else if (this.currentCoordinate === 1 && this.currentId) {
-				const currentPolygonGeometry = this.store.getGeometryCopy<Polygon>(
+				const previousCoordinate = this.readFeature.getCoordinate(
 					this.currentId,
+					0,
 				);
 
-				const previousCoordinate = currentPolygonGeometry.coordinates[0][0];
 				const isIdentical = coordinatesIdentical(
 					[event.lng, event.lat],
 					previousCoordinate,
@@ -351,16 +342,22 @@ export class TerraDrawAngledRectangleMode extends TerraDrawBaseDrawMode<PolygonS
 					return;
 				}
 
-				const updated = this.updatePolygonGeometry(
-					this.currentId,
-					[
-						currentPolygonGeometry.coordinates[0][0],
-						[event.lng, event.lat],
-						[event.lng, event.lat],
-						currentPolygonGeometry.coordinates[0][0],
+				const updated = this.mutateFeature.updatePolygon({
+					featureId: this.currentId,
+					coordinateMutations: [
+						{
+							type: Mutations.Update,
+							index: 1,
+							coordinate: [event.lng, event.lat],
+						},
+						{
+							type: Mutations.InsertAfter,
+							index: 1,
+							coordinate: [event.lng, event.lat],
+						},
 					],
-					UpdateTypes.Commit,
-				);
+					context: { updateType: UpdateTypes.Commit },
+				});
 
 				if (!updated) {
 					return;
@@ -403,7 +400,7 @@ export class TerraDrawAngledRectangleMode extends TerraDrawBaseDrawMode<PolygonS
 	cleanUp() {
 		try {
 			if (this.currentId) {
-				this.store.delete([this.currentId]);
+				this.mutateFeature.deleteFeature(this.currentId);
 			}
 		} catch (error) {}
 		this.currentId = undefined;
@@ -469,5 +466,19 @@ export class TerraDrawAngledRectangleMode extends TerraDrawBaseDrawMode<PolygonS
 				this.setStarted();
 			}
 		}
+	}
+
+	registerBehaviors(config: BehaviorConfig) {
+		this.readFeature = new ReadFeatureBehavior(config);
+		this.mutateFeature = new MutateFeatureBehavior(config, {
+			validate: this.validate,
+			onUpdate: ({ id }) => {},
+			onFinish: (featureId, context) => {
+				this.onFinish(featureId, {
+					mode: this.mode,
+					action: context.action,
+				});
+			},
+		});
 	}
 }

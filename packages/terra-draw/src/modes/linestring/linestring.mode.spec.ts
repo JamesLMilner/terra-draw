@@ -468,6 +468,44 @@ describe("TerraDrawLineStringMode", () => {
 			expect(features[1].geometry.coordinates).toStrictEqual([2, 2]);
 		});
 
+		it("can snap from existing line once finished with snapping toLine and toCoordinate enabled", () => {
+			lineStringMode = new TerraDrawLineStringMode({
+				snapping: { toLine: true, toCoordinate: true },
+			});
+			const mockConfig = MockModeConfig(lineStringMode.mode);
+			onChange = mockConfig.onChange;
+			onFinish = mockConfig.onFinish;
+			store = mockConfig.store;
+
+			lineStringMode.register(mockConfig);
+			lineStringMode.start();
+
+			lineStringMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+			lineStringMode.onMouseMove(MockCursorEvent({ lng: 4, lat: 4 }));
+
+			lineStringMode.onClick(MockCursorEvent({ lng: 4, lat: 4 }));
+
+			lineStringMode.onMouseMove(MockCursorEvent({ lng: 8, lat: 8 }));
+
+			lineStringMode.onClick(MockCursorEvent({ lng: 8, lat: 8 }));
+
+			lineStringMode.onClick(MockCursorEvent({ lng: 8, lat: 8 }));
+
+			expect(onFinish).toHaveBeenCalledTimes(1);
+
+			lineStringMode.onMouseMove(MockCursorEvent({ lng: 2, lat: 2 }));
+
+			const features = store.copyAll();
+			expect(features.length).toBe(2);
+
+			expect(features[1].geometry.type).toBe("Point");
+			expect(features[1].properties.snappingPoint).toBe(true);
+			expect(features[1].geometry.coordinates).toStrictEqual([
+				1.999389836, 2.000609297,
+			]);
+		});
+
 		it("can snap from existing line once finished with snapping toCustom enabled", () => {
 			const coordinates = [
 				[5, 5],

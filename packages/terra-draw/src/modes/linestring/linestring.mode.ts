@@ -937,19 +937,24 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 		}
 
 		if (this.snapping?.toCoordinate) {
+			let snapped: Position | undefined;
 			if (this.currentId) {
-				snappedCoordinate = this.coordinateSnapping.getSnappableCoordinate(
+				snapped = this.coordinateSnapping.getSnappableCoordinate(
 					event,
 					this.currentId,
 				);
 			} else {
-				snappedCoordinate =
+				snapped =
 					this.coordinateSnapping.getSnappableCoordinateFirstClick(event);
+			}
+
+			if (snapped) {
+				snappedCoordinate = snapped;
 			}
 		}
 
 		if (this.snapping?.toCustom) {
-			snappedCoordinate = this.snapping.toCustom(event, {
+			const snapped = this.snapping.toCustom(event, {
 				currentCoordinate: this.currentCoordinate,
 				currentId: this.currentId,
 				getCurrentGeometrySnapshot: this.currentId
@@ -961,6 +966,10 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 				project: this.project,
 				unproject: this.unproject,
 			});
+
+			if (snapped) {
+				snappedCoordinate = snapped;
+			}
 		}
 
 		return snappedCoordinate;

@@ -430,7 +430,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 		}
 
 		if (this.snapping?.toCustom) {
-			snappedCoordinate = this.snapping.toCustom(event, {
+			const snapped = this.snapping.toCustom(event, {
 				currentCoordinate: this.currentCoordinate,
 				currentId: this.currentId,
 				getCurrentGeometrySnapshot: this.currentId
@@ -440,6 +440,10 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 				project: this.project,
 				unproject: this.unproject,
 			});
+
+			if (snapped) {
+				snappedCoordinate = snapped;
+			}
 		}
 
 		return snappedCoordinate;

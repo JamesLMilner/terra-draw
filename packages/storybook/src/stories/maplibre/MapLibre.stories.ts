@@ -27,6 +27,10 @@ export const PolygonWithCoordinateCounts =
 export const ZIndexOrdering = AllStories.ZIndexOrdering;
 export const Styling = AllStories.Styling;
 export const Circle = AllStories.Circle;
+export const CircleWithClickDragInteraction =
+	AllStories.CircleWithClickDragInteraction;
+export const CircleWithClickMoveOrDragInteraction =
+	AllStories.CircleWithClickMoveOrDragInteraction;
 export const Rectangle = AllStories.Rectangle;
 export const RectangleWithClickDragInteraction =
 	AllStories.RectangleWithClickDragInteraction;

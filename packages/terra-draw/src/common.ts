@@ -95,6 +95,8 @@ export type DrawInteractions =
 	| "click-drag"
 	| "click-move-or-drag";
 
+export type DrawType = "click" | "drag";
+
 export type Actions = (typeof FinishActions)[keyof typeof FinishActions];
 
 export type OnFinishContext = { mode: string; action: Actions };

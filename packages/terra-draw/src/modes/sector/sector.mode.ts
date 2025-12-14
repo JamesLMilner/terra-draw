@@ -36,7 +36,14 @@ import {
 import { cartesianDistance } from "../../geometry/measure/pixel-distance";
 import { isClockwiseWebMercator } from "../../geometry/clockwise";
 import { limitPrecision } from "../../geometry/limit-decimal-precision";
-import { ensureRightHandRule } from "../../geometry/ensure-right-hand-rule";
+import { BehaviorConfig } from "../base.behavior";
+import { ReadFeatureBehavior } from "../read-feature.behavior";
+import {
+	CoordinateMutation,
+	MutateFeatureBehavior,
+	Mutations,
+	ReplaceMutation,
+} from "../mutate-feature.behavior";
 
 type TerraDrawSectorModeKeyEvents = {
 	cancel?: KeyboardEvent["key"] | null;
@@ -78,10 +85,12 @@ export class TerraDrawSectorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 	private keyEvents: TerraDrawSectorModeKeyEvents = defaultKeyEvents;
 	private direction: "clockwise" | "anticlockwise" | undefined;
 	private arcPoints: number = 64;
-
-	// Behaviors
 	private cursors: Required<Cursors> = defaultCursors;
 	private mouseMove = false;
+
+	// Behaviors
+	private readFeature!: ReadFeatureBehavior;
+	private mutateFeature!: MutateFeatureBehavior;
 
 	constructor(options?: TerraDrawSectorModeOptions<SectorPolygonStyling>) {
 		super(options, true);
@@ -115,24 +124,26 @@ export class TerraDrawSectorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 			return;
 		}
 
-		// Fix right hand rule if necessary
-		const correctedGeometry = ensureRightHandRule(
-			this.store.getGeometryCopy<Polygon>(this.currentId),
-		);
-		if (correctedGeometry) {
-			this.store.updateGeometry([
-				{ id: this.currentId, geometry: correctedGeometry },
-			]);
-		}
-		this.store.updateProperty([
-			{
-				id: this.currentId,
-				property: COMMON_PROPERTIES.CURRENTLY_DRAWING,
-				value: undefined,
+		const updated = this.mutateFeature.updatePolygon({
+			featureId: this.currentId,
+			propertyMutations: {
+				[COMMON_PROPERTIES.CURRENTLY_DRAWING]: undefined,
 			},
-		]);
+			coordinateMutations: {
+				// Trigger right-hand rule enforcement
+				coordinates: this.readFeature.getGeometry<Polygon>(this.currentId)
+					.coordinates,
+				type: Mutations.Replace,
+			},
+			context: {
+				updateType: UpdateTypes.Finish,
+				action: "draw",
+			},
+		});
 
-		const finishedId = this.currentId;
+		if (!updated) {
+			return;
+		}
 
 		this.currentCoordinate = 0;
 		this.currentId = undefined;
@@ -142,8 +153,107 @@ export class TerraDrawSectorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 		if (this.state === "drawing") {
 			this.setStarted();
 		}
+	}
 
-		this.onFinish(finishedId, { mode: this.mode, action: "draw" });
+	private getSectorCoordinates(event: TerraDrawMouseEvent) {
+		const currentPolygonCoordinates = this.readFeature.getCoordinates<Polygon>(
+			this.currentId!,
+		);
+		const center = currentPolygonCoordinates[0];
+		const arcCoordOne = currentPolygonCoordinates[1];
+		const arcCoordTwo = [event.lng, event.lat];
+
+		// Convert coordinates to Web Mercator
+		const webMercatorCenter = lngLatToWebMercatorXY(center[0], center[1]);
+		const webMercatorArcCoordOne = lngLatToWebMercatorXY(
+			arcCoordOne[0],
+			arcCoordOne[1],
+		);
+		const webMercatorArcCoordTwo = lngLatToWebMercatorXY(
+			arcCoordTwo[0],
+			arcCoordTwo[1],
+		);
+
+		// We want to determine the direction of the sector, whether
+		// it is clockwise or anticlockwise
+		if (this.direction === undefined) {
+			const clockwise = isClockwiseWebMercator(
+				webMercatorCenter,
+				webMercatorArcCoordOne,
+				webMercatorArcCoordTwo,
+			);
+			this.direction = clockwise ? "clockwise" : "anticlockwise";
+		}
+
+		// Calculate the radius (distance from center to second point in Web Mercator)
+		const radius = cartesianDistance(webMercatorCenter, webMercatorArcCoordOne);
+
+		// Calculate bearings for the second and third points in Web Mercator
+		const startBearing = webMercatorBearing(
+			webMercatorCenter,
+			webMercatorArcCoordOne,
+		);
+		const endBearing = webMercatorBearing(
+			webMercatorCenter,
+			webMercatorArcCoordTwo,
+		);
+
+		// Generate points along the arc in Web Mercator
+		const numberOfPoints = this.arcPoints; // Number of points to approximate the arc
+		const coordinates: Position[] = [center]; // Start with the center (in WGS84)
+
+		// Corrected version to calculate deltaBearing
+		const normalizedStart = normalizeBearing(startBearing);
+		const normalizedEnd = normalizeBearing(endBearing);
+
+		// Calculate the delta bearing based on the direction
+		let deltaBearing;
+		if (this.direction === "anticlockwise") {
+			deltaBearing = normalizedEnd - normalizedStart;
+			if (deltaBearing < 0) {
+				deltaBearing += 360; // Adjust for wrap-around
+			}
+		} else {
+			deltaBearing = normalizedStart - normalizedEnd;
+			if (deltaBearing < 0) {
+				deltaBearing += 360; // Adjust for wrap-around
+			}
+		}
+
+		const bearingStep =
+			((this.direction === "anticlockwise" ? 1 : -1) * deltaBearing) /
+			numberOfPoints;
+
+		// Add the first coordinate to the polygon
+		coordinates.push(arcCoordOne);
+
+		// Add all the arc points
+		for (let i = 0; i <= numberOfPoints; i++) {
+			const currentBearing = normalizedStart + i * bearingStep;
+			const pointOnArc = webMercatorDestination(
+				webMercatorCenter,
+				radius,
+				currentBearing,
+			);
+			const { lng, lat } = webMercatorXYToLngLat(pointOnArc.x, pointOnArc.y);
+
+			const nextCoord = [
+				limitPrecision(lng, this.coordinatePrecision),
+				limitPrecision(lat, this.coordinatePrecision),
+			];
+
+			const notIdentical =
+				nextCoord[0] !== coordinates[coordinates.length - 1][0] &&
+				nextCoord[1] !== coordinates[coordinates.length - 1][1];
+			if (notIdentical) {
+				coordinates.push(nextCoord);
+			}
+		}
+
+		// Close the polygon
+		coordinates.push(center);
+
+		return coordinates;
 	}
 
 	/** @internal */
@@ -168,11 +278,7 @@ export class TerraDrawSectorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 			return;
 		}
 
-		const currentPolygonCoordinates = this.store.getGeometryCopy<Polygon>(
-			this.currentId,
-		).coordinates[0];
-
-		let updatedCoordinates: Polygon["coordinates"][0] | undefined;
+		let mutations: CoordinateMutation[] | ReplaceMutation<Polygon>;
 
 		if (this.currentCoordinate === 1) {
 			// We must add a very small epsilon value so that Mapbox GL
@@ -180,154 +286,38 @@ export class TerraDrawSectorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 			const epsilon = 1 / Math.pow(10, this.coordinatePrecision - 1);
 			const offset = Math.max(0.000001, epsilon);
 
-			updatedCoordinates = [
-				currentPolygonCoordinates[0],
-				[event.lng, event.lat],
-				[event.lng, event.lat - offset],
-				currentPolygonCoordinates[0],
+			mutations = [
+				{
+					type: Mutations.Update,
+					index: 1,
+					coordinate: [event.lng, event.lat],
+				},
+				{
+					type: Mutations.Update,
+					index: 2,
+					coordinate: [event.lng, event.lat - offset],
+				},
 			];
 		} else if (this.currentCoordinate === 2) {
-			const center = currentPolygonCoordinates[0];
-			const arcCoordOne = currentPolygonCoordinates[1];
-			const arcCoordTwo = [event.lng, event.lat];
-
-			// Convert coordinates to Web Mercator
-			const webMercatorCenter = lngLatToWebMercatorXY(center[0], center[1]);
-			const webMercatorArcCoordOne = lngLatToWebMercatorXY(
-				arcCoordOne[0],
-				arcCoordOne[1],
-			);
-			const webMercatorArcCoordTwo = lngLatToWebMercatorXY(
-				arcCoordTwo[0],
-				arcCoordTwo[1],
-			);
-
-			// We want to determine the direction of the sector, whether
-			// it is clockwise or anticlockwise
-			if (this.direction === undefined) {
-				const clockwise = isClockwiseWebMercator(
-					webMercatorCenter,
-					webMercatorArcCoordOne,
-					webMercatorArcCoordTwo,
-				);
-				this.direction = clockwise ? "clockwise" : "anticlockwise";
+			const sectorCoordinates = this.getSectorCoordinates(event);
+			if (!sectorCoordinates) {
+				return;
 			}
-
-			// Calculate the radius (distance from center to second point in Web Mercator)
-			const radius = cartesianDistance(
-				webMercatorCenter,
-				webMercatorArcCoordOne,
-			);
-
-			// Calculate bearings for the second and third points in Web Mercator
-			const startBearing = webMercatorBearing(
-				webMercatorCenter,
-				webMercatorArcCoordOne,
-			);
-			const endBearing = webMercatorBearing(
-				webMercatorCenter,
-				webMercatorArcCoordTwo,
-			);
-
-			// Generate points along the arc in Web Mercator
-			const numberOfPoints = this.arcPoints; // Number of points to approximate the arc
-			const coordinates: Position[] = [center]; // Start with the center (in WGS84)
-
-			// Corrected version to calculate deltaBearing
-			const normalizedStart = normalizeBearing(startBearing);
-			const normalizedEnd = normalizeBearing(endBearing);
-
-			// Calculate the delta bearing based on the direction
-			let deltaBearing;
-			if (this.direction === "anticlockwise") {
-				deltaBearing = normalizedEnd - normalizedStart;
-				if (deltaBearing < 0) {
-					deltaBearing += 360; // Adjust for wrap-around
-				}
-			} else {
-				deltaBearing = normalizedStart - normalizedEnd;
-				if (deltaBearing < 0) {
-					deltaBearing += 360; // Adjust for wrap-around
-				}
-			}
-
-			const bearingStep =
-				((this.direction === "anticlockwise" ? 1 : -1) * deltaBearing) /
-				numberOfPoints;
-
-			// Add the first coordinate to the polygon
-			coordinates.push(arcCoordOne);
-
-			// Add all the arc points
-			for (let i = 0; i <= numberOfPoints; i++) {
-				const currentBearing = normalizedStart + i * bearingStep;
-				const pointOnArc = webMercatorDestination(
-					webMercatorCenter,
-					radius,
-					currentBearing,
-				);
-				const { lng, lat } = webMercatorXYToLngLat(pointOnArc.x, pointOnArc.y);
-
-				const nextCoord = [
-					limitPrecision(lng, this.coordinatePrecision),
-					limitPrecision(lat, this.coordinatePrecision),
-				];
-
-				const notIdentical =
-					nextCoord[0] !== coordinates[coordinates.length - 1][0] &&
-					nextCoord[1] !== coordinates[coordinates.length - 1][1];
-				if (notIdentical) {
-					coordinates.push(nextCoord);
-				}
-			}
-
-			// Close the polygon
-			coordinates.push(center);
-
-			updatedCoordinates = [...coordinates];
+			mutations = {
+				type: Mutations.Replace,
+				coordinates: [sectorCoordinates],
+			};
+		} else {
+			return;
 		}
 
-		if (updatedCoordinates) {
-			this.updatePolygonGeometry(
-				this.currentId,
-				updatedCoordinates,
-				UpdateTypes.Provisional,
-			);
-		}
-	}
-
-	private updatePolygonGeometry(
-		id: FeatureId,
-		coordinates: Polygon["coordinates"][0],
-		updateType: UpdateTypes,
-	) {
-		const updatedGeometry = {
-			type: "Polygon",
-			coordinates: [coordinates],
-		} as Polygon;
-
-		if (this.validate) {
-			const validationResult = this.validate(
-				{
-					type: "Feature",
-					geometry: updatedGeometry,
-				} as GeoJSONStoreFeatures,
-				{
-					project: this.project,
-					unproject: this.unproject,
-					coordinatePrecision: this.coordinatePrecision,
-					updateType,
-				},
-			);
-
-			if (!validationResult.valid) {
-				return false;
-			}
-		}
-
-		this.store.updateGeometry([{ id, geometry: updatedGeometry }]);
-
-		return true;
+		this.mutateFeature.updatePolygon({
+			featureId: this.currentId,
+			coordinateMutations: mutations,
+			context: {
+				updateType: UpdateTypes.Provisional,
+			},
+		});
 	}
 
 	/** @internal */
@@ -350,55 +340,52 @@ export class TerraDrawSectorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 			this.mouseMove = false;
 
 			if (this.currentCoordinate === 0) {
-				const [newId] = this.store.create([
-					{
-						geometry: {
-							type: "Polygon",
-							coordinates: [
-								[
-									[event.lng, event.lat],
-									[event.lng, event.lat],
-									[event.lng, event.lat],
-									[event.lng, event.lat],
-								],
-							],
-						},
-						properties: {
-							mode: this.mode,
-							[COMMON_PROPERTIES.CURRENTLY_DRAWING]: true,
-						},
+				const created = this.mutateFeature.createPolygon({
+					coordinates: [
+						[event.lng, event.lat],
+						[event.lng, event.lat],
+						[event.lng, event.lat],
+						[event.lng, event.lat],
+					],
+					properties: {
+						mode: this.mode,
+						[COMMON_PROPERTIES.CURRENTLY_DRAWING]: true,
 					},
-				]);
-				this.currentId = newId;
+				});
+				this.currentId = created?.id;
 				this.currentCoordinate++;
 
 				// Ensure the state is updated to reflect drawing has started
 				this.setDrawing();
 			} else if (this.currentCoordinate === 1 && this.currentId) {
-				const currentPolygonGeometry = this.store.getGeometryCopy<Polygon>(
-					this.currentId,
-				);
-
-				const previousCoordinate = currentPolygonGeometry.coordinates[0][0];
-				const isIdentical = coordinatesIdentical(
-					[event.lng, event.lat],
-					previousCoordinate,
-				);
+				const isIdentical = this.readFeature.coordinateAtIndexIsIdentical({
+					featureId: this.currentId,
+					index: 0,
+					newCoordinate: [event.lng, event.lat],
+				});
 
 				if (isIdentical) {
 					return;
 				}
 
-				const updated = this.updatePolygonGeometry(
-					this.currentId,
-					[
-						currentPolygonGeometry.coordinates[0][0],
-						[event.lng, event.lat],
-						[event.lng, event.lat],
-						currentPolygonGeometry.coordinates[0][0],
+				const updated = this.mutateFeature.updatePolygon({
+					featureId: this.currentId,
+					coordinateMutations: [
+						{
+							type: Mutations.Update,
+							index: 1,
+							coordinate: [event.lng, event.lat],
+						},
+						{
+							type: Mutations.Update,
+							index: 2,
+							coordinate: [event.lng, event.lat],
+						},
 					],
-					UpdateTypes.Commit,
-				);
+					context: {
+						updateType: UpdateTypes.Provisional,
+					},
+				});
 
 				if (!updated) {
 					return;
@@ -421,22 +408,30 @@ export class TerraDrawSectorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 	}
 
 	/** @internal */
-	onKeyDown() {}
+	onKeyDown() {
+		// no-op
+	}
 
 	/** @internal */
-	onDragStart() {}
+	onDragStart() {
+		// no-op
+	}
 
 	/** @internal */
-	onDrag() {}
+	onDrag() {
+		// no-op
+	}
 
 	/** @internal */
-	onDragEnd() {}
+	onDragEnd() {
+		// no-op
+	}
 
 	/** @internal */
 	cleanUp() {
 		try {
 			if (this.currentId) {
-				this.store.delete([this.currentId]);
+				this.mutateFeature.deleteFeature(this.currentId);
 			}
 		} catch (error) {}
 		this.currentId = undefined;
@@ -504,5 +499,19 @@ export class TerraDrawSectorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 				this.setStarted();
 			}
 		}
+	}
+
+	registerBehaviors(config: BehaviorConfig) {
+		this.readFeature = new ReadFeatureBehavior(config);
+		this.mutateFeature = new MutateFeatureBehavior(config, {
+			validate: this.validate,
+			onUpdate: (_feature) => undefined,
+			onFinish: (featureId, context) => {
+				this.onFinish(featureId, {
+					mode: this.mode,
+					action: context.action,
+				});
+			},
+		});
 	}
 }

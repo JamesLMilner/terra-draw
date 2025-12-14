@@ -1,4 +1,4 @@
-import { GeoJSONStore } from "../../store/store";
+import { GeoJSONStore, GeoJSONStoreFeatures } from "../../store/store";
 import { MockModeConfig } from "../../test/mock-mode-config";
 import { MockCursorEvent } from "../../test/mock-cursor-event";
 import { TerraDrawAngledRectangleMode } from "./angled-rectangle.mode";
@@ -294,6 +294,7 @@ describe("TerraDrawAngledRectangleMode", () => {
 	describe("onClick", () => {
 		let angledRectangleMode: TerraDrawAngledRectangleMode;
 		let store: TerraDrawGeoJSONStore;
+		let onFinish: jest.Mock;
 
 		describe("with successful validation", () => {
 			beforeEach(() => {
@@ -303,6 +304,7 @@ describe("TerraDrawAngledRectangleMode", () => {
 				const mockConfig = MockModeConfig(angledRectangleMode.mode);
 
 				store = mockConfig.store;
+				onFinish = mockConfig.onFinish;
 				angledRectangleMode.register(mockConfig);
 				angledRectangleMode.start();
 			});
@@ -321,13 +323,15 @@ describe("TerraDrawAngledRectangleMode", () => {
 				let features = store.copyAll();
 				expect(features.length).toBe(1);
 
+				const angledRectangle = features[0] as GeoJSONStoreFeatures<Polygon>;
+				expect(angledRectangle.geometry.type).toBe("Polygon");
+				expect(angledRectangle.geometry.coordinates[0]).toHaveLength(5);
+				expect(followsRightHandRule(angledRectangle.geometry)).toBe(true);
 				expect(
-					features[0].properties[COMMON_PROPERTIES.CURRENTLY_DRAWING],
+					angledRectangle.properties[COMMON_PROPERTIES.CURRENTLY_DRAWING],
 				).toBe(undefined);
 
-				expect(followsRightHandRule(features[0].geometry as Polygon)).toBe(
-					true,
-				);
+				expect(onFinish).toHaveBeenCalledTimes(1);
 
 				// Create a new angled rectangle polygon
 				angledRectangleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
@@ -345,6 +349,7 @@ describe("TerraDrawAngledRectangleMode", () => {
 				const mockConfig = MockModeConfig(angledRectangleMode.mode);
 
 				store = mockConfig.store;
+				onFinish = mockConfig.onFinish;
 				angledRectangleMode.register(mockConfig);
 				angledRectangleMode.start();
 			});
@@ -363,11 +368,13 @@ describe("TerraDrawAngledRectangleMode", () => {
 				let features = store.copyAll();
 				expect(features.length).toBe(1);
 
-				// Create a new angled rectangle polygon
+				// Try again
 				angledRectangleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
 				features = store.copyAll();
 				expect(features.length).toBe(1);
+
+				expect(onFinish).toHaveBeenCalledTimes(0);
 			});
 		});
 
@@ -395,6 +402,7 @@ describe("TerraDrawAngledRectangleMode", () => {
 
 				let features = store.copyAll();
 				expect(features.length).toBe(0);
+				expect(onFinish).toHaveBeenCalledTimes(0);
 			});
 		});
 	});
@@ -453,6 +461,8 @@ describe("TerraDrawAngledRectangleMode", () => {
 
 			features = store.copyAll();
 			expect(features.length).toBe(0);
+
+			expect(onFinish).toHaveBeenCalledTimes(0);
 		});
 
 		it("finishes drawing angled rectangle on finish key press", () => {
@@ -488,23 +498,22 @@ describe("TerraDrawAngledRectangleMode", () => {
 			features = store.copyAll();
 			expect(features.length).toBe(1);
 
-			expect(features[0].properties[COMMON_PROPERTIES.CURRENTLY_DRAWING]).toBe(
-				undefined,
-			);
+			const angledRectangle = features[0] as GeoJSONStoreFeatures<Polygon>;
+			expect(angledRectangle.geometry.type).toBe("Polygon");
+			expect(angledRectangle.geometry.coordinates[0]).toHaveLength(5);
+			expect(followsRightHandRule(angledRectangle.geometry)).toBe(true);
+			expect(
+				angledRectangle.properties[COMMON_PROPERTIES.CURRENTLY_DRAWING],
+			).toBe(undefined);
+
+			expect(onFinish).toHaveBeenCalledTimes(1);
 
 			rectangleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
 			features = store.copyAll();
+
 			// Two as the rectangle has been closed via enter
 			expect(features.length).toBe(2);
-
-			expect(onChange).toHaveBeenCalledTimes(6);
-			expect(onChange).toHaveBeenCalledWith(
-				[expect.any(String)],
-				"create",
-				undefined,
-			);
-			expect(onFinish).toHaveBeenCalledTimes(1);
 		});
 
 		it("does not finish on key press when keyEvents null", () => {

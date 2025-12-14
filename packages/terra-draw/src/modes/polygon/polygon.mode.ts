@@ -305,13 +305,10 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 					context: { updateType: UpdateTypes.Provisional },
 				});
 			} else {
-				this.snappedPointId = this.mutateFeature.createPoint({
-					coordinates: snappedCoordinate,
-					properties: {
-						mode: this.mode,
-						[COMMON_PROPERTIES.SNAPPING_POINT]: true,
-					},
-				}).id;
+				this.snappedPointId = this.mutateFeature.createGuidancePoint(
+					snappedCoordinate,
+					COMMON_PROPERTIES.SNAPPING_POINT,
+				);
 			}
 
 			event.lng = snappedCoordinate[0];
@@ -768,13 +765,10 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 
 		// Create a point to drag when editing
 		if (!this.editedPointId) {
-			this.editedPointId = this.mutateFeature.createPoint({
-				coordinates: snappedCoordinate,
-				properties: {
-					mode: this.mode,
-					[COMMON_PROPERTIES.EDITED]: true,
-				},
-			}).id;
+			this.editedPointId = this.mutateFeature.createGuidancePoint(
+				snappedCoordinate,
+				COMMON_PROPERTIES.EDITED,
+			);
 		}
 
 		// Drag Feature

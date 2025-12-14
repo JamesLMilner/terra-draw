@@ -45,7 +45,7 @@ const Point: Story = {
 const MarkerPNG: Story = {
 	...DefaultStory,
 	args: {
-		id: "marker",
+		id: "marker-png",
 		modes: [
 			() =>
 				new TerraDrawMarkerMode({
@@ -64,7 +64,7 @@ const MarkerPNG: Story = {
 const MarkerJPG: Story = {
 	...DefaultStory,
 	args: {
-		id: "marker",
+		id: "marker-jpg",
 		modes: [
 			() =>
 				new TerraDrawMarkerMode({
@@ -673,11 +673,6 @@ const SelectWithMultipleOfSameModes: Story = {
 					},
 				}),
 		],
-		afterRender: (draw: TerraDraw) => {
-			draw.updateModeOptions<typeof TerraDrawPolygonMode>("polygon2", {
-				modeName: "polygon3",
-			} as any);
-		},
 		...DefaultStory.args,
 	},
 };

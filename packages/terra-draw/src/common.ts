@@ -249,6 +249,16 @@ export const COMMON_PROPERTIES = {
 	MARKER: "marker",
 } as const;
 
+const GUIDANCE_POINT_PROPERTY_KEYS = [
+	"EDITED", // Edited points don't have a point naming convention but are still guidance points
+	"SNAPPING_POINT",
+	"COORDINATE_POINT",
+	"CLOSING_POINT",
+] as const satisfies readonly (keyof typeof COMMON_PROPERTIES)[];
+
+export type GuidancePointProperties =
+	(typeof COMMON_PROPERTIES)[(typeof GUIDANCE_POINT_PROPERTY_KEYS)[number]];
+
 /**
  * Lower z-index represents layers that are lower in the stack
  * and higher z-index represents layers that are higher in the stack

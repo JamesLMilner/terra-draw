@@ -9,7 +9,6 @@ import {
 	COMMON_PROPERTIES,
 	Z_INDEX,
 } from "../../common";
-import { Polygon } from "geojson";
 
 import {
 	BaseModeOptions,
@@ -25,7 +24,9 @@ import {
 } from "../../store/store";
 import { cartesianDistance } from "../../geometry/measure/pixel-distance";
 import { ValidatePolygonFeature } from "../../validations/polygon.validation";
-import { ensureRightHandRule } from "../../geometry/ensure-right-hand-rule";
+import { MutateFeatureBehavior, Mutations } from "../mutate-feature.behavior";
+import { BehaviorConfig } from "../base.behavior";
+import { ReadFeatureBehavior } from "../read-feature.behavior";
 
 type TerraDrawFreehandModeKeyEvents = {
 	cancel: KeyboardEvent["key"] | null;
@@ -68,7 +69,7 @@ interface TerraDrawFreehandModeOptions<T extends CustomStyling>
 export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygonStyling> {
 	mode = "freehand";
 
-	private startingClick = false;
+	private canClose = false;
 	private currentId: FeatureId | undefined;
 	private closingPointId: FeatureId | undefined;
 	private minDistance: number = 20;
@@ -79,6 +80,10 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 	private autoCloseTimeout = 500;
 	private hasLeftStartingPoint = false;
 	private preventNewFeature = false;
+
+	// Behaviors
+	private mutateFeature!: MutateFeatureBehavior;
+	private readFeature!: ReadFeatureBehavior;
 
 	constructor(options?: TerraDrawFreehandModeOptions<FreehandPolygonStyling>) {
 		super(options, true);
@@ -124,54 +129,19 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 			return;
 		}
 
-		// Fix right hand rule if necessary
-		if (this.currentId) {
-			const correctedGeometry = ensureRightHandRule(
-				this.store.getGeometryCopy<Polygon>(this.currentId),
-			);
-			if (correctedGeometry) {
-				this.store.updateGeometry([
-					{ id: this.currentId, geometry: correctedGeometry },
-				]);
-			}
-			this.store.updateProperty([
-				{
-					id: this.currentId,
-					property: COMMON_PROPERTIES.CURRENTLY_DRAWING,
-					value: undefined,
-				},
-			]);
+		const updated = this.mutateFeature.updatePolygon({
+			featureId: this.currentId,
+			propertyMutations: {
+				[COMMON_PROPERTIES.CURRENTLY_DRAWING]: undefined,
+			},
+			context: { updateType: UpdateTypes.Finish, action: "draw" },
+		});
+
+		if (!updated) {
+			return;
 		}
 
-		const finishedId = this.currentId;
-
-		if (this.validate && finishedId) {
-			const currentGeometry = this.store.getGeometryCopy<Polygon>(finishedId);
-
-			const validationResult = this.validate(
-				{
-					type: "Feature",
-					id: finishedId,
-					geometry: currentGeometry,
-					properties: {},
-				},
-				{
-					project: this.project,
-					unproject: this.unproject,
-					coordinatePrecision: this.coordinatePrecision,
-					updateType: UpdateTypes.Finish,
-				},
-			);
-
-			if (!validationResult.valid) {
-				return;
-			}
-		}
-
-		if (this.closingPointId) {
-			this.store.delete([this.closingPointId]);
-		}
-		this.startingClick = false;
+		this.canClose = false;
 		this.currentId = undefined;
 		this.closingPointId = undefined;
 		this.hasLeftStartingPoint = false;
@@ -179,9 +149,6 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 		if (this.state === "drawing") {
 			this.setStarted();
 		}
-
-		// Ensure that any listerers are triggered with the main created geometry
-		this.onFinish(finishedId, { mode: this.mode, action: "draw" });
 	}
 
 	/** @internal */
@@ -199,25 +166,25 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 
 	/** @internal */
 	onMouseMove(event: TerraDrawMouseEvent) {
-		if (this.currentId === undefined || this.startingClick === false) {
+		if (this.currentId === undefined || this.canClose === false) {
 			this.setCursor(this.cursors.start);
 			return;
 		}
 
-		const currentLineGeometry = this.store.getGeometryCopy<Polygon>(
+		const [previousLng, previousLat] = this.readFeature.getCoordinate(
 			this.currentId,
+			-2,
 		);
-
-		const previousIndex = currentLineGeometry.coordinates[0].length - 2;
-		const [previousLng, previousLat] =
-			currentLineGeometry.coordinates[0][previousIndex];
 		const { x, y } = this.project(previousLng, previousLat);
 		const distance = cartesianDistance(
 			{ x, y },
 			{ x: event.containerX, y: event.containerY },
 		);
 
-		const [closingLng, closingLat] = currentLineGeometry.coordinates[0][0];
+		const [closingLng, closingLat] = this.readFeature.getCoordinate(
+			this.currentId,
+			0,
+		);
 		const { x: closingX, y: closingY } = this.project(closingLng, closingLat);
 		const closingDistance = cartesianDistance(
 			{ x: closingX, y: closingY },
@@ -256,46 +223,17 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 			return;
 		}
 
-		currentLineGeometry.coordinates[0].pop();
-
-		const newGeometry = {
-			type: "Polygon",
-			coordinates: [
-				[
-					...currentLineGeometry.coordinates[0],
-					[event.lng, event.lat],
-					currentLineGeometry.coordinates[0][0],
-				],
+		this.mutateFeature.updatePolygon({
+			featureId: this.currentId,
+			coordinateMutations: [
+				{
+					type: Mutations.InsertBefore,
+					index: -1,
+					coordinate: [event.lng, event.lat],
+				},
 			],
-		} as Polygon;
-
-		if (this.validate) {
-			const validationResult = this.validate(
-				{
-					type: "Feature",
-					id: this.currentId,
-					geometry: newGeometry,
-					properties: {},
-				},
-				{
-					project: this.project,
-					unproject: this.unproject,
-					coordinatePrecision: this.coordinatePrecision,
-					updateType: UpdateTypes.Provisional,
-				},
-			);
-
-			if (!validationResult.valid) {
-				return;
-			}
-		}
-
-		this.store.updateGeometry([
-			{
-				id: this.currentId,
-				geometry: newGeometry,
-			},
-		]);
+			context: { updateType: UpdateTypes.Provisional },
+		});
 	}
 
 	/** @internal */
@@ -312,40 +250,27 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 				return;
 			}
 
-			if (this.startingClick === false) {
-				const [createdId, closingPointId] = this.store.create([
-					{
-						geometry: {
-							type: "Polygon",
-							coordinates: [
-								[
-									[event.lng, event.lat],
-									[event.lng, event.lat],
-									[event.lng, event.lat],
-									[event.lng, event.lat],
-								],
-							],
-						},
-						properties: {
-							mode: this.mode,
-							[COMMON_PROPERTIES.CURRENTLY_DRAWING]: true,
-						},
+			if (this.canClose === false) {
+				const { id: createdId } = this.mutateFeature.createPolygon({
+					coordinates: [
+						[event.lng, event.lat],
+						[event.lng, event.lat],
+						[event.lng, event.lat],
+						[event.lng, event.lat],
+					],
+					properties: {
+						mode: this.mode,
+						[COMMON_PROPERTIES.CURRENTLY_DRAWING]: true,
 					},
-					{
-						geometry: {
-							type: "Point",
-							coordinates: [event.lng, event.lat],
-						},
-						properties: {
-							mode: this.mode,
-							[COMMON_PROPERTIES.CLOSING_POINT]: true,
-						},
-					},
-				]);
-
+				});
 				this.currentId = createdId;
-				this.closingPointId = closingPointId;
-				this.startingClick = true;
+
+				this.closingPointId = this.mutateFeature.createGuidancePoint(
+					[event.lng, event.lat],
+					COMMON_PROPERTIES.CLOSING_POINT,
+				);
+
+				this.canClose = true;
 
 				// We could already be in drawing due to updating the existing polygon
 				// via afterFeatureUpdated
@@ -368,7 +293,7 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 		if (event.key === this.keyEvents.cancel) {
 			this.cleanUp();
 		} else if (event.key === this.keyEvents.finish) {
-			if (this.startingClick === true) {
+			if (this.canClose === true) {
 				this.close();
 			}
 		}
@@ -390,17 +315,17 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 
 		this.closingPointId = undefined;
 		this.currentId = undefined;
-		this.startingClick = false;
+		this.canClose = false;
 		if (this.state === "drawing") {
 			this.setStarted();
 		}
 
 		try {
 			if (cleanUpId !== undefined) {
-				this.store.delete([cleanUpId]);
+				this.mutateFeature.deleteFeature(cleanUpId);
 			}
 			if (cleanUpClosingPointId !== undefined) {
-				this.store.delete([cleanUpClosingPointId]);
+				this.mutateFeature.deleteFeature(cleanUpClosingPointId);
 			}
 		} catch (error) {}
 	}
@@ -490,12 +415,29 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 		// to recover the drawing state after a feature update
 		if (this.currentId === feature.id) {
 			if (this.closingPointId) {
-				this.store.delete([this.closingPointId]);
+				this.mutateFeature.deleteFeature(this.closingPointId);
 			}
-			this.startingClick = false;
+			this.canClose = false;
 			this.currentId = undefined;
 			this.closingPointId = undefined;
 			this.hasLeftStartingPoint = false;
 		}
+	}
+
+	registerBehaviors(config: BehaviorConfig) {
+		this.readFeature = new ReadFeatureBehavior(config);
+		this.mutateFeature = new MutateFeatureBehavior(config, {
+			validate: this.validate,
+			onUpdate: ({ id }) => {},
+			onFinish: (featureId, context) => {
+				this.onFinish(featureId, {
+					mode: this.mode,
+					action: context.action,
+				});
+				if (this.closingPointId) {
+					this.mutateFeature.deleteFeature(this.closingPointId);
+				}
+			},
+		});
 	}
 }

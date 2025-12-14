@@ -35,7 +35,9 @@ import {
 import { cartesianDistance } from "../../geometry/measure/pixel-distance";
 import { isClockwiseWebMercator } from "../../geometry/clockwise";
 import { limitPrecision } from "../../geometry/limit-decimal-precision";
-import { ensureRightHandRule } from "../../geometry/ensure-right-hand-rule";
+import { BehaviorConfig } from "../base.behavior";
+import { ReadFeatureBehavior } from "../read-feature.behavior";
+import { MutateFeatureBehavior, Mutations } from "../mutate-feature.behavior";
 
 type TerraDrawSensorModeKeyEvents = {
 	cancel?: KeyboardEvent["key"] | null;
@@ -83,10 +85,12 @@ export class TerraDrawSensorMode extends TerraDrawBaseDrawMode<SensorPolygonStyl
 	private keyEvents: TerraDrawSensorModeKeyEvents = defaultKeyEvents;
 	private direction: "clockwise" | "anticlockwise" | undefined;
 	private arcPoints: number = 64;
-
-	// Behaviors
 	private cursors: Required<Cursors> = defaultCursors;
 	private mouseMove = false;
+
+	// Behaviors
+	private readFeature!: ReadFeatureBehavior;
+	private mutateFeature!: MutateFeatureBehavior;
 
 	constructor(options?: TerraDrawSensorModeOptions<SensorPolygonStyling>) {
 		super(options, true);
@@ -112,58 +116,6 @@ export class TerraDrawSensorMode extends TerraDrawBaseDrawMode<SensorPolygonStyl
 
 		if (options?.arcPoints) {
 			this.arcPoints = options.arcPoints;
-		}
-	}
-
-	private close() {
-		if (this.currentStartingPointId === undefined) {
-			return;
-		}
-
-		const finishedCurrentStartingPointId = this.currentStartingPointId;
-		const finishedInitialArcId = this.currentInitialArcId;
-		const finishedCurrentId = this.currentId;
-
-		if (finishedCurrentStartingPointId) {
-			this.store.delete([finishedCurrentStartingPointId]);
-		}
-
-		if (finishedInitialArcId) {
-			this.store.delete([finishedInitialArcId]);
-		}
-
-		// Fix right hand rule if necessary
-		if (this.currentId) {
-			const correctedGeometry = ensureRightHandRule(
-				this.store.getGeometryCopy<Polygon>(this.currentId),
-			);
-			if (correctedGeometry) {
-				this.store.updateGeometry([
-					{ id: this.currentId, geometry: correctedGeometry },
-				]);
-			}
-			this.store.updateProperty([
-				{
-					id: this.currentId,
-					property: COMMON_PROPERTIES.CURRENTLY_DRAWING,
-					value: undefined,
-				},
-			]);
-		}
-
-		this.currentCoordinate = 0;
-		this.currentStartingPointId = undefined;
-		this.currentInitialArcId = undefined;
-		this.currentId = undefined;
-		this.direction = undefined;
-
-		// Go back to started state
-		if (this.state === "drawing") {
-			this.setStarted();
-		}
-
-		if (finishedCurrentId) {
-			this.onFinish(finishedCurrentId, { mode: this.mode, action: "draw" });
 		}
 	}
 
@@ -194,326 +146,52 @@ export class TerraDrawSensorMode extends TerraDrawBaseDrawMode<SensorPolygonStyl
 		}
 
 		if (this.currentCoordinate === 2) {
-			const currentPolygonCoordinates = this.store.getGeometryCopy<LineString>(
-				this.currentInitialArcId,
-			).coordinates;
-			const center = this.store.getGeometryCopy<Point>(
-				this.currentStartingPointId,
-			).coordinates;
-
-			const arcCoordOne = currentPolygonCoordinates[0];
-			const arcCoordTwo = [event.lng, event.lat];
-
-			const webMercatorArcCoordOne = lngLatToWebMercatorXY(
-				arcCoordOne[0],
-				arcCoordOne[1],
-			);
-			const webMercatorArcCoordTwo = lngLatToWebMercatorXY(
-				arcCoordTwo[0],
-				arcCoordTwo[1],
-			);
-			const webMercatorCenter = lngLatToWebMercatorXY(center[0], center[1]);
-
-			const radius = cartesianDistance(
-				webMercatorCenter,
-				webMercatorArcCoordOne,
-			);
-
-			// We want to determine the direction of the sector, whether
-			// it is clockwise or anticlockwise
-			if (this.direction === undefined) {
-				const clockwise = isClockwiseWebMercator(
-					webMercatorCenter,
-					webMercatorArcCoordOne,
-					webMercatorArcCoordTwo,
-				);
-				this.direction = clockwise ? "clockwise" : "anticlockwise";
-			}
-
-			// Calculate bearings for the second and third points in Web Mercator
-			const startBearing = webMercatorBearing(
-				webMercatorCenter,
-				webMercatorArcCoordOne,
-			);
-			const endBearing = webMercatorBearing(
-				webMercatorCenter,
-				webMercatorArcCoordTwo,
-			);
-
-			// Generate points along the arc in Web Mercator
-			const numberOfPoints = this.arcPoints; // Number of points to approximate the arc
-			const coordinates: Position[] = [arcCoordOne];
-
-			// Corrected version to calculate deltaBearing
-			const normalizedStart = normalizeBearing(startBearing);
-			const normalizedEnd = normalizeBearing(endBearing);
-
-			// Calculate the delta bearing based on the direction
-			let deltaBearing;
-			if (this.direction === "anticlockwise") {
-				deltaBearing = normalizedEnd - normalizedStart;
-				if (deltaBearing < 0) {
-					deltaBearing += 360; // Adjust for wrap-around
-				}
-			} else {
-				deltaBearing = normalizedStart - normalizedEnd;
-				if (deltaBearing < 0) {
-					deltaBearing += 360; // Adjust for wrap-around
-				}
-			}
-
-			const bearingStep =
-				((this.direction === "anticlockwise" ? 1 : -1) * deltaBearing) /
-				numberOfPoints;
-
-			// Add all the arc points
-			for (let i = 0; i <= numberOfPoints; i++) {
-				const currentBearing = normalizedStart + i * bearingStep;
-				const pointOnArc = webMercatorDestination(
-					webMercatorCenter,
-					radius,
-					currentBearing,
-				);
-				const { lng, lat } = webMercatorXYToLngLat(pointOnArc.x, pointOnArc.y);
-
-				const nextCoord = [
-					limitPrecision(lng, this.coordinatePrecision),
-					limitPrecision(lat, this.coordinatePrecision),
-				];
-
-				const notIdentical =
-					nextCoord[0] !== coordinates[coordinates.length - 1][0] &&
-					nextCoord[1] !== coordinates[coordinates.length - 1][1];
-				if (notIdentical) {
-					coordinates.push(nextCoord);
-				}
-			}
-
-			this.updateLineStringGeometry(
-				this.currentInitialArcId,
-				coordinates,
-				UpdateTypes.Provisional,
-			);
-		} else if (this.currentCoordinate === 3) {
-			const coordinates = this.store.getGeometryCopy<LineString>(
-				this.currentInitialArcId,
-			).coordinates;
-
-			if (coordinates.length < 2) {
+			const coordinates = this.getUpdatedLineStringCoordinates(event);
+			if (!coordinates) {
 				return;
 			}
 
-			// This shouldn't happen but we protect against it in case as we can't calculate if the cursor
-			// is in the sector otherwise
-			if (!this.direction) {
-				return;
-			}
-
-			const center = this.store.getGeometryCopy<Point>(
-				this.currentStartingPointId,
-			).coordinates;
-
-			const firstCoord = coordinates[0];
-			const lastCoord = coordinates[coordinates.length - 1];
-
-			const webMercatorCursor = lngLatToWebMercatorXY(event.lng, event.lat);
-			const webMercatorCoordOne = lngLatToWebMercatorXY(
-				firstCoord[0],
-				firstCoord[1],
-			);
-			const webMercatorCoordTwo = lngLatToWebMercatorXY(
-				lastCoord[0],
-				lastCoord[1],
-			);
-
-			const webMercatorCenter = lngLatToWebMercatorXY(center[0], center[1]);
-
-			const innerRadius = cartesianDistance(
-				webMercatorCenter,
-				webMercatorCoordOne,
-			);
-
-			const outerRadius = cartesianDistance(
-				webMercatorCenter,
-				webMercatorCursor,
-			);
-
-			const hasLessThanZeroSize = outerRadius < innerRadius;
-
-			// If the cursor is inside the inner radius, the depth of the sensor is always 0
-			const radiusCalculationPosition = hasLessThanZeroSize
-				? webMercatorCoordOne
-				: webMercatorCursor;
-
-			const cursorBearing = webMercatorBearing(
-				webMercatorCenter,
-				webMercatorCursor,
-			);
-
-			const startBearing = webMercatorBearing(
-				webMercatorCenter,
-				webMercatorCoordOne,
-			);
-			const endBearing = webMercatorBearing(
-				webMercatorCenter,
-				webMercatorCoordTwo,
-			);
-
-			const normalizedStart = normalizeBearing(startBearing);
-			const normalizedEnd = normalizeBearing(endBearing);
-			const normalizedCursor = normalizeBearing(cursorBearing);
-
-			const notInSector = this.notInSector({
-				normalizedCursor,
-				normalizedStart,
-				normalizedEnd,
-				direction: this.direction,
+			this.mutateFeature.updateLineString({
+				featureId: this.currentInitialArcId,
+				coordinateMutations: {
+					type: Mutations.Replace,
+					coordinates: coordinates,
+				},
+				context: {
+					updateType: UpdateTypes.Provisional,
+				},
 			});
-
-			// If it's not a valid cursor movement then we don't update
-			if (notInSector) {
+		} else if (this.currentCoordinate === 3) {
+			const coordinates = this.getUpdatedPolygonCoordinates(event);
+			if (!coordinates) {
 				return;
 			}
-
-			// Calculate the delta bearing based on the direction
-			const deltaBearing = this.getDeltaBearing(
-				this.direction,
-				normalizedStart,
-				normalizedEnd,
-			);
-
-			// Number of points to approximate the arc
-			const numberOfPoints = this.arcPoints;
-
-			// Calculate bearing step
-			const multiplier = this.direction === "anticlockwise" ? 1 : -1;
-			const bearingStep = (multiplier * deltaBearing) / numberOfPoints;
-
-			const radius = cartesianDistance(
-				webMercatorCenter,
-				radiusCalculationPosition,
-			);
-
-			// Add all the arc points
-			const finalArc = [];
-			for (let i = 0; i <= numberOfPoints; i++) {
-				const currentBearing = normalizedStart + i * bearingStep;
-				const pointOnArc = webMercatorDestination(
-					webMercatorCenter,
-					radius,
-					currentBearing,
-				);
-				const { lng, lat } = webMercatorXYToLngLat(pointOnArc.x, pointOnArc.y);
-
-				const nextCoord = [
-					limitPrecision(lng, this.coordinatePrecision),
-					limitPrecision(lat, this.coordinatePrecision),
-				];
-
-				const notIdentical =
-					nextCoord[0] !== coordinates[coordinates.length - 1][0] &&
-					nextCoord[1] !== coordinates[coordinates.length - 1][1];
-				if (notIdentical) {
-					finalArc.unshift(nextCoord);
-				}
-			}
-
-			coordinates.push(...finalArc);
-
-			// Close the polygon
-			coordinates.push(coordinates[0]);
 
 			// If the polygon doesn't exist, create it
 			// else update the existing geometry
 			if (!this.currentId) {
-				[this.currentId] = this.store.create([
-					{
-						geometry: {
-							type: "Polygon",
-							coordinates: [coordinates],
-						},
-						properties: {
-							mode: this.mode,
-							[COMMON_PROPERTIES.CURRENTLY_DRAWING]: true,
-						},
-					},
-				]);
-			} else {
-				this.updatePolygonGeometry(
-					this.currentId,
+				const created = this.mutateFeature.createPolygon({
 					coordinates,
-					UpdateTypes.Provisional,
-				);
+					properties: {
+						mode: this.mode,
+						[COMMON_PROPERTIES.CURRENTLY_DRAWING]: true,
+					},
+				});
+				if (!created) {
+					return;
+				}
+				this.currentId = created.id;
+			} else {
+				this.mutateFeature.updatePolygon({
+					featureId: this.currentId,
+					coordinateMutations: {
+						type: Mutations.Replace,
+						coordinates: [coordinates],
+					},
+					context: { updateType: UpdateTypes.Provisional },
+				});
 			}
 		}
-	}
-
-	private updateLineStringGeometry(
-		id: FeatureId,
-		coordinates: LineString["coordinates"],
-		updateType: UpdateTypes,
-	) {
-		const updatedGeometry = {
-			type: "LineString",
-			coordinates,
-		} as LineString;
-
-		if (this.validate) {
-			const validationResult = this.validate(
-				{
-					type: "Feature",
-					geometry: updatedGeometry,
-				} as GeoJSONStoreFeatures,
-				{
-					project: this.project,
-					unproject: this.unproject,
-					coordinatePrecision: this.coordinatePrecision,
-					updateType,
-				},
-			);
-
-			if (!validationResult.valid) {
-				return false;
-			}
-		}
-
-		this.store.updateGeometry([{ id, geometry: updatedGeometry }]);
-
-		return true;
-	}
-
-	private updatePolygonGeometry(
-		id: FeatureId,
-		coordinates: Polygon["coordinates"][0],
-		updateType: UpdateTypes,
-	) {
-		const updatedGeometry = {
-			type: "Polygon",
-			coordinates: [coordinates],
-		} as Polygon;
-
-		if (this.validate) {
-			const validationResult = this.validate(
-				{
-					type: "Feature",
-					geometry: updatedGeometry,
-				} as GeoJSONStoreFeatures,
-				{
-					project: this.project,
-					unproject: this.unproject,
-					coordinatePrecision: this.coordinatePrecision,
-					updateType,
-				},
-			);
-
-			if (!validationResult.valid) {
-				return false;
-			}
-		}
-
-		this.store.updateGeometry([{ id, geometry: updatedGeometry }]);
-
-		return true;
 	}
 
 	/** @internal */
@@ -536,31 +214,30 @@ export class TerraDrawSensorMode extends TerraDrawBaseDrawMode<SensorPolygonStyl
 			this.mouseMove = false;
 
 			if (this.currentCoordinate === 0) {
-				const [newId] = this.store.create([
-					{
-						geometry: { type: "Point", coordinates: [event.lng, event.lat] },
-						properties: { mode: this.mode },
-					},
-				]);
-				this.currentStartingPointId = newId;
+				const created = this.mutateFeature.createPoint({
+					coordinates: [event.lng, event.lat],
+					properties: { mode: this.mode },
+				});
+				if (!created) {
+					return;
+				}
+				this.currentStartingPointId = created.id;
 				this.currentCoordinate++;
 
 				// Ensure the state is updated to reflect drawing has started
 				this.setDrawing();
 			} else if (this.currentCoordinate === 1 && this.currentStartingPointId) {
-				const [newId] = this.store.create([
-					{
-						geometry: {
-							type: "LineString",
-							coordinates: [
-								[event.lng, event.lat],
-								[event.lng, event.lat],
-							],
-						},
-						properties: { mode: this.mode },
-					},
-				]);
-				this.currentInitialArcId = newId;
+				const created = this.mutateFeature.createLineString({
+					coordinates: [
+						[event.lng, event.lat],
+						[event.lng, event.lat],
+					],
+					properties: { mode: this.mode },
+				});
+				if (!created) {
+					return;
+				}
+				this.currentInitialArcId = created.id;
 				this.currentCoordinate++;
 			} else if (this.currentCoordinate === 2 && this.currentStartingPointId) {
 				this.currentCoordinate++;
@@ -581,30 +258,38 @@ export class TerraDrawSensorMode extends TerraDrawBaseDrawMode<SensorPolygonStyl
 	}
 
 	/** @internal */
-	onKeyDown() {}
+	onKeyDown() {
+		// no-op
+	}
 
 	/** @internal */
-	onDragStart() {}
+	onDragStart() {
+		// no-op
+	}
 
 	/** @internal */
-	onDrag() {}
+	onDrag() {
+		// no-op
+	}
 
 	/** @internal */
-	onDragEnd() {}
+	onDragEnd() {
+		// no-op
+	}
 
 	/** @internal */
 	cleanUp() {
 		try {
 			if (this.currentStartingPointId) {
-				this.store.delete([this.currentStartingPointId]);
+				this.mutateFeature.deleteFeature(this.currentStartingPointId);
 			}
 			if (this.currentInitialArcId) {
-				this.store.delete([this.currentInitialArcId]);
+				this.mutateFeature.deleteFeature(this.currentInitialArcId);
 			}
 			if (this.currentId) {
-				this.store.delete([this.currentId]);
+				this.mutateFeature.deleteFeature(this.currentId);
 			}
-		} catch (error) {}
+		} catch {}
 		this.currentStartingPointId = undefined;
 		this.direction = undefined;
 		this.currentId = undefined;
@@ -704,12 +389,14 @@ export class TerraDrawSensorMode extends TerraDrawBaseDrawMode<SensorPolygonStyl
 		// If we are in the middle of drawing a sensor and the feature being updated is the current sensor,
 		// we need to reset the drawing state
 		if (this.currentId === feature.id) {
-			if (this.currentStartingPointId) {
-				this.store.delete([this.currentStartingPointId]);
-			}
-			if (this.currentInitialArcId) {
-				this.store.delete([this.currentInitialArcId]);
-			}
+			try {
+				if (this.currentStartingPointId) {
+					this.mutateFeature.deleteFeature(this.currentStartingPointId);
+				}
+				if (this.currentInitialArcId) {
+					this.mutateFeature.deleteFeature(this.currentInitialArcId);
+				}
+			} catch {}
 
 			this.currentStartingPointId = undefined;
 			this.direction = undefined;
@@ -720,6 +407,308 @@ export class TerraDrawSensorMode extends TerraDrawBaseDrawMode<SensorPolygonStyl
 				this.setStarted();
 			}
 		}
+	}
+
+	registerBehaviors(config: BehaviorConfig) {
+		this.readFeature = new ReadFeatureBehavior(config);
+		this.mutateFeature = new MutateFeatureBehavior(config, {
+			validate: this.validate,
+			onFinish: (featureId, context) => {
+				this.onFinish(featureId, { mode: this.mode, action: context.action });
+			},
+		});
+	}
+
+	private close() {
+		if (this.currentStartingPointId === undefined) {
+			return;
+		}
+
+		const finishedCurrentStartingPointId = this.currentStartingPointId;
+		const finishedInitialArcId = this.currentInitialArcId;
+
+		// Fix right hand rule if necessary
+		if (this.currentId) {
+			const updated = this.mutateFeature.updatePolygon({
+				featureId: this.currentId,
+				propertyMutations: {
+					[COMMON_PROPERTIES.CURRENTLY_DRAWING]: undefined,
+				},
+				coordinateMutations: {
+					// Trigger right-hand rule enforcement
+					coordinates: this.readFeature.getGeometry<Polygon>(this.currentId)
+						.coordinates,
+					type: Mutations.Replace,
+				},
+				context: { updateType: UpdateTypes.Finish, action: "draw" },
+			});
+
+			if (!updated) {
+				return;
+			}
+		}
+
+		try {
+			if (finishedCurrentStartingPointId) {
+				this.mutateFeature.deleteFeature(finishedCurrentStartingPointId);
+			}
+
+			if (finishedInitialArcId) {
+				this.mutateFeature.deleteFeature(finishedInitialArcId);
+			}
+		} catch {}
+
+		this.currentCoordinate = 0;
+		this.currentStartingPointId = undefined;
+		this.currentInitialArcId = undefined;
+		this.currentId = undefined;
+		this.direction = undefined;
+
+		// Go back to started state
+		if (this.state === "drawing") {
+			this.setStarted();
+		}
+	}
+
+	private getUpdatedPolygonCoordinates(event: TerraDrawMouseEvent) {
+		if (
+			this.currentInitialArcId === undefined ||
+			this.currentStartingPointId === undefined ||
+			this.currentCoordinate < 3
+		) {
+			return;
+		}
+
+		const coordinates = this.readFeature.getCoordinates<LineString>(
+			this.currentInitialArcId,
+		);
+
+		if (coordinates.length < 2) {
+			return;
+		}
+
+		// This shouldn't happen but we protect against it in case as we can't calculate if the cursor
+		// is in the sector otherwise
+		if (!this.direction) {
+			return;
+		}
+
+		const center = this.readFeature.getGeometry<Point>(
+			this.currentStartingPointId,
+		).coordinates;
+
+		const firstCoord = coordinates[0];
+		const lastCoord = coordinates[coordinates.length - 1];
+
+		const webMercatorCursor = lngLatToWebMercatorXY(event.lng, event.lat);
+		const webMercatorCoordOne = lngLatToWebMercatorXY(
+			firstCoord[0],
+			firstCoord[1],
+		);
+		const webMercatorCoordTwo = lngLatToWebMercatorXY(
+			lastCoord[0],
+			lastCoord[1],
+		);
+
+		const webMercatorCenter = lngLatToWebMercatorXY(center[0], center[1]);
+
+		const innerRadius = cartesianDistance(
+			webMercatorCenter,
+			webMercatorCoordOne,
+		);
+
+		const outerRadius = cartesianDistance(webMercatorCenter, webMercatorCursor);
+
+		const hasLessThanZeroSize = outerRadius < innerRadius;
+
+		// If the cursor is inside the inner radius, the depth of the sensor is always 0
+		const radiusCalculationPosition = hasLessThanZeroSize
+			? webMercatorCoordOne
+			: webMercatorCursor;
+
+		const cursorBearing = webMercatorBearing(
+			webMercatorCenter,
+			webMercatorCursor,
+		);
+
+		const startBearing = webMercatorBearing(
+			webMercatorCenter,
+			webMercatorCoordOne,
+		);
+		const endBearing = webMercatorBearing(
+			webMercatorCenter,
+			webMercatorCoordTwo,
+		);
+
+		const normalizedStart = normalizeBearing(startBearing);
+		const normalizedEnd = normalizeBearing(endBearing);
+		const normalizedCursor = normalizeBearing(cursorBearing);
+
+		const notInSector = this.notInSector({
+			normalizedCursor,
+			normalizedStart,
+			normalizedEnd,
+			direction: this.direction,
+		});
+
+		// If it's not a valid cursor movement then we don't update
+		if (notInSector) {
+			return;
+		}
+
+		// Calculate the delta bearing based on the direction
+		const deltaBearing = this.getDeltaBearing(
+			this.direction,
+			normalizedStart,
+			normalizedEnd,
+		);
+
+		// Number of points to approximate the arc
+		const numberOfPoints = this.arcPoints;
+
+		// Calculate bearing step
+		const multiplier = this.direction === "anticlockwise" ? 1 : -1;
+		const bearingStep = (multiplier * deltaBearing) / numberOfPoints;
+
+		const radius = cartesianDistance(
+			webMercatorCenter,
+			radiusCalculationPosition,
+		);
+
+		// Add all the arc points
+		const finalArc = [];
+		for (let i = 0; i <= numberOfPoints; i++) {
+			const currentBearing = normalizedStart + i * bearingStep;
+			const pointOnArc = webMercatorDestination(
+				webMercatorCenter,
+				radius,
+				currentBearing,
+			);
+			const { lng, lat } = webMercatorXYToLngLat(pointOnArc.x, pointOnArc.y);
+
+			const nextCoord = [
+				limitPrecision(lng, this.coordinatePrecision),
+				limitPrecision(lat, this.coordinatePrecision),
+			];
+
+			const notIdentical =
+				nextCoord[0] !== coordinates[coordinates.length - 1][0] &&
+				nextCoord[1] !== coordinates[coordinates.length - 1][1];
+			if (notIdentical) {
+				finalArc.unshift(nextCoord);
+			}
+		}
+
+		coordinates.push(...finalArc);
+
+		// Close the polygon
+		coordinates.push(coordinates[0]);
+
+		return coordinates;
+	}
+
+	private getUpdatedLineStringCoordinates(event: TerraDrawMouseEvent) {
+		if (
+			this.currentInitialArcId === undefined ||
+			this.currentStartingPointId === undefined ||
+			this.currentCoordinate < 2
+		) {
+			return;
+		}
+
+		const currentPolygonCoordinates = this.readFeature.getGeometry<LineString>(
+			this.currentInitialArcId,
+		).coordinates;
+		const center = this.readFeature.getGeometry<Point>(
+			this.currentStartingPointId,
+		).coordinates;
+
+		const arcCoordOne = currentPolygonCoordinates[0];
+		const arcCoordTwo = [event.lng, event.lat];
+
+		const webMercatorArcCoordOne = lngLatToWebMercatorXY(
+			arcCoordOne[0],
+			arcCoordOne[1],
+		);
+		const webMercatorArcCoordTwo = lngLatToWebMercatorXY(
+			arcCoordTwo[0],
+			arcCoordTwo[1],
+		);
+		const webMercatorCenter = lngLatToWebMercatorXY(center[0], center[1]);
+
+		const radius = cartesianDistance(webMercatorCenter, webMercatorArcCoordOne);
+
+		// We want to determine the direction of the sector, whether
+		// it is clockwise or anticlockwise
+		if (this.direction === undefined) {
+			const clockwise = isClockwiseWebMercator(
+				webMercatorCenter,
+				webMercatorArcCoordOne,
+				webMercatorArcCoordTwo,
+			);
+			this.direction = clockwise ? "clockwise" : "anticlockwise";
+		}
+
+		// Calculate bearings for the second and third points in Web Mercator
+		const startBearing = webMercatorBearing(
+			webMercatorCenter,
+			webMercatorArcCoordOne,
+		);
+		const endBearing = webMercatorBearing(
+			webMercatorCenter,
+			webMercatorArcCoordTwo,
+		);
+
+		// Generate points along the arc in Web Mercator
+		const numberOfPoints = this.arcPoints; // Number of points to approximate the arc
+		const coordinates: Position[] = [arcCoordOne];
+
+		// Corrected version to calculate deltaBearing
+		const normalizedStart = normalizeBearing(startBearing);
+		const normalizedEnd = normalizeBearing(endBearing);
+
+		// Calculate the delta bearing based on the direction
+		let deltaBearing;
+		if (this.direction === "anticlockwise") {
+			deltaBearing = normalizedEnd - normalizedStart;
+			if (deltaBearing < 0) {
+				deltaBearing += 360; // Adjust for wrap-around
+			}
+		} else {
+			deltaBearing = normalizedStart - normalizedEnd;
+			if (deltaBearing < 0) {
+				deltaBearing += 360; // Adjust for wrap-around
+			}
+		}
+
+		const bearingStep =
+			((this.direction === "anticlockwise" ? 1 : -1) * deltaBearing) /
+			numberOfPoints;
+
+		// Add all the arc points
+		for (let i = 0; i <= numberOfPoints; i++) {
+			const currentBearing = normalizedStart + i * bearingStep;
+			const pointOnArc = webMercatorDestination(
+				webMercatorCenter,
+				radius,
+				currentBearing,
+			);
+			const { lng, lat } = webMercatorXYToLngLat(pointOnArc.x, pointOnArc.y);
+
+			const nextCoord = [
+				limitPrecision(lng, this.coordinatePrecision),
+				limitPrecision(lat, this.coordinatePrecision),
+			];
+
+			const notIdentical =
+				nextCoord[0] !== coordinates[coordinates.length - 1][0] &&
+				nextCoord[1] !== coordinates[coordinates.length - 1][1];
+			if (notIdentical) {
+				coordinates.push(nextCoord);
+			}
+		}
+
+		return coordinates;
 	}
 
 	private getDeltaBearing(

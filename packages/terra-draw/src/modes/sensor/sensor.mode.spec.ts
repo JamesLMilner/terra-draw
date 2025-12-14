@@ -325,6 +325,9 @@ describe("TerraDrawSensorMode", () => {
 						COMMON_PROPERTIES.CURRENTLY_DRAWING
 					],
 				).toBe(undefined);
+				expect(
+					followsRightHandRule(featuresAfterFinalClick[0].geometry as Polygon),
+				).toBe(true);
 
 				expect(featuresAfterFinalClick.length).toBe(1);
 				expect(onFinish).toHaveBeenCalledTimes(1);
@@ -339,6 +342,7 @@ describe("TerraDrawSensorMode", () => {
 				const mockConfig = MockModeConfig(sensorMode.mode);
 
 				store = mockConfig.store;
+				onFinish = mockConfig.onFinish;
 				sensorMode.register(mockConfig);
 				sensorMode.start();
 			});
@@ -367,7 +371,15 @@ describe("TerraDrawSensorMode", () => {
 
 				const featuresAfterFinalClick = store.copyAll();
 
-				expect(featuresAfterFinalClick.length).toBe(1);
+				expect(featuresAfterFinalClick.length).toBe(3);
+				const sensor = featuresAfterFinalClick.find(
+					(f) => f.geometry.type === "Polygon",
+				);
+				expect(sensor?.properties[COMMON_PROPERTIES.CURRENTLY_DRAWING]).toBe(
+					true,
+				);
+
+				expect(onFinish).toHaveBeenCalledTimes(0);
 			});
 		});
 	});

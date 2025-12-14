@@ -165,7 +165,7 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 					coordinatePrecision: this.coordinatePrecision,
 				});
 
-				const { id: createdId } = this.mutateFeature.createPolygon({
+				const created = this.mutateFeature.createPolygon({
 					coordinates: startingCircle.geometry.coordinates[0],
 					properties: {
 						mode: this.mode,
@@ -174,7 +174,11 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 					},
 				});
 
-				this.currentCircleId = createdId;
+				if (!created) {
+					return;
+				}
+
+				this.currentCircleId = created.id;
 				this.cursorMovedAfterInitialCursorDown = false;
 				this.setDrawing();
 			} else if (this.center && this.currentCircleId !== undefined) {

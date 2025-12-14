@@ -173,13 +173,10 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 					context: { updateType: UpdateTypes.Provisional },
 				});
 			} else {
-				this.snappedPointId = this.manipulateFeature.createPoint({
-					coordinates: snappedCoordinate,
-					properties: {
-						mode: this.mode,
-						[COMMON_PROPERTIES.SNAPPING_POINT]: true,
-					},
-				}).id;
+				this.snappedPointId = this.manipulateFeature.createGuidancePoint(
+					snappedCoordinate,
+					COMMON_PROPERTIES.SNAPPING_POINT,
+				);
 			}
 
 			event.lng = snappedCoordinate[0];
@@ -280,13 +277,10 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 			return;
 		}
 
-		this.closingPointId = this.manipulateFeature.createPoint({
-			coordinates: updatedCoord,
-			properties: {
-				mode: this.mode,
-				[COMMON_PROPERTIES.CLOSING_POINT]: true,
-			},
-		}).id;
+		this.closingPointId = this.manipulateFeature.createGuidancePoint(
+			updatedCoord,
+			COMMON_PROPERTIES.CLOSING_POINT,
+		);
 
 		// We are creating the point so we immediately want
 		// to set the point cursor to show it can be closed
@@ -681,13 +675,10 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 
 		// Create a point to drag when editing
 		if (!this.editedPointId) {
-			this.editedPointId = this.manipulateFeature.createPoint({
-				coordinates: snappedCoordinate,
-				properties: {
-					mode: this.mode,
-					[COMMON_PROPERTIES.EDITED]: true,
-				},
-			}).id;
+			this.editedPointId = this.manipulateFeature.createGuidancePoint(
+				snappedCoordinate,
+				COMMON_PROPERTIES.EDITED,
+			);
 		}
 
 		// Drag Feature

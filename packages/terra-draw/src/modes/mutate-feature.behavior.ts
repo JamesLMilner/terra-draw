@@ -10,6 +10,7 @@ import { Polygon, Position, LineString, Point } from "geojson";
 import {
 	Actions,
 	GuidancePointProperties,
+	SELECT_PROPERTIES,
 	UpdateTypes,
 	Validation,
 } from "../common";
@@ -111,6 +112,10 @@ export class MutateFeatureBehavior extends TerraDrawModeBehavior {
 
 	public deleteFeature(featureId: FeatureId) {
 		this.store.delete([featureId]);
+	}
+
+	public deleteFeatures(featureIds: FeatureId[]) {
+		this.store.delete(featureIds);
 	}
 
 	public updatePoint({
@@ -220,6 +225,37 @@ export class MutateFeatureBehavior extends TerraDrawModeBehavior {
 			propertyMutations,
 			context,
 		});
+	}
+
+	public setDeselected(featureIds: FeatureId[]) {
+		const updateSelectedFeatures = featureIds
+			.filter((id) => this.store.has(id))
+			.map((id) => ({
+				id,
+				property: SELECT_PROPERTIES.SELECTED,
+				value: false,
+			}));
+
+		this.store.updateProperty(updateSelectedFeatures);
+	}
+
+	public setSelected(featureId: FeatureId) {
+		const { type } = this.store.getGeometryCopy(featureId);
+		const update = {
+			featureId,
+			propertyMutations: {
+				[SELECT_PROPERTIES.SELECTED]: true,
+			},
+			context: { updateType: UpdateTypes.Commit },
+		} as const;
+
+		if (type === "Polygon") {
+			this.updatePolygon(update);
+		} else if (type === "LineString") {
+			this.updateLineString(update);
+		} else if (type === "Point") {
+			this.updatePoint(update);
+		}
 	}
 
 	public createGuidancePoint(

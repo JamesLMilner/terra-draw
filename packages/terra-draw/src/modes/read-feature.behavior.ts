@@ -62,4 +62,8 @@ export class ReadFeatureBehavior extends TerraDrawModeBehavior {
 
 		return coords[normalizedIndex];
 	}
+
+	public getProperties(featureId: FeatureId) {
+		return this.store.getPropertiesCopy(featureId);
+	}
 }

@@ -267,6 +267,36 @@ const Circle: Story = {
 	},
 };
 
+// Circle drawing with click-drag interaction story
+const CircleWithClickDragInteraction: Story = {
+	...DefaultStory,
+	args: {
+		id: "circle-with-click-drag-interaction",
+		modes: [
+			() =>
+				new TerraDrawCircleMode({
+					drawInteraction: "click-drag",
+				}),
+		],
+		...DefaultStory.args,
+	},
+};
+
+// Circle drawing with click-move-or-drag interaction story
+const CircleWithClickMoveOrDragInteraction: Story = {
+	...DefaultStory,
+	args: {
+		id: "circle-with-click-move-or-drag-interaction",
+		modes: [
+			() =>
+				new TerraDrawCircleMode({
+					drawInteraction: "click-move-or-drag",
+				}),
+		],
+		...DefaultStory.args,
+	},
+};
+
 // Rectangle drawing story
 const Rectangle: Story = {
 	...DefaultStory,
@@ -690,6 +720,8 @@ const AllStories = {
 	Styling,
 	ZIndexOrdering,
 	Circle,
+	CircleWithClickDragInteraction,
+	CircleWithClickMoveOrDragInteraction,
 	Rectangle,
 	RectangleWithClickDragInteraction,
 	RectangleWithClickMoveOrDragInteraction,

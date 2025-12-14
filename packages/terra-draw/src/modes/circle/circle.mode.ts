@@ -11,6 +11,8 @@ import {
 	Z_INDEX,
 	COMMON_PROPERTIES,
 	FinishActions,
+	DrawInteractions,
+	DrawType,
 } from "../../common";
 import { haversineDistanceKilometers } from "../../geometry/measure/haversine-distance";
 import { circle, circleWebMercator } from "../../geometry/shape/create-circle";
@@ -60,6 +62,7 @@ interface TerraDrawCircleModeOptions<T extends CustomStyling>
 	cursors?: Cursors;
 	startingRadiusKilometers?: number;
 	projection?: Projection;
+	drawInteraction?: DrawInteractions;
 }
 
 export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyling> {
@@ -72,6 +75,8 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 	private cursors: Required<Cursors> = defaultCursors;
 	private startingRadiusKilometers = 0.00001;
 	private cursorMovedAfterInitialCursorDown = false;
+	private drawInteraction = "click-move";
+	private drawType: DrawType | undefined;
 
 	// Behaviors
 	public mutateFeature!: MutateFeatureBehavior;
@@ -83,6 +88,10 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 	 * @param options.cursors - Cursors to use for the mode
 	 * @param options.styles - Custom styling for the circle
 	 * @param options.pointerDistance - Distance in pixels to consider a pointer close to a vertex
+	 * @param options.startingRadiusKilometers - The starting radius of the circle in kilometers
+	 * @param options.projection - The map projection being used
+	 * @param options.drawInteraction - The type of draw interaction to use
+	 *
 	 */
 	constructor(options?: TerraDrawCircleModeOptions<CirclePolygonStyling>) {
 		super(options, true);
@@ -109,6 +118,10 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 		if (options?.startingRadiusKilometers) {
 			this.startingRadiusKilometers = options.startingRadiusKilometers;
 		}
+
+		if (options?.drawInteraction) {
+			this.drawInteraction = options.drawInteraction;
+		}
 	}
 
 	private close() {
@@ -125,11 +138,58 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 		this.cursorMovedAfterInitialCursorDown = false;
 		this.center = undefined;
 		this.currentCircleId = undefined;
+		this.drawType = undefined;
 
 		// Go back to started state
 		if (this.state === "drawing") {
 			this.setStarted();
 		}
+	}
+
+	private beginDrawing(
+		event: TerraDrawMouseEvent,
+		drawType: DrawType = "click",
+	): void {
+		this.center = [event.lng, event.lat];
+		this.endPosition = [event.lng, event.lat];
+
+		const startingCircle = circle({
+			center: this.center,
+			radiusKilometers: this.startingRadiusKilometers,
+			coordinatePrecision: this.coordinatePrecision,
+		});
+
+		const created = this.mutateFeature.createPolygon({
+			coordinates: startingCircle.geometry.coordinates[0],
+			properties: {
+				mode: this.mode,
+				radiusKilometers: this.startingRadiusKilometers,
+				[COMMON_PROPERTIES.CURRENTLY_DRAWING]: true,
+			},
+		});
+
+		if (!created) {
+			return;
+		}
+
+		this.currentCircleId = created.id;
+		this.cursorMovedAfterInitialCursorDown = false;
+		this.drawType = drawType;
+		this.setDrawing();
+	}
+
+	private dragDrawAllowed() {
+		return (
+			this.drawInteraction === "click-drag" ||
+			this.drawInteraction === "click-move-or-drag"
+		);
+	}
+
+	private moveDrawAllowed() {
+		return (
+			this.drawInteraction === "click-move" ||
+			this.drawInteraction === "click-move-or-drag"
+		);
 	}
 
 	/** @internal */
@@ -148,39 +208,16 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 	/** @internal */
 	onClick(event: TerraDrawMouseEvent) {
 		if (
-			(event.button === "right" &&
+			this.moveDrawAllowed() &&
+			((event.button === "right" &&
 				this.allowPointerEvent(this.pointerEvents.rightClick, event)) ||
-			(event.button === "left" &&
-				this.allowPointerEvent(this.pointerEvents.leftClick, event)) ||
-			(event.isContextMenu &&
-				this.allowPointerEvent(this.pointerEvents.contextMenu, event))
+				(event.button === "left" &&
+					this.allowPointerEvent(this.pointerEvents.leftClick, event)) ||
+				(event.isContextMenu &&
+					this.allowPointerEvent(this.pointerEvents.contextMenu, event)))
 		) {
 			if (!this.center) {
-				this.center = [event.lng, event.lat];
-				this.endPosition = [event.lng, event.lat];
-
-				const startingCircle = circle({
-					center: this.center,
-					radiusKilometers: this.startingRadiusKilometers,
-					coordinatePrecision: this.coordinatePrecision,
-				});
-
-				const created = this.mutateFeature.createPolygon({
-					coordinates: startingCircle.geometry.coordinates[0],
-					properties: {
-						mode: this.mode,
-						radiusKilometers: this.startingRadiusKilometers,
-						[COMMON_PROPERTIES.CURRENTLY_DRAWING]: true,
-					},
-				});
-
-				if (!created) {
-					return;
-				}
-
-				this.currentCircleId = created.id;
-				this.cursorMovedAfterInitialCursorDown = false;
-				this.setDrawing();
+				this.beginDrawing(event);
 			} else if (this.center && this.currentCircleId !== undefined) {
 				this.endPosition = [event.lng, event.lat];
 
@@ -210,13 +247,55 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 	}
 
 	/** @internal */
-	onDragStart() {}
+	onDragStart(
+		event: TerraDrawMouseEvent,
+		setMapDraggability: (enabled: boolean) => void,
+	) {
+		if (this.state === "drawing") {
+			return;
+		}
+
+		if (
+			this.allowPointerEvent(this.pointerEvents.onDragStart, event) &&
+			this.dragDrawAllowed()
+		) {
+			this.beginDrawing(event, "drag");
+			setMapDraggability(false);
+		}
+	}
 
 	/** @internal */
-	onDrag() {}
+	onDrag(
+		event: TerraDrawMouseEvent,
+		setMapDraggability: (enabled: boolean) => void,
+	) {
+		if (
+			this.allowPointerEvent(this.pointerEvents.onDrag, event) &&
+			this.dragDrawAllowed() &&
+			this.drawType === "drag"
+		) {
+			this.cursorMovedAfterInitialCursorDown = true;
+			this.endPosition = [event.lng, event.lat];
+			this.updateCircle(this.endPosition, UpdateTypes.Provisional);
+		}
+	}
 
 	/** @internal */
-	onDragEnd() {}
+	onDragEnd(
+		event: TerraDrawMouseEvent,
+		setMapDraggability: (enabled: boolean) => void,
+	) {
+		if (
+			this.allowPointerEvent(this.pointerEvents.onDragEnd, event) &&
+			this.dragDrawAllowed() &&
+			this.drawType === "drag"
+		) {
+			this.endPosition = [event.lng, event.lat];
+			// Finish drawing
+			this.close();
+			setMapDraggability(true);
+		}
+	}
 
 	/** @internal */
 	cleanUp() {
@@ -224,6 +303,7 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 
 		this.center = undefined;
 		this.currentCircleId = undefined;
+		this.drawType = undefined;
 
 		if (this.state === "drawing") {
 			this.setStarted();
@@ -361,7 +441,7 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 			this.cursorMovedAfterInitialCursorDown = false;
 			this.center = undefined;
 			this.currentCircleId = undefined;
-
+			this.drawType = undefined;
 			if (this.state === "drawing") {
 				this.setStarted();
 			}

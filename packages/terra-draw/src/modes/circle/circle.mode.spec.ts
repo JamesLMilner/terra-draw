@@ -58,6 +58,20 @@ describe("TerraDrawCircleMode", () => {
 			});
 			expect(circleMode.mode).toBe("custom");
 		});
+
+		it("constructs with drawInteraction option", () => {
+			new TerraDrawCircleMode({
+				drawInteraction: "click-move",
+			});
+
+			new TerraDrawCircleMode({
+				drawInteraction: "click-drag",
+			});
+
+			new TerraDrawCircleMode({
+				drawInteraction: "click-move-or-drag",
+			});
+		});
 	});
 
 	describe("lifecycle", () => {
@@ -229,64 +243,115 @@ describe("TerraDrawCircleMode", () => {
 					);
 				});
 
-				it("finishes drawing circle on second click with no cursor movement", () => {
-					circleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+				describe.each([
+					["click-move" as const, true],
+					["click-move-or-drag" as const, true],
+					["click-drag" as const, false],
+				])("with drawInteraction %s", (drawInteraction, shouldAddCircle) => {
+					it(`${shouldAddCircle ? "adds" : "does not add"} a circle to store`, () => {
+						circleMode = new TerraDrawCircleMode({
+							drawInteraction,
+						});
+						const mockConfig = MockModeConfig(circleMode.mode);
 
-					let features = store.copyAll();
-					expect(features.length).toBe(1);
-					expect(
-						features[0].properties[COMMON_PROPERTIES.CURRENTLY_DRAWING],
-					).toBe(true);
+						store = mockConfig.store;
+						onChange = mockConfig.onChange;
+						onFinish = mockConfig.onFinish;
 
-					circleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+						circleMode.register(mockConfig);
+						circleMode.start();
 
-					features = store.copyAll();
-					expect(features.length).toBe(1);
+						circleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
-					expect(
-						features[0].properties[COMMON_PROPERTIES.CURRENTLY_DRAWING],
-					).toBe(undefined);
+						expect(onChange).toHaveBeenCalledTimes(shouldAddCircle ? 1 : 0);
+						if (shouldAddCircle) {
+							expect(onChange).toHaveBeenCalledWith(
+								[expect.any(String)],
+								"create",
+								undefined,
+							);
+						}
 
-					expect(followsRightHandRule(features[0].geometry as Polygon)).toBe(
-						true,
-					);
-
-					// We don't expect any changes if there is no cursor movement
-					expect(onChange).toHaveBeenCalledTimes(2);
-					expect(onChange).toHaveBeenCalledWith(
-						[expect.any(String)],
-						"create",
-						undefined,
-					);
-
-					expect(onFinish).toHaveBeenCalledTimes(1);
+						expect(onFinish).toHaveBeenCalledTimes(0);
+					});
 				});
 
-				it("finishes drawing circle on second click with cursor movement", () => {
-					circleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+				describe.each([
+					["click-move" as const],
+					["click-move-or-drag" as const],
+				])("with drawInteraction %s", (drawInteraction) => {
+					it("finishes drawing circle on second click with no cursor movement", () => {
+						circleMode = new TerraDrawCircleMode({
+							drawInteraction,
+						});
 
-					let features = store.copyAll();
-					expect(features.length).toBe(1);
+						const mockConfig = MockModeConfig(circleMode.mode);
 
-					circleMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
+						store = mockConfig.store;
+						onChange = mockConfig.onChange;
+						onFinish = mockConfig.onFinish;
 
-					circleMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
+						circleMode.register(mockConfig);
+						circleMode.start();
 
-					features = store.copyAll();
-					expect(features.length).toBe(1);
+						circleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
-					expect(followsRightHandRule(features[0].geometry as Polygon)).toBe(
-						true,
-					);
+						let features = store.copyAll();
+						expect(features.length).toBe(1);
+						expect(
+							features[0].properties[COMMON_PROPERTIES.CURRENTLY_DRAWING],
+						).toBe(true);
 
-					expect(onChange).toHaveBeenCalledTimes(5);
-					expect(onChange).toHaveBeenCalledWith(
-						[expect.any(String)],
-						"create",
-						undefined,
-					);
+						circleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
-					expect(onFinish).toHaveBeenCalledTimes(1);
+						features = store.copyAll();
+						expect(features.length).toBe(1);
+
+						expect(
+							features[0].properties[COMMON_PROPERTIES.CURRENTLY_DRAWING],
+						).toBe(undefined);
+
+						expect(followsRightHandRule(features[0].geometry as Polygon)).toBe(
+							true,
+						);
+
+						// We don't expect any changes if there is no cursor movement
+						expect(onChange).toHaveBeenCalledTimes(2);
+						expect(onChange).toHaveBeenCalledWith(
+							[expect.any(String)],
+							"create",
+							undefined,
+						);
+
+						expect(onFinish).toHaveBeenCalledTimes(1);
+					});
+
+					it("finishes drawing circle on second click with cursor movement", () => {
+						circleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+						let features = store.copyAll();
+						expect(features.length).toBe(1);
+
+						circleMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
+
+						circleMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
+
+						features = store.copyAll();
+						expect(features.length).toBe(1);
+
+						expect(followsRightHandRule(features[0].geometry as Polygon)).toBe(
+							true,
+						);
+
+						expect(onChange).toHaveBeenCalledTimes(5);
+						expect(onChange).toHaveBeenCalledWith(
+							[expect.any(String)],
+							"create",
+							undefined,
+						);
+
+						expect(onFinish).toHaveBeenCalledTimes(1);
+					});
 				});
 			});
 
@@ -625,33 +690,428 @@ describe("TerraDrawCircleMode", () => {
 	});
 
 	describe("onDrag", () => {
-		it("does nothing", () => {
-			const circleMode = new TerraDrawCircleMode();
+		let onChange: jest.Mock;
+		let onFinish: jest.Mock;
+		let circleMode: TerraDrawCircleMode;
+		let setMapDraggability: jest.Mock;
+		let store: TerraDrawGeoJSONStore;
 
-			expect(() => {
-				circleMode.onDrag();
-			}).not.toThrow();
+		beforeEach(() => {
+			setMapDraggability = jest.fn();
 		});
+
+		describe.each([
+			["without drawInteraction option", undefined],
+			["with drawInteraction click-move", "click-move" as const],
+		])("%s", (_, drawInteraction) => {
+			it("does nothing", () => {
+				circleMode = new TerraDrawCircleMode(
+					drawInteraction ? { drawInteraction } : undefined,
+				);
+
+				const mockConfig = MockModeConfig(circleMode.mode);
+				store = mockConfig.store;
+				onChange = mockConfig.onChange;
+				onFinish = mockConfig.onFinish;
+				circleMode.register(mockConfig);
+				circleMode.start();
+
+				circleMode.onDrag(
+					MockCursorEvent({ lng: 0, lat: 0 }),
+					setMapDraggability,
+				);
+
+				expect(onFinish).toHaveBeenCalledTimes(0);
+				expect(onChange).toHaveBeenCalledTimes(0);
+				expect(setMapDraggability).toHaveBeenCalledTimes(0);
+			});
+		});
+
+		describe.each([["click-drag" as const], ["click-move-or-drag" as const]])(
+			"with drawInteraction %s and onDrag pointer event set to false",
+			(drawInteraction) => {
+				it("does nothing", () => {
+					const circleMode = new TerraDrawCircleMode({
+						drawInteraction,
+						pointerEvents: {
+							...DefaultPointerEvents,
+							onDrag: false,
+						},
+					});
+
+					const mockConfig = MockModeConfig(circleMode.mode);
+					store = mockConfig.store;
+					onChange = mockConfig.onChange;
+					onFinish = mockConfig.onFinish;
+					circleMode.register(mockConfig);
+					circleMode.start();
+
+					circleMode.onDragStart(
+						MockCursorEvent({ lng: 0, lat: 0 }),
+						setMapDraggability,
+					);
+
+					onChange.mockClear();
+
+					circleMode.onDrag(
+						MockCursorEvent({ lng: 1, lat: 1 }),
+						setMapDraggability,
+					);
+
+					expect(onFinish).toHaveBeenCalledTimes(0);
+					expect(onChange).toHaveBeenCalledTimes(0);
+				});
+			},
+		);
+
+		it("with drawInteraction click-move-or-drag and drawType is click it does nothing", () => {
+			const circleMode = new TerraDrawCircleMode({
+				drawInteraction: "click-move-or-drag",
+			});
+
+			const mockConfig = MockModeConfig(circleMode.mode);
+			store = mockConfig.store;
+			onChange = mockConfig.onChange;
+			onFinish = mockConfig.onFinish;
+			circleMode.register(mockConfig);
+			circleMode.start();
+
+			circleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+			onChange.mockClear();
+			onFinish.mockClear();
+
+			circleMode.onDrag(
+				MockCursorEvent({ lng: 0, lat: 0 }),
+				setMapDraggability,
+			);
+
+			expect(onChange).toHaveBeenCalledTimes(0);
+			expect(onFinish).toHaveBeenCalledTimes(0);
+			expect(setMapDraggability).toHaveBeenCalledTimes(0);
+		});
+
+		describe.each([["click-drag" as const], ["click-move-or-drag" as const]])(
+			"with drawInteraction %s",
+			(drawInteraction) => {
+				it("updates the circle size", () => {
+					const circleMode = new TerraDrawCircleMode({
+						drawInteraction,
+					});
+
+					const mockConfig = MockModeConfig(circleMode.mode);
+					store = mockConfig.store;
+					onChange = mockConfig.onChange;
+					circleMode.register(mockConfig);
+					circleMode.start();
+
+					circleMode.onDragStart(
+						MockCursorEvent({ lng: 0, lat: 0 }),
+						setMapDraggability,
+					);
+
+					expect(onChange).toHaveBeenCalledTimes(1);
+					expect(onChange).toHaveBeenNthCalledWith(
+						1,
+						[expect.any(String)],
+						"create",
+						undefined,
+					);
+					expect(setMapDraggability).toHaveBeenCalledTimes(1);
+
+					const feature = store.copyAll()[0];
+
+					circleMode.onDrag(
+						MockCursorEvent({ lng: 1, lat: 1 }),
+						setMapDraggability,
+					);
+
+					expect(onChange).toHaveBeenCalledTimes(3);
+					expect(onChange).toHaveBeenNthCalledWith(
+						2,
+						[expect.any(String)],
+						"update",
+						{ target: "geometry" },
+					);
+
+					expect(onChange).toHaveBeenNthCalledWith(
+						3,
+						[expect.any(String)],
+						"update",
+						{ target: "properties" },
+					);
+
+					const updatedFeature = store.copyAll()[0];
+
+					expect(feature.id).toBe(updatedFeature.id);
+					expect(feature.geometry.coordinates).not.toStrictEqual(
+						updatedFeature.geometry.coordinates,
+					);
+
+					expect(setMapDraggability).toHaveBeenCalledTimes(1);
+				});
+			},
+		);
 	});
 
 	describe("onDragStart", () => {
-		it("does nothing", () => {
-			const circleMode = new TerraDrawCircleMode();
+		let onChange: jest.Mock;
+		let onFinish: jest.Mock;
+		let circleMode: TerraDrawCircleMode;
+		let setMapDraggability: jest.Mock;
 
-			expect(() => {
-				circleMode.onDragStart();
-			}).not.toThrow();
+		beforeEach(() => {
+			setMapDraggability = jest.fn();
 		});
+
+		describe.each([
+			["without drawInteraction option", undefined],
+			["with drawInteraction click-move", "click-move" as const],
+		])("%s", (_, drawInteraction) => {
+			it("does nothing", () => {
+				circleMode = new TerraDrawCircleMode(
+					drawInteraction ? { drawInteraction } : undefined,
+				);
+				const mockConfig = MockModeConfig(circleMode.mode);
+
+				onChange = mockConfig.onChange;
+				onFinish = mockConfig.onFinish;
+				circleMode.register(mockConfig);
+				circleMode.start();
+
+				circleMode.onDragStart(
+					MockCursorEvent({ lng: 0, lat: 0 }),
+					setMapDraggability,
+				);
+
+				expect(onChange).toHaveBeenCalledTimes(0);
+				expect(onFinish).toHaveBeenCalledTimes(0);
+				expect(setMapDraggability).toHaveBeenCalledTimes(0);
+			});
+		});
+
+		describe.each([["click-drag" as const], ["click-move-or-drag" as const]])(
+			"with drawInteraction %s and onDragStart pointer event false",
+			(drawInteraction) => {
+				it("does nothing", () => {
+					circleMode = new TerraDrawCircleMode({
+						drawInteraction,
+						pointerEvents: {
+							...DefaultPointerEvents,
+							onDragStart: false,
+						},
+					});
+
+					const mockConfig = MockModeConfig(circleMode.mode);
+					onChange = mockConfig.onChange;
+					onFinish = mockConfig.onFinish;
+					circleMode.register(mockConfig);
+					circleMode.start();
+
+					circleMode.onDragStart(
+						MockCursorEvent({ lng: 0, lat: 0 }),
+						setMapDraggability,
+					);
+
+					expect(onFinish).toHaveBeenCalledTimes(0);
+					expect(onChange).toHaveBeenCalledTimes(0);
+					expect(setMapDraggability).toHaveBeenCalledTimes(0);
+				});
+			},
+		);
+
+		it("with drawInteraction click-move-or-drag and drawType is click it does nothing", () => {
+			circleMode = new TerraDrawCircleMode({
+				drawInteraction: "click-move-or-drag",
+			});
+
+			const mockConfig = MockModeConfig(circleMode.mode);
+			onChange = mockConfig.onChange;
+			onFinish = mockConfig.onFinish;
+			circleMode.register(mockConfig);
+			circleMode.start();
+
+			circleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+			onChange.mockClear();
+
+			circleMode.onDragStart(
+				MockCursorEvent({ lng: 0, lat: 0 }),
+				setMapDraggability,
+			);
+
+			expect(onChange).toHaveBeenCalledTimes(0);
+			expect(onFinish).toHaveBeenCalledTimes(0);
+			expect(setMapDraggability).toHaveBeenCalledTimes(0);
+		});
+
+		describe.each([["click-drag" as const], ["click-move-or-drag" as const]])(
+			"with drawInteraction %s and drag true",
+			(drawInteraction) => {
+				it("begins drawing", () => {
+					circleMode = new TerraDrawCircleMode({
+						drawInteraction,
+					});
+
+					const mockConfig = MockModeConfig(circleMode.mode);
+					onChange = mockConfig.onChange;
+					circleMode.register(mockConfig);
+					circleMode.start();
+
+					circleMode.onDragStart(
+						MockCursorEvent({ lng: 0, lat: 0 }),
+						setMapDraggability,
+					);
+
+					expect(onChange).toHaveBeenCalledTimes(1);
+					expect(onChange).toHaveBeenCalledWith(
+						[expect.any(String)],
+						"create",
+						undefined,
+					);
+					expect(onFinish).not.toHaveBeenCalled();
+					expect(setMapDraggability).toHaveBeenCalledTimes(1);
+					expect(setMapDraggability).toHaveBeenCalledWith(false);
+				});
+			},
+		);
 	});
 
 	describe("onDragEnd", () => {
-		it("does nothing", () => {
-			const circleMode = new TerraDrawCircleMode();
+		let onChange: jest.Mock;
+		let onFinish: jest.Mock;
+		let circleMode: TerraDrawCircleMode;
+		let setMapDraggability: jest.Mock;
+		let store: TerraDrawGeoJSONStore;
 
-			expect(() => {
-				circleMode.onDragEnd();
-			}).not.toThrow();
+		beforeEach(() => {
+			setMapDraggability = jest.fn();
 		});
+
+		describe.each([
+			["without drawInteraction option", undefined],
+			["with drawInteraction click-move", "click-move" as const],
+		])("%s", (_, drawInteraction) => {
+			it("does nothing", () => {
+				circleMode = new TerraDrawCircleMode(
+					drawInteraction ? { drawInteraction } : undefined,
+				);
+				const mockConfig = MockModeConfig(circleMode.mode);
+				store = mockConfig.store;
+				onChange = mockConfig.onChange;
+				onFinish = mockConfig.onFinish;
+				circleMode.register(mockConfig);
+				circleMode.start();
+
+				circleMode.onDragEnd(
+					MockCursorEvent({ lng: 0, lat: 0 }),
+					setMapDraggability,
+				);
+
+				expect(onChange).toHaveBeenCalledTimes(0);
+				expect(onFinish).toHaveBeenCalledTimes(0);
+				expect(setMapDraggability).toHaveBeenCalledTimes(0);
+			});
+		});
+
+		describe.each([["click-drag" as const], ["click-move-or-drag" as const]])(
+			"with drawInteraction %s and onDragEnd pointer event false",
+			(drawInteraction) => {
+				it("does nothing", () => {
+					circleMode = new TerraDrawCircleMode({
+						drawInteraction,
+						pointerEvents: {
+							...DefaultPointerEvents,
+							onDragEnd: false,
+						},
+					});
+
+					const mockConfig = MockModeConfig(circleMode.mode);
+					store = mockConfig.store;
+					onChange = mockConfig.onChange;
+					onFinish = mockConfig.onFinish;
+					circleMode.register(mockConfig);
+					circleMode.start();
+
+					circleMode.onDragStart(
+						MockCursorEvent({ lng: 0, lat: 0 }),
+						setMapDraggability,
+					);
+
+					onChange.mockClear();
+					setMapDraggability.mockClear();
+
+					circleMode.onDragEnd(
+						MockCursorEvent({ lng: 1, lat: 1 }),
+						setMapDraggability,
+					);
+
+					expect(onChange).toHaveBeenCalledTimes(0);
+					expect(onFinish).toHaveBeenCalledTimes(0);
+					expect(setMapDraggability).toHaveBeenCalledTimes(0);
+				});
+			},
+		);
+
+		describe.each([["click-drag" as const], ["click-move-or-drag" as const]])(
+			"with drawInteraction %s",
+			(drawInteraction) => {
+				it("finishes the circle", () => {
+					circleMode = new TerraDrawCircleMode({
+						drawInteraction,
+					});
+
+					const mockConfig = MockModeConfig(circleMode.mode);
+					const setMapDraggability = jest.fn();
+
+					store = mockConfig.store;
+					onChange = mockConfig.onChange;
+					const onFinish = mockConfig.onFinish;
+					circleMode.register(mockConfig);
+					circleMode.start();
+
+					circleMode.onDragStart(
+						MockCursorEvent({ lng: 0, lat: 0 }),
+						setMapDraggability,
+					);
+
+					expect(setMapDraggability).toHaveBeenCalledTimes(1);
+
+					let features = store.copyAll();
+
+					circleMode.onDragEnd(
+						MockCursorEvent({ lng: 1, lat: 1 }),
+						setMapDraggability,
+					);
+
+					features = store.copyAll();
+					expect(features.length).toBe(1);
+
+					const circle = features[0] as GeoJSONStoreFeatures<Polygon>;
+
+					expect(circle.properties[COMMON_PROPERTIES.CURRENTLY_DRAWING]).toBe(
+						undefined,
+					);
+
+					expect(onChange).toHaveBeenCalledTimes(2);
+					expect(onChange).toHaveBeenNthCalledWith(
+						1,
+						[expect.any(String)],
+						"create",
+						undefined,
+					);
+
+					expect(onFinish).toHaveBeenCalledTimes(1);
+					expect(onFinish).toHaveBeenNthCalledWith(1, expect.any(String), {
+						action: "draw",
+						mode: "circle",
+					});
+
+					expect(setMapDraggability).toHaveBeenCalledTimes(2);
+					expect(setMapDraggability).toHaveBeenNthCalledWith(2, true);
+				});
+			},
+		);
 	});
 
 	describe("styleFeature", () => {

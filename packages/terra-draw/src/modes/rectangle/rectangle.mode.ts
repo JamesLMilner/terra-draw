@@ -11,6 +11,7 @@ import {
 	COMMON_PROPERTIES,
 	FinishActions,
 	DrawInteractions,
+	DrawType,
 } from "../../common";
 import {
 	FeatureId,
@@ -41,8 +42,6 @@ type RectanglePolygonStyling = {
 	outlineWidth: NumericStyling;
 	fillOpacity: NumericStyling;
 };
-
-type DrawType = "click" | "drag";
 
 interface Cursors {
 	start?: Cursor;

@@ -44,6 +44,8 @@ import {
 import { CoordinatePointBehavior } from "./behaviors/coordinate-point.behavior";
 import { CoordinateSnappingBehavior } from "../coordinate-snapping.behavior";
 import { LineSnappingBehavior } from "../line-snapping.behavior";
+import { MutateFeatureBehavior, Mutations } from "../mutate-feature.behavior";
+import { ReadFeatureBehavior } from "../read-feature.behavior";
 
 type TerraDrawSelectModeKeyEvents = {
 	deselect: KeyboardEvent["key"] | null;
@@ -166,6 +168,8 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 	private dragCoordinateResizeFeature!: DragCoordinateResizeBehavior;
 	private coordinatePoints!: CoordinatePointBehavior;
 	private lineSnap!: LineSnappingBehavior;
+	private mutateFeature!: MutateFeatureBehavior;
+	private readFeature!: ReadFeatureBehavior;
 
 	constructor(options?: TerraDrawSelectModeOptions<SelectionStyling>) {
 		super(options, true);
@@ -290,6 +294,18 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 			config,
 			this.dragCoordinateResizeFeature,
 		);
+
+		this.readFeature = new ReadFeatureBehavior(config);
+		this.mutateFeature = new MutateFeatureBehavior(config, {
+			validate: this.validate,
+			onUpdate: ({ id }) => {},
+			onFinish: (featureId, context) => {
+				this.onFinish(featureId, {
+					mode: this.mode,
+					action: context.action,
+				});
+			},
+		});
 	}
 
 	public deselectFeature() {
@@ -297,15 +313,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 	}
 
 	private deselect() {
-		const updateSelectedFeatures = this.selected
-			.filter((id) => this.store.has(id))
-			.map((id) => ({
-				id,
-				property: SELECT_PROPERTIES.SELECTED,
-				value: false,
-			}));
-
-		this.store.updateProperty(updateSelectedFeatures);
+		this.mutateFeature.setDeselected(this.selected);
 
 		this.onDeselect(this.selected[0]);
 		this.selected = [];
@@ -319,7 +327,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 		// We don't need to set selected false
 		// as we're going to delete the feature
 
-		this.store.delete(this.selected);
+		this.mutateFeature.deleteFeatures(this.selected);
 		this.selected = [];
 	}
 
@@ -333,7 +341,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 		let clickedFeatureDistance = Infinity;
 
 		this.selectionPoints.ids.forEach((id) => {
-			const geometry = this.store.getGeometryCopy<Point>(id);
+			const geometry = this.readFeature.getGeometry<Point>(id);
 			const distance = this.pixelDistance.measure(event, geometry.coordinates);
 
 			if (
@@ -341,7 +349,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 				distance < clickedFeatureDistance
 			) {
 				clickedFeatureDistance = distance;
-				clickedSelectionPointProps = this.store.getPropertiesCopy(
+				clickedSelectionPointProps = this.readFeature.getProperties(
 					id,
 				) as SelectionPointProperties;
 			}
@@ -355,7 +363,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 		const coordinateIndex = clickedSelectionPointProps.index;
 
 		// We allow for preventing deleting coordinates via flags
-		const properties = this.store.getPropertiesCopy(featureId);
+		const properties = this.readFeature.getProperties(featureId);
 		const modeFlags = this.flags[properties.mode as string];
 		const validation = this.validations[properties.mode as string];
 
@@ -370,7 +378,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 			return;
 		}
 
-		const geometry = this.store.getGeometryCopy(featureId);
+		const geometry = this.readFeature.getGeometry(featureId);
 
 		let coordinates;
 		if (geometry.type === "Polygon") {
@@ -410,37 +418,39 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 			coordinates.splice(coordinateIndex, 1);
 		}
 
-		// Validate the new geometry
-		if (validation) {
-			const validationResult = validation(
-				{
-					id: featureId,
-					type: "Feature",
-					geometry,
-					properties,
+		let updated: GeoJSONStoreFeatures | null = null;
+
+		if (geometry.type === "Polygon") {
+			updated = this.mutateFeature.updatePolygon({
+				featureId,
+				coordinateMutations: {
+					type: Mutations.Replace,
+					coordinates: [coordinates],
 				},
-				{
-					project: this.project,
-					unproject: this.unproject,
-					coordinatePrecision: this.coordinatePrecision,
+				context: {
 					updateType: UpdateTypes.Commit,
 				},
-			);
-			if (!validationResult.valid) {
-				return;
-			}
+			});
+		} else if (geometry.type === "LineString") {
+			updated = this.mutateFeature.updateLineString({
+				featureId,
+				coordinateMutations: {
+					type: Mutations.Replace,
+					coordinates: coordinates,
+				},
+				context: {
+					updateType: UpdateTypes.Commit,
+				},
+			});
+		}
+
+		if (!updated) {
+			return;
 		}
 
 		const deletePoints = [...this.midPoints.ids, ...this.selectionPoints.ids];
 
-		this.store.delete(deletePoints);
-
-		this.store.updateGeometry([
-			{
-				id: featureId,
-				geometry,
-			},
-		]);
+		this.mutateFeature.deleteFeatures(deletePoints);
 
 		if (properties.coordinatePointIds) {
 			this.coordinatePoints.createOrUpdate(featureId);
@@ -472,7 +482,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 			return;
 		}
 
-		const { mode } = this.store.getPropertiesCopy(featureId);
+		const { mode } = this.readFeature.getProperties(featureId);
 
 		// This will be undefined for points
 		const modeFlags = this.flags[mode as string];
@@ -503,13 +513,12 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 		// Select feature
 		this.selected = [featureId];
 
-		this.store.updateProperty([
-			{ id: featureId, property: SELECT_PROPERTIES.SELECTED, value: true },
-		]);
+		this.mutateFeature.setSelected(featureId);
+
 		this.onSelect(featureId);
 
 		// Get the clicked feature
-		const { type, coordinates } = this.store.getGeometryCopy(featureId);
+		const { type, coordinates } = this.readFeature.getGeometry(featureId);
 
 		if (type !== "LineString" && type !== "Polygon") {
 			return;
@@ -683,7 +692,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 
 		// If the selected feature is not draggable
 		// don't do anything
-		const properties = this.store.getPropertiesCopy(this.selected[0]);
+		const properties = this.readFeature.getProperties(this.selected[0]);
 		const modeFlags = this.flags[properties.mode as string];
 		const draggable =
 			modeFlags &&
@@ -803,7 +812,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 			return;
 		}
 
-		const properties = this.store.getPropertiesCopy(selectedId);
+		const properties = this.readFeature.getProperties(selectedId);
 		const modeFlags = this.flags[properties.mode as string];
 		const canSelfIntersect: boolean =
 			(modeFlags &&
@@ -950,7 +959,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 			if (nearbyMidPoint) {
 				return;
 			}
-			const geometry = this.store.getGeometryCopy<Point>(id);
+			const geometry = this.readFeature.getGeometry<Point>(id);
 			const distance = this.pixelDistance.measure(event, geometry.coordinates);
 
 			if (distance < this.pointerDistance) {
@@ -962,7 +971,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 		// TODO: Is there a cleaner way to handle prioritising
 		// dragging selection points?
 		this.selectionPoints.ids.forEach((id: FeatureId) => {
-			const geometry = this.store.getGeometryCopy<Point>(id);
+			const geometry = this.readFeature.getGeometry<Point>(id);
 			const distance = this.pixelDistance.measure(event, geometry.coordinates);
 			if (distance < this.pointerDistance) {
 				nearbyMidPoint = false;

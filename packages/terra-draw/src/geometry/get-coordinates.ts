@@ -1,5 +1,4 @@
 import { Position } from "geojson";
-import { GeoJSONStoreFeatures } from "../terra-draw";
 
 export function isPolygonArray(
 	coords: Position[] | Position[][],

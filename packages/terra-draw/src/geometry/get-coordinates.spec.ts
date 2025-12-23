@@ -31,16 +31,32 @@ describe("geometry/get-coordinates", () => {
 		});
 
 		it("returns false for an empty array", () => {
-			// Runtime behavior for an empty array (which is ambiguous at the type level).
 			const empty: unknown = [];
 			expect(isPolygonArray(empty as Position[] | Position[][])).toBe(false);
 		});
 
-		it("returns false for a nested array that doesn't have Position shape", () => {
-			// Example: [[[0,0]]] is not a valid `Position[][]` because
-			// the ring contains a single Position rather than an array of Positions.
-			const invalid: unknown = [[[0, 0]]];
+		it("returns false for a nested array that doesn't have the expected shape", () => {
+			const invalid: unknown = [[0, 0]];
 			expect(isPolygonArray(invalid as Position[] | Position[][])).toBe(false);
+		});
+
+		it("returns true for a polygon that includes multiple rings by considering the first ring", () => {
+			const polygonWithHole: Position[][] = [
+				[
+					[0, 0],
+					[4, 0],
+					[4, 4],
+					[0, 0],
+				],
+				[
+					[1, 1],
+					[2, 1],
+					[2, 2],
+					[1, 1],
+				],
+			];
+
+			expect(isPolygonArray(polygonWithHole)).toBe(true);
 		});
 	});
 

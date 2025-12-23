@@ -15,11 +15,17 @@ import {
 import { centroid } from "../../../geometry/centroid";
 import { rhumbBearing } from "../../../geometry/measure/rhumb-bearing";
 import { limitPrecision } from "../../../geometry/limit-decimal-precision";
-import { FeatureId } from "../../../store/store";
+import { FeatureId, GeoJSONStoreFeatures } from "../../../store/store";
 import { webMercatorCentroid } from "../../../geometry/web-mercator-centroid";
 import { lngLatToWebMercatorXY } from "../../../geometry/project/web-mercator";
 import { webMercatorBearing } from "../../../geometry/measure/bearing";
 import { CoordinatePointBehavior } from "./coordinate-point.behavior";
+import { ReadFeatureBehavior } from "../../read-feature.behavior";
+import {
+	MutateFeatureBehavior,
+	Mutations,
+	UpdateGeometry,
+} from "../../mutate-feature.behavior";
 
 export class RotateFeatureBehavior extends TerraDrawModeBehavior {
 	constructor(
@@ -27,6 +33,8 @@ export class RotateFeatureBehavior extends TerraDrawModeBehavior {
 		private readonly selectionPoints: SelectionPointBehavior,
 		private readonly midPoints: MidPointBehavior,
 		private readonly coordinatePoints: CoordinatePointBehavior,
+		private readonly readFeature: ReadFeatureBehavior,
+		private readonly mutateFeature: MutateFeatureBehavior,
 	) {
 		super(config);
 	}
@@ -43,15 +51,11 @@ export class RotateFeatureBehavior extends TerraDrawModeBehavior {
 		this.selectedGeometryCentroid = undefined;
 	}
 
-	rotate(
-		event: TerraDrawMouseEvent,
-		selectedId: FeatureId,
-		validateFeature?: Validation,
-	) {
+	rotate(event: TerraDrawMouseEvent, selectedId: FeatureId) {
 		if (!this.selectedGeometry) {
-			this.selectedGeometry = this.store.getGeometryCopy<LineString | Polygon>(
-				selectedId,
-			);
+			this.selectedGeometry = this.readFeature.getGeometry<
+				LineString | Polygon
+			>(selectedId);
 		}
 
 		const geometry = this.selectedGeometry;
@@ -64,7 +68,7 @@ export class RotateFeatureBehavior extends TerraDrawModeBehavior {
 		const mouseCoord = [event.lng, event.lat];
 
 		let bearing: number;
-		const feature = { type: "Feature", geometry, properties: {} } as
+		const updatedFeature = { type: "Feature", geometry, properties: {} } as
 			| Feature<Polygon>
 			| Feature<LineString>;
 
@@ -72,7 +76,8 @@ export class RotateFeatureBehavior extends TerraDrawModeBehavior {
 			// Cache the centroid of the selected geometry
 			// to avoid recalculating it on every cursor move
 			if (!this.selectedGeometryWebMercatorCentroid) {
-				this.selectedGeometryWebMercatorCentroid = webMercatorCentroid(feature);
+				this.selectedGeometryWebMercatorCentroid =
+					webMercatorCentroid(updatedFeature);
 			}
 
 			const cursorWebMercator = lngLatToWebMercatorXY(event.lng, event.lat);
@@ -93,7 +98,7 @@ export class RotateFeatureBehavior extends TerraDrawModeBehavior {
 
 			const angle = this.lastBearing - bearing;
 
-			transformRotateWebMercator(feature, -angle);
+			transformRotateWebMercator(updatedFeature, -angle);
 		} else if (this.config.projection === "globe") {
 			// Cache the centroid of the selected geometry
 			// to avoid recalculating it on every cursor move
@@ -115,7 +120,7 @@ export class RotateFeatureBehavior extends TerraDrawModeBehavior {
 
 			const angle = this.lastBearing - (bearing + 180);
 
-			transformRotate(feature, -angle);
+			transformRotate(updatedFeature, -angle);
 		} else {
 			throw new Error("Unsupported projection");
 		}
@@ -132,42 +137,44 @@ export class RotateFeatureBehavior extends TerraDrawModeBehavior {
 			coordinate[1] = limitPrecision(coordinate[1], this.coordinatePrecision);
 		});
 
-		const updatedMidPoints = this.midPoints.getUpdated(updatedCoords) || [];
+		const update = {
+			featureId: selectedId,
+			coordinateMutations: {
+				type: Mutations.Replace,
+				coordinates:
+					geometry.type === "Polygon" ? [updatedCoords] : updatedCoords,
+			},
+			context: {
+				updateType: UpdateTypes.Provisional as const,
+			},
+		};
 
-		const updatedSelectionPoints =
-			this.selectionPoints.getUpdated(updatedCoords) || [];
-
-		const updatedCoordinatePoints =
-			this.coordinatePoints.getUpdated(selectedId, updatedCoords) || [];
-
-		if (validateFeature) {
-			if (
-				!validateFeature(
-					{
-						id: selectedId,
-						type: "Feature",
-						geometry,
-						properties: {},
-					},
-					{
-						project: this.config.project,
-						unproject: this.config.unproject,
-						coordinatePrecision: this.config.coordinatePrecision,
-						updateType: UpdateTypes.Provisional,
-					},
-				)
-			) {
-				return false;
-			}
+		let updated: GeoJSONStoreFeatures<Polygon | LineString> | null = null;
+		if (updatedFeature.geometry.type === "Polygon") {
+			updated = this.mutateFeature.updatePolygon(
+				update as UpdateGeometry<Polygon>,
+			);
+		} else if (updatedFeature.geometry.type === "LineString") {
+			updated = this.mutateFeature.updateLineString(
+				update as UpdateGeometry<LineString>,
+			);
+		} else {
+			return;
 		}
 
-		// Issue the update to the selected feature
-		this.store.updateGeometry([
-			{ id: selectedId, geometry },
-			...updatedSelectionPoints,
-			...updatedMidPoints,
-			...updatedCoordinatePoints,
-		]);
+		if (!updated) {
+			return false;
+		}
+
+		const featureCoordinates = updated.geometry.coordinates;
+
+		// Perform the update to the midpoints and selection points
+		this.midPoints.updateAllInPlace({ featureCoordinates });
+		this.selectionPoints.updateAllInPlace({ featureCoordinates });
+		this.coordinatePoints.updateAllInPlace({
+			featureId: selectedId,
+			featureCoordinates,
+		});
 
 		if (this.projection === "web-mercator") {
 			this.lastBearing = bearing;

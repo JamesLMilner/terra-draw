@@ -14,6 +14,8 @@ import { CoordinatePointBehavior } from "./coordinate-point.behavior";
 import { CoordinateSnappingBehavior } from "../../coordinate-snapping.behavior";
 import { ClickBoundingBoxBehavior } from "../../click-bounding-box.behavior";
 import { LineSnappingBehavior } from "../../line-snapping.behavior";
+import { MutateFeatureBehavior } from "../../mutate-feature.behavior";
+import { ReadFeatureBehavior } from "../../read-feature.behavior";
 
 describe("DragCoordinateBehavior", () => {
 	const createLineString = (
@@ -41,30 +43,52 @@ describe("DragCoordinateBehavior", () => {
 	describe("constructor", () => {
 		it("constructs", () => {
 			const config = MockBehaviorConfig("test");
-			const selectionPointBehavior = new SelectionPointBehavior(config);
-			const coordinatePointBehavior = new CoordinatePointBehavior(config);
+			const mutateFeatureBehavior = new MutateFeatureBehavior(config, {
+				onFinish: jest.fn(),
 
+				validate: jest.fn(() => ({ valid: true })),
+			});
+			const readFeatureBehavior = new ReadFeatureBehavior(config);
+			const selectionPointBehavior = new SelectionPointBehavior(
+				config,
+				mutateFeatureBehavior,
+			);
 			const pixelDistanceBehavior = new PixelDistanceBehavior(config);
+			const coordinatePointBehavior = new CoordinatePointBehavior(
+				config,
+				readFeatureBehavior,
+				mutateFeatureBehavior,
+			);
+
+			const midpointBehavior = new MidPointBehavior(
+				config,
+				selectionPointBehavior,
+				coordinatePointBehavior,
+				mutateFeatureBehavior,
+				readFeatureBehavior,
+			);
+			const coordinateBehavior = new CoordinateSnappingBehavior(
+				config,
+				pixelDistanceBehavior,
+				new ClickBoundingBoxBehavior(config),
+			);
+
+			const lineSnappingBehavior = new LineSnappingBehavior(
+				config,
+				pixelDistanceBehavior,
+				new ClickBoundingBoxBehavior(config),
+			);
+
 			new DragCoordinateBehavior(
 				config,
 				pixelDistanceBehavior,
 				selectionPointBehavior,
-				new MidPointBehavior(
-					config,
-					selectionPointBehavior,
-					coordinatePointBehavior,
-				),
+				midpointBehavior,
 				coordinatePointBehavior,
-				new CoordinateSnappingBehavior(
-					config,
-					pixelDistanceBehavior,
-					new ClickBoundingBoxBehavior(config),
-				),
-				new LineSnappingBehavior(
-					config,
-					pixelDistanceBehavior,
-					new ClickBoundingBoxBehavior(config),
-				),
+				coordinateBehavior,
+				lineSnappingBehavior,
+				readFeatureBehavior,
+				mutateFeatureBehavior,
 			);
 		});
 	});
@@ -72,17 +96,32 @@ describe("DragCoordinateBehavior", () => {
 	describe("api", () => {
 		let config: BehaviorConfig;
 		let dragCoordinateBehavior: DragCoordinateBehavior;
+		let validate = jest.fn(() => ({ valid: true }));
 
 		beforeEach(() => {
 			config = MockBehaviorConfig("test");
-			const selectionPointBehavior = new SelectionPointBehavior(config);
+			const mutateFeatureBehavior = new MutateFeatureBehavior(config, {
+				onFinish: jest.fn(),
+				validate,
+			});
+			const readFeatureBehavior = new ReadFeatureBehavior(config);
+			const selectionPointBehavior = new SelectionPointBehavior(
+				config,
+				mutateFeatureBehavior,
+			);
 			const pixelDistanceBehavior = new PixelDistanceBehavior(config);
-			const coordinatePointBehavior = new CoordinatePointBehavior(config);
+			const coordinatePointBehavior = new CoordinatePointBehavior(
+				config,
+				readFeatureBehavior,
+				mutateFeatureBehavior,
+			);
 
 			const midpointBehavior = new MidPointBehavior(
 				config,
 				selectionPointBehavior,
 				coordinatePointBehavior,
+				mutateFeatureBehavior,
+				readFeatureBehavior,
 			);
 			const coordinateBehavior = new CoordinateSnappingBehavior(
 				config,
@@ -104,6 +143,8 @@ describe("DragCoordinateBehavior", () => {
 				coordinatePointBehavior,
 				coordinateBehavior,
 				lineSnappingBehavior,
+				readFeatureBehavior,
+				mutateFeatureBehavior,
 			);
 		});
 
@@ -159,12 +200,9 @@ describe("DragCoordinateBehavior", () => {
 			it("returns early if nothing is being dragged", () => {
 				jest.spyOn(config.store, "updateGeometry");
 
-				dragCoordinateBehavior.drag(
-					MockCursorEvent({ lng: 0, lat: 0 }),
-					true,
-					() => ({ valid: true }),
-					{ toCoordinate: false },
-				);
+				dragCoordinateBehavior.drag(MockCursorEvent({ lng: 0, lat: 0 }), true, {
+					toCoordinate: false,
+				});
 
 				expect(config.store.updateGeometry).toHaveBeenCalledTimes(0);
 			});
@@ -173,46 +211,41 @@ describe("DragCoordinateBehavior", () => {
 				createStorePoint(config);
 				jest.spyOn(config.store, "updateGeometry");
 
-				dragCoordinateBehavior.drag(
-					MockCursorEvent({ lng: 0, lat: 0 }),
-					true,
-					() => ({ valid: true }),
-					{ toCoordinate: false },
-				);
+				dragCoordinateBehavior.drag(MockCursorEvent({ lng: 0, lat: 0 }), true, {
+					toCoordinate: false,
+				});
 
 				expect(config.store.updateGeometry).toHaveBeenCalledTimes(0);
 			});
 
 			it("validation returning false means updates are not called", () => {
+				validate.mockImplementationOnce(() => ({ valid: false }));
+
 				const id = createStorePolygon(config);
 
 				dragCoordinateBehavior.startDragging(id, 0);
 
 				jest.spyOn(config.store, "updateGeometry");
 
-				dragCoordinateBehavior.drag(
-					MockCursorEvent({ lng: 0, lat: 0 }),
-					true,
-					() => ({ valid: false }),
-					{ toCoordinate: false },
-				);
+				dragCoordinateBehavior.drag(MockCursorEvent({ lng: 0, lat: 0 }), true, {
+					toCoordinate: false,
+				});
 
 				expect(config.store.updateGeometry).toHaveBeenCalledTimes(0);
 			});
 
 			it("validation returning true means updates are called", () => {
+				validate.mockImplementationOnce(() => ({ valid: true }));
+
 				const id = createStorePolygon(config);
 
 				dragCoordinateBehavior.startDragging(id, 0);
 
 				jest.spyOn(config.store, "updateGeometry");
 
-				dragCoordinateBehavior.drag(
-					MockCursorEvent({ lng: 0, lat: 0 }),
-					true,
-					() => ({ valid: true }),
-					{ toCoordinate: false },
-				);
+				dragCoordinateBehavior.drag(MockCursorEvent({ lng: 0, lat: 0 }), true, {
+					toCoordinate: false,
+				});
 
 				expect(config.store.updateGeometry).toHaveBeenCalledTimes(1);
 			});
@@ -224,12 +257,9 @@ describe("DragCoordinateBehavior", () => {
 
 				jest.spyOn(config.store, "updateGeometry");
 
-				dragCoordinateBehavior.drag(
-					MockCursorEvent({ lng: 0, lat: 0 }),
-					true,
-					() => ({ valid: true }),
-					{ toCoordinate: false },
-				);
+				dragCoordinateBehavior.drag(MockCursorEvent({ lng: 0, lat: 0 }), true, {
+					toCoordinate: false,
+				});
 
 				expect(config.store.updateGeometry).toHaveBeenCalledTimes(1);
 			});
@@ -256,7 +286,7 @@ describe("DragCoordinateBehavior", () => {
 				dragCoordinateBehavior.drag(
 					MockCursorEvent({ lng: 0.5, lat: 0.5 }),
 					true,
-					() => ({ valid: true }),
+
 					{ toCoordinate: true },
 				);
 
@@ -297,7 +327,6 @@ describe("DragCoordinateBehavior", () => {
 				dragCoordinateBehavior.drag(
 					MockCursorEvent({ lng: 0.5, lat: 0.5 }),
 					true,
-					() => ({ valid: true }),
 					{ toCoordinate: true },
 				);
 
@@ -333,7 +362,7 @@ describe("DragCoordinateBehavior", () => {
 				dragCoordinateBehavior.drag(
 					MockCursorEvent({ lng: 0.5, lat: 0.5 }),
 					true,
-					() => ({ valid: true }),
+
 					{ toCoordinate: false },
 				);
 
@@ -374,7 +403,7 @@ describe("DragCoordinateBehavior", () => {
 				dragCoordinateBehavior.drag(
 					MockCursorEvent({ lng: 0.5, lat: 0.5 }),
 					true,
-					() => ({ valid: true }),
+
 					{ toLine: true },
 				);
 
@@ -418,7 +447,7 @@ describe("DragCoordinateBehavior", () => {
 				dragCoordinateBehavior.drag(
 					MockCursorEvent({ lng: 0.5, lat: 0.5 }),
 					true,
-					() => ({ valid: true }),
+
 					{ toCoordinate: false },
 				);
 
@@ -448,12 +477,9 @@ describe("DragCoordinateBehavior", () => {
 
 				dragCoordinateBehavior.startDragging(id, 0);
 
-				dragCoordinateBehavior.drag(
-					MockCursorEvent({ lng: 0, lat: 0 }),
-					true,
-					() => ({ valid: true }),
-					{ toCoordinate: false },
-				);
+				dragCoordinateBehavior.drag(MockCursorEvent({ lng: 0, lat: 0 }), true, {
+					toCoordinate: false,
+				});
 
 				expect(config.store.updateGeometry).toHaveBeenCalledTimes(1);
 			});
@@ -476,7 +502,7 @@ describe("DragCoordinateBehavior", () => {
 				dragCoordinateBehavior.drag(
 					MockCursorEvent({ lng: 100, lat: 0 }),
 					false,
-					() => ({ valid: true }),
+
 					{ toCoordinate: false },
 				);
 				expect(config.store.updateGeometry).toHaveBeenCalledTimes(0);
@@ -497,7 +523,6 @@ describe("DragCoordinateBehavior", () => {
 				dragCoordinateBehavior.drag(
 					MockCursorEvent({ lng: 100, lat: 0 }),
 					false,
-					() => ({ valid: true }),
 					{ toCoordinate: false },
 				);
 				expect(config.store.updateGeometry).toHaveBeenCalledTimes(0);

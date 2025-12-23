@@ -11,11 +11,7 @@ export class ScaleFeatureBehavior extends TerraDrawModeBehavior {
 		super(config);
 	}
 
-	public scale(
-		event: TerraDrawMouseEvent,
-		featureId: FeatureId,
-		validation?: Validation,
-	) {
+	public scale(event: TerraDrawMouseEvent, featureId: FeatureId) {
 		if (!this.dragCoordinateResizeBehavior.isDragging()) {
 			const index = this.dragCoordinateResizeBehavior.getDraggableIndex(
 				event,
@@ -24,7 +20,7 @@ export class ScaleFeatureBehavior extends TerraDrawModeBehavior {
 			this.dragCoordinateResizeBehavior.startDragging(featureId, index);
 		}
 
-		this.dragCoordinateResizeBehavior.drag(event, "center-fixed", validation);
+		this.dragCoordinateResizeBehavior.drag(event, "center-fixed");
 	}
 
 	public reset() {

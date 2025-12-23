@@ -15,6 +15,11 @@ import { FeatureId, GeoJSONStoreFeatures } from "../../../store/store";
 import { CoordinatePointBehavior } from "./coordinate-point.behavior";
 import { CoordinateSnappingBehavior } from "../../coordinate-snapping.behavior";
 import { LineSnappingBehavior } from "../../line-snapping.behavior";
+import { ReadFeatureBehavior } from "../../read-feature.behavior";
+import {
+	MutateFeatureBehavior,
+	Mutations,
+} from "../../mutate-feature.behavior";
 
 export class DragCoordinateBehavior extends TerraDrawModeBehavior {
 	constructor(
@@ -25,6 +30,8 @@ export class DragCoordinateBehavior extends TerraDrawModeBehavior {
 		private readonly coordinatePoints: CoordinatePointBehavior,
 		private readonly coordinateSnapping: CoordinateSnappingBehavior,
 		private readonly lineSnapping: LineSnappingBehavior,
+		private readonly readFeature: ReadFeatureBehavior,
+		private readonly mutateFeature: MutateFeatureBehavior,
 	) {
 		super(config);
 	}
@@ -86,7 +93,7 @@ export class DragCoordinateBehavior extends TerraDrawModeBehavior {
 		event: TerraDrawMouseEvent,
 		selectedId: FeatureId,
 	): number {
-		const geometry = this.store.getGeometryCopy(selectedId);
+		const geometry = this.readFeature.getGeometry(selectedId);
 		const closestCoordinate = this.getClosestCoordinate(event, geometry);
 
 		// No coordinate was within the pointer distance
@@ -140,7 +147,7 @@ export class DragCoordinateBehavior extends TerraDrawModeBehavior {
 				currentId: draggedFeature.id,
 				getCurrentGeometrySnapshot: draggedFeature.id
 					? () =>
-							this.store.getGeometryCopy<Polygon>(
+							this.readFeature.getGeometry<Polygon>(
 								draggedFeature.id as FeatureId,
 							)
 					: () => null,
@@ -159,7 +166,6 @@ export class DragCoordinateBehavior extends TerraDrawModeBehavior {
 	drag(
 		event: TerraDrawMouseEvent,
 		allowSelfIntersection: boolean,
-		validateFeature: Validation,
 		snapping: Snapping,
 	): boolean {
 		const draggedFeatureId = this.draggedCoordinate.id;
@@ -169,10 +175,10 @@ export class DragCoordinateBehavior extends TerraDrawModeBehavior {
 		}
 
 		const index = this.draggedCoordinate.index;
-		const geometry = this.store.getGeometryCopy(draggedFeatureId);
-		const properties = this.store.getPropertiesCopy(draggedFeatureId);
+		const geometry = this.readFeature.getGeometry(draggedFeatureId);
+		const properties = this.readFeature.getProperties(draggedFeatureId);
 
-		const geomCoordinates = (
+		const updatedCoordinates = (
 			geometry.type === "LineString"
 				? geometry.coordinates
 				: geometry.coordinates[0]
@@ -180,7 +186,7 @@ export class DragCoordinateBehavior extends TerraDrawModeBehavior {
 
 		const isFirstOrLastPolygonCoord =
 			geometry.type === "Polygon" &&
-			(index === geomCoordinates.length - 1 || index === 0);
+			(index === updatedCoordinates.length - 1 || index === 0);
 
 		const draggedFeature: GeoJSONStoreFeatures = {
 			type: "Feature",
@@ -210,26 +216,12 @@ export class DragCoordinateBehavior extends TerraDrawModeBehavior {
 		// We want to update the actual Polygon/LineString itself -
 		// for Polygons we want the first and last coordinates to match
 		if (isFirstOrLastPolygonCoord) {
-			const lastCoordIndex = geomCoordinates.length - 1;
-			geomCoordinates[0] = updatedCoordinate;
-			geomCoordinates[lastCoordIndex] = updatedCoordinate;
+			const lastCoordIndex = updatedCoordinates.length - 1;
+			updatedCoordinates[0] = updatedCoordinate;
+			updatedCoordinates[lastCoordIndex] = updatedCoordinate;
 		} else {
-			geomCoordinates[index] = updatedCoordinate;
+			updatedCoordinates[index] = updatedCoordinate;
 		}
-
-		const updatedSelectionPoint = this.selectionPoints.getOneUpdated(
-			index,
-			updatedCoordinate,
-		);
-
-		const updatedSelectionPoints = updatedSelectionPoint
-			? [updatedSelectionPoint]
-			: [];
-
-		const updatedMidPoints = this.midPoints.getUpdated(geomCoordinates) || [];
-
-		const updatedCoordinatePoints =
-			this.coordinatePoints.getUpdated(draggedFeatureId, geomCoordinates) || [];
 
 		if (
 			geometry.type !== "Point" &&
@@ -243,31 +235,43 @@ export class DragCoordinateBehavior extends TerraDrawModeBehavior {
 			return false;
 		}
 
-		if (validateFeature) {
-			const validationResult = validateFeature(draggedFeature, {
-				project: this.config.project,
-				unproject: this.config.unproject,
-				coordinatePrecision: this.config.coordinatePrecision,
-				updateType: UpdateTypes.Provisional,
-			});
+		const featureId = draggedFeatureId as FeatureId;
 
-			if (!validationResult.valid) {
-				return false;
-			}
+		let updated: GeoJSONStoreFeatures | null = null;
+
+		if (geometry.type === "Polygon") {
+			updated = this.mutateFeature.updatePolygon({
+				featureId,
+				coordinateMutations: {
+					type: Mutations.Replace,
+					coordinates: [updatedCoordinates],
+				},
+				context: {
+					updateType: UpdateTypes.Provisional as const,
+				},
+			});
+		} else if (geometry.type === "LineString") {
+			updated = this.mutateFeature.updateLineString({
+				featureId,
+				coordinateMutations: {
+					type: Mutations.Replace,
+					coordinates: updatedCoordinates,
+				},
+				context: {
+					updateType: UpdateTypes.Provisional as const,
+				},
+			});
 		}
 
-		// Apply all the updates
-		this.store.updateGeometry([
-			// Update feature
-			{
-				id: draggedFeatureId,
-				geometry: geometry,
-			},
-			// Update selection and mid points
-			...updatedSelectionPoints,
-			...updatedMidPoints,
-			...updatedCoordinatePoints,
-		]);
+		if (!updated) {
+			return false;
+		}
+
+		// Perform the update to the midpoints and selection points
+		this.midPoints.updateOneAtIndex(index, updatedCoordinates);
+		this.midPoints.updateOneAtIndex(index + 1, updatedCoordinates);
+		this.selectionPoints.updateOneAtIndex(index, updatedCoordinate);
+		this.coordinatePoints.updateOneAtIndex(featureId, index, updatedCoordinate);
 
 		return true;
 	}

@@ -3,7 +3,9 @@ import { MockBehaviorConfig } from "../../../test/mock-behavior-config";
 import { MockCursorEvent } from "../../../test/mock-cursor-event";
 import { BehaviorConfig } from "../../base.behavior";
 import { ClickBoundingBoxBehavior } from "../../click-bounding-box.behavior";
+import { MutateFeatureBehavior } from "../../mutate-feature.behavior";
 import { PixelDistanceBehavior } from "../../pixel-distance.behavior";
+import { ReadFeatureBehavior } from "../../read-feature.behavior";
 import { CoordinatePointBehavior } from "./coordinate-point.behavior";
 import { DragFeatureBehavior } from "./drag-feature.behavior";
 import { FeatureAtPointerEventBehavior } from "./feature-at-pointer-event.behavior";
@@ -14,18 +16,33 @@ describe("DragFeatureBehavior", () => {
 	describe("constructor", () => {
 		it("constructs", () => {
 			const config = MockBehaviorConfig("test");
-			const selectionPointBehavior = new SelectionPointBehavior(config);
+			const readFeatureBehavior = new ReadFeatureBehavior(config);
+			const mutateFeatureBehavior = new MutateFeatureBehavior(config, {
+				onFinish: jest.fn(),
+
+				validate: jest.fn(() => ({ valid: true })),
+			});
+			const selectionPointBehavior = new SelectionPointBehavior(
+				config,
+				mutateFeatureBehavior,
+			);
 			const featureAtPointerEventBehavior = new FeatureAtPointerEventBehavior(
 				config,
 				new ClickBoundingBoxBehavior(config),
 				new PixelDistanceBehavior(config),
 			);
-			const coordinatePointBehavior = new CoordinatePointBehavior(config);
+			const coordinatePointBehavior = new CoordinatePointBehavior(
+				config,
+				readFeatureBehavior,
+				mutateFeatureBehavior,
+			);
 
 			const midpointBehavior = new MidPointBehavior(
 				config,
 				selectionPointBehavior,
 				coordinatePointBehavior,
+				mutateFeatureBehavior,
+				readFeatureBehavior,
 			);
 
 			new DragFeatureBehavior(
@@ -34,6 +51,8 @@ describe("DragFeatureBehavior", () => {
 				selectionPointBehavior,
 				midpointBehavior,
 				coordinatePointBehavior,
+				readFeatureBehavior,
+				mutateFeatureBehavior,
 			);
 		});
 	});
@@ -41,24 +60,41 @@ describe("DragFeatureBehavior", () => {
 	describe.each(["web-mercator", "globe"])("api", (projection) => {
 		let config: BehaviorConfig;
 		let dragFeatureBehavior: DragFeatureBehavior;
+		let validate: jest.Mock;
 
 		beforeEach(() => {
+			validate = jest.fn(() => ({ valid: true }));
 			config = MockBehaviorConfig(
 				"test",
 				projection as "web-mercator" | "globe",
 			);
-			const selectionPointBehavior = new SelectionPointBehavior(config);
+			const mutateFeatureBehavior = new MutateFeatureBehavior(config, {
+				onFinish: jest.fn(),
+
+				validate: validate,
+			});
+			const readFeatureBehavior = new ReadFeatureBehavior(config);
+			const selectionPointBehavior = new SelectionPointBehavior(
+				config,
+				mutateFeatureBehavior,
+			);
 			const featureAtPointerEventBehavior = new FeatureAtPointerEventBehavior(
 				config,
 				new ClickBoundingBoxBehavior(config),
 				new PixelDistanceBehavior(config),
 			);
-			const coordinatePointBehavior = new CoordinatePointBehavior(config);
+			const coordinatePointBehavior = new CoordinatePointBehavior(
+				config,
+				readFeatureBehavior,
+				mutateFeatureBehavior,
+			);
 
 			const midpointBehavior = new MidPointBehavior(
 				config,
 				selectionPointBehavior,
 				coordinatePointBehavior,
+				mutateFeatureBehavior,
+				readFeatureBehavior,
 			);
 
 			dragFeatureBehavior = new DragFeatureBehavior(
@@ -67,6 +103,8 @@ describe("DragFeatureBehavior", () => {
 				selectionPointBehavior,
 				midpointBehavior,
 				coordinatePointBehavior,
+				readFeatureBehavior,
+				mutateFeatureBehavior,
 			);
 		});
 
@@ -75,7 +113,6 @@ describe("DragFeatureBehavior", () => {
 				const id = createStorePolygon(config);
 
 				jest.spyOn(config.store, "updateGeometry");
-				jest.spyOn(config.store, "getGeometryCopy");
 
 				const event = MockCursorEvent({ lat: 0.5, lng: 0.5 });
 				const canDrag = dragFeatureBehavior.canDrag(event, id);
@@ -87,7 +124,6 @@ describe("DragFeatureBehavior", () => {
 				const id = createStorePolygon(config);
 
 				jest.spyOn(config.store, "updateGeometry");
-				jest.spyOn(config.store, "getGeometryCopy");
 
 				const event = MockCursorEvent({ lat: 89, lng: 89 });
 				const canDrag = dragFeatureBehavior.canDrag(event, id);
@@ -101,11 +137,9 @@ describe("DragFeatureBehavior", () => {
 				const event = MockCursorEvent({ lat: 0.5, lng: 0.5 });
 
 				jest.spyOn(config.store, "updateGeometry");
-				jest.spyOn(config.store, "getGeometryCopy");
 
 				dragFeatureBehavior.drag(event);
 
-				expect(config.store.getGeometryCopy).toHaveBeenCalledTimes(0);
 				expect(config.store.updateGeometry).toHaveBeenCalledTimes(0);
 			});
 
@@ -116,11 +150,9 @@ describe("DragFeatureBehavior", () => {
 				dragFeatureBehavior.startDragging(event, id);
 
 				jest.spyOn(config.store, "updateGeometry");
-				jest.spyOn(config.store, "getGeometryCopy");
 
 				dragFeatureBehavior.drag(MockCursorEvent({ lng: 0, lat: 0 }));
 
-				expect(config.store.getGeometryCopy).toHaveBeenCalledTimes(1);
 				expect(config.store.updateGeometry).toHaveBeenCalledTimes(1);
 
 				expect(config.store.updateGeometry).not.toHaveBeenCalledWith({
@@ -141,19 +173,16 @@ describe("DragFeatureBehavior", () => {
 			});
 
 			it("validation returning false does not update the polygon to the dragged position", () => {
+				validate.mockImplementation(() => ({ valid: false }));
 				const id = createStorePolygon(config);
 				const event = MockCursorEvent({ lat: 0.5, lng: 0.5 });
 
 				dragFeatureBehavior.startDragging(event, id);
 
 				jest.spyOn(config.store, "updateGeometry");
-				jest.spyOn(config.store, "getGeometryCopy");
 
-				dragFeatureBehavior.drag(MockCursorEvent({ lng: 0, lat: 0 }), () => ({
-					valid: false,
-				}));
+				dragFeatureBehavior.drag(MockCursorEvent({ lng: 0, lat: 0 }));
 
-				expect(config.store.getGeometryCopy).toHaveBeenCalledTimes(1);
 				expect(config.store.updateGeometry).toHaveBeenCalledTimes(0);
 			});
 
@@ -164,13 +193,9 @@ describe("DragFeatureBehavior", () => {
 				dragFeatureBehavior.startDragging(event, id);
 
 				jest.spyOn(config.store, "updateGeometry");
-				jest.spyOn(config.store, "getGeometryCopy");
 
-				dragFeatureBehavior.drag(MockCursorEvent({ lng: 0, lat: 0 }), () => ({
-					valid: true,
-				}));
+				dragFeatureBehavior.drag(MockCursorEvent({ lng: 0, lat: 0 }));
 
-				expect(config.store.getGeometryCopy).toHaveBeenCalledTimes(1);
 				expect(config.store.updateGeometry).toHaveBeenCalledTimes(1);
 			});
 		});

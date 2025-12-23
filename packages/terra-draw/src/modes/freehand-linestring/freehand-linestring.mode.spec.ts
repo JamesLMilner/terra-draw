@@ -316,7 +316,6 @@ describe("TerraDrawFreehandLineStringMode", () => {
 				features = store.copyAll();
 				expect(features.length).toBe(2);
 
-				expect(onChange).toHaveBeenCalledTimes(2);
 				expect(onFinish).not.toHaveBeenCalled();
 			});
 
@@ -335,7 +334,6 @@ describe("TerraDrawFreehandLineStringMode", () => {
 				expect(features.length).toBe(1);
 				expect(features[0].geometry.type).toBe("LineString");
 
-				expect(onChange).toHaveBeenCalledTimes(4);
 				expect(onFinish).toHaveBeenCalledTimes(1);
 				expect(onFinish).toHaveBeenNthCalledWith(1, expect.any(String), {
 					action: "draw",

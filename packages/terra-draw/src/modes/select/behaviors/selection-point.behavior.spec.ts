@@ -1,4 +1,9 @@
+import { Position } from "geojson";
+import { COMMON_PROPERTIES, SELECT_PROPERTIES } from "../../../common";
 import { MockBehaviorConfig } from "../../../test/mock-behavior-config";
+import { BehaviorConfig } from "../../base.behavior";
+import { MutateFeatureBehavior } from "../../mutate-feature.behavior";
+import { ReadFeatureBehavior } from "../../read-feature.behavior";
 import { SelectionPointBehavior } from "./selection-point.behavior";
 
 describe("SelectionPointBehavior", () => {
@@ -7,44 +12,56 @@ describe("SelectionPointBehavior", () => {
 	);
 
 	const isUUIDV4 = (received: string) => UUIDV4.test(received);
+	let selectionPointBehavior: SelectionPointBehavior;
+	let config: BehaviorConfig;
 
 	describe("constructor", () => {
 		it("constructs", () => {
-			new SelectionPointBehavior(MockBehaviorConfig("test"));
+			config = MockBehaviorConfig("test");
+			const mutateFeatureBehavior = new MutateFeatureBehavior(config, {
+				onFinish: jest.fn(),
+
+				validate: jest.fn(() => ({ valid: true })),
+			});
+			selectionPointBehavior = new SelectionPointBehavior(
+				config,
+				mutateFeatureBehavior,
+			);
 		});
 	});
 
 	describe("api", () => {
-		it("get ids", () => {
-			const selectionPointBehavior = new SelectionPointBehavior(
-				MockBehaviorConfig("test"),
-			);
+		beforeEach(() => {
+			config = MockBehaviorConfig("test");
+			const mutateFeatureBehavior = new MutateFeatureBehavior(config, {
+				onFinish: jest.fn(),
 
+				validate: jest.fn(() => ({ valid: true })),
+			});
+			selectionPointBehavior = new SelectionPointBehavior(
+				config,
+				mutateFeatureBehavior,
+			);
+		});
+
+		it("get ids", () => {
 			expect(selectionPointBehavior.ids).toStrictEqual([]);
 		});
 
 		it("set ids fails", () => {
-			const selectionPointBehavior = new SelectionPointBehavior(
-				MockBehaviorConfig("test"),
-			);
-
 			selectionPointBehavior.ids = ["test"];
 
 			expect(selectionPointBehavior.ids).toStrictEqual([]);
 		});
 
 		it("create for Polygon", () => {
-			const config = MockBehaviorConfig("test");
-			const selectionPointBehavior = new SelectionPointBehavior(config);
-
-			selectionPointBehavior.create(
-				[
+			selectionPointBehavior.create({
+				featureCoordinates: [
 					[0, 0],
 					[0, 1],
 				],
-				"LineString",
-				"id",
-			);
+				featureId: "id",
+			});
 
 			expect(selectionPointBehavior.ids.length).toBe(2);
 			selectionPointBehavior.ids.forEach((id) =>
@@ -61,21 +78,15 @@ describe("SelectionPointBehavior", () => {
 		});
 
 		it("delete", () => {
-			const selectionPointBehavior = new SelectionPointBehavior(
-				MockBehaviorConfig("test"),
-			);
-
-			selectionPointBehavior.create(
-				[
+			selectionPointBehavior.create({
+				featureCoordinates: [
 					[0, 0],
 					[0, 1],
 					[1, 1],
 					[1, 0],
-					[0, 0],
 				],
-				"Polygon",
-				"id",
-			);
+				featureId: "id",
+			});
 
 			expect(selectionPointBehavior.ids.length).toBe(4);
 			selectionPointBehavior.delete();
@@ -84,136 +95,136 @@ describe("SelectionPointBehavior", () => {
 
 		describe("getUpdated", () => {
 			it("should return empty array if trying to get updated coordinates when non exist", () => {
-				const config = MockBehaviorConfig("test");
-
-				const selectionPointBehavior = new SelectionPointBehavior(config);
-
-				const result = selectionPointBehavior.getUpdated([
-					[0, 0],
-					[0, 1],
-					[1, 1],
-					[1, 0],
-				]);
+				const result = selectionPointBehavior.updateAllInPlace({
+					featureCoordinates: [
+						[0, 0],
+						[0, 1],
+						[1, 1],
+						[1, 0],
+					],
+				});
 
 				expect(result).toBe(undefined);
 			});
 
 			it("should get updated coordinates if lengths match for Polygon", () => {
-				const config = MockBehaviorConfig("test");
-
-				const selectionPointBehavior = new SelectionPointBehavior(config);
-
-				selectionPointBehavior.create(
-					[
-						[0, 0],
-						[0, 1],
-						[1, 1],
-						[1, 0],
-						[0, 0],
+				selectionPointBehavior.create({
+					featureCoordinates: [
+						[
+							[0, 0],
+							[0, 1],
+							[1, 1],
+							[1, 0],
+							[0, 0],
+						],
 					],
-					"Polygon",
-					"id",
+					featureId: "id",
+				});
+
+				const featureCoordinatesUpdated = [
+					[0, 0],
+					[0, 2],
+					[2, 2],
+					[2, 0],
+					[0, 0],
+				] as Position[];
+
+				selectionPointBehavior.updateAllInPlace({
+					featureCoordinates: [featureCoordinatesUpdated],
+				});
+
+				const selectionPoints = config.store.copyAllWhere((properties) =>
+					Boolean(properties[SELECT_PROPERTIES.SELECTION_POINT]),
 				);
 
-				const result = selectionPointBehavior.getUpdated([
-					[2, 2],
-					[2, 3],
-					[2, 2],
-					[2, 3],
-				]);
+				expect(Array.isArray(selectionPoints)).toBe(true);
 
-				expect(Array.isArray(result)).toBe(true);
-
-				(result as any[]).forEach((point, i) => {
-					expect(isUUIDV4(point.id as string));
-
-					const properties = config.store.getPropertiesCopy(point.id);
-
-					expect(properties.mode).toBe("test");
-					expect(properties.index).toBe(i);
-					expect(properties.selectionPoint).toBe(true);
-					expect(properties.selectionPointFeatureId).toBe("id");
-
-					expect(point.geometry.type).toBe("Point");
-					expect(point.geometry.coordinates).toStrictEqual([
-						expect.any(Number),
-						expect.any(Number),
-					]);
-				});
+				expect(selectionPoints.length).toBe(4);
+				expect(
+					selectionPoints.every(
+						({ geometry }, i) =>
+							geometry.type === "Point" &&
+							geometry.coordinates.toString() ===
+								featureCoordinatesUpdated[i].toString(),
+					),
+				).toBe(true);
 			});
 
 			it("should get updated coordinates if lengths match for LineString", () => {
-				const config = MockBehaviorConfig("test");
-
-				const selectionPointBehavior = new SelectionPointBehavior(config);
-
-				selectionPointBehavior.create(
-					[
+				selectionPointBehavior.create({
+					featureCoordinates: [
 						[0, 0],
 						[0, 1],
 						[1, 1],
 						[1, 0],
 					],
-					"LineString",
-					"id",
+					featureId: "id",
+				});
+
+				const featureCoordinatesUpdated = [
+					[2, 2],
+					[2, 3],
+					[2, 2],
+					[2, 3],
+				] as Position[];
+
+				selectionPointBehavior.updateAllInPlace({
+					featureCoordinates: [
+						[2, 2],
+						[2, 3],
+						[2, 2],
+						[2, 3],
+					],
+				});
+
+				const selectionPoints = config.store.copyAllWhere((properties) =>
+					Boolean(properties[SELECT_PROPERTIES.SELECTION_POINT]),
 				);
 
-				const result = selectionPointBehavior.getUpdated([
-					[2, 2],
-					[2, 3],
-					[2, 2],
-					[2, 3],
-				]);
+				expect(Array.isArray(selectionPoints)).toBe(true);
 
-				expect(Array.isArray(result)).toBe(true);
-
-				(result as any[]).forEach((point, i) => {
-					expect(isUUIDV4(point.id as string));
-
-					const properties = config.store.getPropertiesCopy(point.id);
-
-					expect(properties.mode).toBe("test");
-					expect(properties.index).toBe(i);
-					expect(properties.selectionPoint).toBe(true);
-					expect(properties.selectionPointFeatureId).toBe("id");
-
-					expect(point.geometry.type).toBe("Point");
-					expect(point.geometry.coordinates).toStrictEqual([
-						expect.any(Number),
-						expect.any(Number),
-					]);
-				});
+				expect(selectionPoints.length).toBe(4);
+				expect(
+					selectionPoints.every(
+						({ geometry }, i) =>
+							geometry.type === "Point" &&
+							geometry.coordinates.toString() ===
+								featureCoordinatesUpdated[i].toString(),
+					),
+				).toBe(true);
 			});
 		});
 
 		describe("getOneUpdated", () => {
 			it("should return undefined if trying to get updated coordinates when non exist", () => {
-				const config = MockBehaviorConfig("test");
-
-				const selectionPointBehavior = new SelectionPointBehavior(config);
-
-				const result = selectionPointBehavior.getOneUpdated(0, [0, 1]);
+				const result = selectionPointBehavior.updateOneAtIndex(0, [0, 1]);
 				expect(result).toBe(undefined);
 			});
 
-			it("should get updated coordinates index exists", () => {
-				const config = MockBehaviorConfig("test");
-
-				const selectionPointBehavior = new SelectionPointBehavior(config);
-
-				selectionPointBehavior.create(
-					[
+			it("should update coordinates if index exists", () => {
+				selectionPointBehavior.create({
+					featureCoordinates: [
 						[0, 0],
 						[0, 1],
 						[1, 1],
 						[1, 0],
-						[0, 0],
 					],
-					"Polygon",
-					"id",
+					featureId: "id",
+				});
+
+				selectionPointBehavior.updateOneAtIndex(0, [2, 2]);
+
+				const selectionPoints = config.store.copyAllWhere((properties) =>
+					Boolean(properties[SELECT_PROPERTIES.SELECTION_POINT]),
 				);
 
-				const result = selectionPointBehavior.getOneUpdated(0, [2, 2]);
+				expect(Array.isArray(selectionPoints)).toBe(true);
+
+				const result = selectionPoints.find(
+					({ properties }) =>
+						properties.index === 0 &&
+						properties[SELECT_PROPERTIES.SELECTION_POINT] === true,
+				);
 
 				expect(result).not.toBe(undefined);
 				expect(result && isUUIDV4(result.id as string)).toBe(true);

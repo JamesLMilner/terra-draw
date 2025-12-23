@@ -265,10 +265,10 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 				});
 				this.currentId = createdId;
 
-				this.closingPointId = this.mutateFeature.createGuidancePoint(
-					[event.lng, event.lat],
-					COMMON_PROPERTIES.CLOSING_POINT,
-				);
+				this.closingPointId = this.mutateFeature.createGuidancePoint({
+					coordinate: [event.lng, event.lat],
+					type: COMMON_PROPERTIES.CLOSING_POINT,
+				});
 
 				this.canClose = true;
 
@@ -428,7 +428,6 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 		this.readFeature = new ReadFeatureBehavior(config);
 		this.mutateFeature = new MutateFeatureBehavior(config, {
 			validate: this.validate,
-			onUpdate: ({ id }) => {},
 			onFinish: (featureId, context) => {
 				this.onFinish(featureId, {
 					mode: this.mode,

@@ -9,6 +9,10 @@ export class ReadFeatureBehavior extends TerraDrawModeBehavior {
 		super(config);
 	}
 
+	public getGeometryType(featureId: FeatureId) {
+		return this.store.getGeometryCopy(featureId).type;
+	}
+
 	public coordinateAtIndexIsIdentical({
 		featureId,
 		newCoordinate,
@@ -65,5 +69,9 @@ export class ReadFeatureBehavior extends TerraDrawModeBehavior {
 
 	public getProperties(featureId: FeatureId) {
 		return this.store.getPropertiesCopy(featureId);
+	}
+
+	public hasFeature(featureId: FeatureId) {
+		return this.store.has(featureId);
 	}
 }

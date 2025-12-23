@@ -120,7 +120,7 @@ export class TerraDrawAngledRectangleMode extends TerraDrawBaseDrawMode<PolygonS
 			propertyMutations: {
 				[COMMON_PROPERTIES.CURRENTLY_DRAWING]: undefined,
 			},
-			context: { updateType: UpdateTypes.Finish } as any,
+			context: { updateType: UpdateTypes.Finish, action: "draw" },
 		});
 
 		if (!updated) {
@@ -180,8 +180,7 @@ export class TerraDrawAngledRectangleMode extends TerraDrawBaseDrawMode<PolygonS
 	): CoordinateMutation[] {
 		// We must add a very small epsilon value so that Mapbox GL
 		// renders the polygon - There might be a cleaner solution?
-		const epsilon = 1 / Math.pow(10, this.coordinatePrecision - 1);
-		const offset = Math.max(0.000001, epsilon);
+		const offset = this.mutateFeature.epsilonOffset();
 
 		return [
 			{
@@ -472,7 +471,6 @@ export class TerraDrawAngledRectangleMode extends TerraDrawBaseDrawMode<PolygonS
 		this.readFeature = new ReadFeatureBehavior(config);
 		this.mutateFeature = new MutateFeatureBehavior(config, {
 			validate: this.validate,
-			onUpdate: ({ id }) => {},
 			onFinish: (featureId, context) => {
 				this.onFinish(featureId, {
 					mode: this.mode,

@@ -1,8 +1,9 @@
-import { LineString, Point, Polygon, Position } from "geojson";
+import { Position } from "geojson";
 import { BehaviorConfig, TerraDrawModeBehavior } from "../../base.behavior";
-import { getCoordinatesAsPoints } from "../../../geometry/get-coordinates-as-points";
 import { FeatureId } from "../../../store/store";
 import { SELECT_PROPERTIES } from "../../../common";
+import { MutateFeatureBehavior } from "../../mutate-feature.behavior";
+import { getUnclosedCoordinates } from "../../../geometry/get-coordinates";
 
 export type SelectionPointProperties = {
 	mode: string;
@@ -12,9 +13,15 @@ export type SelectionPointProperties = {
 };
 
 export class SelectionPointBehavior extends TerraDrawModeBehavior {
-	constructor(config: BehaviorConfig) {
+	constructor(
+		config: BehaviorConfig,
+		mutateFeatureBehavior: MutateFeatureBehavior,
+	) {
 		super(config);
+		this.mutateFeature = mutateFeatureBehavior;
 	}
+
+	private mutateFeature: MutateFeatureBehavior;
 
 	private _selectionPoints: FeatureId[] = [];
 
@@ -24,55 +31,65 @@ export class SelectionPointBehavior extends TerraDrawModeBehavior {
 
 	set ids(_: FeatureId[]) {}
 
-	public create(
-		selectedCoords: Position[],
-		type: Polygon["type"] | LineString["type"],
-		featureId: FeatureId,
-	) {
-		this._selectionPoints = this.store.create(
-			getCoordinatesAsPoints(selectedCoords, type, (i) => ({
-				mode: this.mode,
-				index: i,
-				[SELECT_PROPERTIES.SELECTION_POINT]: true,
+	public create({
+		featureId,
+		featureCoordinates,
+	}: {
+		featureId: FeatureId;
+		featureCoordinates: Position[] | Position[][];
+	}) {
+		const coordinates = getUnclosedCoordinates(featureCoordinates);
+
+		this._selectionPoints = this.mutateFeature.createGuidancePoints({
+			coordinates,
+			type: SELECT_PROPERTIES.SELECTION_POINT,
+			additionalProperties: (index) => ({
 				[SELECT_PROPERTIES.SELECTION_POINT_FEATURE_ID]: featureId,
-			})),
-		);
+				index,
+			}),
+		});
 	}
 
 	public delete() {
 		if (this.ids.length) {
-			this.store.delete(this.ids);
+			this.mutateFeature.deleteFeatures(this.ids);
 			this._selectionPoints = [];
 		}
 	}
 
-	public getUpdated(updatedCoordinates: Position[]) {
+	public updateAllInPlace({
+		featureCoordinates,
+	}: {
+		featureCoordinates: Position[] | Position[][];
+	}) {
 		if (this._selectionPoints.length === 0) {
-			return undefined;
+			return;
 		}
 
-		return this._selectionPoints.map((id, i) => {
-			return {
-				id,
-				geometry: {
-					type: "Point",
-					coordinates: updatedCoordinates[i],
-				} as Point,
-			};
-		});
+		const coordinates = getUnclosedCoordinates(featureCoordinates);
+
+		if (coordinates.length !== this._selectionPoints.length) {
+			return;
+		}
+
+		this.mutateFeature.updateGuidancePoints(
+			this._selectionPoints.map((id, i) => ({
+				featureId: id,
+				coordinate: coordinates[i],
+			})),
+		);
 	}
 
-	public getOneUpdated(index: number, updatedCoordinate: Position) {
+	public updateOneAtIndex(index: number, updatedCoordinate: Position) {
 		if (this._selectionPoints[index] === undefined) {
-			return undefined;
+			return;
 		}
 
-		return {
-			id: this._selectionPoints[index] as string,
-			geometry: {
-				type: "Point",
-				coordinates: updatedCoordinate,
-			} as Point,
-		};
+		this.mutateFeature.updateGuidancePoints([
+			{
+				featureId: this._selectionPoints[index],
+				coordinate: updatedCoordinate,
+			},
+		]);
 	}
 }

@@ -489,7 +489,7 @@ const Select: Story = {
 const SelectWithSelectionPoints: Story = {
 	...DefaultStory,
 	args: {
-		id: "select",
+		id: "select-with-selection-points",
 		modes: [
 			() => new TerraDrawPolygonMode(),
 			() =>
@@ -508,10 +508,56 @@ const SelectWithSelectionPoints: Story = {
 	},
 };
 
+const SelectWithScaleAndRotate: Story = {
+	...DefaultStory,
+	args: {
+		id: "select-with-scale-and-rotate",
+		modes: [
+			() => new TerraDrawPolygonMode(),
+			() =>
+				new TerraDrawSelectMode({
+					flags: {
+						polygon: {
+							feature: {
+								rotateable: true,
+								scaleable: true,
+								coordinates: {},
+							},
+						},
+					},
+				}),
+		],
+		...DefaultStory.args,
+	},
+};
+
+const SelectWithResizable: Story = {
+	...DefaultStory,
+	args: {
+		id: "select-with-resizable",
+		modes: [
+			() => new TerraDrawPolygonMode(),
+			() =>
+				new TerraDrawSelectMode({
+					flags: {
+						polygon: {
+							feature: {
+								coordinates: {
+									resizable: "opposite-fixed",
+								},
+							},
+						},
+					},
+				}),
+		],
+		...DefaultStory.args,
+	},
+};
+
 const SelectWithMidPoints: Story = {
 	...DefaultStory,
 	args: {
-		id: "select",
+		id: "select-with-midpoints",
 		modes: [
 			() => new TerraDrawPolygonMode(),
 			() =>
@@ -740,6 +786,8 @@ const AllStories = {
 	ProgrammaticUpdate,
 	Select,
 	SelectWithSelectionPoints,
+	SelectWithScaleAndRotate,
+	SelectWithResizable,
 	SelectWithMidPoints,
 	SelectWithMultipleOfSameModes,
 };

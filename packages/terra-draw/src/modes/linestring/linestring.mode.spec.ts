@@ -1061,8 +1061,6 @@ describe("TerraDrawLineStringMode", () => {
 
 				lineStringMode.onKeyUp(MockKeyboardEvent({ key: "Escape" }));
 
-				// expect(onChange).toHaveBeenCalledTimes(6);
-
 				features = store.copyAll();
 				expect(features.length).toBe(2);
 

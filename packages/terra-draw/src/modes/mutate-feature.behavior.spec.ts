@@ -57,7 +57,6 @@ describe("mutateFeatureBehavior", () => {
 
 				const behavior = new MutateFeatureBehavior(config, {
 					validate: undefined,
-
 					onFinish: jest.fn(),
 				});
 
@@ -128,7 +127,6 @@ describe("mutateFeatureBehavior", () => {
 
 				const behavior = new MutateFeatureBehavior(config, {
 					validate: undefined,
-
 					onFinish: jest.fn(),
 				});
 
@@ -162,7 +160,6 @@ describe("mutateFeatureBehavior", () => {
 
 				const behavior = new MutateFeatureBehavior(config, {
 					validate: undefined,
-
 					onFinish: jest.fn(),
 				});
 
@@ -193,7 +190,6 @@ describe("mutateFeatureBehavior", () => {
 				const config = MockBehaviorConfig("test");
 				const behavior = new MutateFeatureBehavior(config, {
 					validate: undefined,
-
 					onFinish: jest.fn(),
 				});
 
@@ -231,7 +227,6 @@ describe("mutateFeatureBehavior", () => {
 
 				const behavior = new MutateFeatureBehavior(config, {
 					validate: undefined,
-
 					onFinish: jest.fn(),
 				});
 
@@ -268,7 +263,6 @@ describe("mutateFeatureBehavior", () => {
 				const config = MockBehaviorConfig("test");
 				const behavior = new MutateFeatureBehavior(config, {
 					validate: undefined,
-
 					onFinish: jest.fn(),
 				});
 
@@ -291,7 +285,6 @@ describe("mutateFeatureBehavior", () => {
 				const config = MockBehaviorConfig("test");
 				const behavior = new MutateFeatureBehavior(config, {
 					validate: undefined,
-
 					onFinish: jest.fn(),
 				});
 
@@ -322,7 +315,6 @@ describe("mutateFeatureBehavior", () => {
 				const config = MockBehaviorConfig("test");
 				const behavior = new MutateFeatureBehavior(config, {
 					validate: undefined,
-
 					onFinish: jest.fn(),
 				});
 
@@ -345,10 +337,9 @@ describe("mutateFeatureBehavior", () => {
 					},
 				});
 
-				// expect(updated).not.toBeNull();
-				// expect(updated!.geometry.type).toBe("Polygon");
-				// expect(updated!.geometry.coordinates[0]).toEqual(newRing);
-				// expect(onSuccess).toHaveBeenCalledTimes(1);
+				expect(updated).not.toBeNull();
+				expect(updated!.geometry.type).toBe("Polygon");
+				expect(updated!.geometry.coordinates[0]).toEqual(newRing);
 			});
 		});
 
@@ -364,7 +355,6 @@ describe("mutateFeatureBehavior", () => {
 				const configLow = MockBehaviorConfig("test", "web-mercator", 5);
 				const behaviorLow = new MutateFeatureBehavior(configLow, {
 					validate: undefined,
-
 					onFinish: jest.fn(),
 				});
 				expect(behaviorLow.epsilonOffset()).toBeCloseTo(0.0001, 10);
@@ -440,7 +430,6 @@ describe("mutateFeatureBehavior", () => {
 				const config = MockBehaviorConfig("test");
 				const behavior = new MutateFeatureBehavior(config, {
 					validate: undefined,
-
 					onFinish: jest.fn(),
 				});
 
@@ -450,27 +439,25 @@ describe("mutateFeatureBehavior", () => {
 					{ type: Mutations.Update, index: 1, coordinate: [2, 2] }, // update first
 				];
 
-				behavior.updateLineString({
+				const updated = behavior.updateLineString({
 					featureId: lineId,
 					context: { updateType: UpdateTypes.Commit },
 					coordinateMutations: mutations,
 				});
 
-				// expect(updated).not.toBeNull();
-				// expect(updated!.geometry.type).toBe("LineString");
-				// const expected: Position[] = [
-				// 	[0, 0],
-				// 	[2, 2],
-				// ];
-				// expect(updated!.geometry.coordinates).toEqual(expected);
-				// expect(onSuccess).toHaveBeenCalledTimes(1);
+				expect(updated).not.toBeNull();
+				expect(updated!.geometry.type).toBe("LineString");
+				const expected: Position[] = [
+					[0, 0],
+					[2, 2],
+				];
+				expect(updated!.geometry.coordinates).toEqual(expected);
 			});
 
 			it("applies coordinate mutations (INSERT_BEFORE)", () => {
 				const config = MockBehaviorConfig("test");
 				const behavior = new MutateFeatureBehavior(config, {
 					validate: undefined,
-
 					onFinish: jest.fn(),
 				});
 
@@ -486,14 +473,14 @@ describe("mutateFeatureBehavior", () => {
 					coordinateMutations: mutations,
 				});
 
-				// expect(updated).not.toBeNull();
-				// expect(updated!.geometry.type).toBe("LineString");
-				// const expected: Position[] = [
-				// 	[0, 0],
-				// 	[0.5, 0.5],
-				// 	[0, 1],
-				// ];
-				// expect(updated!.geometry.coordinates).toEqual(expected);
+				expect(updated).not.toBeNull();
+				expect(updated!.geometry.type).toBe("LineString");
+				const expected: Position[] = [
+					[0, 0],
+					[0.5, 0.5],
+					[0, 1],
+				];
+				expect(updated!.geometry.coordinates).toEqual(expected);
 			});
 
 			it("applies coordinate mutations (DELETE)", () => {
@@ -525,7 +512,6 @@ describe("mutateFeatureBehavior", () => {
 				const config = MockBehaviorConfig("test");
 				const behavior = new MutateFeatureBehavior(config, {
 					validate: undefined,
-
 					onFinish: jest.fn(),
 				});
 
@@ -537,28 +523,27 @@ describe("mutateFeatureBehavior", () => {
 					{ type: Mutations.InsertAfter, index: 1, coordinate: [2, 2] }, // tail insert
 				];
 
-				behavior.updateLineString({
+				const updated = behavior.updateLineString({
 					featureId: lineId,
 					context: { updateType: UpdateTypes.Commit },
 					coordinateMutations: mutations,
 				});
 
-				// expect(updated).not.toBeNull();
-				// expect(updated!.geometry.type).toBe("LineString");
-				// const expected: Position[] = [
-				// 	[0, 1],
-				// 	[0.5, 0.5],
-				// 	[0, 1],
-				// 	[2, 2],
-				// ];
-				// expect(updated!.geometry.coordinates).toEqual(expected);
+				expect(updated).not.toBeNull();
+				expect(updated!.geometry.type).toBe("LineString");
+				const expected: Position[] = [
+					[0, 1],
+					[0.5, 0.5],
+					[0, 1],
+					[2, 2],
+				];
+				expect(updated!.geometry.coordinates).toEqual(expected);
 			});
 
 			it("supports negative indices for inserts", () => {
 				const config = MockBehaviorConfig("test");
 				const behavior = new MutateFeatureBehavior(config, {
 					validate: undefined,
-
 					onFinish: jest.fn(),
 				});
 
@@ -583,7 +568,6 @@ describe("mutateFeatureBehavior", () => {
 				const config = MockBehaviorConfig("test");
 				const behavior = new MutateFeatureBehavior(config, {
 					validate: undefined,
-
 					onFinish: jest.fn(),
 				});
 
@@ -614,7 +598,6 @@ describe("mutateFeatureBehavior", () => {
 				const config = MockBehaviorConfig("test");
 				const behavior = new MutateFeatureBehavior(config, {
 					validate: undefined,
-
 					onFinish: jest.fn(),
 				});
 
@@ -626,7 +609,7 @@ describe("mutateFeatureBehavior", () => {
 					[30, 30],
 				];
 
-				behavior.updateLineString({
+				const updated = behavior.updateLineString({
 					featureId: lineId,
 					context: { updateType: UpdateTypes.Commit },
 					coordinateMutations: {
@@ -635,9 +618,9 @@ describe("mutateFeatureBehavior", () => {
 					},
 				});
 
-				// expect(updated).not.toBeNull();
-				// expect(updated!.geometry.type).toBe("LineString");
-				// expect(updated!.geometry.coordinates).toEqual(newCoords);
+				expect(updated).not.toBeNull();
+				expect(updated!.geometry.type).toBe("LineString");
+				expect(updated!.geometry.coordinates).toEqual(newCoords);
 			});
 		});
 	});

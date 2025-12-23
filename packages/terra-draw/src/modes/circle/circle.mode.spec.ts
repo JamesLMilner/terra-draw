@@ -421,7 +421,6 @@ describe("TerraDrawCircleMode", () => {
 					expect(afterGeometry).toStrictEqual(beforeGeometry);
 
 					// Create, but no properties changed
-					// expect(onChange).toHaveBeenCalledTimes(1);
 					expect(onChange).toHaveBeenNthCalledWith(
 						1,
 						[expect.any(String)],

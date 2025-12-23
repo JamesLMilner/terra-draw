@@ -85,17 +85,7 @@ const Polygon: Story = {
 	...DefaultStory,
 	args: {
 		id: "polygon",
-		modes: [
-			() =>
-				new TerraDrawPolygonMode({
-					modeName: "Polygon",
-				}),
-		],
-		afterRender: (draw: TerraDraw) => {
-			draw.on("change", (ids) => {
-				console.log(draw.getSnapshot());
-			});
-		},
+		modes: [() => new TerraDrawPolygonMode()],
 		...DefaultStory.args,
 	},
 };

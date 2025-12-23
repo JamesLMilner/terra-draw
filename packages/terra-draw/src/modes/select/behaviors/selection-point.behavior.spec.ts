@@ -214,9 +214,21 @@ describe("SelectionPointBehavior", () => {
 
 				selectionPointBehavior.updateOneAtIndex(0, [2, 2]);
 
-				// expect(result).not.toBe(undefined);
-				// expect(result && isUUIDV4(result.id as string)).toBe(true);
-				// expect(result && result.geometry.coordinates).toStrictEqual([2, 2]);
+				const selectionPoints = config.store.copyAllWhere((properties) =>
+					Boolean(properties[SELECT_PROPERTIES.SELECTION_POINT]),
+				);
+
+				expect(Array.isArray(selectionPoints)).toBe(true);
+
+				const result = selectionPoints.find(
+					({ properties }) =>
+						properties.index === 0 &&
+						properties[SELECT_PROPERTIES.SELECTION_POINT] === true,
+				);
+
+				expect(result).not.toBe(undefined);
+				expect(result && isUUIDV4(result.id as string)).toBe(true);
+				expect(result && result.geometry.coordinates).toStrictEqual([2, 2]);
 			});
 		});
 	});

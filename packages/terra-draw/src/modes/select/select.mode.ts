@@ -846,8 +846,6 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 			return;
 		}
 
-		// const validation = this.validations[properties.mode as string];
-
 		// Check if should rotate
 		if (
 			modeFlags &&

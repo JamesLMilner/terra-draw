@@ -22,7 +22,7 @@ import {
 import { PixelDistanceBehavior } from "../pixel-distance.behavior";
 import { ClickBoundingBoxBehavior } from "../click-bounding-box.behavior";
 import { BehaviorConfig } from "../base.behavior";
-import { ClosingPointsBehavior } from "./behaviors/closing-points.behavior";
+import { ClosingPointsBehavior } from "../closing-points.behavior";
 import { getDefaultStyling } from "../../util/styling";
 import {
 	FeatureId,
@@ -169,9 +169,11 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 				const features = this.store.copyAllWhere(
 					(properties) => properties.mode === this.mode,
 				);
-				const polygonIds = features.map((feature) => feature.id as FeatureId);
-				polygonIds.forEach((id) => {
-					this.coordinatePoints.createOrUpdate(id);
+				features.forEach((feature) => {
+					this.coordinatePoints.createOrUpdate({
+						featureId: feature.id as FeatureId,
+						featureCoordinates: feature.geometry.coordinates as Position[][],
+					});
 				});
 			} else if (this.coordinatePoints && this.showCoordinatePoints === false) {
 				const featuresWithCoordinates = this.store.copyAllWhere(
@@ -223,6 +225,13 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 			return;
 		}
 
+		if (this.showCoordinatePoints) {
+			this.coordinatePoints.createOrUpdate({
+				featureId: this.currentId,
+				featureCoordinates: updated.geometry.coordinates,
+			});
+		}
+
 		this.currentCoordinate = 0;
 		this.currentId = undefined;
 		this.snappedPointId = undefined;
@@ -236,29 +245,10 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 
 	/** @internal */
 	registerBehaviors(config: BehaviorConfig) {
-		this.clickBoundingBox = new ClickBoundingBoxBehavior(config);
-		this.pixelDistance = new PixelDistanceBehavior(config);
-		this.lineSnapping = new LineSnappingBehavior(
-			config,
-			this.pixelDistance,
-			this.clickBoundingBox,
-		);
-		this.coordinateSnapping = new CoordinateSnappingBehavior(
-			config,
-			this.pixelDistance,
-			this.clickBoundingBox,
-		);
-		this.closingPoints = new ClosingPointsBehavior(config, this.pixelDistance);
-
-		this.coordinatePoints = new CoordinatePointBehavior(config);
 		this.readFeature = new ReadFeatureBehavior(config);
 		this.mutateFeature = new MutateFeatureBehavior(config, {
 			validate: this.validate,
-			onUpdate: ({ id }) => {
-				if (id && this.showCoordinatePoints) {
-					this.coordinatePoints.createOrUpdate(id);
-				}
-			},
+
 			onFinish: (featureId, context) => {
 				if (this.editedPointId) {
 					this.mutateFeature.deleteFeature(this.editedPointId);
@@ -276,6 +266,30 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 				});
 			},
 		});
+		this.clickBoundingBox = new ClickBoundingBoxBehavior(config);
+		this.pixelDistance = new PixelDistanceBehavior(config);
+		this.lineSnapping = new LineSnappingBehavior(
+			config,
+			this.pixelDistance,
+			this.clickBoundingBox,
+		);
+		this.coordinateSnapping = new CoordinateSnappingBehavior(
+			config,
+			this.pixelDistance,
+			this.clickBoundingBox,
+		);
+		this.closingPoints = new ClosingPointsBehavior(
+			config,
+			this.pixelDistance,
+			this.mutateFeature,
+			this.readFeature,
+		);
+
+		this.coordinatePoints = new CoordinatePointBehavior(
+			config,
+			this.readFeature,
+			this.mutateFeature,
+		);
 	}
 
 	/** @internal */
@@ -296,19 +310,17 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 
 		if (snappedCoordinate) {
 			if (this.snappedPointId) {
-				this.mutateFeature.updatePoint({
-					featureId: this.snappedPointId,
-					coordinateMutations: {
-						type: Mutations.Replace,
-						coordinates: snappedCoordinate,
+				this.mutateFeature.updateGuidancePoints([
+					{
+						featureId: this.snappedPointId,
+						coordinate: snappedCoordinate,
 					},
-					context: { updateType: UpdateTypes.Provisional },
-				});
+				]);
 			} else {
-				this.snappedPointId = this.mutateFeature.createGuidancePoint(
-					snappedCoordinate,
-					COMMON_PROPERTIES.SNAPPING_POINT,
-				);
+				this.snappedPointId = this.mutateFeature.createGuidancePoint({
+					coordinate: snappedCoordinate,
+					type: COMMON_PROPERTIES.SNAPPING_POINT,
+				});
 			}
 
 			event.lng = snappedCoordinate[0];
@@ -357,7 +369,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 			];
 		} else {
 			const { isClosing, isPreviousClosing } =
-				this.closingPoints.isClosingPoint(event);
+				this.closingPoints.isPolygonClosingPoints(event);
 
 			if (isPreviousClosing || isClosing) {
 				if (this.snappedPointId) {
@@ -379,7 +391,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 			}
 		}
 
-		this.mutateFeature.updatePolygon({
+		const updated = this.mutateFeature.updatePolygon({
 			featureId: this.currentId,
 			coordinateMutations,
 			propertyMutations: {
@@ -388,6 +400,17 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 			},
 			context: { updateType: UpdateTypes.Provisional },
 		});
+
+		if (!updated) {
+			return;
+		}
+
+		if (this.showCoordinatePoints) {
+			this.coordinatePoints.createOrUpdate({
+				featureId: this.currentId,
+				featureCoordinates: updated.geometry.coordinates,
+			});
+		}
 	}
 
 	private snapCoordinate(event: TerraDrawMouseEvent): undefined | Position {
@@ -513,13 +536,20 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 		}
 
 		const updated = this.mutateFeature.updatePolygon({
-			featureId: featureId,
+			featureId,
 			coordinateMutations,
 			context: { updateType: UpdateTypes.Finish, action: FinishActions.Edit },
 		});
 
 		if (!updated) {
 			return;
+		}
+
+		if (this.showCoordinatePoints) {
+			this.coordinatePoints.createOrUpdate({
+				featureId,
+				featureCoordinates: updated.geometry.coordinates,
+			});
 		}
 	}
 
@@ -537,7 +567,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 			: [event.lng, event.lat];
 
 		if (this.currentCoordinate === 0) {
-			const { id } = this.mutateFeature.createPolygon({
+			const { id, geometry } = this.mutateFeature.createPolygon({
 				coordinates: [
 					eventCoordinate,
 					eventCoordinate,
@@ -553,6 +583,13 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 						this.currentCoordinate + 1,
 				},
 			});
+
+			if (this.showCoordinatePoints) {
+				this.coordinatePoints.createOrUpdate({
+					featureId: id,
+					featureCoordinates: geometry.coordinates,
+				});
+			}
 
 			this.currentId = id;
 			this.currentCoordinate++;
@@ -585,6 +622,13 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 
 			if (!updated) {
 				return;
+			}
+
+			if (this.showCoordinatePoints) {
+				this.coordinatePoints.createOrUpdate({
+					featureId: this.currentId,
+					featureCoordinates: updated.geometry.coordinates,
+				});
 			}
 
 			this.currentCoordinate++;
@@ -620,14 +664,21 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 				return;
 			}
 
+			if (this.showCoordinatePoints) {
+				this.coordinatePoints.createOrUpdate({
+					featureId: this.currentId,
+					featureCoordinates: updated.geometry.coordinates,
+				});
+			}
+
 			if (this.currentCoordinate === 2) {
-				this.closingPoints.create(updated.geometry.coordinates[0], this.mode);
+				this.closingPoints.create(updated.geometry.coordinates);
 			}
 
 			this.currentCoordinate++;
 		} else if (this.currentId) {
 			const { isClosing, isPreviousClosing } =
-				this.closingPoints.isClosingPoint(event);
+				this.closingPoints.isPolygonClosingPoints(event);
 
 			if (isPreviousClosing || isClosing) {
 				this.close();
@@ -663,11 +714,18 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 					return;
 				}
 
+				if (this.showCoordinatePoints) {
+					this.coordinatePoints.createOrUpdate({
+						featureId: this.currentId,
+						featureCoordinates: updated.geometry.coordinates,
+					});
+				}
+
 				this.currentCoordinate++;
 
 				// Update closing points straight away
 				if (this.closingPoints.ids.length) {
-					this.closingPoints.update(updated.geometry.coordinates[0]);
+					this.closingPoints.update(updated.geometry.coordinates);
 				}
 			}
 		}
@@ -765,10 +823,10 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 
 		// Create a point to drag when editing
 		if (!this.editedPointId) {
-			this.editedPointId = this.mutateFeature.createGuidancePoint(
-				snappedCoordinate,
-				COMMON_PROPERTIES.EDITED,
-			);
+			this.editedPointId = this.mutateFeature.createGuidancePoint({
+				coordinate: snappedCoordinate,
+				type: COMMON_PROPERTIES.EDITED,
+			});
 		}
 
 		// Drag Feature
@@ -871,20 +929,29 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 			return;
 		}
 
+		if (
+			this.showCoordinatePoints &&
+			this.editedFeatureCoordinateIndex !== undefined
+		) {
+			this.coordinatePoints.updateOneAtIndex(
+				this.editedFeatureId,
+				this.editedFeatureCoordinateIndex,
+				eventCoordinate,
+			);
+		}
+
 		if (this.snapping && this.snappedPointId) {
 			this.mutateFeature.deleteFeature(this.snappedPointId);
 			this.snappedPointId = undefined;
 		}
 
 		if (this.editedPointId) {
-			this.mutateFeature.updatePoint({
-				featureId: this.editedPointId,
-				coordinateMutations: {
-					type: Mutations.Replace,
-					coordinates: eventCoordinate,
+			this.mutateFeature.updateGuidancePoints([
+				{
+					featureId: this.editedPointId,
+					coordinate: eventCoordinate,
 				},
-				context: { updateType: UpdateTypes.Provisional },
-			});
+			]);
 		}
 	}
 
@@ -1086,7 +1153,10 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 
 	afterFeatureAdded(feature: GeoJSONStoreFeatures) {
 		if (this.showCoordinatePoints) {
-			this.coordinatePoints.createOrUpdate(feature.id as FeatureId);
+			this.coordinatePoints.createOrUpdate({
+				featureId: feature.id as FeatureId,
+				featureCoordinates: feature.geometry.coordinates as Position[][],
+			});
 		}
 	}
 
@@ -1096,7 +1166,10 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 
 		// IF we have coordinate points showing these need to be completely recreated
 		if (this.showCoordinatePoints) {
-			this.coordinatePoints.createOrUpdate(feature.id as FeatureId);
+			this.coordinatePoints.createOrUpdate({
+				featureId: feature.id as FeatureId,
+				featureCoordinates: feature.geometry.coordinates as Position[][],
+			});
 		}
 
 		// If we are editing a feature by dragging one of its points

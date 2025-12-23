@@ -6,7 +6,7 @@ import {
 	JSONObject,
 	JSON,
 } from "../store/store";
-import { Polygon, Position, LineString, Point } from "geojson";
+import { Polygon, Position, LineString, Point, Feature } from "geojson";
 import {
 	Actions,
 	GuidancePointProperties,
@@ -18,7 +18,6 @@ import { ensureRightHandRule } from "../geometry/ensure-right-hand-rule";
 
 type MutateFeatureBehaviorOptions = {
 	validate: Validation | undefined;
-	onUpdate?: (feature: GeoJSONStoreFeatures) => void;
 	onFinish: (featureId: FeatureId, context: FinishContext) => void;
 };
 
@@ -70,6 +69,13 @@ type MutateContext =
 	| FinishContext
 	| { updateType: UpdateTypes.Commit | UpdateTypes.Provisional };
 
+export type UpdateGeometry<G extends GeoJSONStoreGeometries> = {
+	featureId: FeatureId;
+	coordinateMutations?: ReplaceMutation<G> | CoordinateMutation[];
+	propertyMutations?: ValidProperties;
+	context: MutateContext;
+};
+
 export class MutateFeatureBehavior extends TerraDrawModeBehavior {
 	constructor(config: BehaviorConfig, options: MutateFeatureBehaviorOptions) {
 		super(config);
@@ -84,7 +90,7 @@ export class MutateFeatureBehavior extends TerraDrawModeBehavior {
 		context,
 	}: {
 		coordinates: Position;
-		properties?: JSONObject;
+		properties: JSONObject;
 		context?: {
 			updateType: UpdateTypes.Finish;
 		};
@@ -103,38 +109,28 @@ export class MutateFeatureBehavior extends TerraDrawModeBehavior {
 			}
 		}
 
-		return this.createFeatureWithGeometry<Point>({
+		const created = this.handleCreateFeature({
 			geometry: { type: "Point", coordinates },
 			properties,
-			context,
 		});
+
+		if (context?.updateType === UpdateTypes.Finish) {
+			this.options.onFinish(created.id, context as FinishContext);
+		}
+
+		return created;
 	}
 
-	public deleteFeature(featureId: FeatureId) {
-		this.store.delete([featureId]);
-	}
-
-	public deleteFeatures(featureIds: FeatureId[]) {
-		this.store.delete(featureIds);
-	}
-
-	public updatePoint({
-		featureId,
-		coordinateMutations,
-		propertyMutations,
-		context,
+	public createLineString({
+		coordinates,
+		properties,
 	}: {
-		featureId: FeatureId;
-		coordinateMutations?: ReplaceMutation<Point>;
-		propertyMutations?: JSONObject;
-		context: MutateContext;
+		coordinates: LineString["coordinates"];
+		properties: JSONObject;
 	}) {
-		return this.updateGeometry<Point>({
-			type: "Point",
-			featureId,
-			coordinateMutations,
-			context,
-			propertyMutations,
+		return this.handleCreateFeature({
+			geometry: { type: "LineString", coordinates },
+			properties,
 		});
 	}
 
@@ -143,13 +139,14 @@ export class MutateFeatureBehavior extends TerraDrawModeBehavior {
 		properties,
 	}: {
 		coordinates: Polygon["coordinates"][0];
-		properties?: JSONObject;
+		properties: JSONObject;
 	}) {
 		const corrected = ensureRightHandRule({
 			type: "Polygon",
 			coordinates: [coordinates],
 		});
-		return this.createFeatureWithGeometry<Polygon>({
+
+		return this.handleCreateFeature({
 			geometry: {
 				type: "Polygon",
 				coordinates: corrected ? corrected.coordinates : [coordinates],
@@ -158,52 +155,66 @@ export class MutateFeatureBehavior extends TerraDrawModeBehavior {
 		});
 	}
 
+	public createGuidancePoint({
+		coordinate,
+		type,
+	}: {
+		coordinate: Position;
+		type: GuidancePointProperties;
+	}) {
+		return this.createGuidancePoints({ coordinates: [coordinate], type })[0];
+	}
+
+	public createGuidancePoints({
+		coordinates,
+		type,
+		additionalProperties,
+	}: {
+		coordinates: Position[];
+		type: GuidancePointProperties;
+		additionalProperties?: (index: number) => JSONObject;
+	}) {
+		const features = coordinates.map((coordinate, i) => ({
+			type: "Feature" as const,
+			geometry: { type: "Point" as const, coordinates: coordinate },
+			properties: {
+				mode: this.mode,
+				[type]: true,
+				...(additionalProperties ? additionalProperties(i) : {}),
+			},
+		}));
+
+		const ids = this.createFeatures(features);
+		return ids;
+	}
+
+	public updatePoint({
+		featureId,
+		coordinateMutations,
+		propertyMutations,
+		context,
+	}: UpdateGeometry<Point>) {
+		return this.handleMutateFeature<Point>({
+			type: "Point",
+			featureId,
+			coordinateMutations,
+			propertyMutations,
+			context,
+		});
+	}
+
 	public updatePolygon({
 		featureId,
 		coordinateMutations,
 		context,
 		propertyMutations,
-	}: {
-		featureId: FeatureId;
-		context: MutateContext;
-		coordinateMutations?: CoordinateMutation[] | ReplaceMutation<Polygon>;
-		propertyMutations?: ValidProperties;
-	}) {
-		return this.updateGeometry<Polygon>({
+	}: UpdateGeometry<Polygon>) {
+		return this.handleMutateFeature({
 			type: "Polygon",
 			featureId,
 			coordinateMutations,
 			propertyMutations,
-			context:
-				context.updateType === UpdateTypes.Finish
-					? {
-							...context,
-							correctRightHandRule: true,
-						}
-					: {
-							...context,
-						},
-		});
-	}
-
-	public epsilonOffset() {
-		// We must add a very small epsilon value so that Mapbox GL
-		// renders the polygon - There might be a cleaner solution?
-		const epsilon = 1 / Math.pow(10, this.coordinatePrecision - 1);
-		const offset = Math.max(0.000001, epsilon);
-		return offset;
-	}
-
-	public createLineString({
-		coordinates,
-		properties,
-	}: {
-		coordinates: LineString["coordinates"];
-		properties?: JSONObject;
-	}) {
-		return this.createFeatureWithGeometry<LineString>({
-			geometry: { type: "LineString", coordinates },
-			properties,
+			context,
 		});
 	}
 
@@ -212,13 +223,8 @@ export class MutateFeatureBehavior extends TerraDrawModeBehavior {
 		coordinateMutations,
 		context,
 		propertyMutations,
-	}: {
-		featureId: FeatureId;
-		coordinateMutations?: CoordinateMutation[] | ReplaceMutation<LineString>;
-		propertyMutations?: ValidProperties;
-		context: MutateContext;
-	}) {
-		return this.updateGeometry<LineString>({
+	}: UpdateGeometry<LineString>) {
+		return this.handleMutateFeature({
 			type: "LineString",
 			featureId,
 			coordinateMutations,
@@ -227,16 +233,25 @@ export class MutateFeatureBehavior extends TerraDrawModeBehavior {
 		});
 	}
 
+	public deleteFeature(featureId: FeatureId) {
+		this.deleteFeatures([featureId]);
+	}
+
+	public deleteFeatures(featureIds: FeatureId[]) {
+		this.store.delete(featureIds);
+	}
+
 	public setDeselected(featureIds: FeatureId[]) {
 		const updateSelectedFeatures = featureIds
 			.filter((id) => this.store.has(id))
 			.map((id) => ({
-				id,
-				property: SELECT_PROPERTIES.SELECTED,
-				value: false,
+				featureId: id,
+				properties: {
+					[SELECT_PROPERTIES.SELECTED]: false,
+				} as ValidProperties,
 			}));
 
-		this.store.updateProperty(updateSelectedFeatures);
+		this.updateFeatureProperties(updateSelectedFeatures);
 	}
 
 	public setSelected(featureId: FeatureId) {
@@ -258,23 +273,91 @@ export class MutateFeatureBehavior extends TerraDrawModeBehavior {
 		}
 	}
 
-	public createGuidancePoint(
-		coordinate: Position,
-		type: GuidancePointProperties,
+	public updateGuidancePoints(
+		guidancePoints: {
+			featureId: FeatureId;
+			coordinate: Position;
+		}[],
 	) {
-		const [id] = this.store.create([
-			{
-				geometry: { type: "Point", coordinates: coordinate },
-				properties: {
-					mode: this.mode,
-					[type]: true,
-				},
-			},
-		]);
-		return id;
+		this.updateFeatureGeometries(
+			guidancePoints.map(({ featureId, coordinate }) => ({
+				id: featureId,
+				geometry: {
+					type: "Point",
+					coordinates: coordinate,
+				} as Point,
+			})),
+		);
 	}
 
-	private updateGeometry<G extends GeoJSONStoreGeometries>({
+	private handleCreateFeature<G extends GeoJSONStoreGeometries>({
+		geometry,
+		properties,
+	}: {
+		geometry: G;
+		properties: JSONObject;
+	}) {
+		return this.createFeatureWithGeometry<G>({
+			geometry,
+			properties,
+		});
+	}
+
+	private handleMutateFeature<G extends GeoJSONStoreGeometries>({
+		type,
+		featureId,
+		coordinateMutations,
+		propertyMutations,
+		context,
+	}: UpdateGeometry<G> & { type: G["type"] }) {
+		const updated = this.mutateFeature<G>({
+			type,
+			featureId,
+			coordinateMutations,
+			propertyMutations,
+			context:
+				context.updateType === UpdateTypes.Finish
+					? {
+							...context,
+							correctRightHandRule: true,
+						}
+					: {
+							...context,
+						},
+		});
+
+		if (!updated) {
+			return null;
+		}
+
+		// Handle special case where there are no coordinate mutations but we want to validate on finish
+		if (context.updateType === UpdateTypes.Finish) {
+			if (!coordinateMutations) {
+				if (
+					!this.validateGeometryWithUpdateType({
+						geometry: this.store.getGeometryCopy(featureId),
+						properties: this.store.getPropertiesCopy(featureId),
+						updateType: context.updateType,
+					})
+				) {
+					return null;
+				}
+			}
+			this.options.onFinish(featureId, context as FinishContext);
+		}
+
+		return this.buildFeatureWithGeometry<G>(featureId);
+	}
+
+	public epsilonOffset() {
+		// We must add a very small epsilon value so that Mapbox GL
+		// renders the polygon - There might be a cleaner solution?
+		const epsilon = 1 / Math.pow(10, this.coordinatePrecision - 1);
+		const offset = Math.max(0.000001, epsilon);
+		return offset;
+	}
+
+	private mutateFeature<G extends GeoJSONStoreGeometries>({
 		type,
 		featureId,
 		coordinateMutations,
@@ -286,9 +369,9 @@ export class MutateFeatureBehavior extends TerraDrawModeBehavior {
 		coordinateMutations?: CoordinateMutation[] | ReplaceMutation<G>;
 		propertyMutations?: ValidProperties;
 		context: MutateContext & { correctRightHandRule?: boolean };
-	}) {
+	}): boolean {
 		if (!featureId) {
-			return null;
+			return false;
 		}
 
 		const existingGeometry = this.store.getGeometryCopy(featureId);
@@ -321,37 +404,21 @@ export class MutateFeatureBehavior extends TerraDrawModeBehavior {
 					updateType: context.updateType,
 				})
 			) {
-				return null;
+				return false;
 			}
 
-			this.store.updateGeometry([{ id: featureId, geometry: updatedGeometry }]);
-		} else if (context.updateType === UpdateTypes.Finish) {
-			// Even if no coordinate mutations, we may need to validate on finish
-			const existingGeometry = this.store.getGeometryCopy(featureId);
-			if (
-				!this.validateGeometryWithUpdateType({
-					geometry: existingGeometry,
-					properties: existingProperties,
-					updateType: context.updateType,
-				})
-			) {
-				return null;
-			}
+			this.updateFeatureGeometries([
+				{ id: featureId, geometry: updatedGeometry },
+			]);
 		}
 
 		if (propertyMutations) {
-			this.applyPropertyMutations(featureId, propertyMutations);
+			this.updateFeatureProperties([
+				{ featureId, properties: propertyMutations },
+			]);
 		}
 
-		const updated = this.buildFeatureWithGeometry<G>(featureId);
-
-		this.options.onUpdate && this.options.onUpdate(updated);
-
-		if (context.updateType === UpdateTypes.Finish) {
-			this.options.onFinish(featureId, context as FinishContext);
-		}
-
-		return updated as GeoJSONStoreFeatures<G>;
+		return true;
 	}
 
 	private applyCoordinateMutations<
@@ -522,16 +589,16 @@ export class MutateFeatureBehavior extends TerraDrawModeBehavior {
 	private createFeatureWithGeometry<G extends GeoJSONStoreGeometries>({
 		geometry,
 		properties,
-		context,
 	}: {
 		geometry: G;
-		properties?: JSONObject;
-		context?: {
-			updateType: UpdateTypes.Finish;
-		};
+		properties: GeoJSONStoreFeatures<G>["properties"];
 	}) {
-		const [id] = this.store.create([
-			{ geometry, properties: properties ? properties : {} },
+		const [id] = this.createFeatures([
+			{
+				type: "Feature",
+				geometry,
+				properties,
+			},
 		]);
 
 		const created = {
@@ -539,17 +606,7 @@ export class MutateFeatureBehavior extends TerraDrawModeBehavior {
 			type: "Feature",
 			properties: this.store.getPropertiesCopy(id),
 			geometry: this.store.getGeometryCopy<G>(id),
-		} as GeoJSONStoreFeatures<G>;
-
-		if (context?.updateType === UpdateTypes.Finish) {
-			this.options.onFinish(id, {
-				updateType: context.updateType,
-				action: "draw",
-			});
-		} else {
-			this.options.onUpdate &&
-				this.options.onUpdate(created as GeoJSONStoreFeatures);
-		}
+		} as GeoJSONStoreFeatures<G> & { id: FeatureId };
 
 		return created;
 	}
@@ -584,20 +641,6 @@ export class MutateFeatureBehavior extends TerraDrawModeBehavior {
 		return validationResult.valid;
 	}
 
-	private applyPropertyMutations(
-		featureId: FeatureId,
-		propertyMutations: ValidProperties,
-	) {
-		const properties = Object.keys(propertyMutations);
-		this.store.updateProperty(
-			properties.map((key: string) => ({
-				id: featureId,
-				property: key,
-				value: propertyMutations[key] as JSON | undefined,
-			})),
-		);
-	}
-
 	private buildFeatureWithGeometry<G extends GeoJSONStoreGeometries>(
 		featureId: FeatureId,
 	) {
@@ -607,5 +650,39 @@ export class MutateFeatureBehavior extends TerraDrawModeBehavior {
 			properties: this.store.getPropertiesCopy(featureId),
 			geometry: this.store.getGeometryCopy<G>(featureId),
 		} as GeoJSONStoreFeatures<G>;
+	}
+
+	private createFeatures<G extends GeoJSONStoreGeometries>(
+		features: GeoJSONStoreFeatures<G>[],
+	) {
+		return this.store.create(features);
+	}
+
+	private updateFeatureGeometries<G extends GeoJSONStoreGeometries>(
+		updates: {
+			id: FeatureId;
+			geometry: G;
+		}[],
+	) {
+		this.store.updateGeometry(updates);
+	}
+
+	private updateFeatureProperties(
+		properties: {
+			featureId: FeatureId;
+			properties: ValidProperties;
+		}[],
+	) {
+		const updates = properties
+			.map(({ featureId, properties }) => {
+				return Object.entries(properties).map(([key, value]) => ({
+					id: featureId,
+					property: key,
+					value,
+				}));
+			})
+			.flat();
+
+		this.store.updateProperty(updates);
 	}
 }

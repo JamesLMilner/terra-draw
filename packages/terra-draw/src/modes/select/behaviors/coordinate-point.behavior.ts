@@ -1,31 +1,33 @@
 import { Point, Position } from "geojson";
 import { BehaviorConfig, TerraDrawModeBehavior } from "../../base.behavior";
 import { FeatureId } from "../../../store/store";
-import { COMMON_PROPERTIES } from "../../../common";
+import { COMMON_PROPERTIES, UpdateTypes } from "../../../common";
+import { ReadFeatureBehavior } from "../../read-feature.behavior";
+import { MutateFeatureBehavior } from "../../mutate-feature.behavior";
+import { getUnclosedCoordinates } from "../../../geometry/get-coordinates";
 
 export class CoordinatePointBehavior extends TerraDrawModeBehavior {
-	constructor(config: BehaviorConfig) {
+	constructor(
+		config: BehaviorConfig,
+		private readonly readFeature: ReadFeatureBehavior,
+		private readonly mutateFeature: MutateFeatureBehavior,
+	) {
 		super(config);
 	}
 
-	public createOrUpdate(featureId: FeatureId) {
-		const existingFeature = this.store.getGeometryCopy(featureId);
-		const existingProperties = this.store.getPropertiesCopy(featureId);
+	public createOrUpdate({
+		featureId,
+		featureCoordinates,
+	}: {
+		featureId: FeatureId;
+		featureCoordinates: Position[] | Position[][];
+	}) {
+		const coordinates = getUnclosedCoordinates(featureCoordinates);
 
-		let coordinates: Position[];
-
-		if (existingFeature.type === "Polygon") {
-			coordinates = existingFeature.coordinates[0].slice(0, -1) as Position[];
-		} else if (existingFeature.type === "LineString") {
-			coordinates = existingFeature.coordinates as Position[];
-		} else {
-			return;
-		}
-
-		const existingFeatureProps = this.store.getPropertiesCopy(featureId);
+		const existingProperties = this.readFeature.getProperties(featureId);
 
 		const existingCoordinatePointIds =
-			existingFeatureProps.coordinatePointIds as FeatureId[];
+			existingProperties.coordinatePointIds as FeatureId[];
 
 		// If no existing coordinate points, create them
 		if (!existingCoordinatePointIds) {
@@ -39,13 +41,13 @@ export class CoordinatePointBehavior extends TerraDrawModeBehavior {
 		// If the existing coordinate points are present in the store, update them
 		else if (
 			existingCoordinatePointIds &&
-			existingCoordinatePointIds.every((id) => this.store.has(id))
+			existingCoordinatePointIds.every((id) => this.readFeature.hasFeature(id))
 		) {
 			// Check if the coordinates have changed
 			const existingCoordinates =
-				existingFeatureProps.coordinatePointIds as FeatureId[];
+				existingProperties.coordinatePointIds as FeatureId[];
 			const existingCoordinatePoints = existingCoordinates.map(
-				(id) => this.store.getGeometryCopy(id).coordinates as Position,
+				(id) => this.readFeature.getGeometry(id).coordinates as Position,
 			);
 
 			// If the number of coordinates has changed, delete and recreate as it's too
@@ -59,6 +61,10 @@ export class CoordinatePointBehavior extends TerraDrawModeBehavior {
 				);
 				this.setFeatureCoordinatePoints(featureId, coordinatePointIds);
 			} else {
+				const updates: {
+					featureId: FeatureId;
+					coordinate: Position;
+				}[] = [];
 				// Update the coordinates
 				coordinates.forEach((coordinate, i) => {
 					// If the coordinates are the same, don't update
@@ -68,24 +74,21 @@ export class CoordinatePointBehavior extends TerraDrawModeBehavior {
 					) {
 						return;
 					}
-					// Only update the coordinates that have changed
-					this.store.updateGeometry([
-						{
-							id: existingCoordinates[i],
-							geometry: {
-								type: "Point",
-								coordinates: coordinate,
-							} as Point,
-						},
-					]);
+
+					updates.push({
+						featureId: existingCoordinates[i],
+						coordinate: coordinate,
+					});
 				});
+
+				this.mutateFeature.updateGuidancePoints(updates);
 			}
 		}
 		// If the existing coordinate points are not present in the store, delete them and recreate
 		else {
 			// If there are any leftover coordinate points we remove them
 			const existingPoints = existingCoordinatePointIds.filter((id) =>
-				this.store.has(id),
+				this.readFeature.hasFeature(id),
 			);
 			if (existingPoints.length) {
 				this.deleteCoordinatePoints(existingPoints);
@@ -107,74 +110,117 @@ export class CoordinatePointBehavior extends TerraDrawModeBehavior {
 		}
 	}
 
-	public getUpdated(featureId: FeatureId, updatedCoordinates: Position[]) {
-		const featureProperties = this.store.getPropertiesCopy(featureId);
+	public updateOneAtIndex(
+		featureId: FeatureId,
+		index: number,
+		updatedCoordinate: Position,
+	) {
+		const featureProperties = this.readFeature.getProperties(featureId);
+		const coordinatePointIds =
+			featureProperties.coordinatePointIds as FeatureId[];
 
-		if (!featureProperties.coordinatePointIds) {
-			return undefined;
+		if (
+			!coordinatePointIds ||
+			coordinatePointIds.length === 0 ||
+			coordinatePointIds[index] === undefined
+		) {
+			return;
 		}
 
-		return (featureProperties.coordinatePointIds as FeatureId[]).map(
-			(id, i) => {
-				return {
-					id,
-					geometry: {
-						...this.store.getGeometryCopy(id),
-						coordinates: updatedCoordinates[i],
-					} as Point,
-				};
+		this.mutateFeature.updateGuidancePoints([
+			{
+				featureId: coordinatePointIds[index],
+				coordinate: updatedCoordinate,
 			},
-		) as {
-			id: FeatureId;
-			geometry: Point;
-		}[];
+		]);
+	}
+
+	public updateAllInPlace({
+		featureId,
+		featureCoordinates,
+	}: {
+		featureId: FeatureId;
+		featureCoordinates: Position[] | Position[][];
+	}) {
+		const featureProperties = this.readFeature.getProperties(featureId);
+
+		if (!featureProperties.coordinatePointIds) {
+			return;
+		}
+
+		const coordinates = getUnclosedCoordinates(featureCoordinates);
+		const coordinatePointIds =
+			featureProperties.coordinatePointIds as FeatureId[];
+
+		if (coordinates.length !== coordinatePointIds.length) {
+			return;
+		}
+
+		this.mutateFeature.updateGuidancePoints(
+			(featureProperties.coordinatePointIds as FeatureId[]).map((id, i) => ({
+				featureId: id,
+				coordinate: coordinates[i],
+			})),
+		);
 	}
 
 	private createPoints(
-		coordinates: Position[],
+		featureCoordinates: Position[],
 		mode: string,
 		featureId: FeatureId,
 	) {
-		return this.store.create(
-			coordinates.map((coordinate, i) => ({
-				geometry: {
-					type: "Point",
-					coordinates: coordinate,
-				},
-				properties: {
-					mode,
-					[COMMON_PROPERTIES.COORDINATE_POINT]: true,
-					[COMMON_PROPERTIES.COORDINATE_POINT_FEATURE_ID]: featureId,
-					index: i,
-				},
-			})),
-		);
+		return this.mutateFeature.createGuidancePoints({
+			coordinates: featureCoordinates,
+			type: COMMON_PROPERTIES.COORDINATE_POINT,
+			additionalProperties: (i) => ({
+				mode,
+				[COMMON_PROPERTIES.COORDINATE_POINT]: true,
+				[COMMON_PROPERTIES.COORDINATE_POINT_FEATURE_ID]: featureId,
+				index: i,
+			}),
+		});
 	}
 
 	private setFeatureCoordinatePoints(
 		featureId: FeatureId,
 		value: FeatureId[] | null,
+		updateType:
+			| UpdateTypes.Provisional
+			| UpdateTypes.Commit = UpdateTypes.Commit,
 	) {
-		this.store.updateProperty([
-			{
-				id: featureId,
-				property: COMMON_PROPERTIES.COORDINATE_POINT_IDS,
-				value: value,
+		const type = this.readFeature.getGeometryType(featureId);
+
+		const update = {
+			featureId,
+			propertyMutations: {
+				[COMMON_PROPERTIES.COORDINATE_POINT_IDS]: value,
 			},
-		]);
+			context: {
+				updateType,
+			},
+		};
+
+		if (type === "Polygon") {
+			this.mutateFeature.updatePolygon(update);
+		} else if (type === "LineString") {
+			this.mutateFeature.updateLineString(update);
+		} else {
+			throw new Error("Unsupported geometry type for coordinate points");
+		}
 	}
 
 	private deleteCoordinatePoints(coordinatePointIds: FeatureId[]) {
 		// We have to account for someone manually deleting the coordinate points or only partially restoring them
 		// from some persistent storage. Essentially we cannot assume they are all present in the store.
 		const existingCoordinatePointIds = coordinatePointIds.filter((id) =>
-			this.store.has(id),
+			this.readFeature.hasFeature(id),
 		) as FeatureId[];
-		this.store.delete(existingCoordinatePointIds);
+
+		this.mutateFeature.deleteFeatures(existingCoordinatePointIds);
 	}
 
 	private deleteIfPresent(featureId: FeatureId) {
-		const existingFeatureProps = this.store.getPropertiesCopy(featureId);
+		const existingFeatureProps = this.readFeature.getProperties(featureId);
 		const coordinatePoints =
 			existingFeatureProps.coordinatePointIds as FeatureId[];
 

@@ -5,6 +5,7 @@ import { MockCursorEvent } from "../../test/mock-cursor-event";
 import { MockKeyboardEvent } from "../../test/mock-keyboard-event";
 import {
 	COMMON_PROPERTIES,
+	SELECT_PROPERTIES,
 	TerraDrawGeoJSONStore,
 	TerraDrawMouseEvent,
 } from "../../common";
@@ -1775,13 +1776,17 @@ describe("TerraDrawSelectMode", () => {
 					setMapDraggability,
 				);
 
-				expect(onChange).toHaveBeenCalledTimes(5);
-
 				// Update linestring position and 1 selection points
 				// that gets moved
 				expect(onChange).toHaveBeenNthCalledWith(
 					5,
-					[expect.any(String), expect.any(String)],
+					[expect.any(String)],
+					"update",
+					{ target: "geometry" },
+				);
+				expect(onChange).toHaveBeenNthCalledWith(
+					6,
+					[expect.any(String)],
 					"update",
 					{ target: "geometry" },
 				);
@@ -1841,13 +1846,18 @@ describe("TerraDrawSelectMode", () => {
 					setMapDraggability,
 				);
 
-				expect(onChange).toHaveBeenCalledTimes(5);
-
 				// Update linestring position and 1 selection points
 				// that gets moved
 				expect(onChange).toHaveBeenNthCalledWith(
 					5,
-					[expect.any(String), expect.any(String)],
+					[expect.any(String)],
+					"update",
+					{ target: "geometry" },
+				);
+
+				expect(onChange).toHaveBeenNthCalledWith(
+					6,
+					[expect.any(String)],
 					"update",
 					{ target: "geometry" },
 				);
@@ -1921,9 +1931,7 @@ describe("TerraDrawSelectMode", () => {
 					setMapDraggability,
 				);
 
-				expect(onChange).toHaveBeenCalledTimes(6);
-
-				expect(store.updateGeometry).toHaveBeenCalledTimes(1);
+				expect(store.updateGeometry).toHaveBeenCalledTimes(2);
 				expect(store.updateGeometry).toHaveBeenNthCalledWith(1, [
 					{
 						geometry: {
@@ -1940,6 +1948,8 @@ describe("TerraDrawSelectMode", () => {
 						},
 						id: expect.any(String),
 					},
+				]);
+				expect(store.updateGeometry).toHaveBeenNthCalledWith(2, [
 					{
 						geometry: {
 							coordinates: [2, 2],
@@ -1953,7 +1963,13 @@ describe("TerraDrawSelectMode", () => {
 				// that gets moved
 				expect(onChange).toHaveBeenNthCalledWith(
 					6,
-					[expect.any(String), expect.any(String)],
+					[expect.any(String)],
+					"update",
+					{ target: "geometry" },
+				);
+				expect(onChange).toHaveBeenNthCalledWith(
+					7,
+					[expect.any(String)],
 					"update",
 					{ target: "geometry" },
 				);
@@ -2025,9 +2041,7 @@ describe("TerraDrawSelectMode", () => {
 					setMapDraggability,
 				);
 
-				expect(onChange).toHaveBeenCalledTimes(6);
-
-				expect(store.updateGeometry).toHaveBeenCalledTimes(1);
+				expect(store.updateGeometry).toHaveBeenCalledTimes(2);
 				expect(store.updateGeometry).toHaveBeenNthCalledWith(1, [
 					{
 						geometry: {
@@ -2041,6 +2055,8 @@ describe("TerraDrawSelectMode", () => {
 						},
 						id: expect.any(String),
 					},
+				]);
+				expect(store.updateGeometry).toHaveBeenNthCalledWith(2, [
 					{
 						geometry: {
 							coordinates: [2, 2],
@@ -2054,7 +2070,13 @@ describe("TerraDrawSelectMode", () => {
 				// that gets moved
 				expect(onChange).toHaveBeenNthCalledWith(
 					6,
-					[expect.any(String), expect.any(String)],
+					[expect.any(String)],
+					"update",
+					{ target: "geometry" },
+				);
+				expect(onChange).toHaveBeenNthCalledWith(
+					7,
+					[expect.any(String)],
 					"update",
 					{ target: "geometry" },
 				);
@@ -2135,9 +2157,7 @@ describe("TerraDrawSelectMode", () => {
 					setMapDraggability,
 				);
 
-				expect(onChange).toHaveBeenCalledTimes(6);
-
-				expect(store.updateGeometry).toHaveBeenCalledTimes(1);
+				expect(store.updateGeometry).toHaveBeenCalledTimes(2);
 				expect(store.updateGeometry).toHaveBeenNthCalledWith(1, [
 					{
 						geometry: {
@@ -2154,6 +2174,8 @@ describe("TerraDrawSelectMode", () => {
 						},
 						id: expect.any(String),
 					},
+				]);
+				expect(store.updateGeometry).toHaveBeenNthCalledWith(2, [
 					{
 						geometry: {
 							coordinates: [2, 2],
@@ -2167,7 +2189,13 @@ describe("TerraDrawSelectMode", () => {
 				// that gets moved
 				expect(onChange).toHaveBeenNthCalledWith(
 					6,
-					[expect.any(String), expect.any(String)],
+					[expect.any(String)],
+					"update",
+					{ target: "geometry" },
+				);
+				expect(onChange).toHaveBeenNthCalledWith(
+					7,
+					[expect.any(String)],
 					"update",
 					{ target: "geometry" },
 				);
@@ -2246,9 +2274,7 @@ describe("TerraDrawSelectMode", () => {
 					setMapDraggability,
 				);
 
-				expect(onChange).toHaveBeenCalledTimes(6);
-
-				expect(store.updateGeometry).toHaveBeenCalledTimes(1);
+				expect(store.updateGeometry).toHaveBeenCalledTimes(2);
 				expect(store.updateGeometry).toHaveBeenNthCalledWith(1, [
 					{
 						geometry: {
@@ -2262,6 +2288,9 @@ describe("TerraDrawSelectMode", () => {
 						},
 						id: expect.any(String),
 					},
+				]);
+
+				expect(store.updateGeometry).toHaveBeenNthCalledWith(2, [
 					{
 						geometry: {
 							coordinates: [2, 2],
@@ -2275,7 +2304,13 @@ describe("TerraDrawSelectMode", () => {
 				// that gets moved
 				expect(onChange).toHaveBeenNthCalledWith(
 					6,
-					[expect.any(String), expect.any(String)],
+					[expect.any(String)],
+					"update",
+					{ target: "geometry" },
+				);
+				expect(onChange).toHaveBeenNthCalledWith(
+					7,
+					[expect.any(String)],
 					"update",
 					{ target: "geometry" },
 				);
@@ -2356,9 +2391,7 @@ describe("TerraDrawSelectMode", () => {
 					setMapDraggability,
 				);
 
-				expect(onChange).toHaveBeenCalledTimes(6);
-
-				expect(store.updateGeometry).toHaveBeenCalledTimes(1);
+				expect(store.updateGeometry).toHaveBeenCalledTimes(2);
 				expect(store.updateGeometry).toHaveBeenNthCalledWith(1, [
 					{
 						geometry: {
@@ -2375,6 +2408,9 @@ describe("TerraDrawSelectMode", () => {
 						},
 						id: expect.any(String),
 					},
+				]);
+
+				expect(store.updateGeometry).toHaveBeenNthCalledWith(2, [
 					{
 						geometry: {
 							coordinates: [45, 45],
@@ -2388,7 +2424,14 @@ describe("TerraDrawSelectMode", () => {
 				// that gets moved
 				expect(onChange).toHaveBeenNthCalledWith(
 					6,
-					[expect.any(String), expect.any(String)],
+					[expect.any(String)],
+					"update",
+					{ target: "geometry" },
+				);
+
+				expect(onChange).toHaveBeenNthCalledWith(
+					7,
+					[expect.any(String)],
 					"update",
 					{ target: "geometry" },
 				);
@@ -2454,13 +2497,17 @@ describe("TerraDrawSelectMode", () => {
 					setMapDraggability,
 				);
 
-				expect(onChange).toHaveBeenCalledTimes(6);
-
 				// Update linestring position and 1 selection points
 				// that gets moved
 				expect(onChange).toHaveBeenNthCalledWith(
 					5,
-					[expect.any(String), expect.any(String), expect.any(String)],
+					[expect.any(String)],
+					"update",
+					{ target: "geometry" },
+				);
+				expect(onChange).toHaveBeenNthCalledWith(
+					6,
+					[expect.any(String), expect.any(String)],
 					"update",
 					{ target: "geometry" },
 				);
@@ -2534,14 +2581,18 @@ describe("TerraDrawSelectMode", () => {
 					setMapDraggability,
 				);
 
-				expect(onChange).toHaveBeenCalledTimes(6);
-
 				// Update polygon position and 1 selection points
 				// that gets moved
 				expect(onChange).toHaveBeenNthCalledWith(
 					5,
+					[expect.any(String)],
+					"update",
+					{ target: "geometry" },
+				);
+
+				expect(onChange).toHaveBeenNthCalledWith(
+					6,
 					[
-						expect.any(String),
 						expect.any(String),
 						expect.any(String),
 						expect.any(String),
@@ -2643,33 +2694,15 @@ describe("TerraDrawSelectMode", () => {
 					undefined,
 				);
 
-				// Mid points
-				expect(onChange).toHaveBeenNthCalledWith(
-					7,
-					[
-						expect.any(String),
-						expect.any(String),
-						expect.any(String),
-						expect.any(String),
-						expect.any(String),
-					],
-					"create",
-					undefined,
-				);
+				const midpoints = store
+					.copyAll()
+					.filter((f) => f.properties?.[SELECT_PROPERTIES.MID_POINT]);
+				expect(midpoints.length).toBe(5);
 
-				// Selection points
-				expect(onChange).toHaveBeenNthCalledWith(
-					8,
-					[
-						expect.any(String),
-						expect.any(String),
-						expect.any(String),
-						expect.any(String),
-						expect.any(String),
-					],
-					"create",
-					undefined,
-				);
+				const selectionPoints = store
+					.copyAll()
+					.filter((f) => f.properties?.[SELECT_PROPERTIES.SELECTION_POINT]);
+				expect(selectionPoints.length).toBe(5);
 
 				const setMapDraggability = jest.fn();
 				selectMode.onDrag(

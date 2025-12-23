@@ -558,7 +558,8 @@ describe("TerraDrawLineStringMode", () => {
 				[2, 2],
 			]);
 
-			lineStringMode.onClick(MockCursorEvent({ lng: 2, lat: 2 }));
+			// We can't close with a snapping click
+			lineStringMode.onClick(MockCursorEvent({ lng: 10, lat: 10 }));
 
 			expect(onFinish).toHaveBeenCalledTimes(1);
 			expect(onFinish).toHaveBeenCalledWith(lineString.id, {

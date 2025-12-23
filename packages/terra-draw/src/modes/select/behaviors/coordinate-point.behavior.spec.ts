@@ -4,6 +4,9 @@ import { GeoJSONStoreFeatures, JSONObject } from "../../../store/store";
 import { MockBehaviorConfig } from "../../../test/mock-behavior-config";
 import { MockPolygonSquare } from "../../../test/mock-features";
 import { CoordinatePointBehavior } from "./coordinate-point.behavior";
+import { MutateFeatureBehavior } from "../../mutate-feature.behavior";
+import { ReadFeatureBehavior } from "../../read-feature.behavior";
+import { BehaviorConfig } from "../../base.behavior";
 
 describe("CoordinatePointBehavior", () => {
 	const UUIDV4 = new RegExp(
@@ -14,17 +17,38 @@ describe("CoordinatePointBehavior", () => {
 
 	describe("constructor", () => {
 		it("constructs", () => {
-			new CoordinatePointBehavior(MockBehaviorConfig("test"));
+			const config = MockBehaviorConfig("test");
+			new CoordinatePointBehavior(
+				config,
+				new ReadFeatureBehavior(config),
+				new MutateFeatureBehavior(config, {
+					onFinish: jest.fn(),
+
+					validate: jest.fn(() => ({ valid: true })),
+				}),
+			);
 		});
 	});
 
 	describe("api", () => {
+		let config: BehaviorConfig;
+		let coordinatePointBehavior: CoordinatePointBehavior;
+
+		beforeEach(() => {
+			config = MockBehaviorConfig("test");
+			coordinatePointBehavior = new CoordinatePointBehavior(
+				config,
+				new ReadFeatureBehavior(config),
+				new MutateFeatureBehavior(config, {
+					onFinish: jest.fn(),
+
+					validate: jest.fn(() => ({ valid: true })),
+				}),
+			);
+		});
+
 		it("createOrUpdate", () => {
-			const config = MockBehaviorConfig("test");
-
 			jest.spyOn(config.store, "create");
-
-			const coordinatePointBehavior = new CoordinatePointBehavior(config);
 
 			const mockPolygon = MockPolygonSquare();
 			const [featureId] = config.store.create([
@@ -35,7 +59,10 @@ describe("CoordinatePointBehavior", () => {
 			]);
 
 			expect(config.store.has(featureId)).toBe(true);
-			coordinatePointBehavior.createOrUpdate(featureId);
+			coordinatePointBehavior.createOrUpdate({
+				featureId,
+				featureCoordinates: mockPolygon.geometry.coordinates,
+			});
 
 			const properties = config.store.getPropertiesCopy(featureId);
 			expect(properties).toBeDefined();
@@ -65,9 +92,6 @@ describe("CoordinatePointBehavior", () => {
 		});
 
 		it("createOrUpdate creates new points if previous ones have been deleted", () => {
-			const config = MockBehaviorConfig("test");
-			const coordinatePointBehavior = new CoordinatePointBehavior(config);
-
 			const mockPolygon = MockPolygonSquare();
 			const [featureId] = config.store.create([
 				{
@@ -77,14 +101,20 @@ describe("CoordinatePointBehavior", () => {
 			]);
 
 			expect(config.store.has(featureId)).toBe(true);
-			coordinatePointBehavior.createOrUpdate(featureId);
+			coordinatePointBehavior.createOrUpdate({
+				featureId,
+				featureCoordinates: mockPolygon.geometry.coordinates,
+			});
 
 			const properties = config.store.getPropertiesCopy(featureId);
 			const coordinatePointIds = properties.coordinatePointIds as string[];
 
 			config.store.delete(coordinatePointIds);
 
-			coordinatePointBehavior.createOrUpdate(featureId);
+			coordinatePointBehavior.createOrUpdate({
+				featureId,
+				featureCoordinates: mockPolygon.geometry.coordinates,
+			});
 			const propertiesAfterDelete = config.store.getPropertiesCopy(featureId);
 			const coordinatePointIdsAfterDelete =
 				propertiesAfterDelete.coordinatePointIds as string[];
@@ -112,10 +142,60 @@ describe("CoordinatePointBehavior", () => {
 			).toBe(true);
 		});
 
-		it("deletePointsByFeatureIds", () => {
-			const config = MockBehaviorConfig("test");
-			const coordinatePointBehavior = new CoordinatePointBehavior(config);
+		it("createOrUpdate updates current points", () => {
+			const mockPolygon = MockPolygonSquare();
+			const [featureId] = config.store.create([
+				{
+					geometry: mockPolygon.geometry,
+					properties: mockPolygon.properties as JSONObject,
+				},
+			]);
 
+			const featureCoordinates = [
+				[0, 0],
+				[0, 1],
+				[1, 0],
+				[1, 1],
+			] as Position[];
+
+			expect(config.store.has(featureId)).toBe(true);
+			coordinatePointBehavior.createOrUpdate({ featureId, featureCoordinates });
+
+			const properties = config.store.getPropertiesCopy(featureId);
+			expect(properties).toBeDefined();
+
+			const coordinatePointIds = properties.coordinatePointIds as string[];
+			expect(coordinatePointIds.length).toBe(4);
+			expect(coordinatePointIds.every(isUUIDV4)).toBe(true);
+
+			const featureCoordinatesUpdated = [
+				[0, 0],
+				[0, 2],
+				[2, 0],
+				[2, 2],
+			] as Position[];
+
+			coordinatePointBehavior.createOrUpdate({
+				featureId,
+				featureCoordinates: featureCoordinatesUpdated,
+			});
+
+			// Ensure all coordinate points are updated
+			const coordinatePoints = config.store.copyAllWhere((properties) =>
+				Boolean(properties[COMMON_PROPERTIES.COORDINATE_POINT]),
+			);
+			expect(coordinatePoints.length).toBe(4);
+			expect(
+				coordinatePoints.every(
+					({ geometry }, i) =>
+						geometry.type === "Point" &&
+						geometry.coordinates.toString() ===
+							featureCoordinatesUpdated[i].toString(),
+				),
+			).toBe(true);
+		});
+
+		it("deletePointsByFeatureIds", () => {
 			const mockPolygon = MockPolygonSquare();
 			const [featureId] = config.store.create([
 				{
@@ -125,7 +205,10 @@ describe("CoordinatePointBehavior", () => {
 			]);
 
 			expect(config.store.has(featureId)).toBe(true);
-			coordinatePointBehavior.createOrUpdate(featureId);
+			coordinatePointBehavior.createOrUpdate({
+				featureId,
+				featureCoordinates: mockPolygon.geometry.coordinates,
+			});
 
 			const properties = config.store.getPropertiesCopy(featureId);
 			expect(properties).toBeDefined();
@@ -146,9 +229,6 @@ describe("CoordinatePointBehavior", () => {
 		});
 
 		it("deletePointsByFeatureIds when points no longer exist doesn't throw an error", () => {
-			const config = MockBehaviorConfig("test");
-			const coordinatePointBehavior = new CoordinatePointBehavior(config);
-
 			const mockPolygon = MockPolygonSquare();
 			const [featureId] = config.store.create([
 				{
@@ -158,7 +238,10 @@ describe("CoordinatePointBehavior", () => {
 			]);
 
 			expect(config.store.has(featureId)).toBe(true);
-			coordinatePointBehavior.createOrUpdate(featureId);
+			coordinatePointBehavior.createOrUpdate({
+				featureId,
+				featureCoordinates: mockPolygon.geometry.coordinates,
+			});
 
 			const properties = config.store.getPropertiesCopy(featureId);
 			expect(properties).toBeDefined();
@@ -184,48 +267,6 @@ describe("CoordinatePointBehavior", () => {
 				(properties) => Boolean(properties[COMMON_PROPERTIES.COORDINATE_POINT]),
 			);
 			expect(coordinatePointsAfterDelete).toStrictEqual([]);
-		});
-
-		it("getUpdated", () => {
-			const config = MockBehaviorConfig("test");
-			const coordinatePointBehavior = new CoordinatePointBehavior(config);
-
-			const mockPolygon = MockPolygonSquare();
-			const [featureId] = config.store.create([
-				{
-					geometry: mockPolygon.geometry,
-					properties: mockPolygon.properties as JSONObject,
-				},
-			]);
-
-			expect(config.store.has(featureId)).toBe(true);
-			coordinatePointBehavior.createOrUpdate(featureId);
-
-			const properties = config.store.getPropertiesCopy(featureId);
-			expect(properties).toBeDefined();
-
-			const coordinatePointIds = properties.coordinatePointIds as string[];
-			expect(coordinatePointIds.length).toBe(4);
-			expect(coordinatePointIds.every(isUUIDV4)).toBe(true);
-
-			const updatedCoordinates = [
-				[0, 0],
-				[0, 1],
-				[1, 0],
-				[1, 1],
-			] as Position[];
-
-			const updatedPoints = coordinatePointBehavior.getUpdated(
-				featureId,
-				updatedCoordinates,
-			) as GeoJSONStoreFeatures[];
-
-			expect(updatedPoints).toBeDefined();
-			expect(updatedPoints.length).toBe(4);
-			expect(
-				updatedPoints.every((point) => point.geometry.type === "Point"),
-			).toBe(true);
-			expect(updatedPoints.every((_, i) => updatedCoordinates[i])).toBe(true);
 		});
 	});
 });

@@ -1,6 +1,5 @@
-import { Point, Position } from "geojson";
+import { Position } from "geojson";
 import { Project, Projection, Unproject } from "../common";
-import { JSONObject } from "../store/store";
 import {
 	midpointCoordinate,
 	geodesicMidpointCoordinate,
@@ -43,24 +42,4 @@ export function getMidPointCoordinates({
 		midPointCoords.push(mid);
 	}
 	return midPointCoords;
-}
-
-export function getMidPoints(
-	selectedCoords: Position[],
-	properties: (index: number) => JSONObject,
-	precision: number,
-	project: Project,
-	unproject: Unproject,
-	projection: Projection,
-) {
-	return getMidPointCoordinates({
-		featureCoords: selectedCoords,
-		precision,
-		project,
-		unproject,
-		projection,
-	}).map((coord, i) => ({
-		geometry: { type: "Point", coordinates: coord } as Point,
-		properties: properties(i),
-	}));
 }

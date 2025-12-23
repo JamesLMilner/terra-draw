@@ -1,7 +1,9 @@
-import { MockBehaviorConfig } from "../../../test/mock-behavior-config";
-import { MockCursorEvent } from "../../../test/mock-cursor-event";
-import { BehaviorConfig } from "../../base.behavior";
-import { PixelDistanceBehavior } from "../../pixel-distance.behavior";
+import { MockBehaviorConfig } from "./../test/mock-behavior-config";
+import { MockCursorEvent } from "./../test/mock-cursor-event";
+import { BehaviorConfig } from "./base.behavior";
+import { MutateFeatureBehavior } from "./mutate-feature.behavior";
+import { PixelDistanceBehavior } from "./pixel-distance.behavior";
+import { ReadFeatureBehavior } from "./read-feature.behavior";
 import { ClosingPointsBehavior } from "./closing-points.behavior";
 
 describe("ClosingPointsBehavior", () => {
@@ -14,7 +16,15 @@ describe("ClosingPointsBehavior", () => {
 	describe("constructor", () => {
 		it("constructs", () => {
 			const config = MockBehaviorConfig("test");
-			new ClosingPointsBehavior(config, new PixelDistanceBehavior(config));
+			new ClosingPointsBehavior(
+				config,
+				new PixelDistanceBehavior(config),
+				new MutateFeatureBehavior(config, {
+					onFinish: jest.fn(),
+					validate: jest.fn(() => ({ valid: true })),
+				}),
+				new ReadFeatureBehavior(config),
+			);
 		});
 	});
 
@@ -27,6 +37,11 @@ describe("ClosingPointsBehavior", () => {
 			startEndPointBehavior = new ClosingPointsBehavior(
 				config,
 				new PixelDistanceBehavior(config),
+				new MutateFeatureBehavior(config, {
+					onFinish: jest.fn(),
+					validate: jest.fn(() => ({ valid: true })),
+				}),
+				new ReadFeatureBehavior(config),
 			);
 		});
 
@@ -45,18 +60,17 @@ describe("ClosingPointsBehavior", () => {
 		describe("create", () => {
 			it("throws error if not enough coordinates", () => {
 				expect(() => {
-					startEndPointBehavior.create(
+					startEndPointBehavior.create([
 						[
 							[0, 0],
 							[0, 1],
 						],
-						"polygon",
-					);
+					]);
 				}).toThrow();
 			});
 
 			it("creates correctly when enough coordinates are present", () => {
-				startEndPointBehavior.create(
+				startEndPointBehavior.create([
 					[
 						[0, 0],
 						[0, 1],
@@ -64,28 +78,24 @@ describe("ClosingPointsBehavior", () => {
 						[1, 0],
 						[0, 0],
 					],
-					"polygon",
-				);
+				]);
 
 				expect(startEndPointBehavior.ids.length).toBe(2);
-				expect(isUUIDV4(startEndPointBehavior.ids[0])).toBe(true);
-				expect(isUUIDV4(startEndPointBehavior.ids[1])).toBe(true);
+				expect(isUUIDV4(startEndPointBehavior.ids[0] as string)).toBe(true);
+				expect(isUUIDV4(startEndPointBehavior.ids[1] as string)).toBe(true);
 			});
 
 			it("create can't be run twice", () => {
-				startEndPointBehavior.create(
-					[
-						[0, 0],
-						[0, 1],
-						[1, 1],
-						[1, 0],
-						[0, 0],
-					],
-					"polygon",
-				);
+				startEndPointBehavior.create([
+					[0, 0],
+					[0, 1],
+					[1, 1],
+					[1, 0],
+					[0, 0],
+				]);
 
 				expect(() => {
-					startEndPointBehavior.create(
+					startEndPointBehavior.create([
 						[
 							[0, 0],
 							[0, 1],
@@ -93,8 +103,7 @@ describe("ClosingPointsBehavior", () => {
 							[1, 0],
 							[0, 0],
 						],
-						"polygon",
-					);
+					]);
 				}).toThrow();
 			});
 		});
@@ -107,7 +116,7 @@ describe("ClosingPointsBehavior", () => {
 			});
 
 			it("with closing points deletes them", () => {
-				startEndPointBehavior.create(
+				startEndPointBehavior.create([
 					[
 						[0, 0],
 						[0, 1],
@@ -115,8 +124,7 @@ describe("ClosingPointsBehavior", () => {
 						[1, 0],
 						[0, 0],
 					],
-					"polygon",
-				);
+				]);
 
 				expect(startEndPointBehavior.ids.length).toBe(2);
 				startEndPointBehavior.delete();
@@ -125,30 +133,17 @@ describe("ClosingPointsBehavior", () => {
 		});
 
 		describe("update", () => {
-			it("throws error if nothing created", () => {
-				expect(() => {
-					startEndPointBehavior.update([
-						[0, 0],
-						[0, 1],
-						[1, 1],
-						[1, 0],
-						[0, 0],
-					]);
-				}).toThrow();
-			});
-
 			it("updates geometries correctly", () => {
 				jest.spyOn(config.store, "updateGeometry");
 
-				startEndPointBehavior.create(
+				startEndPointBehavior.create([
 					[
 						[0, 0],
 						[0, 1],
 						[1, 1],
 						[0, 0],
 					],
-					"polygon",
-				);
+				]);
 
 				expect(config.store.updateGeometry).toHaveBeenCalledTimes(0);
 
@@ -166,7 +161,7 @@ describe("ClosingPointsBehavior", () => {
 
 		describe("isClosingPoint", () => {
 			it("returns isClosing as true when in vicinity of closing point", () => {
-				startEndPointBehavior.create(
+				startEndPointBehavior.create([
 					[
 						[0, 0],
 						[0, 1],
@@ -174,11 +169,10 @@ describe("ClosingPointsBehavior", () => {
 						[1, 0],
 						[0, 0],
 					],
-					"polygon",
-				);
+				]);
 
 				const { isClosing, isPreviousClosing } =
-					startEndPointBehavior.isClosingPoint(
+					startEndPointBehavior.isPolygonClosingPoints(
 						MockCursorEvent({ lng: 0, lat: 0 }),
 					);
 
@@ -187,7 +181,7 @@ describe("ClosingPointsBehavior", () => {
 			});
 
 			it("returns isPreviousClosing as true when in vicinity of previous closing point", () => {
-				startEndPointBehavior.create(
+				startEndPointBehavior.create([
 					[
 						[0, 0],
 						[0, 1],
@@ -195,11 +189,10 @@ describe("ClosingPointsBehavior", () => {
 						[1, 0],
 						[0, 0],
 					],
-					"polygon",
-				);
+				]);
 
 				const { isClosing, isPreviousClosing } =
-					startEndPointBehavior.isClosingPoint(
+					startEndPointBehavior.isPolygonClosingPoints(
 						MockCursorEvent({ lng: 1, lat: 0 }),
 					);
 
@@ -208,7 +201,7 @@ describe("ClosingPointsBehavior", () => {
 			});
 
 			it("returns both as false when not in vicinity of either closing point", () => {
-				startEndPointBehavior.create(
+				startEndPointBehavior.create([
 					[
 						[0, 0],
 						[0, 1],
@@ -216,11 +209,10 @@ describe("ClosingPointsBehavior", () => {
 						[1, 0],
 						[0, 0],
 					],
-					"polygon",
-				);
+				]);
 
 				const { isClosing, isPreviousClosing } =
-					startEndPointBehavior.isClosingPoint(
+					startEndPointBehavior.isPolygonClosingPoints(
 						MockCursorEvent({ lng: 10, lat: 10 }),
 					);
 

@@ -6,27 +6,56 @@ import {
 import { MockBehaviorConfig } from "../../../test/mock-behavior-config";
 import { MockCursorEvent } from "../../../test/mock-cursor-event";
 import { BehaviorConfig } from "../../base.behavior";
+import { MutateFeatureBehavior } from "../../mutate-feature.behavior";
+import { ReadFeatureBehavior } from "../../read-feature.behavior";
 import { CoordinatePointBehavior } from "./coordinate-point.behavior";
 import { MidPointBehavior } from "./midpoint.behavior";
 import { RotateFeatureBehavior } from "./rotate-feature.behavior";
 import { SelectionPointBehavior } from "./selection-point.behavior";
+import { webMercatorCentroid } from "../../../geometry/web-mercator-centroid";
+
+jest.mock("../../../geometry/web-mercator-centroid", () => {
+	const actual = jest.requireActual("../../../geometry/web-mercator-centroid");
+	return {
+		...actual,
+		webMercatorCentroid: jest.fn(actual.webMercatorCentroid),
+	};
+});
 
 describe("RotateFeatureBehavior", () => {
 	describe("constructor", () => {
 		it("constructs", () => {
 			const config = MockBehaviorConfig("test");
-			const selectionPointBehavior = new SelectionPointBehavior(config);
-			const coordinatePointBehavior = new CoordinatePointBehavior(config);
+			const mutateFeatureBehavior = new MutateFeatureBehavior(config, {
+				onFinish: jest.fn(),
+
+				validate: jest.fn(() => ({ valid: true })),
+			});
+			const readFeatureBehavior = new ReadFeatureBehavior(config);
+			const selectionPointBehavior = new SelectionPointBehavior(
+				config,
+				mutateFeatureBehavior,
+			);
+			const coordinatePointBehavior = new CoordinatePointBehavior(
+				config,
+				readFeatureBehavior,
+				mutateFeatureBehavior,
+			);
+			const midpointBehavior = new MidPointBehavior(
+				config,
+				selectionPointBehavior,
+				coordinatePointBehavior,
+				mutateFeatureBehavior,
+				readFeatureBehavior,
+			);
 
 			new RotateFeatureBehavior(
 				config,
 				selectionPointBehavior,
-				new MidPointBehavior(
-					config,
-					selectionPointBehavior,
-					coordinatePointBehavior,
-				),
+				midpointBehavior,
 				coordinatePointBehavior,
+				readFeatureBehavior,
+				mutateFeatureBehavior,
 			);
 		});
 	});
@@ -37,8 +66,21 @@ describe("RotateFeatureBehavior", () => {
 
 		beforeEach(() => {
 			config = MockBehaviorConfig("test");
-			const selectionPointBehavior = new SelectionPointBehavior(config);
-			const coordinatePointBehavior = new CoordinatePointBehavior(config);
+			const mutateFeatureBehavior = new MutateFeatureBehavior(config, {
+				onFinish: jest.fn(),
+
+				validate: jest.fn(() => ({ valid: true })),
+			});
+			const readFeatureBehavior = new ReadFeatureBehavior(config);
+			const selectionPointBehavior = new SelectionPointBehavior(
+				config,
+				mutateFeatureBehavior,
+			);
+			const coordinatePointBehavior = new CoordinatePointBehavior(
+				config,
+				readFeatureBehavior,
+				mutateFeatureBehavior,
+			);
 
 			rotateFeatureBehavior = new RotateFeatureBehavior(
 				config,
@@ -47,10 +89,17 @@ describe("RotateFeatureBehavior", () => {
 					config,
 					selectionPointBehavior,
 					coordinatePointBehavior,
+					mutateFeatureBehavior,
+					readFeatureBehavior,
 				),
 				coordinatePointBehavior,
+				readFeatureBehavior,
+				mutateFeatureBehavior,
 			);
 
+			(
+				webMercatorCentroid as jest.MockedFunction<typeof webMercatorCentroid>
+			).mockClear();
 			jest.spyOn(config.store, "updateGeometry");
 			jest.spyOn(config.store, "getGeometryCopy");
 		});
@@ -61,6 +110,7 @@ describe("RotateFeatureBehavior", () => {
 
 				rotateFeatureBehavior.rotate(MockCursorEvent({ lng: 0, lat: 0 }), id);
 
+				expect(webMercatorCentroid).toHaveBeenCalledTimes(0);
 				expect(config.store.updateGeometry).toHaveBeenCalledTimes(0);
 			});
 
@@ -69,6 +119,8 @@ describe("RotateFeatureBehavior", () => {
 
 				rotateFeatureBehavior.rotate(MockCursorEvent({ lng: 0, lat: 0 }), id);
 
+				// Cached centroid geometry is calculated
+				expect(webMercatorCentroid).toHaveBeenCalledTimes(1);
 				expect(config.store.updateGeometry).toHaveBeenCalledTimes(0);
 			});
 
@@ -78,21 +130,20 @@ describe("RotateFeatureBehavior", () => {
 				rotateFeatureBehavior.rotate(MockCursorEvent({ lng: 0, lat: 0 }), id);
 				rotateFeatureBehavior.rotate(MockCursorEvent({ lng: 0, lat: 0 }), id);
 
-				// We cache the geometry in the first event
+				// We cache the centroid geometry in the first event
 				// and then use it in the second event
-				expect(config.store.getGeometryCopy).toHaveBeenCalledTimes(1);
+				expect(webMercatorCentroid).toHaveBeenCalledTimes(1);
 				expect(config.store.updateGeometry).toHaveBeenCalledTimes(1);
 			});
 
 			it("second event rotates the Polygon", () => {
 				const id = createStorePolygon(config);
-
 				rotateFeatureBehavior.rotate(MockCursorEvent({ lng: 0, lat: 0 }), id);
 				rotateFeatureBehavior.rotate(MockCursorEvent({ lng: 0, lat: 0 }), id);
 
-				// We cache the geometry in the first event
+				// We cache the centroid geometry in the first event
 				// and then use it in the second event
-				expect(config.store.getGeometryCopy).toHaveBeenCalledTimes(1);
+				expect(webMercatorCentroid).toHaveBeenCalledTimes(1);
 				expect(config.store.updateGeometry).toHaveBeenCalledTimes(1);
 			});
 		});

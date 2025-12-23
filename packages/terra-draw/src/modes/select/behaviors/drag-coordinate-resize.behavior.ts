@@ -9,7 +9,11 @@ import { LineString, Polygon, Position, Point, Feature } from "geojson";
 import { PixelDistanceBehavior } from "../../pixel-distance.behavior";
 import { MidPointBehavior } from "./midpoint.behavior";
 import { SelectionPointBehavior } from "./selection-point.behavior";
-import { FeatureId, GeoJSONStoreGeometries } from "../../../store/store";
+import {
+	FeatureId,
+	GeoJSONStoreFeatures,
+	GeoJSONStoreGeometries,
+} from "../../../store/store";
 import { limitPrecision } from "../../../geometry/limit-decimal-precision";
 import { cartesianDistance } from "../../../geometry/measure/pixel-distance";
 import { coordinatePrecisionIsValid } from "../../../geometry/boolean/is-valid-coordinate";
@@ -20,6 +24,12 @@ import {
 import { webMercatorCentroid } from "../../../geometry/web-mercator-centroid";
 import { CoordinatePointBehavior } from "./coordinate-point.behavior";
 import { transformScaleWebMercatorCoordinates } from "../../../geometry/transform/scale";
+import { ReadFeatureBehavior } from "../../read-feature.behavior";
+import {
+	MutateFeatureBehavior,
+	Mutations,
+} from "../../mutate-feature.behavior";
+import { getUnclosedCoordinates } from "../../../geometry/get-coordinates";
 
 export type ResizeOptions =
 	| "center"
@@ -47,6 +57,8 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 		private readonly selectionPoints: SelectionPointBehavior,
 		private readonly midPoints: MidPointBehavior,
 		private readonly coordinatePoints: CoordinatePointBehavior,
+		private readonly readFeature: ReadFeatureBehavior,
+		private readonly mutateFeature: MutateFeatureBehavior,
 	) {
 		super(config);
 	}
@@ -474,7 +486,7 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 			return null;
 		}
 
-		const geometry = this.store.getGeometryCopy(id);
+		const geometry = this.readFeature.getGeometry(id);
 
 		// Update the geometry of the dragged feature
 		if (geometry.type !== "Polygon" && geometry.type !== "LineString") {
@@ -486,7 +498,7 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 			type: "Feature",
 			geometry,
 			properties: {},
-		} as Feature<Polygon | LineString>;
+		} as GeoJSONStoreFeatures<Polygon | LineString>;
 
 		return feature;
 	}
@@ -667,7 +679,7 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 		event: TerraDrawMouseEvent,
 		selectedId: FeatureId,
 	): number {
-		const geometry = this.store.getGeometryCopy(selectedId);
+		const geometry = this.readFeature.getGeometry(selectedId);
 		const closestCoordinate = this.getClosestCoordinate(event, geometry);
 
 		// No coordinate was within the pointer distance
@@ -686,7 +698,6 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 	public drag(
 		event: TerraDrawMouseEvent,
 		resizeOption: ResizeOptions,
-		validateFeature?: Validation,
 	): boolean {
 		if (!this.draggedCoordinate.id) {
 			return false;
@@ -725,52 +736,46 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 			}
 		}
 
-		// Perform the update to the midpoints and selection points
-		const updatedMidPoints = this.midPoints.getUpdated(updatedCoords) || [];
-		const updatedSelectionPoints =
-			this.selectionPoints.getUpdated(updatedCoords) || [];
-		const updatedCoordinatePoints =
-			this.coordinatePoints.getUpdated(
-				feature.id as FeatureId,
-				updatedCoords,
-			) || [];
+		const featureId = feature.id as FeatureId;
 
-		const updatedGeometry = {
-			type: feature.geometry.type as "Polygon" | "LineString",
-			coordinates:
-				feature.geometry.type === "Polygon" ? [updatedCoords] : updatedCoords,
-		} as GeoJSONStoreGeometries;
+		let updated: GeoJSONStoreFeatures | null = null;
 
-		if (validateFeature) {
-			const validationResult = validateFeature(
-				{
-					id: this.draggedCoordinate.id,
-					type: "Feature",
-					geometry: updatedGeometry,
-					properties: {},
+		if (feature.geometry.type === "Polygon") {
+			updated = this.mutateFeature.updatePolygon({
+				featureId,
+				coordinateMutations: {
+					type: Mutations.Replace,
+					coordinates: [updatedCoords],
 				},
-				{
-					project: this.config.project,
-					unproject: this.config.unproject,
-					coordinatePrecision: this.config.coordinatePrecision,
-					updateType: UpdateTypes.Provisional,
+				context: {
+					updateType: UpdateTypes.Provisional as const,
 				},
-			);
-			if (!validationResult.valid) {
-				return false;
-			}
+			});
+		} else if (feature.geometry.type === "LineString") {
+			updated = this.mutateFeature.updateLineString({
+				featureId,
+				coordinateMutations: {
+					type: Mutations.Replace,
+					coordinates: updatedCoords,
+				},
+				context: {
+					updateType: UpdateTypes.Provisional as const,
+				},
+			});
 		}
 
-		// Issue the update to the selected feature
-		this.store.updateGeometry([
-			{
-				id: this.draggedCoordinate.id,
-				geometry: updatedGeometry,
-			},
-			...updatedSelectionPoints,
-			...updatedMidPoints,
-			...updatedCoordinatePoints,
-		]);
+		if (!updated) {
+			return false;
+		}
+
+		const featureCoordinates = getUnclosedCoordinates(
+			feature.geometry.coordinates,
+		);
+
+		// Perform the update to the midpoints and selection points
+		this.midPoints.updateAllInPlace({ featureCoordinates });
+		this.selectionPoints.updateAllInPlace({ featureCoordinates });
+		this.coordinatePoints.updateAllInPlace({ featureId, featureCoordinates });
 
 		return true;
 	}

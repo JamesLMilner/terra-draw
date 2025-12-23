@@ -27,6 +27,8 @@ import { ValidateLineStringFeature } from "../../validations/linestring.validati
 import { MutateFeatureBehavior, Mutations } from "../mutate-feature.behavior";
 import { ReadFeatureBehavior } from "../read-feature.behavior";
 import { BehaviorConfig } from "../base.behavior";
+import { ClosingPointsBehavior } from "../closing-points.behavior";
+import { PixelDistanceBehavior } from "../pixel-distance.behavior";
 
 type TerraDrawFreehandLineStringModeKeyEvents = {
 	cancel: KeyboardEvent["key"] | null;
@@ -66,7 +68,6 @@ export class TerraDrawFreehandLineStringMode extends TerraDrawBaseDrawMode<Freeh
 
 	private canClose = false;
 	private currentId: FeatureId | undefined;
-	private closingPointId: FeatureId | undefined;
 	private minDistance: number = 20;
 	private keyEvents: TerraDrawFreehandLineStringModeKeyEvents =
 		defaultKeyEvents;
@@ -76,6 +77,8 @@ export class TerraDrawFreehandLineStringMode extends TerraDrawBaseDrawMode<Freeh
 	// Behaviors
 	private mutateFeature!: MutateFeatureBehavior;
 	private readFeature!: ReadFeatureBehavior;
+	private pixelDistance!: PixelDistanceBehavior;
+	private closingPoints!: ClosingPointsBehavior;
 
 	constructor(
 		options?: TerraDrawFreehandLineStringModeOptions<FreehandLineStringStyling>,
@@ -123,9 +126,10 @@ export class TerraDrawFreehandLineStringMode extends TerraDrawBaseDrawMode<Freeh
 			return;
 		}
 
+		this.closingPoints.delete();
+
 		this.canClose = false;
 		this.currentId = undefined;
-		this.closingPointId = undefined;
 
 		// Go back to started state
 		if (this.state === "drawing") {
@@ -185,7 +189,7 @@ export class TerraDrawFreehandLineStringMode extends TerraDrawBaseDrawMode<Freeh
 			return;
 		}
 
-		this.mutateFeature.updateLineString({
+		const updated = this.mutateFeature.updateLineString({
 			featureId: this.currentId,
 			coordinateMutations: [
 				{
@@ -197,16 +201,11 @@ export class TerraDrawFreehandLineStringMode extends TerraDrawBaseDrawMode<Freeh
 			context: { updateType: UpdateTypes.Provisional },
 		});
 
-		if (this.closingPointId) {
-			this.mutateFeature.updatePoint({
-				featureId: this.closingPointId,
-				coordinateMutations: {
-					type: Mutations.Replace,
-					coordinates: [event.lng, event.lat],
-				},
-				context: { updateType: UpdateTypes.Provisional },
-			});
+		if (!updated) {
+			return;
 		}
+
+		this.closingPoints.update(updated.geometry.coordinates);
 	}
 
 	/** @internal */
@@ -224,24 +223,21 @@ export class TerraDrawFreehandLineStringMode extends TerraDrawBaseDrawMode<Freeh
 			}
 
 			if (this.canClose === false) {
-				const { id: createdId } = this.mutateFeature.createLineString({
-					coordinates: [
-						[event.lng, event.lat],
-						[event.lng, event.lat],
-					],
-					properties: {
-						mode: this.mode,
-						[COMMON_PROPERTIES.CURRENTLY_DRAWING]: true,
+				const { id: createdId, geometry } = this.mutateFeature.createLineString(
+					{
+						coordinates: [
+							[event.lng, event.lat],
+							[event.lng, event.lat],
+						],
+						properties: {
+							mode: this.mode,
+							[COMMON_PROPERTIES.CURRENTLY_DRAWING]: true,
+						},
 					},
-				});
-
-				const closingPointId = this.mutateFeature.createGuidancePoint(
-					[event.lng, event.lat],
-					COMMON_PROPERTIES.CLOSING_POINT,
 				);
 
+				this.closingPoints.create(geometry.coordinates);
 				this.currentId = createdId;
-				this.closingPointId = closingPointId;
 				this.canClose = true;
 
 				// We could already be in drawing due to updating the existing linestring
@@ -283,9 +279,7 @@ export class TerraDrawFreehandLineStringMode extends TerraDrawBaseDrawMode<Freeh
 	/** @internal */
 	cleanUp() {
 		const cleanUpId = this.currentId;
-		const cleanUpClosingPointId = this.closingPointId;
 
-		this.closingPointId = undefined;
 		this.currentId = undefined;
 		this.canClose = false;
 		if (this.state === "drawing") {
@@ -296,9 +290,8 @@ export class TerraDrawFreehandLineStringMode extends TerraDrawBaseDrawMode<Freeh
 			if (cleanUpId !== undefined) {
 				this.mutateFeature.deleteFeature(cleanUpId);
 			}
-			if (cleanUpClosingPointId !== undefined) {
-				this.mutateFeature.deleteFeature(cleanUpClosingPointId);
-			}
+
+			this.closingPoints.delete();
 		} catch (error) {}
 	}
 
@@ -374,12 +367,9 @@ export class TerraDrawFreehandLineStringMode extends TerraDrawBaseDrawMode<Freeh
 		// We need to reset the drawing state because it is very complicated (impossible?)
 		// to recover the drawing state after a feature update
 		if (this.currentId === feature.id) {
-			if (this.closingPointId) {
-				this.mutateFeature.deleteFeature(this.closingPointId);
-			}
+			this.closingPoints.delete();
 			this.canClose = false;
 			this.currentId = undefined;
-			this.closingPointId = undefined;
 		}
 	}
 
@@ -387,16 +377,19 @@ export class TerraDrawFreehandLineStringMode extends TerraDrawBaseDrawMode<Freeh
 		this.readFeature = new ReadFeatureBehavior(config);
 		this.mutateFeature = new MutateFeatureBehavior(config, {
 			validate: this.validate,
-			onUpdate: ({ id }) => {},
 			onFinish: (featureId, context) => {
 				this.onFinish(featureId, {
 					mode: this.mode,
 					action: context.action,
 				});
-				if (this.closingPointId) {
-					this.mutateFeature.deleteFeature(this.closingPointId);
-				}
 			},
 		});
+		this.pixelDistance = new PixelDistanceBehavior(config);
+		this.closingPoints = new ClosingPointsBehavior(
+			config,
+			this.pixelDistance,
+			this.mutateFeature,
+			this.readFeature,
+		);
 	}
 }

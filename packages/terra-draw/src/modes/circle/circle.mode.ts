@@ -451,7 +451,6 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 	registerBehaviors(config: BehaviorConfig) {
 		this.mutateFeature = new MutateFeatureBehavior(config, {
 			validate: this.validate,
-			onUpdate: ({ id }) => {},
 			onFinish: (featureId, context) => {
 				this.onFinish(featureId, {
 					mode: this.mode,

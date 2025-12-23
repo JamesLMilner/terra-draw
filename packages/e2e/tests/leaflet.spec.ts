@@ -153,6 +153,20 @@ test.describe("linestring mode", () => {
 	] as { name: string; config: TestConfigOptions[] }[];
 
 	for (const { name, config } of options) {
+		test(`creates correctly closing points for linestring${name}`, async ({
+			page,
+		}) => {
+			const mapDiv = await setupMap({ page, configQueryParam: config });
+			await changeMode({ page, mode });
+
+			await page.mouse.move(mapDiv.width / 2, mapDiv.height / 2);
+			await page.mouse.click(mapDiv.width / 2, mapDiv.height / 2);
+			await page.mouse.move(mapDiv.width / 3, mapDiv.height / 3);
+			await page.mouse.click(mapDiv.width / 3, mapDiv.height / 3);
+
+			await expectPaths({ page, count: 2 });
+		});
+
 		test(`mode can set and used to create a linestring${name}`, async ({
 			page,
 		}) => {
@@ -358,6 +372,35 @@ test.describe("linestring mode", () => {
 
 test.describe("polygon mode", () => {
 	const mode = "polygon";
+
+	test("closing points appear as expected", async ({ page }) => {
+		const mapDiv = await setupMap({ page });
+		await changeMode({ page, mode });
+
+		// The length of the square sides in pixels
+		const sideLength = 100;
+
+		// Calculating the half of the side length
+		const halfLength = sideLength / 2;
+
+		// Coordinates of the center
+		const centerX = mapDiv.width / 2;
+		const centerY = mapDiv.height / 2;
+
+		// Coordinates of the four corners of the square
+		const topLeft = { x: centerX - halfLength, y: centerY - halfLength };
+		const topRight = { x: centerX + halfLength, y: centerY - halfLength };
+		const bottomLeft = { x: centerX - halfLength, y: centerY + halfLength };
+		const bottomRight = { x: centerX + halfLength, y: centerY + halfLength };
+
+		// Perform clicks at each corner
+		await page.mouse.click(topLeft.x, topLeft.y);
+		await page.mouse.click(topRight.x, topRight.y);
+		await page.mouse.click(bottomRight.x, bottomRight.y);
+
+		// One point + one line
+		await expectPaths({ page, count: 3 });
+	});
 
 	test("mode can set and used to create a polygon", async ({ page }) => {
 		const mapDiv = await setupMap({ page });
@@ -714,6 +757,10 @@ test.describe("polygon mode", () => {
 		await page.mouse.click(topRight.x, topRight.y);
 		await page.mouse.click(bottomRight.x, bottomRight.y);
 		await page.mouse.click(bottomLeft.x, bottomLeft.y);
+
+		// An extra point is inserted for the mouse movement to manipulate
+		// Then we expect two extra closing points to be visible
+		await expectPaths({ page, count: 8 });
 
 		// Close the square
 		await page.mouse.click(bottomLeft.x, bottomLeft.y);

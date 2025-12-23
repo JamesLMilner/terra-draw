@@ -498,6 +498,7 @@ describe("TerraDrawPointMode", () => {
 			pointMode.register(mockConfig);
 
 			pointMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			expect(mockConfig.onFinish).toHaveBeenCalledTimes(1);
 
 			const setMapDraggability = jest.fn();
 			pointMode.onDragStart(

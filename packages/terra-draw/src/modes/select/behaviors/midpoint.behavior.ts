@@ -1,145 +1,203 @@
-import { LineString, Point, Polygon, Position } from "geojson";
+import { LineString, Polygon, Position } from "geojson";
 import { BehaviorConfig, TerraDrawModeBehavior } from "../../base.behavior";
-import {
-	getMidPointCoordinates,
-	getMidPoints,
-} from "../../../geometry/get-midpoints";
+import { getMidPointCoordinates } from "../../../geometry/get-midpoints";
 import { SelectionPointBehavior } from "./selection-point.behavior";
 import {
 	COMMON_PROPERTIES,
 	Projection,
 	SELECT_PROPERTIES,
+	UpdateTypes,
 } from "../../../common";
-import { FeatureId } from "../../../store/store";
+import { FeatureId, GeoJSONStoreFeatures } from "../../../store/store";
 import { CoordinatePointBehavior } from "./coordinate-point.behavior";
+import {
+	MutateFeatureBehavior,
+	Mutations,
+} from "../../mutate-feature.behavior";
+import { ReadFeatureBehavior } from "../../read-feature.behavior";
+import {
+	getClosedCoordinates,
+	getUnclosedCoordinates,
+} from "../../../geometry/get-coordinates";
 
 export class MidPointBehavior extends TerraDrawModeBehavior {
 	constructor(
 		readonly config: BehaviorConfig,
 		private readonly selectionPointBehavior: SelectionPointBehavior,
 		private readonly coordinatePointBehavior: CoordinatePointBehavior,
+		private readonly mutateFeature: MutateFeatureBehavior,
+		private readonly readFeature: ReadFeatureBehavior,
 	) {
 		super(config);
 	}
 
-	private _midPoints: string[] = [];
+	private _midPoints: FeatureId[] = [];
+
+	private getMidpointConfig(coordinates: Position[]) {
+		return {
+			featureCoords: coordinates,
+			precision: this.coordinatePrecision,
+			project: this.config.project,
+			unproject: this.config.unproject,
+			projection: this.config.projection as Projection,
+		};
+	}
 
 	get ids() {
 		return this._midPoints.concat();
 	}
 
-	set ids(_: string[]) {}
+	set ids(_: FeatureId[]) {}
 
-	public insert(
-		featureId: FeatureId,
-		midPointId: FeatureId,
-		coordinatePrecision: number,
-	) {
-		const midPoint = this.store.getGeometryCopy(midPointId);
+	public insert({
+		featureId,
+		midPointId,
+	}: {
+		featureId: FeatureId;
+		midPointId: FeatureId;
+	}) {
+		const midPoint = this.readFeature.getGeometry(midPointId);
 		const { midPointFeatureId, midPointSegment } =
-			this.store.getPropertiesCopy(midPointId);
-		const geometry = this.store.getGeometryCopy<Polygon | LineString>(
+			this.readFeature.getProperties(midPointId);
+		const geometry = this.readFeature.getGeometry<Polygon | LineString>(
 			midPointFeatureId as FeatureId,
 		);
 
-		// Update the coordinates to include inserted midpoint
-		const updatedCoordinates =
-			geometry.type === "Polygon"
-				? geometry.coordinates[0]
-				: geometry.coordinates;
+		const update = {
+			featureId: midPointFeatureId as FeatureId,
+			coordinateMutations: [
+				{
+					type: Mutations.InsertAfter,
+					index: midPointSegment as number,
+					coordinate: midPoint.coordinates as Position,
+				},
+			],
+			context: {
+				updateType: UpdateTypes.Commit as const,
+			},
+		};
 
-		updatedCoordinates.splice(
-			(midPointSegment as number) + 1,
-			0,
-			midPoint.coordinates as Position,
-		);
+		let updated: GeoJSONStoreFeatures<Polygon | LineString> | null = null;
 
-		// Update geometry coordinates depending
-		// on if a polygon or linestring
-		geometry.coordinates =
-			geometry.type === "Polygon" ? [updatedCoordinates] : updatedCoordinates;
+		if (geometry.type === "Polygon") {
+			updated = this.mutateFeature.updatePolygon(update);
+		} else if (geometry.type === "LineString") {
+			updated = this.mutateFeature.updateLineString(update);
+		} else {
+			throw new Error("Midpoints can only be added to polygons or linestrings");
+		}
 
-		// Update the selected features geometry to insert
-		// the new midpoint
-		this.store.updateGeometry([{ id: midPointFeatureId as string, geometry }]);
+		if (!updated) {
+			throw new Error("Failed to insert midpoint coordinate");
+		}
+
+		const featureCoordinates = updated.geometry.coordinates;
 
 		// We need to update the coordinate points to reflect the new midpoint
-		const featureProperties = this.store.getPropertiesCopy(featureId as string);
+		const featureProperties = this.readFeature.getProperties(featureId);
 
 		if (featureProperties[COMMON_PROPERTIES.COORDINATE_POINT_IDS]) {
-			this.coordinatePointBehavior.createOrUpdate(featureId);
+			this.coordinatePointBehavior.createOrUpdate({
+				featureId,
+				featureCoordinates,
+			});
 		}
 
 		// TODO: is there a way of just updating the selection points rather
 		// than fully deleting / recreating?
 		// Recreate the selection points
-
-		this.store.delete([...this._midPoints, ...this.selectionPointBehavior.ids]);
+		this.mutateFeature.deleteFeatures([
+			...this._midPoints,
+			...this.selectionPointBehavior.ids,
+		]);
 
 		// We don't need to check if flags are correct
 		// because selection points are prerequisite for midpoints
-		this.create(
-			updatedCoordinates,
-			midPointFeatureId as string,
-			coordinatePrecision,
-		);
-		this.selectionPointBehavior.create(
-			updatedCoordinates,
-			geometry.type,
-			midPointFeatureId as string,
-		);
+		this.create({
+			featureCoordinates,
+			featureId: midPointFeatureId as FeatureId,
+		});
+
+		this.selectionPointBehavior.create({
+			featureCoordinates,
+			featureId: featureId,
+		});
 	}
 
-	public create(
-		selectedCoords: Position[],
-		featureId: FeatureId,
-		coordinatePrecision: number,
-	) {
-		if (!this.store.has(featureId)) {
+	public create({
+		featureCoordinates,
+		featureId,
+	}: {
+		featureCoordinates: Position[] | Position[][];
+		featureId: FeatureId;
+	}) {
+		if (!this.readFeature.hasFeature(featureId)) {
 			throw new Error("Store does not have feature with this id");
 		}
 
-		this._midPoints = this.store.create(
-			getMidPoints(
-				selectedCoords,
-				(i) => ({
-					mode: this.mode,
-					[SELECT_PROPERTIES.MID_POINT]: true,
-					midPointSegment: i,
-					midPointFeatureId: featureId,
-				}),
-				coordinatePrecision,
-				this.config.project,
-				this.config.unproject,
-				this.projection,
-			),
+		const coordinates = getClosedCoordinates(featureCoordinates);
+		const midpoints = getMidPointCoordinates(
+			this.getMidpointConfig(coordinates),
 		);
+
+		this._midPoints = this.mutateFeature.createGuidancePoints({
+			additionalProperties: (i) => ({
+				mode: this.mode,
+				midPointSegment: i,
+				midPointFeatureId: featureId,
+				[SELECT_PROPERTIES.MID_POINT]: true,
+			}),
+			coordinates: midpoints,
+			type: SELECT_PROPERTIES.MID_POINT,
+		});
 	}
 
 	public delete() {
 		if (this._midPoints.length) {
-			this.store.delete(this._midPoints);
+			this.mutateFeature.deleteFeatures(this._midPoints);
 			this._midPoints = [];
 		}
 	}
 
-	public getUpdated(updatedCoordinates: Position[]) {
+	public updateAllInPlace({
+		featureCoordinates,
+	}: {
+		featureCoordinates: Position[] | Position[][];
+	}) {
 		if (this._midPoints.length === 0) {
 			return undefined;
 		}
 
-		return getMidPointCoordinates({
-			featureCoords: updatedCoordinates,
-			precision: this.coordinatePrecision,
-			project: this.config.project,
-			unproject: this.config.unproject,
-			projection: this.config.projection as Projection,
-		}).map((updatedMidPointCoord, i) => ({
-			id: this._midPoints[i] as string,
-			geometry: {
-				type: "Point",
-				coordinates: updatedMidPointCoord,
-			} as Point,
-		}));
+		const coordinates = getClosedCoordinates(featureCoordinates);
+		const midpoints = getMidPointCoordinates(
+			this.getMidpointConfig(coordinates),
+		);
+
+		this.mutateFeature.updateGuidancePoints(
+			this._midPoints.map((id, i) => ({
+				featureId: id,
+				coordinate: midpoints[i],
+			})),
+		);
+	}
+
+	public updateOneAtIndex(
+		index: number,
+		featureCoordinates: Position[] | Position[][],
+	) {
+		if (this._midPoints[index] === undefined) {
+			return undefined;
+		}
+		const coordinates = getClosedCoordinates(featureCoordinates);
+		const midpoints = getMidPointCoordinates(
+			this.getMidpointConfig(coordinates),
+		);
+
+		this.mutateFeature.updateGuidancePoints([
+			{
+				featureId: this._midPoints[index],
+				coordinate: midpoints[index],
+			},
+		]);
 	}
 }

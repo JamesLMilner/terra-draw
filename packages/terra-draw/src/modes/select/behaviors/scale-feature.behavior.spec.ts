@@ -6,7 +6,9 @@ import {
 import { MockBehaviorConfig } from "../../../test/mock-behavior-config";
 import { MockCursorEvent } from "../../../test/mock-cursor-event";
 import { BehaviorConfig } from "../../base.behavior";
+import { MutateFeatureBehavior } from "../../mutate-feature.behavior";
 import { PixelDistanceBehavior } from "../../pixel-distance.behavior";
+import { ReadFeatureBehavior } from "../../read-feature.behavior";
 import { CoordinatePointBehavior } from "./coordinate-point.behavior";
 import { DragCoordinateResizeBehavior } from "./drag-coordinate-resize.behavior";
 import { MidPointBehavior } from "./midpoint.behavior";
@@ -17,8 +19,21 @@ describe("ScaleFeatureBehavior", () => {
 	describe("constructor", () => {
 		it("constructs", () => {
 			const config = MockBehaviorConfig("test");
-			const selectionPointBehavior = new SelectionPointBehavior(config);
-			const coordinatePointBehavior = new CoordinatePointBehavior(config);
+			const mutateFeatureBehavior = new MutateFeatureBehavior(config, {
+				onFinish: jest.fn(),
+				validate: jest.fn(() => ({ valid: true })),
+			});
+			const readFeatureBehavior = new ReadFeatureBehavior(config);
+			const selectionPointBehavior = new SelectionPointBehavior(
+				config,
+				mutateFeatureBehavior,
+			);
+			const coordinatePointBehavior = new CoordinatePointBehavior(
+				config,
+				readFeatureBehavior,
+				mutateFeatureBehavior,
+			);
+
 			const dragCoordinatePointBehavior = new DragCoordinateResizeBehavior(
 				config,
 				new PixelDistanceBehavior(config),
@@ -27,8 +42,12 @@ describe("ScaleFeatureBehavior", () => {
 					config,
 					selectionPointBehavior,
 					coordinatePointBehavior,
+					mutateFeatureBehavior,
+					readFeatureBehavior,
 				),
 				coordinatePointBehavior,
+				readFeatureBehavior,
+				mutateFeatureBehavior,
 			);
 
 			new ScaleFeatureBehavior(config, dragCoordinatePointBehavior);
@@ -42,8 +61,22 @@ describe("ScaleFeatureBehavior", () => {
 		beforeEach(() => {
 			config = MockBehaviorConfig("test");
 
-			const selectionPointBehavior = new SelectionPointBehavior(config);
-			const coordinatePointBehavior = new CoordinatePointBehavior(config);
+			const mutateFeatureBehavior = new MutateFeatureBehavior(config, {
+				onFinish: jest.fn(),
+
+				validate: jest.fn(() => ({ valid: true })),
+			});
+			const readFeatureBehavior = new ReadFeatureBehavior(config);
+			const selectionPointBehavior = new SelectionPointBehavior(
+				config,
+				mutateFeatureBehavior,
+			);
+			const coordinatePointBehavior = new CoordinatePointBehavior(
+				config,
+				readFeatureBehavior,
+				mutateFeatureBehavior,
+			);
+
 			const dragCoordinatePointBehavior = new DragCoordinateResizeBehavior(
 				config,
 				new PixelDistanceBehavior(config),
@@ -52,8 +85,12 @@ describe("ScaleFeatureBehavior", () => {
 					config,
 					selectionPointBehavior,
 					coordinatePointBehavior,
+					mutateFeatureBehavior,
+					readFeatureBehavior,
 				),
 				coordinatePointBehavior,
+				readFeatureBehavior,
+				mutateFeatureBehavior,
 			);
 
 			scaleFeatureBehavior = new ScaleFeatureBehavior(

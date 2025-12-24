@@ -24,6 +24,93 @@ describe("Terra Draw", () => {
 		});
 	});
 
+	describe("constructing with custom mode names", () => {
+		it("should not allow changing to the original mode name if it has custom name", () => {
+			const polygonMode = new TerraDrawPolygonMode({
+				modeName: "new-polygon",
+			});
+			const draw = new TerraDraw({
+				adapter,
+				modes: [polygonMode],
+			});
+
+			draw.start();
+
+			// The new mode name should be valid
+			expect(() => draw.setMode("new-polygon")).not.toThrow();
+
+			// The previous mode name should no longer be valid
+			expect(() => draw.setMode("polygon")).toThrow(
+				"No mode with this name present",
+			);
+		});
+
+		it("should ensure that multiple instances of the same mode can coexist", () => {
+			const polygonMode = new TerraDrawPolygonMode();
+			const polygonModeNew = new TerraDrawPolygonMode({
+				modeName: "new-polygon",
+			});
+			const draw = new TerraDraw({
+				adapter,
+				modes: [polygonMode, polygonModeNew],
+			});
+
+			draw.start();
+
+			// Switch to the new mode name
+			draw.setMode("polygon");
+
+			polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			polygonMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
+			polygonMode.onClick(MockCursorEvent({ lng: 2, lat: 2 }));
+
+			let features = draw.getSnapshot();
+			expect(features.length).toBe(3);
+			expect(features[0].geometry.type).toEqual("Polygon");
+			expect(features[0].properties[COMMON_PROPERTIES.MODE]).toEqual("polygon");
+			expect(features[1].geometry.type).toEqual("Point");
+			expect(features[1].properties[COMMON_PROPERTIES.CLOSING_POINT]).toEqual(
+				true,
+			);
+			expect(features[1].properties[COMMON_PROPERTIES.MODE]).toEqual("polygon");
+			expect(features[2].geometry.type).toEqual("Point");
+			expect(features[2].properties[COMMON_PROPERTIES.CLOSING_POINT]).toEqual(
+				true,
+			);
+			expect(features[2].properties[COMMON_PROPERTIES.MODE]).toEqual("polygon");
+
+			// Not technically needed but for clarity we have wiped all features
+			draw.clear();
+
+			draw.setMode("new-polygon");
+
+			polygonModeNew.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			polygonModeNew.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
+			polygonModeNew.onClick(MockCursorEvent({ lng: 2, lat: 2 }));
+
+			features = draw.getSnapshot();
+			expect(features.length).toBe(3);
+			expect(features[0].geometry.type).toEqual("Polygon");
+			expect(features[0].properties[COMMON_PROPERTIES.MODE]).toEqual(
+				"new-polygon",
+			);
+			expect(features[1].geometry.type).toEqual("Point");
+			expect(features[1].properties[COMMON_PROPERTIES.CLOSING_POINT]).toEqual(
+				true,
+			);
+			expect(features[1].properties[COMMON_PROPERTIES.MODE]).toEqual(
+				"new-polygon",
+			);
+			expect(features[2].geometry.type).toEqual("Point");
+			expect(features[2].properties[COMMON_PROPERTIES.CLOSING_POINT]).toEqual(
+				true,
+			);
+			expect(features[2].properties[COMMON_PROPERTIES.MODE]).toEqual(
+				"new-polygon",
+			);
+		});
+	});
+
 	describe("addFeatures", () => {
 		it("respects the default id strategy", () => {
 			const draw = new TerraDraw({

@@ -915,6 +915,58 @@ describe("TerraDrawPolygonMode", () => {
 			expect(features.length).toBe(2);
 		});
 
+		it("closing points are created as expected", () => {
+			polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			polygonMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
+			polygonMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
+			polygonMode.onMouseMove(MockCursorEvent({ lng: 2, lat: 2 }));
+			polygonMode.onClick(MockCursorEvent({ lng: 2, lat: 2 }));
+			polygonMode.onMouseMove(MockCursorEvent({ lng: 3, lat: 3 }));
+
+			const features = store.copyAll();
+			expect(features.length).toBe(3);
+			expect(features[0].properties[COMMON_PROPERTIES.CURRENTLY_DRAWING]).toBe(
+				true,
+			);
+			expect(features[1].properties).toEqual({
+				[COMMON_PROPERTIES.CLOSING_POINT]: true,
+				[COMMON_PROPERTIES.MODE]: "polygon",
+				createdAt: expect.any(Number),
+				updatedAt: expect.any(Number),
+			});
+			expect(features[2].properties).toEqual({
+				[COMMON_PROPERTIES.CLOSING_POINT]: true,
+				[COMMON_PROPERTIES.MODE]: "polygon",
+				createdAt: expect.any(Number),
+				updatedAt: expect.any(Number),
+			});
+		});
+
+		it("closing points respect custom mode name", () => {
+			polygonMode = new TerraDrawPolygonMode({
+				modeName: "custom-polygon",
+			});
+			const mockConfig = MockModeConfig(polygonMode.mode);
+			store = mockConfig.store;
+			polygonMode.register(mockConfig);
+			polygonMode.start();
+
+			polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			polygonMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
+			polygonMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
+			polygonMode.onMouseMove(MockCursorEvent({ lng: 2, lat: 2 }));
+			polygonMode.onClick(MockCursorEvent({ lng: 2, lat: 2 }));
+			polygonMode.onMouseMove(MockCursorEvent({ lng: 3, lat: 3 }));
+
+			const features = store.copyAll();
+			expect(features.length).toBe(3);
+			expect(features[0].properties[COMMON_PROPERTIES.CURRENTLY_DRAWING]).toBe(
+				true,
+			);
+			expect(features[1].properties.mode).toEqual("custom-polygon");
+			expect(features[2].properties.mode).toEqual("custom-polygon");
+		});
+
 		it("can create a polygon with toCoordinate snapping enabled", () => {
 			polygonMode = new TerraDrawPolygonMode({
 				snapping: {

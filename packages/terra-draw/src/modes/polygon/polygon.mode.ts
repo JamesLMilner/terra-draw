@@ -248,7 +248,6 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 		this.readFeature = new ReadFeatureBehavior(config);
 		this.mutateFeature = new MutateFeatureBehavior(config, {
 			validate: this.validate,
-
 			onFinish: (featureId, context) => {
 				if (this.editedPointId) {
 					this.mutateFeature.deleteFeature(this.editedPointId);

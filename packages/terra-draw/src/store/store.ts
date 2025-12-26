@@ -276,7 +276,8 @@ export class GeoJSONStore<
 
 		if (this._onChange && ids.size > 0) {
 			this._onChange(
-				[...ids],
+				// NOTE: We use Array.from to convert Set to Array because microbundle cannot handle spreading Sets
+				Array.from(ids),
 				"update",
 				context
 					? { ...context, ...propertiesContext }
@@ -313,7 +314,8 @@ export class GeoJSONStore<
 
 		if (this._onChange && ids.size > 0) {
 			this._onChange(
-				[...ids],
+				// NOTE: We use Array.from to convert Set to Array because microbundle cannot handle spreading Sets
+				Array.from(ids),
 				"update",
 				context
 					? { ...context, ...geometryContext }

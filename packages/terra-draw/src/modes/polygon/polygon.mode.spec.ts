@@ -271,6 +271,12 @@ describe("TerraDrawPolygonMode", () => {
 			});
 
 			expect(mockConfig.onChange).toHaveBeenCalledTimes(0);
+
+			const coordinatePoints = mockConfig.store.copyAllWhere(
+				(properties) =>
+					properties[COMMON_PROPERTIES.COORDINATE_POINT] as boolean,
+			);
+			expect(coordinatePoints.length).toBe(0);
 		});
 
 		it("can handle changes to showCoordinatePoints when there are polygons in the mode", () => {
@@ -317,6 +323,12 @@ describe("TerraDrawPolygonMode", () => {
 				"update",
 				{ target: "properties" },
 			);
+
+			const coordinatePoints = mockConfig.store.copyAllWhere(
+				(properties) =>
+					properties[COMMON_PROPERTIES.COORDINATE_POINT] as boolean,
+			);
+			expect(coordinatePoints.length).toBe(4);
 		});
 	});
 
@@ -1853,6 +1865,22 @@ describe("cleanUp", () => {
 		polygonMode.cleanUp();
 
 		// Removes the LineString that was being created
+		expect(store.copyAll().length).toBe(0);
+	});
+
+	it('cleans up coordinate points if "showCoordinatePoints" is enabled', () => {
+		polygonMode.updateOptions({
+			showCoordinatePoints: true,
+		});
+
+		polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+		// 1 Polygon + 3 Coordinate Points
+		expect(store.copyAll().length).toBe(4);
+
+		polygonMode.cleanUp();
+
+		// Removes the Polygon and Coordinate Points
 		expect(store.copyAll().length).toBe(0);
 	});
 });

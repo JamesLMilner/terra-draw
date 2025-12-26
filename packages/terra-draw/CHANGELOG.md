@@ -2,6 +2,43 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.21.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.20.0...terra-draw@1.21.0) (2025-12-26)
+
+
+### test
+
+* **terra-draw:** add more unit tests around custom mode names (#753) ([](https://github.com/JamesLMilner/terra-draw/commit/05fe176e4dc420db64578b9471f3d00908559fde)), closes [#753](https://github.com/JamesLMilner/terra-draw/issues/753)
+* **terra-draw:** add some additional unit tests for coordinate points (#755) ([](https://github.com/JamesLMilner/terra-draw/commit/b49fbbb9ca860a431ad4af37aae47a94b830679e)), closes [#755](https://github.com/JamesLMilner/terra-draw/issues/755)
+
+
+### fix
+
+* **terra-draw:** ensure that rectangle mode cleanup can handle deleted geometries (#754) ([](https://github.com/JamesLMilner/terra-draw/commit/dbcd5e53882f85e182927fd3a610f0b9906f24d7)), closes [#754](https://github.com/JamesLMilner/terra-draw/issues/754)
+* **terra-draw:** ensure that toLine and toCoordinate snapping works correctly in linestring mode (#740) ([](https://github.com/JamesLMilner/terra-draw/commit/c6ed5c2cb943dae70bc5b6cde4a59e73ec788c54)), closes [#740](https://github.com/JamesLMilner/terra-draw/issues/740)
+
+
+### chore
+
+* **terra-draw:** fix mutate behavior tests (#751) ([](https://github.com/JamesLMilner/terra-draw/commit/e42c4c318a7d2a563dfcc7239f03a87e9a03722e)), closes [#751](https://github.com/JamesLMilner/terra-draw/issues/751)
+
+
+### refactor
+
+* **terra-draw:** add a centralised way to manipulate geometries (#718) ([](https://github.com/JamesLMilner/terra-draw/commit/971d307727911d14dc111934f9eb5b6096117398)), closes [#718](https://github.com/JamesLMilner/terra-draw/issues/718)
+* **terra-draw:** rework behaviors to use mutate feature behavior (#750) ([](https://github.com/JamesLMilner/terra-draw/commit/dd1c5a2ada0aa5b0aba68d773567330015e81459)), closes [#750](https://github.com/JamesLMilner/terra-draw/issues/750)
+* **terra-draw:** use MutateBehavior in select mode (#747) ([](https://github.com/JamesLMilner/terra-draw/commit/73c1ad9298bcb06b6e0aeaccf4d2c053cb6b6cb0)), closes [#747](https://github.com/JamesLMilner/terra-draw/issues/747)
+* **terra-draw:** use MutateFeatureBehavior for circle and rectangle modes (#738) ([](https://github.com/JamesLMilner/terra-draw/commit/9fc1bfd5c73e7b61a7fd26d888173828c1a12594)), closes [#738](https://github.com/JamesLMilner/terra-draw/issues/738)
+* **terra-draw:** use MutateFeatureBehavior in angled rectangle mode (#741) ([](https://github.com/JamesLMilner/terra-draw/commit/7d8598fce6947da44334b1a0451fe9a2082bb441)), closes [#741](https://github.com/JamesLMilner/terra-draw/issues/741)
+* **terra-draw:** use MutateFeatureBehavior in freehand and freehand-linestring modes (#744) ([](https://github.com/JamesLMilner/terra-draw/commit/fe2ce9ea748266ed509094d5aa8fc1a456d6e29f)), closes [#744](https://github.com/JamesLMilner/terra-draw/issues/744)
+* **terra-draw:** use MutateFeatureBehavior in point and marker modes (#743) ([](https://github.com/JamesLMilner/terra-draw/commit/aa8d5d4d7ca757813b64c88eaef9847681549b89)), closes [#743](https://github.com/JamesLMilner/terra-draw/issues/743)
+* **terra-draw:** use MutateFeatureBehavior in sector and sensor modes (#746) ([](https://github.com/JamesLMilner/terra-draw/commit/dc1fb8c6e2b7260515450da0d8f38a9b2930b778)), closes [#746](https://github.com/JamesLMilner/terra-draw/issues/746) [#744](https://github.com/JamesLMilner/terra-draw/issues/744)
+
+
+### feat
+
+* **terra-draw:** optional click-and-drag support for TerraDrawCircleMode (#668) (#745) ([](https://github.com/JamesLMilner/terra-draw/commit/e7144e97e919b268a1dc7b0f878276a8a36e5236)), closes [#668](https://github.com/JamesLMilner/terra-draw/issues/668) [#745](https://github.com/JamesLMilner/terra-draw/issues/745) [#744](https://github.com/JamesLMilner/terra-draw/issues/744) [#668](https://github.com/JamesLMilner/terra-draw/issues/668)
+* **terra-draw:** provide event type to getMapEventElement (#733) ([](https://github.com/JamesLMilner/terra-draw/commit/25cc42c67adee74d7a4f487bada4b03a49f457ad)), closes [#733](https://github.com/JamesLMilner/terra-draw/issues/733)
+
 ## [1.20.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.19.0...terra-draw@1.20.0) (2025-11-29)
 
 

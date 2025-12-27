@@ -399,7 +399,14 @@ const LineString: Story = {
 	...DefaultStory,
 	args: {
 		id: "linestring",
-		modes: [() => new TerraDrawLineStringMode()],
+		modes: [
+			() =>
+				new TerraDrawLineStringMode({
+					styles: {
+						lineStringDash: [1, 1],
+					},
+				}),
+		],
 		...DefaultStory.args,
 	},
 };
@@ -488,7 +495,14 @@ const FreehandLineString: Story = {
 	...DefaultStory,
 	args: {
 		id: "freehand-linestring",
-		modes: [() => new TerraDrawFreehandLineStringMode()],
+		modes: [
+			() =>
+				new TerraDrawFreehandLineStringMode({
+					styles: {
+						lineStringDash: [1, 1],
+					},
+				}),
+		],
 		...DefaultStory.args,
 	},
 };

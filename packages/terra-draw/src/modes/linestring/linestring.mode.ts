@@ -67,6 +67,7 @@ type LineStringStyling = {
 	snappingPointOpacity: NumericStyling;
 	snappingPointOutlineColor: HexColorStyling;
 	snappingPointOutlineWidth: NumericStyling;
+<<<<<<< HEAD
 	snappingPointOutlineOpacity: NumericStyling;
 	coordinatePointColor: HexColorStyling;
 	coordinatePointOpacity: NumericStyling;
@@ -74,6 +75,9 @@ type LineStringStyling = {
 	coordinatePointOutlineColor: HexColorStyling;
 	coordinatePointOutlineWidth: NumericStyling;
 	coordinatePointOutlineOpacity: NumericStyling;
+=======
+	lineStringDash: [number, number];
+>>>>>>> 192adbe (refactor(terra-draw): bring line dash in work with latest changes)
 };
 
 interface Cursors {
@@ -1160,6 +1164,8 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 			feature.geometry.type === "LineString" &&
 			feature.properties.mode === this.mode
 		) {
+			styles.lineStringDash = this.styles.lineStringDash;
+
 			styles.lineStringColor = this.getHexColorStylingValue(
 				this.styles.lineStringColor,
 				styles.lineStringColor,

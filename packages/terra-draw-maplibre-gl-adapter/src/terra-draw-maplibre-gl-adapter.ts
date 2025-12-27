@@ -130,6 +130,15 @@ export class TerraDrawMapLibreGLAdapter<
 	}
 
 	private _addLineLayer(id: string) {
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		const paint: { "line-dasharray"?: any[] } = {};
+
+		paint["line-dasharray"] = [
+			"coalesce",
+			["get", "lineStringDash"],
+			["literal", []],
+		];
+
 		const layer = this._map.addLayer({
 			id,
 			source: id,
@@ -139,6 +148,7 @@ export class TerraDrawMapLibreGLAdapter<
 			},
 			// No need for filters as style is driven by properties
 			paint: {
+				...paint,
 				"line-width": ["get", "lineStringWidth"],
 				"line-color": ["get", "lineStringColor"],
 				"line-opacity": ["get", "lineStringOpacity"],
@@ -450,6 +460,8 @@ export class TerraDrawMapLibreGLAdapter<
 
 					points.push(feature);
 				} else if (feature.geometry.type === "LineString") {
+					console.log(styles.lineStringDash);
+					properties.lineStringDash = styles.lineStringDash || null;
 					properties.lineStringColor = styles.lineStringColor;
 					properties.lineStringWidth = styles.lineStringWidth;
 

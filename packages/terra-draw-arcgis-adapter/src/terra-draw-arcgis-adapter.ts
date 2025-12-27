@@ -269,11 +269,21 @@ export class TerraDrawArcGISMapsSDKAdapter extends TerraDrawExtend.TerraDrawBase
 					.lineStringOpacity;
 
 				geometry = new this._lib.Polyline({ paths: [coordinates] });
+
+				const dashed = style.lineStringDash
+					? { style: "dot" as const, lineDash: style.lineStringDash }
+					: {};
+
 				symbol = new this._lib.SimpleLineSymbol({
+<<<<<<< HEAD
 					color: this.getColorFromHex(
 						style.lineStringColor,
 						lineStringOpacity === undefined ? 1 : lineStringOpacity,
 					),
+=======
+					...dashed,
+					color: this.getColorFromHex(style.lineStringColor),
+>>>>>>> 192adbe (refactor(terra-draw): bring line dash in work with latest changes)
 					width: style.lineStringWidth + "px",
 				});
 				break;

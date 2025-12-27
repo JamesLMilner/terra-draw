@@ -644,9 +644,45 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawExtend.TerraDrawBaseAda
 							String(updatedFeature.id),
 						);
 
+<<<<<<< HEAD
 						if (!featureToUpdate) {
 							throw new Error("Feature could not be found by Google Maps API");
 						}
+=======
+				case "LineString":
+					const dashedLineStyles = calculatedStyles.lineStringDash
+						? {
+								strokeOpacity: 0,
+								icons: [
+									{
+										icon: {
+											path: "M 0,-1 0,1",
+											strokeOpacity: 1,
+											scale: 4,
+										},
+										offset: "0",
+										repeat: "20px",
+									},
+								],
+							}
+						: {};
+
+					return {
+						strokeColor: calculatedStyles.lineStringColor,
+						strokeWeight: calculatedStyles.lineStringWidth,
+						zIndex: calculatedStyles.zIndex,
+						...dashedLineStyles,
+					};
+				case "Polygon":
+					return {
+						strokeColor: calculatedStyles.polygonOutlineColor,
+						strokeWeight: calculatedStyles.polygonOutlineWidth,
+						fillOpacity: calculatedStyles.polygonFillOpacity,
+						fillColor: calculatedStyles.polygonFillColor,
+						zIndex: calculatedStyles.zIndex,
+					};
+			}
+>>>>>>> 192adbe (refactor(terra-draw): bring line dash in work with latest changes)
 
 						// Remove all keys
 						featureToUpdate.forEachProperty((_property, name) => {

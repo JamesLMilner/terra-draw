@@ -234,12 +234,12 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawExtend.TerraDrawBaseAdapt
 		polygons: boolean;
 		styling: boolean;
 	} = {
-			deletion: false,
-			points: false,
-			linestrings: false,
-			polygons: false,
-			styling: false,
-		};
+		deletion: false,
+		points: false,
+		linestrings: false,
+		polygons: false,
+		styling: false,
+	};
 
 	private updateChangedIds(changes: TerraDrawChanges) {
 		[...changes.updated, ...changes.created].forEach((feature) => {

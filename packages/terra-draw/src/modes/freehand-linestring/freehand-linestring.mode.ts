@@ -41,7 +41,11 @@ const defaultKeyEvents = { cancel: "Escape", finish: "Enter" };
 type FreehandLineStringStyling = {
 	lineStringWidth: NumericStyling;
 	lineStringColor: HexColorStyling;
+<<<<<<< HEAD
 	lineStringOpacity: NumericStyling;
+=======
+	lineStringDash: [number, number];
+>>>>>>> 192adbe (refactor(terra-draw): bring line dash in work with latest changes)
 	closingPointColor: HexColorStyling;
 	closingPointOpacity: NumericStyling;
 	closingPointWidth: NumericStyling;
@@ -310,6 +314,8 @@ export class TerraDrawFreehandLineStringMode extends TerraDrawBaseDrawMode<Freeh
 			feature.geometry.type === "LineString" &&
 			feature.properties.mode === this.mode
 		) {
+			styles.lineStringDash = this.styles.lineStringDash;
+
 			styles.lineStringColor = this.getHexColorStylingValue(
 				this.styles.lineStringColor,
 				styles.lineStringColor,

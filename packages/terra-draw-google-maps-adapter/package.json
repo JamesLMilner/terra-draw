@@ -4,7 +4,7 @@
 	"description": "Terra Draw Adapter for Google Maps JavaScript API",
 	"peerDependencies": {
 		"terra-draw": "^1.0.0",
-		"@googlemaps/js-api-loader": "^1.14.3"
+		"@googlemaps/js-api-loader": "^1.14.3 || ^2.0.0"
 	},
 	"devDependencies": {
 		"@types/google.maps": "^3.49.2"

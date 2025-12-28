@@ -299,7 +299,7 @@ export class TerraDrawPointMode extends TerraDrawBaseDrawMode<PointModeStyling> 
 				mode: this.mode,
 				[COMMON_PROPERTIES.MARKER]: true,
 			},
-			context: { updateType: UpdateTypes.Finish },
+			context: { updateType: UpdateTypes.Finish, action: "draw" },
 		});
 	}
 

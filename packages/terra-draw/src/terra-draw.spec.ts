@@ -3456,6 +3456,173 @@ describe("Terra Draw", () => {
 
 			expect(callback).toHaveBeenCalledTimes(2);
 		});
+
+		it.only("it calls on finish when feature is finished with point mode", async () => {
+			const pointMode = new TerraDrawPointMode();
+			const draw = new TerraDraw({
+				adapter,
+				modes: [pointMode],
+			});
+
+			draw.start();
+
+			draw.setMode("point");
+
+			const callback = jest.fn();
+			draw.on("finish", callback);
+
+			pointMode.onClick(MockCursorEvent({ lng: -25, lat: 34 }));
+
+			expect(callback).toHaveBeenCalledTimes(1);
+			expect(callback).toHaveBeenCalledWith(expect.any(String), {
+				action: "draw",
+				mode: "point",
+			});
+
+			const id = callback.mock.calls[0][0];
+			const feature = draw.getSnapshotFeature(id);
+			expect(feature).toBeDefined();
+			expect(feature!.geometry).toEqual({
+				type: "Point",
+				coordinates: [-25, 34],
+			});
+
+			// Point can be removed
+			draw.removeFeatures([id]);
+			expect(draw.getSnapshotFeature(id)).toBeUndefined();
+		});
+
+		it.only("it calls on finish when feature is finished with linestring mode", async () => {
+			const lineStringMode = new TerraDrawLineStringMode();
+			const draw = new TerraDraw({
+				adapter,
+				modes: [lineStringMode],
+			});
+
+			draw.start();
+
+			draw.setMode("linestring");
+
+			const callback = jest.fn();
+			draw.on("finish", callback);
+
+			lineStringMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			lineStringMode.onClick(MockCursorEvent({ lng: 0.000001, lat: 0.000001 }));
+
+			expect(draw.getSnapshot()).toHaveLength(2);
+
+			lineStringMode.onClick(MockCursorEvent({ lng: 0.000001, lat: 0.000001 }));
+
+			expect(draw.getSnapshot()).toHaveLength(1);
+
+			expect(callback).toHaveBeenCalledTimes(1);
+			expect(callback).toHaveBeenCalledWith(expect.any(String), {
+				action: "draw",
+				mode: "linestring",
+			});
+
+			const id = callback.mock.calls[0][0];
+			const feature = draw.getSnapshotFeature(id);
+			expect(feature).toBeDefined();
+			expect(feature!.geometry).toEqual({
+				type: "LineString",
+				coordinates: [
+					[0, 0],
+					[0.000001, 0.000001],
+				],
+			});
+
+			// LineString can be removed
+			draw.removeFeatures([id]);
+			expect(draw.getSnapshotFeature(id)).toBeUndefined();
+
+			draw.stop();
+		});
+
+		it.only("it calls on finish when feature is dragged in editable linestring mode", async () => {
+			const lineStringMode = new TerraDrawLineStringMode({
+				editable: true,
+			});
+			const draw = new TerraDraw({
+				adapter,
+				modes: [lineStringMode],
+			});
+
+			draw.start();
+
+			draw.setMode("linestring");
+
+			const callback = jest.fn();
+			draw.on("finish", callback);
+
+			lineStringMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			lineStringMode.onClick(MockCursorEvent({ lng: 0.000001, lat: 0.000001 }));
+
+			expect(draw.getSnapshot()).toHaveLength(2);
+
+			lineStringMode.onClick(MockCursorEvent({ lng: 0.000001, lat: 0.000001 }));
+
+			expect(draw.getSnapshot()).toHaveLength(1);
+
+			expect(callback).toHaveBeenCalledTimes(1);
+			expect(callback).toHaveBeenCalledWith(expect.any(String), {
+				action: "draw",
+				mode: "linestring",
+			});
+
+			lineStringMode.onDragStart(
+				MockCursorEvent({ lng: 0.000001, lat: 0.000001 }),
+				adapter.setDraggability,
+			);
+			lineStringMode.onDrag(
+				MockCursorEvent({ lng: 0.000002, lat: 0.000002 }),
+				adapter.setDraggability,
+			);
+			lineStringMode.onDragEnd(
+				MockCursorEvent({ lng: 0.000002, lat: 0.000002 }),
+				adapter.setDraggability,
+			);
+
+			expect(callback).toHaveBeenCalledTimes(2);
+			expect(callback).toHaveBeenNthCalledWith(2, expect.any(String), {
+				action: "edit",
+				mode: "linestring",
+			});
+			const id = callback.mock.calls[1][0];
+
+			// LineString can be removed
+			draw.removeFeatures([id]);
+			expect(draw.getSnapshotFeature(id)).toBeUndefined();
+
+			draw.stop();
+		});
+
+		it.only("it does not call on finish when feature is drawn but clear is called before finishing", async () => {
+			const lineStringMode = new TerraDrawLineStringMode();
+			const draw = new TerraDraw({
+				adapter,
+				modes: [lineStringMode],
+			});
+
+			draw.start();
+
+			draw.setMode("linestring");
+
+			const callback = jest.fn();
+			draw.on("finish", callback);
+
+			lineStringMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			lineStringMode.onClick(MockCursorEvent({ lng: 0.000001, lat: 0.000001 }));
+
+			expect(draw.getSnapshot()).toHaveLength(2);
+
+			draw.clear();
+
+			expect(draw.getSnapshot()).toHaveLength(0);
+			expect(callback).toHaveBeenCalledTimes(0);
+
+			draw.stop();
+		});
 	});
 
 	describe("off", () => {

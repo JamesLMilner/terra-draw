@@ -1,4 +1,4 @@
-import { Loader } from "@googlemaps/js-api-loader";
+import { setOptions, importLibrary } from "@googlemaps/js-api-loader";
 import {
 	setupMapContainer,
 	setupControls,
@@ -20,7 +20,7 @@ const initialiseGoogleMap = async ({
 	zoom: number;
 }) => {
 	// Check for Google Maps API key (can be set via environment or global)
-	let apiKey = (import.meta as any).env.GOOGLE_API_KEY;
+	const apiKey = (import.meta as any).env.GOOGLE_API_KEY;
 
 	// If no API key is provided, use empty string (will still work for development)
 	if (!apiKey) {
@@ -29,13 +29,13 @@ const initialiseGoogleMap = async ({
 		);
 	}
 
-	const loader = new Loader({
-		apiKey,
-		version: "weekly",
+	setOptions({
+		key: apiKey,
+		v: "weekly",
 	});
 
-	// Load Google Maps API
-	const google = await loader.load();
+	// Load Google Maps API (maps for Map/Data/OverlayView, core for LatLng/Point/Size)
+	await Promise.all([importLibrary("maps"), importLibrary("core")]);
 
 	// Create Google Maps instance
 	const map = new google.maps.Map(mapContainer, {

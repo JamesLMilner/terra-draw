@@ -7,6 +7,7 @@ import {
 	UpdateTypes,
 	COMMON_PROPERTIES,
 	Z_INDEX,
+	FinishActions,
 } from "../../common";
 import {
 	FeatureId,

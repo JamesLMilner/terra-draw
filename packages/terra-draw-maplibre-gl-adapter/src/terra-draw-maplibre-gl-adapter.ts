@@ -18,12 +18,10 @@ import {
 } from "maplibre-gl";
 import { Feature, LineString, Point, Polygon } from "geojson";
 
-export class TerraDrawMapLibreGLAdapter<
-	MapType,
-> extends TerraDrawExtend.TerraDrawBaseAdapter {
+export class TerraDrawMapLibreGLAdapter extends TerraDrawExtend.TerraDrawBaseAdapter {
 	constructor(
 		config: {
-			map: MapType;
+			map: MaplibreMap;
 			renderBelowLayerId?: string;
 			prefixId?: string;
 		} & TerraDrawExtend.BaseAdapterConfig,

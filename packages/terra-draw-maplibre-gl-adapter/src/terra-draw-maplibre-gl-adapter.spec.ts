@@ -111,8 +111,8 @@ describe("TerraDrawMapLibreGLAdapter", () => {
 	});
 
 	describe("getLngLatFromEvent", () => {
-		let adapter: TerraDrawMapLibreGLAdapter<maplibregl.Map>;
-		const map = createMapLibreGLMap();
+		let adapter: TerraDrawMapLibreGLAdapter;
+		const map = createMapLibreGLMap() as maplibregl.Map;
 		beforeEach(() => {
 			adapter = new TerraDrawMapLibreGLAdapter({
 				map,

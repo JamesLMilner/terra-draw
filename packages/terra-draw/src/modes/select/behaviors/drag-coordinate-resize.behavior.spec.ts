@@ -48,6 +48,7 @@ describe("DragCoordinateResizeBehavior", () => {
 			const readFeatureBehavior = new ReadFeatureBehavior(config);
 			const selectionPointBehavior = new SelectionPointBehavior(
 				config,
+				readFeatureBehavior,
 				mutateFeatureBehavior,
 			);
 			const pixelDistanceBehavior = new PixelDistanceBehavior(config);
@@ -90,6 +91,7 @@ describe("DragCoordinateResizeBehavior", () => {
 				const readFeatureBehavior = new ReadFeatureBehavior(config);
 				const selectionPointBehavior = new SelectionPointBehavior(
 					config,
+					readFeatureBehavior,
 					mutateFeatureBehavior,
 				);
 				const pixelDistanceBehavior = new PixelDistanceBehavior(config);

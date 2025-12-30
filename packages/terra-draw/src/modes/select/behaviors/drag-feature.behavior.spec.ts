@@ -24,6 +24,7 @@ describe("DragFeatureBehavior", () => {
 			});
 			const selectionPointBehavior = new SelectionPointBehavior(
 				config,
+				readFeatureBehavior,
 				mutateFeatureBehavior,
 			);
 			const featureAtPointerEventBehavior = new FeatureAtPointerEventBehavior(
@@ -76,6 +77,7 @@ describe("DragFeatureBehavior", () => {
 			const readFeatureBehavior = new ReadFeatureBehavior(config);
 			const selectionPointBehavior = new SelectionPointBehavior(
 				config,
+				readFeatureBehavior,
 				mutateFeatureBehavior,
 			);
 			const featureAtPointerEventBehavior = new FeatureAtPointerEventBehavior(

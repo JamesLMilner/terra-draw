@@ -320,14 +320,15 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 			this.setStarted();
 		}
 
-		try {
-			if (cleanUpId !== undefined) {
-				this.mutateFeature.deleteFeature(cleanUpId);
-			}
-			if (cleanUpClosingPointId !== undefined) {
-				this.mutateFeature.deleteFeature(cleanUpClosingPointId);
-			}
-		} catch (error) {}
+		if (cleanUpId !== undefined && this.readFeature.hasFeature(cleanUpId)) {
+			this.mutateFeature.deleteFeature(cleanUpId);
+		}
+		if (
+			cleanUpClosingPointId !== undefined &&
+			this.readFeature.hasFeature(cleanUpClosingPointId)
+		) {
+			this.mutateFeature.deleteFeature(cleanUpClosingPointId);
+		}
 	}
 
 	/** @internal */

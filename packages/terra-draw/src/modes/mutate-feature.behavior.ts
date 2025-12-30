@@ -236,6 +236,9 @@ export class MutateFeatureBehavior extends TerraDrawModeBehavior {
 	}
 
 	public deleteFeatures(featureIds: FeatureId[]) {
+		if (featureIds.length === 0) {
+			return;
+		}
 		this.store.delete(featureIds);
 	}
 

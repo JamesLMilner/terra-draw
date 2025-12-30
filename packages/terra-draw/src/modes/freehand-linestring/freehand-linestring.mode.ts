@@ -286,13 +286,11 @@ export class TerraDrawFreehandLineStringMode extends TerraDrawBaseDrawMode<Freeh
 			this.setStarted();
 		}
 
-		try {
-			if (cleanUpId !== undefined) {
-				this.mutateFeature.deleteFeature(cleanUpId);
-			}
+		if (cleanUpId !== undefined && this.readFeature.hasFeature(cleanUpId)) {
+			this.mutateFeature.deleteFeature(cleanUpId);
+		}
 
-			this.closingPoints.delete();
-		} catch (error) {}
+		this.closingPoints.delete();
 	}
 
 	/** @internal */

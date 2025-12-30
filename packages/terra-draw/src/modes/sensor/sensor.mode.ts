@@ -279,17 +279,22 @@ export class TerraDrawSensorMode extends TerraDrawBaseDrawMode<SensorPolygonStyl
 
 	/** @internal */
 	cleanUp() {
-		try {
-			if (this.currentStartingPointId) {
-				this.mutateFeature.deleteFeature(this.currentStartingPointId);
-			}
-			if (this.currentInitialArcId) {
-				this.mutateFeature.deleteFeature(this.currentInitialArcId);
-			}
-			if (this.currentId) {
-				this.mutateFeature.deleteFeature(this.currentId);
-			}
-		} catch {}
+		if (
+			this.currentStartingPointId &&
+			this.readFeature.hasFeature(this.currentStartingPointId)
+		) {
+			this.mutateFeature.deleteFeature(this.currentStartingPointId);
+		}
+		if (
+			this.currentInitialArcId &&
+			this.readFeature.hasFeature(this.currentInitialArcId)
+		) {
+			this.mutateFeature.deleteFeature(this.currentInitialArcId);
+		}
+		if (this.currentId && this.readFeature.hasFeature(this.currentId)) {
+			this.mutateFeature.deleteFeature(this.currentId);
+		}
+
 		this.currentStartingPointId = undefined;
 		this.direction = undefined;
 		this.currentId = undefined;

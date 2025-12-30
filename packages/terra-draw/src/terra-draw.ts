@@ -786,7 +786,13 @@ class TerraDraw {
 			origin: "api",
 		});
 
-		if (modeToCleanUp) {
+		// Clean up should be safe to call without throwing errors
+		// as all internal modes wrap deletes in try catch blocks
+		if (
+			modeToCleanUp &&
+			this._modes[modeToCleanUp] &&
+			this._modes[modeToCleanUp].cleanUp()
+		) {
 			this._modes[modeToCleanUp].cleanUp();
 		}
 	}

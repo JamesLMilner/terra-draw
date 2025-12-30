@@ -20,11 +20,12 @@ describe("SelectionPointBehavior", () => {
 			config = MockBehaviorConfig("test");
 			const mutateFeatureBehavior = new MutateFeatureBehavior(config, {
 				onFinish: jest.fn(),
-
 				validate: jest.fn(() => ({ valid: true })),
 			});
+			const readFeatureBehavior = new ReadFeatureBehavior(config);
 			selectionPointBehavior = new SelectionPointBehavior(
 				config,
+				readFeatureBehavior,
 				mutateFeatureBehavior,
 			);
 		});
@@ -35,11 +36,12 @@ describe("SelectionPointBehavior", () => {
 			config = MockBehaviorConfig("test");
 			const mutateFeatureBehavior = new MutateFeatureBehavior(config, {
 				onFinish: jest.fn(),
-
 				validate: jest.fn(() => ({ valid: true })),
 			});
+			const readFeatureBehavior = new ReadFeatureBehavior(config);
 			selectionPointBehavior = new SelectionPointBehavior(
 				config,
+				readFeatureBehavior,
 				mutateFeatureBehavior,
 			);
 		});

@@ -216,7 +216,9 @@ export class CoordinatePointBehavior extends TerraDrawModeBehavior {
 			this.readFeature.hasFeature(id),
 		) as FeatureId[];
 
-		this.mutateFeature.deleteFeatures(existingCoordinatePointIds);
+		if (existingCoordinatePointIds.length) {
+			this.mutateFeature.deleteFeatures(existingCoordinatePointIds);
+		}
 	}
 
 	private deleteIfPresent(featureId: FeatureId) {

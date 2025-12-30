@@ -1009,24 +1009,28 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 			this.setStarted();
 		}
 
-		try {
-			if (cleanUpId) {
-				this.coordinatePoints.deletePointsByFeatureIds([cleanUpId]);
-			}
+		if (cleanUpId) {
+			this.coordinatePoints.deletePointsByFeatureIds([cleanUpId]);
+		}
 
-			if (cleanUpId !== undefined) {
-				this.mutateFeature.deleteFeature(cleanUpId);
-			}
-			if (editedPointId !== undefined) {
-				this.mutateFeature.deleteFeature(editedPointId);
-			}
-			if (snappedPointId !== undefined) {
-				this.mutateFeature.deleteFeature(snappedPointId);
-			}
-			if (this.closingPoints.ids.length) {
-				this.closingPoints.delete();
-			}
-		} catch (error) {}
+		if (cleanUpId !== undefined && this.readFeature.hasFeature(cleanUpId)) {
+			this.mutateFeature.deleteFeature(cleanUpId);
+		}
+		if (
+			editedPointId !== undefined &&
+			this.readFeature.hasFeature(editedPointId)
+		) {
+			this.mutateFeature.deleteFeature(editedPointId);
+		}
+		if (
+			snappedPointId !== undefined &&
+			this.readFeature.hasFeature(snappedPointId)
+		) {
+			this.mutateFeature.deleteFeature(snappedPointId);
+		}
+		if (this.closingPoints.ids.length) {
+			this.closingPoints.delete();
+		}
 	}
 
 	/** @internal */

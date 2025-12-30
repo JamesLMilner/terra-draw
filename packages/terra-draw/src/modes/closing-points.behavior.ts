@@ -57,7 +57,12 @@ export class ClosingPointsBehavior extends TerraDrawModeBehavior {
 
 	public delete() {
 		if (this.ids.length) {
-			this.mutateFeatureBehavior.deleteFeatures(this.ids);
+			const existingIds = this.ids.filter((id) =>
+				this.readFeatureBehavior.hasFeature(id),
+			);
+			if (existingIds.length) {
+				this.mutateFeatureBehavior.deleteFeatures(existingIds);
+			}
 			this._startEndPoints = [];
 		}
 	}

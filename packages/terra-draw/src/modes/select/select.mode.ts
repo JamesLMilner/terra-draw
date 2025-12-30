@@ -265,6 +265,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 
 		this.selectionPoints = new SelectionPointBehavior(
 			config,
+			this.readFeature,
 			this.mutateFeature,
 		);
 		this.coordinatePoints = new CoordinatePointBehavior(
@@ -352,7 +353,14 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 		// We don't need to set selected false
 		// as we're going to delete the feature
 
-		this.mutateFeature.deleteFeatures(this.selected);
+		const selectedIds = this.selected.filter((id) =>
+			this.readFeature.hasFeature(id),
+		);
+
+		if (selectedIds.length) {
+			this.mutateFeature.deleteFeatures(selectedIds);
+		}
+
 		this.selected = [];
 	}
 
@@ -469,11 +477,16 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 			return;
 		}
 
-		const deletePoints = [...this.midPoints.ids, ...this.selectionPoints.ids];
+		const deletePoints = [
+			...this.midPoints.ids,
+			...this.selectionPoints.ids,
+		].filter((id) => this.readFeature.hasFeature(id));
 
 		const featureCoordinates = updated.geometry.coordinates;
 
-		this.mutateFeature.deleteFeatures(deletePoints);
+		if (deletePoints.length) {
+			this.mutateFeature.deleteFeatures(deletePoints);
+		}
 
 		if (properties.coordinatePointIds) {
 			this.coordinatePoints.createOrUpdate({ featureId, featureCoordinates });

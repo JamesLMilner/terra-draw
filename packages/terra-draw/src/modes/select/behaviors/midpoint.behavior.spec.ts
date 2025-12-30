@@ -29,7 +29,11 @@ describe("MidPointBehavior", () => {
 			const readFeatureBehavior = new ReadFeatureBehavior(config);
 			midPointBehavior = new MidPointBehavior(
 				config,
-				new SelectionPointBehavior(config, mutateFeatureBehavior),
+				new SelectionPointBehavior(
+					config,
+					readFeatureBehavior,
+					mutateFeatureBehavior,
+				),
 				new CoordinatePointBehavior(
 					config,
 					readFeatureBehavior,
@@ -51,7 +55,11 @@ describe("MidPointBehavior", () => {
 				const readFeatureBehavior = new ReadFeatureBehavior(config);
 				midPointBehavior = new MidPointBehavior(
 					config,
-					new SelectionPointBehavior(config, mutateFeatureBehavior),
+					new SelectionPointBehavior(
+						config,
+						readFeatureBehavior,
+						mutateFeatureBehavior,
+					),
 					new CoordinatePointBehavior(
 						config,
 						readFeatureBehavior,

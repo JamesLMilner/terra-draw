@@ -757,15 +757,16 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 			this.setStarted();
 		}
 
-		try {
-			if (cleanUpId !== undefined) {
-				this.mutateFeature.deleteFeature(cleanUpId);
-			}
-			if (snappedPointId !== undefined) {
-				this.mutateFeature.deleteFeature(snappedPointId);
-			}
-			this.closingPoints.delete();
-		} catch (error) {}
+		if (cleanUpId !== undefined && this.readFeature.hasFeature(cleanUpId)) {
+			this.mutateFeature.deleteFeature(cleanUpId);
+		}
+		if (
+			snappedPointId !== undefined &&
+			this.readFeature.hasFeature(snappedPointId)
+		) {
+			this.mutateFeature.deleteFeature(snappedPointId);
+		}
+		this.closingPoints.delete();
 	}
 
 	/** @internal */

@@ -747,30 +747,48 @@ class TerraDraw {
 
 		const coordinatePointsToDelete: FeatureId[] = [];
 
+		const idsToDelete: FeatureId[] = [];
+
+		let modeToCleanUp: undefined | string = undefined;
+
 		ids.forEach((id) => {
 			// Deselect any passed features - this removes all selection points and midpoints
 			if (!this._store.has(id)) {
 				throw new Error(`No feature with id ${id}, can not delete`);
 			}
 
-			const feature = this._store.copy(id);
-			if (feature.properties[SELECT_PROPERTIES.SELECTED]) {
+			const properties = this._store.getPropertiesCopy(id);
+			if (properties[SELECT_PROPERTIES.SELECTED]) {
 				this.deselectFeature(id);
 			}
 
+			// Special case where the feature being deleted is currently being drawn
+			if (properties[COMMON_PROPERTIES.CURRENTLY_DRAWING]) {
+				if (this._modes[properties.mode as string]) {
+					modeToCleanUp = properties.mode as string;
+					return;
+				}
+			}
+
 			// If the feature has coordinate points, we want to remove them as well
-			if (feature.properties[COMMON_PROPERTIES.COORDINATE_POINT_IDS]) {
+			if (properties[COMMON_PROPERTIES.COORDINATE_POINT_IDS]) {
 				coordinatePointsToDelete.push(
-					...(feature.properties[
+					...(properties[
 						COMMON_PROPERTIES.COORDINATE_POINT_IDS
 					] as FeatureId[]),
 				);
 			}
+
+			idsToDelete.push(id);
 		});
 
-		this._store.delete([...ids, ...coordinatePointsToDelete], {
+		this._store.delete([...idsToDelete, ...coordinatePointsToDelete], {
 			origin: "api",
 		});
+
+		if (modeToCleanUp) {
+			this._modes[modeToCleanUp].cleanUp();
+		}
 	}
 
 	/**

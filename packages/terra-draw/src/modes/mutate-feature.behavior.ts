@@ -91,9 +91,7 @@ export class MutateFeatureBehavior extends TerraDrawModeBehavior {
 	}: {
 		coordinates: Position;
 		properties: JSONObject;
-		context?: {
-			updateType: UpdateTypes.Finish;
-		};
+		context?: FinishContext;
 	}) {
 		// Create point is slightly different in that creating can also be the finish action
 		// because there is only one step to creating a point.

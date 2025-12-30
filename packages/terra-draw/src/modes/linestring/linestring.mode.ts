@@ -533,6 +533,13 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 	/** @internal */
 	onClick(event: TerraDrawMouseEvent) {
 		if (
+			this.currentId !== undefined &&
+			!this.readFeature.hasFeature(this.currentId)
+		) {
+			this.cleanUp();
+		}
+
+		if (
 			(event.button === "right" &&
 				this.allowPointerEvent(this.pointerEvents.rightClick, event)) ||
 			(event.button === "left" &&

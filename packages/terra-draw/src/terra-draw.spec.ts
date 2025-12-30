@@ -758,6 +758,160 @@ describe("Terra Draw", () => {
 			expect(draw.getSnapshot()).toHaveLength(0);
 		});
 
+		it("correctly cleans up linestring mode when a currently drawn feature is removed midway through drawing", () => {
+			const linestringMode = new TerraDrawLineStringMode();
+			const draw = new TerraDraw({
+				adapter: new TerraDrawTestAdapter({
+					lib: {},
+				}),
+				modes: [linestringMode],
+			});
+
+			const onChange = jest.fn();
+			draw.on("change", onChange);
+
+			draw.start();
+			draw.setMode("linestring");
+
+			linestringMode.onClick(MockCursorEvent({ lng: -25, lat: 34 }));
+
+			const currentFeature = draw
+				.getSnapshot()
+				.find(
+					(feature) => feature.properties[COMMON_PROPERTIES.CURRENTLY_DRAWING],
+				) as GeoJSONStoreFeatures;
+
+			draw.removeFeatures([currentFeature.id as FeatureId]);
+
+			const afterRemoveFeatures = draw
+				.getSnapshot()
+				.map(({ id }) => id as FeatureId);
+			expect(afterRemoveFeatures.length).toBe(0);
+
+			expect(() => {
+				linestringMode.onClick(MockCursorEvent({ lng: -25, lat: 34 }));
+			}).not.toThrow();
+		});
+
+		it("correctly cleans up a linestring mode when a currently drawn feature and closing point are removed midway through drawing", () => {
+			const linestringMode = new TerraDrawLineStringMode();
+			const draw = new TerraDraw({
+				adapter: new TerraDrawTestAdapter({
+					lib: {},
+				}),
+				modes: [linestringMode],
+			});
+
+			const onChange = jest.fn();
+			draw.on("change", onChange);
+
+			draw.start();
+			draw.setMode("linestring");
+
+			linestringMode.onClick(MockCursorEvent({ lng: -25, lat: 34 }));
+			linestringMode.onClick(MockCursorEvent({ lng: -25, lat: 35 }));
+
+			const currentFeatures = draw
+				.getSnapshot()
+				.map(({ id }) => id as FeatureId);
+
+			expect(currentFeatures.length).toBe(2);
+
+			draw.removeFeatures(currentFeatures);
+
+			const afterRemoveFeatures = draw
+				.getSnapshot()
+				.map(({ id }) => id as FeatureId);
+			expect(afterRemoveFeatures.length).toBe(0);
+
+			linestringMode.onClick(MockCursorEvent({ lng: -25, lat: 35 }));
+
+			const afterFeatures = draw.getSnapshot().map(({ id }) => id as FeatureId);
+			expect(afterFeatures.length).toBe(1);
+		});
+
+		it("correctly cleans up polygon mode when a currently drawn feature is removed midway through drawing", () => {
+			const polygonMode = new TerraDrawPolygonMode({
+				showCoordinatePoints: true,
+			});
+			const draw = new TerraDraw({
+				adapter: new TerraDrawTestAdapter({
+					lib: {},
+				}),
+				modes: [polygonMode],
+			});
+
+			const onChange = jest.fn();
+			draw.on("change", onChange);
+
+			draw.start();
+			draw.setMode("polygon");
+
+			polygonMode.onClick(MockCursorEvent({ lng: -25, lat: 34 }));
+
+			const currentFeatures = draw
+				.getSnapshot()
+				.map(({ id }) => id as FeatureId);
+			expect(currentFeatures.length).toBe(4);
+
+			const currentFeature = draw
+				.getSnapshot()
+				.find(
+					(feature) => feature.properties[COMMON_PROPERTIES.CURRENTLY_DRAWING],
+				) as GeoJSONStoreFeatures;
+
+			draw.removeFeatures([currentFeature.id as FeatureId]);
+
+			const afterRemoveFeatures = draw
+				.getSnapshot()
+				.map(({ id }) => id as FeatureId);
+			expect(afterRemoveFeatures.length).toBe(0);
+
+			expect(() => {
+				polygonMode.onClick(MockCursorEvent({ lng: -25, lat: 34 }));
+			}).not.toThrow();
+		});
+
+		it("correctly cleans up a polygon mode when a currently drawn feature and closing point are removed midway through drawing", () => {
+			const polygonMode = new TerraDrawPolygonMode({
+				showCoordinatePoints: true,
+			});
+			const draw = new TerraDraw({
+				adapter: new TerraDrawTestAdapter({
+					lib: {},
+				}),
+				modes: [polygonMode],
+			});
+
+			const onChange = jest.fn();
+			draw.on("change", onChange);
+
+			draw.start();
+			draw.setMode("polygon");
+
+			polygonMode.onClick(MockCursorEvent({ lng: -25, lat: 34 }));
+			polygonMode.onClick(MockCursorEvent({ lng: -25, lat: 35 }));
+
+			const currentFeatures = draw
+				.getSnapshot()
+				.map(({ id }) => id as FeatureId);
+			expect(currentFeatures.length).toBe(4);
+
+			draw.removeFeatures(currentFeatures);
+
+			const afterRemoveFeatures = draw
+				.getSnapshot()
+				.map(({ id }) => id as FeatureId);
+			expect(afterRemoveFeatures.length).toBe(0);
+
+			polygonMode.onClick(MockCursorEvent({ lng: -25, lat: 35 }));
+
+			const clickAfterRemoveFeatures = draw
+				.getSnapshot()
+				.map(({ id }) => id as FeatureId);
+			expect(clickAfterRemoveFeatures.length).toBe(4);
+		});
+
 		it("throws an error if not enabled", () => {
 			const draw = new TerraDraw({
 				adapter: new TerraDrawTestAdapter({
@@ -3457,7 +3611,7 @@ describe("Terra Draw", () => {
 			expect(callback).toHaveBeenCalledTimes(2);
 		});
 
-		it.only("it calls on finish when feature is finished with point mode", async () => {
+		it("it calls on finish when feature is finished with point mode", async () => {
 			const pointMode = new TerraDrawPointMode();
 			const draw = new TerraDraw({
 				adapter,
@@ -3492,7 +3646,7 @@ describe("Terra Draw", () => {
 			expect(draw.getSnapshotFeature(id)).toBeUndefined();
 		});
 
-		it.only("it calls on finish when feature is finished with linestring mode", async () => {
+		it("it calls on finish when feature is finished with linestring mode", async () => {
 			const lineStringMode = new TerraDrawLineStringMode();
 			const draw = new TerraDraw({
 				adapter,
@@ -3539,7 +3693,7 @@ describe("Terra Draw", () => {
 			draw.stop();
 		});
 
-		it.only("it calls on finish when feature is dragged in editable linestring mode", async () => {
+		it("it calls on finish when feature is dragged in editable linestring mode", async () => {
 			const lineStringMode = new TerraDrawLineStringMode({
 				editable: true,
 			});
@@ -3597,7 +3751,7 @@ describe("Terra Draw", () => {
 			draw.stop();
 		});
 
-		it.only("it does not call on finish when feature is drawn but clear is called before finishing", async () => {
+		it("it does not call on finish when feature is drawn but clear is called before finishing", async () => {
 			const lineStringMode = new TerraDrawLineStringMode();
 			const draw = new TerraDraw({
 				adapter,

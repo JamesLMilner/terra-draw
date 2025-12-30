@@ -3777,6 +3777,127 @@ describe("Terra Draw", () => {
 
 			draw.stop();
 		});
+
+		it("it does not error when clear is being called in on finish when feature in linestring mode", async () => {
+			const lineStringMode = new TerraDrawLineStringMode({
+				editable: true,
+			});
+			const draw = new TerraDraw({
+				adapter,
+				modes: [lineStringMode],
+			});
+
+			jest.spyOn(draw, "clear");
+
+			draw.start();
+
+			draw.setMode("linestring");
+
+			draw.on("finish", () => {
+				draw.clear();
+			});
+
+			draw.start();
+
+			draw.setMode("linestring");
+
+			lineStringMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			lineStringMode.onClick(MockCursorEvent({ lng: 0.000001, lat: 0.000001 }));
+
+			expect(draw.getSnapshot()).toHaveLength(2);
+
+			// Close the linestring
+			lineStringMode.onClick(MockCursorEvent({ lng: 0.000001, lat: 0.000001 }));
+
+			expect(draw.getSnapshot()).toHaveLength(0);
+			expect(draw.clear).toHaveBeenCalledTimes(1);
+		});
+
+		it("it does not error when clear is being called in on finish when feature in polygon mode", async () => {
+			const polygonMode = new TerraDrawPolygonMode();
+			const draw = new TerraDraw({
+				adapter,
+				modes: [polygonMode],
+			});
+
+			jest.spyOn(draw, "clear");
+
+			draw.start();
+
+			draw.on("finish", () => {
+				draw.clear();
+			});
+
+			draw.setMode("polygon");
+
+			polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			polygonMode.onClick(MockCursorEvent({ lng: 0.000001, lat: 0.000001 }));
+			polygonMode.onClick(MockCursorEvent({ lng: 0.000002, lat: 0.000002 }));
+
+			const snapshot = draw.getSnapshot();
+			expect(snapshot).toHaveLength(3);
+			expect(
+				snapshot.filter(
+					(feature) => feature.properties[COMMON_PROPERTIES.CLOSING_POINT],
+				),
+			).toHaveLength(2);
+			expect(
+				snapshot.filter((feature) => feature.geometry.type === "Polygon"),
+			).toHaveLength(1);
+
+			// Close the polygon
+			polygonMode.onClick(MockCursorEvent({ lng: 0.000002, lat: 0.000002 }));
+
+			expect(draw.getSnapshot()).toHaveLength(0);
+			expect(draw.clear).toHaveBeenCalledTimes(1);
+		});
+
+		it("it does not error when clear is being called in on finish when feature in polygon mode with coordinate points enabled", async () => {
+			const polygonMode = new TerraDrawPolygonMode({
+				showCoordinatePoints: true,
+			});
+			const draw = new TerraDraw({
+				adapter,
+				modes: [polygonMode],
+			});
+
+			jest.spyOn(draw, "clear");
+
+			draw.start();
+
+			draw.on("finish", () => {
+				draw.clear();
+			});
+
+			draw.setMode("polygon");
+
+			polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			polygonMode.onClick(MockCursorEvent({ lng: 0.000001, lat: 0.000001 }));
+			polygonMode.onClick(MockCursorEvent({ lng: 0.000002, lat: 0.000002 }));
+
+			const snapshot = draw.getSnapshot();
+			expect(snapshot).toHaveLength(7);
+			// One extra coordinate point for the live point that we manipulate for mouse movements
+			expect(
+				snapshot.filter(
+					(feature) => feature.properties[COMMON_PROPERTIES.COORDINATE_POINT],
+				),
+			).toHaveLength(4);
+			expect(
+				snapshot.filter(
+					(feature) => feature.properties[COMMON_PROPERTIES.CLOSING_POINT],
+				),
+			).toHaveLength(2);
+			expect(
+				snapshot.filter((feature) => feature.geometry.type === "Polygon"),
+			).toHaveLength(1);
+
+			// Close the polygon
+			polygonMode.onClick(MockCursorEvent({ lng: 0.000002, lat: 0.000002 }));
+
+			expect(draw.getSnapshot()).toHaveLength(0);
+			expect(draw.clear).toHaveBeenCalledTimes(1);
+		});
 	});
 
 	describe("off", () => {

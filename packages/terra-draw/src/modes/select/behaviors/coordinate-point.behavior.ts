@@ -22,6 +22,12 @@ export class CoordinatePointBehavior extends TerraDrawModeBehavior {
 		featureId: FeatureId;
 		featureCoordinates: Position[] | Position[][];
 	}) {
+		// Handle the edge case where the feature is deleted before create or update
+		if (!this.readFeature.hasFeature(featureId)) {
+			this.deleteOrphanedPoints(featureId);
+			return;
+		}
+
 		const coordinates = getUnclosedCoordinates(featureCoordinates);
 
 		const existingProperties = this.readFeature.getProperties(featureId);
@@ -229,6 +235,17 @@ export class CoordinatePointBehavior extends TerraDrawModeBehavior {
 		if (coordinatePoints) {
 			this.deleteCoordinatePoints(coordinatePoints);
 			this.setFeatureCoordinatePoints(featureId, null);
+		}
+	}
+
+	private deleteOrphanedPoints(featureId: FeatureId) {
+		const orphanedCoordinatePointIds = this.readFeature.getAllFeatureIdsWhere(
+			(properties) =>
+				properties[COMMON_PROPERTIES.COORDINATE_POINT_FEATURE_ID] === featureId,
+		);
+
+		if (orphanedCoordinatePointIds.length) {
+			this.mutateFeature.deleteFeatures(orphanedCoordinatePointIds);
 		}
 	}
 }

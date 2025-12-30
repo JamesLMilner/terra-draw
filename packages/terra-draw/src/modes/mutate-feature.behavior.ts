@@ -331,23 +331,26 @@ export class MutateFeatureBehavior extends TerraDrawModeBehavior {
 			return null;
 		}
 
+		const feature = this.buildFeatureWithGeometry<G>(featureId);
+
 		// Handle special case where there are no coordinate mutations but we want to validate on finish
 		if (context.updateType === UpdateTypes.Finish) {
 			if (!coordinateMutations) {
 				if (
 					!this.validateGeometryWithUpdateType({
-						geometry: this.store.getGeometryCopy(featureId),
-						properties: this.store.getPropertiesCopy(featureId),
+						geometry: feature.geometry,
+						properties: feature.properties,
 						updateType: context.updateType,
 					})
 				) {
 					return null;
 				}
 			}
+
 			this.options.onFinish(featureId, context as FinishContext);
 		}
 
-		return this.buildFeatureWithGeometry<G>(featureId);
+		return feature;
 	}
 
 	public epsilonOffset() {

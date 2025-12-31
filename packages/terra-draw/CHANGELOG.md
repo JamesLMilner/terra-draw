@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.21.1](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.21.0...terra-draw@1.21.1) (2025-12-31)
+
+
+### fix
+
+* **terra-draw:** call cleanup when a currently drawn feature is deleted (#760) ([](https://github.com/JamesLMilner/terra-draw/commit/771d0567125a27d471e9bfa397f5d2ddf263e5d4)), closes [#760](https://github.com/JamesLMilner/terra-draw/issues/760)
+* **terra-draw:** use Array.from for Sets instead of spreading due to microbundle (#757) ([](https://github.com/JamesLMilner/terra-draw/commit/dd4b1091dd43302f6b7409b25cf5e96296549ea9)), closes [#757](https://github.com/JamesLMilner/terra-draw/issues/757)
+
 ## [1.21.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.20.0...terra-draw@1.21.0) (2025-12-26)
 
 

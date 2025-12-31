@@ -8,6 +8,7 @@ import {
 	Z_INDEX,
 	UrlStyling,
 	MARKER_URL_DEFAULT,
+	FinishActions,
 } from "../../common";
 import {
 	FeatureId,
@@ -279,7 +280,7 @@ export class TerraDrawMarkerMode extends TerraDrawBaseDrawMode<MarkerModeStyling
 				mode: this.mode,
 				[COMMON_PROPERTIES.MARKER]: true,
 			},
-			context: { updateType: UpdateTypes.Finish },
+			context: { updateType: UpdateTypes.Finish, action: FinishActions.Draw },
 		});
 	}
 
@@ -292,7 +293,7 @@ export class TerraDrawMarkerMode extends TerraDrawBaseDrawMode<MarkerModeStyling
 		const clickedFeature = this.pointSearch.getNearestPointFeature(event);
 
 		if (clickedFeature) {
-			this.mutateFeature.deleteFeature(clickedFeature.id as FeatureId);
+			this.mutateFeature.deleteFeatureIfPresent(clickedFeature.id as FeatureId);
 		}
 	}
 

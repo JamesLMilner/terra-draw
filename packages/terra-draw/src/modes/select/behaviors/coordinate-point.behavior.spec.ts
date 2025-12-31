@@ -257,8 +257,8 @@ describe("CoordinatePointBehavior", () => {
 
 			coordinatePointBehavior.deletePointsByFeatureIds([featureId]);
 
-			expect(config.store.delete).toHaveBeenCalledTimes(1);
-			expect(config.store.delete).toHaveBeenNthCalledWith(1, []);
+			// Ensure no delete calls were made because we have already deleted the points
+			expect(config.store.delete).toHaveBeenCalledTimes(0);
 
 			const propertiesAfterDelete = config.store.getPropertiesCopy(featureId);
 			expect(propertiesAfterDelete.coordinatePointIds).toBe(null);

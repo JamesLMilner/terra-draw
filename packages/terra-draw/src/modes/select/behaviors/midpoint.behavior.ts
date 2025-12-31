@@ -106,9 +106,9 @@ export class MidPointBehavior extends TerraDrawModeBehavior {
 		// TODO: is there a way of just updating the selection points rather
 		// than fully deleting / recreating?
 		// Recreate the selection points
-		this.mutateFeature.deleteFeatures([
-			...this._midPoints,
+		this.mutateFeature.deleteFeaturesIfPresent([
 			...this.selectionPointBehavior.ids,
+			...this._midPoints,
 		]);
 
 		// We don't need to check if flags are correct
@@ -153,10 +153,12 @@ export class MidPointBehavior extends TerraDrawModeBehavior {
 	}
 
 	public delete() {
-		if (this._midPoints.length) {
-			this.mutateFeature.deleteFeatures(this._midPoints);
-			this._midPoints = [];
+		if (!this._midPoints.length) {
+			return;
 		}
+
+		this.mutateFeature.deleteFeaturesIfPresent(this._midPoints);
+		this._midPoints = [];
 	}
 
 	public updateAllInPlace({

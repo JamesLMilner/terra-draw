@@ -91,9 +91,7 @@ export class MutateFeatureBehavior extends TerraDrawModeBehavior {
 	}: {
 		coordinates: Position;
 		properties: JSONObject;
-		context?: {
-			updateType: UpdateTypes.Finish;
-		};
+		context?: FinishContext;
 	}) {
 		// Create point is slightly different in that creating can also be the finish action
 		// because there is only one step to creating a point.
@@ -233,12 +231,22 @@ export class MutateFeatureBehavior extends TerraDrawModeBehavior {
 		});
 	}
 
-	public deleteFeature(featureId: FeatureId) {
-		this.deleteFeatures([featureId]);
+	public deleteFeatureIfPresent(featureId: FeatureId | undefined) {
+		if (featureId && this.store.has(featureId)) {
+			this.store.delete([featureId]);
+		}
 	}
 
-	public deleteFeatures(featureIds: FeatureId[]) {
-		this.store.delete(featureIds);
+	public deleteFeaturesIfPresent(featureIds: FeatureId[]) {
+		if (featureIds.length === 0) {
+			return;
+		}
+
+		const existing = featureIds.filter((id) => this.store.has(id));
+
+		if (existing.length) {
+			this.store.delete(existing);
+		}
 	}
 
 	public setDeselected(featureIds: FeatureId[]) {
@@ -330,23 +338,26 @@ export class MutateFeatureBehavior extends TerraDrawModeBehavior {
 			return null;
 		}
 
+		const feature = this.buildFeatureWithGeometry<G>(featureId);
+
 		// Handle special case where there are no coordinate mutations but we want to validate on finish
 		if (context.updateType === UpdateTypes.Finish) {
 			if (!coordinateMutations) {
 				if (
 					!this.validateGeometryWithUpdateType({
-						geometry: this.store.getGeometryCopy(featureId),
-						properties: this.store.getPropertiesCopy(featureId),
+						geometry: feature.geometry,
+						properties: feature.properties,
 						updateType: context.updateType,
 					})
 				) {
 					return null;
 				}
 			}
+
 			this.options.onFinish(featureId, context as FinishContext);
 		}
 
-		return this.buildFeatureWithGeometry<G>(featureId);
+		return feature;
 	}
 
 	public epsilonOffset() {

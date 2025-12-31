@@ -28,6 +28,7 @@ import {
 import { ValidateNonIntersectingPolygonFeature } from "../../validations/polygon.validation";
 import { BehaviorConfig } from "../base.behavior";
 import { MutateFeatureBehavior, Mutations } from "../mutate-feature.behavior";
+import { ReadFeatureBehavior } from "../read-feature.behavior";
 
 type TerraDrawRectangleModeKeyEvents = {
 	cancel: KeyboardEvent["key"] | null;
@@ -70,6 +71,7 @@ export class TerraDrawRectangleMode extends TerraDrawBaseDrawMode<RectanglePolyg
 
 	// Behaviors
 	private mutateFeature!: MutateFeatureBehavior;
+	private readFeature!: ReadFeatureBehavior;
 
 	constructor(
 		options?: TerraDrawRectangleModeOptions<RectanglePolygonStyling>,
@@ -319,11 +321,7 @@ export class TerraDrawRectangleMode extends TerraDrawBaseDrawMode<RectanglePolyg
 			this.setStarted();
 		}
 
-		try {
-			if (cleanUpId !== undefined) {
-				this.mutateFeature.deleteFeature(cleanUpId);
-			}
-		} catch {}
+		this.mutateFeature.deleteFeatureIfPresent(cleanUpId);
 	}
 
 	/** @internal */
@@ -390,6 +388,7 @@ export class TerraDrawRectangleMode extends TerraDrawBaseDrawMode<RectanglePolyg
 	}
 
 	registerBehaviors(config: BehaviorConfig) {
+		this.readFeature = new ReadFeatureBehavior(config);
 		this.mutateFeature = new MutateFeatureBehavior(config, {
 			validate: this.validate,
 			onFinish: (featureId, context) => {

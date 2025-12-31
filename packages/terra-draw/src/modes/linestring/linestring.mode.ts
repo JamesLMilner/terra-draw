@@ -180,7 +180,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 			event.lng = snappedCoordinate[0];
 			event.lat = snappedCoordinate[1];
 		} else if (this.snappedPointId) {
-			this.mutateFeature.deleteFeature(this.snappedPointId);
+			this.mutateFeature.deleteFeatureIfPresent(this.snappedPointId);
 			this.snappedPointId = undefined;
 		}
 
@@ -359,12 +359,12 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 			validate: this.validate,
 			onFinish: (featureId, context) => {
 				if (this.snappedPointId) {
-					this.mutateFeature.deleteFeature(this.snappedPointId);
+					this.mutateFeature.deleteFeatureIfPresent(this.snappedPointId);
 					this.snappedPointId = undefined;
 				}
 
 				if (this.editedPointId) {
-					this.mutateFeature.deleteFeature(this.editedPointId);
+					this.mutateFeature.deleteFeatureIfPresent(this.editedPointId);
 					this.editedPointId = undefined;
 
 					// Reset edit state
@@ -512,7 +512,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 	private onLeftClick(event: TerraDrawMouseEvent) {
 		// Reset the snapping point
 		if (this.snappedPointId) {
-			this.mutateFeature.deleteFeature(this.snappedPointId);
+			this.mutateFeature.deleteFeatureIfPresent(this.snappedPointId);
 			this.snappedPointId = undefined;
 		}
 
@@ -532,6 +532,13 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 
 	/** @internal */
 	onClick(event: TerraDrawMouseEvent) {
+		if (
+			this.currentId !== undefined &&
+			!this.readFeature.hasFeature(this.currentId)
+		) {
+			this.cleanUp();
+		}
+
 		if (
 			(event.button === "right" &&
 				this.allowPointerEvent(this.pointerEvents.rightClick, event)) ||
@@ -690,7 +697,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 		}
 
 		if (this.snapping && this.snappedPointId) {
-			this.mutateFeature.deleteFeature(this.snappedPointId);
+			this.mutateFeature.deleteFeatureIfPresent(this.snappedPointId);
 			this.snappedPointId = undefined;
 		}
 
@@ -740,7 +747,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 
 	/** @internal */
 	cleanUp() {
-		const cleanUpId = this.currentId;
+		const currentId = this.currentId;
 		const snappedPointId = this.snappedPointId;
 
 		this.snappedPointId = undefined;
@@ -750,15 +757,9 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 			this.setStarted();
 		}
 
-		try {
-			if (cleanUpId !== undefined) {
-				this.mutateFeature.deleteFeature(cleanUpId);
-			}
-			if (snappedPointId !== undefined) {
-				this.mutateFeature.deleteFeature(snappedPointId);
-			}
-			this.closingPoints.delete();
-		} catch (error) {}
+		this.mutateFeature.deleteFeatureIfPresent(currentId);
+		this.mutateFeature.deleteFeatureIfPresent(snappedPointId);
+		this.closingPoints.delete();
 	}
 
 	/** @internal */
@@ -913,7 +914,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 		// we want to clear that state up as new polygon might be completely
 		// different in terms of it's coordinates
 		if (this.editedFeatureId === feature.id && this.editedPointId) {
-			this.mutateFeature.deleteFeature(this.editedPointId);
+			this.mutateFeature.deleteFeatureIfPresent(this.editedPointId);
 			this.editedPointId = undefined;
 			this.editedFeatureId = undefined;
 			this.editedFeatureCoordinateIndex = undefined;

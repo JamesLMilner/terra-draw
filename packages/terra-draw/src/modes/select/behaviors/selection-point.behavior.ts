@@ -4,6 +4,7 @@ import { FeatureId } from "../../../store/store";
 import { SELECT_PROPERTIES } from "../../../common";
 import { MutateFeatureBehavior } from "../../mutate-feature.behavior";
 import { getUnclosedCoordinates } from "../../../geometry/get-coordinates";
+import { ReadFeatureBehavior } from "../../read-feature.behavior";
 
 export type SelectionPointProperties = {
 	mode: string;
@@ -15,13 +16,16 @@ export type SelectionPointProperties = {
 export class SelectionPointBehavior extends TerraDrawModeBehavior {
 	constructor(
 		config: BehaviorConfig,
+		readFeatureBehavior: ReadFeatureBehavior,
 		mutateFeatureBehavior: MutateFeatureBehavior,
 	) {
 		super(config);
 		this.mutateFeature = mutateFeatureBehavior;
+		this.readFeature = readFeatureBehavior;
 	}
 
 	private mutateFeature: MutateFeatureBehavior;
+	private readFeature: ReadFeatureBehavior;
 
 	private _selectionPoints: FeatureId[] = [];
 
@@ -51,10 +55,12 @@ export class SelectionPointBehavior extends TerraDrawModeBehavior {
 	}
 
 	public delete() {
-		if (this.ids.length) {
-			this.mutateFeature.deleteFeatures(this.ids);
-			this._selectionPoints = [];
+		if (!this.ids.length) {
+			return;
 		}
+
+		this.mutateFeature.deleteFeaturesIfPresent(this.ids);
+		this._selectionPoints = [];
 	}
 
 	public updateAllInPlace({

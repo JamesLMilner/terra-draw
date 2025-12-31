@@ -758,6 +758,160 @@ describe("Terra Draw", () => {
 			expect(draw.getSnapshot()).toHaveLength(0);
 		});
 
+		it("correctly cleans up linestring mode when a currently drawn feature is removed midway through drawing", () => {
+			const linestringMode = new TerraDrawLineStringMode();
+			const draw = new TerraDraw({
+				adapter: new TerraDrawTestAdapter({
+					lib: {},
+				}),
+				modes: [linestringMode],
+			});
+
+			const onChange = jest.fn();
+			draw.on("change", onChange);
+
+			draw.start();
+			draw.setMode("linestring");
+
+			linestringMode.onClick(MockCursorEvent({ lng: -25, lat: 34 }));
+
+			const currentFeature = draw
+				.getSnapshot()
+				.find(
+					(feature) => feature.properties[COMMON_PROPERTIES.CURRENTLY_DRAWING],
+				) as GeoJSONStoreFeatures;
+
+			draw.removeFeatures([currentFeature.id as FeatureId]);
+
+			const afterRemoveFeatures = draw
+				.getSnapshot()
+				.map(({ id }) => id as FeatureId);
+			expect(afterRemoveFeatures.length).toBe(0);
+
+			expect(() => {
+				linestringMode.onClick(MockCursorEvent({ lng: -25, lat: 34 }));
+			}).not.toThrow();
+		});
+
+		it("correctly cleans up a linestring mode when a currently drawn feature and closing point are removed midway through drawing", () => {
+			const linestringMode = new TerraDrawLineStringMode();
+			const draw = new TerraDraw({
+				adapter: new TerraDrawTestAdapter({
+					lib: {},
+				}),
+				modes: [linestringMode],
+			});
+
+			const onChange = jest.fn();
+			draw.on("change", onChange);
+
+			draw.start();
+			draw.setMode("linestring");
+
+			linestringMode.onClick(MockCursorEvent({ lng: -25, lat: 34 }));
+			linestringMode.onClick(MockCursorEvent({ lng: -25, lat: 35 }));
+
+			const currentFeatures = draw
+				.getSnapshot()
+				.map(({ id }) => id as FeatureId);
+
+			expect(currentFeatures.length).toBe(2);
+
+			draw.removeFeatures(currentFeatures);
+
+			const afterRemoveFeatures = draw
+				.getSnapshot()
+				.map(({ id }) => id as FeatureId);
+			expect(afterRemoveFeatures.length).toBe(0);
+
+			linestringMode.onClick(MockCursorEvent({ lng: -25, lat: 35 }));
+
+			const afterFeatures = draw.getSnapshot().map(({ id }) => id as FeatureId);
+			expect(afterFeatures.length).toBe(1);
+		});
+
+		it("correctly cleans up polygon mode when a currently drawn feature is removed midway through drawing", () => {
+			const polygonMode = new TerraDrawPolygonMode({
+				showCoordinatePoints: true,
+			});
+			const draw = new TerraDraw({
+				adapter: new TerraDrawTestAdapter({
+					lib: {},
+				}),
+				modes: [polygonMode],
+			});
+
+			const onChange = jest.fn();
+			draw.on("change", onChange);
+
+			draw.start();
+			draw.setMode("polygon");
+
+			polygonMode.onClick(MockCursorEvent({ lng: -25, lat: 34 }));
+
+			const currentFeatures = draw
+				.getSnapshot()
+				.map(({ id }) => id as FeatureId);
+			expect(currentFeatures.length).toBe(4);
+
+			const currentFeature = draw
+				.getSnapshot()
+				.find(
+					(feature) => feature.properties[COMMON_PROPERTIES.CURRENTLY_DRAWING],
+				) as GeoJSONStoreFeatures;
+
+			draw.removeFeatures([currentFeature.id as FeatureId]);
+
+			const afterRemoveFeatures = draw
+				.getSnapshot()
+				.map(({ id }) => id as FeatureId);
+			expect(afterRemoveFeatures.length).toBe(0);
+
+			expect(() => {
+				polygonMode.onClick(MockCursorEvent({ lng: -25, lat: 34 }));
+			}).not.toThrow();
+		});
+
+		it("correctly cleans up a polygon mode when a currently drawn feature and closing point are removed midway through drawing", () => {
+			const polygonMode = new TerraDrawPolygonMode({
+				showCoordinatePoints: true,
+			});
+			const draw = new TerraDraw({
+				adapter: new TerraDrawTestAdapter({
+					lib: {},
+				}),
+				modes: [polygonMode],
+			});
+
+			const onChange = jest.fn();
+			draw.on("change", onChange);
+
+			draw.start();
+			draw.setMode("polygon");
+
+			polygonMode.onClick(MockCursorEvent({ lng: -25, lat: 34 }));
+			polygonMode.onClick(MockCursorEvent({ lng: -25, lat: 35 }));
+
+			const currentFeatures = draw
+				.getSnapshot()
+				.map(({ id }) => id as FeatureId);
+			expect(currentFeatures.length).toBe(4);
+
+			draw.removeFeatures(currentFeatures);
+
+			const afterRemoveFeatures = draw
+				.getSnapshot()
+				.map(({ id }) => id as FeatureId);
+			expect(afterRemoveFeatures.length).toBe(0);
+
+			polygonMode.onClick(MockCursorEvent({ lng: -25, lat: 35 }));
+
+			const clickAfterRemoveFeatures = draw
+				.getSnapshot()
+				.map(({ id }) => id as FeatureId);
+			expect(clickAfterRemoveFeatures.length).toBe(4);
+		});
+
 		it("throws an error if not enabled", () => {
 			const draw = new TerraDraw({
 				adapter: new TerraDrawTestAdapter({
@@ -3455,6 +3609,310 @@ describe("Terra Draw", () => {
 			]);
 
 			expect(callback).toHaveBeenCalledTimes(2);
+		});
+
+		describe("finish", () => {
+			it("is called when feature is finished with point mode", async () => {
+				const pointMode = new TerraDrawPointMode();
+				const draw = new TerraDraw({
+					adapter,
+					modes: [pointMode],
+				});
+
+				draw.start();
+
+				draw.setMode("point");
+
+				const callback = jest.fn();
+				draw.on("finish", callback);
+
+				pointMode.onClick(MockCursorEvent({ lng: -25, lat: 34 }));
+
+				expect(callback).toHaveBeenCalledTimes(1);
+				expect(callback).toHaveBeenCalledWith(expect.any(String), {
+					action: "draw",
+					mode: "point",
+				});
+
+				const id = callback.mock.calls[0][0];
+				const feature = draw.getSnapshotFeature(id);
+				expect(feature).toBeDefined();
+				expect(feature!.geometry).toEqual({
+					type: "Point",
+					coordinates: [-25, 34],
+				});
+
+				// Point can be removed
+				draw.removeFeatures([id]);
+				expect(draw.getSnapshotFeature(id)).toBeUndefined();
+			});
+
+			it("is called when feature is finished with linestring mode", async () => {
+				const lineStringMode = new TerraDrawLineStringMode();
+				const draw = new TerraDraw({
+					adapter,
+					modes: [lineStringMode],
+				});
+
+				draw.start();
+
+				draw.setMode("linestring");
+
+				const callback = jest.fn();
+				draw.on("finish", callback);
+
+				lineStringMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+				lineStringMode.onClick(
+					MockCursorEvent({ lng: 0.000001, lat: 0.000001 }),
+				);
+
+				expect(draw.getSnapshot()).toHaveLength(2);
+
+				lineStringMode.onClick(
+					MockCursorEvent({ lng: 0.000001, lat: 0.000001 }),
+				);
+
+				expect(draw.getSnapshot()).toHaveLength(1);
+
+				expect(callback).toHaveBeenCalledTimes(1);
+				expect(callback).toHaveBeenCalledWith(expect.any(String), {
+					action: "draw",
+					mode: "linestring",
+				});
+
+				const id = callback.mock.calls[0][0];
+				const feature = draw.getSnapshotFeature(id);
+				expect(feature).toBeDefined();
+				expect(feature!.geometry).toEqual({
+					type: "LineString",
+					coordinates: [
+						[0, 0],
+						[0.000001, 0.000001],
+					],
+				});
+
+				// LineString can be removed
+				draw.removeFeatures([id]);
+				expect(draw.getSnapshotFeature(id)).toBeUndefined();
+
+				draw.stop();
+			});
+
+			it("is called when feature is dragged in editable linestring mode", async () => {
+				const lineStringMode = new TerraDrawLineStringMode({
+					editable: true,
+				});
+				const draw = new TerraDraw({
+					adapter,
+					modes: [lineStringMode],
+				});
+
+				draw.start();
+
+				draw.setMode("linestring");
+
+				const callback = jest.fn();
+				draw.on("finish", callback);
+
+				lineStringMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+				lineStringMode.onClick(
+					MockCursorEvent({ lng: 0.000001, lat: 0.000001 }),
+				);
+
+				expect(draw.getSnapshot()).toHaveLength(2);
+
+				lineStringMode.onClick(
+					MockCursorEvent({ lng: 0.000001, lat: 0.000001 }),
+				);
+
+				expect(draw.getSnapshot()).toHaveLength(1);
+
+				expect(callback).toHaveBeenCalledTimes(1);
+				expect(callback).toHaveBeenCalledWith(expect.any(String), {
+					action: "draw",
+					mode: "linestring",
+				});
+
+				lineStringMode.onDragStart(
+					MockCursorEvent({ lng: 0.000001, lat: 0.000001 }),
+					adapter.setDraggability,
+				);
+				lineStringMode.onDrag(
+					MockCursorEvent({ lng: 0.000002, lat: 0.000002 }),
+					adapter.setDraggability,
+				);
+				lineStringMode.onDragEnd(
+					MockCursorEvent({ lng: 0.000002, lat: 0.000002 }),
+					adapter.setDraggability,
+				);
+
+				expect(callback).toHaveBeenCalledTimes(2);
+				expect(callback).toHaveBeenNthCalledWith(2, expect.any(String), {
+					action: "edit",
+					mode: "linestring",
+				});
+				const id = callback.mock.calls[1][0];
+
+				// LineString can be removed
+				draw.removeFeatures([id]);
+				expect(draw.getSnapshotFeature(id)).toBeUndefined();
+
+				draw.stop();
+			});
+
+			it("is not called when feature is drawn but clear is called before finishing", async () => {
+				const lineStringMode = new TerraDrawLineStringMode();
+				const draw = new TerraDraw({
+					adapter,
+					modes: [lineStringMode],
+				});
+
+				draw.start();
+
+				draw.setMode("linestring");
+
+				const callback = jest.fn();
+				draw.on("finish", callback);
+
+				lineStringMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+				lineStringMode.onClick(
+					MockCursorEvent({ lng: 0.000001, lat: 0.000001 }),
+				);
+
+				expect(draw.getSnapshot()).toHaveLength(2);
+
+				draw.clear();
+
+				expect(draw.getSnapshot()).toHaveLength(0);
+				expect(callback).toHaveBeenCalledTimes(0);
+
+				draw.stop();
+			});
+
+			it("does not error when clear is being called in its callback for linestring mode", async () => {
+				const lineStringMode = new TerraDrawLineStringMode({
+					editable: true,
+				});
+				const draw = new TerraDraw({
+					adapter,
+					modes: [lineStringMode],
+				});
+
+				jest.spyOn(draw, "clear");
+
+				draw.start();
+
+				draw.setMode("linestring");
+
+				draw.on("finish", () => {
+					draw.clear();
+				});
+
+				draw.start();
+
+				draw.setMode("linestring");
+
+				lineStringMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+				lineStringMode.onClick(
+					MockCursorEvent({ lng: 0.000001, lat: 0.000001 }),
+				);
+
+				expect(draw.getSnapshot()).toHaveLength(2);
+
+				// Close the linestring
+				lineStringMode.onClick(
+					MockCursorEvent({ lng: 0.000001, lat: 0.000001 }),
+				);
+
+				expect(draw.getSnapshot()).toHaveLength(0);
+				expect(draw.clear).toHaveBeenCalledTimes(1);
+			});
+
+			it("does not error when clear is being called in its callback for polygon mode", async () => {
+				const polygonMode = new TerraDrawPolygonMode();
+				const draw = new TerraDraw({
+					adapter,
+					modes: [polygonMode],
+				});
+
+				jest.spyOn(draw, "clear");
+
+				draw.start();
+
+				draw.on("finish", () => {
+					draw.clear();
+				});
+
+				draw.setMode("polygon");
+
+				polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+				polygonMode.onClick(MockCursorEvent({ lng: 0.000001, lat: 0.000001 }));
+				polygonMode.onClick(MockCursorEvent({ lng: 0.000002, lat: 0.000002 }));
+
+				const snapshot = draw.getSnapshot();
+				expect(snapshot).toHaveLength(3);
+				expect(
+					snapshot.filter(
+						(feature) => feature.properties[COMMON_PROPERTIES.CLOSING_POINT],
+					),
+				).toHaveLength(2);
+				expect(
+					snapshot.filter((feature) => feature.geometry.type === "Polygon"),
+				).toHaveLength(1);
+
+				// Close the polygon
+				polygonMode.onClick(MockCursorEvent({ lng: 0.000002, lat: 0.000002 }));
+
+				expect(draw.getSnapshot()).toHaveLength(0);
+				expect(draw.clear).toHaveBeenCalledTimes(1);
+			});
+
+			it("does not error when clear is being called in its callback for polygon mode with coordinate points enabled", async () => {
+				const polygonMode = new TerraDrawPolygonMode({
+					showCoordinatePoints: true,
+				});
+				const draw = new TerraDraw({
+					adapter,
+					modes: [polygonMode],
+				});
+
+				jest.spyOn(draw, "clear");
+
+				draw.start();
+
+				draw.on("finish", () => {
+					draw.clear();
+				});
+
+				draw.setMode("polygon");
+
+				polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+				polygonMode.onClick(MockCursorEvent({ lng: 0.000001, lat: 0.000001 }));
+				polygonMode.onClick(MockCursorEvent({ lng: 0.000002, lat: 0.000002 }));
+
+				const snapshot = draw.getSnapshot();
+				expect(snapshot).toHaveLength(7);
+				// One extra coordinate point for the live point that we manipulate for mouse movements
+				expect(
+					snapshot.filter(
+						(feature) => feature.properties[COMMON_PROPERTIES.COORDINATE_POINT],
+					),
+				).toHaveLength(4);
+				expect(
+					snapshot.filter(
+						(feature) => feature.properties[COMMON_PROPERTIES.CLOSING_POINT],
+					),
+				).toHaveLength(2);
+				expect(
+					snapshot.filter((feature) => feature.geometry.type === "Polygon"),
+				).toHaveLength(1);
+
+				// Close the polygon
+				polygonMode.onClick(MockCursorEvent({ lng: 0.000002, lat: 0.000002 }));
+
+				expect(draw.getSnapshot()).toHaveLength(0);
+				expect(draw.clear).toHaveBeenCalledTimes(1);
+			});
 		});
 	});
 

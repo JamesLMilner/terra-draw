@@ -343,6 +343,103 @@ describe("mutateFeatureBehavior", () => {
 			});
 		});
 
+		describe("deleteFeatureIfPresent", () => {
+			it("does nothing when featureId is undefined", () => {
+				const config = MockBehaviorConfig("test");
+				const behavior = new MutateFeatureBehavior(config, {
+					validate: undefined,
+					onFinish: jest.fn(),
+				});
+
+				const polygonId = createStorePolygon(config);
+				expect(config.store.has(polygonId)).toBe(true);
+
+				behavior.deleteFeatureIfPresent(undefined);
+				expect(config.store.has(polygonId)).toBe(true);
+			});
+
+			it("does nothing when feature is not present", () => {
+				const config = MockBehaviorConfig("test");
+				const behavior = new MutateFeatureBehavior(config, {
+					validate: undefined,
+					onFinish: jest.fn(),
+				});
+
+				// should not throw
+				behavior.deleteFeatureIfPresent("missing-id");
+			});
+
+			it("deletes an existing feature", () => {
+				const config = MockBehaviorConfig("test");
+				const behavior = new MutateFeatureBehavior(config, {
+					validate: undefined,
+					onFinish: jest.fn(),
+				});
+
+				const polygonId = createStorePolygon(config);
+				expect(config.store.has(polygonId)).toBe(true);
+
+				behavior.deleteFeatureIfPresent(polygonId);
+				expect(config.store.has(polygonId)).toBe(false);
+
+				// idempotent
+				behavior.deleteFeatureIfPresent(polygonId);
+				expect(config.store.has(polygonId)).toBe(false);
+			});
+		});
+
+		describe("deleteFeaturesIfPresent", () => {
+			it("does nothing when given an empty array", () => {
+				const config = MockBehaviorConfig("test");
+				const behavior = new MutateFeatureBehavior(config, {
+					validate: undefined,
+					onFinish: jest.fn(),
+				});
+
+				const polygonId = createStorePolygon(config);
+				expect(config.store.has(polygonId)).toBe(true);
+
+				behavior.deleteFeaturesIfPresent([]);
+				expect(config.store.has(polygonId)).toBe(true);
+			});
+
+			it("deletes only features that are present", () => {
+				const config = MockBehaviorConfig("test");
+				const behavior = new MutateFeatureBehavior(config, {
+					validate: undefined,
+					onFinish: jest.fn(),
+				});
+
+				const pointId = createStorePoint(config);
+				const lineId = createStoreLineString(config);
+
+				expect(config.store.has(pointId)).toBe(true);
+				expect(config.store.has(lineId)).toBe(true);
+
+				// should not throw when some ids are missing
+				behavior.deleteFeaturesIfPresent([pointId, "missing-id", lineId]);
+
+				expect(config.store.has(pointId)).toBe(false);
+				expect(config.store.has(lineId)).toBe(false);
+			});
+
+			it("duplicate ids for existing features throw an error", () => {
+				const config = MockBehaviorConfig("test");
+				const behavior = new MutateFeatureBehavior(config, {
+					validate: undefined,
+					onFinish: jest.fn(),
+				});
+
+				const polygonId = createStorePolygon(config);
+				expect(config.store.has(polygonId)).toBe(true);
+
+				expect(() => {
+					behavior.deleteFeaturesIfPresent([polygonId, polygonId]);
+				}).toThrow();
+				expect(config.store.has(polygonId)).toBe(false);
+			});
+		});
+
 		describe("epsilonOffset", () => {
 			it("returns >= 1e-6 for high precision and equals epsilon for lower precision", () => {
 				const configHigh = MockBehaviorConfig("test", "web-mercator", 9);

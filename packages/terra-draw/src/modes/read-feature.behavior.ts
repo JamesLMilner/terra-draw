@@ -1,6 +1,6 @@
 import { BehaviorConfig, TerraDrawModeBehavior } from "./base.behavior";
 import { FeatureId } from "../extend";
-import { GeoJSONStoreGeometries } from "../store/store";
+import { GeoJSONStoreGeometries, JSONObject } from "../store/store";
 import { Position, Point } from "geojson";
 import { coordinatesIdentical } from "../geometry/coordinates-identical";
 
@@ -73,5 +73,9 @@ export class ReadFeatureBehavior extends TerraDrawModeBehavior {
 
 	public hasFeature(featureId: FeatureId) {
 		return this.store.has(featureId);
+	}
+
+	public getAllFeatureIdsWhere(equals: (properties: JSONObject) => boolean) {
+		return this.store.copyAllWhere(equals).map(({ id }) => id as FeatureId);
 	}
 }

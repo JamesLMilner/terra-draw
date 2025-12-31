@@ -103,15 +103,13 @@ export class MidPointBehavior extends TerraDrawModeBehavior {
 			});
 		}
 
-		const existingIds = [
-			...this._midPoints,
-			...this.selectionPointBehavior.ids,
-		].filter(() => this.readFeature.hasFeature(featureId));
-
 		// TODO: is there a way of just updating the selection points rather
 		// than fully deleting / recreating?
 		// Recreate the selection points
-		this.mutateFeature.deleteFeatures(existingIds);
+		this.mutateFeature.deleteFeaturesIfPresent([
+			...this.selectionPointBehavior.ids,
+			...this._midPoints,
+		]);
 
 		// We don't need to check if flags are correct
 		// because selection points are prerequisite for midpoints
@@ -155,15 +153,12 @@ export class MidPointBehavior extends TerraDrawModeBehavior {
 	}
 
 	public delete() {
-		if (this._midPoints.length) {
-			const existingIds = this._midPoints.filter((id) =>
-				this.readFeature.hasFeature(id),
-			);
-			if (existingIds.length) {
-				this.mutateFeature.deleteFeatures(existingIds);
-			}
-			this._midPoints = [];
+		if (!this._midPoints.length) {
+			return;
 		}
+
+		this.mutateFeature.deleteFeaturesIfPresent(this._midPoints);
+		this._midPoints = [];
 	}
 
 	public updateAllInPlace({

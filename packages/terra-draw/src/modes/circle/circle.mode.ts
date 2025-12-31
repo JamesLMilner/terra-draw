@@ -311,9 +311,7 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 			this.setStarted();
 		}
 
-		if (currentId !== undefined && this.readFeature.hasFeature(currentId)) {
-			this.mutateFeature.deleteFeature(currentId);
-		}
+		this.mutateFeature.deleteFeatureIfPresent(currentId);
 	}
 
 	/** @internal */

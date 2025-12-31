@@ -320,15 +320,8 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 			this.setStarted();
 		}
 
-		if (cleanUpId !== undefined && this.readFeature.hasFeature(cleanUpId)) {
-			this.mutateFeature.deleteFeature(cleanUpId);
-		}
-		if (
-			cleanUpClosingPointId !== undefined &&
-			this.readFeature.hasFeature(cleanUpClosingPointId)
-		) {
-			this.mutateFeature.deleteFeature(cleanUpClosingPointId);
-		}
+		this.mutateFeature.deleteFeatureIfPresent(cleanUpId);
+		this.mutateFeature.deleteFeatureIfPresent(cleanUpClosingPointId);
 	}
 
 	/** @internal */
@@ -415,9 +408,7 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 		// We need to reset the drawing state because it is very complicated (impossible?)
 		// to recover the drawing state after a feature update
 		if (this.currentId === feature.id) {
-			if (this.closingPointId) {
-				this.mutateFeature.deleteFeature(this.closingPointId);
-			}
+			this.mutateFeature.deleteFeatureIfPresent(this.closingPointId);
 			this.canClose = false;
 			this.currentId = undefined;
 			this.closingPointId = undefined;
@@ -434,9 +425,7 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 					mode: this.mode,
 					action: context.action,
 				});
-				if (this.closingPointId) {
-					this.mutateFeature.deleteFeature(this.closingPointId);
-				}
+				this.mutateFeature.deleteFeatureIfPresent(this.closingPointId);
 			},
 		});
 	}

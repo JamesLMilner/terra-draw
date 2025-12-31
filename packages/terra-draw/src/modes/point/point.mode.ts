@@ -313,7 +313,7 @@ export class TerraDrawPointMode extends TerraDrawBaseDrawMode<PointModeStyling> 
 		const clickedFeature = this.pointSearch.getNearestPointFeature(event);
 
 		if (clickedFeature) {
-			this.mutateFeature.deleteFeature(clickedFeature.id as FeatureId);
+			this.mutateFeature.deleteFeatureIfPresent(clickedFeature.id as FeatureId);
 		}
 	}
 

@@ -293,7 +293,7 @@ export class TerraDrawMarkerMode extends TerraDrawBaseDrawMode<MarkerModeStyling
 		const clickedFeature = this.pointSearch.getNearestPointFeature(event);
 
 		if (clickedFeature) {
-			this.mutateFeature.deleteFeature(clickedFeature.id as FeatureId);
+			this.mutateFeature.deleteFeatureIfPresent(clickedFeature.id as FeatureId);
 		}
 	}
 

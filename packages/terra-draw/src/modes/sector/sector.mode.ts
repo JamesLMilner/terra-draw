@@ -437,9 +437,7 @@ export class TerraDrawSectorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 			this.setStarted();
 		}
 
-		if (currentId && this.readFeature.hasFeature(currentId)) {
-			this.mutateFeature.deleteFeature(currentId);
-		}
+		this.mutateFeature.deleteFeatureIfPresent(currentId);
 	}
 
 	/** @internal */

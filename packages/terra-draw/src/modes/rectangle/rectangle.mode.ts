@@ -321,9 +321,7 @@ export class TerraDrawRectangleMode extends TerraDrawBaseDrawMode<RectanglePolyg
 			this.setStarted();
 		}
 
-		if (cleanUpId !== undefined && this.readFeature.hasFeature(cleanUpId)) {
-			this.mutateFeature.deleteFeature(cleanUpId);
-		}
+		this.mutateFeature.deleteFeatureIfPresent(cleanUpId);
 	}
 
 	/** @internal */

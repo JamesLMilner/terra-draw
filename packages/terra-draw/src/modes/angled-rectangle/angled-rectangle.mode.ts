@@ -405,9 +405,7 @@ export class TerraDrawAngledRectangleMode extends TerraDrawBaseDrawMode<PolygonS
 			this.setStarted();
 		}
 
-		if (currentId && this.readFeature.hasFeature(currentId)) {
-			this.mutateFeature.deleteFeature(currentId);
-		}
+		this.mutateFeature.deleteFeatureIfPresent(currentId);
 	}
 
 	/** @internal */

@@ -218,13 +218,8 @@ export class CoordinatePointBehavior extends TerraDrawModeBehavior {
 	private deleteCoordinatePoints(coordinatePointIds: FeatureId[]) {
 		// We have to account for someone manually deleting the coordinate points or only partially restoring them
 		// from some persistent storage. Essentially we cannot assume they are all present in the store.
-		const existingCoordinatePointIds = coordinatePointIds.filter((id) =>
-			this.readFeature.hasFeature(id),
-		) as FeatureId[];
 
-		if (existingCoordinatePointIds.length) {
-			this.mutateFeature.deleteFeatures(existingCoordinatePointIds);
-		}
+		this.mutateFeature.deleteFeaturesIfPresent(coordinatePointIds);
 	}
 
 	private deleteIfPresent(featureId: FeatureId) {
@@ -244,8 +239,6 @@ export class CoordinatePointBehavior extends TerraDrawModeBehavior {
 				properties[COMMON_PROPERTIES.COORDINATE_POINT_FEATURE_ID] === featureId,
 		);
 
-		if (orphanedCoordinatePointIds.length) {
-			this.mutateFeature.deleteFeatures(orphanedCoordinatePointIds);
-		}
+		this.mutateFeature.deleteFeaturesIfPresent(orphanedCoordinatePointIds);
 	}
 }

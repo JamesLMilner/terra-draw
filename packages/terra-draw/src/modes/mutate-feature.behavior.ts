@@ -231,15 +231,22 @@ export class MutateFeatureBehavior extends TerraDrawModeBehavior {
 		});
 	}
 
-	public deleteFeature(featureId: FeatureId) {
-		this.deleteFeatures([featureId]);
+	public deleteFeatureIfPresent(featureId: FeatureId | undefined) {
+		if (featureId && this.store.has(featureId)) {
+			this.store.delete([featureId]);
+		}
 	}
 
-	public deleteFeatures(featureIds: FeatureId[]) {
+	public deleteFeaturesIfPresent(featureIds: FeatureId[]) {
 		if (featureIds.length === 0) {
 			return;
 		}
-		this.store.delete(featureIds);
+
+		const existing = featureIds.filter((id) => this.store.has(id));
+
+		if (existing.length) {
+			this.store.delete(existing);
+		}
 	}
 
 	public setDeselected(featureIds: FeatureId[]) {

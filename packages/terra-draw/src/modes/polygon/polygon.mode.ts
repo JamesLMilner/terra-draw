@@ -250,12 +250,12 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 			validate: this.validate,
 			onFinish: (featureId, context) => {
 				if (this.editedPointId) {
-					this.mutateFeature.deleteFeature(this.editedPointId);
+					this.mutateFeature.deleteFeatureIfPresent(this.editedPointId);
 					this.editedPointId = undefined;
 				}
 
 				if (this.snappedPointId) {
-					this.mutateFeature.deleteFeature(this.snappedPointId);
+					this.mutateFeature.deleteFeatureIfPresent(this.snappedPointId);
 					this.snappedPointId = undefined;
 				}
 
@@ -325,7 +325,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 			event.lng = snappedCoordinate[0];
 			event.lat = snappedCoordinate[1];
 		} else if (this.snappedPointId) {
-			this.mutateFeature.deleteFeature(this.snappedPointId);
+			this.mutateFeature.deleteFeatureIfPresent(this.snappedPointId);
 			this.snappedPointId = undefined;
 		}
 	}
@@ -372,7 +372,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 
 			if (isPreviousClosing || isClosing) {
 				if (this.snappedPointId) {
-					this.mutateFeature.deleteFeature(this.snappedPointId);
+					this.mutateFeature.deleteFeatureIfPresent(this.snappedPointId);
 					this.snappedPointId = undefined;
 				}
 
@@ -555,7 +555,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 	private onLeftClick(event: TerraDrawMouseEvent) {
 		// Reset the snapping point
 		if (this.snappedPointId) {
-			this.mutateFeature.deleteFeature(this.snappedPointId);
+			this.mutateFeature.deleteFeatureIfPresent(this.snappedPointId);
 			this.snappedPointId = undefined;
 		}
 
@@ -940,7 +940,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 		}
 
 		if (this.snapping && this.snappedPointId) {
-			this.mutateFeature.deleteFeature(this.snappedPointId);
+			this.mutateFeature.deleteFeatureIfPresent(this.snappedPointId);
 			this.snappedPointId = undefined;
 		}
 
@@ -1013,21 +1013,10 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 			this.coordinatePoints.deletePointsByFeatureIds([cleanUpId]);
 		}
 
-		if (cleanUpId !== undefined && this.readFeature.hasFeature(cleanUpId)) {
-			this.mutateFeature.deleteFeature(cleanUpId);
-		}
-		if (
-			editedPointId !== undefined &&
-			this.readFeature.hasFeature(editedPointId)
-		) {
-			this.mutateFeature.deleteFeature(editedPointId);
-		}
-		if (
-			snappedPointId !== undefined &&
-			this.readFeature.hasFeature(snappedPointId)
-		) {
-			this.mutateFeature.deleteFeature(snappedPointId);
-		}
+		this.mutateFeature.deleteFeatureIfPresent(cleanUpId);
+		this.mutateFeature.deleteFeatureIfPresent(editedPointId);
+		this.mutateFeature.deleteFeatureIfPresent(snappedPointId);
+
 		if (this.closingPoints.ids.length) {
 			this.closingPoints.delete();
 		}
@@ -1179,7 +1168,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 		// we want to clear that state up as new polygon might be completely
 		// different in terms of it's coordinates
 		if (this.editedFeatureId === feature.id && this.editedPointId) {
-			this.mutateFeature.deleteFeature(this.editedPointId);
+			this.mutateFeature.deleteFeatureIfPresent(this.editedPointId);
 			this.editedPointId = undefined;
 			this.editedFeatureId = undefined;
 			this.editedFeatureCoordinateIndex = undefined;

@@ -55,15 +55,12 @@ export class SelectionPointBehavior extends TerraDrawModeBehavior {
 	}
 
 	public delete() {
-		if (this.ids.length) {
-			const existingIds = this.ids.filter((id) =>
-				this.readFeature.hasFeature(id),
-			);
-			if (existingIds.length) {
-				this.mutateFeature.deleteFeatures(existingIds);
-			}
-			this._selectionPoints = [];
+		if (!this.ids.length) {
+			return;
 		}
+
+		this.mutateFeature.deleteFeaturesIfPresent(this.ids);
+		this._selectionPoints = [];
 	}
 
 	public updateAllInPlace({

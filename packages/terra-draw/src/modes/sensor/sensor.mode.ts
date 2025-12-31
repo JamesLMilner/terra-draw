@@ -279,21 +279,9 @@ export class TerraDrawSensorMode extends TerraDrawBaseDrawMode<SensorPolygonStyl
 
 	/** @internal */
 	cleanUp() {
-		if (
-			this.currentStartingPointId &&
-			this.readFeature.hasFeature(this.currentStartingPointId)
-		) {
-			this.mutateFeature.deleteFeature(this.currentStartingPointId);
-		}
-		if (
-			this.currentInitialArcId &&
-			this.readFeature.hasFeature(this.currentInitialArcId)
-		) {
-			this.mutateFeature.deleteFeature(this.currentInitialArcId);
-		}
-		if (this.currentId && this.readFeature.hasFeature(this.currentId)) {
-			this.mutateFeature.deleteFeature(this.currentId);
-		}
+		this.mutateFeature.deleteFeatureIfPresent(this.currentStartingPointId);
+		this.mutateFeature.deleteFeatureIfPresent(this.currentInitialArcId);
+		this.mutateFeature.deleteFeatureIfPresent(this.currentId);
 
 		this.currentStartingPointId = undefined;
 		this.direction = undefined;
@@ -394,15 +382,8 @@ export class TerraDrawSensorMode extends TerraDrawBaseDrawMode<SensorPolygonStyl
 		// If we are in the middle of drawing a sensor and the feature being updated is the current sensor,
 		// we need to reset the drawing state
 		if (this.currentId === feature.id) {
-			try {
-				if (this.currentStartingPointId) {
-					this.mutateFeature.deleteFeature(this.currentStartingPointId);
-				}
-				if (this.currentInitialArcId) {
-					this.mutateFeature.deleteFeature(this.currentInitialArcId);
-				}
-			} catch {}
-
+			this.mutateFeature.deleteFeatureIfPresent(this.currentStartingPointId);
+			this.mutateFeature.deleteFeatureIfPresent(this.currentInitialArcId);
 			this.currentStartingPointId = undefined;
 			this.direction = undefined;
 			this.currentId = undefined;
@@ -453,15 +434,8 @@ export class TerraDrawSensorMode extends TerraDrawBaseDrawMode<SensorPolygonStyl
 			}
 		}
 
-		try {
-			if (finishedCurrentStartingPointId) {
-				this.mutateFeature.deleteFeature(finishedCurrentStartingPointId);
-			}
-
-			if (finishedInitialArcId) {
-				this.mutateFeature.deleteFeature(finishedInitialArcId);
-			}
-		} catch {}
+		this.mutateFeature.deleteFeatureIfPresent(finishedCurrentStartingPointId);
+		this.mutateFeature.deleteFeatureIfPresent(finishedInitialArcId);
 
 		this.currentCoordinate = 0;
 		this.currentStartingPointId = undefined;

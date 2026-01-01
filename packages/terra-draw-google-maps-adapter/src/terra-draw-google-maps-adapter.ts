@@ -419,7 +419,7 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawExtend.TerraDrawBaseAda
 		this._map.data.addGeoJson(featureCollection);
 
 		this._map.data.setStyle((feature) => {
-			const mode = feature.getProperty("mode");
+			const mode = feature.getProperty("mode") as string;
 			const gmGeometry = feature.getGeometry();
 			if (!gmGeometry) {
 				throw new Error("Google Maps geometry not found");

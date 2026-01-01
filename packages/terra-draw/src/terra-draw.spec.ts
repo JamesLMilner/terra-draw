@@ -3789,7 +3789,7 @@ describe("Terra Draw", () => {
 				draw.stop();
 			});
 
-			it("does not error when clear is being called in its callback for linestring mode", async () => {
+			it("clear does not error when clear is being called in its callback for linestring mode", async () => {
 				const lineStringMode = new TerraDrawLineStringMode({
 					editable: true,
 				});
@@ -3828,7 +3828,7 @@ describe("Terra Draw", () => {
 				expect(draw.clear).toHaveBeenCalledTimes(1);
 			});
 
-			it("does not error when clear is being called in its callback for polygon mode", async () => {
+			it("clear does not error when clear is being called in its callback for polygon mode", async () => {
 				const polygonMode = new TerraDrawPolygonMode();
 				const draw = new TerraDraw({
 					adapter,
@@ -3867,7 +3867,7 @@ describe("Terra Draw", () => {
 				expect(draw.clear).toHaveBeenCalledTimes(1);
 			});
 
-			it("does not error when clear is being called in its callback for polygon mode with coordinate points enabled", async () => {
+			it("clear does not error when clear is being called in its callback for polygon mode with coordinate points enabled", async () => {
 				const polygonMode = new TerraDrawPolygonMode({
 					showCoordinatePoints: true,
 				});
@@ -3912,6 +3912,89 @@ describe("Terra Draw", () => {
 
 				expect(draw.getSnapshot()).toHaveLength(0);
 				expect(draw.clear).toHaveBeenCalledTimes(1);
+			});
+
+			it("remove and then stop being called does not error when clear is being called in its callback for polygon mode", async () => {
+				const polygonMode = new TerraDrawPolygonMode();
+				const draw = new TerraDraw({
+					adapter,
+					modes: [polygonMode],
+				});
+
+				jest.spyOn(draw, "stop");
+
+				draw.start();
+
+				draw.on("finish", (id) => {
+					draw.removeFeatures([id]);
+					draw.stop();
+				});
+
+				draw.setMode("polygon");
+
+				polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+				polygonMode.onClick(MockCursorEvent({ lng: 0.000001, lat: 0.000001 }));
+				polygonMode.onClick(MockCursorEvent({ lng: 0.000002, lat: 0.000002 }));
+
+				const snapshot = draw.getSnapshot();
+				expect(snapshot).toHaveLength(3);
+				expect(
+					snapshot.filter(
+						(feature) => feature.properties[COMMON_PROPERTIES.CLOSING_POINT],
+					),
+				).toHaveLength(2);
+				expect(
+					snapshot.filter((feature) => feature.geometry.type === "Polygon"),
+				).toHaveLength(1);
+
+				// Close the polygon
+				polygonMode.onClick(MockCursorEvent({ lng: 0.000002, lat: 0.000002 }));
+
+				expect(draw.getSnapshot()).toHaveLength(0);
+				expect(draw.stop).toHaveBeenCalledTimes(1);
+			});
+
+			it("remove and then stop being called does not error when clear is being called in its callback for linestring mode", async () => {
+				const lineStringMode = new TerraDrawLineStringMode();
+				const draw = new TerraDraw({
+					adapter,
+					modes: [lineStringMode],
+				});
+
+				jest.spyOn(draw, "stop");
+
+				draw.start();
+
+				draw.on("finish", (id) => {
+					draw.removeFeatures([id]);
+					draw.stop();
+				});
+
+				draw.setMode("linestring");
+
+				lineStringMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+				lineStringMode.onClick(
+					MockCursorEvent({ lng: 0.000001, lat: 0.000001 }),
+				);
+
+				const snapshot = draw.getSnapshot();
+				expect(snapshot).toHaveLength(2);
+				expect(
+					snapshot.filter(
+						(feature) => feature.properties[COMMON_PROPERTIES.CLOSING_POINT],
+					),
+				).toHaveLength(1);
+				expect(
+					snapshot.filter((feature) => feature.geometry.type === "LineString"),
+				).toHaveLength(1);
+
+				// Close the line string
+				lineStringMode.onClick(
+					MockCursorEvent({ lng: 0.000001, lat: 0.000001 }),
+				);
+
+				expect(draw.getSnapshot()).toHaveLength(0);
+				expect(draw.stop).toHaveBeenCalledTimes(1);
 			});
 		});
 	});

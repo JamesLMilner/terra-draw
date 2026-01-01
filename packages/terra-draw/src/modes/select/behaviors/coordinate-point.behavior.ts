@@ -223,6 +223,10 @@ export class CoordinatePointBehavior extends TerraDrawModeBehavior {
 	}
 
 	private deleteIfPresent(featureId: FeatureId) {
+		if (!this.readFeature.hasFeature(featureId)) {
+			return;
+		}
+
 		const existingFeatureProps = this.readFeature.getProperties(featureId);
 		const coordinatePoints =
 			existingFeatureProps.coordinatePointIds as FeatureId[];

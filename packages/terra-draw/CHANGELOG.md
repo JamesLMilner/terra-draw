@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.21.2](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.21.1...terra-draw@1.21.2) (2026-01-01)
+
+
+### fix
+
+* **terra-draw:** fix feature being deleted and then stop being called in on finish (#763) ([](https://github.com/JamesLMilner/terra-draw/commit/c9b5e4b70362839c4316e7c576e98253a85fcd7f)), closes [#763](https://github.com/JamesLMilner/terra-draw/issues/763)
+
 ## [1.21.1](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.21.0...terra-draw@1.21.1) (2025-12-31)
 
 

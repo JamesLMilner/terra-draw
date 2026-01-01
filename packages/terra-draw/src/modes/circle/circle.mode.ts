@@ -33,6 +33,7 @@ import { Polygon } from "geojson";
 import { calculateWebMercatorDistortion } from "../../geometry/shape/web-mercator-distortion";
 import { BehaviorConfig } from "../base.behavior";
 import { MutateFeatureBehavior, Mutations } from "../mutate-feature.behavior";
+import { ReadFeatureBehavior } from "../read-feature.behavior";
 
 type TerraDrawCircleModeKeyEvents = {
 	cancel: KeyboardEvent["key"] | null;
@@ -79,7 +80,8 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 	private drawType: DrawType | undefined;
 
 	// Behaviors
-	public mutateFeature!: MutateFeatureBehavior;
+	private readFeature!: ReadFeatureBehavior;
+	private mutateFeature!: MutateFeatureBehavior;
 
 	/**
 	 * Create a new circle mode instance
@@ -299,7 +301,7 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 
 	/** @internal */
 	cleanUp() {
-		const cleanUpId = this.currentCircleId;
+		const currentId = this.currentCircleId;
 
 		this.center = undefined;
 		this.currentCircleId = undefined;
@@ -309,11 +311,7 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 			this.setStarted();
 		}
 
-		try {
-			if (cleanUpId !== undefined) {
-				this.mutateFeature.deleteFeature(cleanUpId);
-			}
-		} catch {}
+		this.mutateFeature.deleteFeatureIfPresent(currentId);
 	}
 
 	/** @internal */
@@ -449,6 +447,7 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 	}
 
 	registerBehaviors(config: BehaviorConfig) {
+		this.readFeature = new ReadFeatureBehavior(config);
 		this.mutateFeature = new MutateFeatureBehavior(config, {
 			validate: this.validate,
 			onFinish: (featureId, context) => {

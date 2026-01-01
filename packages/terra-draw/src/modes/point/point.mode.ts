@@ -7,6 +7,7 @@ import {
 	UpdateTypes,
 	COMMON_PROPERTIES,
 	Z_INDEX,
+	FinishActions,
 } from "../../common";
 import {
 	FeatureId,
@@ -299,7 +300,7 @@ export class TerraDrawPointMode extends TerraDrawBaseDrawMode<PointModeStyling> 
 				mode: this.mode,
 				[COMMON_PROPERTIES.MARKER]: true,
 			},
-			context: { updateType: UpdateTypes.Finish },
+			context: { updateType: UpdateTypes.Finish, action: FinishActions.Draw },
 		});
 	}
 
@@ -312,7 +313,7 @@ export class TerraDrawPointMode extends TerraDrawBaseDrawMode<PointModeStyling> 
 		const clickedFeature = this.pointSearch.getNearestPointFeature(event);
 
 		if (clickedFeature) {
-			this.mutateFeature.deleteFeature(clickedFeature.id as FeatureId);
+			this.mutateFeature.deleteFeatureIfPresent(clickedFeature.id as FeatureId);
 		}
 	}
 

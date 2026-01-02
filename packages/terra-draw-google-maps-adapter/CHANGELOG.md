@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.2.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw-google-maps-adapter@1.1.2...terra-draw-google-maps-adapter@1.2.0) (2026-01-02)
+
+
+### feat
+
+* **terra-draw-google-maps-adapter:** allow use of @googlemaps/js-api-loader v2 (#762) ([](https://github.com/JamesLMilner/terra-draw/commit/08438b8b901148f53782a5fae21455de500385d4)), closes [#762](https://github.com/JamesLMilner/terra-draw/issues/762)
+
 ## [1.1.2](https://github.com/JamesLMilner/terra-draw/compare/terra-draw-google-maps-adapter@1.1.1...terra-draw-google-maps-adapter@1.1.2) (2025-12-02)
 
 

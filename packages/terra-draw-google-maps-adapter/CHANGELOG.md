@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.2.1](https://github.com/JamesLMilner/terra-draw/compare/terra-draw-google-maps-adapter@1.2.0...terra-draw-google-maps-adapter@1.2.1) (2026-01-02)
+
+
+### fix
+
+* **terra-draw-google-maps-adapter:** use rAF to fix issues with external geometries and improve perf (#764) ([](https://github.com/JamesLMilner/terra-draw/commit/6dd34829e2ea88b027dbb45354b43adce9f8cd0e)), closes [#764](https://github.com/JamesLMilner/terra-draw/issues/764)
+
 ## [1.2.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw-google-maps-adapter@1.1.2...terra-draw-google-maps-adapter@1.2.0) (2026-01-02)
 
 

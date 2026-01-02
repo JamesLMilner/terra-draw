@@ -6,9 +6,11 @@ import {
 	SetCursor,
 	TerraDrawStylingFunction,
 	TerraDrawExtend,
+	GeoJSONStoreFeatures,
 } from "terra-draw";
 
 import { GeoJsonObject } from "geojson";
+import { JSONObject } from "terra-draw/src/store/store";
 
 export class TerraDrawGoogleMapsAdapter extends TerraDrawExtend.TerraDrawBaseAdapter {
 	constructor(
@@ -36,7 +38,7 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawExtend.TerraDrawBaseAda
 	private _mouseMoveEventListener: google.maps.MapsEventListener | undefined;
 	private _readyCalled = false;
 
-	private get _layers(): boolean {
+	private get _hasRenderedFeatures(): boolean {
 		return Boolean(this.renderedFeatureIds?.size > 0);
 	}
 
@@ -114,6 +116,96 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawExtend.TerraDrawBaseAda
 				}
 			},
 		);
+	}
+
+	private styling: TerraDrawStylingFunction | undefined;
+
+	private style(feature: google.maps.Data.Feature) {
+		if (!this.styling) {
+			throw new Error("Styling function not defined");
+		}
+
+		const id = feature.getId();
+
+		// Style callback has been called for a feature that is not rendered
+		if (!this.renderedFeatureIds.has(id as string)) {
+			return {};
+		}
+
+		const mode = feature.getProperty("mode") as string;
+		const gmGeometry = feature.getGeometry();
+		if (!gmGeometry) {
+			throw new Error("Google Maps geometry not found");
+		}
+		const type = gmGeometry.getType();
+		const properties: Record<string, any> = {};
+
+		feature.forEachProperty((value, property) => {
+			properties[property] = value;
+		});
+
+		const calculatedStyles = this.styling[mode]({
+			type: "Feature",
+			id,
+			geometry: {
+				type: type as "Point" | "LineString" | "Polygon",
+				coordinates: [],
+			},
+			properties,
+		});
+
+		switch (type) {
+			case "Point":
+				if (calculatedStyles.markerUrl) {
+					return {
+						clickable: false,
+						icon: {
+							url: calculatedStyles.markerUrl as string,
+							scaledSize:
+								calculatedStyles.markerWidth && calculatedStyles.markerHeight
+									? new this._lib.Size(
+											calculatedStyles.markerWidth,
+											calculatedStyles.markerHeight,
+										)
+									: undefined,
+						},
+						zIndex: calculatedStyles.zIndex,
+					};
+				}
+
+				const path = this.circlePath(0, 0, calculatedStyles.pointWidth);
+
+				return {
+					clickable: false,
+					icon: {
+						path,
+						fillColor: calculatedStyles.pointColor,
+						fillOpacity: 1,
+						strokeColor: calculatedStyles.pointOutlineColor,
+						strokeWeight: calculatedStyles.pointOutlineWidth,
+						rotation: 0,
+						scale: 1,
+					},
+					zIndex: calculatedStyles.zIndex,
+				};
+
+			case "LineString":
+				return {
+					strokeColor: calculatedStyles.lineStringColor,
+					strokeWeight: calculatedStyles.lineStringWidth,
+					zIndex: calculatedStyles.zIndex,
+				};
+			case "Polygon":
+				return {
+					strokeColor: calculatedStyles.polygonOutlineColor,
+					strokeWeight: calculatedStyles.polygonOutlineWidth,
+					fillOpacity: calculatedStyles.polygonFillOpacity,
+					fillColor: calculatedStyles.polygonFillColor,
+					zIndex: calculatedStyles.zIndex,
+				};
+		}
+
+		throw Error("Unknown feature type");
 	}
 
 	public unregister(): void {
@@ -308,197 +400,200 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawExtend.TerraDrawBaseAda
 
 	/**
 	 * Renders GeoJSON features on the map using the provided styling configuration.
-	 * @param changes An object containing arrays of created, updated, and unchanged features to render.
-	 * @param styling An object mapping draw modes to feature styling functions
+	 * Schedules actual mutations into requestAnimationFrame, applying:
+	 * deletes -> updates -> creates
 	 */
 	render(changes: TerraDrawChanges, styling: TerraDrawStylingFunction) {
-		if (this._layers) {
-			changes.deletedIds.forEach((deletedId) => {
-				const featureToDelete = this._map.data.getFeatureById(deletedId);
-				if (featureToDelete) {
-					this._map.data.remove(featureToDelete);
-					this.renderedFeatureIds.delete(deletedId);
-				}
-			});
+		this.styling = styling;
 
-			changes.updated.forEach((updatedFeature) => {
-				if (!updatedFeature || !updatedFeature.id) {
-					throw new Error("Feature is not valid");
-				}
-
-				const featureToUpdate = this._map.data.getFeatureById(
-					updatedFeature.id,
-				);
-
-				if (!featureToUpdate) {
-					throw new Error("Feature could not be found by Google Maps API");
-				}
-
-				// Remove all keys
-				featureToUpdate.forEachProperty((property, name) => {
-					featureToUpdate.setProperty(name, undefined);
-				});
-
-				// Update all keys
-				Object.keys(updatedFeature.properties).forEach((property) => {
-					featureToUpdate.setProperty(
-						property,
-						updatedFeature.properties[property],
-					);
-				});
-
-				switch (updatedFeature.geometry.type) {
-					case "Point":
-						{
-							const coordinates = updatedFeature.geometry.coordinates;
-
-							featureToUpdate.setGeometry(
-								new this._lib.Data.Point(
-									new this._lib.LatLng(coordinates[1], coordinates[0]),
-								),
-							);
-						}
-						break;
-					case "LineString":
-						{
-							const coordinates = updatedFeature.geometry.coordinates;
-
-							const path: google.maps.LatLng[] = [];
-							for (let i = 0; i < coordinates.length; i++) {
-								const coordinate = coordinates[i];
-								const latLng = new this._lib.LatLng(
-									coordinate[1],
-									coordinate[0],
-								);
-								path.push(latLng);
-							}
-
-							featureToUpdate.setGeometry(new this._lib.Data.LineString(path));
-						}
-						break;
-					case "Polygon":
-						{
-							const coordinates = updatedFeature.geometry.coordinates;
-
-							const paths: google.maps.LatLng[][] = [];
-							for (let i = 0; i < coordinates.length; i++) {
-								const path: google.maps.LatLng[] = [];
-								for (let j = 0; j < coordinates[i].length; j++) {
-									const latLng = new this._lib.LatLng(
-										coordinates[i][j][1],
-										coordinates[i][j][0],
-									);
-									path.push(latLng);
-								}
-								paths.push(path);
-							}
-
-							featureToUpdate.setGeometry(new this._lib.Data.Polygon(paths));
-						}
-
-						break;
-				}
-			});
-
-			// Create new features
-			changes.created.forEach((createdFeature) => {
-				this.renderedFeatureIds.add(createdFeature.id as string);
-				this._map.data.addGeoJson(createdFeature);
-			});
+		if (!this._map.data.getStyle()) {
+			this._map.data.setStyle((feature) => this.style(feature));
 		}
 
-		changes.created.forEach((feature) => {
-			this.renderedFeatureIds.add(feature.id as string);
-		});
-
-		const featureCollection = {
-			type: "FeatureCollection",
-			features: [...changes.created],
-		} as GeoJsonObject;
-
-		this._map.data.addGeoJson(featureCollection);
-
-		this._map.data.setStyle((feature) => {
-			const mode = feature.getProperty("mode") as string;
-			const gmGeometry = feature.getGeometry();
-			if (!gmGeometry) {
-				throw new Error("Google Maps geometry not found");
-			}
-			const type = gmGeometry.getType();
-			const properties: Record<string, any> = {};
-			const id = feature.getId();
-
-			feature.forEachProperty((value, property) => {
-				properties[property] = value;
-			});
-
-			const calculatedStyles = styling[mode]({
-				type: "Feature",
-				id,
-				geometry: {
-					type: type as "Point" | "LineString" | "Polygon",
-					coordinates: [],
+		// Ensure scheduler state exists
+		if (!this._rafState) {
+			this._rafState = {
+				rafId: null as number | null,
+				pending: {
+					deletedIds: [] as string[],
+					updated: [] as GeoJSONStoreFeatures[],
+					created: [] as GeoJSONStoreFeatures[],
 				},
-				properties,
-			});
+				// Used to coalesce changes within a frame
+				deletedSet: new Set<string>(),
+				updatedById: new Map<string, GeoJSONStoreFeatures>(),
+				createdById: new Map<string, GeoJSONStoreFeatures>(),
+			};
+		}
 
-			switch (type) {
-				case "Point":
-					if (calculatedStyles.markerUrl) {
-						return {
-							clickable: false,
-							icon: {
-								url: calculatedStyles.markerUrl as string,
-								scaledSize:
-									calculatedStyles.markerWidth && calculatedStyles.markerHeight
-										? new this._lib.Size(
-												calculatedStyles.markerWidth,
-												calculatedStyles.markerHeight,
-											)
-										: undefined,
-							},
-							zIndex: calculatedStyles.zIndex,
-						};
+		// ---- Queue up changes for the next animation frame ----
+		// Deleted
+		for (const id of changes.deletedIds) {
+			// If something is deleted, it shouldn't also be created/updated in same frame.
+			this._rafState.deletedSet.add(id as string);
+			this._rafState.updatedById.delete(id as string);
+			this._rafState.createdById.delete(id as string);
+		}
+
+		// Updated
+		for (const feature of changes.updated) {
+			if (!feature?.id) throw new Error("Feature is not valid");
+
+			const id = String(feature.id);
+			if (this._rafState.deletedSet.has(id)) continue; // delete wins
+
+			// If it was created this frame, treat as "create with latest data"
+			if (this._rafState.createdById.has(id)) {
+				this._rafState.createdById.set(id, feature);
+			} else {
+				this._rafState.updatedById.set(id, feature); // latest update wins
+			}
+		}
+
+		// Created
+		for (const feature of changes.created) {
+			if (!feature?.id) throw new Error("Feature is not valid");
+
+			const id = String(feature.id);
+			if (this._rafState.deletedSet.has(id)) continue; // delete wins
+
+			this._rafState.createdById.set(id, feature); // latest create wins
+			this._rafState.updatedById.delete(id); // creation supersedes update in same frame
+		}
+
+		// Schedule a flush if not already scheduled
+		if (this._rafState.rafId == null) {
+			this._rafState.rafId = requestAnimationFrame(() => {
+				if (!this._rafState) return;
+
+				this._rafState.rafId = null;
+
+				// Snapshot + clear (so new renders can queue while we flush)
+				const deletedIds = Array.from(this._rafState.deletedSet);
+				const updated = Array.from(this._rafState.updatedById.values());
+				const created = Array.from(this._rafState.createdById.values());
+
+				this._rafState!.deletedSet.clear();
+				this._rafState!.updatedById.clear();
+				this._rafState!.createdById.clear();
+
+				// ---- Apply chronologically: deletes -> updates -> creates ----
+				if (this._hasRenderedFeatures) {
+					// Deletes
+					for (const deletedId of deletedIds) {
+						const featureToDelete = this._map.data.getFeatureById(deletedId);
+						if (featureToDelete) {
+							this._map.data.remove(featureToDelete);
+							this.renderedFeatureIds.delete(deletedId);
+						}
 					}
 
-					const path = this.circlePath(0, 0, calculatedStyles.pointWidth);
+					// Updates
+					for (const updatedFeature of updated) {
+						if (!updatedFeature?.id) throw new Error("Feature is not valid");
 
-					return {
-						clickable: false,
-						icon: {
-							path,
-							fillColor: calculatedStyles.pointColor,
-							fillOpacity: 1,
-							strokeColor: calculatedStyles.pointOutlineColor,
-							strokeWeight: calculatedStyles.pointOutlineWidth,
-							rotation: 0,
-							scale: 1,
-						},
-						zIndex: calculatedStyles.zIndex,
-					};
+						const featureToUpdate = this._map.data.getFeatureById(
+							String(updatedFeature.id),
+						);
 
-				case "LineString":
-					return {
-						strokeColor: calculatedStyles.lineStringColor,
-						strokeWeight: calculatedStyles.lineStringWidth,
-						zIndex: calculatedStyles.zIndex,
-					};
-				case "Polygon":
-					return {
-						strokeColor: calculatedStyles.polygonOutlineColor,
-						strokeWeight: calculatedStyles.polygonOutlineWidth,
-						fillOpacity: calculatedStyles.polygonFillOpacity,
-						fillColor: calculatedStyles.polygonFillColor,
-						zIndex: calculatedStyles.zIndex,
-					};
-			}
+						if (!featureToUpdate) {
+							throw new Error("Feature could not be found by Google Maps API");
+						}
 
-			throw Error("Unknown feature type");
-		});
+						// Remove all keys
+						featureToUpdate.forEachProperty((_property, name) => {
+							featureToUpdate.setProperty(name, undefined);
+						});
+
+						// Update all keys
+						Object.keys(updatedFeature.properties).forEach((property) => {
+							featureToUpdate.setProperty(
+								property,
+								(updatedFeature.properties as JSONObject)[property],
+							);
+						});
+
+						switch (updatedFeature.geometry.type) {
+							case "Point": {
+								const coordinates = updatedFeature.geometry.coordinates;
+								featureToUpdate.setGeometry(
+									new this._lib.Data.Point(
+										new this._lib.LatLng(coordinates[1], coordinates[0]),
+									),
+								);
+								break;
+							}
+							case "LineString": {
+								const coordinates = updatedFeature.geometry.coordinates;
+								const path: google.maps.LatLng[] = [];
+								for (let i = 0; i < coordinates.length; i++) {
+									const [lng, lat] = coordinates[i];
+									path.push(new this._lib.LatLng(lat, lng));
+								}
+								featureToUpdate.setGeometry(
+									new this._lib.Data.LineString(path),
+								);
+								break;
+							}
+							case "Polygon": {
+								const coordinates = updatedFeature.geometry.coordinates;
+								const paths: google.maps.LatLng[][] = [];
+								for (let i = 0; i < coordinates.length; i++) {
+									const ring: google.maps.LatLng[] = [];
+									for (let j = 0; j < coordinates[i].length; j++) {
+										const [lng, lat] = coordinates[i][j];
+										ring.push(new this._lib.LatLng(lat, lng));
+									}
+									paths.push(ring);
+								}
+								featureToUpdate.setGeometry(new this._lib.Data.Polygon(paths));
+								break;
+							}
+						}
+					}
+
+					// Creates
+					for (const createdFeature of created) {
+						this.renderedFeatureIds.add(String(createdFeature.id));
+						this._map.data.addGeoJson(createdFeature);
+					}
+				} else {
+					// First render: treat everything as a feature collection create
+					const features: GeoJSONStoreFeatures[] = [];
+
+					// (If you want deletes/updates to matter before first render, you can filter here,
+					// but usually first render is only creates.)
+					for (const feature of created) {
+						this.renderedFeatureIds.add(String(feature.id));
+						features.push(feature);
+					}
+
+					if (features.length) {
+						this._map.data.addGeoJson({
+							type: "FeatureCollection",
+							features,
+						} as GeoJsonObject);
+					}
+				}
+			});
+		}
 	}
 
+	// Put this on the class:
+	private _rafState?: {
+		rafId: number | null;
+		pending: {
+			deletedIds: string[];
+			updated: GeoJSONStoreFeatures[];
+			created: GeoJSONStoreFeatures[];
+		};
+		deletedSet: Set<string>;
+		updatedById: Map<string, GeoJSONStoreFeatures>;
+		createdById: Map<string, GeoJSONStoreFeatures>;
+	};
+
 	private clearLayers() {
-		if (this._layers) {
+		if (this._hasRenderedFeatures) {
 			this._map.data.forEach((feature) => {
 				const id = feature.getId() as string;
 				const hasFeature = this.renderedFeatureIds.has(id);

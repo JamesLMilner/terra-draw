@@ -2,6 +2,8 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.1.1](https://github.com/JamesLMilner/terra-draw/compare/terra-draw-arcgis-adapter@1.1.0...terra-draw-arcgis-adapter@1.1.1) (2026-01-02)
+
 ## [1.1.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw-arcgis-adapter@1.0.0...terra-draw-arcgis-adapter@1.1.0) (2025-10-12)
 
 

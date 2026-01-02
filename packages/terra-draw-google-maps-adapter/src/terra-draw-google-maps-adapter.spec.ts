@@ -8,6 +8,10 @@ import {
 } from "terra-draw";
 
 const createMockGoogleMap = (overrides?: Partial<google.maps.Map>) => {
+	// Minimal emulation of google.maps.Data styling behavior.
+	// The adapter calls `map.data.getStyle()` to check if a style function is set.
+	let currentStyle: unknown = null;
+
 	return {
 		setValues: jest.fn(),
 		unbind: jest.fn(),
@@ -21,8 +25,11 @@ const createMockGoogleMap = (overrides?: Partial<google.maps.Map>) => {
 		controls: [],
 		data: {
 			addListener: jest.fn(),
-			setStyle: jest.fn(),
-		} as any,
+			getStyle: jest.fn(() => currentStyle),
+			setStyle: jest.fn((style) => {
+				currentStyle = style;
+			}),
+		} as unknown as google.maps.Data,
 		fitBounds: jest.fn(),
 		getCenter: jest.fn(),
 		getClickableIcons: jest.fn(),
@@ -40,9 +47,9 @@ const createMockGoogleMap = (overrides?: Partial<google.maps.Map>) => {
 		getStreetView: jest.fn(),
 		getTilt: jest.fn(),
 		getZoom: jest.fn(),
-		mapTypes: {} as any,
+		mapTypes: {} as unknown as google.maps.MapTypeRegistry,
 		moveCamera: jest.fn(),
-		overlayMapTypes: [] as any,
+		overlayMapTypes: [] as unknown as google.maps.MVCArray<google.maps.MapType>,
 		panBy: jest.fn(),
 		panTo: jest.fn(),
 		panToBounds: jest.fn(),
@@ -55,11 +62,51 @@ const createMockGoogleMap = (overrides?: Partial<google.maps.Map>) => {
 		setTilt: jest.fn(),
 		setZoom: jest.fn(),
 		...overrides,
-	} as google.maps.Map;
+	} as unknown as google.maps.Map;
 };
 
-import { Feature, LineString, Point, Polygon } from "geojson";
+import {
+	Feature,
+	FeatureCollection,
+	LineString,
+	Point,
+	Polygon,
+} from "geojson";
 import { TerraDrawGoogleMapsAdapter } from "./terra-draw-google-maps-adapter";
+
+// The adapter batches map mutations into requestAnimationFrame; in unit tests we
+// want those mutations to happen immediately so assertions are deterministic.
+let rafQueue: FrameRequestCallback[] = [];
+
+function flushRaf(maxFrames = 10) {
+	for (let i = 0; i < maxFrames; i++) {
+		const cb = rafQueue.shift();
+		if (!cb) return;
+		cb(0);
+	}
+
+	if (rafQueue.length) {
+		throw new Error(
+			`flushRaf exceeded maxFrames=${maxFrames}. Remaining=${rafQueue.length}`,
+		);
+	}
+}
+
+beforeEach(() => {
+	rafQueue = [];
+	jest
+		.spyOn(globalThis, "requestAnimationFrame")
+		.mockImplementation((cb: FrameRequestCallback) => {
+			rafQueue.push(cb);
+			return 0;
+		});
+});
+
+afterEach(() => {
+	// Only clear call history between tests; keep the requestAnimationFrame mock
+	// from being fully restored mid-suite.
+	jest.clearAllMocks();
+});
 
 const mockUUID = "29da86c2-92e2-4095-a1b3-22103535ebfa";
 
@@ -858,14 +905,18 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 
 	describe("render", () => {
 		it("rejects updates to invalid features", () => {
-			const p1 = MockPoint("point-1") as GeoJSONStoreFeatures;
+			const pointOne = MockPoint("point-1") as GeoJSONStoreFeatures;
+			let style: unknown = null;
 			const mockMap = createMockGoogleMap({
 				data: {
+					getStyle: () => style,
 					addListener: () => {},
 					addGeoJson: () => {},
 					remove: () => {},
 					getFeatureById: () => {},
-					setStyle: () => {},
+					setStyle: (s: unknown) => {
+						style = s;
+					},
 				} as any,
 			});
 			const adapter = new TerraDrawGoogleMapsAdapter({
@@ -881,23 +932,23 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 			adapter.render(
 				{
 					unchanged: [],
-					created: [p1],
+					created: [pointOne],
 					deletedIds: [],
 					updated: [],
 				},
 				mockStyleDraw,
 			);
 
-			const p2 = MockPoint("point-2") as GeoJSONStoreFeatures;
-			p2.id = undefined;
+			const pointTwo = MockPoint("point-2") as GeoJSONStoreFeatures;
+			pointTwo.id = undefined;
 
 			expect(() => {
 				adapter.render(
 					{
-						unchanged: [p1],
+						unchanged: [pointOne],
 						created: [],
 						deletedIds: [],
-						updated: [p2],
+						updated: [pointTwo],
 					},
 					mockStyleDraw,
 				);
@@ -905,20 +956,26 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 		});
 
 		it("rejects updates to unrecognized/out-of-sync features", () => {
-			const p1 = MockPoint("point-1") as GeoJSONStoreFeatures;
-			Object.assign(p1, { forEachProperty: () => {} });
-			Object.assign(p1, { setProperty: () => {} });
-			Object.assign(p1, { setGeometry: jest.fn() });
-			const getFeatureByIdMock = jest.fn((featureId: string) =>
-				[p1].find((f) => f.id === featureId),
-			);
+			const pointOne = MockPoint("point-1") as GeoJSONStoreFeatures;
+			Object.assign(pointOne, { forEachProperty: () => {} });
+			Object.assign(pointOne, { setProperty: () => {} });
+			Object.assign(pointOne, { setGeometry: jest.fn() });
+			const getFeatureByIdMock = jest.fn((featureId: string) => {
+				// Only the feature created during the first render exists.
+				// Any update for an unknown id should return undefined.
+				return [pointOne].find((f) => f.id === featureId);
+			});
+			let style: unknown = null;
 			const mockMap = createMockGoogleMap({
 				data: {
+					getStyle: () => style,
 					addListener: jest.fn(),
 					addGeoJson: () => {},
 					remove: () => {},
 					getFeatureById: getFeatureByIdMock,
-					setStyle: () => {},
+					setStyle: (s: unknown) => {
+						style = s;
+					},
 				} as any,
 			});
 			const adapter = new TerraDrawGoogleMapsAdapter({
@@ -938,37 +995,101 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 			adapter.render(
 				{
 					unchanged: [],
-					created: [p1],
+					created: [pointOne],
 					deletedIds: [],
 					updated: [],
 				},
 				mockStyleDraw,
 			);
+			flushRaf();
 
 			// Not present in map copy of state, will cause to throw
-			const p2 = MockPoint("point-2") as GeoJSONStoreFeatures;
+			const pointTwo = MockPoint("point-2") as GeoJSONStoreFeatures;
 
+			// The adapter only throws for out-of-sync features when applying updates
+			// after the initial render. Because render work is queued via
+			// requestAnimationFrame, the exception is raised when we flush the frame.
 			expect(() => {
 				adapter.render(
 					{
 						unchanged: [],
 						created: [],
 						deletedIds: [],
-						updated: [p1, p2],
+						updated: [pointOne, pointTwo],
 					},
 					mockStyleDraw,
 				);
-			}).toThrow();
+				flushRaf();
+			}).toThrow("Feature could not be found by Google Maps API");
 
+			// pointOne lookup + failing pointTwo lookup
 			expect(getFeatureByIdMock).toHaveBeenCalledTimes(2);
 		});
 
 		describe("Point", () => {
 			it("adds and deletes features", () => {
-				const p1 = MockPoint("point-1") as GeoJSONStoreFeatures;
-				const p2 = MockPoint("point-2", 2, 4) as GeoJSONStoreFeatures;
+				const pointOne = MockPoint("point-1") as GeoJSONStoreFeatures;
+				const pointTwo = MockPoint("point-2", 2, 4) as GeoJSONStoreFeatures;
+				const addGeoJsonMock = jest.fn();
+				const removeMock = jest.fn();
+				let style: unknown = null;
+				const mockMap = createMockGoogleMap({
+					data: {
+						getStyle: () => style,
+						addListener: jest.fn(),
+						addGeoJson: addGeoJsonMock,
+						remove: removeMock,
+						getFeatureById: (featureId: string) =>
+							[pointOne, pointTwo].find((s) => s.id === featureId),
+						setStyle: jest.fn((s: unknown) => {
+							style = s;
+						}),
+					} as any,
+				});
+				const adapter = new TerraDrawGoogleMapsAdapter({
+					lib: {
+						OverlayView: jest.fn(() => ({
+							setMap: jest.fn(),
+							getProjection: jest.fn(),
+						})),
+					} as any,
+					map: mockMap,
+				});
 
-				verifyAddingAndDeletingFeature(p1, p2);
+				adapter.render(
+					{
+						unchanged: [],
+						created: [pointOne, pointTwo],
+						deletedIds: [],
+						updated: [],
+					},
+					mockStyleDraw,
+				);
+				flushRaf();
+
+				expect(addGeoJsonMock).toHaveBeenCalledWith(
+					expect.objectContaining({
+						features: [
+							expect.objectContaining({ id: pointOne.id }),
+							expect.objectContaining({ id: pointTwo.id }),
+						],
+					}),
+				);
+
+				adapter.render(
+					{
+						unchanged: [pointOne],
+						created: [],
+						deletedIds: [pointTwo.id!.toString()],
+						updated: [],
+					},
+					mockStyleDraw,
+				);
+				flushRaf();
+
+				expect(removeMock).toHaveBeenCalledWith(
+					expect.objectContaining({ id: pointTwo.id }),
+				);
 			});
 
 			it("applies styles to added feature", () => {
@@ -985,37 +1106,259 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 					pointOutlineColor: "#FFFFFF",
 				} as unknown as TerraDrawAdapterStyling;
 
-				const setStyleResult = getStyleAppliedToAddedFeature(
-					feature,
-					testStyles,
+				// looks up mode
+				Object.assign(feature, { getProperty: () => "test" });
+				Object.assign(feature, { forEachProperty: () => {} });
+				Object.assign(feature, { getId: () => feature.id });
+
+				const addGeoJsonMock = jest.fn();
+				let style: unknown = null;
+				const setStyleMock = jest.fn((cb) => {
+					style = cb;
+				});
+				const mockMap = createMockGoogleMap({
+					data: {
+						getStyle: () => style,
+						addListener: () => {},
+						addGeoJson: addGeoJsonMock,
+						remove: () => {},
+						getFeatureById: (featureId: string) =>
+							[feature].find((s) => s.id === featureId),
+						setStyle: setStyleMock,
+					} as any,
+				});
+				const adapter = new TerraDrawGoogleMapsAdapter({
+					lib: {
+						OverlayView: jest.fn(() => ({
+							setMap: jest.fn(),
+							getProjection: jest.fn(),
+						})),
+					} as any,
+					map: mockMap,
+				});
+
+				adapter.render(
+					{
+						unchanged: [],
+						created: [feature],
+						deletedIds: [],
+						updated: [],
+					},
+					{ test: () => testStyles },
+				);
+				flushRaf();
+
+				// Google Maps stores a style callback and calls it lazily; emulate that.
+				const styleFn = mockMap.data.getStyle() as unknown as (
+					f: unknown,
+				) => unknown;
+				const setStyleResult = styleFn(feature) as unknown as {
+					icon?: { strokeColor?: unknown; strokeWeight?: unknown };
+				};
+
+				expect(addGeoJsonMock).toHaveBeenCalledWith(
+					expect.objectContaining({
+						features: [expect.objectContaining({ id: feature.id })],
+					}),
 				);
 
 				expect(setStyleResult).toHaveProperty("icon");
-				expect(setStyleResult!.icon.strokeColor).toEqual(
+				expect(setStyleResult!.icon!.strokeColor).toEqual(
 					testStyles.pointOutlineColor,
 				);
-				expect(setStyleResult!.icon.strokeWeight).toEqual(
+				expect(setStyleResult!.icon!.strokeWeight).toEqual(
 					testStyles.pointOutlineWidth,
 				);
 			});
 
 			it("adds features on successive renders", () => {
-				const p1 = MockPoint("point-1") as GeoJSONStoreFeatures;
-				verifyAddingFeatureSecondRender(p1);
+				const pointOne = MockPoint("point-1") as GeoJSONStoreFeatures;
+				const addGeoJsonMock = jest.fn();
+				let style: unknown = null;
+				const mockMap = createMockGoogleMap({
+					data: {
+						getStyle: () => style,
+						addListener: jest.fn(),
+						addGeoJson: addGeoJsonMock,
+						remove: jest.fn(),
+						getFeatureById: jest.fn(),
+						setStyle: jest.fn((s: unknown) => {
+							style = s;
+						}),
+					} as any,
+				});
+				const adapter = new TerraDrawGoogleMapsAdapter({
+					lib: {
+						OverlayView: jest.fn(() => ({
+							setMap: jest.fn(),
+							getProjection: jest.fn(),
+						})),
+					} as any,
+					map: mockMap,
+				});
+
+				adapter.render(
+					{ unchanged: [], created: [], deletedIds: [], updated: [] },
+					mockStyleDraw,
+				);
+				flushRaf();
+				expect(addGeoJsonMock).not.toHaveBeenCalled();
+
+				adapter.render(
+					{
+						unchanged: [],
+						created: [pointOne],
+						deletedIds: [],
+						updated: [],
+					},
+					mockStyleDraw,
+				);
+				flushRaf();
+
+				expect(addGeoJsonMock).toHaveBeenCalledWith(
+					expect.objectContaining({
+						features: [expect.objectContaining({ id: pointOne.id })],
+					}),
+				);
 			});
 
 			it("updates features on successive renders", () => {
-				const p1 = MockPoint("point-1") as GeoJSONStoreFeatures;
-				verifyUpdatesFeature(p1);
+				const pointOne = MockPoint("point-1") as GeoJSONStoreFeatures;
+				const addGeoJsonMock = jest.fn();
+				const dummyProp = "dummy";
+				const forEachPropertyMock = jest.fn((cb) => {
+					cb("propValue", dummyProp);
+				});
+				const setPropertyMock = jest.fn();
+				Object.assign(pointOne, { forEachProperty: forEachPropertyMock });
+				Object.assign(pointOne, { setProperty: setPropertyMock });
+				Object.assign(pointOne, { setGeometry: jest.fn() });
+
+				let style: unknown = null;
+				const mockMap = createMockGoogleMap({
+					data: {
+						getStyle: () => style,
+						addListener: jest.fn(),
+						addGeoJson: addGeoJsonMock,
+						remove: () => {},
+						getFeatureById: (featureId: string) =>
+							[pointOne].find((s) => s.id === featureId),
+						setStyle: jest.fn((s: unknown) => {
+							style = s;
+						}),
+					} as any,
+				});
+				const adapter = new TerraDrawGoogleMapsAdapter({
+					lib: {
+						OverlayView: jest.fn(() => ({
+							setMap: jest.fn(),
+							getProjection: jest.fn(),
+						})),
+						LatLng: jest.fn(),
+						Data: {
+							LineString: jest.fn(),
+							Polygon: jest.fn(),
+							Point: jest.fn(),
+						},
+					} as any,
+					map: mockMap,
+				});
+
+				adapter.render(
+					{ unchanged: [], created: [pointOne], deletedIds: [], updated: [] },
+					mockStyleDraw,
+				);
+				flushRaf();
+
+				expect(addGeoJsonMock).toHaveBeenCalledWith(
+					expect.objectContaining({
+						features: [expect.objectContaining({ id: pointOne.id })],
+					}),
+				);
+
+				adapter.render(
+					{
+						unchanged: [],
+						created: [],
+						deletedIds: [],
+						updated: [pointOne],
+					},
+					mockStyleDraw,
+				);
+				flushRaf();
+
+				expect(setPropertyMock).toHaveBeenCalledWith(dummyProp, undefined);
 			});
 		});
 
 		describe("LineString", () => {
 			it("adds and deletes features", () => {
-				const p1 = MockLineString("line-string-1") as GeoJSONStoreFeatures;
-				const p2 = MockLineString("line-string-2") as GeoJSONStoreFeatures;
+				const pointOne = MockLineString(
+					"line-string-1",
+				) as GeoJSONStoreFeatures;
+				const pointTwo = MockLineString(
+					"line-string-2",
+				) as GeoJSONStoreFeatures;
+				const addGeoJsonMock = jest.fn();
+				const removeMock = jest.fn();
+				let style: unknown = null;
+				const mockMap = createMockGoogleMap({
+					data: {
+						getStyle: () => style,
+						addListener: jest.fn(),
+						addGeoJson: addGeoJsonMock,
+						remove: removeMock,
+						getFeatureById: (featureId: string) =>
+							[pointOne, pointTwo].find((s) => s.id === featureId),
+						setStyle: jest.fn((s: unknown) => {
+							style = s;
+						}),
+					} as unknown as google.maps.Data,
+				});
+				const adapter = new TerraDrawGoogleMapsAdapter({
+					lib: {
+						OverlayView: jest.fn(() => ({
+							setMap: jest.fn(),
+							getProjection: jest.fn(),
+						})),
+					} as unknown as typeof google.maps,
+					map: mockMap,
+				});
 
-				verifyAddingAndDeletingFeature(p1, p2);
+				adapter.render(
+					{
+						unchanged: [],
+						created: [pointOne, pointTwo],
+						deletedIds: [],
+						updated: [],
+					},
+					mockStyleDraw,
+				);
+				flushRaf();
+
+				expect(addGeoJsonMock).toHaveBeenCalledWith(
+					expect.objectContaining({
+						features: [
+							expect.objectContaining({ id: pointOne.id }),
+							expect.objectContaining({ id: pointTwo.id }),
+						],
+					}),
+				);
+
+				adapter.render(
+					{
+						unchanged: [pointOne],
+						created: [],
+						deletedIds: [pointTwo.id!.toString()],
+						updated: [],
+					},
+					mockStyleDraw,
+				);
+				flushRaf();
+
+				expect(removeMock).toHaveBeenCalledWith(
+					expect.objectContaining({ id: pointTwo.id }),
+				);
 			});
 
 			it("applies styles to added feature", () => {
@@ -1031,9 +1374,59 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 					lineStringColor: "#FFFFFF",
 				} as unknown as TerraDrawAdapterStyling;
 
-				const setStyleResult = getStyleAppliedToAddedFeature(
-					feature,
-					testStyles,
+				Object.assign(feature, { getProperty: () => "test" });
+				Object.assign(feature, { forEachProperty: () => {} });
+				Object.assign(feature, { getId: () => feature.id });
+
+				const addGeoJsonMock = jest.fn();
+				let style: unknown = null;
+				const setStyleMock = jest.fn((cb) => {
+					style = cb;
+				});
+				const mockMap = createMockGoogleMap({
+					data: {
+						getStyle: () => style,
+						addListener: () => {},
+						addGeoJson: addGeoJsonMock,
+						remove: () => {},
+						getFeatureById: (featureId: string) =>
+							[feature].find((s) => s.id === featureId),
+						setStyle: setStyleMock,
+					} as any,
+				});
+				const adapter = new TerraDrawGoogleMapsAdapter({
+					lib: {
+						OverlayView: jest.fn(() => ({
+							setMap: jest.fn(),
+							getProjection: jest.fn(),
+						})),
+					} as unknown as typeof google.maps,
+					map: mockMap,
+				});
+
+				adapter.render(
+					{
+						unchanged: [],
+						created: [feature],
+						deletedIds: [],
+						updated: [],
+					},
+					{ test: () => testStyles },
+				);
+				flushRaf();
+
+				const styleFn = mockMap.data.getStyle() as unknown as (
+					f: unknown,
+				) => unknown;
+				const setStyleResult = styleFn(feature) as unknown as {
+					strokeColor?: unknown;
+					strokeWeight?: unknown;
+				};
+
+				expect(addGeoJsonMock).toHaveBeenCalledWith(
+					expect.objectContaining({
+						features: [expect.objectContaining({ id: feature.id })],
+					}),
 				);
 
 				expect(setStyleResult!.strokeColor).toEqual(testStyles.lineStringColor);
@@ -1043,13 +1436,126 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 			});
 
 			it("adds features on successive renders", () => {
-				const p1 = MockLineString("line-string-1") as GeoJSONStoreFeatures;
-				verifyAddingFeatureSecondRender(p1);
+				const pointOne = MockLineString(
+					"line-string-1",
+				) as GeoJSONStoreFeatures;
+				const addGeoJsonMock = jest.fn();
+				let style: unknown = null;
+				const mockMap = createMockGoogleMap({
+					data: {
+						getStyle: () => style,
+						addListener: jest.fn(),
+						addGeoJson: addGeoJsonMock,
+						remove: jest.fn(),
+						getFeatureById: jest.fn(),
+						setStyle: jest.fn((s: unknown) => {
+							style = s;
+						}),
+					} as unknown as google.maps.Data,
+				});
+				const adapter = new TerraDrawGoogleMapsAdapter({
+					lib: {
+						OverlayView: jest.fn(() => ({
+							setMap: jest.fn(),
+							getProjection: jest.fn(),
+						})),
+					} as unknown as typeof google.maps,
+					map: mockMap,
+				});
+
+				adapter.render(
+					{ unchanged: [], created: [], deletedIds: [], updated: [] },
+					mockStyleDraw,
+				);
+				flushRaf();
+				expect(addGeoJsonMock).not.toHaveBeenCalled();
+
+				adapter.render(
+					{
+						unchanged: [],
+						created: [pointOne],
+						deletedIds: [],
+						updated: [],
+					},
+					mockStyleDraw,
+				);
+				flushRaf();
+
+				expect(addGeoJsonMock).toHaveBeenCalledWith(
+					expect.objectContaining({
+						features: [expect.objectContaining({ id: pointOne.id })],
+					}),
+				);
 			});
 
 			it("updates features on successive renders", () => {
-				const p1 = MockLineString("line-string-1") as GeoJSONStoreFeatures;
-				verifyUpdatesFeature(p1);
+				const pointOne = MockLineString(
+					"line-string-1",
+				) as GeoJSONStoreFeatures;
+				const addGeoJsonMock = jest.fn();
+				const dummyProp = "dummy";
+				const forEachPropertyMock = jest.fn((cb) => {
+					cb("propValue", dummyProp);
+				});
+				const setPropertyMock = jest.fn();
+				Object.assign(pointOne, { forEachProperty: forEachPropertyMock });
+				Object.assign(pointOne, { setProperty: setPropertyMock });
+				Object.assign(pointOne, { setGeometry: jest.fn() });
+
+				let style: unknown = null;
+				const mockMap = createMockGoogleMap({
+					data: {
+						getStyle: () => style,
+						addListener: jest.fn(),
+						addGeoJson: addGeoJsonMock,
+						remove: () => {},
+						getFeatureById: (featureId: string) =>
+							[pointOne].find((s) => s.id === featureId),
+						setStyle: jest.fn((s: unknown) => {
+							style = s;
+						}),
+					} as any,
+				});
+				const adapter = new TerraDrawGoogleMapsAdapter({
+					lib: {
+						OverlayView: jest.fn(() => ({
+							setMap: jest.fn(),
+							getProjection: jest.fn(),
+						})),
+						LatLng: jest.fn(),
+						Data: {
+							LineString: jest.fn(),
+							Polygon: jest.fn(),
+							Point: jest.fn(),
+						},
+					} as unknown as typeof google.maps,
+					map: mockMap,
+				});
+
+				adapter.render(
+					{ unchanged: [], created: [pointOne], deletedIds: [], updated: [] },
+					mockStyleDraw,
+				);
+				flushRaf();
+
+				expect(addGeoJsonMock).toHaveBeenCalledWith(
+					expect.objectContaining({
+						features: [expect.objectContaining({ id: pointOne.id })],
+					}),
+				);
+
+				adapter.render(
+					{
+						unchanged: [],
+						created: [],
+						deletedIds: [],
+						updated: [pointOne],
+					},
+					mockStyleDraw,
+				);
+				flushRaf();
+
+				expect(setPropertyMock).toHaveBeenCalledWith(dummyProp, undefined);
 			});
 		});
 
@@ -1057,8 +1563,66 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 			it("adds and deletes features", () => {
 				const sq1 = MockPolygonSquare("square-1") as GeoJSONStoreFeatures;
 				const sq2 = MockPolygonSquare("square-2", 2, 4) as GeoJSONStoreFeatures;
+				const addGeoJsonMock = jest.fn();
+				const removeMock = jest.fn();
+				let style: unknown = null;
+				const mockMap = createMockGoogleMap({
+					data: {
+						getStyle: () => style,
+						addListener: jest.fn(),
+						addGeoJson: addGeoJsonMock,
+						remove: removeMock,
+						getFeatureById: (featureId: string) =>
+							[sq1, sq2].find((s) => s.id === featureId),
+						setStyle: jest.fn((s: unknown) => {
+							style = s;
+						}),
+					} as any,
+				});
+				const adapter = new TerraDrawGoogleMapsAdapter({
+					lib: {
+						OverlayView: jest.fn(() => ({
+							setMap: jest.fn(),
+							getProjection: jest.fn(),
+						})),
+					} as unknown as typeof google.maps,
+					map: mockMap,
+				});
 
-				verifyAddingAndDeletingFeature(sq1, sq2);
+				adapter.render(
+					{
+						unchanged: [],
+						created: [sq1, sq2],
+						deletedIds: [],
+						updated: [],
+					},
+					mockStyleDraw,
+				);
+				flushRaf();
+
+				expect(addGeoJsonMock).toHaveBeenCalledWith(
+					expect.objectContaining({
+						features: [
+							expect.objectContaining({ id: sq1.id }),
+							expect.objectContaining({ id: sq2.id }),
+						],
+					}),
+				);
+
+				adapter.render(
+					{
+						unchanged: [sq1],
+						created: [],
+						deletedIds: [sq2.id!.toString()],
+						updated: [],
+					},
+					mockStyleDraw,
+				);
+				flushRaf();
+
+				expect(removeMock).toHaveBeenCalledWith(
+					expect.objectContaining({ id: sq2.id }),
+				);
 			});
 
 			it("applies styles to added feature", () => {
@@ -1074,9 +1638,54 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 					polygonOutlineColor: "#FFFFFF",
 				} as unknown as TerraDrawAdapterStyling;
 
-				const setStyleResult = getStyleAppliedToAddedFeature(
-					feature,
-					testStyles,
+				Object.assign(feature, { getProperty: () => "test" });
+				Object.assign(feature, { forEachProperty: () => {} });
+				Object.assign(feature, { getId: () => feature.id });
+
+				const addGeoJsonMock = jest.fn();
+				let style: unknown = null;
+				const setStyleMock = jest.fn((cb) => {
+					style = cb;
+				});
+				const mockMap = createMockGoogleMap({
+					data: {
+						getStyle: () => style,
+						addListener: () => {},
+						addGeoJson: addGeoJsonMock,
+						remove: () => {},
+						getFeatureById: (featureId: string) =>
+							[feature].find((s) => s.id === featureId),
+						setStyle: setStyleMock,
+					} as any,
+				});
+				const adapter = new TerraDrawGoogleMapsAdapter({
+					lib: {
+						OverlayView: jest.fn(() => ({
+							setMap: jest.fn(),
+							getProjection: jest.fn(),
+						})),
+					} as any,
+					map: mockMap,
+				});
+
+				adapter.render(
+					{
+						unchanged: [],
+						created: [feature],
+						deletedIds: [],
+						updated: [],
+					},
+					{ test: () => testStyles },
+				);
+				flushRaf();
+
+				const styleFn = mockMap.data.getStyle() as unknown as (f: any) => any;
+				const setStyleResult = styleFn(feature);
+
+				expect(addGeoJsonMock).toHaveBeenCalledWith(
+					expect.objectContaining({
+						features: [expect.objectContaining({ id: feature.id })],
+					}),
 				);
 
 				expect(setStyleResult!.strokeColor).toEqual(
@@ -1089,12 +1698,407 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 
 			it("adds features on successive renders", () => {
 				const sq1 = MockPolygonSquare("square-1") as GeoJSONStoreFeatures;
-				verifyAddingFeatureSecondRender(sq1);
+				const addGeoJsonMock = jest.fn();
+				let style: unknown = null;
+				const mockMap = createMockGoogleMap({
+					data: {
+						getStyle: () => style,
+						addListener: jest.fn(),
+						addGeoJson: addGeoJsonMock,
+						remove: jest.fn(),
+						getFeatureById: jest.fn(),
+						setStyle: jest.fn((s: unknown) => {
+							style = s;
+						}),
+					} as any,
+				});
+				const adapter = new TerraDrawGoogleMapsAdapter({
+					lib: {
+						OverlayView: jest.fn(() => ({
+							setMap: jest.fn(),
+							getProjection: jest.fn(),
+						})),
+					} as any,
+					map: mockMap,
+				});
+
+				adapter.render(
+					{ unchanged: [], created: [], deletedIds: [], updated: [] },
+					mockStyleDraw,
+				);
+				flushRaf();
+				expect(addGeoJsonMock).not.toHaveBeenCalled();
+
+				adapter.render(
+					{
+						unchanged: [],
+						created: [sq1],
+						deletedIds: [],
+						updated: [],
+					},
+					mockStyleDraw,
+				);
+				flushRaf();
+
+				expect(addGeoJsonMock).toHaveBeenCalledWith(
+					expect.objectContaining({
+						features: [expect.objectContaining({ id: sq1.id })],
+					}),
+				);
 			});
 
 			it("updates features on successive renders", () => {
 				const sq1 = MockPolygonSquare("square-1") as GeoJSONStoreFeatures;
-				verifyUpdatesFeature(sq1);
+				const addGeoJsonMock = jest.fn();
+				const dummyProp = "dummy";
+				const forEachPropertyMock = jest.fn((cb) => {
+					cb("propValue", dummyProp);
+				});
+				const setPropertyMock = jest.fn();
+				Object.assign(sq1, { forEachProperty: forEachPropertyMock });
+				Object.assign(sq1, { setProperty: setPropertyMock });
+				Object.assign(sq1, { setGeometry: jest.fn() });
+
+				let style: unknown = null;
+				const mockMap = createMockGoogleMap({
+					data: {
+						getStyle: () => style,
+						addListener: jest.fn(),
+						addGeoJson: addGeoJsonMock,
+						remove: () => {},
+						getFeatureById: (featureId: string) =>
+							[sq1].find((s) => s.id === featureId),
+						setStyle: jest.fn((s: unknown) => {
+							style = s;
+						}),
+					} as any,
+				});
+				const adapter = new TerraDrawGoogleMapsAdapter({
+					lib: {
+						OverlayView: jest.fn(() => ({
+							setMap: jest.fn(),
+							getProjection: jest.fn(),
+						})),
+						LatLng: jest.fn(),
+						Data: {
+							LineString: jest.fn(),
+							Polygon: jest.fn(),
+							Point: jest.fn(),
+						},
+					} as any,
+					map: mockMap,
+				});
+
+				adapter.render(
+					{ unchanged: [], created: [sq1], deletedIds: [], updated: [] },
+					mockStyleDraw,
+				);
+				flushRaf();
+
+				expect(addGeoJsonMock).toHaveBeenCalledWith(
+					expect.objectContaining({
+						features: [expect.objectContaining({ id: sq1.id })],
+					}),
+				);
+
+				adapter.render(
+					{
+						unchanged: [],
+						created: [],
+						deletedIds: [],
+						updated: [sq1],
+					},
+					mockStyleDraw,
+				);
+				flushRaf();
+
+				expect(setPropertyMock).toHaveBeenCalledWith(dummyProp, undefined);
+			});
+		});
+
+		describe("requestAnimationFrame checks", () => {
+			it("queues RAF callbacks and flushRaf() runs them in order", () => {
+				const calls: number[] = [];
+				requestAnimationFrame(() => calls.push(1));
+				requestAnimationFrame(() => calls.push(2));
+
+				expect(calls).toEqual([]);
+				flushRaf();
+				expect(calls).toEqual([1, 2]);
+			});
+
+			it("supports nested scheduling within a frame", () => {
+				const calls: string[] = [];
+
+				requestAnimationFrame(() => {
+					calls.push("a");
+					requestAnimationFrame(() => calls.push("b"));
+				});
+
+				flushRaf();
+				expect(calls).toEqual(["a", "b"]);
+			});
+
+			it("throws when flushRaf maxFrames is exceeded", () => {
+				requestAnimationFrame(() => {
+					// Schedule another frame forever
+					requestAnimationFrame(() => {
+						requestAnimationFrame(() => {
+							// keep queue non-empty
+						});
+					});
+				});
+
+				expect(() => flushRaf(1)).toThrow(/exceeded maxFrames=1/);
+			});
+
+			it("resets the queue between tests (via beforeEach)", () => {
+				// If this test runs, beforeEach has already reset rafQueue to []
+				flushRaf();
+				// No assertion needed beyond not throwing; schedule and run a single frame
+				const fn = jest.fn();
+				requestAnimationFrame(fn);
+				flushRaf();
+				expect(fn).toHaveBeenCalledTimes(1);
+			});
+		});
+
+		describe("render batching", () => {
+			const createAdapterWithMapSpies = () => {
+				const addGeoJson = jest.fn();
+				const remove = jest.fn();
+				const getFeatureById = jest.fn();
+				const setStyle = jest.fn();
+				const getStyle = jest.fn(() => null);
+
+				const mockMap = createMockGoogleMap({
+					data: {
+						addListener: jest.fn(),
+						addGeoJson,
+						remove,
+						getFeatureById,
+						setStyle,
+						getStyle,
+					} as any,
+				});
+
+				const adapter = new TerraDrawGoogleMapsAdapter({
+					lib: {
+						OverlayView: jest.fn(() => ({
+							setMap: jest.fn(),
+							getProjection: jest.fn(),
+						})),
+						LatLng: jest.fn(),
+						LatLngBounds: jest.fn(),
+						Point: jest.fn(),
+						Size: jest.fn(),
+						Data: {
+							Point: jest.fn(),
+							LineString: jest.fn(),
+							Polygon: jest.fn(),
+						},
+					} as any,
+					map: mockMap,
+				});
+
+				return {
+					adapter,
+					mockMap,
+					spies: { addGeoJson, remove, getFeatureById, setStyle, getStyle },
+				};
+			};
+
+			it("coalesces multiple render() calls into a single RAF flush", () => {
+				const { adapter, spies } = createAdapterWithMapSpies();
+
+				const pointOne = MockPoint("point-1") as GeoJSONStoreFeatures;
+				const pointTwo = MockPoint("point-2") as GeoJSONStoreFeatures;
+
+				adapter.render(
+					{ unchanged: [], created: [pointOne], deletedIds: [], updated: [] },
+					mockStyleDraw,
+				);
+				adapter.render(
+					{ unchanged: [], created: [pointTwo], deletedIds: [], updated: [] },
+					mockStyleDraw,
+				);
+
+				// Nothing should apply until RAF flush
+				expect(spies.addGeoJson).toHaveBeenCalledTimes(0);
+				flushRaf();
+
+				// First render path batches into a single FeatureCollection
+				expect(spies.addGeoJson).toHaveBeenCalledTimes(1);
+				const arg = spies.addGeoJson.mock.calls[0][0] as FeatureCollection;
+				expect(arg.type).toBe("FeatureCollection");
+				expect(arg.features.map((feature) => feature.id).sort()).toEqual(
+					["point-1", "point-2"].sort(),
+				);
+			});
+
+			it("delete wins over update/create in the same frame", () => {
+				const { adapter, spies } = createAdapterWithMapSpies();
+				const pointOne = MockPoint("point-1") as GeoJSONStoreFeatures;
+
+				// Create initial feature so later renders go down the _hasRenderedFeatures path
+				adapter.render(
+					{ unchanged: [], created: [pointOne], deletedIds: [], updated: [] },
+					mockStyleDraw,
+				);
+				flushRaf();
+				spies.addGeoJson.mockClear();
+
+				const gmFeature = {
+					id: "point-1",
+					getId: () => "point-1",
+					forEachProperty: jest.fn(),
+					setProperty: jest.fn(),
+					setGeometry: jest.fn(),
+				} as any;
+				spies.getFeatureById.mockReturnValue(gmFeature);
+
+				adapter.render(
+					{
+						unchanged: [],
+						created: [pointOne],
+						deletedIds: ["point-1"],
+						updated: [pointOne],
+					},
+					mockStyleDraw,
+				);
+				flushRaf();
+
+				// Deleted applies, update/create should be suppressed
+				expect(spies.remove).toHaveBeenCalledTimes(1);
+				expect(spies.addGeoJson).toHaveBeenCalledTimes(0);
+				expect(gmFeature.setGeometry).toHaveBeenCalledTimes(0);
+			});
+
+			it("create supersedes update for the same id within a frame (post-initial render)", () => {
+				const { adapter, spies } = createAdapterWithMapSpies();
+				const pointOne = MockPoint("point-1") as GeoJSONStoreFeatures;
+				const pointOneUpdated = MockPoint(
+					"point-1",
+					5,
+					6,
+				) as GeoJSONStoreFeatures;
+
+				adapter.render(
+					{ unchanged: [], created: [pointOne], deletedIds: [], updated: [] },
+					mockStyleDraw,
+				);
+				flushRaf();
+				spies.addGeoJson.mockClear();
+
+				const gmFeature = {
+					id: "point-1",
+					getId: () => "point-1",
+					forEachProperty: jest.fn(),
+					setProperty: jest.fn(),
+					setGeometry: jest.fn(),
+				} as any;
+				spies.getFeatureById.mockReturnValue(gmFeature);
+
+				adapter.render(
+					{
+						unchanged: [],
+						created: [pointOneUpdated],
+						deletedIds: [],
+						updated: [pointOneUpdated],
+					},
+					mockStyleDraw,
+				);
+				flushRaf();
+
+				// Because create supersedes update, it should addGeoJson (single feature) and not setGeometry.
+				expect(spies.addGeoJson).toHaveBeenCalledTimes(1);
+				expect(spies.addGeoJson).toHaveBeenCalledWith(pointOneUpdated);
+				expect(gmFeature.setGeometry).toHaveBeenCalledTimes(0);
+			});
+
+			it("latest update wins when multiple updates for same id are queued in one frame", () => {
+				const { adapter, spies } = createAdapterWithMapSpies();
+				const pointOne = MockPoint("point-1") as GeoJSONStoreFeatures;
+
+				adapter.render(
+					{ unchanged: [], created: [pointOne], deletedIds: [], updated: [] },
+					mockStyleDraw,
+				);
+				flushRaf();
+
+				const gmFeature = {
+					id: "point-1",
+					getId: () => "point-1",
+					forEachProperty: jest.fn((cb: any) => {
+						// no existing props
+					}),
+					setProperty: jest.fn(),
+					setGeometry: jest.fn(),
+				} as any;
+				spies.getFeatureById.mockReturnValue(gmFeature);
+
+				const pointOneUpdate1 = MockPoint(
+					"point-1",
+					1,
+					1,
+				) as GeoJSONStoreFeatures;
+				(pointOneUpdate1.properties as any) = { mode: "point", a: 1 };
+				const pointOneUpdate2 = MockPoint(
+					"point-1",
+					2,
+					2,
+				) as GeoJSONStoreFeatures;
+				(pointOneUpdate2.properties as any) = { mode: "point", a: 2 };
+
+				adapter.render(
+					{
+						unchanged: [],
+						created: [],
+						deletedIds: [],
+						updated: [pointOneUpdate1],
+					},
+					mockStyleDraw,
+				);
+				adapter.render(
+					{
+						unchanged: [],
+						created: [],
+						deletedIds: [],
+						updated: [pointOneUpdate2],
+					},
+					mockStyleDraw,
+				);
+				flushRaf();
+
+				// Last one should win: expect lat/lng (2,2) in the LatLng constructor and property a=2 set.
+				const latLngCalls = (adapter as any)._lib.LatLng.mock.calls;
+				expect(latLngCalls[latLngCalls.length - 1]).toEqual([2, 2]);
+				expect(gmFeature.setProperty).toHaveBeenCalledWith("a", 2);
+			});
+
+			it("resets rafId allowing subsequent frames to schedule", () => {
+				const { adapter, spies } = createAdapterWithMapSpies();
+				const pointOne = MockPoint("point-1") as GeoJSONStoreFeatures;
+				const pointTwo = MockPoint("point-2") as GeoJSONStoreFeatures;
+
+				const rafSpy = jest.spyOn(globalThis, "requestAnimationFrame");
+
+				adapter.render(
+					{ unchanged: [], created: [pointOne], deletedIds: [], updated: [] },
+					mockStyleDraw,
+				);
+				expect(rafSpy).toHaveBeenCalledTimes(1);
+				flushRaf();
+
+				spies.addGeoJson.mockClear();
+				adapter.render(
+					{ unchanged: [], created: [pointTwo], deletedIds: [], updated: [] },
+					mockStyleDraw,
+				);
+				// A new frame should be scheduled after previous flush cleared rafId
+				expect(rafSpy).toHaveBeenCalledTimes(2);
+				flushRaf();
+				expect(spies.addGeoJson).toHaveBeenCalledTimes(1);
 			});
 		});
 	});
@@ -1107,16 +2111,22 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 						setMap: jest.fn(),
 						getProjection: jest.fn(),
 					})),
-				} as any,
+				} as unknown as typeof google.maps,
 				map: createMockGoogleMap(),
 			});
 
 			adapter.clear();
 		});
 		it("is clears data.setStyle function", () => {
+			let style: unknown = null;
 			const mockMap = createMockGoogleMap({
+				// If the adapter sees a style already set, it exits early.
+				// Use a stateful getStyle/setStyle pair so render can proceed.
 				data: {
-					setStyle: jest.fn(),
+					getStyle: () => style,
+					setStyle: jest.fn((s: unknown) => {
+						style = s;
+					}),
 				} as any,
 			});
 			const adapter = new TerraDrawGoogleMapsAdapter({
@@ -1125,7 +2135,7 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 						setMap: jest.fn(),
 						getProjection: jest.fn(),
 					})),
-				} as any,
+				} as unknown as typeof google.maps,
 				map: mockMap,
 			});
 
@@ -1139,245 +2149,3 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 const mockStyleDraw = {
 	test: jest.fn(() => ({}) as any),
 };
-
-const verifyAddingAndDeletingFeature = (
-	feature1: GeoJSONStoreFeatures,
-	feature2: GeoJSONStoreFeatures,
-) => {
-	const addGeoJsonMock = jest.fn();
-	const removeMock = jest.fn();
-	const mockMap = createMockGoogleMap({
-		data: {
-			addListener: jest.fn(),
-			addGeoJson: addGeoJsonMock,
-			remove: removeMock,
-			getFeatureById: (featureId: string) =>
-				[feature1, feature2].find((s) => s.id === featureId),
-			setStyle: jest.fn(),
-		} as any,
-	});
-	const adapter = new TerraDrawGoogleMapsAdapter({
-		lib: {
-			OverlayView: jest.fn(() => ({
-				setMap: jest.fn(),
-				getProjection: jest.fn(),
-			})),
-		} as any,
-		map: mockMap,
-	});
-
-	adapter.render(
-		{
-			unchanged: [],
-			created: [feature1, feature2],
-			deletedIds: [],
-			updated: [],
-		},
-		mockStyleDraw,
-	);
-
-	expect(addGeoJsonMock).toHaveBeenCalledWith(
-		expect.objectContaining({
-			features: [
-				expect.objectContaining({
-					id: feature1.id,
-				}),
-				expect.objectContaining({
-					id: feature2.id,
-				}),
-			],
-		}),
-	);
-
-	adapter.render(
-		{
-			unchanged: [feature1],
-			created: [],
-			deletedIds: [feature2.id!.toString()],
-			updated: [],
-		},
-		mockStyleDraw,
-	);
-
-	expect(removeMock).toHaveBeenCalledWith(
-		expect.objectContaining({
-			id: feature2.id,
-		}),
-	);
-};
-
-const getStyleAppliedToAddedFeature = (
-	feature: GeoJSONStoreFeatures,
-	testStyles: TerraDrawAdapterStyling,
-): any => {
-	// looks up mode
-	Object.assign(feature, { getProperty: () => "test" });
-	Object.assign(feature, { forEachProperty: () => {} });
-	Object.assign(feature, { getId: () => feature.id });
-
-	const addGeoJsonMock = jest.fn();
-	let setStyleResult;
-	const setStyleMock = jest.fn((cb) => {
-		setStyleResult = cb(feature);
-	});
-	const mockMap = createMockGoogleMap({
-		data: {
-			addListener: () => {},
-			addGeoJson: addGeoJsonMock,
-			remove: () => {},
-			getFeatureById: (featureId: string) =>
-				[feature].find((s) => s.id === featureId),
-			setStyle: setStyleMock,
-		} as any,
-	});
-	const adapter = new TerraDrawGoogleMapsAdapter({
-		lib: {
-			OverlayView: jest.fn(() => ({
-				setMap: jest.fn(),
-				getProjection: jest.fn(),
-			})),
-		} as any,
-		map: mockMap,
-	});
-
-	adapter.render(
-		{
-			unchanged: [],
-			created: [feature],
-			deletedIds: [],
-			updated: [],
-		},
-		{
-			test: () => testStyles,
-		},
-	);
-
-	expect(addGeoJsonMock).toHaveBeenCalledWith(
-		expect.objectContaining({
-			features: [
-				expect.objectContaining({
-					id: feature.id,
-				}),
-			],
-		}),
-	);
-
-	return setStyleResult;
-};
-
-const verifyAddingFeatureSecondRender = (feature: GeoJSONStoreFeatures) => {
-	const addGeoJsonMock = jest.fn();
-	const removeMock = jest.fn();
-	const mockMap = createMockGoogleMap({
-		data: {
-			addListener: jest.fn(),
-			addGeoJson: addGeoJsonMock,
-			remove: removeMock,
-			getFeatureById: jest.fn(),
-			setStyle: jest.fn(),
-		} as any,
-	});
-	const adapter = new TerraDrawGoogleMapsAdapter({
-		lib: {
-			OverlayView: jest.fn(() => ({
-				setMap: jest.fn(),
-				getProjection: jest.fn(),
-			})),
-		} as any,
-		map: mockMap,
-	});
-
-	adapter.render(
-		{ unchanged: [], created: [], deletedIds: [], updated: [] },
-		mockStyleDraw,
-	);
-
-	expect(addGeoJsonMock).toHaveBeenCalledWith(
-		expect.objectContaining({
-			features: [],
-		}),
-	);
-
-	adapter.render(
-		{
-			unchanged: [],
-			created: [feature],
-			deletedIds: [],
-			updated: [],
-		},
-		mockStyleDraw,
-	);
-
-	expect(addGeoJsonMock).toHaveBeenCalledWith(
-		expect.objectContaining({
-			features: [expect.objectContaining({ id: feature.id })],
-		}),
-	);
-};
-
-function verifyUpdatesFeature(feature: GeoJSONStoreFeatures) {
-	const addGeoJsonMock = jest.fn();
-	const dummyProp = "dummy";
-	const forEachPropertyMock = jest.fn((cb) => {
-		cb("propValue", dummyProp);
-	});
-	const setPropertyMock = jest.fn();
-	Object.assign(feature, { forEachProperty: forEachPropertyMock });
-	Object.assign(feature, { setProperty: setPropertyMock });
-	Object.assign(feature, { setGeometry: jest.fn() });
-
-	const mockMap = createMockGoogleMap({
-		data: {
-			addListener: jest.fn(),
-			addGeoJson: addGeoJsonMock,
-			remove: () => {},
-			getFeatureById: (featureId: string) =>
-				[feature].find((s) => s.id === featureId),
-			setStyle: jest.fn(),
-		} as any,
-	});
-	const adapter = new TerraDrawGoogleMapsAdapter({
-		lib: {
-			OverlayView: jest.fn(() => ({
-				setMap: jest.fn(),
-				getProjection: jest.fn(),
-			})),
-			LatLng: jest.fn(),
-			Data: {
-				LineString: jest.fn(),
-				Polygon: jest.fn(),
-				Point: jest.fn(),
-			},
-		} as any,
-		map: mockMap,
-	});
-
-	adapter.render(
-		{ unchanged: [], created: [feature], deletedIds: [], updated: [] },
-		mockStyleDraw,
-	);
-
-	expect(addGeoJsonMock).toHaveBeenCalledWith(
-		expect.objectContaining({
-			features: [expect.objectContaining({ id: feature.id })],
-		}),
-	);
-
-	adapter.render(
-		{
-			unchanged: [],
-			created: [],
-			deletedIds: [],
-			updated: [feature],
-		},
-		mockStyleDraw,
-	);
-
-	expect(setPropertyMock).toHaveBeenCalledWith(dummyProp, undefined);
-
-	expect(addGeoJsonMock).toHaveBeenCalledWith(
-		expect.objectContaining({
-			features: [expect.objectContaining({ id: feature.id })],
-		}),
-	);
-}

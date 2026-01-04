@@ -15,6 +15,7 @@ import {
 	LineLayerSpecification,
 	Map as MaplibreMap,
 	PointLike,
+	getVersion,
 } from "maplibre-gl";
 import { Feature, LineString, Point, Polygon } from "geojson";
 
@@ -83,6 +84,41 @@ export class TerraDrawMapLibreGLAdapter<
 	private _map: MaplibreMap;
 	private _container: HTMLElement;
 
+	private toGlDashArrayFromPixels(
+		dash: [number, number] | undefined,
+		lineWidth: number,
+	): [number, number] | null {
+		if (!dash) {
+			return null;
+		}
+
+		const [onPx, offPx] = dash;
+		if (
+			!Number.isFinite(onPx) ||
+			!Number.isFinite(offPx) ||
+			onPx < 0 ||
+			offPx < 0
+		) {
+			return null;
+		}
+
+		const width = Math.max(0.0001, lineWidth);
+		return [onPx / width, offPx / width];
+	}
+
+	private isMapLibreAtLeast(minVersion = "5.8.0") {
+		const version = getVersion();
+
+		const parse = (v: string) => v.split(".").map((n) => parseInt(n, 10) || 0);
+
+		const [a1, b1, c1] = parse(version);
+		const [a2, b2, c2] = parse(minVersion);
+
+		if (a1 !== a2) return a1 > a2;
+		if (b1 !== b2) return b1 > b2;
+		return c1 >= c2;
+	}
+
 	private _addGeoJSONSource(id: string, features: Feature[]) {
 		this._map.addSource(id, {
 			type: "geojson",
@@ -133,11 +169,13 @@ export class TerraDrawMapLibreGLAdapter<
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		const paint: { "line-dasharray"?: any[] } = {};
 
-		paint["line-dasharray"] = [
-			"coalesce",
-			["get", "lineStringDash"],
-			["literal", []],
-		];
+		if (this.isMapLibreAtLeast("5.8.0")) {
+			paint["line-dasharray"] = [
+				"coalesce",
+				["get", "lineStringDash"],
+				["literal", []],
+			];
+		}
 
 		const layer = this._map.addLayer({
 			id,
@@ -460,8 +498,11 @@ export class TerraDrawMapLibreGLAdapter<
 
 					points.push(feature);
 				} else if (feature.geometry.type === "LineString") {
-					console.log(styles.lineStringDash);
-					properties.lineStringDash = styles.lineStringDash || null;
+					properties.lineStringDash = this.toGlDashArrayFromPixels(
+						styles.lineStringDash,
+						styles.lineStringWidth,
+					);
+
 					properties.lineStringColor = styles.lineStringColor;
 					properties.lineStringWidth = styles.lineStringWidth;
 

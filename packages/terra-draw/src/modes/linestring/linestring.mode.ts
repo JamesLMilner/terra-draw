@@ -67,7 +67,6 @@ type LineStringStyling = {
 	snappingPointOpacity: NumericStyling;
 	snappingPointOutlineColor: HexColorStyling;
 	snappingPointOutlineWidth: NumericStyling;
-<<<<<<< HEAD
 	snappingPointOutlineOpacity: NumericStyling;
 	coordinatePointColor: HexColorStyling;
 	coordinatePointOpacity: NumericStyling;
@@ -75,9 +74,7 @@ type LineStringStyling = {
 	coordinatePointOutlineColor: HexColorStyling;
 	coordinatePointOutlineWidth: NumericStyling;
 	coordinatePointOutlineOpacity: NumericStyling;
-=======
 	lineStringDash: [number, number];
->>>>>>> 192adbe (refactor(terra-draw): bring line dash in work with latest changes)
 };
 
 interface Cursors {

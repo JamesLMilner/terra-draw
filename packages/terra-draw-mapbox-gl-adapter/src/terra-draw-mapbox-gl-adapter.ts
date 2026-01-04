@@ -45,6 +45,28 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawExtend.TerraDrawBaseAdapt
 	private _map: mapboxgl.Map;
 	private _container: HTMLElement;
 
+	private toGlDashArrayFromPixels(
+		dash: [number, number] | undefined,
+		lineWidth: number,
+	): [number, number] | null {
+		if (!dash) {
+			return null;
+		}
+
+		const [onPx, offPx] = dash;
+		if (
+			!Number.isFinite(onPx) ||
+			!Number.isFinite(offPx) ||
+			onPx < 0 ||
+			offPx < 0
+		) {
+			return null;
+		}
+
+		const width = Math.max(0.0001, lineWidth);
+		return [onPx / width, offPx / width];
+	}
+
 	// Marker state
 	private markerCounter = 0;
 	private markerMap = new Map<string, string>();
@@ -469,7 +491,11 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawExtend.TerraDrawBaseAdapt
 
 					points.push(feature);
 				} else if (feature.geometry.type === "LineString") {
-					properties.lineStringDash = styles.lineStringDash || null;
+					properties.lineStringDash = this.toGlDashArrayFromPixels(
+						styles.lineStringDash,
+						styles.lineStringWidth,
+					);
+
 					properties.lineStringColor = styles.lineStringColor;
 					properties.lineStringWidth = styles.lineStringWidth;
 					// Backwards compatible read: pre Terra Draw v1.24.0 will not have this field in the interface

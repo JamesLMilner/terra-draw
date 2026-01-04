@@ -33,11 +33,11 @@ export interface TerraDrawAdapterStyling {
 	lineStringWidth: number;
 	lineStringColor: HexColor;
 	lineStringOpacity?: number;
+	lineStringDash?: [number, number];
 	zIndex: number;
 	markerUrl?: string;
 	markerHeight?: number;
 	markerWidth?: number;
-	lineStringDash: [number, number] | undefined;
 }
 
 export type CartesianPoint = { x: number; y: number };

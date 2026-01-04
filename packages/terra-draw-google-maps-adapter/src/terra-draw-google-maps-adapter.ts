@@ -298,12 +298,33 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawExtend.TerraDrawBaseAda
 					calculatedStyles as { lineStringOpacity?: number }
 				).lineStringOpacity;
 
+				const dashedLineStyles = calculatedStyles.lineStringDash
+					? {
+							strokeOpacity: 0,
+							icons: [
+								{
+									icon: {
+										path: "M 0,0 0," + calculatedStyles.lineStringDash[0],
+										strokeOpacity: 1,
+										strokeWeight: calculatedStyles.lineStringWidth,
+										color: calculatedStyles.lineStringColor,
+										scale: 1,
+									},
+									offset: "0",
+									repeat: `${calculatedStyles.lineStringDash[0] + calculatedStyles.lineStringDash[1]}px`,
+									fixedRotation: false,
+								},
+							],
+						}
+					: {};
+
 				return {
 					strokeColor: calculatedStyles.lineStringColor,
 					strokeWeight: calculatedStyles.lineStringWidth,
 					strokeOpacity:
 						lineStringOpacity === undefined ? 1 : lineStringOpacity,
 					zIndex: calculatedStyles.zIndex,
+					...dashedLineStyles,
 				};
 			case "Polygon":
 				const polygonOutlineOpacity = (
@@ -644,45 +665,9 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawExtend.TerraDrawBaseAda
 							String(updatedFeature.id),
 						);
 
-<<<<<<< HEAD
 						if (!featureToUpdate) {
 							throw new Error("Feature could not be found by Google Maps API");
 						}
-=======
-				case "LineString":
-					const dashedLineStyles = calculatedStyles.lineStringDash
-						? {
-								strokeOpacity: 0,
-								icons: [
-									{
-										icon: {
-											path: "M 0,-1 0,1",
-											strokeOpacity: 1,
-											scale: 4,
-										},
-										offset: "0",
-										repeat: "20px",
-									},
-								],
-							}
-						: {};
-
-					return {
-						strokeColor: calculatedStyles.lineStringColor,
-						strokeWeight: calculatedStyles.lineStringWidth,
-						zIndex: calculatedStyles.zIndex,
-						...dashedLineStyles,
-					};
-				case "Polygon":
-					return {
-						strokeColor: calculatedStyles.polygonOutlineColor,
-						strokeWeight: calculatedStyles.polygonOutlineWidth,
-						fillOpacity: calculatedStyles.polygonFillOpacity,
-						fillColor: calculatedStyles.polygonFillColor,
-						zIndex: calculatedStyles.zIndex,
-					};
-			}
->>>>>>> 192adbe (refactor(terra-draw): bring line dash in work with latest changes)
 
 						// Remove all keys
 						featureToUpdate.forEachProperty((_property, name) => {

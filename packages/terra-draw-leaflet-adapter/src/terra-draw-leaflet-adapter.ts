@@ -168,7 +168,6 @@ export class TerraDrawLeafletAdapter extends TerraDrawExtend.TerraDrawBaseAdapte
 				}
 
 				if (feature.geometry.type === "LineString") {
-<<<<<<< HEAD
 					// Backwards compatible read: pre Terra Draw v1.24.0 will not have this field in the interface
 					const lineStringOpacity = (
 						featureStyles as { lineStringOpacity?: number }
@@ -176,8 +175,6 @@ export class TerraDrawLeafletAdapter extends TerraDrawExtend.TerraDrawBaseAdapte
 
 					console.log(featureStyles.lineStringDash);
 
-=======
->>>>>>> 192adbe (refactor(terra-draw): bring line dash in work with latest changes)
 					return {
 						interactive: false, // Removes mouse hover cursor styles
 						color: featureStyles.lineStringColor,
@@ -185,7 +182,7 @@ export class TerraDrawLeafletAdapter extends TerraDrawExtend.TerraDrawBaseAdapte
 						pane: paneId,
 						opacity: lineStringOpacity === undefined ? 1 : lineStringOpacity,
 						dashArray: featureStyles.lineStringDash
-							? `${featureStyles.lineStringDash[0]}%, ${featureStyles.lineStringDash[1]}%`
+							? `${featureStyles.lineStringDash[0]} ${featureStyles.lineStringDash[1]}`
 							: undefined,
 					};
 				} else if (feature.geometry.type === "Polygon") {

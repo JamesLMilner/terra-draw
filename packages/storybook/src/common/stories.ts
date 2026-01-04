@@ -403,7 +403,9 @@ const LineString: Story = {
 			() =>
 				new TerraDrawLineStringMode({
 					styles: {
-						lineStringDash: [1, 1],
+						lineStringDash: [5, 5],
+						lineStringColor: "#ff0000",
+						lineStringWidth: 3,
 					},
 				}),
 		],

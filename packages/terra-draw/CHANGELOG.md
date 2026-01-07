@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.21.3](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.21.2...terra-draw@1.21.3) (2026-01-07)
+
+
+### fix
+
+* **terra-draw:** ensure that setMode can be called in onFinish (#766) ([](https://github.com/JamesLMilner/terra-draw/commit/6819b1c406883016c8b8123ac04b38e8538d9503)), closes [#766](https://github.com/JamesLMilner/terra-draw/issues/766)
+
 ## [1.21.2](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.21.1...terra-draw@1.21.2) (2026-01-01)
 
 

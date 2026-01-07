@@ -8,6 +8,7 @@ import {
 	UpdateTypes,
 	Z_INDEX,
 	COMMON_PROPERTIES,
+	FinishActions,
 } from "../../common";
 import { Polygon, Position } from "geojson";
 import {
@@ -137,13 +138,15 @@ export class TerraDrawSectorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 			},
 			context: {
 				updateType: UpdateTypes.Finish,
-				action: "draw",
+				action: FinishActions.Draw,
 			},
 		});
 
 		if (!updated) {
 			return;
 		}
+
+		const featureId = this.currentId;
 
 		this.currentCoordinate = 0;
 		this.currentId = undefined;
@@ -153,6 +156,11 @@ export class TerraDrawSectorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 		if (this.state === "drawing") {
 			this.setStarted();
 		}
+
+		this.onFinish(featureId, {
+			mode: this.mode,
+			action: FinishActions.Draw,
+		});
 	}
 
 	private getSectorCoordinates(event: TerraDrawMouseEvent) {
@@ -503,12 +511,6 @@ export class TerraDrawSectorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 		this.readFeature = new ReadFeatureBehavior(config);
 		this.mutateFeature = new MutateFeatureBehavior(config, {
 			validate: this.validate,
-			onFinish: (featureId, context) => {
-				this.onFinish(featureId, {
-					mode: this.mode,
-					action: context.action,
-				});
-			},
 		});
 	}
 }

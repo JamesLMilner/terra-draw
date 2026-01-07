@@ -247,12 +247,6 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 
 				return this.validations[mode](feature, context);
 			},
-			onFinish: (featureId, context) => {
-				this.onFinish(featureId, {
-					mode: this.mode,
-					action: context.action,
-				});
-			},
 		});
 
 		this.pixelDistance = new PixelDistanceBehavior(config);

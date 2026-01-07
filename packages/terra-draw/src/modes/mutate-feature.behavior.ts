@@ -18,7 +18,6 @@ import { ensureRightHandRule } from "../geometry/ensure-right-hand-rule";
 
 type MutateFeatureBehaviorOptions = {
 	validate: Validation | undefined;
-	onFinish: (featureId: FeatureId, context: FinishContext) => void;
 };
 
 export const Mutations = {
@@ -111,10 +110,6 @@ export class MutateFeatureBehavior extends TerraDrawModeBehavior {
 			geometry: { type: "Point", coordinates },
 			properties,
 		});
-
-		if (context?.updateType === UpdateTypes.Finish) {
-			this.options.onFinish(created.id, context as FinishContext);
-		}
 
 		return created;
 	}
@@ -353,8 +348,6 @@ export class MutateFeatureBehavior extends TerraDrawModeBehavior {
 					return null;
 				}
 			}
-
-			this.options.onFinish(featureId, context as FinishContext);
 		}
 
 		return feature;

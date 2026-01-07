@@ -8,6 +8,7 @@ import {
 	UpdateTypes,
 	Z_INDEX,
 	COMMON_PROPERTIES,
+	FinishActions,
 } from "../../common";
 import {
 	TerraDrawBaseDrawMode,
@@ -120,12 +121,14 @@ export class TerraDrawAngledRectangleMode extends TerraDrawBaseDrawMode<PolygonS
 			propertyMutations: {
 				[COMMON_PROPERTIES.CURRENTLY_DRAWING]: undefined,
 			},
-			context: { updateType: UpdateTypes.Finish, action: "draw" },
+			context: { updateType: UpdateTypes.Finish, action: FinishActions.Draw },
 		});
 
 		if (!updated) {
 			return;
 		}
+
+		const featureId = this.currentId;
 
 		this.currentCoordinate = 0;
 		this.currentId = undefined;
@@ -134,6 +137,11 @@ export class TerraDrawAngledRectangleMode extends TerraDrawBaseDrawMode<PolygonS
 		if (this.state === "drawing") {
 			this.setStarted();
 		}
+
+		this.onFinish(featureId, {
+			mode: this.mode,
+			action: FinishActions.Draw,
+		});
 	}
 
 	/** @internal */
@@ -470,12 +478,6 @@ export class TerraDrawAngledRectangleMode extends TerraDrawBaseDrawMode<PolygonS
 		this.readFeature = new ReadFeatureBehavior(config);
 		this.mutateFeature = new MutateFeatureBehavior(config, {
 			validate: this.validate,
-			onFinish: (featureId, context) => {
-				this.onFinish(featureId, {
-					mode: this.mode,
-					action: context.action,
-				});
-			},
 		});
 	}
 }

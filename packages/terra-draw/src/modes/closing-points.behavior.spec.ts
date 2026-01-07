@@ -20,7 +20,6 @@ describe("ClosingPointsBehavior", () => {
 				config,
 				new PixelDistanceBehavior(config),
 				new MutateFeatureBehavior(config, {
-					onFinish: jest.fn(),
 					validate: jest.fn(() => ({ valid: true })),
 				}),
 				new ReadFeatureBehavior(config),
@@ -38,7 +37,6 @@ describe("ClosingPointsBehavior", () => {
 				config,
 				new PixelDistanceBehavior(config),
 				new MutateFeatureBehavior(config, {
-					onFinish: jest.fn(),
 					validate: jest.fn(() => ({ valid: true })),
 				}),
 				new ReadFeatureBehavior(config),

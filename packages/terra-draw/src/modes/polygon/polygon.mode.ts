@@ -232,15 +232,32 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 			});
 		}
 
-		this.currentCoordinate = 0;
-		this.currentId = undefined;
-		this.snappedPointId = undefined;
-		this.closingPoints.delete();
-
 		// Go back to started state
 		if (this.state === "drawing") {
 			this.setStarted();
 		}
+
+		if (this.editedPointId) {
+			this.mutateFeature.deleteFeatureIfPresent(this.editedPointId);
+			this.editedPointId = undefined;
+		}
+
+		if (this.snappedPointId) {
+			this.mutateFeature.deleteFeatureIfPresent(this.snappedPointId);
+			this.snappedPointId = undefined;
+		}
+
+		this.closingPoints.delete();
+
+		const featureId = this.currentId;
+
+		this.currentCoordinate = 0;
+		this.currentId = undefined;
+
+		this.onFinish(featureId, {
+			mode: this.mode,
+			action: FinishActions.Draw,
+		});
 	}
 
 	/** @internal */
@@ -248,22 +265,6 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 		this.readFeature = new ReadFeatureBehavior(config);
 		this.mutateFeature = new MutateFeatureBehavior(config, {
 			validate: this.validate,
-			onFinish: (featureId, context) => {
-				if (this.editedPointId) {
-					this.mutateFeature.deleteFeatureIfPresent(this.editedPointId);
-					this.editedPointId = undefined;
-				}
-
-				if (this.snappedPointId) {
-					this.mutateFeature.deleteFeatureIfPresent(this.snappedPointId);
-					this.snappedPointId = undefined;
-				}
-
-				this.onFinish(featureId, {
-					mode: this.mode,
-					action: context.action,
-				});
-			},
 		});
 		this.clickBoundingBox = new ClickBoundingBoxBehavior(config);
 		this.pixelDistance = new PixelDistanceBehavior(config);
@@ -550,6 +551,8 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 				featureCoordinates: updated.geometry.coordinates,
 			});
 		}
+
+		this.onFinish(featureId, { mode: this.mode, action: FinishActions.Edit });
 	}
 
 	private onLeftClick(event: TerraDrawMouseEvent) {
@@ -981,6 +984,18 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 			return;
 		}
 
+		const featureId = this.editedFeatureId;
+
+		if (this.editedPointId) {
+			this.mutateFeature.deleteFeatureIfPresent(this.editedPointId);
+			this.editedPointId = undefined;
+		}
+
+		if (this.snappedPointId) {
+			this.mutateFeature.deleteFeatureIfPresent(this.snappedPointId);
+			this.snappedPointId = undefined;
+		}
+
 		// Reset edit state
 		this.editedFeatureId = undefined;
 		this.editedFeatureCoordinateIndex = undefined;
@@ -988,6 +1003,11 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 		this.editedSnapType = undefined;
 
 		setMapDraggability(true);
+
+		this.onFinish(featureId, {
+			mode: this.mode,
+			action: FinishActions.Draw,
+		});
 	}
 
 	/** @internal */

@@ -143,7 +143,7 @@ export class TerraDrawRectangleMode extends TerraDrawBaseDrawMode<RectanglePolyg
 	}
 
 	private close() {
-		if (!this.endPosition) {
+		if (!this.currentRectangleId || !this.endPosition) {
 			return;
 		}
 
@@ -153,6 +153,8 @@ export class TerraDrawRectangleMode extends TerraDrawBaseDrawMode<RectanglePolyg
 			return;
 		}
 
+		const featureId = this.currentRectangleId;
+
 		this.startPosition = undefined;
 		this.currentRectangleId = undefined;
 		this.drawType = undefined;
@@ -160,6 +162,11 @@ export class TerraDrawRectangleMode extends TerraDrawBaseDrawMode<RectanglePolyg
 		if (this.state === "drawing") {
 			this.setStarted();
 		}
+
+		this.onFinish(featureId, {
+			mode: this.mode,
+			action: FinishActions.Draw,
+		});
 	}
 
 	private beginDrawing(
@@ -391,12 +398,6 @@ export class TerraDrawRectangleMode extends TerraDrawBaseDrawMode<RectanglePolyg
 		this.readFeature = new ReadFeatureBehavior(config);
 		this.mutateFeature = new MutateFeatureBehavior(config, {
 			validate: this.validate,
-			onFinish: (featureId, context) => {
-				this.onFinish(featureId, {
-					mode: this.mode,
-					action: context.action,
-				});
-			},
 		});
 	}
 }

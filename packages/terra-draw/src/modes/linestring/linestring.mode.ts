@@ -210,7 +210,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 			return;
 		}
 
-		this.closingPoints.delete();
+		const featureId = this.currentId;
 
 		this.currentCoordinate = 0;
 		this.currentId = undefined;
@@ -220,6 +220,26 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 		if (this.state === "drawing") {
 			this.setStarted();
 		}
+
+		this.closingPoints.delete();
+
+		if (this.snappedPointId) {
+			this.mutateFeature.deleteFeatureIfPresent(this.snappedPointId);
+			this.snappedPointId = undefined;
+		}
+
+		if (this.editedPointId) {
+			this.mutateFeature.deleteFeatureIfPresent(this.editedPointId);
+			this.editedPointId = undefined;
+
+			// Reset edit state
+			this.editedFeatureId = undefined;
+			this.editedFeatureCoordinateIndex = undefined;
+			this.editedInsertIndex = undefined;
+			this.editedSnapType = undefined;
+		}
+
+		this.onFinish(featureId, { mode: this.mode, action: FinishActions.Draw });
 	}
 
 	private generateInsertCoordinates(startCoord: Position, endCoord: Position) {
@@ -357,27 +377,6 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 		this.readFeature = new ReadFeatureBehavior(config);
 		this.mutateFeature = new MutateFeatureBehavior(config, {
 			validate: this.validate,
-			onFinish: (featureId, context) => {
-				if (this.snappedPointId) {
-					this.mutateFeature.deleteFeatureIfPresent(this.snappedPointId);
-					this.snappedPointId = undefined;
-				}
-
-				if (this.editedPointId) {
-					this.mutateFeature.deleteFeatureIfPresent(this.editedPointId);
-					this.editedPointId = undefined;
-
-					// Reset edit state
-					this.editedFeatureId = undefined;
-					this.editedFeatureCoordinateIndex = undefined;
-					this.editedInsertIndex = undefined;
-					this.editedSnapType = undefined;
-				}
-
-				this.closingPoints.delete();
-
-				this.onFinish(featureId, { mode: this.mode, action: context.action });
-			},
 		});
 		this.closingPoints = new ClosingPointsBehavior(
 			config,
@@ -506,6 +505,29 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 			featureId,
 			coordinateMutations: [{ type: Mutations.Delete, index: coordinateIndex }],
 			context: { updateType: UpdateTypes.Finish, action: FinishActions.Edit },
+		});
+
+		if (this.snappedPointId) {
+			this.mutateFeature.deleteFeatureIfPresent(this.snappedPointId);
+			this.snappedPointId = undefined;
+		}
+
+		if (this.editedPointId) {
+			this.mutateFeature.deleteFeatureIfPresent(this.editedPointId);
+			this.editedPointId = undefined;
+
+			// Reset edit state
+			this.editedFeatureId = undefined;
+			this.editedFeatureCoordinateIndex = undefined;
+			this.editedInsertIndex = undefined;
+			this.editedSnapType = undefined;
+		}
+
+		this.closingPoints.delete();
+
+		this.onFinish(featureId, {
+			mode: this.mode,
+			action: FinishActions.DeleteCoordinate,
 		});
 	}
 
@@ -742,7 +764,29 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 			return;
 		}
 
+		const featureId = this.editedFeatureId;
+
 		setMapDraggability(true);
+
+		if (this.snappedPointId) {
+			this.mutateFeature.deleteFeatureIfPresent(this.snappedPointId);
+			this.snappedPointId = undefined;
+		}
+
+		if (this.editedPointId) {
+			this.mutateFeature.deleteFeatureIfPresent(this.editedPointId);
+			this.editedPointId = undefined;
+
+			// Reset edit state
+			this.editedFeatureId = undefined;
+			this.editedFeatureCoordinateIndex = undefined;
+			this.editedInsertIndex = undefined;
+			this.editedSnapType = undefined;
+		}
+
+		this.closingPoints.delete();
+
+		this.onFinish(featureId, { mode: this.mode, action: FinishActions.Edit });
 	}
 
 	/** @internal */

@@ -8,6 +8,7 @@ import {
 	UpdateTypes,
 	Z_INDEX,
 	COMMON_PROPERTIES,
+	FinishActions,
 } from "../../common";
 import { LineString, Point, Polygon, Position } from "geojson";
 import {
@@ -399,9 +400,6 @@ export class TerraDrawSensorMode extends TerraDrawBaseDrawMode<SensorPolygonStyl
 		this.readFeature = new ReadFeatureBehavior(config);
 		this.mutateFeature = new MutateFeatureBehavior(config, {
 			validate: this.validate,
-			onFinish: (featureId, context) => {
-				this.onFinish(featureId, { mode: this.mode, action: context.action });
-			},
 		});
 	}
 
@@ -426,13 +424,15 @@ export class TerraDrawSensorMode extends TerraDrawBaseDrawMode<SensorPolygonStyl
 						.coordinates,
 					type: Mutations.Replace,
 				},
-				context: { updateType: UpdateTypes.Finish, action: "draw" },
+				context: { updateType: UpdateTypes.Finish, action: FinishActions.Draw },
 			});
 
 			if (!updated) {
 				return;
 			}
 		}
+
+		const featureId = this.currentId;
 
 		this.mutateFeature.deleteFeatureIfPresent(finishedCurrentStartingPointId);
 		this.mutateFeature.deleteFeatureIfPresent(finishedInitialArcId);
@@ -446,6 +446,10 @@ export class TerraDrawSensorMode extends TerraDrawBaseDrawMode<SensorPolygonStyl
 		// Go back to started state
 		if (this.state === "drawing") {
 			this.setStarted();
+		}
+
+		if (featureId) {
+			this.onFinish(featureId, { mode: this.mode, action: FinishActions.Draw });
 		}
 	}
 

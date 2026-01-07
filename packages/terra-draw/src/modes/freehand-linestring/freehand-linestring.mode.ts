@@ -8,6 +8,7 @@ import {
 	UpdateTypes,
 	COMMON_PROPERTIES,
 	Z_INDEX,
+	FinishActions,
 } from "../../common";
 
 import {
@@ -119,12 +120,14 @@ export class TerraDrawFreehandLineStringMode extends TerraDrawBaseDrawMode<Freeh
 			propertyMutations: {
 				[COMMON_PROPERTIES.CURRENTLY_DRAWING]: undefined,
 			},
-			context: { updateType: UpdateTypes.Finish, action: "draw" },
+			context: { updateType: UpdateTypes.Finish, action: FinishActions.Draw },
 		});
 
 		if (!updated) {
 			return;
 		}
+
+		const featureId = this.currentId;
 
 		this.closingPoints.delete();
 
@@ -135,6 +138,11 @@ export class TerraDrawFreehandLineStringMode extends TerraDrawBaseDrawMode<Freeh
 		if (this.state === "drawing") {
 			this.setStarted();
 		}
+
+		this.onFinish(featureId, {
+			mode: this.mode,
+			action: FinishActions.Draw,
+		});
 	}
 
 	/** @internal */
@@ -372,12 +380,6 @@ export class TerraDrawFreehandLineStringMode extends TerraDrawBaseDrawMode<Freeh
 		this.readFeature = new ReadFeatureBehavior(config);
 		this.mutateFeature = new MutateFeatureBehavior(config, {
 			validate: this.validate,
-			onFinish: (featureId, context) => {
-				this.onFinish(featureId, {
-					mode: this.mode,
-					action: context.action,
-				});
-			},
 		});
 		this.pixelDistance = new PixelDistanceBehavior(config);
 		this.closingPoints = new ClosingPointsBehavior(

@@ -18,8 +18,6 @@ describe("DragFeatureBehavior", () => {
 			const config = MockBehaviorConfig("test");
 			const readFeatureBehavior = new ReadFeatureBehavior(config);
 			const mutateFeatureBehavior = new MutateFeatureBehavior(config, {
-				onFinish: jest.fn(),
-
 				validate: jest.fn(() => ({ valid: true })),
 			});
 			const selectionPointBehavior = new SelectionPointBehavior(
@@ -70,8 +68,6 @@ describe("DragFeatureBehavior", () => {
 				projection as "web-mercator" | "globe",
 			);
 			const mutateFeatureBehavior = new MutateFeatureBehavior(config, {
-				onFinish: jest.fn(),
-
 				validate: validate,
 			});
 			const readFeatureBehavior = new ReadFeatureBehavior(config);

@@ -22,8 +22,6 @@ describe("CoordinatePointBehavior", () => {
 				config,
 				new ReadFeatureBehavior(config),
 				new MutateFeatureBehavior(config, {
-					onFinish: jest.fn(),
-
 					validate: jest.fn(() => ({ valid: true })),
 				}),
 			);
@@ -40,8 +38,6 @@ describe("CoordinatePointBehavior", () => {
 				config,
 				new ReadFeatureBehavior(config),
 				new MutateFeatureBehavior(config, {
-					onFinish: jest.fn(),
-
 					validate: jest.fn(() => ({ valid: true })),
 				}),
 			);

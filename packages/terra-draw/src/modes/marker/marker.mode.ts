@@ -213,9 +213,16 @@ export class TerraDrawMarkerMode extends TerraDrawBaseDrawMode<MarkerModeStyling
 			return;
 		}
 
+		const featureId = this.editedFeatureId;
+
 		this.setCursor(this.cursors.dragEnd);
 		this.editedFeatureId = undefined;
 		setMapDraggability(true);
+
+		this.onFinish(featureId, {
+			mode: this.mode,
+			action: FinishActions.Draw,
+		});
 	}
 
 	registerBehaviors(config: BehaviorConfig) {
@@ -228,12 +235,6 @@ export class TerraDrawMarkerMode extends TerraDrawBaseDrawMode<MarkerModeStyling
 		);
 		this.mutateFeature = new MutateFeatureBehavior(config, {
 			validate: this.validate,
-			onFinish: (featureId, context) => {
-				this.onFinish(featureId, {
-					mode: this.mode,
-					action: context.action,
-				});
-			},
 		});
 	}
 
@@ -274,7 +275,7 @@ export class TerraDrawMarkerMode extends TerraDrawBaseDrawMode<MarkerModeStyling
 	}
 
 	private onLeftClick(event: TerraDrawMouseEvent) {
-		this.mutateFeature.createPoint({
+		const feature = this.mutateFeature.createPoint({
 			coordinates: [event.lng, event.lat],
 			properties: {
 				mode: this.mode,
@@ -282,6 +283,13 @@ export class TerraDrawMarkerMode extends TerraDrawBaseDrawMode<MarkerModeStyling
 			},
 			context: { updateType: UpdateTypes.Finish, action: FinishActions.Draw },
 		});
+
+		if (feature) {
+			this.onFinish(feature.id, {
+				mode: this.mode,
+				action: FinishActions.Draw,
+			});
+		}
 	}
 
 	private onRightClick(event: TerraDrawMouseEvent) {

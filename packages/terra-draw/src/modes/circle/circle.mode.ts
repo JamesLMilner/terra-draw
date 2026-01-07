@@ -136,6 +136,7 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 		if (!updated) {
 			return;
 		}
+		const featureId = this.currentCircleId;
 
 		this.cursorMovedAfterInitialCursorDown = false;
 		this.center = undefined;
@@ -146,6 +147,11 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 		if (this.state === "drawing") {
 			this.setStarted();
 		}
+
+		this.onFinish(featureId, {
+			mode: this.mode,
+			action: FinishActions.Draw,
+		});
 	}
 
 	private beginDrawing(
@@ -450,12 +456,6 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 		this.readFeature = new ReadFeatureBehavior(config);
 		this.mutateFeature = new MutateFeatureBehavior(config, {
 			validate: this.validate,
-			onFinish: (featureId, context) => {
-				this.onFinish(featureId, {
-					mode: this.mode,
-					action: context.action,
-				});
-			},
 		});
 	}
 }

@@ -20,7 +20,6 @@ describe("ScaleFeatureBehavior", () => {
 		it("constructs", () => {
 			const config = MockBehaviorConfig("test");
 			const mutateFeatureBehavior = new MutateFeatureBehavior(config, {
-				onFinish: jest.fn(),
 				validate: jest.fn(() => ({ valid: true })),
 			});
 			const readFeatureBehavior = new ReadFeatureBehavior(config);
@@ -63,8 +62,6 @@ describe("ScaleFeatureBehavior", () => {
 			config = MockBehaviorConfig("test");
 
 			const mutateFeatureBehavior = new MutateFeatureBehavior(config, {
-				onFinish: jest.fn(),
-
 				validate: jest.fn(() => ({ valid: true })),
 			});
 			const readFeatureBehavior = new ReadFeatureBehavior(config);

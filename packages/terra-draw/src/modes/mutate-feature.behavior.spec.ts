@@ -17,7 +17,6 @@ describe("mutateFeatureBehavior", () => {
 		it("constructs", () => {
 			new MutateFeatureBehavior(MockBehaviorConfig("test"), {
 				validate: undefined,
-				onFinish: jest.fn(),
 			});
 		});
 	});
@@ -29,7 +28,6 @@ describe("mutateFeatureBehavior", () => {
 
 				const behavior = new MutateFeatureBehavior(config, {
 					validate: undefined,
-					onFinish: jest.fn(),
 				});
 
 				const coords: Polygon["coordinates"][0] = [
@@ -57,7 +55,6 @@ describe("mutateFeatureBehavior", () => {
 
 				const behavior = new MutateFeatureBehavior(config, {
 					validate: undefined,
-					onFinish: jest.fn(),
 				});
 
 				// @ts-expect-error testing missing id path
@@ -72,7 +69,6 @@ describe("mutateFeatureBehavior", () => {
 				const config = MockBehaviorConfig("test");
 				const behavior = new MutateFeatureBehavior(config, {
 					validate: undefined,
-					onFinish: jest.fn(),
 				});
 
 				const pointId = createStorePoint(config);
@@ -95,7 +91,6 @@ describe("mutateFeatureBehavior", () => {
 
 				const behavior = new MutateFeatureBehavior(config, {
 					validate: undefined,
-					onFinish: jest.fn(),
 				});
 
 				const polygonId = createStorePolygon(config); // original ring length 5
@@ -127,7 +122,6 @@ describe("mutateFeatureBehavior", () => {
 
 				const behavior = new MutateFeatureBehavior(config, {
 					validate: undefined,
-					onFinish: jest.fn(),
 				});
 
 				const polygonId = createStorePolygon(config); // original ring length 5
@@ -160,7 +154,6 @@ describe("mutateFeatureBehavior", () => {
 
 				const behavior = new MutateFeatureBehavior(config, {
 					validate: undefined,
-					onFinish: jest.fn(),
 				});
 
 				const polygonId = createStorePolygon(config); // original ring length 5
@@ -190,7 +183,6 @@ describe("mutateFeatureBehavior", () => {
 				const config = MockBehaviorConfig("test");
 				const behavior = new MutateFeatureBehavior(config, {
 					validate: undefined,
-					onFinish: jest.fn(),
 				});
 
 				const polygonId = createStorePolygon(config); // ring length 5
@@ -227,7 +219,6 @@ describe("mutateFeatureBehavior", () => {
 
 				const behavior = new MutateFeatureBehavior(config, {
 					validate: undefined,
-					onFinish: jest.fn(),
 				});
 
 				// original length 5: [ [0, 0], [0, 1], [1, 1], [1, 0], [0, 0]],
@@ -263,7 +254,6 @@ describe("mutateFeatureBehavior", () => {
 				const config = MockBehaviorConfig("test");
 				const behavior = new MutateFeatureBehavior(config, {
 					validate: undefined,
-					onFinish: jest.fn(),
 				});
 
 				const polygonId = createStorePolygon(config); // original length 5
@@ -285,7 +275,6 @@ describe("mutateFeatureBehavior", () => {
 				const config = MockBehaviorConfig("test");
 				const behavior = new MutateFeatureBehavior(config, {
 					validate: undefined,
-					onFinish: jest.fn(),
 				});
 
 				const polygonId = createStorePolygon(config); // original length 5
@@ -315,7 +304,6 @@ describe("mutateFeatureBehavior", () => {
 				const config = MockBehaviorConfig("test");
 				const behavior = new MutateFeatureBehavior(config, {
 					validate: undefined,
-					onFinish: jest.fn(),
 				});
 
 				const polygonId = createStorePolygon(config); // original ring
@@ -348,7 +336,6 @@ describe("mutateFeatureBehavior", () => {
 				const config = MockBehaviorConfig("test");
 				const behavior = new MutateFeatureBehavior(config, {
 					validate: undefined,
-					onFinish: jest.fn(),
 				});
 
 				const polygonId = createStorePolygon(config);
@@ -362,7 +349,6 @@ describe("mutateFeatureBehavior", () => {
 				const config = MockBehaviorConfig("test");
 				const behavior = new MutateFeatureBehavior(config, {
 					validate: undefined,
-					onFinish: jest.fn(),
 				});
 
 				// should not throw
@@ -373,7 +359,6 @@ describe("mutateFeatureBehavior", () => {
 				const config = MockBehaviorConfig("test");
 				const behavior = new MutateFeatureBehavior(config, {
 					validate: undefined,
-					onFinish: jest.fn(),
 				});
 
 				const polygonId = createStorePolygon(config);
@@ -393,7 +378,6 @@ describe("mutateFeatureBehavior", () => {
 				const config = MockBehaviorConfig("test");
 				const behavior = new MutateFeatureBehavior(config, {
 					validate: undefined,
-					onFinish: jest.fn(),
 				});
 
 				const polygonId = createStorePolygon(config);
@@ -407,7 +391,6 @@ describe("mutateFeatureBehavior", () => {
 				const config = MockBehaviorConfig("test");
 				const behavior = new MutateFeatureBehavior(config, {
 					validate: undefined,
-					onFinish: jest.fn(),
 				});
 
 				const pointId = createStorePoint(config);
@@ -427,7 +410,6 @@ describe("mutateFeatureBehavior", () => {
 				const config = MockBehaviorConfig("test");
 				const behavior = new MutateFeatureBehavior(config, {
 					validate: undefined,
-					onFinish: jest.fn(),
 				});
 
 				const polygonId = createStorePolygon(config);
@@ -445,14 +427,12 @@ describe("mutateFeatureBehavior", () => {
 				const configHigh = MockBehaviorConfig("test", "web-mercator", 9);
 				const behaviorHigh = new MutateFeatureBehavior(configHigh, {
 					validate: undefined,
-					onFinish: jest.fn(),
 				});
 				expect(behaviorHigh.epsilonOffset()).toBeCloseTo(0.000001, 10);
 
 				const configLow = MockBehaviorConfig("test", "web-mercator", 5);
 				const behaviorLow = new MutateFeatureBehavior(configLow, {
 					validate: undefined,
-					onFinish: jest.fn(),
 				});
 				expect(behaviorLow.epsilonOffset()).toBeCloseTo(0.0001, 10);
 			});
@@ -464,7 +444,6 @@ describe("mutateFeatureBehavior", () => {
 
 				const behavior = new MutateFeatureBehavior(config, {
 					validate: undefined,
-					onFinish: jest.fn(),
 				});
 
 				const coords = [
@@ -489,7 +468,6 @@ describe("mutateFeatureBehavior", () => {
 				const config = MockBehaviorConfig("test");
 				const behavior = new MutateFeatureBehavior(config, {
 					validate: undefined,
-					onFinish: jest.fn(),
 				});
 
 				// @ts-expect-error testing missing id path
@@ -505,7 +483,6 @@ describe("mutateFeatureBehavior", () => {
 				const config = MockBehaviorConfig("test");
 				const behavior = new MutateFeatureBehavior(config, {
 					validate: undefined,
-					onFinish: jest.fn(),
 				});
 
 				const polygonId = createStorePolygon(config);
@@ -527,7 +504,6 @@ describe("mutateFeatureBehavior", () => {
 				const config = MockBehaviorConfig("test");
 				const behavior = new MutateFeatureBehavior(config, {
 					validate: undefined,
-					onFinish: jest.fn(),
 				});
 
 				const lineId = createStoreLineString(config); // original length 2: [[0,0],[0,1]]
@@ -555,7 +531,6 @@ describe("mutateFeatureBehavior", () => {
 				const config = MockBehaviorConfig("test");
 				const behavior = new MutateFeatureBehavior(config, {
 					validate: undefined,
-					onFinish: jest.fn(),
 				});
 
 				const lineId = createStoreLineString(config); // original length 2: [[0,0],[0,1]]
@@ -584,7 +559,6 @@ describe("mutateFeatureBehavior", () => {
 				const config = MockBehaviorConfig("test");
 				const behavior = new MutateFeatureBehavior(config, {
 					validate: undefined,
-					onFinish: jest.fn(),
 				});
 
 				const lineId = createStoreLineString(config); // original length 2: [[0,0],[0,1]]
@@ -609,7 +583,6 @@ describe("mutateFeatureBehavior", () => {
 				const config = MockBehaviorConfig("test");
 				const behavior = new MutateFeatureBehavior(config, {
 					validate: undefined,
-					onFinish: jest.fn(),
 				});
 
 				const lineId = createStoreLineString(config); // original length 2: [[0,0],[0,1]]
@@ -641,7 +614,6 @@ describe("mutateFeatureBehavior", () => {
 				const config = MockBehaviorConfig("test");
 				const behavior = new MutateFeatureBehavior(config, {
 					validate: undefined,
-					onFinish: jest.fn(),
 				});
 
 				const lineId = createStoreLineString(config); // original length 2
@@ -665,7 +637,6 @@ describe("mutateFeatureBehavior", () => {
 				const config = MockBehaviorConfig("test");
 				const behavior = new MutateFeatureBehavior(config, {
 					validate: undefined,
-					onFinish: jest.fn(),
 				});
 
 				const lineId = createStoreLineString(config); // original length 2
@@ -695,7 +666,6 @@ describe("mutateFeatureBehavior", () => {
 				const config = MockBehaviorConfig("test");
 				const behavior = new MutateFeatureBehavior(config, {
 					validate: undefined,
-					onFinish: jest.fn(),
 				});
 
 				const lineId = createStoreLineString(config);

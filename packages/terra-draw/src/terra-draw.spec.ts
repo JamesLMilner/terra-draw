@@ -3996,6 +3996,65 @@ describe("Terra Draw", () => {
 				expect(draw.getSnapshot()).toHaveLength(0);
 				expect(draw.stop).toHaveBeenCalledTimes(1);
 			});
+
+			it("setMode to static does not clear current features", async () => {
+				const polygonMode = new TerraDrawPolygonMode();
+				const draw = new TerraDraw({
+					adapter,
+					modes: [polygonMode],
+				});
+
+				jest.spyOn(draw, "stop");
+
+				draw.start();
+
+				draw.on("finish", () => {
+					draw.setMode("static");
+				});
+
+				draw.setMode("polygon");
+
+				polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+				polygonMode.onClick(MockCursorEvent({ lng: 0.000001, lat: 0.000001 }));
+				polygonMode.onClick(MockCursorEvent({ lng: 0.000002, lat: 0.000002 }));
+
+				// Close the polygon
+				polygonMode.onClick(MockCursorEvent({ lng: 0.000002, lat: 0.000002 }));
+
+				const features = draw.getSnapshot();
+				expect(features).toHaveLength(1);
+				expect(features[0].geometry.type).toBe("Polygon");
+			});
+
+			it("setMode to static does not clear current features", async () => {
+				const polygonMode = new TerraDrawPolygonMode();
+				const lineStringMode = new TerraDrawLineStringMode();
+				const draw = new TerraDraw({
+					adapter,
+					modes: [polygonMode, lineStringMode],
+				});
+
+				jest.spyOn(draw, "stop");
+
+				draw.start();
+
+				draw.on("finish", () => {
+					draw.setMode("linestring");
+				});
+
+				draw.setMode("polygon");
+
+				polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+				polygonMode.onClick(MockCursorEvent({ lng: 0.000001, lat: 0.000001 }));
+				polygonMode.onClick(MockCursorEvent({ lng: 0.000002, lat: 0.000002 }));
+
+				// Close the polygon
+				polygonMode.onClick(MockCursorEvent({ lng: 0.000002, lat: 0.000002 }));
+
+				const features = draw.getSnapshot();
+				expect(features).toHaveLength(1);
+				expect(features[0].geometry.type).toBe("Polygon");
+			});
 		});
 	});
 

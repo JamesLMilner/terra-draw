@@ -49,7 +49,6 @@ describe("DragCoordinateBehavior", () => {
 			const readFeatureBehavior = new ReadFeatureBehavior(config);
 			const selectionPointBehavior = new SelectionPointBehavior(
 				config,
-				readFeatureBehavior,
 				mutateFeatureBehavior,
 			);
 			const pixelDistanceBehavior = new PixelDistanceBehavior(config);
@@ -105,7 +104,6 @@ describe("DragCoordinateBehavior", () => {
 			const readFeatureBehavior = new ReadFeatureBehavior(config);
 			const selectionPointBehavior = new SelectionPointBehavior(
 				config,
-				readFeatureBehavior,
 				mutateFeatureBehavior,
 			);
 			const pixelDistanceBehavior = new PixelDistanceBehavior(config);
@@ -196,6 +194,28 @@ describe("DragCoordinateBehavior", () => {
 		});
 
 		describe("drag", () => {
+			it("updates the previous midpoint with index -1 when dragging index 0", () => {
+				const id = createStorePolygon(config);
+
+				dragCoordinateBehavior.startDragging(id, 0);
+
+				const midPointSpy = jest.spyOn(
+					// eslint-disable-next-line @typescript-eslint/no-explicit-any
+					(dragCoordinateBehavior as any).midPoints,
+					"updateOneAtIndex",
+				);
+
+				dragCoordinateBehavior.drag(MockCursorEvent({ lng: 0, lat: 0 }), true, {
+					toCoordinate: false,
+				});
+
+				// First call should be the "previous" midpoint update.
+				expect(midPointSpy).toHaveBeenNthCalledWith(1, -1, expect.any(Array));
+
+				// Sanity: we should also update the midpoint at index 0.
+				expect(midPointSpy).toHaveBeenCalledWith(0, expect.any(Array));
+			});
+
 			it("returns early if nothing is being dragged", () => {
 				jest.spyOn(config.store, "updateGeometry");
 

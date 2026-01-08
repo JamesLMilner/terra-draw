@@ -25,7 +25,6 @@ describe("ScaleFeatureBehavior", () => {
 			const readFeatureBehavior = new ReadFeatureBehavior(config);
 			const selectionPointBehavior = new SelectionPointBehavior(
 				config,
-				readFeatureBehavior,
 				mutateFeatureBehavior,
 			);
 			const coordinatePointBehavior = new CoordinatePointBehavior(
@@ -67,7 +66,6 @@ describe("ScaleFeatureBehavior", () => {
 			const readFeatureBehavior = new ReadFeatureBehavior(config);
 			const selectionPointBehavior = new SelectionPointBehavior(
 				config,
-				readFeatureBehavior,
 				mutateFeatureBehavior,
 			);
 			const coordinatePointBehavior = new CoordinatePointBehavior(

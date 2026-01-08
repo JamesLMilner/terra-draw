@@ -16,16 +16,13 @@ export type SelectionPointProperties = {
 export class SelectionPointBehavior extends TerraDrawModeBehavior {
 	constructor(
 		config: BehaviorConfig,
-		readFeatureBehavior: ReadFeatureBehavior,
 		mutateFeatureBehavior: MutateFeatureBehavior,
 	) {
 		super(config);
 		this.mutateFeature = mutateFeatureBehavior;
-		this.readFeature = readFeatureBehavior;
 	}
 
 	private mutateFeature: MutateFeatureBehavior;
-	private readFeature: ReadFeatureBehavior;
 
 	private _selectionPoints: FeatureId[] = [];
 

@@ -24,7 +24,6 @@ describe("SelectionPointBehavior", () => {
 			const readFeatureBehavior = new ReadFeatureBehavior(config);
 			selectionPointBehavior = new SelectionPointBehavior(
 				config,
-				readFeatureBehavior,
 				mutateFeatureBehavior,
 			);
 		});
@@ -36,10 +35,8 @@ describe("SelectionPointBehavior", () => {
 			const mutateFeatureBehavior = new MutateFeatureBehavior(config, {
 				validate: jest.fn(() => ({ valid: true })),
 			});
-			const readFeatureBehavior = new ReadFeatureBehavior(config);
 			selectionPointBehavior = new SelectionPointBehavior(
 				config,
-				readFeatureBehavior,
 				mutateFeatureBehavior,
 			);
 		});

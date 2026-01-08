@@ -259,7 +259,6 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 
 		this.selectionPoints = new SelectionPointBehavior(
 			config,
-			this.readFeature,
 			this.mutateFeature,
 		);
 		this.coordinatePoints = new CoordinatePointBehavior(

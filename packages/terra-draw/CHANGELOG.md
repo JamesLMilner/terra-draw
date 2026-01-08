@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.21.4](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.21.3...terra-draw@1.21.4) (2026-01-08)
+
+
+### fix
+
+* **terra-draw:** fix midpoint not being update correctly on coordinate drag (#767) ([](https://github.com/JamesLMilner/terra-draw/commit/20d52af8946277d29f6a3ff0b33d3520d3859a6a)), closes [#767](https://github.com/JamesLMilner/terra-draw/issues/767)
+
 ## [1.21.3](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.21.2...terra-draw@1.21.3) (2026-01-07)
 
 

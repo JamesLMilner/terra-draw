@@ -28,11 +28,7 @@ describe("MidPointBehavior", () => {
 			const readFeatureBehavior = new ReadFeatureBehavior(config);
 			midPointBehavior = new MidPointBehavior(
 				config,
-				new SelectionPointBehavior(
-					config,
-					readFeatureBehavior,
-					mutateFeatureBehavior,
-				),
+				new SelectionPointBehavior(config, mutateFeatureBehavior),
 				new CoordinatePointBehavior(
 					config,
 					readFeatureBehavior,
@@ -53,11 +49,7 @@ describe("MidPointBehavior", () => {
 				const readFeatureBehavior = new ReadFeatureBehavior(config);
 				midPointBehavior = new MidPointBehavior(
 					config,
-					new SelectionPointBehavior(
-						config,
-						readFeatureBehavior,
-						mutateFeatureBehavior,
-					),
+					new SelectionPointBehavior(config, mutateFeatureBehavior),
 					new CoordinatePointBehavior(
 						config,
 						readFeatureBehavior,
@@ -232,6 +224,58 @@ describe("MidPointBehavior", () => {
 								selectionPoint: true,
 								selectionPointFeatureId: expect.any(String),
 							});
+						});
+					});
+
+					describe("updateOneAtIndex", () => {
+						it("should return undefined if index is negative and out of bounds", () => {
+							// no midpoints exist
+							const result = midPointBehavior.updateOneAtIndex(-1, [
+								[0, 0],
+								[0, 1],
+							]);
+
+							expect(result).toBe(undefined);
+						});
+
+						it("should update the final midpoint when using index -1", () => {
+							const createdId = createStorePolygon(config);
+
+							// This closed polygon ring generates 4 midpoints
+							midPointBehavior.create({
+								featureCoordinates: [
+									[0, 0],
+									[0, 1],
+									[1, 1],
+									[1, 0],
+									[0, 0],
+								],
+								featureId: createdId,
+							});
+
+							// New polygon coordinates so we can assert midpoint changes
+							const updatedCoords: Position[] = [
+								[0, 0],
+								[0, 2],
+								[2, 2],
+								[2, 0],
+								[0, 0],
+							];
+
+							// Capture current last midpoint coordinate
+							const lastMidPointId =
+								midPointBehavior.ids[midPointBehavior.ids.length - 1];
+							const lastMidPointBefore = config.store.getGeometryCopy(
+								lastMidPointId,
+							).coordinates as Position;
+
+							midPointBehavior.updateOneAtIndex(-1, updatedCoords);
+
+							const lastMidPointAfter = config.store.getGeometryCopy(
+								lastMidPointId,
+							).coordinates as Position;
+
+							expect(lastMidPointAfter).not.toEqual(lastMidPointBefore);
 						});
 					});
 

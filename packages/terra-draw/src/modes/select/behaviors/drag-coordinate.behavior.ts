@@ -268,8 +268,12 @@ export class DragCoordinateBehavior extends TerraDrawModeBehavior {
 		}
 
 		// Perform the update to the midpoints and selection points
+		if (index > 0) {
+			this.midPoints.updateOneAtIndex(index - 1, updatedCoordinates);
+		} else {
+			this.midPoints.updateOneAtIndex(-1, updatedCoordinates);
+		}
 		this.midPoints.updateOneAtIndex(index, updatedCoordinates);
-		this.midPoints.updateOneAtIndex(index + 1, updatedCoordinates);
 		this.selectionPoints.updateOneAtIndex(index, updatedCoordinate);
 		this.coordinatePoints.updateOneAtIndex(featureId, index, updatedCoordinate);
 

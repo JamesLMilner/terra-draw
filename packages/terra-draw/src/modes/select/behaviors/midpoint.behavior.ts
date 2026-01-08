@@ -187,9 +187,15 @@ export class MidPointBehavior extends TerraDrawModeBehavior {
 		index: number,
 		featureCoordinates: Position[] | Position[][],
 	) {
+		if (index < 0) {
+			// -1 would be the final index
+			index = this._midPoints.length + index;
+		}
+
 		if (this._midPoints[index] === undefined) {
 			return undefined;
 		}
+
 		const coordinates = getClosedCoordinates(featureCoordinates);
 		const midpoints = getMidPointCoordinates(
 			this.getMidpointConfig(coordinates),

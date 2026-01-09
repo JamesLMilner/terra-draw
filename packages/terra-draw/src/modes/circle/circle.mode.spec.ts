@@ -385,6 +385,66 @@ describe("TerraDrawCircleMode", () => {
 				});
 			});
 
+			describe("segments option", () => {
+				beforeEach(() => {
+					circleMode = new TerraDrawCircleMode({
+						segments: 8,
+					});
+					const mockConfig = MockModeConfig(circleMode.mode);
+
+					store = mockConfig.store;
+					onChange = mockConfig.onChange;
+					onFinish = mockConfig.onFinish;
+
+					circleMode.register(mockConfig);
+					circleMode.start();
+				});
+
+				it("uses segments value for polygon ring coordinate count", () => {
+					circleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+					circleMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
+					circleMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
+
+					const features = store.copyAll();
+					expect(features.length).toBe(1);
+
+					// A circle polygon is closed, so it will be steps + 1 coordinates
+					expect((features[0].geometry as Polygon).coordinates[0].length).toBe(
+						9,
+					);
+
+					expect(onFinish).toHaveBeenCalledTimes(1);
+				});
+
+				it("clamps segments lower than 3", () => {
+					circleMode = new TerraDrawCircleMode({
+						segments: 1,
+					});
+					const mockConfig = MockModeConfig(circleMode.mode);
+
+					store = mockConfig.store;
+					onChange = mockConfig.onChange;
+					onFinish = mockConfig.onFinish;
+
+					circleMode.register(mockConfig);
+					circleMode.start();
+
+					circleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+					circleMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
+					circleMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
+
+					const features = store.copyAll();
+					expect(features.length).toBe(1);
+
+					// Minimum of 3 steps, plus the closing coordinate
+					expect((features[0].geometry as Polygon).coordinates[0].length).toBe(
+						4,
+					);
+
+					expect(onFinish).toHaveBeenCalledTimes(1);
+				});
+			});
+
 			describe("validate", () => {
 				let valid = false;
 

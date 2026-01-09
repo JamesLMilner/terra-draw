@@ -64,12 +64,14 @@ interface TerraDrawCircleModeOptions<T extends CustomStyling>
 	startingRadiusKilometers?: number;
 	projection?: Projection;
 	drawInteraction?: DrawInteractions;
+	segments?: number;
 }
 
 export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyling> {
 	mode = "circle";
 	private center: Position | undefined;
 	private endPosition: Position | undefined;
+	private segments = 64;
 
 	private currentCircleId: FeatureId | undefined;
 	private keyEvents: TerraDrawCircleModeKeyEvents = defaultKeyEvents;
@@ -80,7 +82,6 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 	private drawType: DrawType | undefined;
 
 	// Behaviors
-	private readFeature!: ReadFeatureBehavior;
 	private mutateFeature!: MutateFeatureBehavior;
 
 	/**
@@ -123,6 +124,10 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 
 		if (options?.drawInteraction) {
 			this.drawInteraction = options.drawInteraction;
+		}
+
+		if (options?.segments) {
+			this.segments = options.segments < 3 ? 3 : options.segments;
 		}
 	}
 
@@ -395,12 +400,14 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 					center: this.center,
 					radiusKilometers: newRadius * distortion,
 					coordinatePrecision: this.coordinatePrecision,
+					steps: this.segments,
 				});
 			} else if (this.projection === "globe") {
 				updatedCircle = circle({
 					center: this.center,
 					radiusKilometers: newRadius,
 					coordinatePrecision: this.coordinatePrecision,
+					steps: this.segments,
 				});
 			} else {
 				throw new Error("Invalid projection");
@@ -453,7 +460,6 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 	}
 
 	registerBehaviors(config: BehaviorConfig) {
-		this.readFeature = new ReadFeatureBehavior(config);
 		this.mutateFeature = new MutateFeatureBehavior(config, {
 			validate: this.validate,
 		});

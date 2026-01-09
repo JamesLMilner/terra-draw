@@ -416,6 +416,32 @@ describe("TerraDrawCircleMode", () => {
 					expect(onFinish).toHaveBeenCalledTimes(1);
 				});
 
+				it("defaults to 64 segments", () => {
+					circleMode = new TerraDrawCircleMode();
+					const mockConfig = MockModeConfig(circleMode.mode);
+
+					store = mockConfig.store;
+					onChange = mockConfig.onChange;
+					onFinish = mockConfig.onFinish;
+
+					circleMode.register(mockConfig);
+					circleMode.start();
+
+					circleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+					circleMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
+					circleMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
+
+					const features = store.copyAll();
+					expect(features.length).toBe(1);
+
+					// 64 steps plus the closing coordinate
+					expect((features[0].geometry as Polygon).coordinates[0].length).toBe(
+						65,
+					);
+
+					expect(onFinish).toHaveBeenCalledTimes(1);
+				});
+
 				it("clamps segments lower than 3", () => {
 					circleMode = new TerraDrawCircleMode({
 						segments: 1,

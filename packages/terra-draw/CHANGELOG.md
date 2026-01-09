@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.22.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.21.4...terra-draw@1.22.0) (2026-01-09)
+
+
+### feat
+
+* **terra-draw:** allow the number of segments in circle mode to be configurable (#768) ([](https://github.com/JamesLMilner/terra-draw/commit/c12b0108b706e796fd27614e2c04a256ca0b608d)), closes [#768](https://github.com/JamesLMilner/terra-draw/issues/768)
+
 ## [1.21.4](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.21.3...terra-draw@1.21.4) (2026-01-08)
 
 

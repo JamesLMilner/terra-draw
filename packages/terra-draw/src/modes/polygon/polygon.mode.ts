@@ -931,15 +931,22 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 			return;
 		}
 
-		if (
-			this.showCoordinatePoints &&
-			this.editedFeatureCoordinateIndex !== undefined
-		) {
-			this.coordinatePoints.updateOneAtIndex(
-				this.editedFeatureId,
-				this.editedFeatureCoordinateIndex,
-				eventCoordinate,
-			);
+		if (this.showCoordinatePoints) {
+			// If a point was inserted we need to update all coordinate points
+			if (this.editedInsertIndex) {
+				this.coordinatePoints.createOrUpdate({
+					featureId: this.editedFeatureId,
+					featureCoordinates: updated.geometry.coordinates,
+				});
+			}
+			// Else we are only updating one point
+			else {
+				this.coordinatePoints.updateOneAtIndex(
+					this.editedFeatureId,
+					this.editedFeatureCoordinateIndex,
+					updated.geometry.coordinates[0][this.editedFeatureCoordinateIndex],
+				);
+			}
 		}
 
 		if (this.snapping && this.snappedPointId) {

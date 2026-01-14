@@ -368,6 +368,21 @@ const LineString: Story = {
 };
 
 // Linestring drawing story
+const LineStringFinishOnNthCoordinate: Story = {
+	...DefaultStory,
+	args: {
+		id: "linestring-finish-on-nth-coordinate",
+		modes: [
+			() =>
+				new TerraDrawLineStringMode({
+					finishOnNthCoordinate: 2,
+				}),
+		],
+		...DefaultStory.args,
+	},
+};
+
+// Linestring drawing story
 const LineStringWithCoordinatePoints: Story = {
 	...DefaultStory,
 	args: {
@@ -789,6 +804,7 @@ const AllStories = {
 	AngledRectangle,
 	Sector,
 	LineString,
+	LineStringFinishOnNthCoordinate,
 	LineStringWithCoordinatePoints,
 	LineStringEditable,
 	LineStringWithCoordinateSnapping,

@@ -501,6 +501,56 @@ describe("TerraDrawLineStringMode", () => {
 			]);
 		});
 
+		it("auto-finishes on the Nth committed coordinate when finishOnNthCoordinate is set", () => {
+			lineStringMode = new TerraDrawLineStringMode({
+				finishOnNthCoordinate: 3,
+			});
+			const mockConfig = MockModeConfig(lineStringMode.mode);
+			onChange = mockConfig.onChange;
+			onFinish = mockConfig.onFinish;
+			store = mockConfig.store;
+
+			lineStringMode.register(mockConfig);
+			lineStringMode.start();
+
+			// 1st click creates the line (committed coordinates: 1)
+			lineStringMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+			// 2nd click commits another coordinate (committed coordinates: 2)
+			lineStringMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
+			lineStringMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
+
+			let [lineString, closingPoint] = store.copyAll();
+			expect(lineString).toBeDefined();
+			expect(closingPoint).toBeDefined();
+			expect(lineString.geometry.type).toBe("LineString");
+			expect(lineString.properties[COMMON_PROPERTIES.CURRENTLY_DRAWING]).toBe(
+				true,
+			);
+
+			// 3rd click commits a third coordinate (committed coordinates: 3) and should auto-finish
+			lineStringMode.onMouseMove(MockCursorEvent({ lng: 2, lat: 2 }));
+			lineStringMode.onClick(MockCursorEvent({ lng: 2, lat: 2 }));
+
+			expect(onFinish).toHaveBeenCalledTimes(1);
+			expect(onFinish).toHaveBeenCalledWith(lineString.id, {
+				action: "draw",
+				mode: "linestring",
+			});
+
+			// Closing point should be deleted when finished
+			[lineString, closingPoint] = store.copyAll();
+			expect(closingPoint).toBeUndefined();
+			expect(lineString.geometry.coordinates).toStrictEqual([
+				[0, 0],
+				[1, 1],
+				[2, 2],
+			]);
+			expect(
+				lineString.properties[COMMON_PROPERTIES.CURRENTLY_DRAWING],
+			).toBeUndefined();
+		});
+
 		it("finishes the line on the the third click with snapping toCoordinate enabled", () => {
 			lineStringMode = new TerraDrawLineStringMode({
 				snapping: { toCoordinate: true },

@@ -42,6 +42,7 @@ import {
 } from "../mutate-feature.behavior";
 import { ReadFeatureBehavior } from "../read-feature.behavior";
 import { ClosingPointsBehavior } from "../closing-points.behavior";
+import { CoordinatePointBehavior } from "../select/behaviors/coordinate-point.behavior";
 
 type TerraDrawLineStringModeKeyEvents = {
 	cancel: KeyboardEvent["key"] | null;
@@ -61,6 +62,10 @@ type LineStringStyling = {
 	snappingPointWidth: NumericStyling;
 	snappingPointOutlineColor: HexColorStyling;
 	snappingPointOutlineWidth: NumericStyling;
+	coordinatePointColor: HexColorStyling;
+	coordinatePointWidth: NumericStyling;
+	coordinatePointOutlineColor: HexColorStyling;
+	coordinatePointOutlineWidth: NumericStyling;
 };
 
 interface Cursors {
@@ -90,6 +95,7 @@ interface TerraDrawLineStringModeOptions<T extends CustomStyling>
 	cursors?: Cursors;
 	insertCoordinates?: InertCoordinates;
 	editable?: boolean;
+	showCoordinatePoints?: boolean;
 }
 
 export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringStyling> {
@@ -105,6 +111,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 	private lastCommittedCoordinates: Position[] | undefined;
 	private snappedPointId: FeatureId | undefined;
 	private lastMouseMoveEvent: TerraDrawMouseEvent | undefined;
+	private showCoordinatePoints = false;
 
 	// Editable properties
 	private editable: boolean = false;
@@ -123,6 +130,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 	private mutateFeature!: MutateFeatureBehavior;
 	private readFeature!: ReadFeatureBehavior;
 	private closingPoints!: ClosingPointsBehavior;
+	private coordinatePoints!: CoordinatePointBehavior;
 
 	constructor(options?: TerraDrawLineStringModeOptions<LineStringStyling>) {
 		super(options, true);
@@ -156,6 +164,39 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 
 		if (options && options.editable) {
 			this.editable = options.editable;
+		}
+
+		if (options?.showCoordinatePoints !== undefined) {
+			this.showCoordinatePoints = options.showCoordinatePoints;
+
+			// If we are showing coordinate points, we need to add them all
+			if (this.coordinatePoints && options.showCoordinatePoints === true) {
+				const features = this.store.copyAllWhere(
+					(properties) => properties.mode === this.mode,
+				);
+				features.forEach((feature) => {
+					this.coordinatePoints.createOrUpdate({
+						featureId: feature.id as FeatureId,
+						featureCoordinates: feature.geometry.coordinates as Position[],
+					});
+				});
+			} else if (this.coordinatePoints && this.showCoordinatePoints === false) {
+				const featuresWithCoordinates = this.store.copyAllWhere(
+					(properties) =>
+						properties.mode === this.mode &&
+						Boolean(
+							(
+								properties[
+									COMMON_PROPERTIES.COORDINATE_POINT_IDS
+								] as FeatureId[]
+							)?.length,
+						),
+				);
+
+				this.coordinatePoints.deletePointsByFeatureIds(
+					featuresWithCoordinates.map((f) => f.id as FeatureId),
+				);
+			}
 		}
 	}
 
@@ -208,6 +249,13 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 
 		if (!updated) {
 			return;
+		}
+
+		if (this.showCoordinatePoints) {
+			this.coordinatePoints.createOrUpdate({
+				featureId: this.currentId,
+				featureCoordinates: updated.geometry.coordinates,
+			});
 		}
 
 		const featureId = this.currentId;
@@ -290,6 +338,13 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 		this.currentId = created.id as FeatureId;
 		this.currentCoordinate++;
 		this.setDrawing();
+
+		if (this.showCoordinatePoints) {
+			this.coordinatePoints.createOrUpdate({
+				featureId: this.currentId,
+				featureCoordinates: created.geometry.coordinates,
+			});
+		}
 	}
 
 	private firstUpdateToLine(updatedCoord: Position) {
@@ -318,6 +373,13 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 		}
 
 		this.closingPoints.create(updated.geometry.coordinates);
+
+		if (this.showCoordinatePoints) {
+			this.coordinatePoints.createOrUpdate({
+				featureId: this.currentId,
+				featureCoordinates: updated.geometry.coordinates,
+			});
+		}
 
 		this.lastCommittedCoordinates = updated.geometry.coordinates;
 		this.currentCoordinate++;
@@ -354,6 +416,13 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 
 		this.closingPoints.update(updated.geometry.coordinates);
 
+		if (this.showCoordinatePoints) {
+			this.coordinatePoints.createOrUpdate({
+				featureId: this.currentId,
+				featureCoordinates: updated.geometry.coordinates,
+			});
+		}
+
 		this.lastCommittedCoordinates = updated.geometry.coordinates;
 
 		this.currentCoordinate++;
@@ -383,6 +452,11 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 			this.pixelDistance,
 			this.mutateFeature,
 			this.readFeature,
+		);
+		this.coordinatePoints = new CoordinatePointBehavior(
+			config,
+			this.readFeature,
+			this.mutateFeature,
 		);
 	}
 
@@ -444,11 +518,19 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 			}
 		}
 
-		this.mutateFeature.updateLineString({
+		const updated = this.mutateFeature.updateLineString({
 			coordinateMutations,
 			featureId: this.currentId,
 			context: { updateType: UpdateTypes.Provisional },
 		});
+
+		// Keep coordinate points in sync with the provisional "live" coordinate
+		if (updated && this.showCoordinatePoints) {
+			this.coordinatePoints.createOrUpdate({
+				featureId: this.currentId,
+				featureCoordinates: updated.geometry.coordinates,
+			});
+		}
 	}
 
 	private getInsertCoordinates(endCoord: Position) {
@@ -501,11 +583,18 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 			return;
 		}
 
-		this.mutateFeature.updateLineString({
+		const updated = this.mutateFeature.updateLineString({
 			featureId,
 			coordinateMutations: [{ type: Mutations.Delete, index: coordinateIndex }],
 			context: { updateType: UpdateTypes.Finish, action: FinishActions.Edit },
 		});
+
+		if (updated && this.showCoordinatePoints) {
+			this.coordinatePoints.createOrUpdate({
+				featureId,
+				featureCoordinates: updated.geometry.coordinates,
+			});
+		}
 
 		if (this.snappedPointId) {
 			this.mutateFeature.deleteFeatureIfPresent(this.snappedPointId);
@@ -587,7 +676,9 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 	}
 
 	/** @internal */
-	onKeyDown() {}
+	onKeyDown() {
+		// no-op
+	}
 
 	/** @internal */
 	onKeyUp(event: TerraDrawKeyboardEvent) {
@@ -697,6 +788,24 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 			if (!updated) {
 				return;
 			}
+
+			if (this.showCoordinatePoints) {
+				// If a point was inserted we need to update all coordinate points
+				if (this.editedInsertIndex !== undefined) {
+					this.coordinatePoints.createOrUpdate({
+						featureId: this.editedFeatureId,
+						featureCoordinates: updated.geometry.coordinates,
+					});
+				}
+				// Else we are only updating one point
+				else {
+					this.coordinatePoints.updateOneAtIndex(
+						this.editedFeatureId,
+						this.editedFeatureCoordinateIndex,
+						[event.lng, event.lat],
+					);
+				}
+			}
 		} else if (
 			this.editedSnapType === "line" &&
 			this.editedInsertIndex === undefined
@@ -711,6 +820,13 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 
 			if (!inserted) {
 				return;
+			}
+
+			if (this.showCoordinatePoints) {
+				this.coordinatePoints.createOrUpdate({
+					featureId: this.editedFeatureId,
+					featureCoordinates: inserted.geometry.coordinates,
+				});
 			}
 
 			// We have inserted a point, need to change the edit index
@@ -801,6 +917,10 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 			this.setStarted();
 		}
 
+		if (currentId && this.showCoordinatePoints) {
+			this.coordinatePoints.deletePointsByFeatureIds([currentId]);
+		}
+
 		this.mutateFeature.deleteFeatureIfPresent(currentId);
 		this.mutateFeature.deleteFeatureIfPresent(snappedPointId);
 		this.closingPoints.delete();
@@ -835,42 +955,74 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 			feature.geometry.type === "Point" &&
 			feature.properties.mode === this.mode
 		) {
-			const isClosingPoint =
-				feature.properties[COMMON_PROPERTIES.CLOSING_POINT];
+			const closingPoint = feature.properties[COMMON_PROPERTIES.CLOSING_POINT];
+			const snappingPoint =
+				feature.properties[COMMON_PROPERTIES.SNAPPING_POINT];
+			const coordinatePoint =
+				feature.properties[COMMON_PROPERTIES.COORDINATE_POINT];
 
-			styles.pointColor = this.getHexColorStylingValue(
-				isClosingPoint
-					? this.styles.closingPointColor
-					: this.styles.snappingPointColor,
-				styles.pointColor,
-				feature,
-			);
+			const pointType = closingPoint
+				? "closingPoint"
+				: snappingPoint
+					? "snappingPoint"
+					: coordinatePoint
+						? "coordinatePoint"
+						: undefined;
+
+			if (!pointType) {
+				return styles;
+			}
+
+			const styleMap = {
+				closingPoint: {
+					width: this.styles.closingPointWidth,
+					color: this.styles.closingPointColor,
+					outlineColor: this.styles.closingPointOutlineColor,
+					outlineWidth: this.styles.closingPointOutlineWidth,
+				},
+				snappingPoint: {
+					width: this.styles.snappingPointWidth,
+					color: this.styles.snappingPointColor,
+					outlineColor: this.styles.snappingPointOutlineColor,
+					outlineWidth: this.styles.snappingPointOutlineWidth,
+				},
+				coordinatePoint: {
+					width: this.styles.coordinatePointWidth,
+					color: this.styles.coordinatePointColor,
+					outlineColor: this.styles.coordinatePointOutlineColor,
+					outlineWidth: this.styles.coordinatePointOutlineWidth,
+				},
+			};
 
 			styles.pointWidth = this.getNumericStylingValue(
-				isClosingPoint
-					? this.styles.closingPointWidth
-					: this.styles.snappingPointWidth,
+				styleMap[pointType].width,
 				styles.pointWidth,
 				feature,
 			);
 
+			styles.pointColor = this.getHexColorStylingValue(
+				styleMap[pointType].color,
+				styles.pointColor,
+				feature,
+			);
+
 			styles.pointOutlineColor = this.getHexColorStylingValue(
-				isClosingPoint
-					? this.styles.closingPointOutlineColor
-					: this.styles.snappingPointOutlineColor,
+				styleMap[pointType].outlineColor,
 				"#ffffff",
 				feature,
 			);
 
 			styles.pointOutlineWidth = this.getNumericStylingValue(
-				isClosingPoint
-					? this.styles.closingPointOutlineWidth
-					: this.styles.snappingPointOutlineWidth,
+				styleMap[pointType].outlineWidth,
 				2,
 				feature,
 			);
 
-			styles.zIndex = Z_INDEX.LAYER_FIVE;
+			if (coordinatePoint) {
+				styles.zIndex = Z_INDEX.LAYER_TWO;
+			} else {
+				styles.zIndex = Z_INDEX.LAYER_FIVE;
+			}
 
 			return styles;
 		}
@@ -954,6 +1106,14 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 		// Clean up here is important to get right as we need to make a best effort to avoid erroneous
 		// internal state.
 
+		// IF we have coordinate points showing these need to be completely recreated
+		if (this.showCoordinatePoints) {
+			this.coordinatePoints.createOrUpdate({
+				featureId: feature.id as FeatureId,
+				featureCoordinates: feature.geometry.coordinates as Position[],
+			});
+		}
+
 		// If we are editing a feature by dragging one of its points
 		// we want to clear that state up as new polygon might be completely
 		// different in terms of it's coordinates
@@ -985,6 +1145,15 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 			if (this.state === "drawing") {
 				this.setStarted();
 			}
+		}
+	}
+
+	afterFeatureAdded(feature: GeoJSONStoreFeatures) {
+		if (this.showCoordinatePoints) {
+			this.coordinatePoints.createOrUpdate({
+				featureId: feature.id as FeatureId,
+				featureCoordinates: feature.geometry.coordinates as Position[],
+			});
 		}
 	}
 }

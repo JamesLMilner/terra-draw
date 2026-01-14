@@ -43,6 +43,8 @@ export const LineStringWithCoordinateSnapping =
 	AllStories.LineStringWithCoordinateSnapping;
 export const LineStringWithLineSnapping = AllStories.LineStringWithLineSnapping;
 export const LineStringEditable = AllStories.LineStringEditable;
+export const LineStringWithCoordinatePoints =
+	AllStories.LineStringWithCoordinatePoints;
 export const FreehandLineString = AllStories.FreehandLineString;
 export const Freehand = AllStories.Freehand;
 export const FreehandWithAutoClose = AllStories.FreehandWithAutoClose;

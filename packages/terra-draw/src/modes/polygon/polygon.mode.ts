@@ -934,7 +934,6 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 		if (this.showCoordinatePoints) {
 			// If a point was inserted we need to update all coordinate points
 			if (this.editedInsertIndex) {
-				console.log("first branch");
 				this.coordinatePoints.createOrUpdate({
 					featureId: this.editedFeatureId,
 					featureCoordinates: updated.geometry.coordinates,
@@ -942,7 +941,6 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 			}
 			// Else we are only updating one point
 			else {
-				console.log("this branch");
 				this.coordinatePoints.updateOneAtIndex(
 					this.editedFeatureId,
 					this.editedFeatureCoordinateIndex,

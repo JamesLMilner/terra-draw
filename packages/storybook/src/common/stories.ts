@@ -368,6 +368,21 @@ const LineString: Story = {
 };
 
 // Linestring drawing story
+const LineStringWithCoordinatePoints: Story = {
+	...DefaultStory,
+	args: {
+		id: "linestring",
+		modes: [
+			() =>
+				new TerraDrawLineStringMode({
+					showCoordinatePoints: true,
+				}),
+		],
+		...DefaultStory.args,
+	},
+};
+
+// Linestring drawing story
 const LineStringEditable: Story = {
 	...DefaultStory,
 	args: {
@@ -774,6 +789,7 @@ const AllStories = {
 	AngledRectangle,
 	Sector,
 	LineString,
+	LineStringWithCoordinatePoints,
 	LineStringEditable,
 	LineStringWithCoordinateSnapping,
 	LineStringWithLineSnapping,

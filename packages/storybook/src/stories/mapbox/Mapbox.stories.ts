@@ -39,6 +39,8 @@ export const RectangleWithClickMoveOrDragInteraction =
 export const AngledRectangle = AllStories.AngledRectangle;
 export const Sector = AllStories.Sector;
 export const LineString = AllStories.LineString;
+export const LineStringFinishOnNthCoordinate =
+	AllStories.LineStringFinishOnNthCoordinate;
 export const LineStringWithCoordinateSnapping =
 	AllStories.LineStringWithCoordinateSnapping;
 export const LineStringWithLineSnapping = AllStories.LineStringWithLineSnapping;

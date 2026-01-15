@@ -96,6 +96,7 @@ interface TerraDrawLineStringModeOptions<T extends CustomStyling>
 	insertCoordinates?: InertCoordinates;
 	editable?: boolean;
 	showCoordinatePoints?: boolean;
+	finishOnNthCoordinate?: number;
 }
 
 export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringStyling> {
@@ -112,6 +113,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 	private snappedPointId: FeatureId | undefined;
 	private lastMouseMoveEvent: TerraDrawMouseEvent | undefined;
 	private showCoordinatePoints = false;
+	private finishOnNthCoordinate: number | undefined;
 
 	// Editable properties
 	private editable: boolean = false;
@@ -143,6 +145,14 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 		>,
 	) {
 		super.updateOptions(options);
+
+		if (
+			options?.finishOnNthCoordinate !== undefined &&
+			Number.isInteger(options.finishOnNthCoordinate) &&
+			options.finishOnNthCoordinate > 1
+		) {
+			this.finishOnNthCoordinate = Math.floor(options.finishOnNthCoordinate);
+		}
 
 		if (options?.cursors) {
 			this.cursors = { ...this.cursors, ...options.cursors };
@@ -198,6 +208,19 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 				);
 			}
 		}
+	}
+
+	private shouldFinishOnCommit(geometry: LineString) {
+		if (!this.finishOnNthCoordinate) {
+			return false;
+		}
+		// While drawing, LineString coordinates contain a trailing "live" coordinate.
+		// Committed coordinates exclude that last "live" coordinate.
+		const committedCoordinateCount = Math.max(
+			0,
+			geometry.coordinates.length - 1,
+		);
+		return committedCoordinateCount >= this.finishOnNthCoordinate;
 	}
 
 	private updateSnappedCoordinate(event: TerraDrawMouseEvent) {
@@ -383,6 +406,10 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 
 		this.lastCommittedCoordinates = updated.geometry.coordinates;
 		this.currentCoordinate++;
+
+		if (this.shouldFinishOnCommit(updated.geometry)) {
+			this.close();
+		}
 	}
 
 	private updateToLine(event: TerraDrawMouseEvent, updatedCoord: Position) {
@@ -426,6 +453,10 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 		this.lastCommittedCoordinates = updated.geometry.coordinates;
 
 		this.currentCoordinate++;
+
+		if (this.shouldFinishOnCommit(updated.geometry)) {
+			this.close();
+		}
 	}
 
 	/** @internal */

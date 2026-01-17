@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.23.1](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.23.0...terra-draw@1.23.1) (2026-01-17)
+
+
+### fix
+
+* **terra-draw:** ensure snapping points are updated as expected in polygon mode when right clicking (#774) ([](https://github.com/JamesLMilner/terra-draw/commit/634fea999087ad3efae14494b7f938eb53a3a422)), closes [#774](https://github.com/JamesLMilner/terra-draw/issues/774)
+
 ## [1.23.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.22.0...terra-draw@1.23.0) (2026-01-15)
 
 

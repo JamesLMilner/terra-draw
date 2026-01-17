@@ -1353,6 +1353,86 @@ describe("TerraDrawPolygonMode", () => {
 			expect(onFinish).toHaveBeenCalledTimes(2);
 		});
 
+		it("right click deletes the snapping point when deleting a coordinate", () => {
+			polygonMode.updateOptions({
+				snapping: {
+					toCoordinate: true,
+				},
+			});
+
+			// Create a polygon the cursor can snap to
+			polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			polygonMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 0 }));
+			polygonMode.onClick(MockCursorEvent({ lng: 1, lat: 0 }));
+			polygonMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
+			polygonMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
+			polygonMode.onMouseMove(MockCursorEvent({ lng: 0, lat: 1 }));
+			polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 1 }));
+			polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 1 }));
+
+			// Create a snapping point
+			polygonMode.onMouseMove(MockCursorEvent({ lng: 0.5, lat: 0.5 }));
+
+			let features = store.copyAll();
+			expect(
+				features.some(
+					(feature) => feature.properties[COMMON_PROPERTIES.SNAPPING_POINT],
+				),
+			).toBe(true);
+
+			// Delete a coordinate
+			polygonMode.onClick(MockCursorEvent({ lng: 1, lat: 0, button: "right" }));
+
+			features = store.copyAll();
+			expect(
+				features.some(
+					(feature) => feature.properties[COMMON_PROPERTIES.SNAPPING_POINT],
+				),
+			).toBe(false);
+		});
+
+		it("right click deletes the snapping point but updates it to the closest nearby coordinate", () => {
+			polygonMode.updateOptions({
+				snapping: {
+					toCoordinate: true,
+				},
+			});
+
+			// Create a polygon the cursor can snap to
+			polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			polygonMode.onMouseMove(MockCursorEvent({ lng: 0.2, lat: 0 }));
+			polygonMode.onClick(MockCursorEvent({ lng: 0.2, lat: 0 }));
+			polygonMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
+			polygonMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
+			polygonMode.onMouseMove(MockCursorEvent({ lng: 0, lat: 1 }));
+			polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 1 }));
+			polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 1 }));
+
+			// Create a snapping point (should snap to [0,0] inside/near the square)
+			polygonMode.onMouseMove(MockCursorEvent({ lng: 0.2, lat: 0 }));
+
+			let features = store.copyAll();
+			const snapPointBefore = features.find(
+				(feature) => feature.properties[COMMON_PROPERTIES.SNAPPING_POINT],
+			);
+			expect(snapPointBefore).toBeDefined();
+			expect(snapPointBefore!.geometry.type).toBe("Point");
+			expect(snapPointBefore!.geometry.coordinates).toStrictEqual([0.2, 0]);
+
+			// Delete the [1,0] coordinate
+			polygonMode.onClick(
+				MockCursorEvent({ lng: 0.2, lat: 0, button: "right" }),
+			);
+
+			features = store.copyAll();
+			const snapPointAfter = features.find(
+				(feature) => feature.properties[COMMON_PROPERTIES.SNAPPING_POINT],
+			);
+			expect(snapPointAfter).toBeDefined();
+			expect(snapPointAfter!.geometry.type).toBe("Point");
+			expect(snapPointAfter!.geometry.coordinates).toStrictEqual([0, 0]);
+		});
+
 		it("context menu click can delete a point if editable is true", () => {
 			polygonMode.updateOptions({
 				pointerEvents: {

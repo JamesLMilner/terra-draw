@@ -524,7 +524,7 @@ describe("TerraDrawPolygonMode", () => {
 
 			mockConfig.onChange.mockClear();
 
-			polygonMode.onDragStart(MockCursorEvent({ lng: 0, lat: 0 }), () => {});
+			polygonMode.onDragStart(MockCursorEvent({ lng: 0, lat: 0 }), jest.fn());
 
 			expect(mockConfig.onChange).toHaveBeenCalledTimes(1);
 			expect(mockConfig.onChange).toHaveBeenNthCalledWith(
@@ -1972,7 +1972,7 @@ describe("onDragStart", () => {
 		polygonMode.register(mockConfig);
 		polygonMode.start();
 
-		polygonMode.onDragStart(MockCursorEvent({ lng: 0, lat: 0 }), () => {});
+		polygonMode.onDragStart(MockCursorEvent({ lng: 0, lat: 0 }), jest.fn());
 		expect(mockConfig.onChange).not.toHaveBeenCalled();
 		expect(mockConfig.onFinish).not.toHaveBeenCalled();
 	});
@@ -2010,7 +2010,7 @@ describe("onDragStart", () => {
 		mockConfig.onChange.mockClear();
 		mockConfig.setCursor.mockClear();
 
-		polygonMode.onDragStart(MockCursorEvent({ lng: 0, lat: 0 }), () => {});
+		polygonMode.onDragStart(MockCursorEvent({ lng: 0, lat: 0 }), jest.fn());
 
 		expect(mockConfig.onChange).toHaveBeenCalledTimes(1);
 		expect(mockConfig.onChange).toHaveBeenNthCalledWith(
@@ -2033,7 +2033,7 @@ describe("onDrag", () => {
 		const mockConfig = MockModeConfig(polygonMode.mode);
 		polygonMode.register(mockConfig);
 
-		polygonMode.onDrag(MockCursorEvent({ lng: 0, lat: 0 }), () => {});
+		polygonMode.onDrag(MockCursorEvent({ lng: 0, lat: 0 }), jest.fn());
 		expect(mockConfig.onChange).not.toHaveBeenCalled();
 	});
 
@@ -2064,13 +2064,13 @@ describe("onDrag", () => {
 		let features = mockConfig.store.copyAll();
 		expect(features.length).toBe(1);
 
-		polygonMode.onDragStart(MockCursorEvent({ lng: 0, lat: 0 }), () => {});
+		polygonMode.onDragStart(MockCursorEvent({ lng: 0, lat: 0 }), jest.fn());
 
 		// Reset to make it easier to track for onDragStart
 		mockConfig.onChange.mockClear();
 		mockConfig.setCursor.mockClear();
 
-		polygonMode.onDrag(MockCursorEvent({ lng: 1, lat: 1 }), () => {});
+		polygonMode.onDrag(MockCursorEvent({ lng: 1, lat: 1 }), jest.fn());
 
 		expect(mockConfig.onChange).toHaveBeenCalledTimes(3);
 		expect(mockConfig.onChange).toHaveBeenNthCalledWith(
@@ -2103,6 +2103,75 @@ describe("onDrag", () => {
 		expect(mockConfig.setCursor).toHaveBeenCalledTimes(0);
 	});
 
+	it("updates a single coordinate point when showCoordinatePoints is true and no point is inserted", () => {
+		const polygonMode = new TerraDrawPolygonMode({
+			editable: true,
+			showCoordinatePoints: true,
+		});
+		const mockConfig = MockModeConfig(polygonMode.mode);
+		polygonMode.register(mockConfig);
+		polygonMode.start();
+
+		// Create a polygon to edit
+		polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+		polygonMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
+		polygonMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
+		polygonMode.onMouseMove(MockCursorEvent({ lng: 2, lat: 2 }));
+		polygonMode.onClick(MockCursorEvent({ lng: 2, lat: 2 }));
+		polygonMode.onMouseMove(MockCursorEvent({ lng: 3, lat: 3 }));
+		polygonMode.onClick(MockCursorEvent({ lng: 3, lat: 3 }));
+		polygonMode.onClick(MockCursorEvent({ lng: 3, lat: 3 }));
+
+		// Expect coordinate points to exist for a closed polygon: 5 polygon coords -> 4 coordinate points
+		let coordinatePoints = mockConfig.store.copyAllWhere(
+			(properties) => properties[COMMON_PROPERTIES.COORDINATE_POINT] as boolean,
+		);
+		expect(coordinatePoints.length).toBe(4);
+
+		// Start dragging an existing coordinate (no insert)
+		polygonMode.onDragStart(MockCursorEvent({ lng: 0, lat: 0 }), jest.fn());
+
+		jest.spyOn(mockConfig.store, "updateProperty");
+
+		polygonMode.onDrag(MockCursorEvent({ lng: -1, lat: -1 }), jest.fn());
+
+		coordinatePoints = mockConfig.store
+			.copyAllWhere(
+				(properties) =>
+					properties[COMMON_PROPERTIES.COORDINATE_POINT] as boolean,
+			)
+			.sort(
+				(a, b) =>
+					(a.properties.index as number) - (b.properties.index as number),
+			);
+
+		const coordinatePointIds = coordinatePoints.map((p) => p.id);
+
+		expect(coordinatePoints.length).toBe(4);
+		expect(coordinatePoints.map((p) => p.properties.index)).toStrictEqual([
+			0, 1, 2, 3,
+		]);
+		expect(coordinatePoints[0].geometry.type).toBe("Point");
+		expect(coordinatePoints[0].geometry.coordinates).toStrictEqual([-1, -1]);
+
+		const polygon = mockConfig.store
+			.copyAll()
+			.find((f) => f.geometry.type === "Polygon") as GeoJSONStoreFeatures;
+
+		expect(polygon).toBeDefined();
+		expect(polygon.properties.edited).toBe(true);
+		expect(polygon.properties.coordinatePointIds).toEqual(coordinatePointIds);
+		expect(polygon.geometry.coordinates).toEqual([
+			[
+				[-1, -1],
+				[3, 3],
+				[2, 2],
+				[1, 1],
+				[-1, -1],
+			],
+		]);
+	});
+
 	it("creates a drag point if none exists on a line", () => {
 		const polygonMode = new TerraDrawPolygonMode({ editable: true });
 		const mockConfig = MockModeConfig(polygonMode.mode);
@@ -2132,13 +2201,13 @@ describe("onDrag", () => {
 		let features = mockConfig.store.copyAll();
 		expect(features.length).toBe(1);
 
-		polygonMode.onDragStart(MockCursorEvent({ lng: 1, lat: 0 }), () => {});
+		polygonMode.onDragStart(MockCursorEvent({ lng: 1, lat: 0 }), jest.fn());
 
 		// Reset to make it easier to track for onDrag
 		mockConfig.onChange.mockClear();
 		mockConfig.setCursor.mockClear();
 
-		polygonMode.onDrag(MockCursorEvent({ lng: 1, lat: 1 }), () => {});
+		polygonMode.onDrag(MockCursorEvent({ lng: 1, lat: 1 }), jest.fn());
 
 		expect(mockConfig.onChange).toHaveBeenCalledTimes(3);
 		expect(mockConfig.onChange).toHaveBeenNthCalledWith(
@@ -2186,6 +2255,89 @@ describe("onDrag", () => {
 		// We don't change the cursor in onDrag
 		expect(mockConfig.setCursor).toHaveBeenCalledTimes(0);
 	});
+
+	it("recreates coordinate points in the correct order when showCoordinatePoints is true and a point is inserted", () => {
+		const polygonMode = new TerraDrawPolygonMode({
+			editable: true,
+			showCoordinatePoints: true,
+		});
+		const mockConfig = MockModeConfig(polygonMode.mode);
+
+		polygonMode.register(mockConfig);
+		polygonMode.start();
+
+		// Create a square polygon to edit
+		polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+		polygonMode.onMouseMove(MockCursorEvent({ lng: 2, lat: 0 }));
+		polygonMode.onClick(MockCursorEvent({ lng: 2, lat: 0 }));
+		polygonMode.onMouseMove(MockCursorEvent({ lng: 2, lat: 2 }));
+		polygonMode.onClick(MockCursorEvent({ lng: 2, lat: 2 }));
+		polygonMode.onMouseMove(MockCursorEvent({ lng: 0, lat: 2 }));
+		polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 2 }));
+		polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 2 }));
+
+		let coordinatePoints = mockConfig.store.copyAllWhere(
+			(properties) => properties[COMMON_PROPERTIES.COORDINATE_POINT] as boolean,
+		);
+		expect(coordinatePoints.length).toBe(4);
+
+		jest.spyOn(mockConfig.store, "create");
+
+		// Dragging from a line creates a edited coordinate point
+		polygonMode.onDragStart(MockCursorEvent({ lng: 1, lat: 0 }), jest.fn());
+
+		expect(mockConfig.store.create).toHaveBeenCalledTimes(1);
+		expect(mockConfig.store.create).toHaveBeenCalledWith([
+			{
+				geometry: { coordinates: [1, 0], type: "Point" },
+				properties: { edited: true, mode: "polygon" },
+				type: "Feature",
+			},
+		]);
+
+		(mockConfig.store.create as jest.Mock).mockClear();
+
+		jest.spyOn(mockConfig.store, "updateGeometry");
+		jest.spyOn(mockConfig.store, "updateProperty");
+
+		polygonMode.onDrag(MockCursorEvent({ lng: 1, lat: 1 }), jest.fn());
+
+		coordinatePoints = mockConfig.store
+			.copyAllWhere(
+				(properties) =>
+					properties[COMMON_PROPERTIES.COORDINATE_POINT] as boolean,
+			)
+			.sort(
+				(a, b) =>
+					(a.properties.index as number) - (b.properties.index as number),
+			);
+
+		const coordinatePointIds = coordinatePoints.map(({ id }) => id);
+
+		// Polygon now has 6 coordinates (including closing), so 5 coordinate points
+		expect(coordinatePoints.length).toBe(5);
+		expect(coordinatePoints.map((p) => p.properties.index)).toStrictEqual([
+			0, 1, 2, 3, 4,
+		]);
+		expect(coordinatePoints[1].geometry.type).toBe("Point");
+		expect(coordinatePoints[1].geometry.coordinates).toStrictEqual([1, 1]);
+
+		expect(mockConfig.store.updateProperty).toHaveBeenCalledTimes(2);
+		expect(mockConfig.store.updateProperty).toHaveBeenNthCalledWith(1, [
+			{
+				id: expect.any(String),
+				property: "edited",
+				value: true,
+			},
+		]);
+		expect(mockConfig.store.updateProperty).toHaveBeenNthCalledWith(2, [
+			{
+				id: expect.any(String),
+				property: "coordinatePointIds",
+				value: coordinatePointIds,
+			},
+		]);
+	});
 });
 
 describe("onDragEnd", () => {
@@ -2194,7 +2346,7 @@ describe("onDragEnd", () => {
 		const mockConfig = MockModeConfig(polygonMode.mode);
 		polygonMode.register(mockConfig);
 
-		polygonMode.onDragEnd(MockCursorEvent({ lng: 0, lat: 0 }), () => {});
+		polygonMode.onDragEnd(MockCursorEvent({ lng: 0, lat: 0 }), jest.fn());
 		expect(mockConfig.onChange).not.toHaveBeenCalled();
 	});
 
@@ -2227,15 +2379,15 @@ describe("onDragEnd", () => {
 		let features = mockConfig.store.copyAll();
 		expect(features.length).toBe(1);
 
-		polygonMode.onDragStart(MockCursorEvent({ lng: 0, lat: 0 }), () => {});
+		polygonMode.onDragStart(MockCursorEvent({ lng: 0, lat: 0 }), jest.fn());
 
-		polygonMode.onDrag(MockCursorEvent({ lng: 1, lat: 1 }), () => {});
+		polygonMode.onDrag(MockCursorEvent({ lng: 1, lat: 1 }), jest.fn());
 
 		// Reset to make it easier to track for onDragStart
 		mockConfig.onChange.mockClear();
 		mockConfig.setCursor.mockClear();
 
-		polygonMode.onDragEnd(MockCursorEvent({ lng: 1, lat: 1 }), () => {});
+		polygonMode.onDragEnd(MockCursorEvent({ lng: 1, lat: 1 }), jest.fn());
 
 		expect(mockConfig.onChange).toHaveBeenCalledTimes(2);
 

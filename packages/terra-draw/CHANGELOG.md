@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.23.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.22.0...terra-draw@1.23.0) (2026-01-15)
+
+
+### feat
+
+* **terra-draw:** add finishOnNthCoordinate as option to linestring mode (#772) ([](https://github.com/JamesLMilner/terra-draw/commit/e7d87395da4961d02e5a67de98f74f1ac4bf36c0)), closes [#772](https://github.com/JamesLMilner/terra-draw/issues/772)
+* **terra-draw:** add linestring support for coordinate points (#771) ([](https://github.com/JamesLMilner/terra-draw/commit/351ea3ae650c2b8cd485696019c722d91a4af74f)), closes [#771](https://github.com/JamesLMilner/terra-draw/issues/771)
+
+
+### fix
+
+* **terra-draw:** fix coordinate points not updating correctly with polygon editable argument (#770) ([](https://github.com/JamesLMilner/terra-draw/commit/4ffeedd7596f2450b0cbbfd004e7e521ad632509)), closes [#770](https://github.com/JamesLMilner/terra-draw/issues/770)
+
 ## [1.22.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.21.4...terra-draw@1.22.0) (2026-01-09)
 
 

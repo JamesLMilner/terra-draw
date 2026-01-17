@@ -224,6 +224,9 @@ const ZIndexOrdering: Story = {
 		modes: [
 			() =>
 				new TerraDrawPolygonMode({
+					snapping: {
+						toCoordinate: true,
+					},
 					showCoordinatePoints: true,
 					editable: true,
 					styles: {

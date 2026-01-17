@@ -552,6 +552,22 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 			});
 		}
 
+		if (this.snappedPointId) {
+			this.mutateFeature.deleteFeatureIfPresent(this.snappedPointId);
+			this.snappedPointId = undefined;
+
+			if (this.snapping) {
+				const snappedCoordinate = this.snapCoordinate(event);
+				if (snappedCoordinate) {
+					const [snappedPointId] = this.mutateFeature.createGuidancePoints({
+						type: COMMON_PROPERTIES.SNAPPING_POINT,
+						coordinates: [snappedCoordinate],
+					});
+					this.snappedPointId = snappedPointId;
+				}
+			}
+		}
+
 		this.onFinish(featureId, { mode: this.mode, action: FinishActions.Edit });
 	}
 

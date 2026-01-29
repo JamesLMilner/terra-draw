@@ -164,6 +164,20 @@ describe("TerraDrawPointMode", () => {
 				"create",
 				undefined,
 			);
+
+			const features = mockConfig.store.copyAll();
+			expect(features.length).toBe(1);
+
+			expect(features[0]).toEqual({
+				type: "Feature",
+				id: expect.any(String),
+				geometry: { type: "Point", coordinates: [0, 0] },
+				properties: {
+					mode: pointMode.mode,
+					createdAt: expect.any(Number),
+					updatedAt: expect.any(Number),
+				},
+			});
 		});
 
 		it("right click can delete a point if editable is true", () => {
@@ -278,7 +292,7 @@ describe("TerraDrawPointMode", () => {
 				const pointMode = new TerraDrawPointMode({
 					validation: (feature) => {
 						return {
-							valid: feature.properties[COMMON_PROPERTIES.MARKER] === true,
+							valid: feature.properties[COMMON_PROPERTIES.MARKER] === undefined,
 						};
 					},
 				});

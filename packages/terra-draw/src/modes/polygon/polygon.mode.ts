@@ -54,20 +54,28 @@ type PolygonStyling = {
 	fillOpacity: NumericStyling;
 	closingPointWidth: NumericStyling;
 	closingPointColor: HexColorStyling;
+	closingPointOpacity: NumericStyling;
 	closingPointOutlineWidth: NumericStyling;
 	closingPointOutlineColor: HexColorStyling;
+	closingPointOutlineOpacity: NumericStyling;
 	snappingPointWidth: NumericStyling;
 	snappingPointColor: HexColorStyling;
+	snappingPointOpacity: NumericStyling;
 	snappingPointOutlineWidth: NumericStyling;
 	snappingPointOutlineColor: HexColorStyling;
+	snappingPointOutlineOpacity: NumericStyling;
 	editedPointWidth: NumericStyling;
 	editedPointColor: HexColorStyling;
+	editedPointOpacity: NumericStyling;
 	editedPointOutlineWidth: NumericStyling;
 	editedPointOutlineColor: HexColorStyling;
+	editedPointOutlineOpacity: NumericStyling;
 	coordinatePointWidth: NumericStyling;
 	coordinatePointColor: HexColorStyling;
+	coordinatePointOpacity: NumericStyling;
 	coordinatePointOutlineWidth: NumericStyling;
 	coordinatePointOutlineColor: HexColorStyling;
+	coordinatePointOutlineOpacity: NumericStyling;
 };
 
 interface Cursors {
@@ -1124,32 +1132,46 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 					editedPoint: {
 						width: this.styles.editedPointOutlineWidth,
 						color: this.styles.editedPointColor,
+						opacity: this.styles.editedPointOpacity,
 						outlineColor: this.styles.editedPointOutlineColor,
 						outlineWidth: this.styles.editedPointOutlineWidth,
+						outlineOpacity: this.styles.editedPointOutlineOpacity,
 					},
 					closingPoint: {
 						width: this.styles.closingPointWidth,
 						color: this.styles.closingPointColor,
+						opacity: this.styles.closingPointOpacity,
 						outlineColor: this.styles.closingPointOutlineColor,
 						outlineWidth: this.styles.closingPointOutlineWidth,
+						outlineOpacity: this.styles.closingPointOutlineOpacity,
 					},
 					snappingPoint: {
 						width: this.styles.snappingPointWidth,
 						color: this.styles.snappingPointColor,
+						opacity: this.styles.snappingPointOpacity,
 						outlineColor: this.styles.snappingPointOutlineColor,
 						outlineWidth: this.styles.snappingPointOutlineWidth,
+						outlineOpacity: this.styles.snappingPointOutlineOpacity,
 					},
 					coordinatePoint: {
 						width: this.styles.coordinatePointWidth,
 						color: this.styles.coordinatePointColor,
+						opacity: this.styles.coordinatePointOpacity,
 						outlineColor: this.styles.coordinatePointOutlineColor,
 						outlineWidth: this.styles.coordinatePointOutlineWidth,
+						outlineOpacity: this.styles.coordinatePointOutlineOpacity,
 					},
 				};
 
 				styles.pointWidth = this.getNumericStylingValue(
 					styleMap[pointType].width,
 					styles.pointWidth,
+					feature,
+				);
+
+				styles.pointOpacity = this.getNumericStylingValue(
+					styleMap[pointType].opacity,
+					1,
 					feature,
 				);
 
@@ -1162,6 +1184,12 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 				styles.pointOutlineColor = this.getHexColorStylingValue(
 					styleMap[pointType].outlineColor,
 					styles.pointOutlineColor,
+					feature,
+				);
+
+				styles.pointOutlineOpacity = this.getNumericStylingValue(
+					styleMap[pointType].outlineOpacity,
+					1,
 					feature,
 				);
 

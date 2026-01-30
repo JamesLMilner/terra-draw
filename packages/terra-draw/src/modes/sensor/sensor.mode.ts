@@ -50,8 +50,10 @@ const defaultKeyEvents = { cancel: "Escape", finish: "Enter" };
 type SensorPolygonStyling = {
 	centerPointColor: HexColorStyling;
 	centerPointWidth: NumericStyling;
+	centerPointOpacity: NumericStyling;
 	centerPointOutlineColor: HexColorStyling;
 	centerPointOutlineWidth: NumericStyling;
+	centerPointOutlineOpacity: NumericStyling;
 	fillColor: HexColorStyling;
 	outlineColor: HexColorStyling;
 	outlineWidth: NumericStyling;
@@ -345,6 +347,12 @@ export class TerraDrawSensorMode extends TerraDrawBaseDrawMode<SensorPolygonStyl
 					feature,
 				);
 
+				styles.pointOpacity = this.getNumericStylingValue(
+					this.styles.centerPointOpacity,
+					1,
+					feature,
+				);
+
 				styles.pointWidth = this.getNumericStylingValue(
 					this.styles.centerPointWidth,
 					styles.pointWidth,
@@ -354,6 +362,12 @@ export class TerraDrawSensorMode extends TerraDrawBaseDrawMode<SensorPolygonStyl
 				styles.pointOutlineColor = this.getHexColorStylingValue(
 					this.styles.centerPointOutlineColor,
 					styles.pointOutlineColor,
+					feature,
+				);
+
+				styles.pointOutlineOpacity = this.getNumericStylingValue(
+					this.styles.centerPointOutlineOpacity,
+					1,
 					feature,
 				);
 

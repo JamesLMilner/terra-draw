@@ -31,7 +31,9 @@ import { MutateFeatureBehavior, Mutations } from "../mutate-feature.behavior";
 type PointModeStyling = {
 	pointWidth: NumericStyling;
 	pointColor: HexColorStyling;
+	pointOpacity: NumericStyling;
 	pointOutlineColor: HexColorStyling;
+	pointOutlineOpacity: NumericStyling;
 	pointOutlineWidth: NumericStyling;
 	editedPointColor: HexColorStyling;
 	editedPointWidth: NumericStyling;
@@ -260,6 +262,12 @@ export class TerraDrawPointMode extends TerraDrawBaseDrawMode<PointModeStyling> 
 				feature,
 			);
 
+			styles.pointOpacity = this.getNumericStylingValue(
+				this.styles.pointOpacity,
+				styles.pointOpacity === undefined ? 1 : styles.pointOpacity,
+				feature,
+			);
+
 			styles.pointColor = this.getHexColorStylingValue(
 				isEdited ? this.styles.editedPointColor : this.styles.pointColor,
 				styles.pointColor,
@@ -271,6 +279,14 @@ export class TerraDrawPointMode extends TerraDrawBaseDrawMode<PointModeStyling> 
 					? this.styles.editedPointOutlineColor
 					: this.styles.pointOutlineColor,
 				styles.pointOutlineColor,
+				feature,
+			);
+
+			styles.pointOutlineOpacity = this.getNumericStylingValue(
+				this.styles.pointOutlineOpacity,
+				styles.pointOutlineOpacity === undefined
+					? 1
+					: styles.pointOutlineOpacity,
 				feature,
 			);
 

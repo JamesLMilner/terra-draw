@@ -603,8 +603,10 @@ describe("TerraDrawPointMode", () => {
 				styles: {
 					pointColor: "#ffffff",
 					pointWidth: 4,
+					pointOpacity: 0.5,
 					pointOutlineColor: "#111111",
 					pointOutlineWidth: 2,
+					pointOutlineOpacity: 0.75,
 				},
 			});
 
@@ -617,8 +619,10 @@ describe("TerraDrawPointMode", () => {
 			).toMatchObject({
 				pointColor: "#ffffff",
 				pointWidth: 4,
+				pointOpacity: 0.5,
 				pointOutlineColor: "#111111",
 				pointOutlineWidth: 2,
+				pointOutlineOpacity: 0.75,
 			});
 		});
 
@@ -627,8 +631,10 @@ describe("TerraDrawPointMode", () => {
 				styles: {
 					pointColor: () => "#ffffff",
 					pointWidth: () => 4,
+					pointOpacity: () => 0.5,
 					pointOutlineColor: () => "#111111",
 					pointOutlineWidth: () => 2,
+					pointOutlineOpacity: () => 0.75,
 				},
 			});
 
@@ -641,8 +647,10 @@ describe("TerraDrawPointMode", () => {
 			).toMatchObject({
 				pointColor: "#ffffff",
 				pointWidth: 4,
+				pointOpacity: 0.5,
 				pointOutlineColor: "#111111",
 				pointOutlineWidth: 2,
+				pointOutlineOpacity: 0.75,
 			});
 		});
 

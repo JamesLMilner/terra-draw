@@ -54,18 +54,25 @@ const defaultKeyEvents = { cancel: "Escape", finish: "Enter" } as const;
 type LineStringStyling = {
 	lineStringWidth: NumericStyling;
 	lineStringColor: HexColorStyling;
+	lineStringOpacity: NumericStyling;
 	closingPointColor: HexColorStyling;
 	closingPointWidth: NumericStyling;
+	closingPointOpacity: NumericStyling;
 	closingPointOutlineColor: HexColorStyling;
 	closingPointOutlineWidth: NumericStyling;
+	closingPointOutlineOpacity: NumericStyling;
 	snappingPointColor: HexColorStyling;
 	snappingPointWidth: NumericStyling;
+	snappingPointOpacity: NumericStyling;
 	snappingPointOutlineColor: HexColorStyling;
 	snappingPointOutlineWidth: NumericStyling;
+	snappingPointOutlineOpacity: NumericStyling;
 	coordinatePointColor: HexColorStyling;
+	coordinatePointOpacity: NumericStyling;
 	coordinatePointWidth: NumericStyling;
 	coordinatePointOutlineColor: HexColorStyling;
 	coordinatePointOutlineWidth: NumericStyling;
+	coordinatePointOutlineOpacity: NumericStyling;
 };
 
 interface Cursors {
@@ -972,6 +979,12 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 				feature,
 			);
 
+			styles.lineStringOpacity = this.getNumericStylingValue(
+				this.styles.lineStringOpacity,
+				styles.lineStringOpacity === undefined ? 1 : styles.lineStringOpacity,
+				feature,
+			);
+
 			styles.lineStringWidth = this.getNumericStylingValue(
 				this.styles.lineStringWidth,
 				styles.lineStringWidth,
@@ -1008,26 +1021,38 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 				closingPoint: {
 					width: this.styles.closingPointWidth,
 					color: this.styles.closingPointColor,
+					opacity: this.styles.closingPointOpacity,
 					outlineColor: this.styles.closingPointOutlineColor,
 					outlineWidth: this.styles.closingPointOutlineWidth,
+					outlineOpacity: this.styles.closingPointOutlineOpacity,
 				},
 				snappingPoint: {
 					width: this.styles.snappingPointWidth,
 					color: this.styles.snappingPointColor,
+					opacity: this.styles.snappingPointOpacity,
 					outlineColor: this.styles.snappingPointOutlineColor,
 					outlineWidth: this.styles.snappingPointOutlineWidth,
+					outlineOpacity: this.styles.snappingPointOutlineOpacity,
 				},
 				coordinatePoint: {
 					width: this.styles.coordinatePointWidth,
 					color: this.styles.coordinatePointColor,
+					opacity: this.styles.coordinatePointOpacity,
 					outlineColor: this.styles.coordinatePointOutlineColor,
 					outlineWidth: this.styles.coordinatePointOutlineWidth,
+					outlineOpacity: this.styles.coordinatePointOutlineOpacity,
 				},
 			};
 
 			styles.pointWidth = this.getNumericStylingValue(
 				styleMap[pointType].width,
 				styles.pointWidth,
+				feature,
+			);
+
+			styles.pointOpacity = this.getNumericStylingValue(
+				styleMap[pointType].opacity,
+				1,
 				feature,
 			);
 
@@ -1046,6 +1071,12 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 			styles.pointOutlineWidth = this.getNumericStylingValue(
 				styleMap[pointType].outlineWidth,
 				2,
+				feature,
+			);
+
+			styles.pointOutlineOpacity = this.getNumericStylingValue(
+				styleMap[pointType].outlineOpacity,
+				1,
 				feature,
 			);
 

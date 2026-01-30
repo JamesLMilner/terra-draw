@@ -86,8 +86,10 @@ type SelectionStyling = {
 	// Point
 	selectedPointColor: HexColorStyling;
 	selectedPointWidth: NumericStyling;
+	selectedPointOpacity: NumericStyling;
 	selectedPointOutlineColor: HexColorStyling;
 	selectedPointOutlineWidth: NumericStyling;
+	selectedPointOutlineOpacity: NumericStyling;
 
 	// Marker
 	selectedMarkerUrl: UrlStyling;
@@ -97,6 +99,7 @@ type SelectionStyling = {
 	// LineString
 	selectedLineStringColor: HexColorStyling;
 	selectedLineStringWidth: NumericStyling;
+	selectedLineStringOpacity: NumericStyling;
 
 	// Polygon
 	selectedPolygonColor: HexColorStyling;
@@ -107,14 +110,18 @@ type SelectionStyling = {
 	// Selection Points (points at vertices of a polygon/linestring feature)
 	selectionPointWidth: NumericStyling;
 	selectionPointColor: HexColorStyling;
+	selectionPointOpacity: NumericStyling;
 	selectionPointOutlineColor: HexColorStyling;
 	selectionPointOutlineWidth: NumericStyling;
+	selectionPointOutlineOpacity: NumericStyling;
 
 	// Mid points (points at mid point of a polygon/linestring feature)
 	midPointColor: HexColorStyling;
 	midPointOutlineColor: HexColorStyling;
+	midPointOpacity: NumericStyling;
 	midPointWidth: NumericStyling;
 	midPointOutlineWidth: NumericStyling;
+	midPointOutlineOpacity: NumericStyling;
 };
 
 interface Cursors {
@@ -1023,6 +1030,12 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 					feature,
 				);
 
+				styles.pointOpacity = this.getNumericStylingValue(
+					this.styles.selectionPointOpacity,
+					1,
+					feature,
+				);
+
 				styles.pointOutlineColor = this.getHexColorStylingValue(
 					this.styles.selectionPointOutlineColor,
 					styles.pointOutlineColor,
@@ -1032,6 +1045,12 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 				styles.pointWidth = this.getNumericStylingValue(
 					this.styles.selectionPointWidth,
 					styles.pointWidth,
+					feature,
+				);
+
+				styles.pointOutlineOpacity = this.getNumericStylingValue(
+					this.styles.selectionPointOutlineOpacity,
+					1,
 					feature,
 				);
 
@@ -1053,6 +1072,12 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 					feature,
 				);
 
+				styles.pointOpacity = this.getNumericStylingValue(
+					this.styles.midPointOpacity,
+					1,
+					feature,
+				);
+
 				styles.pointOutlineColor = this.getHexColorStylingValue(
 					this.styles.midPointOutlineColor,
 					styles.pointOutlineColor,
@@ -1062,6 +1087,12 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 				styles.pointWidth = this.getNumericStylingValue(
 					this.styles.midPointWidth,
 					4,
+					feature,
+				);
+
+				styles.pointOutlineOpacity = this.getNumericStylingValue(
+					this.styles.midPointOutlineOpacity,
+					1,
 					feature,
 				);
 
@@ -1154,9 +1185,21 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 					feature,
 				);
 
+				styles.pointOpacity = this.getNumericStylingValue(
+					this.styles.selectedPointOpacity,
+					1,
+					feature,
+				);
+
 				styles.pointOutlineColor = this.getHexColorStylingValue(
 					this.styles.selectedPointOutlineColor,
 					styles.pointOutlineColor,
+					feature,
+				);
+
+				styles.pointOutlineOpacity = this.getNumericStylingValue(
+					this.styles.selectedPointOutlineOpacity,
+					1,
 					feature,
 				);
 

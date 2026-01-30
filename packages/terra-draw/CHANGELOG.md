@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.23.2](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.23.1...terra-draw@1.23.2) (2026-01-30)
+
+
+### fix
+
+* **terra-draw:** ensure points do not set marker property to true (#783) ([](https://github.com/JamesLMilner/terra-draw/commit/983539f1803d11da133a0757bcdda7a5f6374385)), closes [#783](https://github.com/JamesLMilner/terra-draw/issues/783)
+
+
+### docs
+
+* **terra-draw:** fix the adapter links in terra-draw package README.md (#779) ([](https://github.com/JamesLMilner/terra-draw/commit/dab83f2cb95c43165bf57c4c9bb49c01c1251dd3)), closes [#779](https://github.com/JamesLMilner/terra-draw/issues/779)
+* **terra-draw:** update the links to the adapter class documentation (#776) ([](https://github.com/JamesLMilner/terra-draw/commit/273f86d7fe6371ea757f34cad4cc7bd80b0544bb)), closes [#776](https://github.com/JamesLMilner/terra-draw/issues/776)
+
 ## [1.23.1](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.23.0...terra-draw@1.23.1) (2026-01-17)
 
 

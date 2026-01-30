@@ -123,12 +123,19 @@ export class TerraDrawLeafletAdapter extends TerraDrawExtend.TerraDrawBaseAdapte
 					});
 				}
 
+				const pointOutlineOpacity = (
+					featureStyles as { pointOutlineOpacity?: number }
+				).pointOutlineOpacity;
+				const pointOpacity = (featureStyles as { pointOpacity?: number })
+					.pointOpacity;
+
 				const styles = {
 					radius: featureStyles.pointWidth,
 					stroke: featureStyles.pointOutlineWidth || false,
+					opacity: pointOutlineOpacity === undefined ? 1 : pointOutlineOpacity,
 					color: featureStyles.pointOutlineColor,
 					weight: featureStyles.pointOutlineWidth,
-					fillOpacity: 0.8,
+					fillOpacity: pointOpacity === undefined ? 1 : pointOpacity,
 					fillColor: featureStyles.pointColor,
 					pane: paneId,
 					interactive: false, // Removes mouse hover cursor styles
@@ -161,11 +168,17 @@ export class TerraDrawLeafletAdapter extends TerraDrawExtend.TerraDrawBaseAdapte
 				}
 
 				if (feature.geometry.type === "LineString") {
+					// Backwards compatible read: pre Terra Draw v1.24.0 will not have this field in the interface
+					const lineStringOpacity = (
+						featureStyles as { lineStringOpacity?: number }
+					).lineStringOpacity;
+
 					return {
 						interactive: false, // Removes mouse hover cursor styles
 						color: featureStyles.lineStringColor,
 						weight: featureStyles.lineStringWidth,
 						pane: paneId,
+						opacity: lineStringOpacity === undefined ? 1 : lineStringOpacity,
 					};
 				} else if (feature.geometry.type === "Polygon") {
 					return {

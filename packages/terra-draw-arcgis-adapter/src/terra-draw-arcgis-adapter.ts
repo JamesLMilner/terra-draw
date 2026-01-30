@@ -240,11 +240,23 @@ export class TerraDrawArcGISMapsSDKAdapter extends TerraDrawExtend.TerraDrawBase
 						latitude: coordinates[1],
 						longitude: coordinates[0],
 					});
+					const pointOpacity = (style as { pointOpacity?: number })
+						.pointOpacity;
+					const pointOutlineOpacity = (
+						style as { pointOutlineOpacity?: number }
+					).pointOutlineOpacity;
+
 					symbol = new this._lib.SimpleMarkerSymbol({
-						color: this.getColorFromHex(style.pointColor),
+						color: this.getColorFromHex(
+							style.pointColor,
+							pointOpacity === undefined ? 1 : pointOpacity,
+						),
 						size: style.pointWidth * 2 + "px",
 						outline: {
-							color: this.getColorFromHex(style.pointOutlineColor),
+							color: this.getColorFromHex(
+								style.pointOutlineColor,
+								pointOutlineOpacity === undefined ? 1 : pointOutlineOpacity,
+							),
 							width: style.pointOutlineWidth + "px",
 						},
 					});
@@ -252,9 +264,16 @@ export class TerraDrawArcGISMapsSDKAdapter extends TerraDrawExtend.TerraDrawBase
 
 				break;
 			case "LineString":
+				// Backwards compatible read: pre Terra Draw v1.24.0 will not have this field in the interface
+				const lineStringOpacity = (style as { lineStringOpacity?: number })
+					.lineStringOpacity;
+
 				geometry = new this._lib.Polyline({ paths: [coordinates] });
 				symbol = new this._lib.SimpleLineSymbol({
-					color: this.getColorFromHex(style.lineStringColor),
+					color: this.getColorFromHex(
+						style.lineStringColor,
+						lineStringOpacity === undefined ? 1 : lineStringOpacity,
+					),
 					width: style.lineStringWidth + "px",
 				});
 				break;
@@ -289,7 +308,7 @@ export class TerraDrawArcGISMapsSDKAdapter extends TerraDrawExtend.TerraDrawBase
 
 	private getColorFromHex(hexColor: string, opacity?: number): Color {
 		const color = this._lib.Color.fromHex(hexColor);
-		if (opacity) {
+		if (opacity !== undefined) {
 			color.a = opacity;
 		}
 		return color;

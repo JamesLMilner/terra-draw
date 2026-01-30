@@ -134,15 +134,34 @@ export class TerraDrawOpenLayersAdapter extends TerraDrawExtend.TerraDrawBaseAda
 					});
 				}
 
+				const {
+					r: pointR,
+					g: pointG,
+					b: pointB,
+				} = this.hexToRGB(style.pointColor);
+				const {
+					r: outlineR,
+					g: outlineG,
+					b: outlineB,
+				} = this.hexToRGB(style.pointOutlineColor);
+
+				// Backwards compatible read: pre Terra Draw v1.24.0 will not have this field in the interface
+				const pointOpacity = (style as { pointOpacity?: number }).pointOpacity;
+				const pointOutlineOpacity = (style as { pointOutlineOpacity?: number })
+					.pointOutlineOpacity;
+
+				const fillColor = `rgba(${pointR},${pointG},${pointB},${pointOpacity === undefined ? 1 : pointOpacity})`;
+				const strokeColor = `rgba(${outlineR},${outlineG},${outlineB},${pointOutlineOpacity === undefined ? 1 : pointOutlineOpacity})`;
+
 				return new this._lib.Style({
 					zIndex: this.baseZIndex + style.zIndex,
 					image: new this._lib.Circle({
 						radius: style.pointWidth,
 						fill: new this._lib.Fill({
-							color: style.pointColor,
+							color: fillColor,
 						}),
 						stroke: new this._lib.Stroke({
-							color: style.pointOutlineColor,
+							color: strokeColor,
 							width: style.pointOutlineWidth,
 						}),
 					}),
@@ -155,10 +174,19 @@ export class TerraDrawOpenLayersAdapter extends TerraDrawExtend.TerraDrawBaseAda
 					geometry: { type: "LineString", coordinates: [] },
 					properties,
 				});
+
+				const { r, g, b } = this.hexToRGB(style.lineStringColor);
+
+				// Backwards compatible read: pre Terra Draw v1.24.0 will not have this field in the interface
+				const lineStringOpacity = (style as { lineStringOpacity?: number })
+					.lineStringOpacity;
+
+				const color = `rgba(${r},${g},${b},${lineStringOpacity === undefined ? 1 : lineStringOpacity})`;
+
 				return new this._lib.Style({
 					zIndex: style.zIndex,
 					stroke: new this._lib.Stroke({
-						color: style.lineStringColor,
+						color,
 						width: style.lineStringWidth,
 					}),
 				});

@@ -140,6 +140,7 @@ export class TerraDrawMapLibreGLAdapter<
 			paint: {
 				"line-width": ["get", "lineStringWidth"],
 				"line-color": ["get", "lineStringColor"],
+				"line-opacity": ["get", "lineStringOpacity"],
 			},
 		} as LineLayerSpecification);
 
@@ -158,8 +159,10 @@ export class TerraDrawMapLibreGLAdapter<
 			paint: {
 				"circle-stroke-color": ["get", "pointOutlineColor"],
 				"circle-stroke-width": ["get", "pointOutlineWidth"],
+				"circle-stroke-opacity": ["get", "pointOutlineOpacity"],
 				"circle-radius": ["get", "pointWidth"],
 				"circle-color": ["get", "pointColor"],
+				"circle-opacity": ["get", "pointOpacity"],
 			},
 		} as CircleLayerSpecification);
 
@@ -405,7 +408,21 @@ export class TerraDrawMapLibreGLAdapter<
 					properties.pointColor = styles.pointColor;
 					properties.pointOutlineColor = styles.pointOutlineColor;
 					properties.pointOutlineWidth = styles.pointOutlineWidth;
+
+					// Backwards compatible read: pre Terra Draw v1.24.0 will not have this field in the interface
+					const pointOutlineOpacity = (
+						styles as { pointOutlineOpacity?: number }
+					).pointOutlineOpacity;
+					properties.pointOutlineOpacity =
+						pointOutlineOpacity === undefined ? 1 : pointOutlineOpacity;
+
 					properties.pointWidth = styles.pointWidth;
+
+					// Backwards compatible read: pre Terra Draw v1.24.0 will not have this field in the interface
+					const pointOpacity = (styles as { pointOpacity?: number })
+						.pointOpacity;
+					properties.pointOpacity =
+						pointOpacity === undefined ? 1 : pointOpacity;
 
 					if (styles.markerUrl && styles.markerWidth && styles.markerHeight) {
 						const id = `marker-${this.hashCode(styles.markerUrl)}`;
@@ -434,6 +451,12 @@ export class TerraDrawMapLibreGLAdapter<
 				} else if (feature.geometry.type === "LineString") {
 					properties.lineStringColor = styles.lineStringColor;
 					properties.lineStringWidth = styles.lineStringWidth;
+
+					// Backwards compatible read: pre Terra Draw v1.24.0 will not have this field in the interface
+					const lineStringOpacity = (styles as { lineStringOpacity?: number })
+						.lineStringOpacity;
+					properties.lineStringOpacity =
+						lineStringOpacity === undefined ? 1 : lineStringOpacity;
 					linestrings.push(feature);
 				} else if (feature.geometry.type === "Polygon") {
 					properties.polygonFillColor = styles.polygonFillColor;

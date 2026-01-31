@@ -105,6 +105,7 @@ type SelectionStyling = {
 	selectedPolygonColor: HexColorStyling;
 	selectedPolygonFillOpacity: NumericStyling;
 	selectedPolygonOutlineColor: HexColorStyling;
+	selectedPolygonOutlineOpacity: NumericStyling;
 	selectedPolygonOutlineWidth: NumericStyling;
 
 	// Selection Points (points at vertices of a polygon/linestring feature)
@@ -1146,6 +1147,12 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 				styles.polygonOutlineColor = this.getHexColorStylingValue(
 					this.styles.selectedPolygonOutlineColor,
 					styles.polygonOutlineColor,
+					feature,
+				);
+
+				styles.polygonOutlineOpacity = this.getNumericStylingValue(
+					this.styles.selectedPolygonOutlineOpacity,
+					1,
 					feature,
 				);
 

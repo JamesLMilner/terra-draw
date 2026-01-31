@@ -103,6 +103,7 @@ const Opacity: Story = {
 				new TerraDrawPolygonMode({
 					styles: {
 						fillOpacity: 0.5,
+						outlineOpacity: 0.5,
 					},
 				}),
 		],

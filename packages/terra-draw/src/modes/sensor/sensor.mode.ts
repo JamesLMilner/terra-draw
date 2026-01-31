@@ -54,9 +54,10 @@ type SensorPolygonStyling = {
 	centerPointOutlineColor: HexColorStyling;
 	centerPointOutlineWidth: NumericStyling;
 	centerPointOutlineOpacity: NumericStyling;
-	fillColor: HexColorStyling;
 	outlineColor: HexColorStyling;
 	outlineWidth: NumericStyling;
+	outlineOpacity: NumericStyling;
+	fillColor: HexColorStyling;
 	fillOpacity: NumericStyling;
 };
 
@@ -316,6 +317,12 @@ export class TerraDrawSensorMode extends TerraDrawBaseDrawMode<SensorPolygonStyl
 				styles.polygonOutlineWidth = this.getNumericStylingValue(
 					this.styles.outlineWidth,
 					styles.polygonOutlineWidth,
+					feature,
+				);
+
+				styles.polygonOutlineOpacity = this.getNumericStylingValue(
+					this.styles.outlineOpacity,
+					1,
 					feature,
 				);
 

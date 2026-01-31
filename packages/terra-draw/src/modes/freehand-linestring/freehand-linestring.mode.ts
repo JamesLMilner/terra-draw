@@ -41,10 +41,13 @@ const defaultKeyEvents = { cancel: "Escape", finish: "Enter" };
 type FreehandLineStringStyling = {
 	lineStringWidth: NumericStyling;
 	lineStringColor: HexColorStyling;
+	lineStringOpacity: NumericStyling;
 	closingPointColor: HexColorStyling;
+	closingPointOpacity: NumericStyling;
 	closingPointWidth: NumericStyling;
 	closingPointOutlineColor: HexColorStyling;
 	closingPointOutlineWidth: NumericStyling;
+	closingPointOutlineOpacity: NumericStyling;
 };
 
 interface Cursors {
@@ -313,6 +316,12 @@ export class TerraDrawFreehandLineStringMode extends TerraDrawBaseDrawMode<Freeh
 				feature,
 			);
 
+			styles.lineStringOpacity = this.getNumericStylingValue(
+				this.styles.lineStringOpacity,
+				styles.lineStringOpacity === undefined ? 1 : styles.lineStringOpacity,
+				feature,
+			);
+
 			styles.lineStringWidth = this.getNumericStylingValue(
 				this.styles.lineStringWidth,
 				styles.lineStringWidth,
@@ -333,6 +342,12 @@ export class TerraDrawFreehandLineStringMode extends TerraDrawBaseDrawMode<Freeh
 				feature,
 			);
 
+			styles.pointOpacity = this.getNumericStylingValue(
+				this.styles.closingPointOpacity,
+				1,
+				feature,
+			);
+
 			styles.pointColor = this.getHexColorStylingValue(
 				this.styles.closingPointColor,
 				styles.pointColor,
@@ -342,6 +357,12 @@ export class TerraDrawFreehandLineStringMode extends TerraDrawBaseDrawMode<Freeh
 			styles.pointOutlineColor = this.getHexColorStylingValue(
 				this.styles.closingPointOutlineColor,
 				styles.pointOutlineColor,
+				feature,
+			);
+
+			styles.pointOutlineOpacity = this.getNumericStylingValue(
+				this.styles.closingPointOutlineOpacity,
+				1,
 				feature,
 			);
 

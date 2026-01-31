@@ -236,6 +236,27 @@ describe("TerraDrawRenderMode", () => {
 			});
 		});
 
+		it("returns the correct styles for linestring opacity", () => {
+			const renderMode = new TerraDrawRenderMode({
+				modeName: "arbitary",
+				styles: {
+					lineStringOpacity: 0.5,
+				},
+			});
+
+			renderMode.register(MockModeConfig(renderMode.mode));
+
+			expect(
+				renderMode.styleFeature({
+					type: "Feature",
+					geometry: { type: "LineString", coordinates: [] },
+					properties: { mode: "render" },
+				}),
+			).toMatchObject({
+				lineStringOpacity: 0.5,
+			});
+		});
+
 		it("returns the correct styles for polygon using function", () => {
 			const renderMode = new TerraDrawRenderMode({
 				modeName: "arbitary",

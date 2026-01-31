@@ -1686,6 +1686,7 @@ describe("TerraDrawLineStringMode", () => {
 				styles: {
 					lineStringColor: "#ffffff",
 					lineStringWidth: 4,
+					lineStringOpacity: 0.5,
 					closingPointColor: "#111111",
 					closingPointWidth: 3,
 					closingPointOutlineColor: "#222222",
@@ -1764,6 +1765,7 @@ describe("TerraDrawLineStringMode", () => {
 				styles: {
 					lineStringColor: "#ffffff",
 					lineStringWidth: 4,
+					lineStringOpacity: 0.5,
 					closingPointColor: "#111111",
 					closingPointWidth: 3,
 					closingPointOutlineColor: "#222222",
@@ -1780,6 +1782,7 @@ describe("TerraDrawLineStringMode", () => {
 			).toMatchObject({
 				lineStringColor: "#ffffff",
 				lineStringWidth: 4,
+				lineStringOpacity: 0.5,
 			});
 		});
 

@@ -21,7 +21,9 @@ export type UrlStyling = string | ((feature: GeoJSONStoreFeatures) => string);
 export interface TerraDrawAdapterStyling {
 	pointColor: HexColor;
 	pointWidth: number;
+	pointOpacity?: number;
 	pointOutlineColor: HexColor;
+	pointOutlineOpacity?: number;
 	pointOutlineWidth: number;
 	polygonFillColor: HexColor;
 	polygonFillOpacity: number;
@@ -29,6 +31,7 @@ export interface TerraDrawAdapterStyling {
 	polygonOutlineWidth: number;
 	lineStringWidth: number;
 	lineStringColor: HexColor;
+	lineStringOpacity?: number;
 	zIndex: number;
 	markerUrl?: string;
 	markerHeight?: number;

@@ -21,7 +21,9 @@ import { StoreValidation } from "../../store/store";
 type RenderModeStyling = {
 	pointColor: HexColorStyling;
 	pointWidth: NumericStyling;
+	pointOpacity: NumericStyling;
 	pointOutlineColor: HexColorStyling;
+	pointOutlineOpacity: NumericStyling;
 	pointOutlineWidth: NumericStyling;
 	polygonFillColor: HexColorStyling;
 	polygonFillOpacity: NumericStyling;
@@ -29,6 +31,7 @@ type RenderModeStyling = {
 	polygonOutlineWidth: NumericStyling;
 	lineStringWidth: NumericStyling;
 	lineStringColor: HexColorStyling;
+	lineStringOpacity: NumericStyling;
 	zIndex: NumericStyling;
 };
 
@@ -115,6 +118,11 @@ export class TerraDrawRenderMode extends TerraDrawBaseDrawMode<RenderModeStyling
 				defaultStyles.pointWidth,
 				feature,
 			),
+			pointOpacity: this.getNumericStylingValue(
+				this.styles.pointOpacity,
+				defaultStyles.pointOpacity as number,
+				feature,
+			),
 			pointOutlineColor: this.getHexColorStylingValue(
 				this.styles.pointOutlineColor,
 				defaultStyles.pointOutlineColor,
@@ -123,6 +131,11 @@ export class TerraDrawRenderMode extends TerraDrawBaseDrawMode<RenderModeStyling
 			pointOutlineWidth: this.getNumericStylingValue(
 				this.styles.pointOutlineWidth,
 				defaultStyles.pointOutlineWidth,
+				feature,
+			),
+			pointOutlineOpacity: this.getNumericStylingValue(
+				this.styles.pointOutlineOpacity,
+				defaultStyles.pointOutlineOpacity as number,
 				feature,
 			),
 			polygonFillColor: this.getHexColorStylingValue(
@@ -153,6 +166,11 @@ export class TerraDrawRenderMode extends TerraDrawBaseDrawMode<RenderModeStyling
 			lineStringColor: this.getHexColorStylingValue(
 				this.styles.lineStringColor,
 				defaultStyles.lineStringColor,
+				feature,
+			),
+			lineStringOpacity: this.getNumericStylingValue(
+				this.styles.lineStringOpacity,
+				defaultStyles.lineStringOpacity as number,
 				feature,
 			),
 			zIndex: this.getNumericStylingValue(

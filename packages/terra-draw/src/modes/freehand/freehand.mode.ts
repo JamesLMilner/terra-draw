@@ -42,8 +42,10 @@ type FreehandPolygonStyling = {
 	outlineWidth: NumericStyling;
 	fillOpacity: NumericStyling;
 	closingPointColor: HexColorStyling;
+	closingPointOpacity: NumericStyling;
 	closingPointWidth: NumericStyling;
 	closingPointOutlineColor: HexColorStyling;
+	closingPointOutlineOpacity: NumericStyling;
 	closingPointOutlineWidth: NumericStyling;
 };
 
@@ -387,6 +389,12 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 				feature,
 			);
 
+			styles.pointOpacity = this.getNumericStylingValue(
+				this.styles.closingPointOpacity,
+				styles.pointOpacity === undefined ? 1 : styles.pointOpacity,
+				feature,
+			);
+
 			styles.pointOutlineColor = this.getHexColorStylingValue(
 				this.styles.closingPointOutlineColor,
 				styles.pointOutlineColor,
@@ -396,6 +404,14 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 			styles.pointOutlineWidth = this.getNumericStylingValue(
 				this.styles.closingPointOutlineWidth,
 				2,
+				feature,
+			);
+
+			styles.pointOutlineOpacity = this.getNumericStylingValue(
+				this.styles.closingPointOutlineOpacity,
+				styles.pointOutlineOpacity === undefined
+					? 1
+					: styles.pointOutlineOpacity,
 				feature,
 			);
 

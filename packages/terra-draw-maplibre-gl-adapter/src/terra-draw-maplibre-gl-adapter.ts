@@ -122,6 +122,7 @@ export class TerraDrawMapLibreGLAdapter<
 			paint: {
 				"line-width": ["get", "polygonOutlineWidth"],
 				"line-color": ["get", "polygonOutlineColor"],
+				"line-opacity": ["get", "polygonOutlineOpacity"],
 			},
 		} as LineLayerSpecification);
 
@@ -459,8 +460,14 @@ export class TerraDrawMapLibreGLAdapter<
 						lineStringOpacity === undefined ? 1 : lineStringOpacity;
 					linestrings.push(feature);
 				} else if (feature.geometry.type === "Polygon") {
+					const polygonOutlineOpacity = (
+						styles as { polygonOutlineOpacity?: number }
+					).polygonOutlineOpacity;
+
 					properties.polygonFillColor = styles.polygonFillColor;
 					properties.polygonFillOpacity = styles.polygonFillOpacity;
+					properties.polygonOutlineOpacity =
+						polygonOutlineOpacity === undefined ? 1 : polygonOutlineOpacity;
 					properties.polygonOutlineColor = styles.polygonOutlineColor;
 					properties.polygonOutlineWidth = styles.polygonOutlineWidth;
 					polygons.push(feature);

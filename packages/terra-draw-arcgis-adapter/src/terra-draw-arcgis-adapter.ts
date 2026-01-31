@@ -285,7 +285,10 @@ export class TerraDrawArcGISMapsSDKAdapter extends TerraDrawExtend.TerraDrawBase
 						style.polygonFillOpacity,
 					),
 					outline: {
-						color: this.getColorFromHex(style.polygonOutlineColor),
+						color: this.getColorFromHex(
+							style.polygonOutlineColor,
+							style.polygonOutlineOpacity,
+						),
 						width: style.polygonOutlineWidth + "px",
 					},
 				});

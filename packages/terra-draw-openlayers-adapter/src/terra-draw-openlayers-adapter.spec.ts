@@ -170,7 +170,13 @@ describe("TerraDrawOpenLayersAdapter", () => {
 						deletedIds: [],
 					},
 					{
-						point: () => ({}) as unknown as TerraDrawAdapterStyling,
+						point: () =>
+							({
+								pointColor: "#ffffff",
+								pointOutlineColor: "#000000",
+								pointWidth: 2,
+								pointOpacity: 1,
+							}) as unknown as TerraDrawAdapterStyling,
 					},
 				);
 
@@ -188,6 +194,60 @@ describe("TerraDrawOpenLayersAdapter", () => {
 				});
 			});
 
+			it("for Point uses pointOutlineOpacity and pointOpacity correctly", () => {
+				const lib = MockLibInjectable();
+				VectorLayer = lib.VectorLayer as jest.Mock<VectorLayer>;
+				adapter = new TerraDrawOpenLayersAdapter({
+					map: MockOLMap(),
+					lib,
+					minPixelDragDistance: 1,
+					minPixelDragDistanceSelecting: 8,
+					minPixelDragDistanceDrawing: 8,
+					coordinatePrecision: 9,
+				});
+
+				adapter.render(
+					{
+						created: [],
+						updated: [],
+						unchanged: [],
+						deletedIds: [],
+					},
+					{
+						point: () =>
+							({
+								pointColor: "#ff0000",
+								pointWidth: 2,
+								pointOpacity: 0.5,
+								pointOutlineColor: "#00ff00",
+								pointOutlineWidth: 2,
+								pointOutlineOpacity: 0.25,
+								zIndex: 0,
+							}) as unknown as TerraDrawAdapterStyling,
+					},
+				);
+
+				const styles = VectorLayer.mock.calls[0][0].style;
+				const getGeometry = jest.fn(() => ({ getType: () => "Point" }));
+				const getProperties = jest.fn(() => ({ mode: "point" }));
+
+				styles({ getGeometry, getProperties });
+
+				// Stroke color should be derived from pointOutlineColor with pointOutlineOpacity
+				expect((lib.Stroke as jest.Mock).mock.calls[0][0]).toEqual(
+					expect.objectContaining({
+						color: "rgba(0,255,0,0.25)",
+						width: 2,
+					}),
+				);
+
+				expect((lib.Fill as jest.Mock).mock.calls[0][0]).toEqual(
+					expect.objectContaining({
+						color: "rgba(255,0,0,0.5)",
+					}),
+				);
+			});
+
 			it("for LineString correctly", () => {
 				adapter.render(
 					{
@@ -197,7 +257,12 @@ describe("TerraDrawOpenLayersAdapter", () => {
 						deletedIds: [],
 					},
 					{
-						linestring: () => ({}) as unknown as TerraDrawAdapterStyling,
+						linestring: () =>
+							({
+								lineStringColor: "#ffffff",
+								lineStringWidth: 2,
+								lineStringOpacity: 1,
+							}) as unknown as TerraDrawAdapterStyling,
 					},
 				);
 

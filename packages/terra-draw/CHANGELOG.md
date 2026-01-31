@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.23.3](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.23.2...terra-draw@1.23.3) (2026-01-31)
+
+
+### fix
+
+* **terra-draw:** ensure resizable updates coordinate and midpoints correctly (#793) ([](https://github.com/JamesLMilner/terra-draw/commit/e7f8cfb2966bc18b45775035d4724f31e3282c6e)), closes [#793](https://github.com/JamesLMilner/terra-draw/issues/793)
+
 ## [1.23.2](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.23.1...terra-draw@1.23.2) (2026-01-30)
 
 

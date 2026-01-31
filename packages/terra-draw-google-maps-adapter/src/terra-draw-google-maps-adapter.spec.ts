@@ -1171,6 +1171,85 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 				);
 			});
 
+			it("applies pointOpacity and pointOutlineOpacity (and defaults to 1)", () => {
+				const feature = MockPoint("point-1") as GeoJSONStoreFeatures;
+				Object.assign(feature, {
+					getGeometry: jest.fn(() => ({
+						getType: () => "Point",
+					})),
+				});
+
+				Object.assign(feature, { getProperty: () => "test" });
+				Object.assign(feature, { forEachProperty: () => {} });
+				Object.assign(feature, { getId: () => feature.id });
+
+				const addGeoJsonMock = jest.fn();
+				let style: unknown = null;
+				const mockMap = createMockGoogleMap({
+					data: {
+						getStyle: () => style,
+						addListener: () => {},
+						addGeoJson: addGeoJsonMock,
+						remove: () => {},
+						getFeatureById: (featureId: string) =>
+							[feature].find((s) => s.id === featureId),
+						setStyle: jest.fn((cb: unknown) => {
+							style = cb;
+						}),
+					} as any,
+				});
+				const adapter = new TerraDrawGoogleMapsAdapter({
+					lib: {
+						OverlayView: jest.fn(() => ({
+							setMap: jest.fn(),
+							getProjection: jest.fn(),
+						})),
+					} as any,
+					map: mockMap,
+				});
+
+				// 1) Defaults should be applied when opacity values are not provided
+				adapter.render(
+					{ unchanged: [], created: [feature], deletedIds: [], updated: [] },
+					{
+						test: () =>
+							({
+								pointColor: "#FF0000",
+								pointOutlineWidth: 5,
+								pointOutlineColor: "#FFFFFF",
+							}) as unknown as TerraDrawAdapterStyling,
+					},
+				);
+				flushRaf();
+
+				const styleFn = mockMap.data.getStyle() as unknown as (
+					f: unknown,
+				) => any;
+				const defaultResult = styleFn(feature);
+				expect(defaultResult.icon.fillOpacity).toBe(1);
+				expect(defaultResult.icon.strokeOpacity).toBe(1);
+
+				// 2) Provided values should be forwarded into Google Maps icon options
+				adapter.render(
+					{ unchanged: [], created: [], deletedIds: [], updated: [] },
+					{
+						test: () =>
+							({
+								pointColor: "#FF0000",
+								pointOutlineWidth: 5,
+								pointOutlineColor: "#FFFFFF",
+								pointOpacity: 0.25,
+								pointOutlineOpacity: 0.5,
+							}) as unknown as TerraDrawAdapterStyling,
+					},
+				);
+				flushRaf();
+
+				const explicitResult = styleFn(feature);
+				expect(explicitResult.icon.fillOpacity).toBe(0.25);
+				expect(explicitResult.icon.strokeOpacity).toBe(0.5);
+			});
+
 			it("adds features on successive renders", () => {
 				const pointOne = MockPoint("point-1") as GeoJSONStoreFeatures;
 				const addGeoJsonMock = jest.fn();
@@ -1433,6 +1512,80 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 				expect(setStyleResult!.strokeWeight).toEqual(
 					testStyles.lineStringWidth,
 				);
+			});
+
+			it("applies lineStringOpacity (and defaults to 1)", () => {
+				const feature = MockLineString("line-string-1") as GeoJSONStoreFeatures;
+				Object.assign(feature, {
+					getGeometry: jest.fn(() => ({
+						getType: () => "LineString",
+					})),
+				});
+
+				Object.assign(feature, { getProperty: () => "test" });
+				Object.assign(feature, { forEachProperty: () => {} });
+				Object.assign(feature, { getId: () => feature.id });
+
+				const addGeoJsonMock = jest.fn();
+				let style: unknown = null;
+				const mockMap = createMockGoogleMap({
+					data: {
+						getStyle: () => style,
+						addListener: () => {},
+						addGeoJson: addGeoJsonMock,
+						remove: () => {},
+						getFeatureById: (featureId: string) =>
+							[feature].find((s) => s.id === featureId),
+						setStyle: jest.fn((cb: unknown) => {
+							style = cb;
+						}),
+					} as any,
+				});
+				const adapter = new TerraDrawGoogleMapsAdapter({
+					lib: {
+						OverlayView: jest.fn(() => ({
+							setMap: jest.fn(),
+							getProjection: jest.fn(),
+						})),
+					} as any,
+					map: mockMap,
+				});
+
+				// 1) Defaults to 1 when not provided
+				adapter.render(
+					{ unchanged: [], created: [feature], deletedIds: [], updated: [] },
+					{
+						test: () =>
+							({
+								lineStringWidth: 5,
+								lineStringColor: "#FFFFFF",
+							}) as unknown as TerraDrawAdapterStyling,
+					},
+				);
+				flushRaf();
+
+				const styleFn = mockMap.data.getStyle() as unknown as (
+					f: unknown,
+				) => any;
+				const defaultResult = styleFn(feature);
+				expect(defaultResult.strokeOpacity).toBe(1);
+
+				// 2) Forwards explicit value
+				adapter.render(
+					{ unchanged: [], created: [], deletedIds: [], updated: [] },
+					{
+						test: () =>
+							({
+								lineStringWidth: 5,
+								lineStringColor: "#FFFFFF",
+								lineStringOpacity: 0.4,
+							}) as unknown as TerraDrawAdapterStyling,
+					},
+				);
+				flushRaf();
+
+				const explicitResult = styleFn(feature);
+				expect(explicitResult.strokeOpacity).toBe(0.4);
 			});
 
 			it("adds features on successive renders", () => {

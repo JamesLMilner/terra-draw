@@ -78,25 +78,30 @@ describe("DragCoordinateResizeBehavior", () => {
 			let validate = jest.fn(() => ({ valid: true }));
 			let config: BehaviorConfig;
 			let dragMaintainedShapeBehavior: DragCoordinateResizeBehavior;
+			let mutateFeatureBehavior: MutateFeatureBehavior;
+			let readFeatureBehavior: ReadFeatureBehavior;
+			let selectionPointBehavior: SelectionPointBehavior;
+			let coordinatePointBehavior: CoordinatePointBehavior;
+			let midpointBehavior: MidPointBehavior;
 
 			beforeEach(() => {
 				config = MockBehaviorConfig("test");
-				const mutateFeatureBehavior = new MutateFeatureBehavior(config, {
+				mutateFeatureBehavior = new MutateFeatureBehavior(config, {
 					validate,
 				});
-				const readFeatureBehavior = new ReadFeatureBehavior(config);
-				const selectionPointBehavior = new SelectionPointBehavior(
+				readFeatureBehavior = new ReadFeatureBehavior(config);
+				selectionPointBehavior = new SelectionPointBehavior(
 					config,
 					mutateFeatureBehavior,
 				);
 				const pixelDistanceBehavior = new PixelDistanceBehavior(config);
-				const coordinatePointBehavior = new CoordinatePointBehavior(
+				coordinatePointBehavior = new CoordinatePointBehavior(
 					config,
 					readFeatureBehavior,
 					mutateFeatureBehavior,
 				);
 
-				const midpointBehavior = new MidPointBehavior(
+				midpointBehavior = new MidPointBehavior(
 					config,
 					selectionPointBehavior,
 					coordinatePointBehavior,
@@ -266,6 +271,91 @@ describe("DragCoordinateResizeBehavior", () => {
 						);
 
 						expect(config.store.updateGeometry).toHaveBeenCalledTimes(1);
+					});
+
+					it("updates selection points, midpoints, and coordinate points when resizing", () => {
+						const id = createStorePolygon(config);
+
+						const featureCoordinatesBefore = readFeatureBehavior.getGeometry(id)
+							.coordinates as Position[][];
+
+						coordinatePointBehavior.createOrUpdate({
+							featureId: id,
+							featureCoordinates: featureCoordinatesBefore,
+						});
+						selectionPointBehavior.create({
+							featureId: id,
+							featureCoordinates: featureCoordinatesBefore,
+						});
+						midpointBehavior.create({
+							featureId: id,
+							featureCoordinates: featureCoordinatesBefore,
+						});
+
+						const selectionPoint0Before = readFeatureBehavior.getGeometry(
+							selectionPointBehavior.ids[0],
+						).coordinates as Position;
+						const midPoint0Before = readFeatureBehavior.getGeometry(
+							midpointBehavior.ids[0],
+						).coordinates as Position;
+						const coordinatePointId0 = (
+							readFeatureBehavior.getProperties(id)
+								.coordinatePointIds as string[]
+						)[0];
+						const coordinatePoint0Before = readFeatureBehavior.getGeometry(
+							coordinatePointId0,
+						).coordinates as Position;
+
+						dragMaintainedShapeBehavior.startDragging(id, 0);
+
+						// Move the dragged corner far enough to guarantee a resize
+						// (index 0 is the bottom-left corner in createStorePolygon)
+						dragMaintainedShapeBehavior.drag(
+							MockCursorEvent({ lng: -1, lat: -1 }),
+							"opposite",
+						);
+
+						const coordinatePoints = readFeatureBehavior.getProperties(id)
+							.coordinatePointIds as string[];
+
+						const featureCoordinatesAfter = readFeatureBehavior.getGeometry(id)
+							.coordinates as Position[][];
+						const selectionPoint0After = readFeatureBehavior.getGeometry(
+							selectionPointBehavior.ids[0],
+						).coordinates as Position;
+						const midPoint0After = readFeatureBehavior.getGeometry(
+							midpointBehavior.ids[0],
+						).coordinates as Position;
+						const coordinatePoint0After = readFeatureBehavior.getGeometry(
+							coordinatePointId0,
+						).coordinates as Position;
+
+						// Ensure the polygon has the correct number of coordinates
+						expect(featureCoordinatesAfter[0]).toHaveLength(5);
+
+						// Ensure polygon is closed correctly
+						expect(featureCoordinatesAfter[0][4]).toStrictEqual(
+							featureCoordinatesAfter[0][0],
+						);
+
+						// Ensure the correct number of guidance points exist
+						expect(midpointBehavior.ids).toHaveLength(4);
+						expect(selectionPointBehavior.ids).toHaveLength(4);
+						expect(coordinatePoints).toHaveLength(4);
+
+						// Feature resized
+						expect(featureCoordinatesAfter[0][0]).not.toStrictEqual(
+							featureCoordinatesBefore[0][0],
+						);
+
+						// Guidance points track the updated geometry
+						expect(selectionPoint0After).not.toStrictEqual(
+							selectionPoint0Before,
+						);
+						expect(midPoint0After).not.toStrictEqual(midPoint0Before);
+						expect(coordinatePoint0After).not.toStrictEqual(
+							coordinatePoint0Before,
+						);
 					});
 
 					it("updates the LineString coordinate if within pointer distance", () => {

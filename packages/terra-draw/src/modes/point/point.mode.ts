@@ -315,7 +315,6 @@ export class TerraDrawPointMode extends TerraDrawBaseDrawMode<PointModeStyling> 
 			coordinates: [event.lng, event.lat],
 			properties: {
 				mode: this.mode,
-				[COMMON_PROPERTIES.MARKER]: true,
 			},
 			context: { updateType: UpdateTypes.Finish, action: FinishActions.Draw },
 		});

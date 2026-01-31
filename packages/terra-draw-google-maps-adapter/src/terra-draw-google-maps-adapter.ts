@@ -175,14 +175,22 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawExtend.TerraDrawBaseAda
 
 				const path = this.circlePath(0, 0, calculatedStyles.pointWidth);
 
+				// Backwards compatible read: pre Terra Draw v1.24.0 will not have this field in the interface
+				const strokeOpacity = (
+					calculatedStyles as { pointOutlineOpacity?: number }
+				).pointOutlineOpacity;
+				const fillOpacity = (calculatedStyles as { pointOpacity?: number })
+					.pointOpacity;
+
 				return {
 					clickable: false,
 					icon: {
 						path,
 						fillColor: calculatedStyles.pointColor,
-						fillOpacity: 1,
+						fillOpacity: fillOpacity === undefined ? 1 : fillOpacity,
 						strokeColor: calculatedStyles.pointOutlineColor,
 						strokeWeight: calculatedStyles.pointOutlineWidth,
+						strokeOpacity: strokeOpacity === undefined ? 1 : strokeOpacity,
 						rotation: 0,
 						scale: 1,
 					},
@@ -190,9 +198,16 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawExtend.TerraDrawBaseAda
 				};
 
 			case "LineString":
+				// Backwards compatible read: pre Terra Draw v1.24.0 will not have this field in the interface
+				const lineStringOpacity = (
+					calculatedStyles as { lineStringOpacity?: number }
+				).lineStringOpacity;
+
 				return {
 					strokeColor: calculatedStyles.lineStringColor,
 					strokeWeight: calculatedStyles.lineStringWidth,
+					strokeOpacity:
+						lineStringOpacity === undefined ? 1 : lineStringOpacity,
 					zIndex: calculatedStyles.zIndex,
 				};
 			case "Polygon":

@@ -278,6 +278,10 @@ export class TerraDrawArcGISMapsSDKAdapter extends TerraDrawExtend.TerraDrawBase
 				});
 				break;
 			case "Polygon":
+				const polygonOutlineOpacity = (
+					style as { polygonOutlineOpacity?: number }
+				).polygonOutlineOpacity;
+
 				geometry = new this._lib.Polygon({ rings: coordinates });
 				symbol = new this._lib.SimpleFillSymbol({
 					color: this.getColorFromHex(
@@ -285,7 +289,10 @@ export class TerraDrawArcGISMapsSDKAdapter extends TerraDrawExtend.TerraDrawBase
 						style.polygonFillOpacity,
 					),
 					outline: {
-						color: this.getColorFromHex(style.polygonOutlineColor),
+						color: this.getColorFromHex(
+							style.polygonOutlineColor,
+							polygonOutlineOpacity,
+						),
 						width: style.polygonOutlineWidth + "px",
 					},
 				});

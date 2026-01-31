@@ -327,7 +327,7 @@ describe("TerraDrawArcGISMapsSDKAdapter", () => {
 				SimpleLineSymbol: jest.fn(),
 				SimpleFillSymbol: jest.fn(),
 				Graphic: jest.fn().mockReturnValue(mockedGraphicCall),
-				Color: { fromHex: jest.fn() },
+				Color: { fromHex: jest.fn(() => ({ r: 255, g: 255, b: 255, a: 1 })) },
 			} as any;
 			adapter = new TerraDrawArcGISMapsSDKAdapter({
 				lib,
@@ -469,9 +469,11 @@ describe("TerraDrawArcGISMapsSDKAdapter", () => {
 				const mockColor = { r: 0, g: 0, b: 0, a: 0 } as Color;
 				lib.Color.fromHex.mockReturnValue(mockColor);
 				const testStyling: TerraDrawAdapterStyling = {
-					pointOutlineWidth: 2,
 					pointColor: "#FFFFFF",
+					pointOpacity: 1,
 					pointWidth: 4,
+					pointOutlineWidth: 2,
+					pointOutlineOpacity: 1,
 					pointOutlineColor: "#000000",
 				} as unknown as TerraDrawAdapterStyling;
 				adapter.render(

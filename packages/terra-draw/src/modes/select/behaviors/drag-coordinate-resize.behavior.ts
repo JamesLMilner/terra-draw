@@ -29,7 +29,6 @@ import {
 	MutateFeatureBehavior,
 	Mutations,
 } from "../../mutate-feature.behavior";
-import { getUnclosedCoordinates } from "../../../geometry/get-coordinates";
 
 export type ResizeOptions =
 	| "center"
@@ -738,7 +737,7 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 
 		const featureId = feature.id as FeatureId;
 
-		let updated: GeoJSONStoreFeatures | null = null;
+		let updated: GeoJSONStoreFeatures<Polygon | LineString> | null = null;
 
 		if (feature.geometry.type === "Polygon") {
 			updated = this.mutateFeature.updatePolygon({
@@ -768,9 +767,7 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 			return false;
 		}
 
-		const featureCoordinates = getUnclosedCoordinates(
-			feature.geometry.coordinates,
-		);
+		const featureCoordinates = updated.geometry.coordinates;
 
 		// Perform the update to the midpoints and selection points
 		this.midPoints.updateAllInPlace({ featureCoordinates });

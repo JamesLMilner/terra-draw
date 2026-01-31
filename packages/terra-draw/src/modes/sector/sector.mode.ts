@@ -17,7 +17,6 @@ import {
 	CustomStyling,
 	ModeUpdateOptions,
 } from "../base.mode";
-import { coordinatesIdentical } from "../../geometry/coordinates-identical";
 import { getDefaultStyling } from "../../util/styling";
 import {
 	FeatureId,
@@ -57,6 +56,7 @@ type SectorPolygonStyling = {
 	fillColor: HexColorStyling;
 	outlineColor: HexColorStyling;
 	outlineWidth: NumericStyling;
+	outlineOpacity: NumericStyling;
 	fillOpacity: NumericStyling;
 };
 
@@ -469,6 +469,12 @@ export class TerraDrawSectorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 				styles.polygonOutlineWidth = this.getNumericStylingValue(
 					this.styles.outlineWidth,
 					styles.polygonOutlineWidth,
+					feature,
+				);
+
+				styles.polygonOutlineOpacity = this.getNumericStylingValue(
+					this.styles.outlineOpacity,
+					1,
 					feature,
 				);
 

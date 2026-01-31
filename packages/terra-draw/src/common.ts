@@ -28,6 +28,7 @@ export interface TerraDrawAdapterStyling {
 	polygonFillColor: HexColor;
 	polygonFillOpacity: number;
 	polygonOutlineColor: HexColor;
+	polygonOutlineOpacity?: number;
 	polygonOutlineWidth: number;
 	lineStringWidth: number;
 	lineStringColor: HexColor;

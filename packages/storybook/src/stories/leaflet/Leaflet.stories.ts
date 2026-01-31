@@ -15,6 +15,7 @@ export default meta;
 export const Point = AllStories.Point;
 export const MarkerPNG = AllStories.MarkerPNG;
 export const MarkerJPG = AllStories.MarkerJPG;
+export const Opacity = AllStories.Opacity;
 export const Polygon = AllStories.Polygon;
 export const PolygonWithCoordinatePoints =
 	AllStories.PolygonWithCoordinatePoints;

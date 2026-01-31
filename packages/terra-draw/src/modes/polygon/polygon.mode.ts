@@ -49,9 +49,10 @@ const defaultKeyEvents = { cancel: "Escape", finish: "Enter" };
 
 type PolygonStyling = {
 	fillColor: HexColorStyling;
-	outlineColor: HexColorStyling;
-	outlineWidth: NumericStyling;
 	fillOpacity: NumericStyling;
+	outlineColor: HexColorStyling;
+	outlineOpacity: NumericStyling;
+	outlineWidth: NumericStyling;
 	closingPointWidth: NumericStyling;
 	closingPointColor: HexColorStyling;
 	closingPointOpacity: NumericStyling;
@@ -1100,6 +1101,12 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 				styles.polygonFillOpacity = this.getNumericStylingValue(
 					this.styles.fillOpacity,
 					styles.polygonFillOpacity,
+					feature,
+				);
+
+				styles.polygonOutlineOpacity = this.getNumericStylingValue(
+					this.styles.outlineOpacity,
+					1,
 					feature,
 				);
 

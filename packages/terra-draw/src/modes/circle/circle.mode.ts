@@ -44,9 +44,10 @@ const defaultKeyEvents = { cancel: "Escape", finish: "Enter" };
 
 type CirclePolygonStyling = {
 	fillColor: HexColorStyling;
+	fillOpacity: NumericStyling;
 	outlineColor: HexColorStyling;
 	outlineWidth: NumericStyling;
-	fillOpacity: NumericStyling;
+	outlineOpacity: NumericStyling;
 };
 
 interface Cursors {
@@ -349,6 +350,12 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 			styles.polygonOutlineWidth = this.getNumericStylingValue(
 				this.styles.outlineWidth,
 				styles.polygonOutlineWidth,
+				feature,
+			);
+
+			styles.polygonOutlineOpacity = this.getNumericStylingValue(
+				this.styles.outlineOpacity,
+				1,
 				feature,
 			);
 

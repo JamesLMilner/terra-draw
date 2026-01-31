@@ -181,12 +181,18 @@ export class TerraDrawLeafletAdapter extends TerraDrawExtend.TerraDrawBaseAdapte
 						opacity: lineStringOpacity === undefined ? 1 : lineStringOpacity,
 					};
 				} else if (feature.geometry.type === "Polygon") {
+					const polygonOutlineOpacity = (
+						featureStyles as { polygonOutlineOpacity?: number }
+					).polygonOutlineOpacity;
+
 					return {
 						interactive: false, // Removes mouse hover cursor styles
 						fillOpacity: featureStyles.polygonFillOpacity,
 						fillColor: featureStyles.polygonFillColor,
 						weight: featureStyles.polygonOutlineWidth,
 						stroke: true,
+						opacity:
+							polygonOutlineOpacity === undefined ? 1 : polygonOutlineOpacity,
 						color: featureStyles.polygonOutlineColor,
 						pane: paneId,
 					};

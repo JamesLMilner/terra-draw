@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.3.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw-google-maps-adapter@1.2.1...terra-draw-google-maps-adapter@1.3.0) (2026-02-01)
+
+
+### chore
+
+* **terra-draw-google-maps-adapter:** add support for polygon outline opacity (#795) ([](https://github.com/JamesLMilner/terra-draw/commit/f33d401127fe1e37da2b090e67e5d2379ad43424)), closes [#795](https://github.com/JamesLMilner/terra-draw/issues/795)
+
+
+### feat
+
+* **terra-draw-google-maps-adapter:** add support for point and linestring opacity (#787) ([](https://github.com/JamesLMilner/terra-draw/commit/3d8c0e8341be3f87a61afcf1012e806ebb519b5a)), closes [#787](https://github.com/JamesLMilner/terra-draw/issues/787)
+
 ## [1.2.1](https://github.com/JamesLMilner/terra-draw/compare/terra-draw-google-maps-adapter@1.2.0...terra-draw-google-maps-adapter@1.2.1) (2026-01-02)
 
 

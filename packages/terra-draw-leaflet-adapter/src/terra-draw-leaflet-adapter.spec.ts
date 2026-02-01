@@ -632,6 +632,7 @@ describe("TerraDrawLeafletAdapter", () => {
 				color: "#ffffff",
 				fillColor: "#ffffff",
 				fillOpacity: 1,
+				opacity: 1,
 				interactive: false,
 				pane: "1",
 				weight: 1,

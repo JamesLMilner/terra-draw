@@ -97,6 +97,7 @@ const Opacity: Story = {
 				new TerraDrawLineStringMode({
 					styles: {
 						lineStringOpacity: 0.5,
+						closingPointOpacity: 0.75,
 					},
 				}),
 			() =>
@@ -104,6 +105,7 @@ const Opacity: Story = {
 					styles: {
 						fillOpacity: 0.5,
 						outlineOpacity: 0.5,
+						closingPointOpacity: 0.75,
 					},
 				}),
 		],

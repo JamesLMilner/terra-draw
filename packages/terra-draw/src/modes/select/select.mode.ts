@@ -568,19 +568,38 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 		}
 	}
 
+	private getMidPointNearCursor(event: TerraDrawMouseEvent) {
+		let midPointClicked: FeatureId | undefined = undefined;
+		this.midPoints.ids.forEach((id) => {
+			if (midPointClicked) {
+				return;
+			}
+			const geometry = this.readFeature.getGeometry<Point>(id);
+			const distance = this.pixelDistance.measure(event, geometry.coordinates);
+
+			if (distance < this.pointerDistance) {
+				midPointClicked = id;
+			}
+		});
+
+		return midPointClicked;
+	}
+
 	private onLeftClick(event: TerraDrawMouseEvent) {
-		const { clickedFeature, clickedMidPoint } = this.featuresAtMouseEvent.find(
+		const { clickedFeature } = this.featuresAtMouseEvent.find(
 			event,
 			this.selected.length > 0,
 		);
 
-		if (this.selected.length && clickedMidPoint) {
+		const midPointClicked = this.getMidPointNearCursor(event);
+
+		if (this.selected.length && midPointClicked) {
 			// TODO: We probably want to make sure the midpoint
 			// is visible?
 
 			this.midPoints.insert({
 				featureId: this.selected[0],
-				midPointId: clickedMidPoint.id as FeatureId,
+				midPointId: midPointClicked as FeatureId,
 			});
 
 			this.onFinish(this.selected[0], {
@@ -777,14 +796,13 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 			typeof modeFlags.feature.coordinates.midpoints === "object" &&
 			modeFlags.feature.coordinates.midpoints.draggable
 		) {
-			const { clickedMidPoint: draggedMidPoint } =
-				this.featuresAtMouseEvent.find(event, this.selected.length > 0);
+			const draggedMidPointId = this.getMidPointNearCursor(event);
 
-			if (this.selected.length && draggedMidPoint) {
+			if (this.selected.length && draggedMidPointId) {
 				// We insert the midpoint first
 				this.midPoints.insert({
 					featureId: selectedId,
-					midPointId: draggedMidPoint.id as FeatureId,
+					midPointId: draggedMidPointId,
 				});
 
 				this.onFinish(this.selected[0], {
@@ -970,32 +988,21 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 			return;
 		}
 
-		let nearbyMidPoint = false;
-		this.midPoints.ids.forEach((id) => {
-			if (nearbyMidPoint) {
-				return;
-			}
-			const geometry = this.readFeature.getGeometry<Point>(id);
-			const distance = this.pixelDistance.measure(event, geometry.coordinates);
+		let nearbyMidPoint = this.getMidPointNearCursor(event);
 
-			if (distance < this.pointerDistance) {
-				nearbyMidPoint = true;
-			}
-		});
-
-		let nearbySelectionPoint = false;
 		// TODO: Is there a cleaner way to handle prioritising
 		// dragging selection points?
+		let nearbySelectionPoint = false;
 		this.selectionPoints.ids.forEach((id: FeatureId) => {
 			const geometry = this.readFeature.getGeometry<Point>(id);
 			const distance = this.pixelDistance.measure(event, geometry.coordinates);
 			if (distance < this.pointerDistance) {
-				nearbyMidPoint = false;
+				nearbyMidPoint = undefined;
 				nearbySelectionPoint = true;
 			}
 		});
 
-		if (nearbyMidPoint) {
+		if (nearbyMidPoint !== undefined) {
 			this.setCursor(this.cursors.insertMidpoint);
 			return;
 		}

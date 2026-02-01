@@ -1,4 +1,4 @@
-import { Position } from "geojson";
+import { Polygon, Position } from "geojson";
 import { MockModeConfig } from "../../test/mock-mode-config";
 import { TerraDrawSelectMode } from "./select.mode";
 import { MockCursorEvent } from "../../test/mock-cursor-event";
@@ -557,6 +557,161 @@ describe("TerraDrawSelectMode", () => {
 						action: "insertMidpoint",
 						mode: "select",
 					});
+				});
+
+				it("sets insert cursor near midpoint on mouse move, then inserts on click on exact midpoint", () => {
+					setSelectMode({
+						pointerDistance: 10,
+						flags: {
+							polygon: {
+								feature: {
+									draggable: false,
+									coordinates: { draggable: false, midpoints: true },
+								},
+							},
+						},
+					});
+
+					addPolygonToStore([
+						[0, 0],
+						[0, 1],
+						[1, 1],
+						[1, 0],
+						[0, 0],
+					]);
+
+					const polygonId = (onChange.mock.calls[0][0] as string[])[0];
+					const before =
+						store.getGeometryCopy<Polygon>(polygonId).coordinates[0];
+
+					// Select polygon first so midpoints exist
+					selectMode.onClick(MockCursorEvent({ lng: 0.5, lat: 0.5 }));
+
+					const midpoints = store
+						.copyAll()
+						.filter(
+							(f) =>
+								f.geometry.type === "Point" &&
+								f.properties?.[SELECT_PROPERTIES.MID_POINT],
+						);
+					expect(midpoints.length).toBeGreaterThan(0);
+
+					// Take the first midpoint coordinate for testing
+					const midPointFeature = midpoints[0];
+					if (midPointFeature.geometry.type !== "Point") {
+						throw new Error(
+							"Expected midpoint guidance point geometry to be Point",
+						);
+					}
+					const midPointCoordinate: Position =
+						midPointFeature.geometry.coordinates;
+
+					setCursor.mockClear();
+
+					// Move near an actual midpoint
+					selectMode.onMouseMove(
+						MockCursorEvent({
+							lng: midPointCoordinate[0],
+							lat: midPointCoordinate[1],
+						}),
+					);
+
+					expect(setCursor).toHaveBeenCalledTimes(1);
+					expect(setCursor).toHaveBeenCalledWith("crosshair");
+
+					// Click the same place to insert the midpoint coordinate
+					selectMode.onClick(
+						MockCursorEvent({
+							lng: midPointCoordinate[0],
+							lat: midPointCoordinate[1],
+						}),
+					);
+
+					const after =
+						store.getGeometryCopy<Polygon>(polygonId).coordinates[0];
+					expect(after.length).toBe(before.length + 1);
+					expect(
+						after.some(
+							(c: Position) =>
+								c[0] === midPointCoordinate[0] &&
+								c[1] === midPointCoordinate[1],
+						),
+					).toBe(true);
+				});
+
+				it("sets insert cursor near midpoint on mouse move, then inserts on click near midpoint", () => {
+					setSelectMode({
+						pointerDistance: 10,
+						flags: {
+							polygon: {
+								feature: {
+									draggable: false,
+									coordinates: { draggable: false, midpoints: true },
+								},
+							},
+						},
+					});
+
+					addPolygonToStore([
+						[0, 0],
+						[0, 1],
+						[1, 1],
+						[1, 0],
+						[0, 0],
+					]);
+
+					const polygonId = (onChange.mock.calls[0][0] as string[])[0];
+					const before =
+						store.getGeometryCopy<Polygon>(polygonId).coordinates[0];
+
+					// Select polygon first so midpoints exist
+					selectMode.onClick(MockCursorEvent({ lng: 0.5, lat: 0.5 }));
+
+					const midpoints = store
+						.copyAll()
+						.filter(
+							(f) =>
+								f.geometry.type === "Point" &&
+								f.properties?.[SELECT_PROPERTIES.MID_POINT],
+						);
+					expect(midpoints.length).toBeGreaterThan(0);
+
+					// Take the first midpoint coordinate for testing
+					const midPointFeature = midpoints[0];
+					if (midPointFeature.geometry.type !== "Point") {
+						throw new Error(
+							"Expected midpoint guidance point geometry to be Point",
+						);
+					}
+					const midPointCoordinate: Position =
+						midPointFeature.geometry.coordinates;
+
+					setCursor.mockClear();
+
+					const event = MockCursorEvent({
+						lng: midPointCoordinate[0] + 0.00001,
+						lat: midPointCoordinate[1] + 0.00001,
+					});
+
+					// Move near an actual midpoint
+					selectMode.onMouseMove(event);
+
+					expect(setCursor).toHaveBeenCalledTimes(1);
+					expect(setCursor).toHaveBeenCalledWith("crosshair");
+
+					// Click the same place to insert the midpoint coordinate
+					selectMode.onClick(event);
+
+					const after =
+						store.getGeometryCopy<Polygon>(polygonId).coordinates[0];
+					expect(after.length).toBe(before.length + 1);
+					expect(
+						after.some(
+							(c: Position) =>
+								c[0] === midPointCoordinate[0] &&
+								c[1] === midPointCoordinate[1],
+						),
+					).toBe(true);
 				});
 
 				describe("switch selected", () => {

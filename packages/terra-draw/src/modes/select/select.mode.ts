@@ -568,7 +568,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 		}
 	}
 
-	private getMidpointNearCursor(event: TerraDrawMouseEvent) {
+	private getMidPointNearCursor(event: TerraDrawMouseEvent) {
 		let midPointClicked: FeatureId | undefined = undefined;
 		this.midPoints.ids.forEach((id) => {
 			if (midPointClicked) {
@@ -591,7 +591,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 			this.selected.length > 0,
 		);
 
-		const midPointClicked = this.getMidpointNearCursor(event);
+		const midPointClicked = this.getMidPointNearCursor(event);
 
 		if (this.selected.length && midPointClicked) {
 			// TODO: We probably want to make sure the midpoint
@@ -796,7 +796,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 			typeof modeFlags.feature.coordinates.midpoints === "object" &&
 			modeFlags.feature.coordinates.midpoints.draggable
 		) {
-			const draggedMidPointId = this.getMidpointNearCursor(event);
+			const draggedMidPointId = this.getMidPointNearCursor(event);
 
 			if (this.selected.length && draggedMidPointId) {
 				// We insert the midpoint first
@@ -988,7 +988,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 			return;
 		}
 
-		let nearbyMidPoint = this.getMidpointNearCursor(event);
+		let nearbyMidPoint = this.getMidPointNearCursor(event);
 
 		// TODO: Is there a cleaner way to handle prioritising
 		// dragging selection points?

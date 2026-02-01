@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.24.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.23.3...terra-draw@1.24.0) (2026-02-01)
+
+
+### chore
+
+* **terra-draw:** fix npm audit high rated issues (#801) ([](https://github.com/JamesLMilner/terra-draw/commit/fdb0716373b4c16f243fc3a1c1fb365eb0f4146d)), closes [#801](https://github.com/JamesLMilner/terra-draw/issues/801)
+* **terra-draw:** improve the opacity story example for in the storybook package (#802) ([](https://github.com/JamesLMilner/terra-draw/commit/af97f567958dea020f8308e561c28180f2bd9708)), closes [#802](https://github.com/JamesLMilner/terra-draw/issues/802)
+* **terra-draw:** update github action versions to v6 for checkout and setup-node (#804) ([](https://github.com/JamesLMilner/terra-draw/commit/41a153a91c4dc745a0b3bb8d153af4dd38acd523)), closes [#804](https://github.com/JamesLMilner/terra-draw/issues/804)
+* **terra-draw:** use Node v24 and npm 11 where possible (#803) ([](https://github.com/JamesLMilner/terra-draw/commit/38a7c6fe4bea3b7ad363bf351d29ca92ecb624b1)), closes [#803](https://github.com/JamesLMilner/terra-draw/issues/803)
+
+
+### feat
+
+* **terra-draw:** add support for point and linestring opacity (#785) ([](https://github.com/JamesLMilner/terra-draw/commit/5ecccd60780f84a9a67e0a7c44c4ac124c6abbc7)), closes [#785](https://github.com/JamesLMilner/terra-draw/issues/785)
+* **terra-draw:** add support from polygon outline opacity configuration (#794) ([](https://github.com/JamesLMilner/terra-draw/commit/2b2a711dfabeb2e159cafecd6e0b94f359b5254c)), closes [#794](https://github.com/JamesLMilner/terra-draw/issues/794)
+
 ## [1.23.3](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.23.2...terra-draw@1.23.3) (2026-01-31)
 
 

@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.3.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw-mapbox-gl-adapter@1.2.0...terra-draw-mapbox-gl-adapter@1.3.0) (2026-02-01)
+
+
+### chore
+
+* **terra-draw-mapbox-gl-adapter:** add support for polygon outline opacity (#798) ([](https://github.com/JamesLMilner/terra-draw/commit/e41303e5661b5256ef0c548e28f6c0c778e26ba4)), closes [#798](https://github.com/JamesLMilner/terra-draw/issues/798)
+
+
+### feat
+
+* **terra-draw-mapbox-gl-adapter:** add support for point and linestring opacity (#789) ([](https://github.com/JamesLMilner/terra-draw/commit/9f2dac69a4ea6e257dee085aa643463bac7b34a7)), closes [#789](https://github.com/JamesLMilner/terra-draw/issues/789)
+
 ## [1.2.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw-mapbox-gl-adapter@1.1.0...terra-draw-mapbox-gl-adapter@1.2.0) (2025-10-12)
 
 

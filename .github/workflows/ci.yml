@@ -17,7 +17,7 @@ jobs:
       - name: Use Node
         uses: actions/setup-node@v4
         with:
-          node-version: "22.x"
+          node-version: "24.x"
       - name: Install Parent Folder
         run: npm ci
       - name: Run linting
@@ -30,7 +30,7 @@ jobs:
       - name: Use Node
         uses: actions/setup-node@v4
         with:
-          node-version: "22.x"
+          node-version: "24.x"
       - name: Install Parent Folder
         run: npm ci
       - name: Run unused code checking
@@ -43,7 +43,7 @@ jobs:
       - name: Use Node
         uses: actions/setup-node@v4
         with:
-          node-version: "22.x"
+          node-version: "24.x"
       - name: Install Parent Folder
         run: npm ci
       - name: Build terra-draw
@@ -58,7 +58,7 @@ jobs:
       - name: Use Node
         uses: actions/setup-node@v4
         with:
-          node-version: "22.x"
+          node-version: "24.x"
       - name: Install Parent Folder
         run: npm ci
       - name: Build terra-draw
@@ -82,7 +82,7 @@ jobs:
       - name: Use Node
         uses: actions/setup-node@v4
         with:
-          node-version: "22.x"
+          node-version: "24.x"
       - name: Install Parent Folder
         run: npm ci
       - name: Ensure no package-lock.json changes
@@ -109,7 +109,7 @@ jobs:
       - name: Use Node
         uses: actions/setup-node@v4
         with:
-          node-version: "22.x"
+          node-version: "24.x"
       - name: Install Parent Folder
         run: npm ci
       - name: Build terra-draw
@@ -126,7 +126,7 @@ jobs:
     - uses: actions/checkout@v4
     - uses: actions/setup-node@v4
       with:
-        node-version: "22.x"
+        node-version: "24.x"
     - name: Install parent directory
       run: npm ci
     - name: Build terra-draw
@@ -164,7 +164,7 @@ jobs:
       - name: Use Node
         uses: actions/setup-node@v4
         with:
-          node-version: "22.x"
+          node-version: "24.x"
       - name: Install Parent Folder
         run: npm ci
       - name: Benchmark

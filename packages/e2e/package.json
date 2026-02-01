@@ -19,7 +19,7 @@
 		"terra-draw-leaflet-adapter": "1.1.0"
 	},
 	"devDependencies": {
-		"@playwright/test": "1.49.1",
+		"@playwright/test": "1.58.1",
 		"@types/jest": "29.5.12",
 		"@types/node": "20.10.5",
 		"typescript": "5.6.3",

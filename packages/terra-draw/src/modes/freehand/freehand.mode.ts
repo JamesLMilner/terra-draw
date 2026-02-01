@@ -38,9 +38,10 @@ const defaultKeyEvents = { cancel: "Escape", finish: "Enter" };
 
 type FreehandPolygonStyling = {
 	fillColor: HexColorStyling;
-	outlineColor: HexColorStyling;
-	outlineWidth: NumericStyling;
 	fillOpacity: NumericStyling;
+	outlineColor: HexColorStyling;
+	outlineOpacity: NumericStyling;
+	outlineWidth: NumericStyling;
 	closingPointColor: HexColorStyling;
 	closingPointOpacity: NumericStyling;
 	closingPointWidth: NumericStyling;
@@ -354,6 +355,12 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 			styles.polygonOutlineColor = this.getHexColorStylingValue(
 				this.styles.outlineColor,
 				styles.polygonOutlineColor,
+				feature,
+			);
+
+			styles.polygonOutlineOpacity = this.getNumericStylingValue(
+				this.styles.outlineOpacity,
+				1,
 				feature,
 			);
 

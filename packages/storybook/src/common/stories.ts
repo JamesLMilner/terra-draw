@@ -80,6 +80,37 @@ const MarkerJPG: Story = {
 	},
 };
 
+// Opacity drawing story
+const Opacity: Story = {
+	...DefaultStory,
+	args: {
+		id: "opacity",
+		modes: [
+			() =>
+				new TerraDrawPointMode({
+					styles: {
+						pointOpacity: 0.5,
+						pointOutlineOpacity: 0.75,
+					},
+				}),
+			() =>
+				new TerraDrawLineStringMode({
+					styles: {
+						lineStringOpacity: 0.5,
+					},
+				}),
+			() =>
+				new TerraDrawPolygonMode({
+					styles: {
+						fillOpacity: 0.5,
+						outlineOpacity: 0.5,
+					},
+				}),
+		],
+		...DefaultStory.args,
+	},
+};
+
 // Polygon drawing story
 const Polygon: Story = {
 	...DefaultStory,
@@ -94,7 +125,7 @@ const Polygon: Story = {
 const PolygonWithCoordinateCounts: Story = {
 	...DefaultStory,
 	args: {
-		id: "polygon",
+		id: "polygon-wtih-coordinate-counts",
 		modes: [() => new TerraDrawPolygonMode()],
 		instructions:
 			"Click to add points, the provisional and committed coordinate counts will appear here",
@@ -790,6 +821,7 @@ const AllStories = {
 	Point,
 	MarkerPNG,
 	MarkerJPG,
+	Opacity,
 	Polygon,
 	PolygonWithCoordinatePoints,
 	PolygonWithCoordinateSnapping,

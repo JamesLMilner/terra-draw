@@ -5,6 +5,7 @@ export const getDefaultStyling = (): TerraDrawAdapterStyling => {
 		polygonFillColor: "#3f97e0",
 		polygonOutlineColor: "#3f97e0",
 		polygonOutlineWidth: 4,
+		polygonOutlineOpacity: 1,
 		polygonFillOpacity: 0.3,
 		pointColor: "#3f97e0",
 		pointOpacity: 1,

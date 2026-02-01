@@ -53,9 +53,10 @@ const defaultKeyEvents = { cancel: "Escape", finish: "Enter" };
 
 type PolygonStyling = {
 	fillColor: HexColorStyling;
-	outlineColor: HexColorStyling;
-	outlineWidth: NumericStyling;
 	fillOpacity: NumericStyling;
+	outlineColor: HexColorStyling;
+	outlineOpacity: NumericStyling;
+	outlineWidth: NumericStyling;
 };
 
 interface Cursors {
@@ -437,6 +438,12 @@ export class TerraDrawAngledRectangleMode extends TerraDrawBaseDrawMode<PolygonS
 				styles.polygonOutlineWidth = this.getNumericStylingValue(
 					this.styles.outlineWidth,
 					styles.polygonOutlineWidth,
+					feature,
+				);
+
+				styles.polygonOutlineOpacity = this.getNumericStylingValue(
+					this.styles.outlineOpacity,
+					1,
 					feature,
 				);
 

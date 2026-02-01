@@ -50,7 +50,6 @@ describe("FeatureAtPointerEventBehavior", () => {
 				);
 				expect(result).toStrictEqual({
 					clickedFeature: undefined,
-					clickedMidPoint: undefined,
 				});
 			});
 
@@ -74,7 +73,6 @@ describe("FeatureAtPointerEventBehavior", () => {
 
 				expect(result).toStrictEqual({
 					clickedFeature: undefined,
-					clickedMidPoint: undefined,
 				});
 			});
 
@@ -93,7 +91,6 @@ describe("FeatureAtPointerEventBehavior", () => {
 						(result.clickedFeature as GeoJSONStoreFeatures).id as string,
 					),
 				).toBe(true);
-				expect(result.clickedMidPoint).toBeUndefined();
 				expect(result.clickedFeature?.geometry.type).toBe("Point");
 			});
 
@@ -111,7 +108,7 @@ describe("FeatureAtPointerEventBehavior", () => {
 						(result.clickedFeature as GeoJSONStoreFeatures).id as string,
 					),
 				).toBe(true);
-				expect(result.clickedMidPoint).toBeUndefined();
+
 				expect(result.clickedFeature?.geometry.type).toBe("LineString");
 			});
 
@@ -129,7 +126,7 @@ describe("FeatureAtPointerEventBehavior", () => {
 						(result.clickedFeature as GeoJSONStoreFeatures).id as string,
 					),
 				).toBe(true);
-				expect(result.clickedMidPoint).toBeUndefined();
+
 				expect(result.clickedFeature?.geometry.type).toBe("Point");
 			});
 
@@ -147,7 +144,7 @@ describe("FeatureAtPointerEventBehavior", () => {
 						(result.clickedFeature as GeoJSONStoreFeatures).id as string,
 					),
 				).toBe(true);
-				expect(result.clickedMidPoint).toBeUndefined();
+
 				expect(result.clickedFeature?.geometry.type).toBe("Point");
 			});
 
@@ -164,7 +161,7 @@ describe("FeatureAtPointerEventBehavior", () => {
 						(result.clickedFeature as GeoJSONStoreFeatures).id as string,
 					),
 				).toBe(true);
-				expect(result.clickedMidPoint).toBeUndefined();
+
 				expect(result.clickedFeature?.geometry.type).toBe("Polygon");
 			});
 
@@ -181,7 +178,7 @@ describe("FeatureAtPointerEventBehavior", () => {
 						(result.clickedFeature as GeoJSONStoreFeatures).id as string,
 					),
 				).toBe(true);
-				expect(result.clickedMidPoint).toBeUndefined();
+
 				expect(result.clickedFeature?.geometry.type).toBe("LineString");
 			});
 
@@ -198,7 +195,7 @@ describe("FeatureAtPointerEventBehavior", () => {
 						(result.clickedFeature as GeoJSONStoreFeatures).id as string,
 					),
 				).toBe(true);
-				expect(result.clickedMidPoint).toBeUndefined();
+
 				expect(result.clickedFeature?.geometry.type).toBe("Point");
 			});
 

@@ -22,8 +22,6 @@ export class FeatureAtPointerEventBehavior extends TerraDrawModeBehavior {
 		let clickedPointDistance = Infinity;
 		let clickedLineString: GeoJSONStoreFeatures | undefined = undefined;
 		let clickedLineStringDistance = Infinity;
-		let clickedMidPoint: GeoJSONStoreFeatures | undefined = undefined;
-		let clickedMidPointDistance = Infinity;
 		let clickedPolygon: GeoJSONStoreFeatures | undefined = undefined;
 
 		const bbox = this.createClickBoundingBox.create(event);
@@ -50,17 +48,7 @@ export class FeatureAtPointerEventBehavior extends TerraDrawModeBehavior {
 					geometry.coordinates,
 				);
 
-				// We want to catch both clicked
-				// features but also any midpoints
-				// in the clicked area
 				if (
-					feature.properties[SELECT_PROPERTIES.MID_POINT] &&
-					distance < this.pointerDistance &&
-					distance < clickedMidPointDistance
-				) {
-					clickedMidPointDistance = distance;
-					clickedMidPoint = feature;
-				} else if (
 					!feature.properties[SELECT_PROPERTIES.MID_POINT] &&
 					distance < this.pointerDistance &&
 					distance < clickedPointDistance
@@ -110,7 +98,6 @@ export class FeatureAtPointerEventBehavior extends TerraDrawModeBehavior {
 
 		return {
 			clickedFeature: clickedPoint || clickedLineString || clickedPolygon,
-			clickedMidPoint,
 		};
 	}
 }

@@ -15,7 +15,7 @@ jobs:
       - name: Use Node
         uses: actions/setup-node@v4
         with:
-          node-version: "22.x"
+          node-version: "24.x"
       - name: Install packages
         run: npm ci
       - name: PR Conventional Commit Validation Against Commit Lint Config

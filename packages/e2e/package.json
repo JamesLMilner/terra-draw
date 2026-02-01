@@ -16,7 +16,7 @@
 	"dependencies": {
 		"leaflet": "1.9.4",
 		"terra-draw": "1.23.3",
-		"terra-draw-leaflet-adapter": "1.1.0"
+		"terra-draw-leaflet-adapter": "1.2.0"
 	},
 	"devDependencies": {
 		"@playwright/test": "1.58.1",

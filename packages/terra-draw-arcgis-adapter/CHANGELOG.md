@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.2.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw-arcgis-adapter@1.1.1...terra-draw-arcgis-adapter@1.2.0) (2026-02-01)
+
+
+### chore
+
+* **terra-draw-arcgis-adapter:** add support for polygon outline opacity (#796) ([](https://github.com/JamesLMilner/terra-draw/commit/c351504f43a9f0a894808ad20d4b4a4cb7b2850d)), closes [#796](https://github.com/JamesLMilner/terra-draw/issues/796)
+
+
+### feat
+
+* **terra-draw-arcgis-adapter:** add support for point and linestring opacity (#786) ([](https://github.com/JamesLMilner/terra-draw/commit/5fc674de7adb570bcd8d10935691c083691580b3)), closes [#786](https://github.com/JamesLMilner/terra-draw/issues/786)
+
 ## [1.1.1](https://github.com/JamesLMilner/terra-draw/compare/terra-draw-arcgis-adapter@1.1.0...terra-draw-arcgis-adapter@1.1.1) (2026-01-02)
 
 ## [1.1.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw-arcgis-adapter@1.0.0...terra-draw-arcgis-adapter@1.1.0) (2025-10-12)

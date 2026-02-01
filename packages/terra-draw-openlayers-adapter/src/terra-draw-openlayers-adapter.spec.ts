@@ -292,6 +292,9 @@ describe("TerraDrawOpenLayersAdapter", () => {
 						polygon: () =>
 							({
 								polygonFillColor: "#ffffff",
+								polygonFillOpacity: 0.5,
+								polygonOutlineColor: "#000000",
+								polygonOutlineOpacity: 0.25,
 							}) as unknown as TerraDrawAdapterStyling,
 					},
 				);

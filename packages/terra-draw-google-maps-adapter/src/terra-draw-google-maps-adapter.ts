@@ -211,9 +211,15 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawExtend.TerraDrawBaseAda
 					zIndex: calculatedStyles.zIndex,
 				};
 			case "Polygon":
+				const polygonOutlineOpacity = (
+					calculatedStyles as { polygonOutlineOpacity?: number }
+				).polygonOutlineOpacity;
+
 				return {
 					strokeColor: calculatedStyles.polygonOutlineColor,
 					strokeWeight: calculatedStyles.polygonOutlineWidth,
+					strokeOpacity:
+						polygonOutlineOpacity === undefined ? 1 : polygonOutlineOpacity,
 					fillOpacity: calculatedStyles.polygonFillOpacity,
 					fillColor: calculatedStyles.polygonFillColor,
 					zIndex: calculatedStyles.zIndex,

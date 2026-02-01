@@ -199,16 +199,26 @@ export class TerraDrawOpenLayersAdapter extends TerraDrawExtend.TerraDrawBaseAda
 
 					properties,
 				});
+
+				const polygonOutlineOpacity = (
+					style as { polygonOutlineOpacity?: number }
+				).polygonOutlineOpacity;
+
 				const { r, g, b } = this.hexToRGB(style.polygonFillColor);
+				const {
+					r: outlineR,
+					g: outlineG,
+					b: outlineB,
+				} = this.hexToRGB(style.polygonOutlineColor);
 
 				return new this._lib.Style({
 					zIndex: style.zIndex,
 					stroke: new this._lib.Stroke({
-						color: style.polygonOutlineColor,
+						color: `rgba(${outlineR},${outlineG},${outlineB},${polygonOutlineOpacity === undefined ? 1 : polygonOutlineOpacity})`,
 						width: style.polygonOutlineWidth,
 					}),
 					fill: new this._lib.Fill({
-						color: `rgba(${r},${g},${b},${style.polygonFillOpacity})`,
+						color: `rgba(${r},${g},${b},${style.polygonFillOpacity === undefined ? 1 : style.polygonFillOpacity})`,
 					}),
 				});
 			},

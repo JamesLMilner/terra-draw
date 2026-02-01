@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.2.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw-leaflet-adapter@1.1.0...terra-draw-leaflet-adapter@1.2.0) (2026-02-01)
+
+
+### chore
+
+* **terra-draw-leaflet-adapter:** add support for polygon outline opacity (#800) ([](https://github.com/JamesLMilner/terra-draw/commit/305471f8e89b047e9da0baea82483bd1b9d4a79e)), closes [#800](https://github.com/JamesLMilner/terra-draw/issues/800)
+
+
+### feat
+
+* **terra-draw-leaflet-adapter:** add support for point and linestring opacity (#788) ([](https://github.com/JamesLMilner/terra-draw/commit/8bf7c721513d5d0635f935858c6120efd646be2f)), closes [#788](https://github.com/JamesLMilner/terra-draw/issues/788)
+
 ## [1.1.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw-leaflet-adapter@1.0.3...terra-draw-leaflet-adapter@1.1.0) (2025-10-12)
 
 

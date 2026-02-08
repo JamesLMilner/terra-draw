@@ -162,6 +162,15 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 	private cursors: Required<Cursors> = defaultCursors;
 	private validations: Record<string, Validation> = {};
 
+	private dragTarget:
+		| { type: "none" }
+		| { type: "feature"; featureId: FeatureId }
+		| { type: "coordinate"; featureId: FeatureId; coordinateIndex: number }
+		| { type: "resize"; featureId: FeatureId; coordinateIndex: number }
+		| { type: "midpoint"; featureId: FeatureId; midPointId: FeatureId } = {
+		type: "none",
+	};
+
 	// Behaviors
 	private selectionPoints!: SelectionPointBehavior;
 	private midPoints!: MidPointBehavior;
@@ -346,6 +355,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 		this.selected = [];
 		this.selectionPoints.delete();
 		this.midPoints.delete();
+		this.dragTarget = { type: "none" };
 	}
 
 	private deleteSelected() {
@@ -359,6 +369,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 		}
 
 		this.selected = [];
+		this.dragTarget = { type: "none" };
 	}
 
 	private onRightClick(event: TerraDrawMouseEvent) {
@@ -568,7 +579,9 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 		}
 	}
 
-	private getMidPointNearCursor(event: TerraDrawMouseEvent) {
+	private getMidPointNearCursor(
+		event: TerraDrawMouseEvent,
+	): FeatureId | undefined {
 		let midPointClicked: FeatureId | undefined = undefined;
 		this.midPoints.ids.forEach((id) => {
 			if (midPointClicked) {
@@ -757,19 +770,32 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 		this.dragEventCount = 0;
 
 		const selectedId = this.selected[0];
-		const draggableCoordinateIndex = this.dragCoordinate.getDraggableIndex(
-			event,
-			selectedId,
-		);
 
-		// Drag Coordinate
+		const pointerOverTarget =
+			this.dragTarget.type !== "none" &&
+			this.dragTarget.featureId === selectedId
+				? this.dragTarget
+				: { type: "none" as const };
+
+		const draggableCoordinateIndex =
+			pointerOverTarget.type === "coordinate"
+				? pointerOverTarget.coordinateIndex
+				: this.dragCoordinate.getDraggableIndex(event, selectedId);
+
+		const resizableCoordinateIndex =
+			pointerOverTarget.type === "resize"
+				? pointerOverTarget.coordinateIndex
+				: this.dragCoordinateResizeFeature.getDraggableIndex(event, selectedId);
+
+		// Drag Coordinate / Resize Coordinate
 		if (
 			modeFlags &&
 			modeFlags.feature &&
 			modeFlags.feature.coordinates &&
-			(modeFlags.feature.coordinates.draggable ||
-				modeFlags.feature.coordinates.resizable) &&
-			draggableCoordinateIndex !== -1
+			((modeFlags.feature.coordinates.draggable &&
+				draggableCoordinateIndex !== -1) ||
+				(modeFlags.feature.coordinates.resizable &&
+					resizableCoordinateIndex !== -1))
 		) {
 			this.setCursor(this.cursors.dragStart);
 
@@ -777,7 +803,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 			if (modeFlags.feature.coordinates.resizable) {
 				this.dragCoordinateResizeFeature.startDragging(
 					selectedId,
-					draggableCoordinateIndex,
+					resizableCoordinateIndex,
 				);
 			} else {
 				// Without with resizable being set
@@ -796,7 +822,10 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 			typeof modeFlags.feature.coordinates.midpoints === "object" &&
 			modeFlags.feature.coordinates.midpoints.draggable
 		) {
-			const draggedMidPointId = this.getMidPointNearCursor(event);
+			const draggedMidPointId =
+				pointerOverTarget.type === "midpoint"
+					? pointerOverTarget.midPointId
+					: this.getMidPointNearCursor(event);
 
 			if (this.selected.length && draggedMidPointId) {
 				// We insert the midpoint first
@@ -829,13 +858,16 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 			modeFlags &&
 			modeFlags.feature &&
 			modeFlags.feature.draggable &&
-			this.dragFeature.canDrag(event, selectedId)
+			(pointerOverTarget.type === "feature" ||
+				this.dragFeature.canDrag(event, selectedId))
 		) {
 			this.setCursor(this.cursors.dragStart);
 			this.dragFeature.startDragging(event, selectedId);
 			setMapDraggability(false);
 			return;
 		}
+
+		this.setCursor("unset");
 	}
 
 	/** @internal */
@@ -980,11 +1012,16 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 	/** @internal */
 	onMouseMove(event: TerraDrawMouseEvent) {
 		if (!this.selected.length) {
+			this.dragTarget = { type: "none" };
 			this.setCursor("unset");
 			return;
 		}
 
-		if (this.dragFeature.isDragging()) {
+		if (
+			this.dragFeature.isDragging() ||
+			this.dragCoordinate.isDragging() ||
+			this.dragCoordinateResizeFeature.isDragging()
+		) {
 			return;
 		}
 
@@ -992,35 +1029,76 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 
 		// TODO: Is there a cleaner way to handle prioritising
 		// dragging selection points?
-		let nearbySelectionPoint = false;
-		this.selectionPoints.ids.forEach((id: FeatureId) => {
+		for (const id of this.selectionPoints.ids) {
 			const geometry = this.readFeature.getGeometry<Point>(id);
 			const distance = this.pixelDistance.measure(event, geometry.coordinates);
 			if (distance < this.pointerDistance) {
 				nearbyMidPoint = undefined;
-				nearbySelectionPoint = true;
+				break;
 			}
-		});
+		}
 
 		if (nearbyMidPoint !== undefined) {
+			this.dragTarget = {
+				type: "midpoint",
+				featureId: this.selected[0],
+				midPointId: nearbyMidPoint,
+			};
 			this.setCursor(this.cursors.insertMidpoint);
 			return;
 		}
 
-		// If we have a feature under the pointer then show the pointer over cursor
-		const { clickedFeature: featureUnderPointer } =
-			this.featuresAtMouseEvent.find(event, true);
+		const selected = this.selected[0];
 
-		if (
-			this.selected.length > 0 &&
-			((featureUnderPointer && featureUnderPointer.id === this.selected[0]) ||
-				nearbySelectionPoint)
-		) {
-			this.setCursor(this.cursors.pointerOver);
-		} else {
-			// Set it back to whatever the default cursor is
+		if (!selected) {
+			this.dragTarget = { type: "none" };
 			this.setCursor("unset");
+			return;
 		}
+
+		const properties = this.readFeature.getProperties(selected);
+		const modeFlags = this.flags[properties.mode as string];
+
+		const featureFlags = modeFlags.feature;
+		if (featureFlags) {
+			if (featureFlags.draggable && this.dragFeature.canDrag(event, selected)) {
+				this.dragTarget = { type: "feature", featureId: selected };
+				this.setCursor(this.cursors.pointerOver);
+				return;
+			}
+
+			if (featureFlags.coordinates && featureFlags.coordinates.draggable) {
+				const index = this.dragCoordinate.getDraggableIndex(event, selected);
+				if (index > -1) {
+					this.dragTarget = {
+						type: "coordinate",
+						featureId: selected,
+						coordinateIndex: index,
+					};
+					this.setCursor(this.cursors.pointerOver);
+					return;
+				}
+			}
+
+			if (featureFlags.coordinates && featureFlags.coordinates.resizable) {
+				const index = this.dragCoordinateResizeFeature.getDraggableIndex(
+					event,
+					selected,
+				);
+				if (index > -1) {
+					this.dragTarget = {
+						type: "resize",
+						featureId: selected,
+						coordinateIndex: index,
+					};
+					this.setCursor(this.cursors.pointerOver);
+					return;
+				}
+			}
+		}
+
+		this.dragTarget = { type: "none" };
+		this.setCursor("unset");
 	}
 
 	/** @internal */

@@ -536,13 +536,20 @@ const Select: Story = {
 			() =>
 				new TerraDrawPolygonMode({
 					showCoordinatePoints: true,
+					styles: {
+						coordinatePointColor: "#ff0000",
+					},
 				}),
 			() =>
 				new TerraDrawSelectMode({
+					styles: {
+						selectionPointColor: "#0000ff",
+					},
 					flags: {
 						polygon: {
 							feature: {
 								draggable: true,
+								coordinates: {},
 							},
 						},
 					},
@@ -633,7 +640,10 @@ const SelectWithMidPoints: Story = {
 							feature: {
 								draggable: true,
 								coordinates: {
-									midpoints: true,
+									draggable: true,
+									midpoints: {
+										draggable: true,
+									},
 								},
 							},
 						},

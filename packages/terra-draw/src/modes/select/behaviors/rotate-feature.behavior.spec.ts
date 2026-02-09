@@ -13,6 +13,7 @@ import { MidPointBehavior } from "./midpoint.behavior";
 import { RotateFeatureBehavior } from "./rotate-feature.behavior";
 import { SelectionPointBehavior } from "./selection-point.behavior";
 import { webMercatorCentroid } from "../../../geometry/web-mercator-centroid";
+import { PixelDistanceBehavior } from "../../pixel-distance.behavior";
 
 jest.mock("../../../geometry/web-mercator-centroid", () => {
 	const actual = jest.requireActual("../../../geometry/web-mercator-centroid");
@@ -45,6 +46,7 @@ describe("RotateFeatureBehavior", () => {
 				coordinatePointBehavior,
 				mutateFeatureBehavior,
 				readFeatureBehavior,
+				new PixelDistanceBehavior(config),
 			);
 
 			new RotateFeatureBehavior(
@@ -87,6 +89,7 @@ describe("RotateFeatureBehavior", () => {
 					coordinatePointBehavior,
 					mutateFeatureBehavior,
 					readFeatureBehavior,
+					new PixelDistanceBehavior(config),
 				),
 				coordinatePointBehavior,
 				readFeatureBehavior,

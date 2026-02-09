@@ -1,4 +1,4 @@
-import { LineString, Polygon, Position } from "geojson";
+import { LineString, Point, Polygon, Position } from "geojson";
 import { BehaviorConfig, TerraDrawModeBehavior } from "../../base.behavior";
 import { getMidPointCoordinates } from "../../../geometry/get-midpoints";
 import { SelectionPointBehavior } from "./selection-point.behavior";
@@ -6,6 +6,7 @@ import {
 	COMMON_PROPERTIES,
 	Projection,
 	SELECT_PROPERTIES,
+	TerraDrawMouseEvent,
 	UpdateTypes,
 } from "../../../common";
 import { FeatureId, GeoJSONStoreFeatures } from "../../../store/store";
@@ -15,10 +16,8 @@ import {
 	Mutations,
 } from "../../mutate-feature.behavior";
 import { ReadFeatureBehavior } from "../../read-feature.behavior";
-import {
-	getClosedCoordinates,
-	getUnclosedCoordinates,
-} from "../../../geometry/get-coordinates";
+import { getClosedCoordinates } from "../../../geometry/get-coordinates";
+import { PixelDistanceBehavior } from "../../pixel-distance.behavior";
 
 export class MidPointBehavior extends TerraDrawModeBehavior {
 	constructor(
@@ -27,6 +26,7 @@ export class MidPointBehavior extends TerraDrawModeBehavior {
 		private readonly coordinatePointBehavior: CoordinatePointBehavior,
 		private readonly mutateFeature: MutateFeatureBehavior,
 		private readonly readFeature: ReadFeatureBehavior,
+		private readonly pixelDistance: PixelDistanceBehavior,
 	) {
 		super(config);
 	}
@@ -48,6 +48,26 @@ export class MidPointBehavior extends TerraDrawModeBehavior {
 	}
 
 	set ids(_: FeatureId[]) {}
+
+	public getNearestMidPoint(event: TerraDrawMouseEvent) {
+		let closestMidPointDistance = Infinity;
+		let closestMidPointId: FeatureId | undefined = undefined;
+
+		this.ids.forEach((id) => {
+			const geometry = this.readFeature.getGeometry<Point>(id);
+			const distance = this.pixelDistance.measure(event, geometry.coordinates);
+
+			if (
+				distance < this.pointerDistance &&
+				distance < closestMidPointDistance
+			) {
+				closestMidPointDistance = distance;
+				closestMidPointId = id;
+			}
+		});
+
+		return closestMidPointId;
+	}
 
 	public insert({
 		featureId,

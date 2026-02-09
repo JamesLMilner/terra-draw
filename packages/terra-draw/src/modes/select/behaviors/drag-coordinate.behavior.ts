@@ -89,6 +89,13 @@ export class DragCoordinateBehavior extends TerraDrawModeBehavior {
 		return closestCoordinate;
 	}
 
+	public getDraggable(event: TerraDrawMouseEvent, selectedId: FeatureId) {
+		const geometry = this.readFeature.getGeometry(selectedId);
+		const closestCoordinate = this.getClosestCoordinate(event, geometry);
+
+		return closestCoordinate;
+	}
+
 	public getDraggableIndex(
 		event: TerraDrawMouseEvent,
 		selectedId: FeatureId,

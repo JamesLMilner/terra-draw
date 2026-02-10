@@ -125,7 +125,7 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawExtend.TerraDrawBaseAda
 			throw new Error("Styling function not defined");
 		}
 
-		const id = feature.getId();
+		const id = String(feature.getId());
 
 		// Style callback has been called for a feature that is not rendered
 		if (!this.renderedFeatureIds.has(id as string)) {

@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.24.1](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.24.0...terra-draw@1.24.1) (2026-02-10)
+
+
+### fix
+
+* **terra-draw:** assure consistent mouse move and click/drag behavior for midpoints (#807) ([](https://github.com/JamesLMilner/terra-draw/commit/aad8bd3da63cab7502f9dd1c7e8c7dc2901e6ef0)), closes [#807](https://github.com/JamesLMilner/terra-draw/issues/807)
+* **terra-draw:** ensure cursor near midpoint and actual insertion behaviours match (#805) ([](https://github.com/JamesLMilner/terra-draw/commit/338c2560e65b5699ecf49917cc16b2b82ec7915b)), closes [#805](https://github.com/JamesLMilner/terra-draw/issues/805)
+* **terra-draw:** ensure midpoint events do not always take priority in select mode (#810) ([](https://github.com/JamesLMilner/terra-draw/commit/808e3d3fa58fd34025e3504cdd0715cd674fb8bf)), closes [#810](https://github.com/JamesLMilner/terra-draw/issues/810)
+
 ## [1.24.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.23.3...terra-draw@1.24.0) (2026-02-01)
 
 

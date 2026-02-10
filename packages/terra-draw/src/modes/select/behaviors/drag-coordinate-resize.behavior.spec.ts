@@ -61,6 +61,7 @@ describe("DragCoordinateResizeBehavior", () => {
 				coordinatePointBehavior,
 				mutateFeatureBehavior,
 				readFeatureBehavior,
+				new PixelDistanceBehavior(config),
 			);
 
 			new DragCoordinateResizeBehavior(
@@ -107,6 +108,7 @@ describe("DragCoordinateResizeBehavior", () => {
 					coordinatePointBehavior,
 					mutateFeatureBehavior,
 					readFeatureBehavior,
+					new PixelDistanceBehavior(config),
 				);
 
 				dragMaintainedShapeBehavior = new DragCoordinateResizeBehavior(

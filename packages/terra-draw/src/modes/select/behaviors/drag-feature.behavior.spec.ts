@@ -41,6 +41,7 @@ describe("DragFeatureBehavior", () => {
 				coordinatePointBehavior,
 				mutateFeatureBehavior,
 				readFeatureBehavior,
+				new PixelDistanceBehavior(config),
 			);
 
 			new DragFeatureBehavior(
@@ -91,6 +92,7 @@ describe("DragFeatureBehavior", () => {
 				coordinatePointBehavior,
 				mutateFeatureBehavior,
 				readFeatureBehavior,
+				new PixelDistanceBehavior(config),
 			);
 
 			dragFeatureBehavior = new DragFeatureBehavior(

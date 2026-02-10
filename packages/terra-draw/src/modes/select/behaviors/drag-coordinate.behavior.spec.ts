@@ -64,6 +64,7 @@ describe("DragCoordinateBehavior", () => {
 				coordinatePointBehavior,
 				mutateFeatureBehavior,
 				readFeatureBehavior,
+				new PixelDistanceBehavior(config),
 			);
 			const coordinateBehavior = new CoordinateSnappingBehavior(
 				config,
@@ -119,6 +120,7 @@ describe("DragCoordinateBehavior", () => {
 				coordinatePointBehavior,
 				mutateFeatureBehavior,
 				readFeatureBehavior,
+				new PixelDistanceBehavior(config),
 			);
 			const coordinateBehavior = new CoordinateSnappingBehavior(
 				config,

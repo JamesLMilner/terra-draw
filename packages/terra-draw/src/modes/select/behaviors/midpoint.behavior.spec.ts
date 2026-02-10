@@ -10,6 +10,7 @@ import { ReadFeatureBehavior } from "../../read-feature.behavior";
 import { CoordinatePointBehavior } from "./coordinate-point.behavior";
 import { MidPointBehavior } from "./midpoint.behavior";
 import { SelectionPointBehavior } from "./selection-point.behavior";
+import { PixelDistanceBehavior } from "../../pixel-distance.behavior";
 
 describe("MidPointBehavior", () => {
 	let config: BehaviorConfig;
@@ -36,6 +37,7 @@ describe("MidPointBehavior", () => {
 				),
 				mutateFeatureBehavior,
 				readFeatureBehavior,
+				new PixelDistanceBehavior(config),
 			);
 		});
 
@@ -57,6 +59,7 @@ describe("MidPointBehavior", () => {
 					),
 					mutateFeatureBehavior,
 					readFeatureBehavior,
+					new PixelDistanceBehavior(config),
 				);
 			});
 

@@ -2,6 +2,7 @@ name: terra-draw-mapbox-gl-adapter Release
 
 permissions:
   contents: write
+  id-token: write  # Required for OIDC
 
 on: workflow_dispatch
 
@@ -68,5 +69,3 @@ jobs:
 
       - run: npm publish
         working-directory: ./packages/terra-draw-mapbox-gl-adapter
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

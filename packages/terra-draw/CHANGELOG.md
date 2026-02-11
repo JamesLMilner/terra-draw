@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.24.2](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.24.1...terra-draw@1.24.2) (2026-02-11)
+
+
+### chore
+
+* **terra-draw:** use OIDC Trusted Publishing (#812) ([](https://github.com/JamesLMilner/terra-draw/commit/b46f9166602c820dc50d49f3be7dc124035acd00)), closes [#812](https://github.com/JamesLMilner/terra-draw/issues/812)
+
 ## [1.24.1](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.24.0...terra-draw@1.24.1) (2026-02-10)
 
 

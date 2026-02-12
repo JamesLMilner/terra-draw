@@ -314,6 +314,33 @@ describe("TerraDrawLineStringMode", () => {
 			// index 1 is the "live" point while drawing
 			expect(coordinatePoints[1].geometry.coordinates).toStrictEqual([1, 1]);
 		});
+
+		it("passes a current geometry snapshot to snapping.toCustom while drawing", () => {
+			const onSnapshot = jest.fn();
+
+			lineStringMode = new TerraDrawLineStringMode({
+				snapping: {
+					toCustom: (_event, context) => {
+						onSnapshot(context.getCurrentGeometrySnapshot());
+						return undefined;
+					},
+				},
+			});
+
+			const mockConfig = MockModeConfig(lineStringMode.mode);
+			lineStringMode.register(mockConfig);
+			lineStringMode.start();
+
+			lineStringMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			lineStringMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
+
+			expect(onSnapshot).toHaveBeenCalledTimes(2);
+			expect(onSnapshot).toHaveBeenNthCalledWith(1, null);
+			expect(onSnapshot).toHaveBeenNthCalledWith(
+				2,
+				expect.objectContaining({ type: "LineString" }),
+			);
+		});
 	});
 
 	describe("onClick", () => {
@@ -1905,6 +1932,40 @@ describe("TerraDrawLineStringMode", () => {
 	});
 
 	describe("afterFeatureUpdated", () => {
+		it("recreates coordinate points when showCoordinatePoints is true", () => {
+			const lineStringMode = new TerraDrawLineStringMode({
+				showCoordinatePoints: true,
+			});
+
+			const mockConfig = MockModeConfig(lineStringMode.mode);
+
+			lineStringMode.register(mockConfig);
+			lineStringMode.start();
+
+			const mockLineString =
+				MockLineString() as GeoJSONStoreFeatures<LineString>;
+			const [featureId] = mockConfig.store.create([
+				{
+					geometry: mockLineString.geometry,
+					properties: mockLineString.properties as JSONObject,
+				},
+			]);
+
+			lineStringMode.afterFeatureUpdated({
+				...mockLineString,
+				id: featureId,
+			});
+
+			const coordinatePoints = mockConfig.store.copyAllWhere(
+				(properties) =>
+					properties[COMMON_PROPERTIES.COORDINATE_POINT] as boolean,
+			);
+
+			expect(coordinatePoints.length).toBe(
+				mockLineString.geometry.coordinates.length,
+			);
+		});
+
 		it("does nothing if the updated feature is not currently being drawn", () => {
 			const lineStringMode = new TerraDrawLineStringMode();
 
@@ -2099,6 +2160,99 @@ describe("TerraDrawLineStringMode", () => {
 			);
 
 			expect(mockConfig.store.has(snapPoint!.id as FeatureId)).toBe(false);
+		});
+
+		it("clears active edit drag state when the edited feature is externally updated", () => {
+			const lineStringMode = new TerraDrawLineStringMode({
+				editable: true,
+			});
+
+			const mockConfig = MockModeConfig(lineStringMode.mode);
+
+			lineStringMode.register(mockConfig);
+			lineStringMode.start();
+
+			lineStringMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			lineStringMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
+			lineStringMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
+			lineStringMode.onMouseMove(MockCursorEvent({ lng: 2, lat: 2 }));
+			lineStringMode.onClick(MockCursorEvent({ lng: 2, lat: 2 }));
+			lineStringMode.onClick(MockCursorEvent({ lng: 2, lat: 2 }));
+
+			mockConfig.onFinish.mockClear();
+
+			const [lineStringFeature] = mockConfig.store.copyAll();
+
+			lineStringMode.onDragStart(
+				MockCursorEvent({ lng: 0, lat: 0 }),
+				() => undefined,
+			);
+
+			const featuresAfterDragStart = mockConfig.store.copyAll();
+			expect(featuresAfterDragStart.length).toBe(2);
+
+			const editedPoint = featuresAfterDragStart.find(
+				(feature) => feature.properties[COMMON_PROPERTIES.EDITED] === true,
+			)!;
+
+			lineStringMode.afterFeatureUpdated({
+				...lineStringFeature,
+				geometry: {
+					type: "LineString",
+					coordinates: [
+						[0, 0],
+						[3, 3],
+					],
+				},
+			});
+
+			expect(mockConfig.store.has(editedPoint.id as FeatureId)).toBe(false);
+
+			mockConfig.onChange.mockClear();
+			lineStringMode.onDrag(
+				MockCursorEvent({ lng: 5, lat: 5 }),
+				() => undefined,
+			);
+
+			expect(mockConfig.onChange).toHaveBeenCalledTimes(0);
+		});
+	});
+
+	describe("afterFeatureAdded", () => {
+		it("creates coordinate points when showCoordinatePoints is true", () => {
+			const lineStringMode = new TerraDrawLineStringMode({
+				showCoordinatePoints: true,
+			});
+
+			const mockConfig = MockModeConfig(lineStringMode.mode);
+
+			lineStringMode.register(mockConfig);
+			lineStringMode.start();
+
+			const mockLineString =
+				MockLineString() as GeoJSONStoreFeatures<LineString>;
+			const [featureId] = mockConfig.store.create([
+				{
+					geometry: mockLineString.geometry,
+					properties: mockLineString.properties as JSONObject,
+				},
+			]);
+
+			mockConfig.onChange.mockClear();
+
+			lineStringMode.afterFeatureAdded({
+				...mockLineString,
+				id: featureId,
+			});
+
+			const coordinatePoints = mockConfig.store.copyAllWhere(
+				(properties) =>
+					properties[COMMON_PROPERTIES.COORDINATE_POINT] as boolean,
+			);
+
+			expect(coordinatePoints.length).toBe(
+				mockLineString.geometry.coordinates.length,
+			);
 		});
 	});
 });

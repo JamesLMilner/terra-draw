@@ -289,10 +289,6 @@ export class TerraDrawSectorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 		let mutations: CoordinateMutation[] | ReplaceMutation<Polygon>;
 
 		if (this.currentCoordinate === 1) {
-			// We must add a very small epsilon value so that Mapbox GL
-			// renders the polygon - There might be a cleaner solution?
-			const offset = this.mutateFeature.epsilonOffset();
-
 			mutations = [
 				{
 					type: Mutations.Update,
@@ -302,7 +298,7 @@ export class TerraDrawSectorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 				{
 					type: Mutations.Update,
 					index: 2,
-					coordinate: [event.lng, event.lat - offset],
+					coordinate: [event.lng, event.lat],
 				},
 			];
 		} else if (this.currentCoordinate === 2) {

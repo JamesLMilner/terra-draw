@@ -1,5 +1,12 @@
-// eslint-disable-next-line no-console
-console.log("===== Using ts-jest ======");
+/* eslint-disable no-console */
+
+const CoverageThreshold = process.env.COVERAGE_THRESHOLD !== "false";
+
+console.log("Loading Jest configuration...");
+console.log("Using ts-jest");
+console.log(
+	`Coverage threshold is ${CoverageThreshold ? "enabled" : "disabled"}\n`,
+);
 
 module.exports = {
 	preset: "ts-jest",
@@ -22,12 +29,14 @@ module.exports = {
 	],
 	collectCoverage: true,
 	collectCoverageFrom: ["<rootDir>/packages/**/src/**"],
-	coverageThreshold: {
-		global: {
-			lines: 80,
-			functions: 80,
-			branches: 80,
-			statements: 80,
-		},
-	},
+	coverageThreshold: CoverageThreshold
+		? {
+				global: {
+					lines: 80,
+					functions: 80,
+					branches: 80,
+					statements: 80,
+				},
+			}
+		: undefined,
 };

@@ -789,7 +789,7 @@ describe("TerraDrawPolygonMode", () => {
 				[
 					[0, 0],
 					[1, 1],
-					[1, 0.999999], // Small offset to keep Mapbox GL happy
+					[1, 1],
 					[0, 0],
 				],
 			]);

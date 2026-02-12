@@ -22,6 +22,8 @@ module.exports = {
 		"<rootDir>/guides/",
 	],
 	coveragePathIgnorePatterns: [
+		"<rootDir>/packages/terra-draw/src/benchmark/",
+		"<rootDir>/packages/terra-draw/src/benchmark.ts",
 		"<rootDir>/packages/.*/dist/",
 		"<rootDir>/packages/.*/src/test",
 		"<rootDir>/packages/e2e/",

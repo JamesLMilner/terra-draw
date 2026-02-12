@@ -5,6 +5,7 @@ module.exports = {
 	preset: "ts-jest",
 	testEnvironment: "node",
 	testPathIgnorePatterns: [
+		"<rootDir>/packages/.*/dist/",
 		"<rootDir>/node_modules/",
 		"<rootDir>/packages/e2e/",
 		"<rootDir>/packages/packages/",
@@ -14,6 +15,7 @@ module.exports = {
 		"<rootDir>/guides/",
 	],
 	coveragePathIgnorePatterns: [
+		"<rootDir>/packages/.*/dist/",
 		"<rootDir>/packages/.*/src/test",
 		"<rootDir>/packages/e2e/",
 		"<rootDir>/packages/storybook/",

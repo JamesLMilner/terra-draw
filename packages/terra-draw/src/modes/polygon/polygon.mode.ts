@@ -366,10 +366,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 				{
 					type: Mutations.Update,
 					index: 2,
-					coordinate: [
-						event.lng,
-						event.lat - this.mutateFeature.epsilonOffset(),
-					],
+					coordinate: [event.lng, event.lat],
 				},
 			];
 		} else if (this.currentCoordinate === 2) {

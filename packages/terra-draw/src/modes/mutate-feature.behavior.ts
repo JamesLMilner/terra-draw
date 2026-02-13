@@ -353,14 +353,6 @@ export class MutateFeatureBehavior extends TerraDrawModeBehavior {
 		return feature;
 	}
 
-	public epsilonOffset() {
-		// We must add a very small epsilon value so that Mapbox GL
-		// renders the polygon - There might be a cleaner solution?
-		const epsilon = 1 / Math.pow(10, this.coordinatePrecision - 1);
-		const offset = Math.max(0.000001, epsilon);
-		return offset;
-	}
-
 	private mutateFeature<G extends GeoJSONStoreGeometries>({
 		type,
 		featureId,

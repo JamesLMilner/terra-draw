@@ -85,7 +85,7 @@ type ChangeListener = (
 	context?: TerraDrawOnChangeContext,
 ) => void;
 type SelectListener = (id: FeatureId) => void;
-type DeselectListener = () => void;
+type DeselectListener = (id: FeatureId) => void;
 
 interface TerraDrawEventListeners {
 	ready: () => void;
@@ -123,9 +123,7 @@ class TerraDraw {
 		select: SelectListener[];
 		deselect: DeselectListener[];
 	};
-	// This is the select mode that is assigned in the instance.
-	// There can only be 1 select mode active per instance
-	private _instanceSelectMode: undefined | string;
+	private _instanceSelectModes: string[];
 
 	constructor(options: {
 		adapter: TerraDrawAdapter;
@@ -134,6 +132,7 @@ class TerraDraw {
 		tracked?: boolean;
 	}) {
 		this._adapter = options.adapter;
+		this._instanceSelectModes = [];
 
 		this._mode = new TerraDrawStaticMode();
 
@@ -160,16 +159,13 @@ class TerraDraw {
 			throw new Error("No modes provided");
 		}
 
-		// Ensure only one select mode can be present
+		// Track the select modes in the order they are provided
 		modeKeys.forEach((mode) => {
 			if (modesMap[mode].type !== ModeTypes.Select) {
 				return;
 			}
-			if (this._instanceSelectMode) {
-				throw new Error("only one type of select mode can be provided");
-			} else {
-				this._instanceSelectMode = mode;
-			}
+
+			this._instanceSelectModes.push(mode);
 		});
 
 		this._modes = { ...modesMap, static: this._mode };
@@ -289,7 +285,7 @@ class TerraDraw {
 			}
 
 			this._eventListeners.deselect.forEach((listener) => {
-				listener();
+				listener(deselectedId);
 			});
 
 			const { changed, unchanged } = getChanged([deselectedId]);
@@ -341,15 +337,19 @@ class TerraDraw {
 			[key: string]: (feature: GeoJSONStoreFeatures) => TerraDrawAdapterStyling;
 		} = {};
 
+		const activeSelectMode = this._instanceSelectModes.includes(this._mode.mode)
+			? this._mode.mode
+			: undefined;
+
 		Object.keys(this._modes).forEach((mode) => {
 			modeStyles[mode] = (feature: GeoJSONStoreFeatures) => {
 				// If the feature is selected, we want to use the select mode styling
 				if (
-					this._instanceSelectMode &&
+					activeSelectMode &&
 					feature.properties[SELECT_PROPERTIES.SELECTED]
 				) {
-					return this._modes[this._instanceSelectMode].styleFeature.bind(
-						this._modes[this._instanceSelectMode],
+					return this._modes[activeSelectMode].styleFeature.bind(
+						this._modes[activeSelectMode],
 					)(feature);
 				}
 
@@ -554,39 +554,63 @@ class TerraDraw {
 			});
 	}
 
-	private getSelectModeOrThrow() {
-		const selectMode = this.getSelectMode({ switchToSelectMode: true });
+	private getSelectModeOrThrow(selectMode: string | undefined = undefined) {
+		const foundSelectMode = this.getSelectMode({
+			switchToSelectMode: true,
+			selectMode,
+		});
 
-		if (!selectMode) {
+		if (!foundSelectMode) {
 			throw new Error("No select mode defined in instance");
 		}
 
-		return selectMode;
+		return foundSelectMode;
 	}
 
 	private getSelectMode({
 		switchToSelectMode,
+		selectMode,
 	}: {
 		switchToSelectMode: boolean;
+		selectMode?: string;
 	}) {
 		this.checkEnabled();
+		const currentMode = this.getMode();
 
-		if (!this._instanceSelectMode) {
+		if (this._instanceSelectModes.length === 0) {
 			return null;
 		}
 
-		const currentMode = this.getMode();
-
-		// If we're not already in the select mode, we switch to it
-		if (switchToSelectMode && currentMode !== this._instanceSelectMode) {
-			this.setMode(this._instanceSelectMode);
+		if (
+			selectMode !== undefined &&
+			!this._instanceSelectModes.includes(selectMode)
+		) {
+			throw new Error(`No select mode with this name present: ${selectMode}`);
 		}
 
-		const selectMode = this._modes[
-			this._instanceSelectMode
-		] as TerraDrawBaseSelectMode<any>;
+		let modeToUse: string;
 
-		return selectMode;
+		// Explicit select mode provided, we use that
+		if (selectMode !== undefined) {
+			modeToUse = selectMode;
+		}
+		// No explicit select mode provided, but we are currently in a select mode, we use the current mode
+		else if (this._instanceSelectModes.includes(currentMode)) {
+			modeToUse = currentMode;
+		}
+		// Finally we default to the first select mode provided in the instance
+		else {
+			modeToUse = this._instanceSelectModes[0];
+		}
+
+		// If we're not already in the select mode, we switch to it
+		if (switchToSelectMode && currentMode !== modeToUse) {
+			this.setMode(modeToUse);
+		}
+
+		const mode = this._modes[modeToUse] as TerraDrawBaseSelectMode<any>;
+
+		return mode;
 	}
 
 	private isGuidanceFeature(feature: GeoJSONStoreFeatures): boolean {
@@ -645,7 +669,7 @@ class TerraDraw {
 	/**
 	 * Allows the user to get a snapshot (copy) of all given features
 	 *
-	 * @returns An array of all given Feature Geometries in the instances store
+	 * @returns An array of all given features in the instances store
 	 */
 	getSnapshot() {
 		// This is a read only method so we do not need to check if enabled
@@ -655,7 +679,7 @@ class TerraDraw {
 	/**
 	 * Allows the user to get a snapshot (copy) of a given feature by id
 	 *
-	 * @returns A copy of the feature geometry in the instances store
+	 * @returns A copy of the features in the instances store
 	 */
 	getSnapshotFeature(id: FeatureId) {
 		if (!this._store.has(id)) {
@@ -800,23 +824,27 @@ class TerraDraw {
 	/**
 	 * Provides the ability to programmatically select a feature using the instances provided select mode.
 	 * If not select mode is provided in the instance, an error will be thrown. If the instance is not currently
-	 * in the select mode, it will switch to it.
+	 * in a select mode, it will switch to the first select mode provided in the constructor unless
+	 * a select mode name is explicitly provided.
 	 * @param id - the id of the feature to select
+	 * @param selectMode - optional select mode name to use when selecting the feature
 	 */
-	selectFeature(id: FeatureId) {
-		const selectMode = this.getSelectModeOrThrow();
-		selectMode.selectFeature(id);
+	selectFeature(id: FeatureId, selectMode?: string) {
+		const selectModeInstance = this.getSelectModeOrThrow(selectMode);
+
+		selectModeInstance.selectFeature(id);
 	}
 
 	/**
 	 * Provides the ability to programmatically deselect a feature using the instances provided select mode.
 	 * If not select mode is provided in the instance, an error will be thrown. If the instance is not currently
-	 * in the select mode, it will switch to it.
+	 * in a select mode, it will switch to the first select mode provided in the constructor.
 	 * @param id  - the id of the feature to deselect
 	 */
 	deselectFeature(id: FeatureId) {
-		const selectMode = this.getSelectModeOrThrow();
-		selectMode.deselectFeature(id);
+		const selectModeInstance = this.getSelectModeOrThrow();
+
+		selectModeInstance.deselectFeature(id);
 	}
 
 	/**

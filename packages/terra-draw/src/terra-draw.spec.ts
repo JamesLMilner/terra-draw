@@ -1,15 +1,19 @@
 /**
  * @jest-environment jsdom
  */
+import { Polygon } from "geojson";
 import { COMMON_PROPERTIES, SELECT_PROPERTIES } from "./common";
 import { FeatureId } from "./extend";
 import {
 	GeoJSONStoreFeatures,
+	GeoJSONStoreGeometries,
 	TerraDraw,
+	TerraDrawChanges,
 	TerraDrawLineStringMode,
 	TerraDrawPointMode,
 	TerraDrawPolygonMode,
 	TerraDrawSelectMode,
+	TerraDrawStylingFunction,
 } from "./terra-draw";
 import { TerraDrawTestAdapter } from "./terra-draw.extensions.spec";
 import { MockCursorEvent } from "./test/mock-cursor-event";
@@ -704,6 +708,541 @@ describe("Terra Draw", () => {
 
 			const feature = draw.getSnapshot()[0];
 			expect(feature.properties.selected).toBe(true);
+		});
+
+		describe("multiple select modes", () => {
+			const featureId = "f8e5a38d-ecfa-4294-8461-d9cff0e0d7f8";
+
+			const getGuidanceFeatures = (
+				feature: GeoJSONStoreFeatures<GeoJSONStoreGeometries>,
+			) =>
+				feature.properties[SELECT_PROPERTIES.SELECTION_POINT] ||
+				feature.properties[SELECT_PROPERTIES.MID_POINT];
+
+			const createPointFeature = (): GeoJSONStoreFeatures => ({
+				id: featureId,
+				type: "Feature",
+				geometry: {
+					type: "Point",
+					coordinates: [-25.431289673, 34.355907891],
+				},
+				properties: {
+					mode: "point",
+				},
+			});
+
+			const createPolygonFeature = (): GeoJSONStoreFeatures => ({
+				id: featureId,
+				type: "Feature",
+				geometry: {
+					type: "Polygon",
+					coordinates: [
+						[
+							[-25.431289673, 34.355907891],
+							[-25.531289673, 34.455907891],
+							[-25.631289673, 34.355907891],
+							[-25.431289673, 34.355907891],
+						],
+					],
+				},
+				properties: {
+					mode: "polygon",
+				},
+			});
+
+			const selectModePointFlags = {
+				flags: {
+					point: {
+						feature: { draggable: true },
+					},
+				},
+			};
+
+			const alternateSelectModePointFlags = {
+				modeName: "alternate-select",
+				flags: {
+					point: {
+						feature: { draggable: true },
+					},
+				},
+			};
+
+			const selectModePolygonFlags = {
+				flags: {
+					polygon: {
+						feature: {
+							coordinates: {
+								draggable: true,
+								midpoints: true,
+							},
+						},
+					},
+				},
+			};
+
+			const alternateSelectModePolygonFlags = {
+				modeName: "alternate-select",
+				flags: {
+					polygon: {
+						feature: {
+							coordinates: {
+								draggable: true,
+								midpoints: false,
+							},
+						},
+					},
+				},
+			};
+
+			it("uses the first select mode by default when multiple are provided", () => {
+				const draw = new TerraDraw({
+					adapter,
+					modes: [
+						new TerraDrawPointMode(),
+						new TerraDrawSelectMode(selectModePointFlags),
+						new TerraDrawSelectMode(alternateSelectModePointFlags),
+					],
+				});
+
+				draw.start();
+				draw.addFeatures([createPointFeature()]);
+
+				draw.selectFeature(featureId);
+
+				expect(draw.getMode()).toBe("select");
+			});
+
+			it("uses constructor order for default select mode when alternate-select is listed first", () => {
+				const draw = new TerraDraw({
+					adapter,
+					modes: [
+						new TerraDrawPointMode(),
+						new TerraDrawSelectMode(alternateSelectModePointFlags),
+						new TerraDrawSelectMode(selectModePointFlags),
+					],
+				});
+
+				draw.start();
+				draw.addFeatures([createPointFeature()]);
+
+				draw.selectFeature(featureId);
+
+				expect(draw.getMode()).toBe("alternate-select");
+			});
+
+			it("uses the provided select mode when passed to selectFeature", () => {
+				const draw = new TerraDraw({
+					adapter,
+					modes: [
+						new TerraDrawPointMode(),
+						new TerraDrawSelectMode(selectModePointFlags),
+						new TerraDrawSelectMode(alternateSelectModePointFlags),
+					],
+				});
+
+				draw.start();
+				draw.addFeatures([createPointFeature()]);
+
+				draw.selectFeature(featureId, "alternate-select");
+
+				expect(draw.getMode()).toBe("alternate-select");
+			});
+
+			it("keeps the active select mode when selecting again without an explicit mode", () => {
+				const draw = new TerraDraw({
+					adapter,
+					modes: [
+						new TerraDrawPolygonMode(),
+						new TerraDrawSelectMode(selectModePolygonFlags),
+						new TerraDrawSelectMode(alternateSelectModePolygonFlags),
+					],
+				});
+
+				draw.start();
+				draw.addFeatures([createPolygonFeature()]);
+
+				draw.selectFeature(featureId, "alternate-select");
+				expect(draw.getMode()).toBe("alternate-select");
+
+				const firstSelectionGuidanceFeatures = draw
+					.getSnapshot()
+					.filter(getGuidanceFeatures);
+
+				expect(firstSelectionGuidanceFeatures).toHaveLength(3);
+
+				draw.selectFeature(featureId);
+
+				expect(draw.getMode()).toBe("alternate-select");
+
+				const secondSelectionGuidanceFeatures = draw
+					.getSnapshot()
+					.filter(getGuidanceFeatures);
+
+				expect(secondSelectionGuidanceFeatures).toHaveLength(3);
+			});
+
+			it("does not re-trigger selection side effects when selecting the same feature in the active select mode", () => {
+				const draw = new TerraDraw({
+					adapter,
+					modes: [
+						new TerraDrawPolygonMode(),
+						new TerraDrawSelectMode(selectModePolygonFlags),
+						new TerraDrawSelectMode(alternateSelectModePolygonFlags),
+					],
+				});
+
+				const onSelect = jest.fn();
+				draw.on("select", onSelect);
+
+				draw.start();
+				draw.addFeatures([createPolygonFeature()]);
+
+				draw.selectFeature(featureId, "alternate-select");
+
+				expect(draw.getMode()).toBe("alternate-select");
+				expect(onSelect).toHaveBeenCalledTimes(1);
+
+				const firstSelectionGuidanceFeatures = draw
+					.getSnapshot()
+					.filter(getGuidanceFeatures);
+
+				expect(firstSelectionGuidanceFeatures).toHaveLength(3);
+
+				draw.selectFeature(featureId);
+
+				expect(draw.getMode()).toBe("alternate-select");
+				expect(onSelect).toHaveBeenCalledTimes(1);
+
+				const secondSelectionGuidanceFeatures = draw
+					.getSnapshot()
+					.filter(getGuidanceFeatures);
+
+				expect(secondSelectionGuidanceFeatures).toHaveLength(3);
+			});
+
+			it("switches from initial select mode to alternate select mode when passed to selectFeature", () => {
+				const draw = new TerraDraw({
+					adapter,
+					modes: [
+						new TerraDrawPointMode(),
+						new TerraDrawSelectMode(selectModePointFlags),
+						new TerraDrawSelectMode(alternateSelectModePointFlags),
+					],
+				});
+
+				draw.start();
+				draw.addFeatures([createPointFeature()]);
+
+				draw.setMode("select");
+				expect(draw.getMode()).toBe("select");
+
+				draw.selectFeature(featureId, "alternate-select");
+
+				expect(draw.getMode()).toBe("alternate-select");
+			});
+
+			it("deselects correctly regardless of select mode", () => {
+				const draw = new TerraDraw({
+					adapter,
+					modes: [
+						new TerraDrawPolygonMode(),
+						new TerraDrawSelectMode(selectModePolygonFlags),
+						new TerraDrawSelectMode(alternateSelectModePolygonFlags),
+					],
+				});
+
+				draw.start();
+				draw.addFeatures([createPolygonFeature()]);
+
+				draw.selectFeature(featureId);
+				draw.deselectFeature(featureId);
+
+				const snapshot = draw.getSnapshot();
+				const selectedFeature = draw.getSnapshotFeature(featureId);
+				const guidanceFeatures = snapshot.filter(getGuidanceFeatures);
+
+				expect(selectedFeature?.properties[SELECT_PROPERTIES.SELECTED]).toBe(
+					false,
+				);
+				expect(guidanceFeatures).toHaveLength(0);
+
+				draw.selectFeature(featureId, "alternate-select");
+				draw.deselectFeature(featureId);
+
+				const snapshotAlternate = draw.getSnapshot();
+				const selectedFeatureAlternate = draw.getSnapshotFeature(featureId);
+				const guidanceFeaturesAlternate =
+					snapshotAlternate.filter(getGuidanceFeatures);
+
+				expect(
+					selectedFeatureAlternate?.properties[SELECT_PROPERTIES.SELECTED],
+				).toBe(false);
+				expect(guidanceFeaturesAlternate).toHaveLength(0);
+			});
+
+			it("correctly handles removing all associated guidance features regardless of select mode", () => {
+				const draw = new TerraDraw({
+					adapter,
+					modes: [
+						new TerraDrawPolygonMode(),
+						new TerraDrawSelectMode(selectModePolygonFlags),
+						new TerraDrawSelectMode(alternateSelectModePolygonFlags),
+					],
+				});
+
+				draw.start();
+				draw.addFeatures([createPolygonFeature()]);
+
+				draw.selectFeature(featureId);
+				draw.removeFeatures([featureId]);
+
+				expect(draw.getSnapshot()).toHaveLength(0);
+
+				draw.addFeatures([createPolygonFeature()]);
+
+				draw.selectFeature(featureId, "alternate-select");
+				draw.removeFeatures([featureId]);
+
+				expect(draw.getSnapshot()).toHaveLength(0);
+			});
+
+			it("keeps the feature selected when switching from 'select' to 'alternate-select'", () => {
+				const draw = new TerraDraw({
+					adapter,
+					modes: [
+						new TerraDrawPolygonMode(),
+						new TerraDrawSelectMode(selectModePolygonFlags),
+						new TerraDrawSelectMode(alternateSelectModePolygonFlags),
+					],
+				});
+
+				draw.start();
+				draw.addFeatures([createPolygonFeature()]);
+
+				draw.selectFeature(featureId);
+				expect(draw.getMode()).toBe("select");
+
+				const selectedFeatureBeforeSwitch = draw.getSnapshotFeature(featureId);
+				expect(
+					selectedFeatureBeforeSwitch?.properties[SELECT_PROPERTIES.SELECTED],
+				).toBe(true);
+
+				const selectGuidanceFeatures = draw
+					.getSnapshot()
+					.filter(getGuidanceFeatures);
+
+				expect(selectGuidanceFeatures).toHaveLength(6);
+
+				draw.selectFeature(featureId, "alternate-select");
+				expect(draw.getMode()).toBe("alternate-select");
+
+				const selectedFeatureAfterSwitch = draw.getSnapshotFeature(featureId);
+				expect(
+					selectedFeatureAfterSwitch?.properties[SELECT_PROPERTIES.SELECTED],
+				).toBe(true);
+
+				const alernateSelectGuidanceFeatures = draw
+					.getSnapshot()
+					.filter(getGuidanceFeatures);
+
+				expect(alernateSelectGuidanceFeatures).toHaveLength(3);
+			});
+
+			it("uses 'alternate-select' selected styling when feature was selected in 'alternate-select'", () => {
+				const render = jest.spyOn(adapter, "render");
+
+				const draw = new TerraDraw({
+					adapter,
+					modes: [
+						new TerraDrawPolygonMode(),
+						new TerraDrawSelectMode(selectModePolygonFlags),
+						new TerraDrawSelectMode({
+							...alternateSelectModePolygonFlags,
+							styles: {
+								selectedPolygonColor: "#000000",
+							},
+						}),
+					],
+				});
+
+				draw.start();
+				const polygon = createPolygonFeature();
+				draw.addFeatures([polygon]);
+
+				draw.selectFeature(featureId, "alternate-select");
+
+				const selectedFeature = draw.getSnapshotFeature(
+					featureId,
+				) as GeoJSONStoreFeatures<Polygon>;
+				expect(selectedFeature?.properties[SELECT_PROPERTIES.SELECTED]).toBe(
+					true,
+				);
+
+				const styling = render.mock.calls[render.mock.calls.length - 1][1];
+
+				expect(
+					styling["alternate-select"](selectedFeature).polygonFillColor,
+				).toBe("#000000");
+			});
+
+			it("is idempotent when selecting the same feature across select modes", () => {
+				const alternateSelectModePolygonFlagsWithMidPoints = {
+					modeName: "alternate-select",
+					flags: {
+						polygon: {
+							feature: {
+								coordinates: {
+									draggable: true,
+									midpoints: true,
+								},
+							},
+						},
+					},
+				};
+
+				const draw = new TerraDraw({
+					adapter,
+					modes: [
+						new TerraDrawPolygonMode(),
+						new TerraDrawSelectMode(selectModePolygonFlags),
+						new TerraDrawSelectMode(
+							alternateSelectModePolygonFlagsWithMidPoints,
+						),
+					],
+				});
+
+				draw.start();
+				draw.addFeatures([createPolygonFeature()]);
+
+				draw.selectFeature(featureId);
+
+				expect(draw.getMode()).toBe("select");
+
+				const firstSelectionSnapshot = draw.getSnapshot();
+				const firstSelectionGuidanceFeatures =
+					firstSelectionSnapshot.filter(getGuidanceFeatures);
+
+				expect(firstSelectionGuidanceFeatures.length).toBe(6);
+
+				draw.selectFeature(featureId, "alternate-select");
+
+				expect(draw.getMode()).toBe("alternate-select");
+
+				const secondSelectionSnapshot = draw.getSnapshot();
+				const secondSelectionGuidanceFeatures =
+					secondSelectionSnapshot.filter(getGuidanceFeatures);
+
+				expect(secondSelectionGuidanceFeatures.length).toBe(
+					firstSelectionGuidanceFeatures.length,
+				);
+				expect(
+					secondSelectionSnapshot.filter((feature) => feature.id === featureId),
+				).toHaveLength(1);
+			});
+
+			it("honors the respective modes flags when selecting the same feature across select modes", () => {
+				const draw = new TerraDraw({
+					adapter,
+					modes: [
+						new TerraDrawPolygonMode(),
+						new TerraDrawSelectMode(selectModePolygonFlags),
+						new TerraDrawSelectMode(alternateSelectModePolygonFlags),
+					],
+				});
+
+				draw.start();
+				draw.addFeatures([createPolygonFeature()]);
+
+				draw.selectFeature(featureId);
+
+				expect(draw.getMode()).toBe("select");
+
+				const firstSelectionSnapshot = draw.getSnapshot();
+				const firstSelectionGuidanceFeatures =
+					firstSelectionSnapshot.filter(getGuidanceFeatures);
+
+				expect(firstSelectionGuidanceFeatures.length).toBe(6);
+
+				draw.selectFeature(featureId, "alternate-select");
+
+				expect(draw.getMode()).toBe("alternate-select");
+
+				const secondSelectionSnapshot = draw.getSnapshot();
+				const secondSelectionGuidanceFeatures =
+					secondSelectionSnapshot.filter(getGuidanceFeatures);
+
+				expect(secondSelectionGuidanceFeatures.length).toBe(3);
+				expect(
+					secondSelectionSnapshot.filter((feature) => feature.id === featureId),
+				).toHaveLength(1);
+
+				draw.selectFeature(featureId, "select");
+
+				const thirdSelectionSnapshot = draw.getSnapshot();
+				const thirdSelectionGuidanceFeatures =
+					thirdSelectionSnapshot.filter(getGuidanceFeatures);
+
+				expect(thirdSelectionGuidanceFeatures.length).toBe(6);
+				expect(
+					thirdSelectionSnapshot.filter((feature) => feature.id === featureId),
+				).toHaveLength(1);
+			});
+
+			it("throws an error if an unknown select mode is provided", () => {
+				const draw = new TerraDraw({
+					adapter,
+					modes: [
+						new TerraDrawPointMode(),
+						new TerraDrawSelectMode(selectModePointFlags),
+						new TerraDrawSelectMode(alternateSelectModePointFlags),
+					],
+				});
+
+				draw.start();
+				draw.addFeatures([createPointFeature()]);
+
+				expect(() => {
+					draw.selectFeature(featureId, "missing");
+				}).toThrow("No select mode with this name present: missing");
+
+				expect(draw.getMode()).toBe("static");
+			});
+
+			it("does not deselect the selected feature when a different id is provided", () => {
+				const draw = new TerraDraw({
+					adapter,
+					modes: [
+						new TerraDrawPolygonMode(),
+						new TerraDrawSelectMode(selectModePolygonFlags),
+						new TerraDrawSelectMode(alternateSelectModePolygonFlags),
+					],
+				});
+
+				const otherFeatureId = "07cbeb25-d7af-4aa7-9f98-0f4f4ed7f999";
+
+				draw.start();
+				draw.addFeatures([
+					createPolygonFeature(),
+					{
+						...createPolygonFeature(),
+						id: otherFeatureId,
+					},
+				]);
+
+				draw.selectFeature(featureId, "alternate-select");
+				expect(draw.getMode()).toBe("alternate-select");
+
+				draw.deselectFeature(otherFeatureId);
+
+				const selectedFeature = draw.getSnapshotFeature(featureId);
+				expect(selectedFeature?.properties[SELECT_PROPERTIES.SELECTED]).toBe(
+					true,
+				);
+
+				const guidanceFeatures = draw.getSnapshot().filter(getGuidanceFeatures);
+
+				expect(guidanceFeatures).toHaveLength(3);
+			});
 		});
 	});
 

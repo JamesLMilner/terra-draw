@@ -654,6 +654,82 @@ const SelectWithMidPoints: Story = {
 	},
 };
 
+const SelectWithMultiSelect: Story = {
+	...DefaultStory,
+	args: {
+		id: "select-with-multiselect",
+		modes: [
+			() => new TerraDrawPolygonMode(),
+			() =>
+				new TerraDrawSelectMode({
+					multiSelect: {
+						enabled: true,
+					},
+					flags: {
+						polygon: {
+							feature: {
+								draggable: true,
+								coordinates: {},
+							},
+						},
+					},
+				}),
+		],
+		instructions:
+			"Draw a few polygons, then hold Shift and click each feature to multi-select. Shift-click a selected feature to deselect it.",
+		...DefaultStory.args,
+	},
+};
+
+const SelectWithMultipleSelectModes: Story = {
+	...DefaultStory,
+	args: {
+		id: "select-with-multiple-select-modes",
+		modes: [
+			() => new TerraDrawPolygonMode(),
+			() =>
+				new TerraDrawSelectMode({
+					styles: {
+						selectionPointColor: "#0000ff",
+						midPointColor: "#00ffff",
+					},
+					flags: {
+						polygon: {
+							feature: {
+								draggable: true,
+								coordinates: {
+									draggable: true,
+									midpoints: {
+										draggable: true,
+									},
+								},
+							},
+						},
+					},
+				}),
+			() =>
+				new TerraDrawSelectMode({
+					modeName: "alternate-select",
+					styles: {
+						selectionPointColor: "#ff00ff",
+						midPointColor: "#ffff00",
+					},
+					flags: {
+						polygon: {
+							feature: {
+								draggable: true,
+								coordinates: {
+									draggable: true,
+								},
+							},
+						},
+					},
+				}),
+		],
+		...DefaultStory.args,
+	},
+};
+
 // Programmatic update geometry story
 const ProgrammaticUpdate: Story = {
 	...DefaultStory,
@@ -868,7 +944,9 @@ const AllStories = {
 	SelectWithScaleAndRotate,
 	SelectWithResizable,
 	SelectWithMidPoints,
+	SelectWithMultiSelect,
 	SelectWithMultipleOfSameModes,
+	SelectWithMultipleSelectModes,
 };
 
 export { AllStories };

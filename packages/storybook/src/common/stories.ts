@@ -654,6 +654,33 @@ const SelectWithMidPoints: Story = {
 	},
 };
 
+const SelectWithMultiSelect: Story = {
+	...DefaultStory,
+	args: {
+		id: "select-with-multiselect",
+		modes: [
+			() => new TerraDrawPolygonMode(),
+			() =>
+				new TerraDrawSelectMode({
+					multiSelect: {
+						enabled: true,
+					},
+					flags: {
+						polygon: {
+							feature: {
+								draggable: true,
+								coordinates: {},
+							},
+						},
+					},
+				}),
+		],
+		instructions:
+			"Draw a few polygons, then hold Shift and click each feature to multi-select. Shift-click a selected feature to deselect it.",
+		...DefaultStory.args,
+	},
+};
+
 const SelectWithMultipleSelectModes: Story = {
 	...DefaultStory,
 	args: {
@@ -699,18 +726,6 @@ const SelectWithMultipleSelectModes: Story = {
 					},
 				}),
 		],
-		afterRender: (draw: TerraDraw) => {
-			draw.on("select", (ids) => {
-				if (ids) {
-					console.log("Selected with first select mode", ids);
-				}
-			});
-			draw.on("deselect", (ids) => {
-				if (ids) {
-					console.log("Deselected with first select mode", ids);
-				}
-			});
-		},
 		...DefaultStory.args,
 	},
 };
@@ -929,6 +944,7 @@ const AllStories = {
 	SelectWithScaleAndRotate,
 	SelectWithResizable,
 	SelectWithMidPoints,
+	SelectWithMultiSelect,
 	SelectWithMultipleOfSameModes,
 	SelectWithMultipleSelectModes,
 };

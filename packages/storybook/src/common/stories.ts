@@ -654,6 +654,67 @@ const SelectWithMidPoints: Story = {
 	},
 };
 
+const SelectWithMultipleSelectModes: Story = {
+	...DefaultStory,
+	args: {
+		id: "select-with-multiple-select-modes",
+		modes: [
+			() => new TerraDrawPolygonMode(),
+			() =>
+				new TerraDrawSelectMode({
+					styles: {
+						selectionPointColor: "#0000ff",
+						midPointColor: "#00ffff",
+					},
+					flags: {
+						polygon: {
+							feature: {
+								draggable: true,
+								coordinates: {
+									draggable: true,
+									midpoints: {
+										draggable: true,
+									},
+								},
+							},
+						},
+					},
+				}),
+			() =>
+				new TerraDrawSelectMode({
+					modeName: "alternate-select",
+					styles: {
+						selectionPointColor: "#ff00ff",
+						midPointColor: "#ffff00",
+					},
+					flags: {
+						polygon: {
+							feature: {
+								draggable: true,
+								coordinates: {
+									draggable: true,
+								},
+							},
+						},
+					},
+				}),
+		],
+		afterRender: (draw: TerraDraw) => {
+			draw.on("select", (ids) => {
+				if (ids) {
+					console.log("Selected with first select mode", ids);
+				}
+			});
+			draw.on("deselect", (ids) => {
+				if (ids) {
+					console.log("Deselected with first select mode", ids);
+				}
+			});
+		},
+		...DefaultStory.args,
+	},
+};
+
 // Programmatic update geometry story
 const ProgrammaticUpdate: Story = {
 	...DefaultStory,
@@ -869,6 +930,7 @@ const AllStories = {
 	SelectWithResizable,
 	SelectWithMidPoints,
 	SelectWithMultipleOfSameModes,
+	SelectWithMultipleSelectModes,
 };
 
 export { AllStories };

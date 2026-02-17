@@ -16,7 +16,9 @@ export type TestConfigOptions =
 	| "showCoordinatePoints"
 	| "selectDragSnapping"
 	| "selectDragSnappingToCustom"
-	| "disableLeftClick";
+	| "disableLeftClick"
+	| "freehandSmoothing"
+	| "freehandClickDrag";
 
 export const setupMap = async ({
 	page,

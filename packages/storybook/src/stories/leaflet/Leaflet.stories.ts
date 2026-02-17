@@ -49,6 +49,7 @@ export const LineStringEditable = AllStories.LineStringEditable;
 export const LineStringWithCoordinatePoints =
 	AllStories.LineStringWithCoordinatePoints;
 export const FreehandLineString = AllStories.FreehandLineString;
+export const FreehandWithSmoothing = AllStories.FreehandWithSmoothing;
 export const Freehand = AllStories.Freehand;
 export const FreehandWithAutoClose = AllStories.FreehandWithAutoClose;
 export const Sensor = AllStories.Sensor;

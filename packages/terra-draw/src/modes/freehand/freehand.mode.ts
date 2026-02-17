@@ -65,6 +65,7 @@ const defaultCursors = {
 interface TerraDrawFreehandModeOptions<T extends CustomStyling>
 	extends BaseModeOptions<T> {
 	minDistance?: number;
+	smoothing?: number;
 	preventPointsNearClose?: boolean;
 	autoClose?: boolean;
 	autoCloseTimeout?: number;
@@ -89,6 +90,7 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 	private preventNewFeature = false;
 	private drawInteraction = "click-move";
 	private drawType: DrawType | undefined;
+	private smoothing = 0;
 
 	// Behaviors
 	private mutateFeature!: MutateFeatureBehavior;
@@ -108,6 +110,15 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 
 		if (options?.minDistance) {
 			this.minDistance = options.minDistance;
+		}
+
+		if (options?.smoothing !== undefined) {
+			const minimumSmoothing = 0;
+			const maximumSmoothing = 0.999;
+			this.smoothing = Math.min(
+				Math.max(options.smoothing, minimumSmoothing),
+				maximumSmoothing,
+			);
 		}
 
 		if (options?.preventPointsNearClose !== undefined) {
@@ -233,17 +244,50 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 			return;
 		}
 
+		const coordinate = this.getSmoothedCoordinate(
+			[previousLng, previousLat],
+			[event.lng, event.lat],
+		);
+
 		this.mutateFeature.updatePolygon({
 			featureId: this.currentId,
 			coordinateMutations: [
 				{
 					type: Mutations.InsertBefore,
 					index: -1,
-					coordinate: [event.lng, event.lat],
+					coordinate,
 				},
 			],
 			context: { updateType: UpdateTypes.Provisional },
 		});
+	}
+
+	/**
+	 * Uses a simple linear interpolation to smooth the coordinates. The smoothing factor determines how
+	 * much influence the previous coordinate has on the new coordinate. A smoothing factor of 0 means
+	 * no smoothing (the target coordinate is used as is), while a smoothing factor close to 1 means a
+	 * lot of smoothing (the new coordinate will be very close to the previous coordinate).
+	 * The default value is 0, which means no smoothing.
+	 * @param previousCoordinate
+	 * @param targetCoordinate
+	 * @returns
+	 */
+	private getSmoothedCoordinate(
+		previousCoordinate: [number, number],
+		targetCoordinate: [number, number],
+	): [number, number] {
+		if (this.smoothing === 0) {
+			return targetCoordinate;
+		}
+
+		const [previousLongitude, previousLatitude] = previousCoordinate;
+		const [targetLongitude, targetLatitude] = targetCoordinate;
+
+		return [
+			previousLongitude * this.smoothing +
+				targetLongitude * (1 - this.smoothing),
+			previousLatitude * this.smoothing + targetLatitude * (1 - this.smoothing),
+		];
 	}
 
 	private close() {

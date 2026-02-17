@@ -67,6 +67,12 @@ describe("TerraDrawFreehandMode", () => {
 				drawInteraction: "click-move-or-drag",
 			});
 		});
+
+		it("constructs with smoothing option", () => {
+			new TerraDrawFreehandMode({
+				smoothing: 0.5,
+			});
+		});
 	});
 
 	describe("lifecycle", () => {
@@ -436,6 +442,55 @@ describe("TerraDrawFreehandMode", () => {
 			expect(feature.geometry.coordinates).not.toStrictEqual(
 				updatedFeature.geometry.coordinates,
 			);
+		});
+
+		it("smooths inserted coordinates when smoothing is enabled", () => {
+			freehandMode = new TerraDrawFreehandMode({
+				smoothing: 0.5,
+				minDistance: 1,
+			});
+
+			const mockConfig = MockModeConfig(freehandMode.mode);
+			store = mockConfig.store;
+			onChange = mockConfig.onChange;
+			onFinish = mockConfig.onFinish;
+			freehandMode.register(mockConfig);
+			freehandMode.start();
+
+			freehandMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			freehandMode.onMouseMove(MockCursorEvent({ lng: 10, lat: 10 }));
+
+			const [updatedFeature] = store.copyAll();
+			const coordinates = (updatedFeature.geometry as Polygon).coordinates[0];
+			const insertedCoordinate = coordinates[coordinates.length - 2];
+
+			expect(insertedCoordinate).toStrictEqual([5, 5]);
+		});
+
+		it("does not stall drawing when smoothing is set to 1", () => {
+			freehandMode = new TerraDrawFreehandMode({
+				smoothing: 1,
+				minDistance: 1,
+			});
+
+			const mockConfig = MockModeConfig(freehandMode.mode);
+			store = mockConfig.store;
+			onChange = mockConfig.onChange;
+			onFinish = mockConfig.onFinish;
+			freehandMode.register(mockConfig);
+			freehandMode.start();
+
+			freehandMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			freehandMode.onMouseMove(MockCursorEvent({ lng: 10, lat: 10 }));
+
+			const [updatedFeature] = store.copyAll();
+			const coordinates = (updatedFeature.geometry as Polygon).coordinates[0];
+			const insertedCoordinate = coordinates[coordinates.length - 2];
+
+			expect(insertedCoordinate[0]).toBeGreaterThan(0);
+			expect(insertedCoordinate[1]).toBeGreaterThan(0);
+			expect(insertedCoordinate[0]).toBeLessThan(10);
+			expect(insertedCoordinate[1]).toBeLessThan(10);
 		});
 
 		it("does nothing if no first click", () => {

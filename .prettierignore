@@ -1,0 +1,20 @@
+# Generated files
+docs/
+dist/
+build/
+coverage/
+node_modules/
+
+# Package builds
+packages/*/dist/
+packages/*/build/
+
+# E2E and Storybook (these have their own formatting)
+packages/e2e/
+packages/storybook/
+
+# Version control
+.git/
+
+# OS files
+.DS_Store

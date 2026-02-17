@@ -961,6 +961,40 @@ test.describe("freehand mode", () => {
 		await expectPaths({ page, count: 1 });
 		await expectPathDimensions({ page, width: 104, height: 94 }); // Stroke width of 4
 	});
+
+	test("mode can set and used to create a freehand path with click-drag drawInteraction", async ({
+		page,
+	}) => {
+		const mapDiv = await setupMap({
+			page,
+			configQueryParam: ["freehandClickDrag"],
+		});
+		await changeMode({ page, mode });
+
+		await page.mouse.move(mapDiv.width / 2, mapDiv.height / 2);
+		await page.mouse.down();
+
+		await page.mouse.move(mapDiv.width / 2 + 50, mapDiv.height / 2 + 50, {
+			steps: 30,
+		});
+
+		await page.mouse.move(mapDiv.width / 2 + 50, mapDiv.height / 2 - 50, {
+			steps: 30,
+		});
+
+		await page.mouse.move(mapDiv.width / 2 - 50, mapDiv.height / 2 - 50, {
+			steps: 30,
+		});
+
+		await page.mouse.move(mapDiv.width / 2 - 50, mapDiv.height / 2 + 50, {
+			steps: 30,
+		});
+
+		await page.mouse.up();
+
+		await expectPaths({ page, count: 1 });
+		await expectPathDimensions({ page, width: 104, height: 104 }); // Stroke width of 4
+	});
 });
 
 test.describe("freehand linestring mode", () => {

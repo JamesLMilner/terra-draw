@@ -17,7 +17,8 @@ export type TestConfigOptions =
 	| "selectDragSnapping"
 	| "selectDragSnappingToCustom"
 	| "disableLeftClick"
-	| "freehandSmoothing";
+	| "freehandSmoothing"
+	| "freehandClickDrag";
 
 export const setupMap = async ({
 	page,

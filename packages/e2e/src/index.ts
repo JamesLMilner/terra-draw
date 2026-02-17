@@ -219,6 +219,9 @@ class TestMap {
 					smoothing: this.config?.includes("freehandSmoothing")
 						? 0.5
 						: undefined,
+					drawInteraction: this.config?.includes("freehandClickDrag")
+						? "click-drag"
+						: undefined,
 				}),
 				new TerraDrawFreehandLineStringMode(),
 				new TerraDrawAngledRectangleMode(),

@@ -33,7 +33,10 @@
 	"unpkg": "./dist/terra-draw.umd.js",
 	"author": "James Milner",
 	"license": "MIT",
-	"repository": "JamesLMilner/terra-draw",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/JamesLMilner/terra-draw.git"
+	},
 	"keywords": [
 		"map",
 		"drawing",

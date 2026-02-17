@@ -502,6 +502,22 @@ const Freehand: Story = {
 	},
 };
 
+// Freehand drawing story
+const FreehandWithSmoothing: Story = {
+	...DefaultStory,
+	args: {
+		id: "freehand-with-smoothing",
+		modes: [
+			() =>
+				new TerraDrawFreehandMode({
+					smoothing: 0.5,
+					preventPointsNearClose: false,
+				}),
+		],
+		...DefaultStory.args,
+	},
+};
+
 // Freehand autoclose drawing story
 const FreehandWithAutoClose: Story = {
 	...DefaultStory,
@@ -662,9 +678,6 @@ const SelectWithMultiSelect: Story = {
 			() => new TerraDrawPolygonMode(),
 			() =>
 				new TerraDrawSelectMode({
-					multiSelect: {
-						enabled: true,
-					},
 					flags: {
 						polygon: {
 							feature: {
@@ -935,6 +948,7 @@ const AllStories = {
 	FreehandLineString,
 	Freehand,
 	FreehandWithAutoClose,
+	FreehandWithSmoothing,
 	Sensor,
 	ProgrammaticScale,
 	ProgrammaticRotate,

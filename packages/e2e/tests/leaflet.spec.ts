@@ -930,7 +930,9 @@ test.describe("freehand mode", () => {
 		await expectPathDimensions({ page, width: 104, height: 104 }); // Stroke width of 4
 	});
 
-	test("mode can set and used to create a freehand path", async ({ page }) => {
+	test("mode can set and used to create a freehand path with smoothing enabled", async ({
+		page,
+	}) => {
 		const mapDiv = await setupMap({
 			page,
 			configQueryParam: ["freehandSmoothing"],

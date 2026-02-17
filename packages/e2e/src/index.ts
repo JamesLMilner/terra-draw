@@ -216,7 +216,9 @@ class TestMap {
 						: "web-mercator",
 				}),
 				new TerraDrawFreehandMode({
-					smoothing: this.config?.includes("freehandSmoothing") ? 0.5 : 0,
+					smoothing: this.config?.includes("freehandSmoothing")
+						? 0.5
+						: undefined,
 				}),
 				new TerraDrawFreehandLineStringMode(),
 				new TerraDrawAngledRectangleMode(),

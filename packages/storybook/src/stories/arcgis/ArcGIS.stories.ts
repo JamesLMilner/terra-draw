@@ -40,10 +40,14 @@ export const RectangleWithClickMoveOrDragInteraction =
 export const AngledRectangle = AllStories.AngledRectangle;
 export const Sector = AllStories.Sector;
 export const LineString = AllStories.LineString;
+export const LineStringFinishOnNthCoordinate =
+	AllStories.LineStringFinishOnNthCoordinate;
 export const LineStringWithCoordinateSnapping =
 	AllStories.LineStringWithCoordinateSnapping;
 export const LineStringWithLineSnapping = AllStories.LineStringWithLineSnapping;
 export const LineStringEditable = AllStories.LineStringEditable;
+export const LineStringWithCoordinatePoints =
+	AllStories.LineStringWithCoordinatePoints;
 export const FreehandLineString = AllStories.FreehandLineString;
 export const Freehand = AllStories.Freehand;
 export const FreehandWithAutoClose = AllStories.FreehandWithAutoClose;
@@ -53,6 +57,8 @@ export const SelectWithSelectionPoints = AllStories.SelectWithSelectionPoints;
 export const SelectWithMidPoints = AllStories.SelectWithMidPoints;
 export const SelectWithMultipleOfSameModes =
 	AllStories.SelectWithMultipleOfSameModes;
+export const SelectWithMultipleSelectModes =
+	AllStories.SelectWithMultipleSelectModes;
 export const SelectWithScaleAndRotate = AllStories.SelectWithScaleAndRotate;
 export const SelectWithResizable = AllStories.SelectWithResizable;
 export const ProgrammaticRotate = AllStories.ProgrammaticRotate;

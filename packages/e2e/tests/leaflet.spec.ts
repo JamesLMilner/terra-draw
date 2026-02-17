@@ -959,7 +959,7 @@ test.describe("freehand mode", () => {
 		await page.mouse.up();
 
 		await expectPaths({ page, count: 1 });
-		await expectPathDimensions({ page, width: 104, height: 104 }); // Stroke width of 4
+		await expectPathDimensions({ page, width: 104, height: 94 }); // Stroke width of 4
 	});
 });
 

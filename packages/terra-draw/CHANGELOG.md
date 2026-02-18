@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.25.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.24.2...terra-draw@1.25.0) (2026-02-18)
+
+
+### chore
+
+* **terra-draw:** add storybook story for smoothing in freehand mode (#821) ([](https://github.com/JamesLMilner/terra-draw/commit/9ebea41ee2019a3f39569d76e9015608ad5e94ca)), closes [#821](https://github.com/JamesLMilner/terra-draw/issues/821)
+* **terra-draw:** add way to disable coverage threshold when developing locally (#816) ([](https://github.com/JamesLMilner/terra-draw/commit/75fdfde7ba5289fbfc05f2f2f876c088ad155510)), closes [#816](https://github.com/JamesLMilner/terra-draw/issues/816)
+* **terra-draw:** bump jest to version 30 (#817) ([](https://github.com/JamesLMilner/terra-draw/commit/c4d3a64146e867a61e1233041aca19739599be7d)), closes [#817](https://github.com/JamesLMilner/terra-draw/issues/817)
+* **terra-draw:** enable trusted publishing on all packages (#813) ([](https://github.com/JamesLMilner/terra-draw/commit/2081e01e6a45113a1f7296184d6166a17d2df7c7)), closes [#813](https://github.com/JamesLMilner/terra-draw/issues/813)
+* **terra-draw:** skip testing in dist folders (#815) ([](https://github.com/JamesLMilner/terra-draw/commit/9c1726c56fee1b5b060d34190be34810c4accf7d)), closes [#815](https://github.com/JamesLMilner/terra-draw/issues/815)
+
+
+### feat
+
+* **terra-draw:** allow multiple select modes concurrently (#818) ([](https://github.com/JamesLMilner/terra-draw/commit/e1325935120bc7170f9b4e92d50debd01eab33c6)), closes [#818](https://github.com/JamesLMilner/terra-draw/issues/818)
+* **terra-draw:** smoothing option for freehand (#820) ([](https://github.com/JamesLMilner/terra-draw/commit/c66f679aeaefe66caf36f3ef4d1664f561e772d9)), closes [#820](https://github.com/JamesLMilner/terra-draw/issues/820)
+* **terra-draw:** support draw interactions for freehand mode (#819) ([](https://github.com/JamesLMilner/terra-draw/commit/51941298f6ab95d53fac2808aff26f4945b76094)), closes [#819](https://github.com/JamesLMilner/terra-draw/issues/819)
+
 ## [1.24.2](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.24.1...terra-draw@1.24.2) (2026-02-11)
 
 

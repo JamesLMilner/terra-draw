@@ -261,9 +261,9 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawExtend.TerraDrawBaseAda
 		const sw = bounds.getSouthWest();
 		const latLngBounds = new this._lib.LatLngBounds(sw, ne);
 
-		// In fullscreen mode, use coordinates relative to the fullscreen element
-		const mapElement = document.fullscreenElement ?? this._map.getDiv();
-		const mapCanvasRect = mapElement.getBoundingClientRect();
+		const mapCanvasRect = this.getBoundingMapElement(
+			this._map,
+		).getBoundingClientRect();
 		const offsetX = event.clientX - mapCanvasRect.left;
 		const offsetY = event.clientY - mapCanvasRect.top;
 		const screenCoord = new this._lib.Point(offsetX, offsetY);
@@ -280,6 +280,21 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawExtend.TerraDrawBaseAda
 		} else {
 			return null;
 		}
+	}
+
+	/**
+	 * Returns the containing parent element to do lng/lat calculations from
+	 *
+	 * Defaults here should work well for most use-cases, but in the case of a map loaded by
+	 * a fullscreen parent element (think custom button bar above a full-screen map),
+	 * overrides by a custom adapter become possible
+	 *
+	 * @param map
+	 * @returns
+	 */
+	getBoundingMapElement(map: google.maps.Map) {
+		// In fullscreen mode, use coordinates relative to the fullscreen element
+		return document.fullscreenElement ?? map.getDiv();
 	}
 
 	/**

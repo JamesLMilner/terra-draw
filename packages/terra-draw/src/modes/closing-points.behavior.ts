@@ -1,6 +1,6 @@
 import { Position } from "geojson";
 import { BehaviorConfig, TerraDrawModeBehavior } from "./base.behavior";
-import { COMMON_PROPERTIES, TerraDrawMouseEvent } from "../common";
+import { COMMON_PROPERTIES, TerraDrawMouseEvent, UpdateTypes } from "../common";
 import { PixelDistanceBehavior } from "./pixel-distance.behavior";
 import { MutateFeatureBehavior } from "./mutate-feature.behavior";
 import { FeatureId } from "../extend";
@@ -65,36 +65,45 @@ export class ClosingPointsBehavior extends TerraDrawModeBehavior {
 	}
 
 	public updateOne(index: number, updatedCoordinate: Position) {
-		this.mutateFeatureBehavior.updateGuidancePoints([
-			{
-				featureId: this.ids[index],
-				coordinate: updatedCoordinate,
-			},
-		]);
+		this.mutateFeatureBehavior.updateGuidancePoints(
+			[
+				{
+					featureId: this.ids[index],
+					coordinate: updatedCoordinate,
+				},
+			],
+			UpdateTypes.Provisional,
+		);
 	}
 
 	public update(updatedCoordinates: Position[] | Position[][]) {
 		const coordinates = getClosedCoordinates(updatedCoordinates);
 
 		if (this.ids.length === 1) {
-			this.mutateFeatureBehavior.updateGuidancePoints([
-				{
-					featureId: this.ids[0],
-					coordinate: coordinates[coordinates.length - 2],
-				},
-			]);
+			this.mutateFeatureBehavior.updateGuidancePoints(
+				[
+					{
+						featureId: this.ids[0],
+						coordinate: coordinates[coordinates.length - 2],
+					},
+				],
+				UpdateTypes.Provisional,
+			);
 			return;
 		} else if (this.ids.length === 2) {
-			this.mutateFeatureBehavior.updateGuidancePoints([
-				{
-					featureId: this.ids[0],
-					coordinate: coordinates[0],
-				},
-				{
-					featureId: this.ids[1],
-					coordinate: coordinates[coordinates.length - 3],
-				},
-			]);
+			this.mutateFeatureBehavior.updateGuidancePoints(
+				[
+					{
+						featureId: this.ids[0],
+						coordinate: coordinates[0],
+					},
+					{
+						featureId: this.ids[1],
+						coordinate: coordinates[coordinates.length - 3],
+					},
+				],
+				UpdateTypes.Provisional,
+			);
 		}
 	}
 

@@ -445,7 +445,7 @@ export class TerraDrawSensorMode extends TerraDrawBaseDrawMode<SensorPolygonStyl
 						.coordinates,
 					type: Mutations.Replace,
 				},
-				context: { updateType: UpdateTypes.Finish, action: FinishActions.Draw },
+				context: { updateType: UpdateTypes.Finish },
 			});
 
 			if (!updated) {

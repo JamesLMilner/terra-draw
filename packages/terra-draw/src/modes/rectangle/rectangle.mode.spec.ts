@@ -325,13 +325,13 @@ describe("TerraDrawRectangleMode", () => {
 						2,
 						[expect.any(String)],
 						"update",
-						{ target: "geometry" },
+						{ target: "geometry", updateType: "finish" },
 					);
 					expect(onChange).toHaveBeenNthCalledWith(
 						3,
 						[expect.any(String)],
 						"update",
-						{ target: "properties" },
+						{ target: "properties", updateType: "finish" },
 					);
 
 					expect(onFinish).toHaveBeenCalledTimes(1);
@@ -487,7 +487,7 @@ describe("TerraDrawRectangleMode", () => {
 				2,
 				[expect.any(String)],
 				"update",
-				{ target: "geometry" },
+				{ target: "geometry", updateType: "provisional" },
 			);
 
 			const updatedFeature = store.copyAll()[0];
@@ -732,7 +732,7 @@ describe("TerraDrawRectangleMode", () => {
 						2,
 						[expect.any(String)],
 						"update",
-						{ target: "geometry" },
+						{ target: "geometry", updateType: "provisional" },
 					);
 
 					const updatedFeature = store.copyAll()[0];

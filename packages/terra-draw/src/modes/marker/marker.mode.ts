@@ -206,7 +206,7 @@ export class TerraDrawMarkerMode extends TerraDrawBaseDrawMode<MarkerModeStyling
 				mode: this.mode,
 				[COMMON_PROPERTIES.EDITED]: false,
 			},
-			context: { updateType: UpdateTypes.Finish, action: "edit" },
+			context: { updateType: UpdateTypes.Finish },
 		});
 
 		if (!updated) {
@@ -281,7 +281,7 @@ export class TerraDrawMarkerMode extends TerraDrawBaseDrawMode<MarkerModeStyling
 				mode: this.mode,
 				[COMMON_PROPERTIES.MARKER]: true,
 			},
-			context: { updateType: UpdateTypes.Finish, action: FinishActions.Draw },
+			context: { updateType: UpdateTypes.Finish },
 		});
 
 		if (feature) {

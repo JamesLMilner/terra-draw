@@ -1,7 +1,7 @@
 import { Position } from "geojson";
 import { BehaviorConfig, TerraDrawModeBehavior } from "../../base.behavior";
 import { FeatureId } from "../../../store/store";
-import { SELECT_PROPERTIES } from "../../../common";
+import { SELECT_PROPERTIES, UpdateTypes } from "../../../common";
 import { MutateFeatureBehavior } from "../../mutate-feature.behavior";
 import { getUnclosedCoordinates } from "../../../geometry/get-coordinates";
 import { ReadFeatureBehavior } from "../../read-feature.behavior";
@@ -62,8 +62,10 @@ export class SelectionPointBehavior extends TerraDrawModeBehavior {
 
 	public updateAllInPlace({
 		featureCoordinates,
+		updateType,
 	}: {
 		featureCoordinates: Position[] | Position[][];
+		updateType: UpdateTypes;
 	}) {
 		if (this._selectionPoints.length === 0) {
 			return;
@@ -80,19 +82,27 @@ export class SelectionPointBehavior extends TerraDrawModeBehavior {
 				featureId: id,
 				coordinate: coordinates[i],
 			})),
+			updateType,
 		);
 	}
 
-	public updateOneAtIndex(index: number, updatedCoordinate: Position) {
+	public updateOneAtIndex(
+		index: number,
+		updatedCoordinate: Position,
+		updateType: UpdateTypes,
+	) {
 		if (this._selectionPoints[index] === undefined) {
 			return;
 		}
 
-		this.mutateFeature.updateGuidancePoints([
-			{
-				featureId: this._selectionPoints[index],
-				coordinate: updatedCoordinate,
-			},
-		]);
+		this.mutateFeature.updateGuidancePoints(
+			[
+				{
+					featureId: this._selectionPoints[index],
+					coordinate: updatedCoordinate,
+				},
+			],
+			updateType,
+		);
 	}
 }

@@ -1,4 +1,9 @@
-import { TerraDrawMouseEvent, UpdateTypes, Validation } from "../../../common";
+import {
+	FinishActions,
+	TerraDrawMouseEvent,
+	UpdateTypes,
+	Validation,
+} from "../../../common";
 import { BehaviorConfig, TerraDrawModeBehavior } from "../../base.behavior";
 import { FeatureAtPointerEventBehavior } from "./feature-at-pointer-event.behavior";
 import { LineString, Polygon, Position } from "geojson";
@@ -61,10 +66,12 @@ export class DragFeatureBehavior extends TerraDrawModeBehavior {
 		return true;
 	}
 
-	drag(event: TerraDrawMouseEvent) {
+	drag(event: TerraDrawMouseEvent, updateType: UpdateTypes) {
 		if (!this.draggedFeatureId) {
 			return;
 		}
+
+		const context = { updateType };
 
 		const geometry = this.readFeature.getGeometry(this.draggedFeatureId);
 		const cursorCoord = [event.lng, event.lat];
@@ -174,9 +181,7 @@ export class DragFeatureBehavior extends TerraDrawModeBehavior {
 						type: Mutations.Replace,
 						coordinates: [updatedCoords],
 					},
-					context: {
-						updateType: UpdateTypes.Provisional as const,
-					},
+					context,
 				});
 			} else if (geometry.type === "LineString") {
 				updated = this.mutateFeature.updateLineString({
@@ -185,9 +190,7 @@ export class DragFeatureBehavior extends TerraDrawModeBehavior {
 						type: Mutations.Replace,
 						coordinates: updatedCoords,
 					},
-					context: {
-						updateType: UpdateTypes.Provisional as const,
-					},
+					context,
 				});
 			} else {
 				return;
@@ -200,9 +203,13 @@ export class DragFeatureBehavior extends TerraDrawModeBehavior {
 			const featureCoordinates = updated.geometry.coordinates;
 
 			// Perform the update to the midpoints and selection points
-			this.midPoints.updateAllInPlace({ featureCoordinates });
-			this.selectionPoints.updateAllInPlace({ featureCoordinates });
-			this.coordinatePoints.updateAllInPlace({ featureId, featureCoordinates });
+			this.midPoints.updateAllInPlace({ featureCoordinates, updateType });
+			this.selectionPoints.updateAllInPlace({ featureCoordinates, updateType });
+			this.coordinatePoints.updateAllInPlace({
+				featureId,
+				featureCoordinates,
+				updateType,
+			});
 
 			this.dragPosition = [event.lng, event.lat];
 
@@ -216,9 +223,7 @@ export class DragFeatureBehavior extends TerraDrawModeBehavior {
 					type: Mutations.Replace,
 					coordinates: cursorCoord,
 				},
-				context: {
-					updateType: UpdateTypes.Provisional as const,
-				},
+				context,
 			});
 
 			this.dragPosition = [event.lng, event.lat];

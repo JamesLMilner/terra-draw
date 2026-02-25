@@ -20,6 +20,7 @@ import {
 	TerraDrawOnChangeContext,
 	Projection,
 	TerraDrawHandledEvents,
+	UpdateTypes,
 } from "./common";
 import {
 	ModeTypes,

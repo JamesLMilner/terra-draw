@@ -51,7 +51,11 @@ export class RotateFeatureBehavior extends TerraDrawModeBehavior {
 		this.selectedGeometryCentroid = undefined;
 	}
 
-	rotate(event: TerraDrawMouseEvent, selectedId: FeatureId) {
+	rotate(
+		event: TerraDrawMouseEvent,
+		selectedId: FeatureId,
+		updateType: UpdateTypes,
+	) {
 		if (!this.selectedGeometry) {
 			this.selectedGeometry = this.readFeature.getGeometry<
 				LineString | Polygon
@@ -145,7 +149,7 @@ export class RotateFeatureBehavior extends TerraDrawModeBehavior {
 					geometry.type === "Polygon" ? [updatedCoords] : updatedCoords,
 			},
 			context: {
-				updateType: UpdateTypes.Provisional as const,
+				updateType,
 			},
 		};
 
@@ -169,11 +173,12 @@ export class RotateFeatureBehavior extends TerraDrawModeBehavior {
 		const featureCoordinates = updated.geometry.coordinates;
 
 		// Perform the update to the midpoints and selection points
-		this.midPoints.updateAllInPlace({ featureCoordinates });
-		this.selectionPoints.updateAllInPlace({ featureCoordinates });
+		this.midPoints.updateAllInPlace({ featureCoordinates, updateType });
+		this.selectionPoints.updateAllInPlace({ featureCoordinates, updateType });
 		this.coordinatePoints.updateAllInPlace({
 			featureId: selectedId,
 			featureCoordinates,
+			updateType,
 		});
 
 		if (this.projection === "web-mercator") {

@@ -62,11 +62,7 @@ export type CoordinateMutation =
 
 type ValidProperties = Record<string, JSON | undefined>;
 
-type FinishContext = { updateType: UpdateTypes.Finish; action: Actions };
-
-type MutateContext =
-	| FinishContext
-	| { updateType: UpdateTypes.Commit | UpdateTypes.Provisional };
+type MutateContext = { updateType: UpdateTypes };
 
 export type UpdateGeometry<G extends GeoJSONStoreGeometries> = {
 	featureId: FeatureId;
@@ -90,7 +86,7 @@ export class MutateFeatureBehavior extends TerraDrawModeBehavior {
 	}: {
 		coordinates: Position;
 		properties: JSONObject;
-		context?: FinishContext;
+		context?: MutateContext;
 	}) {
 		// Create point is slightly different in that creating can also be the finish action
 		// because there is only one step to creating a point.
@@ -254,7 +250,7 @@ export class MutateFeatureBehavior extends TerraDrawModeBehavior {
 				} as ValidProperties,
 			}));
 
-		this.updateFeatureProperties(updateSelectedFeatures);
+		this.updateFeatureProperties(updateSelectedFeatures, UpdateTypes.Commit);
 	}
 
 	public setSelected(featureId: FeatureId) {
@@ -281,6 +277,7 @@ export class MutateFeatureBehavior extends TerraDrawModeBehavior {
 			featureId: FeatureId;
 			coordinate: Position;
 		}[],
+		updateType: UpdateTypes,
 	) {
 		this.updateFeatureGeometries(
 			guidancePoints.map(({ featureId, coordinate }) => ({
@@ -290,6 +287,7 @@ export class MutateFeatureBehavior extends TerraDrawModeBehavior {
 					coordinates: coordinate,
 				} as Point,
 			})),
+			updateType,
 		);
 	}
 
@@ -411,15 +409,17 @@ export class MutateFeatureBehavior extends TerraDrawModeBehavior {
 				return false;
 			}
 
-			this.updateFeatureGeometries([
-				{ id: featureId, geometry: updatedGeometry },
-			]);
+			this.updateFeatureGeometries(
+				[{ id: featureId, geometry: updatedGeometry }],
+				context.updateType,
+			);
 		}
 
 		if (propertyMutations) {
-			this.updateFeatureProperties([
-				{ featureId, properties: propertyMutations },
-			]);
+			this.updateFeatureProperties(
+				[{ featureId, properties: propertyMutations }],
+				context.updateType,
+			);
 		}
 
 		return true;
@@ -659,6 +659,7 @@ export class MutateFeatureBehavior extends TerraDrawModeBehavior {
 	private createFeatures<G extends GeoJSONStoreGeometries>(
 		features: GeoJSONStoreFeatures<G>[],
 	) {
+		// Create should not be called with updateType
 		return this.store.create(features);
 	}
 
@@ -667,8 +668,9 @@ export class MutateFeatureBehavior extends TerraDrawModeBehavior {
 			id: FeatureId;
 			geometry: G;
 		}[],
+		updateType: UpdateTypes,
 	) {
-		this.store.updateGeometry(updates);
+		this.store.updateGeometry(updates, { updateType });
 	}
 
 	private updateFeatureProperties(
@@ -676,6 +678,7 @@ export class MutateFeatureBehavior extends TerraDrawModeBehavior {
 			featureId: FeatureId;
 			properties: ValidProperties;
 		}[],
+		updateType: UpdateTypes,
 	) {
 		const updates = properties
 			.map(({ featureId, properties }) => {
@@ -687,6 +690,6 @@ export class MutateFeatureBehavior extends TerraDrawModeBehavior {
 			})
 			.flat();
 
-		this.store.updateProperty(updates);
+		this.store.updateProperty(updates, { updateType });
 	}
 }

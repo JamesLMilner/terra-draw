@@ -195,6 +195,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 					this.coordinatePoints.createOrUpdate({
 						featureId: feature.id as FeatureId,
 						featureCoordinates: feature.geometry.coordinates as Position[],
+						updateType: UpdateTypes.Commit,
 					});
 				});
 			} else if (this.coordinatePoints && this.showCoordinatePoints === false) {
@@ -235,12 +236,15 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 
 		if (snappedCoordinate) {
 			if (this.snappedPointId) {
-				this.mutateFeature.updateGuidancePoints([
-					{
-						featureId: this.snappedPointId,
-						coordinate: snappedCoordinate,
-					},
-				]);
+				this.mutateFeature.updateGuidancePoints(
+					[
+						{
+							featureId: this.snappedPointId,
+							coordinate: snappedCoordinate,
+						},
+					],
+					UpdateTypes.Provisional,
+				);
 			} else {
 				this.snappedPointId = this.mutateFeature.createGuidancePoint({
 					coordinate: snappedCoordinate,
@@ -265,7 +269,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 
 		const updated = this.mutateFeature.updateLineString({
 			featureId: this.currentId,
-			context: { updateType: UpdateTypes.Finish, action: FinishActions.Draw },
+			context: { updateType: UpdateTypes.Finish },
 			coordinateMutations: [
 				{
 					type: Mutations.Delete,
@@ -285,6 +289,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 			this.coordinatePoints.createOrUpdate({
 				featureId: this.currentId,
 				featureCoordinates: updated.geometry.coordinates,
+				updateType: UpdateTypes.Finish,
 			});
 		}
 
@@ -373,6 +378,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 			this.coordinatePoints.createOrUpdate({
 				featureId: this.currentId,
 				featureCoordinates: created.geometry.coordinates,
+				updateType: UpdateTypes.Commit,
 			});
 		}
 	}
@@ -408,6 +414,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 			this.coordinatePoints.createOrUpdate({
 				featureId: this.currentId,
 				featureCoordinates: updated.geometry.coordinates,
+				updateType: UpdateTypes.Commit,
 			});
 		}
 
@@ -454,6 +461,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 			this.coordinatePoints.createOrUpdate({
 				featureId: this.currentId,
 				featureCoordinates: updated.geometry.coordinates,
+				updateType: UpdateTypes.Commit,
 			});
 		}
 
@@ -567,6 +575,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 			this.coordinatePoints.createOrUpdate({
 				featureId: this.currentId,
 				featureCoordinates: updated.geometry.coordinates,
+				updateType: UpdateTypes.Provisional,
 			});
 		}
 	}
@@ -624,13 +633,14 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 		const updated = this.mutateFeature.updateLineString({
 			featureId,
 			coordinateMutations: [{ type: Mutations.Delete, index: coordinateIndex }],
-			context: { updateType: UpdateTypes.Finish, action: FinishActions.Edit },
+			context: { updateType: UpdateTypes.Finish },
 		});
 
 		if (updated && this.showCoordinatePoints) {
 			this.coordinatePoints.createOrUpdate({
 				featureId,
 				featureCoordinates: updated.geometry.coordinates,
+				updateType: UpdateTypes.Commit,
 			});
 		}
 
@@ -833,6 +843,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 					this.coordinatePoints.createOrUpdate({
 						featureId: this.editedFeatureId,
 						featureCoordinates: updated.geometry.coordinates,
+						updateType: UpdateTypes.Provisional,
 					});
 				}
 				// Else we are only updating one point
@@ -841,6 +852,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 						this.editedFeatureId,
 						this.editedFeatureCoordinateIndex,
 						[event.lng, event.lat],
+						UpdateTypes.Provisional,
 					);
 				}
 			}
@@ -864,6 +876,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 				this.coordinatePoints.createOrUpdate({
 					featureId: this.editedFeatureId,
 					featureCoordinates: inserted.geometry.coordinates,
+					updateType: UpdateTypes.Provisional,
 				});
 			}
 
@@ -878,12 +891,15 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 		}
 
 		if (this.editedPointId) {
-			this.mutateFeature.updateGuidancePoints([
-				{
-					featureId: this.editedPointId,
-					coordinate: [event.lng, event.lat],
-				},
-			]);
+			this.mutateFeature.updateGuidancePoints(
+				[
+					{
+						featureId: this.editedPointId,
+						coordinate: [event.lng, event.lat],
+					},
+				],
+				UpdateTypes.Provisional,
+			);
 		}
 
 		this.mutateFeature.updateLineString({
@@ -911,7 +927,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 		const updated = this.mutateFeature.updateLineString({
 			featureId: this.editedFeatureId,
 			propertyMutations: { [COMMON_PROPERTIES.EDITED]: false },
-			context: { updateType: UpdateTypes.Finish, action: FinishActions.Edit },
+			context: { updateType: UpdateTypes.Finish },
 		});
 
 		if (!updated) {
@@ -1173,6 +1189,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 			this.coordinatePoints.createOrUpdate({
 				featureId: feature.id as FeatureId,
 				featureCoordinates: feature.geometry.coordinates as Position[],
+				updateType: UpdateTypes.Commit,
 			});
 		}
 
@@ -1215,6 +1232,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 			this.coordinatePoints.createOrUpdate({
 				featureId: feature.id as FeatureId,
 				featureCoordinates: feature.geometry.coordinates as Position[],
+				updateType: UpdateTypes.Commit,
 			});
 		}
 	}

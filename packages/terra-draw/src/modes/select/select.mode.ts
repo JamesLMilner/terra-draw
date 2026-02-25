@@ -82,6 +82,17 @@ type ModeFlags = {
 	};
 };
 
+const DragInteractions = {
+	None: "none",
+	Rotate: "rotate",
+	Scale: "scale",
+	DragCoordinateResize: "dragCoordinateResize",
+	DragCoordinate: "dragCoordinate",
+	DragFeature: "dragFeature",
+} as const;
+
+type DragInteraction = (typeof DragInteractions)[keyof typeof DragInteractions];
+
 type SelectionStyling = {
 	// Point
 	selectedPointColor: HexColorStyling;
@@ -161,6 +172,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 	private keyEvents: TerraDrawSelectModeKeyEvents = defaultKeyEvents;
 	private cursors: Required<Cursors> = defaultCursors;
 	private validations: Record<string, Validation> = {};
+	private activeDragInteraction: DragInteraction = DragInteractions.None;
 
 	private dragTarget:
 		| { type: "none" }
@@ -382,6 +394,110 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 		this.setCursor("unset");
 	}
 
+	private getCanSelfIntersect(modeFlags?: ModeFlags): boolean {
+		return modeFlags?.feature?.selfIntersectable === true;
+	}
+
+	private getSnapOptions(modeFlags?: ModeFlags): Snapping {
+		const snappable = modeFlags?.feature?.coordinates?.snappable;
+
+		if (snappable === true) {
+			return { toCoordinate: true };
+		}
+
+		if (typeof snappable === "object") {
+			return snappable;
+		}
+
+		return { toCoordinate: false };
+	}
+
+	private executeDragInteraction(
+		event: TerraDrawMouseEvent,
+		selectedId: FeatureId,
+		modeFlags: ModeFlags | undefined,
+		updateType: UpdateTypes,
+	): DragInteraction {
+		const shouldFinalizeRotate =
+			updateType === UpdateTypes.Finish &&
+			this.activeDragInteraction === DragInteractions.Rotate;
+
+		if (
+			modeFlags?.feature?.rotateable &&
+			(this.canRotate(event) || shouldFinalizeRotate)
+		) {
+			this.rotateFeature.rotate(event, selectedId, updateType);
+			return DragInteractions.Rotate;
+		}
+
+		const shouldFinalizeScale =
+			updateType === UpdateTypes.Finish &&
+			this.activeDragInteraction === DragInteractions.Scale;
+
+		if (
+			modeFlags?.feature?.scaleable &&
+			(this.canScale(event) || shouldFinalizeScale)
+		) {
+			this.scaleFeature.scale(event, selectedId, updateType);
+			return DragInteractions.Scale;
+		}
+
+		if (
+			this.dragCoordinateResizeFeature.isDragging() &&
+			modeFlags?.feature?.coordinates?.resizable
+		) {
+			if (this.projection === "globe") {
+				throw new Error(
+					"Globe is currently unsupported projection for resizable",
+				);
+			}
+
+			this.dragCoordinateResizeFeature.drag(
+				event,
+				modeFlags.feature.coordinates.resizable,
+				updateType,
+			);
+			return DragInteractions.DragCoordinateResize;
+		}
+
+		if (this.dragCoordinate.isDragging()) {
+			this.dragCoordinate.drag(
+				event,
+				this.getCanSelfIntersect(modeFlags),
+				this.getSnapOptions(modeFlags),
+				updateType,
+			);
+			return DragInteractions.DragCoordinate;
+		}
+
+		if (this.dragFeature.isDragging()) {
+			this.dragFeature.drag(event, updateType);
+			return DragInteractions.DragFeature;
+		}
+
+		return DragInteractions.None;
+	}
+
+	private emitDragFinish(featureId: FeatureId, interaction: DragInteraction) {
+		if (interaction === DragInteractions.None) {
+			return;
+		}
+
+		const finishAction =
+			interaction === DragInteractions.DragCoordinate
+				? FinishActions.DragCoordinate
+				: interaction === DragInteractions.DragFeature
+					? FinishActions.DragFeature
+					: interaction === DragInteractions.DragCoordinateResize
+						? FinishActions.DragCoordinateResize
+						: FinishActions.Edit;
+
+		this.onFinish(featureId, {
+			mode: this.mode,
+			action: finishAction,
+		});
+	}
+
 	private getSelectedFlags(featureId: FeatureId) {
 		const properties = this.readFeature.getProperties(featureId);
 		const modeFlags = this.flags[properties.mode as string];
@@ -500,7 +616,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 					coordinates: [coordinates],
 				},
 				context: {
-					updateType: UpdateTypes.Commit,
+					updateType: UpdateTypes.Finish,
 				},
 			});
 		} else if (geometry.type === "LineString") {
@@ -511,7 +627,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 					coordinates: coordinates,
 				},
 				context: {
-					updateType: UpdateTypes.Commit,
+					updateType: UpdateTypes.Finish,
 				},
 			});
 		}
@@ -528,7 +644,11 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 		]);
 
 		if (properties.coordinatePointIds) {
-			this.coordinatePoints.createOrUpdate({ featureId, featureCoordinates });
+			this.coordinatePoints.createOrUpdate({
+				featureId,
+				featureCoordinates,
+				updateType: UpdateTypes.Finish,
+			});
 		}
 
 		this.selectionPoints.create({
@@ -831,6 +951,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 		// Resize Coordinate
 		if (resizableCoordinate) {
 			this.setCursor(this.cursors.dragStart);
+			this.activeDragInteraction = DragInteractions.DragCoordinateResize;
 
 			this.dragCoordinateResizeFeature.startDragging(
 				selectedId,
@@ -844,6 +965,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 		// Drag Coordinate
 		if (draggableCoordinate) {
 			this.setCursor(this.cursors.dragStart);
+			this.activeDragInteraction = DragInteractions.DragCoordinate;
 
 			this.dragCoordinate.startDragging(selectedId, draggableCoordinateIndex);
 
@@ -877,6 +999,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 					selectedId,
 					draggableCoordinateIndexAfterInsert,
 				);
+				this.activeDragInteraction = DragInteractions.DragCoordinate;
 
 				setMapDraggability(false);
 
@@ -887,11 +1010,13 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 		// Drag Feature
 		if (draggableFeature) {
 			this.setCursor(this.cursors.dragStart);
+			this.activeDragInteraction = DragInteractions.DragFeature;
 			this.dragFeature.startDragging(event, selectedId);
 			setMapDraggability(false);
 			return;
 		}
 
+		this.activeDragInteraction = DragInteractions.None;
 		this.setCursor("unset");
 	}
 
@@ -908,15 +1033,12 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 
 		// If nothing selected we can return early
 		if (!selectedId) {
+			this.activeDragInteraction = DragInteractions.None;
 			return;
 		}
 
 		const properties = this.readFeature.getProperties(selectedId);
 		const modeFlags = this.flags[properties.mode as string];
-		const canSelfIntersect: boolean =
-			(modeFlags &&
-				modeFlags.feature &&
-				modeFlags.feature.selfIntersectable) === true;
 
 		// Ensure drag count is incremented
 		this.dragEventCount++;
@@ -927,73 +1049,20 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 			return;
 		}
 
-		// Check if should rotate
-		if (
-			modeFlags &&
-			modeFlags.feature &&
-			modeFlags.feature.rotateable &&
-			this.canRotate(event)
-		) {
+		const interaction = this.executeDragInteraction(
+			event,
+			selectedId,
+			modeFlags,
+			UpdateTypes.Provisional,
+		);
+
+		this.activeDragInteraction = interaction;
+
+		if (interaction !== DragInteractions.None) {
 			setMapDraggability(false);
-			this.rotateFeature.rotate(event, selectedId);
-			return;
+		} else {
+			setMapDraggability(true);
 		}
-
-		// Check if should scale
-		if (
-			modeFlags &&
-			modeFlags.feature &&
-			modeFlags.feature.scaleable &&
-			this.canScale(event)
-		) {
-			setMapDraggability(false);
-
-			this.scaleFeature.scale(event, selectedId);
-			return;
-		}
-
-		if (
-			this.dragCoordinateResizeFeature.isDragging() &&
-			modeFlags.feature &&
-			modeFlags.feature.coordinates &&
-			modeFlags.feature.coordinates.resizable
-		) {
-			if (this.projection === "globe") {
-				throw new Error(
-					"Globe is currently unsupported projection for resizable",
-				);
-			}
-
-			setMapDraggability(false);
-			this.dragCoordinateResizeFeature.drag(
-				event,
-				modeFlags.feature.coordinates.resizable,
-			);
-			return;
-		}
-
-		// Check if coordinate is draggable and is dragged
-		if (this.dragCoordinate.isDragging()) {
-			const snappable = modeFlags.feature?.coordinates?.snappable;
-
-			let snapOptions: Snapping = { toCoordinate: false };
-			if (snappable === true) {
-				snapOptions = { toCoordinate: true };
-			} else if (typeof snappable === "object") {
-				snapOptions = snappable;
-			}
-
-			this.dragCoordinate.drag(event, canSelfIntersect, snapOptions);
-			return;
-		}
-
-		// Check if feature is draggable and is dragged
-		if (this.dragFeature.isDragging()) {
-			this.dragFeature.drag(event);
-			return;
-		}
-
-		setMapDraggability(true);
 	}
 
 	/** @internal */
@@ -1007,28 +1076,26 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 
 		this.setCursor(this.cursors.dragEnd);
 
-		// If we have finished dragging a coordinate or a feature
-		// lets fire an onFinish event which can be listened to
-		if (this.dragCoordinate.isDragging()) {
-			this.onFinish(this.selected[0], {
-				mode: this.mode,
-				action: FinishActions.DragCoordinate,
-			});
-		} else if (this.dragFeature.isDragging()) {
-			this.onFinish(this.selected[0], {
-				mode: this.mode,
-				action: FinishActions.DragFeature,
-			});
-		} else if (this.dragCoordinateResizeFeature.isDragging()) {
-			this.onFinish(this.selected[0], {
-				mode: this.mode,
-				action: FinishActions.DragCoordinateResize,
-			});
+		const selectedId = this.selected[0];
+
+		if (selectedId) {
+			const properties = this.readFeature.getProperties(selectedId);
+			const modeFlags = this.flags[properties.mode as string];
+
+			const interaction = this.executeDragInteraction(
+				event,
+				selectedId,
+				modeFlags,
+				UpdateTypes.Finish,
+			);
+
+			this.emitDragFinish(selectedId, interaction);
 		}
 
 		this.dragCoordinate.stopDragging();
 		this.dragFeature.stopDragging();
 		this.dragCoordinateResizeFeature.stopDragging();
+		this.activeDragInteraction = DragInteractions.None;
 		this.rotateFeature.reset();
 		this.scaleFeature.reset();
 		setMapDraggability(true);

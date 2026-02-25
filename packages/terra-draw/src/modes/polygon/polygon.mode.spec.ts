@@ -321,7 +321,7 @@ describe("TerraDrawPolygonMode", () => {
 				2,
 				[featureId],
 				"update",
-				{ target: "properties" },
+				{ target: "properties", updateType: "commit" },
 			);
 
 			const coordinatePoints = mockConfig.store.copyAllWhere(
@@ -378,7 +378,7 @@ describe("TerraDrawPolygonMode", () => {
 				2,
 				[featureId],
 				"update",
-				{ target: "properties" },
+				{ target: "properties", updateType: "commit" },
 			);
 		});
 
@@ -461,7 +461,7 @@ describe("TerraDrawPolygonMode", () => {
 				2,
 				[featureId],
 				"update",
-				{ target: "properties" },
+				{ target: "properties", updateType: "commit" },
 			);
 		});
 
@@ -597,7 +597,7 @@ describe("TerraDrawPolygonMode", () => {
 				1,
 				[snapPoint!.id],
 				"update",
-				{ target: "geometry" },
+				{ target: "geometry", updateType: "provisional" },
 			);
 
 			expect(mockConfig.store.has(snapPoint!.id as FeatureId)).toBe(true);
@@ -1295,22 +1295,26 @@ describe("TerraDrawPolygonMode", () => {
 			polygonMode.onClick(thirdPoint);
 
 			// Polygon is now closed and corrected to right hand rule
-			expect(store.updateGeometry).toHaveBeenNthCalledWith(8, [
-				{
-					geometry: {
-						coordinates: [
-							[
-								[1, 1],
-								[3, 3],
-								[2, 2],
-								[1, 1],
+			expect(store.updateGeometry).toHaveBeenNthCalledWith(
+				8,
+				[
+					{
+						geometry: {
+							coordinates: [
+								[
+									[1, 1],
+									[3, 3],
+									[2, 2],
+									[1, 1],
+								],
 							],
-						],
-						type: "Polygon",
+							type: "Polygon",
+						},
+						id: expect.any(String),
 					},
-					id: expect.any(String),
-				},
-			]);
+				],
+				{ updateType: "finish" },
+			);
 
 			expect(onFinish).toHaveBeenCalledTimes(1);
 			expect(onFinish).toHaveBeenNthCalledWith(1, expect.any(String), {
@@ -2077,13 +2081,13 @@ describe("onDrag", () => {
 			1,
 			[expect.any(String)],
 			"update",
-			{ target: "geometry" },
+			{ target: "geometry", updateType: "provisional" },
 		);
 		expect(mockConfig.onChange).toHaveBeenNthCalledWith(
 			2,
 			[expect.any(String)],
 			"update",
-			{ target: "properties" },
+			{ target: "properties", updateType: "provisional" },
 		);
 
 		const allFeatures = mockConfig.store.copyAll();
@@ -2214,19 +2218,19 @@ describe("onDrag", () => {
 			1,
 			[expect.any(String)],
 			"update",
-			{ target: "geometry" },
+			{ target: "geometry", updateType: "provisional" },
 		);
 		expect(mockConfig.onChange).toHaveBeenNthCalledWith(
 			2,
 			[expect.any(String)],
 			"update",
-			{ target: "properties" },
+			{ target: "properties", updateType: "provisional" },
 		);
 		expect(mockConfig.onChange).toHaveBeenNthCalledWith(
 			3,
 			[expect.any(String)],
 			"update",
-			{ target: "geometry" },
+			{ target: "geometry", updateType: "provisional" },
 		);
 
 		const allFeatures = mockConfig.store.copyAll();
@@ -2323,20 +2327,28 @@ describe("onDrag", () => {
 		expect(coordinatePoints[1].geometry.coordinates).toStrictEqual([1, 1]);
 
 		expect(mockConfig.store.updateProperty).toHaveBeenCalledTimes(2);
-		expect(mockConfig.store.updateProperty).toHaveBeenNthCalledWith(1, [
-			{
-				id: expect.any(String),
-				property: "edited",
-				value: true,
-			},
-		]);
-		expect(mockConfig.store.updateProperty).toHaveBeenNthCalledWith(2, [
-			{
-				id: expect.any(String),
-				property: "coordinatePointIds",
-				value: coordinatePointIds,
-			},
-		]);
+		expect(mockConfig.store.updateProperty).toHaveBeenNthCalledWith(
+			1,
+			[
+				{
+					id: expect.any(String),
+					property: "edited",
+					value: true,
+				},
+			],
+			{ updateType: "provisional" },
+		);
+		expect(mockConfig.store.updateProperty).toHaveBeenNthCalledWith(
+			2,
+			[
+				{
+					id: expect.any(String),
+					property: "coordinatePointIds",
+					value: coordinatePointIds,
+				},
+			],
+			{ updateType: "commit" },
+		);
 	});
 });
 
@@ -2396,7 +2408,7 @@ describe("onDragEnd", () => {
 			1,
 			[expect.any(String)],
 			"update",
-			{ target: "properties" },
+			{ target: "properties", updateType: "finish" },
 		);
 
 		// Remove the edit drag point

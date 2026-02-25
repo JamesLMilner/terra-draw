@@ -857,13 +857,13 @@ describe("TerraDrawFreehandMode", () => {
 					3,
 					[expect.any(String)],
 					"update",
-					{ target: "geometry" },
+					{ target: "geometry", updateType: "provisional" },
 				);
 				expect(onChange).toHaveBeenNthCalledWith(
 					4,
 					[expect.any(String)],
 					"update",
-					{ target: "properties" },
+					{ target: "properties", updateType: "finish" },
 				);
 				expect(onChange).toHaveBeenNthCalledWith(
 					5,

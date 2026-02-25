@@ -13,6 +13,7 @@ import { MockCursorEvent } from "../../../test/mock-cursor-event";
 import { CoordinatePointBehavior } from "./coordinate-point.behavior";
 import { MutateFeatureBehavior } from "../../mutate-feature.behavior";
 import { ReadFeatureBehavior } from "../../read-feature.behavior";
+import { UpdateTypes } from "../../../common";
 
 describe("DragCoordinateResizeBehavior", () => {
 	const createLineString = (
@@ -175,6 +176,7 @@ describe("DragCoordinateResizeBehavior", () => {
 					dragMaintainedShapeBehavior.drag(
 						MockCursorEvent({ lng: 0, lat: 0 }),
 						"center",
+						UpdateTypes.Provisional,
 					);
 
 					expect(config.store.updateGeometry).toHaveBeenCalledTimes(0);
@@ -187,6 +189,7 @@ describe("DragCoordinateResizeBehavior", () => {
 					dragMaintainedShapeBehavior.drag(
 						MockCursorEvent({ lng: 0, lat: 0 }),
 						"center",
+						UpdateTypes.Provisional,
 					);
 
 					expect(config.store.updateGeometry).toHaveBeenCalledTimes(0);
@@ -205,6 +208,7 @@ describe("DragCoordinateResizeBehavior", () => {
 						dragMaintainedShapeBehavior.drag(
 							MockCursorEvent({ lng: 0, lat: 0 }),
 							"center",
+							UpdateTypes.Provisional,
 						);
 
 						expect(config.store.updateGeometry).toHaveBeenCalledTimes(0);
@@ -222,6 +226,7 @@ describe("DragCoordinateResizeBehavior", () => {
 						dragMaintainedShapeBehavior.drag(
 							MockCursorEvent({ lng: 0, lat: 0 }),
 							"center",
+							UpdateTypes.Provisional,
 						);
 
 						expect(config.store.updateGeometry).toHaveBeenCalledTimes(1);
@@ -239,6 +244,7 @@ describe("DragCoordinateResizeBehavior", () => {
 						dragMaintainedShapeBehavior.drag(
 							MockCursorEvent({ lng: 0, lat: 0 }),
 							"center",
+							UpdateTypes.Provisional,
 						);
 
 						expect(config.store.updateGeometry).toHaveBeenCalledTimes(1);
@@ -253,6 +259,7 @@ describe("DragCoordinateResizeBehavior", () => {
 						dragMaintainedShapeBehavior.drag(
 							MockCursorEvent({ lng: 0, lat: 0 }),
 							"center",
+							UpdateTypes.Provisional,
 						);
 
 						expect(config.store.updateGeometry).toHaveBeenCalledTimes(1);
@@ -270,6 +277,7 @@ describe("DragCoordinateResizeBehavior", () => {
 						dragMaintainedShapeBehavior.drag(
 							MockCursorEvent({ lng: 0, lat: 0 }),
 							"opposite",
+							UpdateTypes.Provisional,
 						);
 
 						expect(config.store.updateGeometry).toHaveBeenCalledTimes(1);
@@ -284,6 +292,7 @@ describe("DragCoordinateResizeBehavior", () => {
 						coordinatePointBehavior.createOrUpdate({
 							featureId: id,
 							featureCoordinates: featureCoordinatesBefore,
+							updateType: UpdateTypes.Commit,
 						});
 						selectionPointBehavior.create({
 							featureId: id,
@@ -315,6 +324,7 @@ describe("DragCoordinateResizeBehavior", () => {
 						dragMaintainedShapeBehavior.drag(
 							MockCursorEvent({ lng: -1, lat: -1 }),
 							"opposite",
+							UpdateTypes.Provisional,
 						);
 
 						const coordinatePoints = readFeatureBehavior.getProperties(id)
@@ -369,6 +379,7 @@ describe("DragCoordinateResizeBehavior", () => {
 						dragMaintainedShapeBehavior.drag(
 							MockCursorEvent({ lng: 0, lat: 0 }),
 							"opposite",
+							UpdateTypes.Provisional,
 						);
 
 						expect(config.store.updateGeometry).toHaveBeenCalledTimes(1);
@@ -386,6 +397,7 @@ describe("DragCoordinateResizeBehavior", () => {
 						dragMaintainedShapeBehavior.drag(
 							MockCursorEvent({ lng: 0, lat: 0 }),
 							"center-fixed",
+							UpdateTypes.Provisional,
 						);
 
 						expect(config.store.updateGeometry).toHaveBeenCalledTimes(1);
@@ -400,6 +412,7 @@ describe("DragCoordinateResizeBehavior", () => {
 						dragMaintainedShapeBehavior.drag(
 							MockCursorEvent({ lng: 0, lat: 0 }),
 							"center-fixed",
+							UpdateTypes.Provisional,
 						);
 
 						expect(config.store.updateGeometry).toHaveBeenCalledTimes(1);
@@ -417,6 +430,7 @@ describe("DragCoordinateResizeBehavior", () => {
 						dragMaintainedShapeBehavior.drag(
 							MockCursorEvent({ lng: 0, lat: 0 }),
 							"opposite-fixed",
+							UpdateTypes.Provisional,
 						);
 
 						expect(config.store.updateGeometry).toHaveBeenCalledTimes(1);
@@ -431,6 +445,7 @@ describe("DragCoordinateResizeBehavior", () => {
 						dragMaintainedShapeBehavior.drag(
 							MockCursorEvent({ lng: 0, lat: 0 }),
 							"opposite-fixed",
+							UpdateTypes.Provisional,
 						);
 
 						expect(config.store.updateGeometry).toHaveBeenCalledTimes(1);

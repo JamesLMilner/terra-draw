@@ -14,6 +14,7 @@ import { RotateFeatureBehavior } from "./rotate-feature.behavior";
 import { SelectionPointBehavior } from "./selection-point.behavior";
 import { webMercatorCentroid } from "../../../geometry/web-mercator-centroid";
 import { PixelDistanceBehavior } from "../../pixel-distance.behavior";
+import { UpdateTypes } from "../../../common";
 
 jest.mock("../../../geometry/web-mercator-centroid", () => {
 	const actual = jest.requireActual("../../../geometry/web-mercator-centroid");
@@ -107,7 +108,11 @@ describe("RotateFeatureBehavior", () => {
 			it("non Polygon or LineStrings do an early return", () => {
 				const id = createStorePoint(config);
 
-				rotateFeatureBehavior.rotate(MockCursorEvent({ lng: 0, lat: 0 }), id);
+				rotateFeatureBehavior.rotate(
+					MockCursorEvent({ lng: 0, lat: 0 }),
+					id,
+					UpdateTypes.Provisional,
+				);
 
 				expect(webMercatorCentroid).toHaveBeenCalledTimes(0);
 				expect(config.store.updateGeometry).toHaveBeenCalledTimes(0);
@@ -116,7 +121,11 @@ describe("RotateFeatureBehavior", () => {
 			it("first event sets the initial bearing and does not update the LineString", () => {
 				const id = createStoreLineString(config);
 
-				rotateFeatureBehavior.rotate(MockCursorEvent({ lng: 0, lat: 0 }), id);
+				rotateFeatureBehavior.rotate(
+					MockCursorEvent({ lng: 0, lat: 0 }),
+					id,
+					UpdateTypes.Provisional,
+				);
 
 				// Cached centroid geometry is calculated
 				expect(webMercatorCentroid).toHaveBeenCalledTimes(1);
@@ -126,8 +135,16 @@ describe("RotateFeatureBehavior", () => {
 			it("second event rotates the LineString", () => {
 				const id = createStoreLineString(config);
 
-				rotateFeatureBehavior.rotate(MockCursorEvent({ lng: 0, lat: 0 }), id);
-				rotateFeatureBehavior.rotate(MockCursorEvent({ lng: 0, lat: 0 }), id);
+				rotateFeatureBehavior.rotate(
+					MockCursorEvent({ lng: 0, lat: 0 }),
+					id,
+					UpdateTypes.Provisional,
+				);
+				rotateFeatureBehavior.rotate(
+					MockCursorEvent({ lng: 0, lat: 0 }),
+					id,
+					UpdateTypes.Provisional,
+				);
 
 				// We cache the centroid geometry in the first event
 				// and then use it in the second event
@@ -137,8 +154,16 @@ describe("RotateFeatureBehavior", () => {
 
 			it("second event rotates the Polygon", () => {
 				const id = createStorePolygon(config);
-				rotateFeatureBehavior.rotate(MockCursorEvent({ lng: 0, lat: 0 }), id);
-				rotateFeatureBehavior.rotate(MockCursorEvent({ lng: 0, lat: 0 }), id);
+				rotateFeatureBehavior.rotate(
+					MockCursorEvent({ lng: 0, lat: 0 }),
+					id,
+					UpdateTypes.Provisional,
+				);
+				rotateFeatureBehavior.rotate(
+					MockCursorEvent({ lng: 0, lat: 0 }),
+					id,
+					UpdateTypes.Provisional,
+				);
 
 				// We cache the centroid geometry in the first event
 				// and then use it in the second event
@@ -153,9 +178,17 @@ describe("RotateFeatureBehavior", () => {
 
 				jest.spyOn(config.store, "updateGeometry");
 
-				rotateFeatureBehavior.rotate(MockCursorEvent({ lng: 0, lat: 0 }), id);
+				rotateFeatureBehavior.rotate(
+					MockCursorEvent({ lng: 0, lat: 0 }),
+					id,
+					UpdateTypes.Provisional,
+				);
 				rotateFeatureBehavior.reset();
-				rotateFeatureBehavior.rotate(MockCursorEvent({ lng: 0, lat: 0 }), id);
+				rotateFeatureBehavior.rotate(
+					MockCursorEvent({ lng: 0, lat: 0 }),
+					id,
+					UpdateTypes.Provisional,
+				);
 
 				expect(config.store.updateGeometry).toHaveBeenCalledTimes(0);
 			});

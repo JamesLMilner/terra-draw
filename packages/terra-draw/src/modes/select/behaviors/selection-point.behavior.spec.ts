@@ -1,9 +1,8 @@
 import { Position } from "geojson";
-import { COMMON_PROPERTIES, SELECT_PROPERTIES } from "../../../common";
+import { SELECT_PROPERTIES, UpdateTypes } from "../../../common";
 import { MockBehaviorConfig } from "../../../test/mock-behavior-config";
 import { BehaviorConfig } from "../../base.behavior";
 import { MutateFeatureBehavior } from "../../mutate-feature.behavior";
-import { ReadFeatureBehavior } from "../../read-feature.behavior";
 import { SelectionPointBehavior } from "./selection-point.behavior";
 
 describe("SelectionPointBehavior", () => {
@@ -21,7 +20,6 @@ describe("SelectionPointBehavior", () => {
 			const mutateFeatureBehavior = new MutateFeatureBehavior(config, {
 				validate: jest.fn(() => ({ valid: true })),
 			});
-			const readFeatureBehavior = new ReadFeatureBehavior(config);
 			selectionPointBehavior = new SelectionPointBehavior(
 				config,
 				mutateFeatureBehavior,
@@ -99,6 +97,7 @@ describe("SelectionPointBehavior", () => {
 						[1, 1],
 						[1, 0],
 					],
+					updateType: UpdateTypes.Commit,
 				});
 
 				expect(result).toBe(undefined);
@@ -128,6 +127,7 @@ describe("SelectionPointBehavior", () => {
 
 				selectionPointBehavior.updateAllInPlace({
 					featureCoordinates: [featureCoordinatesUpdated],
+					updateType: UpdateTypes.Commit,
 				});
 
 				const selectionPoints = config.store.copyAllWhere((properties) =>
@@ -172,6 +172,7 @@ describe("SelectionPointBehavior", () => {
 						[2, 2],
 						[2, 3],
 					],
+					updateType: UpdateTypes.Commit,
 				});
 
 				const selectionPoints = config.store.copyAllWhere((properties) =>
@@ -194,7 +195,11 @@ describe("SelectionPointBehavior", () => {
 
 		describe("getOneUpdated", () => {
 			it("should return undefined if trying to get updated coordinates when non exist", () => {
-				const result = selectionPointBehavior.updateOneAtIndex(0, [0, 1]);
+				const result = selectionPointBehavior.updateOneAtIndex(
+					0,
+					[0, 1],
+					UpdateTypes.Commit,
+				);
 				expect(result).toBe(undefined);
 			});
 
@@ -209,7 +214,7 @@ describe("SelectionPointBehavior", () => {
 					featureId: "id",
 				});
 
-				selectionPointBehavior.updateOneAtIndex(0, [2, 2]);
+				selectionPointBehavior.updateOneAtIndex(0, [2, 2], UpdateTypes.Commit);
 
 				const selectionPoints = config.store.copyAllWhere((properties) =>
 					Boolean(properties[SELECT_PROPERTIES.SELECTION_POINT]),

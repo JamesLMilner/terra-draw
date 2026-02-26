@@ -540,19 +540,19 @@ describe("TerraDrawFreehandLineStringMode", () => {
 					3,
 					[expect.any(String)],
 					"update",
-					{ target: "geometry", updateType: "provisional" },
+					{ target: "geometry" },
 				);
 				expect(onChange).toHaveBeenNthCalledWith(
 					4,
 					[expect.any(String)],
 					"update",
-					{ target: "geometry", updateType: "provisional" },
+					{ target: "geometry" },
 				);
 				expect(onChange).toHaveBeenNthCalledWith(
 					5,
 					[expect.any(String)],
 					"update",
-					{ target: "properties", updateType: "finish" },
+					{ target: "properties" },
 				);
 				expect(onChange).toHaveBeenNthCalledWith(
 					6,

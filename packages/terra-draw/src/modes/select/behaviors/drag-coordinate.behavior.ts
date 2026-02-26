@@ -174,7 +174,6 @@ export class DragCoordinateBehavior extends TerraDrawModeBehavior {
 		event: TerraDrawMouseEvent,
 		allowSelfIntersection: boolean,
 		snapping: Snapping,
-		updateType: UpdateTypes,
 	): boolean {
 		const draggedFeatureId = this.draggedCoordinate.id;
 
@@ -255,7 +254,7 @@ export class DragCoordinateBehavior extends TerraDrawModeBehavior {
 					coordinates: [updatedCoordinates],
 				},
 				context: {
-					updateType,
+					updateType: UpdateTypes.Provisional as const,
 				},
 			});
 		} else if (geometry.type === "LineString") {
@@ -266,7 +265,7 @@ export class DragCoordinateBehavior extends TerraDrawModeBehavior {
 					coordinates: updatedCoordinates,
 				},
 				context: {
-					updateType,
+					updateType: UpdateTypes.Provisional as const,
 				},
 			});
 		}
@@ -277,22 +276,13 @@ export class DragCoordinateBehavior extends TerraDrawModeBehavior {
 
 		// Perform the update to the midpoints and selection points
 		if (index > 0) {
-			this.midPoints.updateOneAtIndex(
-				index - 1,
-				updatedCoordinates,
-				updateType,
-			);
+			this.midPoints.updateOneAtIndex(index - 1, updatedCoordinates);
 		} else {
-			this.midPoints.updateOneAtIndex(-1, updatedCoordinates, updateType);
+			this.midPoints.updateOneAtIndex(-1, updatedCoordinates);
 		}
-		this.midPoints.updateOneAtIndex(index, updatedCoordinates, updateType);
-		this.selectionPoints.updateOneAtIndex(index, updatedCoordinate, updateType);
-		this.coordinatePoints.updateOneAtIndex(
-			featureId,
-			index,
-			updatedCoordinate,
-			updateType,
-		);
+		this.midPoints.updateOneAtIndex(index, updatedCoordinates);
+		this.selectionPoints.updateOneAtIndex(index, updatedCoordinate);
+		this.coordinatePoints.updateOneAtIndex(featureId, index, updatedCoordinate);
 
 		return true;
 	}

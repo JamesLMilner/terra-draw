@@ -465,7 +465,6 @@ describe("TerraDrawSelectMode", () => {
 					// Polygon selected set to true
 					expect(onChange).toHaveBeenNthCalledWith(2, idOne, "update", {
 						target: "properties",
-						updateType: "commit",
 					});
 
 					// Create selection points
@@ -523,7 +522,6 @@ describe("TerraDrawSelectMode", () => {
 					// Polygon selected set to true
 					expect(onChange).toHaveBeenNthCalledWith(2, idOne, "update", {
 						target: "properties",
-						updateType: "commit",
 					});
 
 					// Create selection points
@@ -594,7 +592,6 @@ describe("TerraDrawSelectMode", () => {
 					// Polygon selected set to true
 					expect(onChange).toHaveBeenNthCalledWith(2, idOne, "update", {
 						target: "properties",
-						updateType: "commit",
 					});
 
 					// Create midpoint by clicking on it
@@ -818,7 +815,6 @@ describe("TerraDrawSelectMode", () => {
 						// First polygon selected set to true
 						expect(onChange).toHaveBeenNthCalledWith(3, idOne, "update", {
 							target: "properties",
-							updateType: "commit",
 						});
 
 						// Deselect first polygon, select second
@@ -840,13 +836,11 @@ describe("TerraDrawSelectMode", () => {
 						// First polygon selected set to false
 						expect(onChange).toHaveBeenNthCalledWith(4, idOne, "update", {
 							target: "properties",
-							updateType: "commit",
 						});
 
 						// Second polygon selected set to true
 						expect(onChange).toHaveBeenNthCalledWith(5, idTwo, "update", {
 							target: "properties",
-							updateType: "commit",
 						});
 					});
 
@@ -910,7 +904,6 @@ describe("TerraDrawSelectMode", () => {
 						// First polygon selected set to true
 						expect(onChange).toHaveBeenNthCalledWith(3, idOne, "update", {
 							target: "properties",
-							updateType: "commit",
 						});
 
 						// Create selection points
@@ -946,7 +939,6 @@ describe("TerraDrawSelectMode", () => {
 
 						expect(onChange).toHaveBeenNthCalledWith(5, idOne, "update", {
 							target: "properties",
-							updateType: "commit",
 						});
 
 						// Delete first polygon selection points
@@ -966,7 +958,6 @@ describe("TerraDrawSelectMode", () => {
 						// Second polygon selected set to true
 						expect(onChange).toHaveBeenNthCalledWith(7, idTwo, "update", {
 							target: "properties",
-							updateType: "commit",
 						});
 					});
 
@@ -1030,7 +1021,6 @@ describe("TerraDrawSelectMode", () => {
 						// First polygon selected set to true
 						expect(onChange).toHaveBeenNthCalledWith(3, idOne, "update", {
 							target: "properties",
-							updateType: "commit",
 						});
 
 						// Create selection points
@@ -1079,7 +1069,6 @@ describe("TerraDrawSelectMode", () => {
 
 						expect(onChange).toHaveBeenNthCalledWith(6, idOne, "update", {
 							target: "properties",
-							updateType: "commit",
 						});
 
 						// Delete first polygon selection points
@@ -1112,7 +1101,6 @@ describe("TerraDrawSelectMode", () => {
 						// Second polygon selected set to true
 						expect(onChange).toHaveBeenNthCalledWith(9, idTwo, "update", {
 							target: "properties",
-							updateType: "commit",
 						});
 					});
 				});
@@ -1182,7 +1170,6 @@ describe("TerraDrawSelectMode", () => {
 				// First polygon selected set to true
 				expect(onChange).toHaveBeenNthCalledWith(3, idOne, "update", {
 					target: "properties",
-					updateType: "commit",
 				});
 
 				jest.spyOn(store, "getGeometryCopy");
@@ -1237,7 +1224,6 @@ describe("TerraDrawSelectMode", () => {
 				// First polygon selected set to true
 				expect(onChange).toHaveBeenNthCalledWith(2, idOne, "update", {
 					target: "properties",
-					updateType: "commit",
 				});
 
 				jest.spyOn(store, "getGeometryCopy");
@@ -1297,7 +1283,6 @@ describe("TerraDrawSelectMode", () => {
 				// First polygon selected set to true
 				expect(onChange).toHaveBeenNthCalledWith(2, idOne, "update", {
 					target: "properties",
-					updateType: "commit",
 				});
 
 				jest.spyOn(store, "delete");
@@ -1346,7 +1331,6 @@ describe("TerraDrawSelectMode", () => {
 				// First polygon selected set to true
 				expect(onChange).toHaveBeenNthCalledWith(2, idOne, "update", {
 					target: "properties",
-					updateType: "commit",
 				});
 
 				jest.spyOn(store, "delete");
@@ -1441,7 +1425,6 @@ describe("TerraDrawSelectMode", () => {
 				// First polygon selected set to true
 				expect(onChange).toHaveBeenNthCalledWith(3, idOne, "update", {
 					target: "properties",
-					updateType: "commit",
 				});
 
 				jest.spyOn(store, "getGeometryCopy");
@@ -1501,7 +1484,6 @@ describe("TerraDrawSelectMode", () => {
 				// First polygon selected set to true
 				expect(onChange).toHaveBeenNthCalledWith(2, idOne, "update", {
 					target: "properties",
-					updateType: "commit",
 				});
 
 				jest.spyOn(store, "getGeometryCopy");
@@ -1567,7 +1549,6 @@ describe("TerraDrawSelectMode", () => {
 				// First polygon selected set to true
 				expect(onChange).toHaveBeenNthCalledWith(2, idOne, "update", {
 					target: "properties",
-					updateType: "commit",
 				});
 
 				jest.spyOn(store, "delete");
@@ -1621,7 +1602,6 @@ describe("TerraDrawSelectMode", () => {
 				// First polygon selected set to true
 				expect(onChange).toHaveBeenNthCalledWith(2, idOne, "update", {
 					target: "properties",
-					updateType: "commit",
 				});
 
 				jest.spyOn(store, "delete");
@@ -1658,7 +1638,7 @@ describe("TerraDrawSelectMode", () => {
 					2,
 					[expect.any(String)],
 					"update",
-					{ target: "properties", updateType: "commit" },
+					{ target: "properties" },
 				);
 
 				expect(onSelect).toHaveBeenCalledTimes(1);
@@ -1901,7 +1881,6 @@ describe("TerraDrawSelectMode", () => {
 					expect(onChange).toHaveBeenCalledTimes(3);
 					expect(onChange).toHaveBeenNthCalledWith(3, idOne, "update", {
 						target: "geometry",
-						updateType: "provisional",
 					});
 				});
 			});
@@ -1945,7 +1924,6 @@ describe("TerraDrawSelectMode", () => {
 					expect(onChange).toHaveBeenCalledTimes(3);
 					expect(onChange).toHaveBeenNthCalledWith(3, idOne, "update", {
 						target: "geometry",
-						updateType: "provisional",
 					});
 				});
 			});
@@ -1979,7 +1957,7 @@ describe("TerraDrawSelectMode", () => {
 					3,
 					[expect.any(String)],
 					"update",
-					{ target: "properties", updateType: "commit" },
+					{ target: "properties" },
 				);
 
 				// Create selection points
@@ -2004,13 +1982,13 @@ describe("TerraDrawSelectMode", () => {
 					5,
 					[expect.any(String)],
 					"update",
-					{ target: "geometry", updateType: "provisional" },
+					{ target: "geometry" },
 				);
 				expect(onChange).toHaveBeenNthCalledWith(
 					6,
 					[expect.any(String)],
 					"update",
-					{ target: "geometry", updateType: "provisional" },
+					{ target: "geometry" },
 				);
 			});
 
@@ -2044,7 +2022,7 @@ describe("TerraDrawSelectMode", () => {
 					3,
 					[expect.any(String)],
 					"update",
-					{ target: "properties", updateType: "commit" },
+					{ target: "properties" },
 				);
 
 				// Create selection points
@@ -2074,14 +2052,14 @@ describe("TerraDrawSelectMode", () => {
 					5,
 					[expect.any(String)],
 					"update",
-					{ target: "geometry", updateType: "provisional" },
+					{ target: "geometry" },
 				);
 
 				expect(onChange).toHaveBeenNthCalledWith(
 					6,
 					[expect.any(String)],
 					"update",
-					{ target: "geometry", updateType: "provisional" },
+					{ target: "geometry" },
 				);
 			});
 
@@ -2129,7 +2107,7 @@ describe("TerraDrawSelectMode", () => {
 					4,
 					[expect.any(String)],
 					"update",
-					{ target: "properties", updateType: "commit" },
+					{ target: "properties" },
 				);
 
 				// Create selection points
@@ -2154,40 +2132,32 @@ describe("TerraDrawSelectMode", () => {
 				);
 
 				expect(store.updateGeometry).toHaveBeenCalledTimes(2);
-				expect(store.updateGeometry).toHaveBeenNthCalledWith(
-					1,
-					[
-						{
-							geometry: {
-								coordinates: [
-									[
-										[0, 0],
-										[0, 1],
-										[2, 2],
-										[1, 0],
-										[0, 0],
-									],
+				expect(store.updateGeometry).toHaveBeenNthCalledWith(1, [
+					{
+						geometry: {
+							coordinates: [
+								[
+									[0, 0],
+									[0, 1],
+									[2, 2],
+									[1, 0],
+									[0, 0],
 								],
-								type: "Polygon",
-							},
-							id: expect.any(String),
+							],
+							type: "Polygon",
 						},
-					],
-					{ updateType: "provisional" },
-				);
-				expect(store.updateGeometry).toHaveBeenNthCalledWith(
-					2,
-					[
-						{
-							geometry: {
-								coordinates: [2, 2],
-								type: "Point",
-							},
-							id: expect.any(String),
+						id: expect.any(String),
+					},
+				]);
+				expect(store.updateGeometry).toHaveBeenNthCalledWith(2, [
+					{
+						geometry: {
+							coordinates: [2, 2],
+							type: "Point",
 						},
-					],
-					{ updateType: "provisional" },
-				);
+						id: expect.any(String),
+					},
+				]);
 
 				// Update polygon position and 1 selection points
 				// that gets moved
@@ -2195,13 +2165,13 @@ describe("TerraDrawSelectMode", () => {
 					6,
 					[expect.any(String)],
 					"update",
-					{ target: "geometry", updateType: "provisional" },
+					{ target: "geometry" },
 				);
 				expect(onChange).toHaveBeenNthCalledWith(
 					7,
 					[expect.any(String)],
 					"update",
-					{ target: "geometry", updateType: "provisional" },
+					{ target: "geometry" },
 				);
 			});
 
@@ -2247,7 +2217,7 @@ describe("TerraDrawSelectMode", () => {
 					4,
 					[expect.any(String)],
 					"update",
-					{ target: "properties", updateType: "commit" },
+					{ target: "properties" },
 				);
 
 				// Create selection points
@@ -2272,37 +2242,29 @@ describe("TerraDrawSelectMode", () => {
 				);
 
 				expect(store.updateGeometry).toHaveBeenCalledTimes(2);
-				expect(store.updateGeometry).toHaveBeenNthCalledWith(
-					1,
-					[
-						{
-							geometry: {
-								coordinates: [
-									[0, 0],
-									[0, 1],
-									[2, 2],
-									[1, 0],
-								],
-								type: "LineString",
-							},
-							id: expect.any(String),
+				expect(store.updateGeometry).toHaveBeenNthCalledWith(1, [
+					{
+						geometry: {
+							coordinates: [
+								[0, 0],
+								[0, 1],
+								[2, 2],
+								[1, 0],
+							],
+							type: "LineString",
 						},
-					],
-					{ updateType: "provisional" },
-				);
-				expect(store.updateGeometry).toHaveBeenNthCalledWith(
-					2,
-					[
-						{
-							geometry: {
-								coordinates: [2, 2],
-								type: "Point",
-							},
-							id: expect.any(String),
+						id: expect.any(String),
+					},
+				]);
+				expect(store.updateGeometry).toHaveBeenNthCalledWith(2, [
+					{
+						geometry: {
+							coordinates: [2, 2],
+							type: "Point",
 						},
-					],
-					{ updateType: "provisional" },
-				);
+						id: expect.any(String),
+					},
+				]);
 
 				// Update linestring position and 1 selection points
 				// that gets moved
@@ -2310,13 +2272,13 @@ describe("TerraDrawSelectMode", () => {
 					6,
 					[expect.any(String)],
 					"update",
-					{ target: "geometry", updateType: "provisional" },
+					{ target: "geometry" },
 				);
 				expect(onChange).toHaveBeenNthCalledWith(
 					7,
 					[expect.any(String)],
 					"update",
-					{ target: "geometry", updateType: "provisional" },
+					{ target: "geometry" },
 				);
 			});
 
@@ -2371,7 +2333,7 @@ describe("TerraDrawSelectMode", () => {
 					4,
 					[expect.any(String)],
 					"update",
-					{ target: "properties", updateType: "commit" },
+					{ target: "properties" },
 				);
 
 				// Create selection points
@@ -2396,40 +2358,32 @@ describe("TerraDrawSelectMode", () => {
 				);
 
 				expect(store.updateGeometry).toHaveBeenCalledTimes(2);
-				expect(store.updateGeometry).toHaveBeenNthCalledWith(
-					1,
-					[
-						{
-							geometry: {
-								coordinates: [
-									[
-										[0, 0],
-										[0, 1],
-										[2, 2],
-										[1, 0],
-										[0, 0],
-									],
+				expect(store.updateGeometry).toHaveBeenNthCalledWith(1, [
+					{
+						geometry: {
+							coordinates: [
+								[
+									[0, 0],
+									[0, 1],
+									[2, 2],
+									[1, 0],
+									[0, 0],
 								],
-								type: "Polygon",
-							},
-							id: expect.any(String),
+							],
+							type: "Polygon",
 						},
-					],
-					{ updateType: "provisional" },
-				);
-				expect(store.updateGeometry).toHaveBeenNthCalledWith(
-					2,
-					[
-						{
-							geometry: {
-								coordinates: [2, 2],
-								type: "Point",
-							},
-							id: expect.any(String),
+						id: expect.any(String),
+					},
+				]);
+				expect(store.updateGeometry).toHaveBeenNthCalledWith(2, [
+					{
+						geometry: {
+							coordinates: [2, 2],
+							type: "Point",
 						},
-					],
-					{ updateType: "provisional" },
-				);
+						id: expect.any(String),
+					},
+				]);
 
 				// Update polygon position and 1 selection points
 				// that gets moved
@@ -2437,13 +2391,13 @@ describe("TerraDrawSelectMode", () => {
 					6,
 					[expect.any(String)],
 					"update",
-					{ target: "geometry", updateType: "provisional" },
+					{ target: "geometry" },
 				);
 				expect(onChange).toHaveBeenNthCalledWith(
 					7,
 					[expect.any(String)],
 					"update",
-					{ target: "geometry", updateType: "provisional" },
+					{ target: "geometry" },
 				);
 			});
 
@@ -2496,7 +2450,7 @@ describe("TerraDrawSelectMode", () => {
 					4,
 					[expect.any(String)],
 					"update",
-					{ target: "properties", updateType: "commit" },
+					{ target: "properties" },
 				);
 
 				// Create selection points
@@ -2521,38 +2475,30 @@ describe("TerraDrawSelectMode", () => {
 				);
 
 				expect(store.updateGeometry).toHaveBeenCalledTimes(2);
-				expect(store.updateGeometry).toHaveBeenNthCalledWith(
-					1,
-					[
-						{
-							geometry: {
-								coordinates: [
-									[0, 0],
-									[0, 1],
-									[2, 2],
-									[1, 0],
-								],
-								type: "LineString",
-							},
-							id: expect.any(String),
+				expect(store.updateGeometry).toHaveBeenNthCalledWith(1, [
+					{
+						geometry: {
+							coordinates: [
+								[0, 0],
+								[0, 1],
+								[2, 2],
+								[1, 0],
+							],
+							type: "LineString",
 						},
-					],
-					{ updateType: "provisional" },
-				);
+						id: expect.any(String),
+					},
+				]);
 
-				expect(store.updateGeometry).toHaveBeenNthCalledWith(
-					2,
-					[
-						{
-							geometry: {
-								coordinates: [2, 2],
-								type: "Point",
-							},
-							id: expect.any(String),
+				expect(store.updateGeometry).toHaveBeenNthCalledWith(2, [
+					{
+						geometry: {
+							coordinates: [2, 2],
+							type: "Point",
 						},
-					],
-					{ updateType: "provisional" },
-				);
+						id: expect.any(String),
+					},
+				]);
 
 				// Update linestring position and 1 selection points
 				// that gets moved
@@ -2560,13 +2506,13 @@ describe("TerraDrawSelectMode", () => {
 					6,
 					[expect.any(String)],
 					"update",
-					{ target: "geometry", updateType: "provisional" },
+					{ target: "geometry" },
 				);
 				expect(onChange).toHaveBeenNthCalledWith(
 					7,
 					[expect.any(String)],
 					"update",
-					{ target: "geometry", updateType: "provisional" },
+					{ target: "geometry" },
 				);
 			});
 
@@ -2621,7 +2567,7 @@ describe("TerraDrawSelectMode", () => {
 					4,
 					[expect.any(String)],
 					"update",
-					{ target: "properties", updateType: "commit" },
+					{ target: "properties" },
 				);
 
 				// Create selection points
@@ -2646,41 +2592,33 @@ describe("TerraDrawSelectMode", () => {
 				);
 
 				expect(store.updateGeometry).toHaveBeenCalledTimes(2);
-				expect(store.updateGeometry).toHaveBeenNthCalledWith(
-					1,
-					[
-						{
-							geometry: {
-								coordinates: [
-									[
-										[0, 0],
-										[0, 1],
-										[45, 45],
-										[1, 0],
-										[0, 0],
-									],
+				expect(store.updateGeometry).toHaveBeenNthCalledWith(1, [
+					{
+						geometry: {
+							coordinates: [
+								[
+									[0, 0],
+									[0, 1],
+									[45, 45],
+									[1, 0],
+									[0, 0],
 								],
-								type: "Polygon",
-							},
-							id: expect.any(String),
+							],
+							type: "Polygon",
 						},
-					],
-					{ updateType: "provisional" },
-				);
+						id: expect.any(String),
+					},
+				]);
 
-				expect(store.updateGeometry).toHaveBeenNthCalledWith(
-					2,
-					[
-						{
-							geometry: {
-								coordinates: [45, 45],
-								type: "Point",
-							},
-							id: expect.any(String),
+				expect(store.updateGeometry).toHaveBeenNthCalledWith(2, [
+					{
+						geometry: {
+							coordinates: [45, 45],
+							type: "Point",
 						},
-					],
-					{ updateType: "provisional" },
-				);
+						id: expect.any(String),
+					},
+				]);
 
 				// Update polygon position and 1 selection points
 				// that gets moved
@@ -2688,14 +2626,14 @@ describe("TerraDrawSelectMode", () => {
 					6,
 					[expect.any(String)],
 					"update",
-					{ target: "geometry", updateType: "provisional" },
+					{ target: "geometry" },
 				);
 
 				expect(onChange).toHaveBeenNthCalledWith(
 					7,
 					[expect.any(String)],
 					"update",
-					{ target: "geometry", updateType: "provisional" },
+					{ target: "geometry" },
 				);
 			});
 		});
@@ -2735,7 +2673,7 @@ describe("TerraDrawSelectMode", () => {
 					3,
 					[expect.any(String)],
 					"update",
-					{ target: "properties", updateType: "commit" },
+					{ target: "properties" },
 				);
 
 				// Create selection points
@@ -2765,13 +2703,13 @@ describe("TerraDrawSelectMode", () => {
 					5,
 					[expect.any(String)],
 					"update",
-					{ target: "geometry", updateType: "provisional" },
+					{ target: "geometry" },
 				);
 				expect(onChange).toHaveBeenNthCalledWith(
 					6,
 					[expect.any(String), expect.any(String)],
 					"update",
-					{ target: "geometry", updateType: "provisional" },
+					{ target: "geometry" },
 				);
 			});
 
@@ -2814,7 +2752,7 @@ describe("TerraDrawSelectMode", () => {
 					3,
 					[expect.any(String)],
 					"update",
-					{ target: "properties", updateType: "commit" },
+					{ target: "properties" },
 				);
 
 				// Create selection points
@@ -2849,7 +2787,7 @@ describe("TerraDrawSelectMode", () => {
 					5,
 					[expect.any(String)],
 					"update",
-					{ target: "geometry", updateType: "provisional" },
+					{ target: "geometry" },
 				);
 
 				expect(onChange).toHaveBeenNthCalledWith(
@@ -2861,7 +2799,7 @@ describe("TerraDrawSelectMode", () => {
 						expect.any(String),
 					],
 					"update",
-					{ target: "geometry", updateType: "provisional" },
+					{ target: "geometry" },
 				);
 			});
 		});
@@ -2911,7 +2849,6 @@ describe("TerraDrawSelectMode", () => {
 				// Polygon selected set to true
 				expect(onChange).toHaveBeenNthCalledWith(2, idOne, "update", {
 					target: "properties",
-					updateType: "commit",
 				});
 
 				// Create mid points
@@ -2938,7 +2875,6 @@ describe("TerraDrawSelectMode", () => {
 
 				expect(onChange).toHaveBeenNthCalledWith(5, idOne, "update", {
 					target: "geometry",
-					updateType: "commit",
 				});
 
 				// Delete existing midpoints and selection points
@@ -3029,7 +2965,7 @@ describe("TerraDrawSelectMode", () => {
 				3,
 				[expect.any(String)],
 				"update",
-				{ target: "properties", updateType: "commit" },
+				{ target: "properties" },
 			);
 
 			// Create selection points
@@ -3056,18 +2992,6 @@ describe("TerraDrawSelectMode", () => {
 			selectMode.onDragEnd(
 				MockCursorEvent({ lng: 1, lat: 1 }),
 				setMapDraggability,
-			);
-
-			expect(onChange).toHaveBeenCalledTimes(8);
-
-			expect(onChange).toHaveBeenNthCalledWith(
-				8,
-				[expect.any(String)],
-				"update",
-				{
-					target: "geometry",
-					updateType: "finish",
-				},
 			);
 
 			expect(onFinish).toHaveBeenCalledTimes(1);
@@ -3115,16 +3039,6 @@ describe("TerraDrawSelectMode", () => {
 				setMapDraggability,
 			);
 
-			expect(onChange).toHaveBeenNthCalledWith(
-				4,
-				[expect.any(String)],
-				"update",
-				{
-					target: "geometry",
-					updateType: "finish",
-				},
-			);
-
 			expect(onFinish).toHaveBeenCalledTimes(1);
 			expect(onFinish).toHaveBeenCalledWith(expect.any(String), {
 				action: "dragFeature",
@@ -3167,7 +3081,7 @@ describe("TerraDrawSelectMode", () => {
 				3,
 				[expect.any(String)],
 				"update",
-				{ target: "properties", updateType: "commit" },
+				{ target: "properties" },
 			);
 
 			// Create selection points
@@ -3194,16 +3108,6 @@ describe("TerraDrawSelectMode", () => {
 			selectMode.onDragEnd(
 				MockCursorEvent({ lng: 1, lat: 1 }),
 				setMapDraggability,
-			);
-
-			expect(onChange).toHaveBeenNthCalledWith(
-				7,
-				[expect.any(String)],
-				"update",
-				{
-					target: "geometry",
-					updateType: "finish",
-				},
 			);
 
 			expect(onFinish).toHaveBeenCalledTimes(1);

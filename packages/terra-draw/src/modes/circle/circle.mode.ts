@@ -443,7 +443,12 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 					}
 				: undefined,
 			propertyMutations,
-			context: { updateType },
+			context: isFinish
+				? {
+						updateType,
+						action: FinishActions.Draw,
+					}
+				: { updateType },
 		});
 	}
 

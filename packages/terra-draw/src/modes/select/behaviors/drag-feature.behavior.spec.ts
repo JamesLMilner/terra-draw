@@ -11,7 +11,6 @@ import { DragFeatureBehavior } from "./drag-feature.behavior";
 import { FeatureAtPointerEventBehavior } from "./feature-at-pointer-event.behavior";
 import { MidPointBehavior } from "./midpoint.behavior";
 import { SelectionPointBehavior } from "./selection-point.behavior";
-import { UpdateTypes } from "../../../common";
 
 describe("DragFeatureBehavior", () => {
 	describe("constructor", () => {
@@ -137,7 +136,7 @@ describe("DragFeatureBehavior", () => {
 
 				jest.spyOn(config.store, "updateGeometry");
 
-				dragFeatureBehavior.drag(event, UpdateTypes.Provisional);
+				dragFeatureBehavior.drag(event);
 
 				expect(config.store.updateGeometry).toHaveBeenCalledTimes(0);
 			});
@@ -150,10 +149,7 @@ describe("DragFeatureBehavior", () => {
 
 				jest.spyOn(config.store, "updateGeometry");
 
-				dragFeatureBehavior.drag(
-					MockCursorEvent({ lng: 0, lat: 0 }),
-					UpdateTypes.Provisional,
-				);
+				dragFeatureBehavior.drag(MockCursorEvent({ lng: 0, lat: 0 }));
 
 				expect(config.store.updateGeometry).toHaveBeenCalledTimes(1);
 
@@ -183,10 +179,7 @@ describe("DragFeatureBehavior", () => {
 
 				jest.spyOn(config.store, "updateGeometry");
 
-				dragFeatureBehavior.drag(
-					MockCursorEvent({ lng: 0, lat: 0 }),
-					UpdateTypes.Provisional,
-				);
+				dragFeatureBehavior.drag(MockCursorEvent({ lng: 0, lat: 0 }));
 
 				expect(config.store.updateGeometry).toHaveBeenCalledTimes(0);
 			});
@@ -199,10 +192,7 @@ describe("DragFeatureBehavior", () => {
 
 				jest.spyOn(config.store, "updateGeometry");
 
-				dragFeatureBehavior.drag(
-					MockCursorEvent({ lng: 0, lat: 0 }),
-					UpdateTypes.Provisional,
-				);
+				dragFeatureBehavior.drag(MockCursorEvent({ lng: 0, lat: 0 }));
 
 				expect(config.store.updateGeometry).toHaveBeenCalledTimes(1);
 			});

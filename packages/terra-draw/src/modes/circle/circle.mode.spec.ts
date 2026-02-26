@@ -662,7 +662,7 @@ describe("TerraDrawCircleMode", () => {
 				2,
 				[expect.any(String)],
 				"update",
-				{ target: "geometry", updateType: "provisional" },
+				{ target: "geometry" },
 			);
 
 			const updatedFeature = store.copyAll()[0];
@@ -916,14 +916,14 @@ describe("TerraDrawCircleMode", () => {
 						2,
 						[expect.any(String)],
 						"update",
-						{ target: "geometry", updateType: "provisional" },
+						{ target: "geometry" },
 					);
 
 					expect(onChange).toHaveBeenNthCalledWith(
 						3,
 						[expect.any(String)],
 						"update",
-						{ target: "properties", updateType: "provisional" },
+						{ target: "properties" },
 					);
 
 					const updatedFeature = store.copyAll()[0];

@@ -11,7 +11,6 @@ import { CoordinatePointBehavior } from "./coordinate-point.behavior";
 import { MidPointBehavior } from "./midpoint.behavior";
 import { SelectionPointBehavior } from "./selection-point.behavior";
 import { PixelDistanceBehavior } from "../../pixel-distance.behavior";
-import { UpdateTypes } from "../../../common";
 
 describe("MidPointBehavior", () => {
 	let config: BehaviorConfig;
@@ -138,7 +137,6 @@ describe("MidPointBehavior", () => {
 								[1, 1],
 								[1, 0],
 							],
-							updateType: UpdateTypes.Commit,
 						});
 
 						expect(result).toBe(undefined);
@@ -164,7 +162,6 @@ describe("MidPointBehavior", () => {
 								[2, 2],
 								[2, 3],
 							],
-							updateType: UpdateTypes.Commit,
 						});
 
 						const result = midPointBehavior.ids.map(
@@ -236,14 +233,10 @@ describe("MidPointBehavior", () => {
 					describe("updateOneAtIndex", () => {
 						it("should return undefined if index is negative and out of bounds", () => {
 							// no midpoints exist
-							const result = midPointBehavior.updateOneAtIndex(
-								-1,
-								[
-									[0, 0],
-									[0, 1],
-								],
-								UpdateTypes.Commit,
-							);
+							const result = midPointBehavior.updateOneAtIndex(-1, [
+								[0, 0],
+								[0, 1],
+							]);
 
 							expect(result).toBe(undefined);
 						});
@@ -279,11 +272,7 @@ describe("MidPointBehavior", () => {
 								lastMidPointId,
 							).coordinates as Position;
 
-							midPointBehavior.updateOneAtIndex(
-								-1,
-								updatedCoords,
-								UpdateTypes.Commit,
-							);
+							midPointBehavior.updateOneAtIndex(-1, updatedCoords);
 
 							const lastMidPointAfter = config.store.getGeometryCopy(
 								lastMidPointId,

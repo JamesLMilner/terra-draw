@@ -697,7 +697,6 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 	public drag(
 		event: TerraDrawMouseEvent,
 		resizeOption: ResizeOptions,
-		updateType: UpdateTypes,
 	): boolean {
 		if (!this.draggedCoordinate.id) {
 			return false;
@@ -748,7 +747,7 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 					coordinates: [updatedCoords],
 				},
 				context: {
-					updateType,
+					updateType: UpdateTypes.Provisional as const,
 				},
 			});
 		} else if (feature.geometry.type === "LineString") {
@@ -759,7 +758,7 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 					coordinates: updatedCoords,
 				},
 				context: {
-					updateType,
+					updateType: UpdateTypes.Provisional as const,
 				},
 			});
 		}
@@ -771,13 +770,9 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 		const featureCoordinates = updated.geometry.coordinates;
 
 		// Perform the update to the midpoints and selection points
-		this.midPoints.updateAllInPlace({ featureCoordinates, updateType });
-		this.selectionPoints.updateAllInPlace({ featureCoordinates, updateType });
-		this.coordinatePoints.updateAllInPlace({
-			featureId,
-			featureCoordinates,
-			updateType,
-		});
+		this.midPoints.updateAllInPlace({ featureCoordinates });
+		this.selectionPoints.updateAllInPlace({ featureCoordinates });
+		this.coordinatePoints.updateAllInPlace({ featureId, featureCoordinates });
 
 		return true;
 	}

@@ -123,7 +123,7 @@ export class TerraDrawFreehandLineStringMode extends TerraDrawBaseDrawMode<Freeh
 			propertyMutations: {
 				[COMMON_PROPERTIES.CURRENTLY_DRAWING]: undefined,
 			},
-			context: { updateType: UpdateTypes.Finish },
+			context: { updateType: UpdateTypes.Finish, action: FinishActions.Draw },
 		});
 
 		if (!updated) {

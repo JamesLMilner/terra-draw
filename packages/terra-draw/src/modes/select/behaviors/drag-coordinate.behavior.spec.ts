@@ -1,5 +1,4 @@
 import { Position } from "geojson";
-import { UpdateTypes } from "../../../common";
 import {
 	createStorePoint,
 	createStorePolygon,
@@ -208,42 +207,23 @@ describe("DragCoordinateBehavior", () => {
 					"updateOneAtIndex",
 				);
 
-				dragCoordinateBehavior.drag(
-					MockCursorEvent({ lng: 0, lat: 0 }),
-					true,
-					{
-						toCoordinate: false,
-					},
-					UpdateTypes.Provisional,
-				);
+				dragCoordinateBehavior.drag(MockCursorEvent({ lng: 0, lat: 0 }), true, {
+					toCoordinate: false,
+				});
 
 				// First call should be the "previous" midpoint update.
-				expect(midPointSpy).toHaveBeenNthCalledWith(
-					1,
-					-1,
-					expect.any(Array),
-					UpdateTypes.Provisional,
-				);
+				expect(midPointSpy).toHaveBeenNthCalledWith(1, -1, expect.any(Array));
 
 				// Sanity: we should also update the midpoint at index 0.
-				expect(midPointSpy).toHaveBeenCalledWith(
-					0,
-					expect.any(Array),
-					UpdateTypes.Provisional,
-				);
+				expect(midPointSpy).toHaveBeenCalledWith(0, expect.any(Array));
 			});
 
 			it("returns early if nothing is being dragged", () => {
 				jest.spyOn(config.store, "updateGeometry");
 
-				dragCoordinateBehavior.drag(
-					MockCursorEvent({ lng: 0, lat: 0 }),
-					true,
-					{
-						toCoordinate: false,
-					},
-					UpdateTypes.Provisional,
-				);
+				dragCoordinateBehavior.drag(MockCursorEvent({ lng: 0, lat: 0 }), true, {
+					toCoordinate: false,
+				});
 
 				expect(config.store.updateGeometry).toHaveBeenCalledTimes(0);
 			});
@@ -252,14 +232,9 @@ describe("DragCoordinateBehavior", () => {
 				createStorePoint(config);
 				jest.spyOn(config.store, "updateGeometry");
 
-				dragCoordinateBehavior.drag(
-					MockCursorEvent({ lng: 0, lat: 0 }),
-					true,
-					{
-						toCoordinate: false,
-					},
-					UpdateTypes.Provisional,
-				);
+				dragCoordinateBehavior.drag(MockCursorEvent({ lng: 0, lat: 0 }), true, {
+					toCoordinate: false,
+				});
 
 				expect(config.store.updateGeometry).toHaveBeenCalledTimes(0);
 			});
@@ -273,14 +248,9 @@ describe("DragCoordinateBehavior", () => {
 
 				jest.spyOn(config.store, "updateGeometry");
 
-				dragCoordinateBehavior.drag(
-					MockCursorEvent({ lng: 0, lat: 0 }),
-					true,
-					{
-						toCoordinate: false,
-					},
-					UpdateTypes.Provisional,
-				);
+				dragCoordinateBehavior.drag(MockCursorEvent({ lng: 0, lat: 0 }), true, {
+					toCoordinate: false,
+				});
 
 				expect(config.store.updateGeometry).toHaveBeenCalledTimes(0);
 			});
@@ -294,14 +264,9 @@ describe("DragCoordinateBehavior", () => {
 
 				jest.spyOn(config.store, "updateGeometry");
 
-				dragCoordinateBehavior.drag(
-					MockCursorEvent({ lng: 0, lat: 0 }),
-					true,
-					{
-						toCoordinate: false,
-					},
-					UpdateTypes.Provisional,
-				);
+				dragCoordinateBehavior.drag(MockCursorEvent({ lng: 0, lat: 0 }), true, {
+					toCoordinate: false,
+				});
 
 				expect(config.store.updateGeometry).toHaveBeenCalledTimes(1);
 			});
@@ -313,14 +278,9 @@ describe("DragCoordinateBehavior", () => {
 
 				jest.spyOn(config.store, "updateGeometry");
 
-				dragCoordinateBehavior.drag(
-					MockCursorEvent({ lng: 0, lat: 0 }),
-					true,
-					{
-						toCoordinate: false,
-					},
-					UpdateTypes.Provisional,
-				);
+				dragCoordinateBehavior.drag(MockCursorEvent({ lng: 0, lat: 0 }), true, {
+					toCoordinate: false,
+				});
 
 				expect(config.store.updateGeometry).toHaveBeenCalledTimes(1);
 			});
@@ -349,30 +309,26 @@ describe("DragCoordinateBehavior", () => {
 					true,
 
 					{ toCoordinate: true },
-					UpdateTypes.Provisional,
 				);
 
 				expect(config.store.updateGeometry).toHaveBeenCalledTimes(1);
-				expect(config.store.updateGeometry).toHaveBeenCalledWith(
-					[
-						{
-							geometry: {
-								coordinates: [
-									[
-										[1, 1],
-										[0, 1],
-										[1, 1],
-										[1, 0],
-										[1, 1],
-									],
+				expect(config.store.updateGeometry).toHaveBeenCalledWith([
+					{
+						geometry: {
+							coordinates: [
+								[
+									[1, 1],
+									[0, 1],
+									[1, 1],
+									[1, 0],
+									[1, 1],
 								],
-								type: "Polygon",
-							},
-							id: expect.any(String),
+							],
+							type: "Polygon",
 						},
-					],
-					{ updateType: UpdateTypes.Provisional },
-				);
+						id: expect.any(String),
+					},
+				]);
 			});
 
 			it("snaps the LineString coordinate if there is a nearby coordinate to snap to and toCoordinate snapping is true", () => {
@@ -393,25 +349,21 @@ describe("DragCoordinateBehavior", () => {
 					MockCursorEvent({ lng: 0.5, lat: 0.5 }),
 					true,
 					{ toCoordinate: true },
-					UpdateTypes.Provisional,
 				);
 
 				expect(config.store.updateGeometry).toHaveBeenCalledTimes(1);
-				expect(config.store.updateGeometry).toHaveBeenCalledWith(
-					[
-						{
-							geometry: {
-								coordinates: [
-									[1, 1], // [0, 0] -> [1, 1]
-									[0, 1],
-								],
-								type: "LineString",
-							},
-							id: expect.any(String),
+				expect(config.store.updateGeometry).toHaveBeenCalledWith([
+					{
+						geometry: {
+							coordinates: [
+								[1, 1], // [0, 0] -> [1, 1]
+								[0, 1],
+							],
+							type: "LineString",
 						},
-					],
-					{ updateType: UpdateTypes.Provisional },
-				);
+						id: expect.any(String),
+					},
+				]);
 			});
 
 			it("does not snap the LineString coordinate if there is a nearby coordinate to snap to and toCoordinate snapping is false", () => {
@@ -433,25 +385,21 @@ describe("DragCoordinateBehavior", () => {
 					true,
 
 					{ toCoordinate: false },
-					UpdateTypes.Provisional,
 				);
 
 				expect(config.store.updateGeometry).toHaveBeenCalledTimes(1);
-				expect(config.store.updateGeometry).toHaveBeenCalledWith(
-					[
-						{
-							geometry: {
-								coordinates: [
-									[0.5, 0.5],
-									[0, 1],
-								],
-								type: "LineString",
-							},
-							id: expect.any(String),
+				expect(config.store.updateGeometry).toHaveBeenCalledWith([
+					{
+						geometry: {
+							coordinates: [
+								[0.5, 0.5],
+								[0, 1],
+							],
+							type: "LineString",
 						},
-					],
-					{ updateType: UpdateTypes.Provisional },
-				);
+						id: expect.any(String),
+					},
+				]);
 			});
 
 			it("snaps the Polygon coordinate if there is a nearby line to snap to and toLine snapping is true", () => {
@@ -478,30 +426,26 @@ describe("DragCoordinateBehavior", () => {
 					true,
 
 					{ toLine: true },
-					UpdateTypes.Provisional,
 				);
 
 				expect(config.store.updateGeometry).toHaveBeenCalledTimes(1);
-				expect(config.store.updateGeometry).toHaveBeenCalledWith(
-					[
-						{
-							geometry: {
-								coordinates: [
-									[
-										[1, 1],
-										[0, 1],
-										[1, 1],
-										[1, 0],
-										[1, 1],
-									],
+				expect(config.store.updateGeometry).toHaveBeenCalledWith([
+					{
+						geometry: {
+							coordinates: [
+								[
+									[1, 1],
+									[0, 1],
+									[1, 1],
+									[1, 0],
+									[1, 1],
 								],
-								type: "Polygon",
-							},
-							id: expect.any(String),
+							],
+							type: "Polygon",
 						},
-					],
-					{ updateType: UpdateTypes.Provisional },
-				);
+						id: expect.any(String),
+					},
+				]);
 			});
 
 			it("does not snap the Polygon coordinate if there is a nearby coordinate to snap to and toCoordinate snapping is false", () => {
@@ -526,30 +470,26 @@ describe("DragCoordinateBehavior", () => {
 					true,
 
 					{ toCoordinate: false },
-					UpdateTypes.Provisional,
 				);
 
 				expect(config.store.updateGeometry).toHaveBeenCalledTimes(1);
-				expect(config.store.updateGeometry).toHaveBeenCalledWith(
-					[
-						{
-							geometry: {
-								coordinates: [
-									[
-										[0.5, 0.5],
-										[0, 1],
-										[1, 1],
-										[1, 0],
-										[0.5, 0.5],
-									],
+				expect(config.store.updateGeometry).toHaveBeenCalledWith([
+					{
+						geometry: {
+							coordinates: [
+								[
+									[0.5, 0.5],
+									[0, 1],
+									[1, 1],
+									[1, 0],
+									[0.5, 0.5],
 								],
-								type: "Polygon",
-							},
-							id: expect.any(String),
+							],
+							type: "Polygon",
 						},
-					],
-					{ updateType: UpdateTypes.Provisional },
-				);
+						id: expect.any(String),
+					},
+				]);
 			});
 
 			it("updates the LineString coordinate if within pointer distance", () => {
@@ -558,14 +498,9 @@ describe("DragCoordinateBehavior", () => {
 
 				dragCoordinateBehavior.startDragging(id, 0);
 
-				dragCoordinateBehavior.drag(
-					MockCursorEvent({ lng: 0, lat: 0 }),
-					true,
-					{
-						toCoordinate: false,
-					},
-					UpdateTypes.Provisional,
-				);
+				dragCoordinateBehavior.drag(MockCursorEvent({ lng: 0, lat: 0 }), true, {
+					toCoordinate: false,
+				});
 
 				expect(config.store.updateGeometry).toHaveBeenCalledTimes(1);
 			});
@@ -590,7 +525,6 @@ describe("DragCoordinateBehavior", () => {
 					false,
 
 					{ toCoordinate: false },
-					UpdateTypes.Provisional,
 				);
 				expect(config.store.updateGeometry).toHaveBeenCalledTimes(0);
 			});
@@ -611,7 +545,6 @@ describe("DragCoordinateBehavior", () => {
 					MockCursorEvent({ lng: 100, lat: 0 }),
 					false,
 					{ toCoordinate: false },
-					UpdateTypes.Provisional,
 				);
 				expect(config.store.updateGeometry).toHaveBeenCalledTimes(0);
 			});

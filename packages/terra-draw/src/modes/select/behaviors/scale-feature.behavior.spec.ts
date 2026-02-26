@@ -1,4 +1,3 @@
-import { UpdateTypes } from "../../../common";
 import {
 	createStorePoint,
 	createStoreLineString,
@@ -105,11 +104,7 @@ describe("ScaleFeatureBehavior", () => {
 			it("non Polygon or LineStrings do an early return", () => {
 				const id = createStorePoint(config);
 
-				scaleFeatureBehavior.scale(
-					MockCursorEvent({ lng: 0, lat: 0 }),
-					id,
-					UpdateTypes.Provisional,
-				);
+				scaleFeatureBehavior.scale(MockCursorEvent({ lng: 0, lat: 0 }), id);
 
 				expect(config.store.updateGeometry).toHaveBeenCalledTimes(0);
 			});
@@ -117,22 +112,14 @@ describe("ScaleFeatureBehavior", () => {
 			it("scales the LineString", () => {
 				const id = createStoreLineString(config);
 
-				scaleFeatureBehavior.scale(
-					MockCursorEvent({ lng: 0, lat: 0 }),
-					id,
-					UpdateTypes.Provisional,
-				);
+				scaleFeatureBehavior.scale(MockCursorEvent({ lng: 0, lat: 0 }), id);
 				expect(config.store.updateGeometry).toHaveBeenCalledTimes(1);
 			});
 
 			it("scales the Polygon", () => {
 				const id = createStorePolygon(config);
 
-				scaleFeatureBehavior.scale(
-					MockCursorEvent({ lng: 0, lat: 0 }),
-					id,
-					UpdateTypes.Provisional,
-				);
+				scaleFeatureBehavior.scale(MockCursorEvent({ lng: 0, lat: 0 }), id);
 				expect(config.store.updateGeometry).toHaveBeenCalledTimes(1);
 			});
 		});
@@ -151,51 +138,37 @@ describe("ScaleFeatureBehavior", () => {
 
 				jest.spyOn(config.store, "updateGeometry");
 
-				scaleFeatureBehavior.scale(
-					MockCursorEvent({ lng: 0, lat: 0 }),
-					id,
-					UpdateTypes.Provisional,
-				);
+				scaleFeatureBehavior.scale(MockCursorEvent({ lng: 0, lat: 0 }), id);
 				expect(config.store.updateGeometry).toHaveBeenCalledTimes(1);
-				expect(config.store.updateGeometry).toHaveBeenCalledWith(
-					[
-						{
-							geometry: {
-								coordinates: [
-									[0, 0],
-									[0, 1],
-								],
-								type: "LineString",
-							},
-							id: id,
+				expect(config.store.updateGeometry).toHaveBeenCalledWith([
+					{
+						geometry: {
+							coordinates: [
+								[0, 0],
+								[0, 1],
+							],
+							type: "LineString",
 						},
-					],
-					{ updateType: UpdateTypes.Provisional },
-				);
+						id: id,
+					},
+				]);
 
 				scaleFeatureBehavior.reset();
 
-				scaleFeatureBehavior.scale(
-					MockCursorEvent({ lng: 10, lat: 10 }),
-					id2,
-					UpdateTypes.Provisional,
-				);
+				scaleFeatureBehavior.scale(MockCursorEvent({ lng: 10, lat: 10 }), id2);
 				expect(config.store.updateGeometry).toHaveBeenCalledTimes(2);
-				expect(config.store.updateGeometry).toHaveBeenCalledWith(
-					[
-						{
-							geometry: {
-								coordinates: [
-									[10, 10],
-									[10, 11],
-								],
-								type: "LineString",
-							},
-							id: id2,
+				expect(config.store.updateGeometry).toHaveBeenCalledWith([
+					{
+						geometry: {
+							coordinates: [
+								[10, 10],
+								[10, 11],
+							],
+							type: "LineString",
 						},
-					],
-					{ updateType: UpdateTypes.Provisional },
-				);
+						id: id2,
+					},
+				]);
 			});
 		});
 	});

@@ -1,5 +1,5 @@
 import { Feature, Position } from "geojson";
-import { COMMON_PROPERTIES, UpdateTypes } from "../../../common";
+import { COMMON_PROPERTIES } from "../../../common";
 import { GeoJSONStoreFeatures, JSONObject } from "../../../store/store";
 import { MockBehaviorConfig } from "../../../test/mock-behavior-config";
 import { MockPolygonSquare } from "../../../test/mock-features";
@@ -58,7 +58,6 @@ describe("CoordinatePointBehavior", () => {
 			coordinatePointBehavior.createOrUpdate({
 				featureId,
 				featureCoordinates: mockPolygon.geometry.coordinates,
-				updateType: UpdateTypes.Commit,
 			});
 
 			const properties = config.store.getPropertiesCopy(featureId);
@@ -101,7 +100,6 @@ describe("CoordinatePointBehavior", () => {
 			coordinatePointBehavior.createOrUpdate({
 				featureId,
 				featureCoordinates: mockPolygon.geometry.coordinates,
-				updateType: UpdateTypes.Commit,
 			});
 
 			const properties = config.store.getPropertiesCopy(featureId);
@@ -112,7 +110,6 @@ describe("CoordinatePointBehavior", () => {
 			coordinatePointBehavior.createOrUpdate({
 				featureId,
 				featureCoordinates: mockPolygon.geometry.coordinates,
-				updateType: UpdateTypes.Commit,
 			});
 			const propertiesAfterDelete = config.store.getPropertiesCopy(featureId);
 			const coordinatePointIdsAfterDelete =
@@ -158,11 +155,7 @@ describe("CoordinatePointBehavior", () => {
 			] as Position[];
 
 			expect(config.store.has(featureId)).toBe(true);
-			coordinatePointBehavior.createOrUpdate({
-				featureId,
-				featureCoordinates,
-				updateType: UpdateTypes.Commit,
-			});
+			coordinatePointBehavior.createOrUpdate({ featureId, featureCoordinates });
 
 			const properties = config.store.getPropertiesCopy(featureId);
 			expect(properties).toBeDefined();
@@ -181,7 +174,6 @@ describe("CoordinatePointBehavior", () => {
 			coordinatePointBehavior.createOrUpdate({
 				featureId,
 				featureCoordinates: featureCoordinatesUpdated,
-				updateType: UpdateTypes.Commit,
 			});
 
 			// Ensure all coordinate points are updated
@@ -212,7 +204,6 @@ describe("CoordinatePointBehavior", () => {
 			coordinatePointBehavior.createOrUpdate({
 				featureId,
 				featureCoordinates: mockPolygon.geometry.coordinates,
-				updateType: UpdateTypes.Commit,
 			});
 
 			const properties = config.store.getPropertiesCopy(featureId);
@@ -246,7 +237,6 @@ describe("CoordinatePointBehavior", () => {
 			coordinatePointBehavior.createOrUpdate({
 				featureId,
 				featureCoordinates: mockPolygon.geometry.coordinates,
-				updateType: UpdateTypes.Commit,
 			});
 
 			const properties = config.store.getPropertiesCopy(featureId);

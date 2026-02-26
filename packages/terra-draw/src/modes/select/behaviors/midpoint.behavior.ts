@@ -120,7 +120,6 @@ export class MidPointBehavior extends TerraDrawModeBehavior {
 			this.coordinatePointBehavior.createOrUpdate({
 				featureId,
 				featureCoordinates,
-				updateType: UpdateTypes.Commit,
 			});
 		}
 
@@ -184,10 +183,8 @@ export class MidPointBehavior extends TerraDrawModeBehavior {
 
 	public updateAllInPlace({
 		featureCoordinates,
-		updateType,
 	}: {
 		featureCoordinates: Position[] | Position[][];
-		updateType: UpdateTypes;
 	}) {
 		if (this._midPoints.length === 0) {
 			return undefined;
@@ -203,14 +200,12 @@ export class MidPointBehavior extends TerraDrawModeBehavior {
 				featureId: id,
 				coordinate: midpoints[i],
 			})),
-			updateType,
 		);
 	}
 
 	public updateOneAtIndex(
 		index: number,
 		featureCoordinates: Position[] | Position[][],
-		updateType: UpdateTypes,
 	) {
 		if (index < 0) {
 			// -1 would be the final index
@@ -226,14 +221,11 @@ export class MidPointBehavior extends TerraDrawModeBehavior {
 			this.getMidpointConfig(coordinates),
 		);
 
-		this.mutateFeature.updateGuidancePoints(
-			[
-				{
-					featureId: this._midPoints[index],
-					coordinate: midpoints[index],
-				},
-			],
-			updateType,
-		);
+		this.mutateFeature.updateGuidancePoints([
+			{
+				featureId: this._midPoints[index],
+				coordinate: midpoints[index],
+			},
+		]);
 	}
 }

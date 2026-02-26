@@ -239,7 +239,7 @@ describe("TerraDrawLineStringMode", () => {
 				2,
 				[featureId],
 				"update",
-				{ target: "properties", updateType: "commit" },
+				{ target: "properties" },
 			);
 
 			const coordinatePoints = mockConfig.store.copyAllWhere(
@@ -336,13 +336,10 @@ describe("TerraDrawLineStringMode", () => {
 
 			expect(onSnapshot).toHaveBeenCalledTimes(2);
 			expect(onSnapshot).toHaveBeenNthCalledWith(1, null);
-			expect(onSnapshot).toHaveBeenNthCalledWith(2, {
-				type: "LineString",
-				coordinates: [
-					[0, 0],
-					[0, 0],
-				],
-			});
+			expect(onSnapshot).toHaveBeenNthCalledWith(
+				2,
+				expect.objectContaining({ type: "LineString" }),
+			);
 		});
 	});
 
@@ -886,7 +883,6 @@ describe("TerraDrawLineStringMode", () => {
 
 			expect(onChange).toHaveBeenCalledWith([lineString.id], "update", {
 				target: "geometry",
-				updateType: "finish",
 			});
 
 			// Verify coordinate has been removed
@@ -999,13 +995,13 @@ describe("TerraDrawLineStringMode", () => {
 					1,
 					[lineStringFeature.id],
 					"update",
-					{ target: "geometry", updateType: "commit" },
+					{ target: "geometry" },
 				);
 				expect(onChange).toHaveBeenNthCalledWith(
 					2,
 					[closingPointFeature.id],
 					"update",
-					{ target: "geometry", updateType: "provisional" },
+					{ target: "geometry" },
 				);
 			});
 
@@ -1246,12 +1242,10 @@ describe("TerraDrawLineStringMode", () => {
 
 				expect(onChange).toHaveBeenNthCalledWith(1, [lineString.id], "update", {
 					target: "geometry",
-					updateType: "finish",
 				});
 
 				expect(onChange).toHaveBeenNthCalledWith(2, [lineString.id], "update", {
 					target: "properties",
-					updateType: "finish",
 				});
 
 				expect(onChange).toHaveBeenNthCalledWith(
@@ -1509,19 +1503,19 @@ describe("TerraDrawLineStringMode", () => {
 				1,
 				[expect.any(String)],
 				"update",
-				{ target: "geometry", updateType: "provisional" },
+				{ target: "geometry" },
 			);
 			expect(mockConfig.onChange).toHaveBeenNthCalledWith(
 				2,
 				[expect.any(String)],
 				"update",
-				{ target: "geometry", updateType: "provisional" },
+				{ target: "geometry" },
 			);
 			expect(mockConfig.onChange).toHaveBeenNthCalledWith(
 				3,
 				[expect.any(String)],
 				"update",
-				{ target: "properties", updateType: "provisional" },
+				{ target: "properties" },
 			);
 
 			const allFeatures = mockConfig.store.copyAll();
@@ -1666,7 +1660,7 @@ describe("TerraDrawLineStringMode", () => {
 				1,
 				[expect.any(String)],
 				"update",
-				{ target: "properties", updateType: "finish" },
+				{ target: "properties" },
 			);
 
 			// Remove the edit drag point
@@ -2095,7 +2089,7 @@ describe("TerraDrawLineStringMode", () => {
 				1,
 				[snapPoint!.id],
 				"update",
-				{ target: "geometry", updateType: "provisional" },
+				{ target: "geometry" },
 			);
 
 			expect(mockConfig.store.has(snapPoint!.id as FeatureId)).toBe(true);

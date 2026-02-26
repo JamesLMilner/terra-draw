@@ -1,4 +1,4 @@
-import { TerraDrawMouseEvent, UpdateTypes, Validation } from "../../../common";
+import { TerraDrawMouseEvent, Validation } from "../../../common";
 import { BehaviorConfig, TerraDrawModeBehavior } from "../../base.behavior";
 import { FeatureId } from "../../../store/store";
 import { DragCoordinateResizeBehavior } from "./drag-coordinate-resize.behavior";
@@ -11,11 +11,7 @@ export class ScaleFeatureBehavior extends TerraDrawModeBehavior {
 		super(config);
 	}
 
-	public scale(
-		event: TerraDrawMouseEvent,
-		featureId: FeatureId,
-		updateType: UpdateTypes,
-	) {
+	public scale(event: TerraDrawMouseEvent, featureId: FeatureId) {
 		if (!this.dragCoordinateResizeBehavior.isDragging()) {
 			const index = this.dragCoordinateResizeBehavior.getDraggableIndex(
 				event,
@@ -24,7 +20,7 @@ export class ScaleFeatureBehavior extends TerraDrawModeBehavior {
 			this.dragCoordinateResizeBehavior.startDragging(featureId, index);
 		}
 
-		this.dragCoordinateResizeBehavior.drag(event, "center-fixed", updateType);
+		this.dragCoordinateResizeBehavior.drag(event, "center-fixed");
 	}
 
 	public reset() {

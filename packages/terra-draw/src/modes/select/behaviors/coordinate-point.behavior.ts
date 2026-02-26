@@ -18,11 +18,9 @@ export class CoordinatePointBehavior extends TerraDrawModeBehavior {
 	public createOrUpdate({
 		featureId,
 		featureCoordinates,
-		updateType,
 	}: {
 		featureId: FeatureId;
 		featureCoordinates: Position[] | Position[][];
-		updateType: UpdateTypes;
 	}) {
 		// Handle the edge case where the feature is deleted before create or update
 		if (!this.readFeature.hasFeature(featureId)) {
@@ -89,7 +87,7 @@ export class CoordinatePointBehavior extends TerraDrawModeBehavior {
 					});
 				});
 
-				this.mutateFeature.updateGuidancePoints(updates, updateType);
+				this.mutateFeature.updateGuidancePoints(updates);
 			}
 		}
 		// If the existing coordinate points are not present in the store, delete them and recreate
@@ -122,7 +120,6 @@ export class CoordinatePointBehavior extends TerraDrawModeBehavior {
 		featureId: FeatureId,
 		index: number,
 		updatedCoordinate: Position,
-		updateType: UpdateTypes,
 	) {
 		const featureProperties = this.readFeature.getProperties(featureId);
 		const coordinatePointIds =
@@ -136,25 +133,20 @@ export class CoordinatePointBehavior extends TerraDrawModeBehavior {
 			return;
 		}
 
-		this.mutateFeature.updateGuidancePoints(
-			[
-				{
-					featureId: coordinatePointIds[index],
-					coordinate: updatedCoordinate,
-				},
-			],
-			updateType,
-		);
+		this.mutateFeature.updateGuidancePoints([
+			{
+				featureId: coordinatePointIds[index],
+				coordinate: updatedCoordinate,
+			},
+		]);
 	}
 
 	public updateAllInPlace({
 		featureId,
 		featureCoordinates,
-		updateType,
 	}: {
 		featureId: FeatureId;
 		featureCoordinates: Position[] | Position[][];
-		updateType: UpdateTypes;
 	}) {
 		const featureProperties = this.readFeature.getProperties(featureId);
 
@@ -175,7 +167,6 @@ export class CoordinatePointBehavior extends TerraDrawModeBehavior {
 				featureId: id,
 				coordinate: coordinates[i],
 			})),
-			updateType,
 		);
 	}
 

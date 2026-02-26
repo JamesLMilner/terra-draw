@@ -106,13 +106,8 @@ export type Actions = (typeof FinishActions)[keyof typeof FinishActions];
 export type OnFinishContext = { mode: string; action: Actions };
 
 export type TerraDrawOnChangeContext =
-	| {
-			origin: "api";
-			target?: "geometry" | "properties";
-			updateType: UpdateTypes;
-	  }
-	| { origin: "api" }
-	| { target?: "geometry" | "properties"; updateType: UpdateTypes };
+	| { origin: "api"; target?: "geometry" | "properties" }
+	| { target?: "geometry" | "properties" };
 
 export type TerraDrawGeoJSONStore = GeoJSONStore<
 	TerraDrawOnChangeContext | undefined,

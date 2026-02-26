@@ -211,7 +211,7 @@ export class TerraDrawPointMode extends TerraDrawBaseDrawMode<PointModeStyling> 
 				mode: this.mode,
 				[COMMON_PROPERTIES.EDITED]: false,
 			},
-			context: { updateType: UpdateTypes.Finish },
+			context: { updateType: UpdateTypes.Finish, action: "edit" },
 		});
 
 		if (!updated) {
@@ -316,7 +316,7 @@ export class TerraDrawPointMode extends TerraDrawBaseDrawMode<PointModeStyling> 
 			properties: {
 				mode: this.mode,
 			},
-			context: { updateType: UpdateTypes.Finish },
+			context: { updateType: UpdateTypes.Finish, action: FinishActions.Draw },
 		});
 
 		if (feature) {

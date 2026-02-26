@@ -138,6 +138,7 @@ export class TerraDrawSectorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 			},
 			context: {
 				updateType: UpdateTypes.Finish,
+				action: FinishActions.Draw,
 			},
 		});
 

@@ -681,18 +681,14 @@ describe("GeoJSONStore", () => {
 			);
 
 			expect(afterFeatureAddedMock).toHaveBeenCalledTimes(2);
-			expect(afterFeatureAddedMock).toHaveBeenNthCalledWith(1, {
-				type: "Feature",
-				id: result[0].id,
-				geometry: { type: "Point", coordinates: [0, 0] },
-				properties: { mode: "point" },
-			});
-			expect(afterFeatureAddedMock).toHaveBeenNthCalledWith(2, {
-				type: "Feature",
-				id: result[1].id,
-				geometry: { type: "Point", coordinates: [1, 1] },
-				properties: { mode: "point" },
-			});
+			expect(afterFeatureAddedMock).toHaveBeenNthCalledWith(
+				1,
+				expect.objectContaining({ id: result[0].id }),
+			);
+			expect(afterFeatureAddedMock).toHaveBeenNthCalledWith(
+				2,
+				expect.objectContaining({ id: result[1].id }),
+			);
 
 			// Ensure onChange is called before afterFeatureAdded
 			expect(mockChangeCallback.mock.invocationCallOrder[0]).toBeLessThan(

@@ -487,7 +487,7 @@ describe("TerraDrawMarkerMode", () => {
 				2,
 				[expect.any(String)],
 				"update",
-				{ target: "geometry", updateType: "provisional" },
+				{ target: "geometry" },
 			);
 
 			// On finished called from onClick and is then only called after onDragEnd

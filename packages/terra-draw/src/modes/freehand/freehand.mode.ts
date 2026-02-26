@@ -300,7 +300,7 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 			propertyMutations: {
 				[COMMON_PROPERTIES.CURRENTLY_DRAWING]: undefined,
 			},
-			context: { updateType: UpdateTypes.Finish },
+			context: { updateType: UpdateTypes.Finish, action: FinishActions.Draw },
 		});
 
 		if (!updated) {

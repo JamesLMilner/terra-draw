@@ -182,7 +182,6 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 					this.coordinatePoints.createOrUpdate({
 						featureId: feature.id as FeatureId,
 						featureCoordinates: feature.geometry.coordinates as Position[][],
-						updateType: UpdateTypes.Commit,
 					});
 				});
 			} else if (this.coordinatePoints && this.showCoordinatePoints === false) {
@@ -227,6 +226,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 			},
 			context: {
 				updateType: UpdateTypes.Finish,
+				action: FinishActions.Draw,
 			},
 		});
 
@@ -238,7 +238,6 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 			this.coordinatePoints.createOrUpdate({
 				featureId: this.currentId,
 				featureCoordinates: updated.geometry.coordinates,
-				updateType: UpdateTypes.Finish,
 			});
 		}
 
@@ -320,15 +319,12 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 
 		if (snappedCoordinate) {
 			if (this.snappedPointId) {
-				this.mutateFeature.updateGuidancePoints(
-					[
-						{
-							featureId: this.snappedPointId,
-							coordinate: snappedCoordinate,
-						},
-					],
-					UpdateTypes.Provisional,
-				);
+				this.mutateFeature.updateGuidancePoints([
+					{
+						featureId: this.snappedPointId,
+						coordinate: snappedCoordinate,
+					},
+				]);
 			} else {
 				this.snappedPointId = this.mutateFeature.createGuidancePoint({
 					coordinate: snappedCoordinate,
@@ -422,7 +418,6 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 			this.coordinatePoints.createOrUpdate({
 				featureId: this.currentId,
 				featureCoordinates: updated.geometry.coordinates,
-				updateType: UpdateTypes.Provisional,
 			});
 		}
 	}
@@ -552,7 +547,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 		const updated = this.mutateFeature.updatePolygon({
 			featureId,
 			coordinateMutations,
-			context: { updateType: UpdateTypes.Finish },
+			context: { updateType: UpdateTypes.Finish, action: FinishActions.Edit },
 		});
 
 		if (!updated) {
@@ -563,7 +558,6 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 			this.coordinatePoints.createOrUpdate({
 				featureId,
 				featureCoordinates: updated.geometry.coordinates,
-				updateType: UpdateTypes.Commit,
 			});
 		}
 
@@ -621,7 +615,6 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 				this.coordinatePoints.createOrUpdate({
 					featureId: id,
 					featureCoordinates: geometry.coordinates,
-					updateType: UpdateTypes.Commit,
 				});
 			}
 
@@ -662,7 +655,6 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 				this.coordinatePoints.createOrUpdate({
 					featureId: this.currentId,
 					featureCoordinates: updated.geometry.coordinates,
-					updateType: UpdateTypes.Commit,
 				});
 			}
 
@@ -703,7 +695,6 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 				this.coordinatePoints.createOrUpdate({
 					featureId: this.currentId,
 					featureCoordinates: updated.geometry.coordinates,
-					updateType: UpdateTypes.Commit,
 				});
 			}
 
@@ -754,7 +745,6 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 					this.coordinatePoints.createOrUpdate({
 						featureId: this.currentId,
 						featureCoordinates: updated.geometry.coordinates,
-						updateType: UpdateTypes.Commit,
 					});
 				}
 
@@ -972,7 +962,6 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 				this.coordinatePoints.createOrUpdate({
 					featureId: this.editedFeatureId,
 					featureCoordinates: updated.geometry.coordinates,
-					updateType: UpdateTypes.Provisional,
 				});
 			}
 			// Else we are only updating one point
@@ -981,7 +970,6 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 					this.editedFeatureId,
 					this.editedFeatureCoordinateIndex,
 					updated.geometry.coordinates[0][this.editedFeatureCoordinateIndex],
-					UpdateTypes.Provisional,
 				);
 			}
 		}
@@ -992,15 +980,12 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 		}
 
 		if (this.editedPointId) {
-			this.mutateFeature.updateGuidancePoints(
-				[
-					{
-						featureId: this.editedPointId,
-						coordinate: eventCoordinate,
-					},
-				],
-				UpdateTypes.Provisional,
-			);
+			this.mutateFeature.updateGuidancePoints([
+				{
+					featureId: this.editedPointId,
+					coordinate: eventCoordinate,
+				},
+			]);
 		}
 	}
 
@@ -1024,7 +1009,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 			propertyMutations: {
 				[COMMON_PROPERTIES.EDITED]: false,
 			},
-			context: { updateType: UpdateTypes.Finish },
+			context: { updateType: UpdateTypes.Finish, action: FinishActions.Edit },
 		});
 
 		if (!updated) {
@@ -1241,7 +1226,6 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 			this.coordinatePoints.createOrUpdate({
 				featureId: feature.id as FeatureId,
 				featureCoordinates: feature.geometry.coordinates as Position[][],
-				updateType: UpdateTypes.Commit,
 			});
 		}
 	}
@@ -1255,7 +1239,6 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 			this.coordinatePoints.createOrUpdate({
 				featureId: feature.id as FeatureId,
 				featureCoordinates: feature.geometry.coordinates as Position[][],
-				updateType: UpdateTypes.Commit,
 			});
 		}
 

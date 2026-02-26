@@ -70,7 +70,7 @@ import { limitPrecision } from "./geometry/limit-decimal-precision";
 import { isValidJSONValue } from "./store/valid-json";
 import { haversineDistanceKilometers } from "./geometry/measure/haversine-distance";
 import { TerraDrawMarkerMode } from "./modes/marker/marker.mode";
-import { setupUndoRedo } from "./undo-redo";
+import { setupGlobalUndoRedo } from "./undo-redo";
 
 // Helper type to determine the instance type of a class
 type InstanceType<T extends new (...args: any[]) => any> = T extends new (
@@ -126,11 +126,23 @@ class TerraDraw {
 	};
 	private _instanceSelectModes: string[];
 
+	private globalUndoRedo?: ReturnType<typeof setupGlobalUndoRedo>;
+
 	constructor(options: {
 		adapter: TerraDrawAdapter;
 		modes: TerraDrawBaseDrawMode<any>[];
 		idStrategy?: IdStrategy<FeatureId>;
 		tracked?: boolean;
+		undoRedo?: {
+			current?: {
+				enabled: boolean;
+				onStackChange?: (undoStackSize: number, redoStackSize: number) => void;
+			};
+			global?: {
+				enabled: boolean;
+				onStackChange?: (undoStackSize: number, redoStackSize: number) => void;
+			};
+		};
 	}) {
 		this._adapter = options.adapter;
 		this._instanceSelectModes = [];
@@ -325,6 +337,12 @@ class TerraDraw {
 				coordinatePrecision: this._adapter.getCoordinatePrecision(),
 			});
 		});
+
+		if (options?.undoRedo?.global?.enabled) {
+			this.globalUndoRedo = setupGlobalUndoRedo(this, {
+				onStackChange: options?.undoRedo?.global?.onStackChange,
+			});
+		}
 	}
 
 	private checkEnabled() {
@@ -1130,6 +1148,102 @@ class TerraDraw {
 		}
 	}
 
+	undo(): boolean {
+		this.checkEnabled();
+		if (this.getModeState() === "drawing") {
+			if (this._mode.undo && this._mode.undoSize && this._mode.undoSize() > 0) {
+				this._mode.undo();
+				return true;
+			}
+		} else {
+			if (this.globalUndoRedo && this.globalUndoRedo.undoSize() > 0) {
+				this.globalUndoRedo.undo();
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	// undoSize(): number | null {
+	// 	this.checkEnabled();
+	// 	if (this.getModeState() === "drawing") {
+	// 		if (this._mode.undoSize) {
+	// 			return this._mode.undoSize();
+	// 		} else {
+	// 			return null;
+	// 		}
+	// 	} else {
+	// 		console.log("Global undo size called", this.globalUndoRedo?.undoSize());
+	// 		return this.globalUndoRedo?.undoSize() ?? null;
+	// 	}
+	// }
+
+	canUndo(): boolean {
+		this.checkEnabled();
+		if (this.getModeState() === "drawing") {
+			console.log(
+				"Can undo called",
+				Boolean(
+					Boolean(this._mode.undo) &&
+						this._mode.undoSize &&
+						this._mode.undoSize() > 0,
+				),
+			);
+			return Boolean(
+				Boolean(this._mode.undo) &&
+					this._mode.undoSize &&
+					this._mode.undoSize() > 0,
+			);
+		} else {
+			return Boolean(this.globalUndoRedo && this.globalUndoRedo.undoSize() > 0);
+		}
+	}
+
+	canRedo(): boolean {
+		this.checkEnabled();
+		if (this.getModeState() === "drawing") {
+			return !!(
+				Boolean(this._mode.undo) &&
+				this._mode.redoSize &&
+				this._mode.redoSize() > 0
+			);
+		} else {
+			return !!(this.globalUndoRedo && this.globalUndoRedo.redoSize() > 0);
+		}
+	}
+
+	redo(): boolean {
+		this.checkEnabled();
+		if (this.getModeState() === "drawing") {
+			if (this._mode.redo && this._mode.redoSize && this._mode.redoSize() > 0) {
+				this._mode.redo();
+				return true;
+			}
+		} else {
+			if (this.globalUndoRedo && this.globalUndoRedo.redoSize() > 0) {
+				this.globalUndoRedo.redo();
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	// redoSize(): number | null {
+	// 	this.checkEnabled();
+
+	// 	if (this.getModeState() === "drawing") {
+	// 		if (this._mode.redoSize) {
+	// 			return this._mode.redoSize();
+	// 		} else {
+	// 			return null;
+	// 		}
+	// 	} else {
+	// 		return this.globalUndoRedo?.redoSize() ?? null;
+	// 	}
+	// }
+
 	/**
 	 * A method for adding features to the store. This method will validate the features
 	 * returning an array of validation results. Features must match one of the modes enabled
@@ -1392,5 +1506,5 @@ export {
 	ValidateMaxAreaSquareMeters,
 	ValidateNotSelfIntersecting,
 	ValidationReasons,
-	setupUndoRedo,
+	setupGlobalUndoRedo as setupUndoRedo,
 };

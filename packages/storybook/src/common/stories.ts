@@ -588,21 +588,31 @@ const Select: Story = {
 			redoButton.disabled = true;
 			undoButton.disabled = true;
 
-			const { undo, redo } = setupUndoRedo(draw, {
-				onStackChange: (undoStackSize: number, redoStackSize: number) => {
-					console.log("undoSize", undoStackSize, "redoSize", redoStackSize);
-					undoButton.disabled = undoStackSize === 0;
-					redoButton.disabled = redoStackSize === 0;
-				},
+			draw.on("change", () => {
+				undoButton.disabled = !draw.canUndo();
+				redoButton.disabled = !draw.canRedo();
 			});
+
+			draw.on("finish", () => {
+				undoButton.disabled = !draw.canUndo();
+				redoButton.disabled = !draw.canRedo();
+			});
+
+			// const { undo, redo } = setupUndoRedo(draw, {
+			// 	onStackChange: (undoStackSize: number, redoStackSize: number) => {
+			// 		console.log("undoSize", undoStackSize, "redoSize", redoStackSize);
+			// 		undoButton.disabled = undoStackSize + draw.undoSize() === 0;
+			// 		redoButton.disabled = redoStackSize === 0;
+			// 	},
+			// });
 
 			const element = document.querySelector('[data-testid="container"]');
 
 			undoButton.onclick = () => {
-				undo();
+				draw.undo();
 			};
 			redoButton.onclick = () => {
-				redo();
+				draw.redo();
 			};
 			element?.appendChild(undoButton);
 			element?.appendChild(redoButton);

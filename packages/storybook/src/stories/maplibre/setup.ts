@@ -80,10 +80,10 @@ export function SetupMapLibre(args: StoryArgs): HTMLElement {
 					}),
 					modes,
 					undoRedo: {
-						global: {
-							enabled: true,
+						sessionLevel: {
+							enabled: false,
 						},
-						current: {
+						drawingLevel: {
 							enabled: true,
 						},
 					},

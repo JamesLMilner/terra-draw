@@ -1914,6 +1914,173 @@ describe("TerraDrawPolygonMode", () => {
 			expect(features.length).toBe(3);
 		});
 	});
+
+	describe("undo and redo", () => {
+		let polygonMode: TerraDrawPolygonMode;
+		let store: TerraDrawGeoJSONStore;
+
+		beforeEach(() => {
+			polygonMode = new TerraDrawPolygonMode();
+			const mockConfig = MockModeConfig(polygonMode.mode);
+
+			store = mockConfig.store;
+			polygonMode.register(mockConfig);
+			polygonMode.start();
+		});
+
+		it("undoes and redoes committed drawing coordinates", () => {
+			polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			polygonMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 0 }));
+			polygonMode.onClick(MockCursorEvent({ lng: 1, lat: 0 }));
+			polygonMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
+			polygonMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
+
+			let features = store.copyAll();
+			expect(features.length).toBe(3);
+			expect(features[0].geometry.coordinates[0]).toStrictEqual([
+				[0, 0],
+				[1, 0],
+				[1, 1],
+				[1, 1],
+				[0, 0],
+			]);
+
+			polygonMode.undo();
+
+			features = store.copyAll();
+			expect(features.length).toBe(1);
+			expect(features[0].geometry.coordinates[0]).toStrictEqual([
+				[0, 0],
+				[1, 0],
+				[1, 0],
+				[0, 0],
+			]);
+
+			polygonMode.redo();
+
+			features = store.copyAll();
+			expect(features.length).toBe(3);
+			expect(features[0].geometry.coordinates[0]).toStrictEqual([
+				[0, 0],
+				[1, 0],
+				[1, 1],
+				[1, 1],
+				[0, 0],
+			]);
+		});
+
+		it("undoes the first coordinate and allows redo", () => {
+			polygonMode.onClick(MockCursorEvent({ lng: 5, lat: 5 }));
+
+			let features = store.copyAll();
+			expect(features.length).toBe(1);
+			expect(features[0].geometry.coordinates[0]).toStrictEqual([
+				[5, 5],
+				[5, 5],
+				[5, 5],
+				[5, 5],
+			]);
+
+			polygonMode.undo();
+
+			features = store.copyAll();
+			expect(features.length).toBe(0);
+
+			polygonMode.redo();
+
+			features = store.copyAll();
+			expect(features.length).toBe(1);
+			expect(features[0].geometry.coordinates[0]).toStrictEqual([
+				[5, 5],
+				[5, 5],
+				[5, 5],
+				[5, 5],
+			]);
+		});
+
+		it("removes snapping guidance point when undo changes drawing context", () => {
+			polygonMode = new TerraDrawPolygonMode({
+				snapping: {
+					toCustom: (_event, context) =>
+						context.currentId ? [10, 10] : undefined,
+				},
+			});
+
+			const mockConfig = MockModeConfig(polygonMode.mode);
+			store = mockConfig.store;
+			polygonMode.register(mockConfig);
+			polygonMode.start();
+
+			polygonMode.onClick(MockCursorEvent({ lng: 5, lat: 5 }));
+			polygonMode.onMouseMove(MockCursorEvent({ lng: 6, lat: 6 }));
+
+			let features = store.copyAll();
+			expect(features.length).toBe(2);
+
+			polygonMode.undo();
+
+			features = store.copyAll();
+			expect(features.length).toBe(0);
+		});
+
+		it("updates snapping guidance point when redo restores drawing context", () => {
+			polygonMode = new TerraDrawPolygonMode({
+				snapping: {
+					toCustom: (_event, context) =>
+						context.currentId ? [20, 20] : [10, 10],
+				},
+			});
+
+			const mockConfig = MockModeConfig(polygonMode.mode);
+			store = mockConfig.store;
+			polygonMode.register(mockConfig);
+			polygonMode.start();
+
+			polygonMode.onClick(MockCursorEvent({ lng: 5, lat: 5 }));
+			polygonMode.undo();
+
+			polygonMode.onMouseMove(MockCursorEvent({ lng: 6, lat: 6 }));
+
+			let features = store.copyAll();
+			expect(features.length).toBe(1);
+			let snappingPointFeature = features.find(
+				(feature) => feature.properties[COMMON_PROPERTIES.SNAPPING_POINT],
+			);
+			expect(snappingPointFeature?.geometry.coordinates).toStrictEqual([
+				10, 10,
+			]);
+
+			polygonMode.redo();
+
+			features = store.copyAll();
+			expect(features.length).toBe(2);
+			snappingPointFeature = features.find(
+				(feature) => feature.properties[COMMON_PROPERTIES.SNAPPING_POINT],
+			);
+			expect(snappingPointFeature?.geometry.coordinates).toStrictEqual([
+				20, 20,
+			]);
+		});
+
+		it("does not recreate closing points when undoing from four coordinates to three", () => {
+			polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			polygonMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 0 }));
+			polygonMode.onClick(MockCursorEvent({ lng: 1, lat: 0 }));
+			polygonMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
+			polygonMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
+			polygonMode.onMouseMove(MockCursorEvent({ lng: 0, lat: 1 }));
+			polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 1 }));
+
+			expect(() => polygonMode.undo()).not.toThrow();
+
+			const features = store.copyAll();
+			const closingPointFeatures = features.filter(
+				(feature) => feature.properties[COMMON_PROPERTIES.CLOSING_POINT],
+			);
+
+			expect(closingPointFeatures.length).toBe(2);
+		});
+	});
 });
 
 describe("cleanUp", () => {

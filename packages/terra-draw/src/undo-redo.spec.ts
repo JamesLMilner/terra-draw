@@ -3,7 +3,12 @@
  */
 
 import { FeatureId } from "./extend";
-import { setupUndoRedo, TerraDraw, TerraDrawPolygonMode } from "./terra-draw";
+import {
+	setupUndoRedo,
+	TerraDraw,
+	TerraDrawPointMode,
+	TerraDrawPolygonMode,
+} from "./terra-draw";
 import { TerraDrawTestAdapter } from "./terra-draw.extensions.spec";
 import { MockCursorEvent } from "./test/mock-cursor-event";
 
@@ -73,6 +78,34 @@ describe("Undo/Redo", () => {
 	});
 
 	describe("undo", () => {
+		it("tracks initial drawn feature when id strategy starts at zero", () => {
+			let currentIdentifier = 0;
+			const onStackChange = jest.fn();
+			const pointMode = new TerraDrawPointMode();
+
+			draw = new TerraDraw({
+				adapter,
+				modes: [pointMode],
+				idStrategy: {
+					isValidId: (id) => typeof id === "number" && Number.isInteger(id),
+					getId: () => currentIdentifier++,
+				},
+			});
+
+			draw.start();
+			draw.setMode("point");
+
+			const numericManager = setupUndoRedo(draw, {
+				onStackChange,
+			});
+
+			pointMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+			expect(onStackChange).toHaveBeenLastCalledWith(1, 0);
+			numericManager.undo();
+			expect(draw.getSnapshot().length).toBe(0);
+		});
+
 		it("can undo one drawn polygon creation", () => {
 			createPolygonFeature(0.1);
 
@@ -162,6 +195,35 @@ describe("Undo/Redo", () => {
 
 			expectFeatures(0);
 			expectStack({ undo: 2, redo: 0 });
+		});
+	});
+
+	describe("undoSize", () => {
+		it("undo size should be 1 before undo and 0 after undo", () => {
+			createPolygonFeature(0.1);
+
+			expect(manager.undoSize()).toBe(1);
+
+			manager.undo();
+
+			expect(manager.undoSize()).toBe(0);
+
+			const featuresAfterUndo = draw.getSnapshot();
+			expect(featuresAfterUndo.length).toBe(0);
+		});
+
+		it("redo size should be 1 after undo and 0 after redo", () => {
+			createPolygonFeature(0.1);
+
+			expect(manager.redoSize()).toBe(0);
+
+			manager.undo();
+
+			expect(manager.redoSize()).toBe(1);
+
+			manager.redo();
+
+			expect(manager.redoSize()).toBe(0);
 		});
 	});
 });

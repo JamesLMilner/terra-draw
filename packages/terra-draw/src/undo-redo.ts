@@ -2,7 +2,7 @@ import { COMMON_PROPERTIES } from "./common";
 import { FeatureId } from "./extend";
 import { GeoJSONStoreFeatures, TerraDraw } from "./terra-draw";
 
-export const setupUndoRedo = (
+export const setupGlobalUndoRedo = (
 	draw: TerraDraw,
 	options?: {
 		onStackChange?: (undoStackSize: number, redoStackSize: number) => void;
@@ -34,21 +34,6 @@ export const setupUndoRedo = (
 
 	draw.on("change", (ids: FeatureId[], type, context) => {
 		if (draw.getModeState() === "drawing") {
-			console.log("drawing", ids);
-
-			const features = ids
-				.map((id) => draw.getSnapshotFeature(id))
-				.filter(
-					(f) =>
-						f &&
-						f!.properties.mode === draw.getMode() &&
-						!f.properties[COMMON_PROPERTIES.CLOSING_POINT] &&
-						!f.properties[COMMON_PROPERTIES.COORDINATE_POINT] &&
-						!f.properties[COMMON_PROPERTIES.SNAPPING_POINT],
-				);
-
-			console.log(features);
-
 			return;
 		}
 
@@ -91,7 +76,7 @@ export const setupUndoRedo = (
 	draw.on("finish", (ids: FeatureId[] | FeatureId) => {
 		const changed = Array.isArray(ids) ? ids : [ids];
 		for (const id of changed) {
-			if (!id) continue;
+			if (id === undefined || id === null) continue;
 
 			const key = String(id);
 
@@ -260,5 +245,7 @@ export const setupUndoRedo = (
 	return {
 		undo,
 		redo,
+		undoSize: () => actionStack.length,
+		redoSize: () => redoStack.length,
 	};
 };

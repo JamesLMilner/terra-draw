@@ -94,6 +94,11 @@ interface InertCoordinates {
 	value: number;
 }
 
+type LineStringDrawingHistoryEntry = {
+	featureCoordinates: Position[];
+	currentCoordinate: number;
+};
+
 interface TerraDrawLineStringModeOptions<T extends CustomStyling>
 	extends BaseModeOptions<T> {
 	snapping?: Snapping;
@@ -121,6 +126,8 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 	private lastMouseMoveEvent: TerraDrawMouseEvent | undefined;
 	private showCoordinatePoints = false;
 	private finishOnNthCoordinate: number | undefined;
+	private undoHistory: LineStringDrawingHistoryEntry[] = [];
+	private redoHistory: LineStringDrawingHistoryEntry[] = [];
 
 	// Editable properties
 	private editable: boolean = false;
@@ -293,6 +300,8 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 		this.currentCoordinate = 0;
 		this.currentId = undefined;
 		this.lastCommittedCoordinates = undefined;
+		this.undoHistory = [];
+		this.redoHistory = [];
 
 		// Go back to started state
 		if (this.state === "drawing") {
@@ -367,6 +376,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 		this.lastCommittedCoordinates = created.geometry.coordinates;
 		this.currentId = created.id as FeatureId;
 		this.currentCoordinate++;
+		this.pushHistorySnapshot(this.currentId, this.currentCoordinate);
 		this.setDrawing();
 
 		if (this.showCoordinatePoints) {
@@ -413,6 +423,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 
 		this.lastCommittedCoordinates = updated.geometry.coordinates;
 		this.currentCoordinate++;
+		this.pushHistorySnapshot(this.currentId, this.currentCoordinate);
 
 		if (this.shouldFinishOnCommit(updated.geometry)) {
 			this.close();
@@ -460,10 +471,219 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 		this.lastCommittedCoordinates = updated.geometry.coordinates;
 
 		this.currentCoordinate++;
+		this.pushHistorySnapshot(this.currentId, this.currentCoordinate);
 
 		if (this.shouldFinishOnCommit(updated.geometry)) {
 			this.close();
 		}
+	}
+
+	undoSize() {
+		return this.undoHistory.length;
+	}
+
+	private cloneCoordinates(coordinates: Position[]): Position[] {
+		return coordinates.map((coordinate) => [...coordinate] as Position);
+	}
+
+	private pushHistorySnapshot(featureId: FeatureId, currentCoordinate: number) {
+		const featureGeometry = this.readFeature.getGeometry<LineString>(featureId);
+
+		this.undoHistory.push({
+			featureCoordinates: this.cloneCoordinates(featureGeometry.coordinates),
+			currentCoordinate,
+		});
+
+		this.redoHistory = [];
+	}
+
+	private updateSnappedGuidancePointFromLastMouseMove() {
+		if (!this.snapping || !this.lastMouseMoveEvent) {
+			if (this.snappedPointId) {
+				this.mutateFeature.deleteFeatureIfPresent(this.snappedPointId);
+				this.snappedPointId = undefined;
+			}
+			return;
+		}
+
+		this.updateSnappedCoordinate(this.lastMouseMoveEvent);
+	}
+
+	private syncClosingPoints(featureCoordinates: Position[]) {
+		if (this.currentCoordinate >= 2) {
+			if (this.closingPoints.ids.length) {
+				this.closingPoints.update(featureCoordinates);
+			} else {
+				this.closingPoints.create(featureCoordinates);
+			}
+		} else {
+			this.closingPoints.delete();
+		}
+	}
+
+	public undo() {
+		if (this.state !== "drawing" || !this.currentId) {
+			return;
+		}
+
+		const undoneHistoryEntry = this.undoHistory.pop();
+
+		if (!undoneHistoryEntry) {
+			return;
+		}
+
+		this.redoHistory.push({
+			featureCoordinates: this.cloneCoordinates(
+				undoneHistoryEntry.featureCoordinates,
+			),
+			currentCoordinate: undoneHistoryEntry.currentCoordinate,
+		});
+
+		const previousHistoryEntry = this.undoHistory[this.undoHistory.length - 1];
+
+		if (!previousHistoryEntry) {
+			const removedFeatureId = this.currentId;
+
+			this.currentId = undefined;
+			this.currentCoordinate = 0;
+			this.lastCommittedCoordinates = undefined;
+			this.closingPoints.delete();
+
+			if (this.state === "drawing") {
+				this.setStarted();
+			}
+
+			if (this.showCoordinatePoints) {
+				this.coordinatePoints.deletePointsByFeatureIds([removedFeatureId]);
+			}
+
+			this.mutateFeature.deleteFeatureIfPresent(removedFeatureId);
+			this.updateSnappedGuidancePointFromLastMouseMove();
+			return;
+		}
+
+		const updated = this.mutateFeature.updateLineString({
+			featureId: this.currentId,
+			coordinateMutations: {
+				type: Mutations.Replace,
+				coordinates: this.cloneCoordinates(
+					previousHistoryEntry.featureCoordinates,
+				),
+			},
+			propertyMutations: {
+				[COMMON_PROPERTIES.CURRENTLY_DRAWING]: true,
+			},
+			context: { updateType: UpdateTypes.Commit },
+		});
+
+		if (!updated) {
+			return;
+		}
+
+		this.currentCoordinate = previousHistoryEntry.currentCoordinate;
+		this.lastCommittedCoordinates = this.cloneCoordinates(
+			updated.geometry.coordinates,
+		);
+		this.syncClosingPoints(updated.geometry.coordinates);
+
+		if (this.showCoordinatePoints) {
+			this.coordinatePoints.createOrUpdate({
+				featureId: this.currentId,
+				featureCoordinates: updated.geometry.coordinates,
+				updateType: UpdateTypes.Commit,
+			});
+		}
+
+		this.updateSnappedGuidancePointFromLastMouseMove();
+	}
+
+	public redoSize(): number {
+		return this.redoHistory.length;
+	}
+
+	public redo() {
+		if (this.redoHistory.length === 0) {
+			return;
+		}
+
+		const redoneHistoryEntry = this.redoHistory.pop();
+
+		if (!redoneHistoryEntry) {
+			return;
+		}
+
+		if (!this.currentId) {
+			const { id, geometry } = this.mutateFeature.createLineString({
+				coordinates: this.cloneCoordinates(
+					redoneHistoryEntry.featureCoordinates,
+				),
+				properties: {
+					mode: this.mode,
+					[COMMON_PROPERTIES.CURRENTLY_DRAWING]: true,
+				},
+			});
+
+			this.currentId = id;
+			this.currentCoordinate = redoneHistoryEntry.currentCoordinate;
+			this.lastCommittedCoordinates = this.cloneCoordinates(
+				geometry.coordinates,
+			);
+
+			if (this.state === "started") {
+				this.setDrawing();
+			}
+
+			this.syncClosingPoints(geometry.coordinates);
+
+			if (this.showCoordinatePoints) {
+				this.coordinatePoints.createOrUpdate({
+					featureId: id,
+					featureCoordinates: geometry.coordinates,
+					updateType: UpdateTypes.Commit,
+				});
+			}
+		} else {
+			const updated = this.mutateFeature.updateLineString({
+				featureId: this.currentId,
+				coordinateMutations: {
+					type: Mutations.Replace,
+					coordinates: this.cloneCoordinates(
+						redoneHistoryEntry.featureCoordinates,
+					),
+				},
+				propertyMutations: {
+					[COMMON_PROPERTIES.CURRENTLY_DRAWING]: true,
+				},
+				context: { updateType: UpdateTypes.Commit },
+			});
+
+			if (!updated) {
+				return;
+			}
+
+			this.currentCoordinate = redoneHistoryEntry.currentCoordinate;
+			this.lastCommittedCoordinates = this.cloneCoordinates(
+				updated.geometry.coordinates,
+			);
+			this.syncClosingPoints(updated.geometry.coordinates);
+
+			if (this.showCoordinatePoints) {
+				this.coordinatePoints.createOrUpdate({
+					featureId: this.currentId,
+					featureCoordinates: updated.geometry.coordinates,
+					updateType: UpdateTypes.Commit,
+				});
+			}
+		}
+
+		this.undoHistory.push({
+			featureCoordinates: this.cloneCoordinates(
+				redoneHistoryEntry.featureCoordinates,
+			),
+			currentCoordinate: redoneHistoryEntry.currentCoordinate,
+		});
+
+		this.updateSnappedGuidancePointFromLastMouseMove();
 	}
 
 	/** @internal */
@@ -951,6 +1171,9 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 		this.snappedPointId = undefined;
 		this.currentId = undefined;
 		this.currentCoordinate = 0;
+		this.lastCommittedCoordinates = undefined;
+		this.undoHistory = [];
+		this.redoHistory = [];
 		if (this.state === "drawing") {
 			this.setStarted();
 		}
@@ -1202,6 +1425,9 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 
 			this.currentCoordinate = 0;
 			this.currentId = undefined;
+			this.lastCommittedCoordinates = undefined;
+			this.undoHistory = [];
+			this.redoHistory = [];
 
 			// Go back to started state
 			if (this.state === "drawing") {

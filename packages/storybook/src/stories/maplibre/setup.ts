@@ -79,6 +79,14 @@ export function SetupMapLibre(args: StoryArgs): HTMLElement {
 						map: mapConfig.map,
 					}),
 					modes,
+					undoRedo: {
+						global: {
+							enabled: true,
+						},
+						current: {
+							enabled: true,
+						},
+					},
 				});
 
 				draw.start();

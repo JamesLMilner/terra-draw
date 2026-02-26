@@ -2,7 +2,11 @@
  * @jest-environment jsdom
  */
 import { Polygon } from "geojson";
-import { COMMON_PROPERTIES, SELECT_PROPERTIES } from "./common";
+import {
+	COMMON_PROPERTIES,
+	SELECT_PROPERTIES,
+	type TerraDrawCallbacks,
+} from "./common";
 import { FeatureId } from "./extend";
 import {
 	GeoJSONStoreFeatures,
@@ -16,6 +20,7 @@ import {
 	TerraDrawStylingFunction,
 } from "./terra-draw";
 import { TerraDrawTestAdapter } from "./terra-draw.extensions.spec";
+import { MockKeyboardEvent } from "./test/mock-keyboard-event";
 import { MockCursorEvent } from "./test/mock-cursor-event";
 
 describe("Terra Draw", () => {
@@ -4624,6 +4629,155 @@ describe("Terra Draw", () => {
 			]);
 
 			expect(callback).not.toHaveBeenCalled();
+		});
+	});
+
+	describe("keyboard shortcuts", () => {
+		const getRegisteredCallbacks = (
+			adapter: TerraDrawTestAdapter,
+		): TerraDrawCallbacks => {
+			const typedAdapter = adapter as unknown as {
+				_currentModeCallbacks?: TerraDrawCallbacks;
+			};
+
+			if (!typedAdapter._currentModeCallbacks) {
+				throw new Error("Adapter callbacks have not been registered");
+			}
+
+			return typedAdapter._currentModeCallbacks;
+		};
+
+		it("uses cmd+z and cmd+shift+z for drawing mode undo and redo", () => {
+			const lineStringMode = new TerraDrawLineStringMode();
+			const draw = new TerraDraw({
+				adapter,
+				modes: [lineStringMode],
+			});
+
+			draw.start();
+			draw.setMode("linestring");
+
+			lineStringMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			lineStringMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 0 }));
+			lineStringMode.onClick(MockCursorEvent({ lng: 1, lat: 0 }));
+			expect(draw.getSnapshot()).toHaveLength(2);
+
+			const undoEvent = MockKeyboardEvent({
+				key: "z",
+				heldKeys: ["Meta", "z"],
+			});
+
+			getRegisteredCallbacks(adapter).onKeyDown(undoEvent);
+
+			expect(draw.getSnapshot()).toHaveLength(1);
+			expect(undoEvent.preventDefault).toHaveBeenCalledTimes(1);
+
+			const redoEvent = MockKeyboardEvent({
+				key: "z",
+				heldKeys: ["Meta", "Shift", "z"],
+			});
+
+			getRegisteredCallbacks(adapter).onKeyDown(redoEvent);
+
+			expect(draw.getSnapshot()).toHaveLength(2);
+			expect(redoEvent.preventDefault).toHaveBeenCalledTimes(1);
+		});
+
+		it("uses ctrl+z and ctrl+y for global undo and redo", () => {
+			const pointMode = new TerraDrawPointMode();
+			const draw = new TerraDraw({
+				adapter,
+				modes: [pointMode],
+				undoRedo: {
+					sessionLevel: {
+						enabled: true,
+					},
+				},
+			});
+
+			draw.start();
+			draw.setMode("point");
+
+			pointMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			expect(draw.getSnapshot()).toHaveLength(1);
+
+			const undoEvent = MockKeyboardEvent({
+				key: "z",
+				heldKeys: ["Control", "z"],
+			});
+
+			getRegisteredCallbacks(adapter).onKeyDown(undoEvent);
+
+			expect(draw.getSnapshot()).toHaveLength(0);
+			expect(undoEvent.preventDefault).toHaveBeenCalledTimes(1);
+
+			const redoEvent = MockKeyboardEvent({
+				key: "y",
+				heldKeys: ["Control", "y"],
+			});
+
+			getRegisteredCallbacks(adapter).onKeyDown(redoEvent);
+
+			expect(draw.getSnapshot()).toHaveLength(1);
+			expect(redoEvent.preventDefault).toHaveBeenCalledTimes(1);
+		});
+
+		it("does not handle mode undo while drawing when undoRedo.drawing is disabled", () => {
+			const lineStringMode = new TerraDrawLineStringMode();
+			const draw = new TerraDraw({
+				adapter,
+				modes: [lineStringMode],
+				undoRedo: {
+					drawingLevel: {
+						enabled: false,
+					},
+				},
+			});
+
+			draw.start();
+			draw.setMode("linestring");
+
+			lineStringMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			expect(draw.getSnapshot()).toHaveLength(1);
+
+			const undoEvent = MockKeyboardEvent({
+				key: "z",
+				heldKeys: ["Meta", "z"],
+			});
+
+			getRegisteredCallbacks(adapter).onKeyDown(undoEvent);
+
+			expect(draw.getSnapshot()).toHaveLength(1);
+			expect(undoEvent.preventDefault).not.toHaveBeenCalled();
+		});
+
+		it("handles mode undo while drawing when undoRedo.drawing is enabled", () => {
+			const lineStringMode = new TerraDrawLineStringMode();
+			const draw = new TerraDraw({
+				adapter,
+				modes: [lineStringMode],
+				undoRedo: {
+					drawingLevel: {
+						enabled: true,
+					},
+				},
+			});
+
+			draw.start();
+			draw.setMode("linestring");
+
+			lineStringMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			expect(draw.getSnapshot()).toHaveLength(1);
+
+			const undoEvent = MockKeyboardEvent({
+				key: "z",
+				heldKeys: ["Meta", "z"],
+			});
+
+			getRegisteredCallbacks(adapter).onKeyDown(undoEvent);
+
+			expect(draw.getSnapshot()).toHaveLength(0);
+			expect(undoEvent.preventDefault).toHaveBeenCalledTimes(1);
 		});
 	});
 });

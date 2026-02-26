@@ -559,6 +559,13 @@ const Select: Story = {
 					},
 				}),
 			() =>
+				new TerraDrawLineStringMode({
+					showCoordinatePoints: true,
+					styles: {
+						coordinatePointColor: "#ff0000",
+					},
+				}),
+			() =>
 				new TerraDrawSelectMode({
 					styles: {
 						selectionPointColor: "#0000ff",

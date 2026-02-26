@@ -2,7 +2,7 @@ import { COMMON_PROPERTIES } from "./common";
 import { FeatureId } from "./extend";
 import { GeoJSONStoreFeatures, TerraDraw } from "./terra-draw";
 
-export const setupGlobalUndoRedo = (
+export const setupSessionUndoRedo = (
 	draw: TerraDraw,
 	options?: {
 		onStackChange?: (undoStackSize: number, redoStackSize: number) => void;

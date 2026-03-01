@@ -443,6 +443,93 @@ describe("TerraDrawFreehandLineStringMode", () => {
 		});
 	});
 
+	describe("onSecondaryPointerDown / onSecondaryPointerUp", () => {
+		let freehandMode: TerraDrawFreehandLineStringMode;
+		let store: TerraDrawGeoJSONStore;
+		let onChange: jest.Mock;
+
+		beforeEach(() => {
+			freehandMode = new TerraDrawFreehandLineStringMode();
+			const mockConfig = MockModeConfig(freehandMode.mode);
+			store = mockConfig.store;
+			onChange = mockConfig.onChange;
+			freehandMode.register(mockConfig);
+			freehandMode.start();
+		});
+
+		it("pauses coordinate addition on secondary pointer down while drawing", () => {
+			freehandMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			expect(onChange).toHaveBeenCalledTimes(2); // linestring + closing point
+
+			freehandMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
+			const callsBeforePause = onChange.mock.calls.length;
+
+			// Simulate second finger down
+			freehandMode.onSecondaryPointerDown(
+				MockCursorEvent({ lng: 2, lat: 2 }),
+			);
+
+			// Further moves should be ignored
+			freehandMode.onMouseMove(MockCursorEvent({ lng: 3, lat: 3 }));
+			freehandMode.onMouseMove(MockCursorEvent({ lng: 4, lat: 4 }));
+
+			expect(onChange).toHaveBeenCalledTimes(callsBeforePause);
+		});
+
+		it("resumes coordinate addition on secondary pointer up", () => {
+			freehandMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+			freehandMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
+
+			// Pause
+			freehandMode.onSecondaryPointerDown(
+				MockCursorEvent({ lng: 2, lat: 2 }),
+			);
+
+			// Resume
+			freehandMode.onSecondaryPointerUp(
+				MockCursorEvent({ lng: 2, lat: 2 }),
+			);
+
+			const callsAfterResume = onChange.mock.calls.length;
+
+			// Move should now add coordinates again
+			freehandMode.onMouseMove(MockCursorEvent({ lng: 5, lat: 5 }));
+
+			expect(onChange.mock.calls.length).toBeGreaterThan(callsAfterResume);
+		});
+
+		it("does not pause if not in drawing state", () => {
+			// Not drawing — secondary pointer should not throw
+			freehandMode.onSecondaryPointerDown(
+				MockCursorEvent({ lng: 0, lat: 0 }),
+			);
+
+			// Start drawing after — should work normally
+			freehandMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			const callsAfterClick = onChange.mock.calls.length;
+
+			freehandMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
+			expect(onChange.mock.calls.length).toBeGreaterThan(callsAfterClick);
+		});
+
+		it("cleanUp resets paused state", () => {
+			freehandMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			freehandMode.onSecondaryPointerDown(
+				MockCursorEvent({ lng: 1, lat: 1 }),
+			);
+
+			freehandMode.cleanUp();
+
+			// Start drawing again — should not be paused
+			freehandMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			const callsAfterClick = onChange.mock.calls.length;
+
+			freehandMode.onMouseMove(MockCursorEvent({ lng: 5, lat: 5 }));
+			expect(onChange.mock.calls.length).toBeGreaterThan(callsAfterClick);
+		});
+	});
+
 	describe("onKeyUp", () => {
 		let store: TerraDrawGeoJSONStore;
 		let freehandMode: TerraDrawFreehandLineStringMode;

@@ -153,6 +153,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 	public mode = "select";
 
 	private allowManualDeselection = true;
+	private _paused = false;
 	private dragEventThrottle = 5;
 	private dragEventCount = 0;
 	private selected: FeatureId[] = [];
@@ -763,10 +764,23 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 	}
 
 	/** @internal */
+	onSecondaryPointerDown(event: TerraDrawMouseEvent) {
+		if (this.state === "selecting") {
+			this._paused = true;
+		}
+	}
+
+	/** @internal */
+	onSecondaryPointerUp(event: TerraDrawMouseEvent) {
+		this._paused = false;
+	}
+
+	/** @internal */
 	cleanUp() {
 		if (this.selected.length) {
 			this.deselect(this.selected[0]);
 		}
+		this._paused = false;
 	}
 
 	/** @internal */
@@ -911,6 +925,8 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 			return;
 		}
 
+		if (this._paused) return;
+
 		const properties = this.readFeature.getProperties(selectedId);
 		const modeFlags = this.flags[properties.mode as string];
 		const canSelfIntersect: boolean =
@@ -1001,6 +1017,8 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 		event: TerraDrawMouseEvent,
 		setMapDraggability: (enabled: boolean) => void,
 	) {
+		if (this._paused) return;
+
 		if (!this.allowPointerEvent(this.pointerEvents.onDragEnd, event)) {
 			return;
 		}

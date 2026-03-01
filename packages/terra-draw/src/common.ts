@@ -54,6 +54,8 @@ export interface TerraDrawMouseEvent {
 	button: "neither" | "left" | "middle" | "right";
 	heldKeys: string[];
 	isContextMenu: boolean;
+	/** The type of pointer that triggered the event (e.g. mouse, pen, or touch). */
+	pointerType?: "mouse" | "pen" | "touch";
 }
 
 export interface TerraDrawKeyboardEvent {
@@ -210,6 +212,7 @@ export type TerraDrawHandledEvents = Extract<
 	| "pointerdown"
 	| "pointerup"
 	| "pointermove"
+	| "pointercancel"
 	| "contextmenu"
 	| "keyup"
 	| "keydown"

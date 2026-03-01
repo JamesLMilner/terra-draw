@@ -56,6 +56,7 @@ export abstract class TerraDrawBaseAdapter implements TerraDrawAdapter {
 
 	private _nextKeyUpIsContextMenu = false;
 	private _lastPointerDownEventTarget: EventTarget | undefined;
+	private _previousTouchAction: string | undefined;
 
 	protected _ignoreMismatchedPointerEvents = false;
 	protected _minPixelDragDistance: number;
@@ -70,6 +71,7 @@ export abstract class TerraDrawBaseAdapter implements TerraDrawAdapter {
 	protected _dragState: "not-dragging" | "pre-dragging" | "dragging" =
 		"not-dragging";
 	protected _currentModeCallbacks: TerraDrawCallbacks | undefined;
+	protected _activePointers: Set<number> = new Set();
 
 	public abstract getMapEventElement(
 		eventType?: TerraDrawHandledEvents,
@@ -119,6 +121,10 @@ export abstract class TerraDrawBaseAdapter implements TerraDrawAdapter {
 		const { containerX, containerY } = this.getMapElementXYPosition(event);
 		const button = this.getButton(event);
 		const heldKeys = Array.from(this._heldKeys);
+		const pointerType =
+			"pointerType" in event
+				? (event.pointerType as "mouse" | "pen" | "touch")
+				: "mouse";
 
 		return {
 			lng: limitPrecision(lng, this._coordinatePrecision),
@@ -128,6 +134,7 @@ export abstract class TerraDrawBaseAdapter implements TerraDrawAdapter {
 			button,
 			heldKeys,
 			isContextMenu,
+			pointerType,
 		};
 	}
 
@@ -145,6 +152,10 @@ export abstract class TerraDrawBaseAdapter implements TerraDrawAdapter {
 		this._listeners.forEach((listener) => {
 			listener.register();
 		});
+
+		const element = this.getMapEventElement();
+		this._previousTouchAction = element.style.touchAction;
+		element.style.touchAction = "none";
 	}
 
 	/**
@@ -161,6 +172,8 @@ export abstract class TerraDrawBaseAdapter implements TerraDrawAdapter {
 			new AdapterListener<BasePointerListener>({
 				name: "pointerdown",
 				callback: (event) => {
+					this._activePointers.add(event.pointerId);
+
 					if (!this._currentModeCallbacks) {
 						return;
 					}
@@ -319,6 +332,8 @@ export abstract class TerraDrawBaseAdapter implements TerraDrawAdapter {
 			new AdapterListener<BasePointerListener>({
 				name: "pointerup",
 				callback: (event) => {
+					this._activePointers.delete(event.pointerId);
+
 					if (!this._currentModeCallbacks) {
 						return;
 					}
@@ -381,6 +396,39 @@ export abstract class TerraDrawBaseAdapter implements TerraDrawAdapter {
 					mapElement.removeEventListener("pointerup", callback);
 				},
 			}),
+			new AdapterListener<BasePointerListener>({
+				name: "pointercancel",
+				callback: (event) => {
+					this._activePointers.delete(event.pointerId);
+
+					if (!this._currentModeCallbacks) return;
+
+					if (event.isPrimary) {
+						if (this._dragState === "dragging") {
+							const drawEvent = this.getDrawEventFromEvent(event);
+							if (drawEvent) {
+								this._currentModeCallbacks.onDragEnd(drawEvent, (enabled) => {
+									this.setDraggability.bind(this)(enabled);
+								});
+							}
+						}
+						this._dragState = "not-dragging";
+						this.setDraggability(true);
+					}
+				},
+				register: (callback) => {
+					this.getMapEventElement("pointercancel").addEventListener(
+						"pointercancel",
+						callback,
+					);
+				},
+				unregister: (callback) => {
+					this.getMapEventElement("pointercancel").removeEventListener(
+						"pointercancel",
+						callback,
+					);
+				},
+			}),
 			new AdapterListener({
 				name: "keyup",
 				callback: (event: KeyboardEvent) => {
@@ -441,6 +489,16 @@ export abstract class TerraDrawBaseAdapter implements TerraDrawAdapter {
 		this._listeners.forEach((listener) => {
 			listener.unregister();
 		});
+
+		const element = this.getMapEventElement();
+		if (this._previousTouchAction) {
+			element.style.touchAction = this._previousTouchAction;
+		} else {
+			element.style.removeProperty("touch-action");
+		}
+		this._previousTouchAction = undefined;
+
+		this._activePointers.clear();
 
 		this.clear();
 

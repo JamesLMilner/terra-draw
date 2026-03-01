@@ -114,6 +114,12 @@ export class TerraDrawTestAdapter extends TerraDrawBaseAdapter {
 			removeEventListener: () => {
 				//
 			},
+			style: {
+				touchAction: "",
+				removeProperty: () => {
+					//
+				},
+			},
 		} as unknown as HTMLElement;
 	}
 	public clear(): void {

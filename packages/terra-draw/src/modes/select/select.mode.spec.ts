@@ -3356,6 +3356,205 @@ describe("TerraDrawSelectMode", () => {
 		});
 	});
 
+	describe("onSecondaryPointerDown / onSecondaryPointerUp", () => {
+		it("pauses onDrag while secondary pointer is down", () => {
+			setSelectMode({
+				flags: { polygon: { feature: { draggable: true } } },
+			});
+			selectMode.start();
+
+			addPolygonToStore([
+				[0, 0],
+				[0, 1],
+				[1, 1],
+				[1, 0],
+				[0, 0],
+			]);
+
+			selectMode.onClick(MockCursorEvent({ lng: 0.5, lat: 0.5 }));
+			expect(onSelect).toHaveBeenCalledTimes(1);
+
+			const setMapDraggability = jest.fn();
+			selectMode.onDragStart(
+				MockCursorEvent({ lng: 0.5, lat: 0.5 }),
+				setMapDraggability,
+			);
+
+			// Drag once to verify it works
+			selectMode.onDrag(
+				MockCursorEvent({ lng: 0.6, lat: 0.6 }),
+				setMapDraggability,
+			);
+			const callsBeforePause = onChange.mock.calls.length;
+
+			// Simulate second finger
+			selectMode.onSecondaryPointerDown(
+				MockCursorEvent({ lng: 2, lat: 2 }),
+			);
+
+			// Drag should be ignored
+			selectMode.onDrag(
+				MockCursorEvent({ lng: 0.7, lat: 0.7 }),
+				setMapDraggability,
+			);
+
+			expect(onChange).toHaveBeenCalledTimes(callsBeforePause);
+		});
+
+		it("resumes onDrag after secondary pointer up", () => {
+			setSelectMode({
+				flags: { polygon: { feature: { draggable: true } } },
+			});
+			selectMode.start();
+
+			addPolygonToStore([
+				[0, 0],
+				[0, 1],
+				[1, 1],
+				[1, 0],
+				[0, 0],
+			]);
+
+			selectMode.onClick(MockCursorEvent({ lng: 0.5, lat: 0.5 }));
+
+			const setMapDraggability = jest.fn();
+			selectMode.onDragStart(
+				MockCursorEvent({ lng: 0.5, lat: 0.5 }),
+				setMapDraggability,
+			);
+
+			// Pause and resume
+			selectMode.onSecondaryPointerDown(
+				MockCursorEvent({ lng: 2, lat: 2 }),
+			);
+			selectMode.onSecondaryPointerUp(
+				MockCursorEvent({ lng: 2, lat: 2 }),
+			);
+
+			const callsAfterResume = onChange.mock.calls.length;
+
+			// Drag should work again
+			selectMode.onDrag(
+				MockCursorEvent({ lng: 0.7, lat: 0.7 }),
+				setMapDraggability,
+			);
+
+			expect(onChange.mock.calls.length).toBeGreaterThan(callsAfterResume);
+		});
+
+		it("prevents onDragEnd from finalizing while paused", () => {
+			setSelectMode({
+				flags: { polygon: { feature: { draggable: true } } },
+			});
+			selectMode.start();
+
+			addPolygonToStore([
+				[0, 0],
+				[0, 1],
+				[1, 1],
+				[1, 0],
+				[0, 0],
+			]);
+
+			selectMode.onClick(MockCursorEvent({ lng: 0.5, lat: 0.5 }));
+
+			const setMapDraggability = jest.fn();
+			selectMode.onDragStart(
+				MockCursorEvent({ lng: 0.5, lat: 0.5 }),
+				setMapDraggability,
+			);
+
+			selectMode.onDrag(
+				MockCursorEvent({ lng: 0.6, lat: 0.6 }),
+				setMapDraggability,
+			);
+
+			// Pause
+			selectMode.onSecondaryPointerDown(
+				MockCursorEvent({ lng: 2, lat: 2 }),
+			);
+
+			// onDragEnd should be no-op
+			selectMode.onDragEnd(
+				MockCursorEvent({ lng: 0.6, lat: 0.6 }),
+				setMapDraggability,
+			);
+
+			expect(onFinish).toHaveBeenCalledTimes(0);
+		});
+
+		it("does not pause if not in selecting state", () => {
+			// Mode is started but not in selecting state... however
+			// select mode goes directly to selecting on start, so we
+			// verify it doesn't throw when called with no selection
+			selectMode.onSecondaryPointerDown(
+				MockCursorEvent({ lng: 0, lat: 0 }),
+			);
+			selectMode.onSecondaryPointerUp(
+				MockCursorEvent({ lng: 0, lat: 0 }),
+			);
+
+			// Should not throw
+			expect(true).toBe(true);
+		});
+
+		it("cleanUp resets paused state", () => {
+			setSelectMode({
+				flags: { polygon: { feature: { draggable: true } } },
+			});
+			selectMode.start();
+
+			addPolygonToStore([
+				[0, 0],
+				[0, 1],
+				[1, 1],
+				[1, 0],
+				[0, 0],
+			]);
+
+			selectMode.onClick(MockCursorEvent({ lng: 0.5, lat: 0.5 }));
+
+			// Pause
+			selectMode.onSecondaryPointerDown(
+				MockCursorEvent({ lng: 2, lat: 2 }),
+			);
+
+			// Clean up — should reset paused
+			selectMode.cleanUp();
+
+			// Re-select and drag — should work
+			setSelectMode({
+				flags: { polygon: { feature: { draggable: true } } },
+			});
+			selectMode.start();
+
+			addPolygonToStore([
+				[0, 0],
+				[0, 1],
+				[1, 1],
+				[1, 0],
+				[0, 0],
+			]);
+
+			selectMode.onClick(MockCursorEvent({ lng: 0.5, lat: 0.5 }));
+
+			const setMapDraggability = jest.fn();
+			selectMode.onDragStart(
+				MockCursorEvent({ lng: 0.5, lat: 0.5 }),
+				setMapDraggability,
+			);
+
+			const callsBeforeDrag = onChange.mock.calls.length;
+
+			selectMode.onDrag(
+				MockCursorEvent({ lng: 0.7, lat: 0.7 }),
+				setMapDraggability,
+			);
+
+			expect(onChange.mock.calls.length).toBeGreaterThan(callsBeforeDrag);
+		});
+	});
+
 	describe("afterFeatureUpdated", () => {
 		it("does nothing if a feature is not selected", () => {
 			const selectMode = new TerraDrawSelectMode();

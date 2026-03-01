@@ -1111,6 +1111,156 @@ describe("TerraDrawFreehandMode", () => {
 		);
 	});
 
+	describe("onSecondaryPointerDown / onSecondaryPointerUp", () => {
+		describe("click-move drawing", () => {
+			let freehandMode: TerraDrawFreehandMode;
+			let store: TerraDrawGeoJSONStore;
+			let onChange: jest.Mock;
+
+			beforeEach(() => {
+				freehandMode = new TerraDrawFreehandMode();
+				const mockConfig = MockModeConfig(freehandMode.mode);
+				store = mockConfig.store;
+				onChange = mockConfig.onChange;
+				freehandMode.register(mockConfig);
+				freehandMode.start();
+			});
+
+			it("pauses coordinate addition on secondary pointer down while drawing", () => {
+				// Start drawing
+				freehandMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+				expect(onChange).toHaveBeenCalledTimes(2); // polygon + closing point
+
+				// Move to add some coordinates
+				freehandMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
+				const callsBeforePause = onChange.mock.calls.length;
+
+				// Simulate second finger down
+				freehandMode.onSecondaryPointerDown(
+					MockCursorEvent({ lng: 2, lat: 2 }),
+				);
+
+				// Further moves should be ignored
+				freehandMode.onMouseMove(MockCursorEvent({ lng: 3, lat: 3 }));
+				freehandMode.onMouseMove(MockCursorEvent({ lng: 4, lat: 4 }));
+
+				expect(onChange).toHaveBeenCalledTimes(callsBeforePause);
+			});
+
+			it("resumes coordinate addition on secondary pointer up", () => {
+				freehandMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+				freehandMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
+
+				// Pause
+				freehandMode.onSecondaryPointerDown(
+					MockCursorEvent({ lng: 2, lat: 2 }),
+				);
+
+				// Resume
+				freehandMode.onSecondaryPointerUp(
+					MockCursorEvent({ lng: 2, lat: 2 }),
+				);
+
+				const callsAfterResume = onChange.mock.calls.length;
+
+				// Move should now add coordinates again
+				freehandMode.onMouseMove(MockCursorEvent({ lng: 5, lat: 5 }));
+
+				expect(onChange.mock.calls.length).toBeGreaterThan(callsAfterResume);
+			});
+
+			it("does not pause if not in drawing state", () => {
+				// Not drawing — secondary pointer should not throw
+				freehandMode.onSecondaryPointerDown(
+					MockCursorEvent({ lng: 0, lat: 0 }),
+				);
+
+				// Start drawing after — should work normally
+				freehandMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+				const callsAfterClick = onChange.mock.calls.length;
+
+				freehandMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
+				expect(onChange.mock.calls.length).toBeGreaterThan(callsAfterClick);
+			});
+		});
+
+		describe("click-drag drawing", () => {
+			let freehandMode: TerraDrawFreehandMode;
+			let store: TerraDrawGeoJSONStore;
+			let onChange: jest.Mock;
+			let onFinish: jest.Mock;
+			let setMapDraggability: jest.Mock;
+
+			beforeEach(() => {
+				setMapDraggability = jest.fn();
+				freehandMode = new TerraDrawFreehandMode({
+					drawInteraction: "click-drag",
+				});
+				const mockConfig = MockModeConfig(freehandMode.mode);
+				store = mockConfig.store;
+				onChange = mockConfig.onChange;
+				onFinish = mockConfig.onFinish;
+				freehandMode.register(mockConfig);
+				freehandMode.start();
+			});
+
+			it("prevents onDragEnd from closing the polygon while paused", () => {
+				freehandMode.onDragStart(
+					MockCursorEvent({ lng: 0, lat: 0 }),
+					setMapDraggability,
+				);
+
+				freehandMode.onDrag(
+					MockCursorEvent({ lng: 1, lat: 1 }),
+					setMapDraggability,
+				);
+
+				// Pause
+				freehandMode.onSecondaryPointerDown(
+					MockCursorEvent({ lng: 2, lat: 2 }),
+				);
+
+				// onDragEnd should not finalize
+				freehandMode.onDragEnd(
+					MockCursorEvent({ lng: 2, lat: 2 }),
+					setMapDraggability,
+				);
+
+				expect(onFinish).toHaveBeenCalledTimes(0);
+
+				// Feature should still exist with CURRENTLY_DRAWING
+				const features = store.copyAll();
+				expect(features.length).toBe(2); // polygon + closing point
+			});
+		});
+
+		it("cleanUp resets paused state", () => {
+			const freehandMode = new TerraDrawFreehandMode();
+			const mockConfig = MockModeConfig(freehandMode.mode);
+			const store = mockConfig.store;
+			const onChange = mockConfig.onChange;
+			freehandMode.register(mockConfig);
+			freehandMode.start();
+
+			// Start drawing and pause
+			freehandMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			freehandMode.onSecondaryPointerDown(
+				MockCursorEvent({ lng: 1, lat: 1 }),
+			);
+
+			// Clean up
+			freehandMode.cleanUp();
+
+			// Start drawing again — should not be paused
+			freehandMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			const callsAfterClick = onChange.mock.calls.length;
+
+			freehandMode.onMouseMove(MockCursorEvent({ lng: 5, lat: 5 }));
+			expect(onChange.mock.calls.length).toBeGreaterThan(callsAfterClick);
+		});
+	});
+
 	describe("styleFeature", () => {
 		it("returns the correct styles for polygon", () => {
 			const freehandMode = new TerraDrawFreehandMode({

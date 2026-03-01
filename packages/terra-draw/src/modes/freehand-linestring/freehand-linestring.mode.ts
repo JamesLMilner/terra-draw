@@ -77,6 +77,7 @@ export class TerraDrawFreehandLineStringMode extends TerraDrawBaseDrawMode<Freeh
 		defaultKeyEvents;
 	private cursors: Required<Cursors> = defaultCursors;
 	private preventNewFeature = false;
+	private _paused = false;
 
 	// Behaviors
 	private mutateFeature!: MutateFeatureBehavior;
@@ -163,6 +164,8 @@ export class TerraDrawFreehandLineStringMode extends TerraDrawBaseDrawMode<Freeh
 
 	/** @internal */
 	onMouseMove(event: TerraDrawMouseEvent) {
+		if (this._paused) return;
+
 		if (this.currentId === undefined || this.canClose === false) {
 			this.setCursor(this.cursors.start);
 			return;
@@ -288,11 +291,24 @@ export class TerraDrawFreehandLineStringMode extends TerraDrawBaseDrawMode<Freeh
 	onDragEnd() {}
 
 	/** @internal */
+	onSecondaryPointerDown(event: TerraDrawMouseEvent) {
+		if (this.state === "drawing") {
+			this._paused = true;
+		}
+	}
+
+	/** @internal */
+	onSecondaryPointerUp(event: TerraDrawMouseEvent) {
+		this._paused = false;
+	}
+
+	/** @internal */
 	cleanUp() {
 		const cleanUpId = this.currentId;
 
 		this.currentId = undefined;
 		this.canClose = false;
+		this._paused = false;
 		if (this.state === "drawing") {
 			this.setStarted();
 		}

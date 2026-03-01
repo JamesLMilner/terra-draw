@@ -88,6 +88,7 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 	private autoCloseTimeout = 500;
 	private hasLeftStartingPoint = false;
 	private preventNewFeature = false;
+	private _paused = false;
 	private drawInteraction = "click-move";
 	private drawType: DrawType | undefined;
 	private smoothing = 0;
@@ -195,6 +196,8 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 	}
 
 	private addCoordinate(event: TerraDrawMouseEvent) {
+		if (this._paused) return;
+
 		if (this.currentId === undefined || this.canClose === false) {
 			this.setCursor(this.cursors.start);
 			return;
@@ -429,6 +432,8 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 		event: TerraDrawMouseEvent,
 		setMapDraggability: (enabled: boolean) => void,
 	) {
+		if (this._paused) return;
+
 		if (
 			this.allowPointerEvent(this.pointerEvents.onDragEnd, event) &&
 			this.dragDrawAllowed() &&
@@ -445,6 +450,18 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 	}
 
 	/** @internal */
+	onSecondaryPointerDown(event: TerraDrawMouseEvent) {
+		if (this.state === "drawing") {
+			this._paused = true;
+		}
+	}
+
+	/** @internal */
+	onSecondaryPointerUp(event: TerraDrawMouseEvent) {
+		this._paused = false;
+	}
+
+	/** @internal */
 	cleanUp() {
 		const cleanUpId = this.currentId;
 		const cleanUpClosingPointId = this.closingPointId;
@@ -454,6 +471,7 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 		this.canClose = false;
 		this.hasLeftStartingPoint = false;
 		this.drawType = undefined;
+		this._paused = false;
 		if (this.state === "drawing") {
 			this.setStarted();
 		}

@@ -194,6 +194,8 @@ export interface TerraDrawCallbacks {
 	) => void;
 	onClear: () => void;
 	onReady?(): void;
+	onSecondaryPointerDown?: (event: TerraDrawMouseEvent) => void;
+	onSecondaryPointerUp?: (event: TerraDrawMouseEvent) => void;
 }
 
 export interface TerraDrawChanges {

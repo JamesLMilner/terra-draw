@@ -178,8 +178,28 @@ export abstract class TerraDrawBaseAdapter implements TerraDrawAdapter {
 						return;
 					}
 
-					// We don't support multitouch as this point in time
+					// Secondary pointer (e.g. second finger) — pause any active drag
+					// and hand control to the map for pan/zoom gestures
 					if (!event.isPrimary) {
+						if (this._activePointers.size >= 2) {
+							if (this._dragState === "dragging") {
+								const drawEvent = this.getDrawEventFromEvent(event);
+								if (drawEvent) {
+									this._currentModeCallbacks.onDragEnd(drawEvent, (enabled) => {
+										this.setDraggability.bind(this)(enabled);
+									});
+								}
+								this.setDraggability(true);
+							} else if (this._dragState === "pre-dragging") {
+								this.setDraggability(true);
+							}
+							this._dragState = "not-dragging";
+
+							const drawEvent = this.getDrawEventFromEvent(event);
+							if (drawEvent) {
+								this._currentModeCallbacks.onSecondaryPointerDown?.(drawEvent);
+							}
+						}
 						return;
 					}
 
@@ -217,8 +237,9 @@ export abstract class TerraDrawBaseAdapter implements TerraDrawAdapter {
 				callback: (event) => {
 					if (!this._currentModeCallbacks) return;
 
-					// We don't support multitouch as this point in time
-					if (!event.isPrimary) {
+					// Skip non-primary pointers and when multiple pointers are
+					// active (map is handling pan/zoom gesture)
+					if (!event.isPrimary || this._activePointers.size > 1) {
 						return;
 					}
 
@@ -352,8 +373,14 @@ export abstract class TerraDrawBaseAdapter implements TerraDrawAdapter {
 
 					this._lastPointerDownEventTarget = undefined;
 
-					// We don't support multitouch as this point in time
+					// Secondary pointer lifted — notify mode and skip draw handling
 					if (!event.isPrimary) {
+						if (this._activePointers.size <= 1) {
+							const drawEvent = this.getDrawEventFromEvent(event);
+							if (drawEvent) {
+								this._currentModeCallbacks.onSecondaryPointerUp?.(drawEvent);
+							}
+						}
 						return;
 					}
 

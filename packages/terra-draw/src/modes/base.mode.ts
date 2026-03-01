@@ -320,6 +320,8 @@ export abstract class TerraDrawBaseDrawMode<Styling extends CustomStyling> {
 		event: TerraDrawMouseEvent,
 		setMapDraggability: (enabled: boolean) => void,
 	) {}
+	onSecondaryPointerDown(event: TerraDrawMouseEvent) {}
+	onSecondaryPointerUp(event: TerraDrawMouseEvent) {}
 
 	protected getHexColorStylingValue(
 		value: HexColor | ((feature: GeoJSONStoreFeatures) => HexColor) | undefined,

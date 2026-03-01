@@ -1245,6 +1245,12 @@ class TerraDraw {
 				// Remove all features from the store
 				this._store.clear();
 			},
+			onSecondaryPointerDown: (event) => {
+				this._mode.onSecondaryPointerDown(event);
+			},
+			onSecondaryPointerUp: (event) => {
+				this._mode.onSecondaryPointerUp(event);
+			},
 		});
 	}
 

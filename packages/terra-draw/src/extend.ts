@@ -1,4 +1,4 @@
-import { TerraDrawBaseAdapter, BaseAdapterConfig } from "./common/base.adapter";
+import { TerraDrawBaseAdapter, BaseAdapterConfig, penDrawTouchNavigateFilter } from "./common/base.adapter";
 import {
 	Cursor,
 	HexColorStyling,
@@ -23,6 +23,7 @@ export {
 	TerraDrawBaseDrawMode,
 	TerraDrawBaseSelectMode,
 	TerraDrawBaseAdapter,
+	penDrawTouchNavigateFilter,
 	getDefaultStyling,
 	SELECT_PROPERTIES,
 

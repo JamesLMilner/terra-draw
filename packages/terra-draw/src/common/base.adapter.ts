@@ -24,7 +24,11 @@ export type BaseAdapterConfig = {
 	minPixelDragDistanceDrawing?: number;
 	minPixelDragDistance?: number;
 	minPixelDragDistanceSelecting?: number;
+	inputFilter?: (event: PointerEvent) => "draw" | "navigate";
 };
+
+export const penDrawTouchNavigateFilter = (event: PointerEvent): "draw" | "navigate" =>
+	event.pointerType === "pen" ? "draw" : "navigate";
 
 export abstract class TerraDrawBaseAdapter implements TerraDrawAdapter {
 	constructor(config: BaseAdapterConfig) {
@@ -52,6 +56,8 @@ export abstract class TerraDrawBaseAdapter implements TerraDrawAdapter {
 			typeof config.coordinatePrecision === "number"
 				? config.coordinatePrecision
 				: 9;
+
+		this._inputFilter = config.inputFilter;
 	}
 
 	private _nextKeyUpIsContextMenu = false;
@@ -59,6 +65,7 @@ export abstract class TerraDrawBaseAdapter implements TerraDrawAdapter {
 	private _previousTouchAction: string | undefined;
 
 	protected _ignoreMismatchedPointerEvents = false;
+	protected _inputFilter: ((event: PointerEvent) => "draw" | "navigate") | undefined;
 	protected _minPixelDragDistance: number;
 	protected _minPixelDragDistanceDrawing: number;
 	protected _minPixelDragDistanceSelecting: number;
@@ -155,7 +162,9 @@ export abstract class TerraDrawBaseAdapter implements TerraDrawAdapter {
 
 		const element = this.getMapEventElement();
 		this._previousTouchAction = element.style.touchAction;
-		element.style.touchAction = "none";
+		if (!this._inputFilter) {
+			element.style.touchAction = "none";
+		}
 	}
 
 	/**
@@ -172,6 +181,10 @@ export abstract class TerraDrawBaseAdapter implements TerraDrawAdapter {
 			new AdapterListener<BasePointerListener>({
 				name: "pointerdown",
 				callback: (event) => {
+					if (this._inputFilter && this._inputFilter(event) === "navigate") {
+						return;
+					}
+
 					this._activePointers.add(event.pointerId);
 
 					if (!this._currentModeCallbacks) {
@@ -235,6 +248,10 @@ export abstract class TerraDrawBaseAdapter implements TerraDrawAdapter {
 			new AdapterListener<BasePointerListener>({
 				name: "pointermove",
 				callback: (event) => {
+					if (this._inputFilter && this._inputFilter(event) === "navigate") {
+						return;
+					}
+
 					if (!this._currentModeCallbacks) return;
 
 					// Skip non-primary pointers and when multiple pointers are
@@ -353,6 +370,10 @@ export abstract class TerraDrawBaseAdapter implements TerraDrawAdapter {
 			new AdapterListener<BasePointerListener>({
 				name: "pointerup",
 				callback: (event) => {
+					if (this._inputFilter && this._inputFilter(event) === "navigate") {
+						return;
+					}
+
 					this._activePointers.delete(event.pointerId);
 
 					if (!this._currentModeCallbacks) {

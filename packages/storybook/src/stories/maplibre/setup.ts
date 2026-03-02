@@ -79,14 +79,7 @@ export function SetupMapLibre(args: StoryArgs): HTMLElement {
 						map: mapConfig.map,
 					}),
 					modes,
-					undoRedo: {
-						sessionLevel: {
-							enabled: false,
-						},
-						drawingLevel: {
-							enabled: true,
-						},
-					},
+					undoRedo: args.undoRedoOptions,
 				});
 
 				draw.start();

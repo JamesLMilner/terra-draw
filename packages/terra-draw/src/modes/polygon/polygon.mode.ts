@@ -39,15 +39,11 @@ import {
 	Mutations,
 } from "../mutate-feature.behavior";
 import { ReadFeatureBehavior } from "../read-feature.behavior";
+import { UndoRedoBehavior } from "../undo-redo.behavior";
 
 type TerraDrawPolygonModeKeyEvents = {
 	cancel?: KeyboardEvent["key"] | null;
 	finish?: KeyboardEvent["key"] | null;
-};
-
-type PolygonDrawingHistoryEntry = {
-	featureCoordinates: Position[][];
-	currentCoordinate: number;
 };
 
 const defaultKeyEvents = { cancel: "Escape", finish: "Enter" };
@@ -119,8 +115,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 	private mouseMove = false;
 	private showCoordinatePoints = false;
 	private lastMouseMoveEvent: TerraDrawMouseEvent | undefined;
-	private undoHistory: PolygonDrawingHistoryEntry[] = [];
-	private redoHistory: PolygonDrawingHistoryEntry[] = [];
+	private undoRedo = new UndoRedoBehavior<Position[][]>();
 
 	// Snapping
 	private snapping: Snapping | undefined;
@@ -269,8 +264,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 
 		this.currentCoordinate = 0;
 		this.currentId = undefined;
-		this.undoHistory = [];
-		this.redoHistory = [];
+		this.undoRedo.clear();
 
 		this.onFinish(featureId, {
 			mode: this.mode,
@@ -350,24 +344,16 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 	}
 
 	undoSize() {
-		return this.undoHistory.length;
-	}
-
-	private cloneCoordinates(coordinates: Position[][]): Position[][] {
-		return coordinates.map((ringCoordinates) =>
-			ringCoordinates.map((coordinate) => [...coordinate] as Position),
-		);
+		return this.undoRedo.undoSize();
 	}
 
 	private pushHistorySnapshot(featureId: FeatureId, currentCoordinate: number) {
 		const featureGeometry = this.readFeature.getGeometry<Polygon>(featureId);
 
-		this.undoHistory.push({
-			featureCoordinates: this.cloneCoordinates(featureGeometry.coordinates),
+		this.undoRedo.recordSnapshot({
+			featureCoordinates: featureGeometry.coordinates,
 			currentCoordinate,
 		});
-
-		this.redoHistory = [];
 	}
 
 	private updateSnappedGuidancePointFromLastMouseMove() {
@@ -399,20 +385,13 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 			return;
 		}
 
-		const undoneHistoryEntry = this.undoHistory.pop();
+		const undoStepResult = this.undoRedo.beginUndo();
 
-		if (!undoneHistoryEntry) {
+		if (!undoStepResult) {
 			return;
 		}
 
-		this.redoHistory.push({
-			featureCoordinates: this.cloneCoordinates(
-				undoneHistoryEntry.featureCoordinates,
-			),
-			currentCoordinate: undoneHistoryEntry.currentCoordinate,
-		});
-
-		const previousHistoryEntry = this.undoHistory[this.undoHistory.length - 1];
+		const { previousEntry: previousHistoryEntry } = undoStepResult;
 
 		if (!previousHistoryEntry) {
 			const removedFeatureId = this.currentId;
@@ -438,9 +417,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 			featureId: this.currentId,
 			coordinateMutations: {
 				type: Mutations.Replace,
-				coordinates: this.cloneCoordinates(
-					previousHistoryEntry.featureCoordinates,
-				),
+				coordinates: previousHistoryEntry.featureCoordinates,
 			},
 			propertyMutations: {
 				[COMMON_PROPERTIES.CURRENTLY_DRAWING]: true,
@@ -463,7 +440,6 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 			this.coordinatePoints.createOrUpdate({
 				featureId: this.currentId,
 				featureCoordinates: updated.geometry.coordinates,
-				updateType: UpdateTypes.Commit,
 			});
 		}
 
@@ -471,25 +447,24 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 	}
 
 	public redoSize(): number {
-		return this.redoHistory.length;
+		return this.undoRedo.redoSize();
 	}
 
 	public redo() {
-		if (this.redoHistory.length === 0) {
-			return;
-		}
-
-		const redoneHistoryEntry = this.redoHistory.pop();
+		const redoneHistoryEntry = this.undoRedo.takeRedo();
 
 		if (!redoneHistoryEntry) {
 			return;
 		}
 
 		if (!this.currentId) {
+			// createPolygon can mutate the coordinates by applying the right hand rule
+			const coordinatesCopy = this.undoRedo.cloneCoordinates(
+				redoneHistoryEntry.featureCoordinates,
+			)[0];
+
 			const { id, geometry } = this.mutateFeature.createPolygon({
-				coordinates: this.cloneCoordinates(
-					redoneHistoryEntry.featureCoordinates,
-				)[0],
+				coordinates: coordinatesCopy,
 				properties: {
 					mode: this.mode,
 					[COMMON_PROPERTIES.CURRENTLY_DRAWING]: true,
@@ -512,7 +487,6 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 				this.coordinatePoints.createOrUpdate({
 					featureId: id,
 					featureCoordinates: geometry.coordinates,
-					updateType: UpdateTypes.Commit,
 				});
 			}
 		} else {
@@ -520,9 +494,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 				featureId: this.currentId,
 				coordinateMutations: {
 					type: Mutations.Replace,
-					coordinates: this.cloneCoordinates(
-						redoneHistoryEntry.featureCoordinates,
-					),
+					coordinates: redoneHistoryEntry.featureCoordinates,
 				},
 				propertyMutations: {
 					[COMMON_PROPERTIES.CURRENTLY_DRAWING]: true,
@@ -545,17 +517,11 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 				this.coordinatePoints.createOrUpdate({
 					featureId: this.currentId,
 					featureCoordinates: updated.geometry.coordinates,
-					updateType: UpdateTypes.Commit,
 				});
 			}
 		}
 
-		this.undoHistory.push({
-			featureCoordinates: this.cloneCoordinates(
-				redoneHistoryEntry.featureCoordinates,
-			),
-			currentCoordinate: redoneHistoryEntry.currentCoordinate,
-		});
+		this.undoRedo.commitRedo(redoneHistoryEntry);
 
 		this.updateSnappedGuidancePointFromLastMouseMove();
 	}
@@ -1280,8 +1246,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 		this.editedInsertIndex = undefined;
 		this.editedSnapType = undefined;
 		this.currentCoordinate = 0;
-		this.undoHistory = [];
-		this.redoHistory = [];
+		this.undoRedo.clear();
 
 		if (this.state === "drawing") {
 			this.setStarted();
@@ -1492,8 +1457,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 		if (this.currentId === feature.id) {
 			this.currentCoordinate = 0;
 			this.currentId = undefined;
-			this.undoHistory = [];
-			this.redoHistory = [];
+			this.undoRedo.clear();
 			this.closingPoints.delete();
 
 			// Go back to started state

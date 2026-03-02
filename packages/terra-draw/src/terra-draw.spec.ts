@@ -13,12 +13,15 @@ import {
 	GeoJSONStoreGeometries,
 	TerraDraw,
 	TerraDrawChanges,
+	TerraDrawDrawingUndoRedo,
 	TerraDrawLineStringMode,
 	TerraDrawPointMode,
 	TerraDrawPolygonMode,
+	TerraDrawUndoRedoKeyboardShortcuts,
 	TerraDrawSelectMode,
 	TerraDrawStylingFunction,
 } from "./terra-draw";
+import { TerraDrawSessionUndoRedo } from "./undo-redo/session-undo-redo";
 import { TerraDrawTestAdapter } from "./terra-draw.extensions.spec";
 import { MockKeyboardEvent } from "./test/mock-keyboard-event";
 import { MockCursorEvent } from "./test/mock-cursor-event";
@@ -4155,6 +4158,132 @@ describe("Terra Draw", () => {
 			expect(callback).toHaveBeenCalledTimes(2);
 		});
 
+		it("it calls on history for session push", () => {
+			const pointMode = new TerraDrawPointMode();
+			const draw = new TerraDraw({
+				adapter,
+				modes: [pointMode],
+				undoRedo: {
+					sessionLevel: new TerraDrawSessionUndoRedo(),
+				},
+			});
+
+			draw.start();
+			draw.setMode("point");
+
+			const callback = jest.fn();
+			draw.on("history", callback);
+
+			pointMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+			expect(callback).toHaveBeenCalledWith({
+				cause: "push",
+				stack: "session",
+				undoSize: 1,
+				redoSize: 0,
+			});
+		});
+
+		it("it calls on history for drawing undo and redo", () => {
+			const lineStringMode = new TerraDrawLineStringMode();
+			const draw = new TerraDraw({
+				adapter,
+				modes: [lineStringMode],
+				undoRedo: {
+					drawingLevel: new TerraDrawDrawingUndoRedo(),
+				},
+			});
+
+			draw.start();
+			draw.setMode("linestring");
+
+			lineStringMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			lineStringMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 0 }));
+			lineStringMode.onClick(MockCursorEvent({ lng: 1, lat: 0 }));
+
+			const callback = jest.fn();
+			draw.on("history", callback);
+
+			expect(draw.undo()).toBe(true);
+			expect(callback).toHaveBeenCalledWith({
+				cause: "undo",
+				stack: "drawing",
+				undoSize: 1,
+				redoSize: 1,
+			});
+
+			expect(draw.redo()).toBe(true);
+			expect(callback).toHaveBeenCalledWith({
+				cause: "redo",
+				stack: "drawing",
+				undoSize: 2,
+				redoSize: 0,
+			});
+		});
+
+		it("it calls on history push while drawing stack grows", () => {
+			const lineStringMode = new TerraDrawLineStringMode();
+			const draw = new TerraDraw({
+				adapter,
+				modes: [lineStringMode],
+				undoRedo: {
+					drawingLevel: new TerraDrawDrawingUndoRedo(),
+				},
+			});
+
+			draw.start();
+			draw.setMode("linestring");
+
+			const callback = jest.fn();
+			draw.on("history", callback);
+
+			lineStringMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			lineStringMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 0 }));
+			lineStringMode.onClick(MockCursorEvent({ lng: 1, lat: 0 }));
+
+			expect(callback).toHaveBeenCalledWith({
+				cause: "push",
+				stack: "drawing",
+				undoSize: 1,
+				redoSize: 0,
+			});
+		});
+
+		it("it calls on history for session undo and redo", () => {
+			const pointMode = new TerraDrawPointMode();
+			const draw = new TerraDraw({
+				adapter,
+				modes: [pointMode],
+				undoRedo: {
+					sessionLevel: new TerraDrawSessionUndoRedo(),
+				},
+			});
+
+			draw.start();
+			draw.setMode("point");
+
+			const callback = jest.fn();
+			draw.on("history", callback);
+
+			pointMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+			expect(draw.undo()).toBe(true);
+			expect(callback).toHaveBeenCalledWith({
+				cause: "undo",
+				stack: "session",
+				undoSize: 0,
+				redoSize: 1,
+			});
+
+			expect(draw.redo()).toBe(true);
+			expect(callback).toHaveBeenCalledWith({
+				cause: "redo",
+				stack: "session",
+				undoSize: 1,
+				redoSize: 0,
+			});
+		});
+
 		describe("finish", () => {
 			it("is called when feature is finished with point mode", async () => {
 				const pointMode = new TerraDrawPointMode();
@@ -4189,6 +4318,58 @@ describe("Terra Draw", () => {
 				// Point can be removed
 				draw.removeFeatures([id]);
 				expect(draw.getSnapshotFeature(id)).toBeUndefined();
+			});
+
+			it("emits history on finish with drawing stack when session level is disabled", () => {
+				const pointMode = new TerraDrawPointMode();
+				const draw = new TerraDraw({
+					adapter,
+					modes: [pointMode],
+					undoRedo: {
+						drawingLevel: new TerraDrawDrawingUndoRedo(),
+					},
+				});
+
+				draw.start();
+				draw.setMode("point");
+
+				const callback = jest.fn();
+				draw.on("history", callback);
+
+				pointMode.onClick(MockCursorEvent({ lng: -25, lat: 34 }));
+
+				expect(callback).toHaveBeenLastCalledWith({
+					cause: "push",
+					stack: "drawing",
+					undoSize: 0,
+					redoSize: 0,
+				});
+			});
+
+			it("emits history on finish with session stack when session level is enabled", () => {
+				const pointMode = new TerraDrawPointMode();
+				const draw = new TerraDraw({
+					adapter,
+					modes: [pointMode],
+					undoRedo: {
+						sessionLevel: new TerraDrawSessionUndoRedo(),
+					},
+				});
+
+				draw.start();
+				draw.setMode("point");
+
+				const callback = jest.fn();
+				draw.on("history", callback);
+
+				pointMode.onClick(MockCursorEvent({ lng: -25, lat: 34 }));
+
+				expect(callback).toHaveBeenLastCalledWith({
+					cause: "push",
+					stack: "session",
+					undoSize: 1,
+					redoSize: 0,
+				});
 			});
 
 			it("is called when feature is finished with linestring mode", async () => {
@@ -4652,6 +4833,10 @@ describe("Terra Draw", () => {
 			const draw = new TerraDraw({
 				adapter,
 				modes: [lineStringMode],
+				undoRedo: {
+					drawingLevel: new TerraDrawDrawingUndoRedo(),
+					keyboardShortcuts: new TerraDrawUndoRedoKeyboardShortcuts(),
+				},
 			});
 
 			draw.start();
@@ -4689,9 +4874,8 @@ describe("Terra Draw", () => {
 				adapter,
 				modes: [pointMode],
 				undoRedo: {
-					sessionLevel: {
-						enabled: true,
-					},
+					sessionLevel: new TerraDrawSessionUndoRedo(),
+					keyboardShortcuts: new TerraDrawUndoRedoKeyboardShortcuts(),
 				},
 			});
 
@@ -4722,15 +4906,46 @@ describe("Terra Draw", () => {
 			expect(redoEvent.preventDefault).toHaveBeenCalledTimes(1);
 		});
 
+		it("allows undo again after redo for session-level polygon history", () => {
+			const polygonMode = new TerraDrawPolygonMode();
+			const draw = new TerraDraw({
+				adapter,
+				modes: [polygonMode],
+				undoRedo: {
+					sessionLevel: new TerraDrawSessionUndoRedo(),
+				},
+			});
+
+			draw.start();
+			draw.setMode("polygon");
+
+			polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			polygonMode.onClick(MockCursorEvent({ lng: 0.000001, lat: 0 }));
+			polygonMode.onClick(MockCursorEvent({ lng: 0.000001, lat: 0.000001 }));
+			polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+			expect(draw.canUndo()).toBe(true);
+			expect(draw.getSnapshot()).toHaveLength(1);
+
+			expect(draw.undo()).toBe(true);
+			expect(draw.canRedo()).toBe(true);
+			expect(draw.getSnapshot()).toHaveLength(0);
+
+			expect(draw.redo()).toBe(true);
+			expect(draw.canUndo()).toBe(true);
+			expect(draw.getSnapshot()).toHaveLength(1);
+
+			expect(draw.undo()).toBe(true);
+			expect(draw.getSnapshot()).toHaveLength(0);
+		});
+
 		it("does not handle mode undo while drawing when undoRedo.drawing is disabled", () => {
 			const lineStringMode = new TerraDrawLineStringMode();
 			const draw = new TerraDraw({
 				adapter,
 				modes: [lineStringMode],
 				undoRedo: {
-					drawingLevel: {
-						enabled: false,
-					},
+					keyboardShortcuts: new TerraDrawUndoRedoKeyboardShortcuts(),
 				},
 			});
 
@@ -4757,9 +4972,8 @@ describe("Terra Draw", () => {
 				adapter,
 				modes: [lineStringMode],
 				undoRedo: {
-					drawingLevel: {
-						enabled: true,
-					},
+					drawingLevel: new TerraDrawDrawingUndoRedo(),
+					keyboardShortcuts: new TerraDrawUndoRedoKeyboardShortcuts(),
 				},
 			});
 
@@ -4778,6 +4992,106 @@ describe("Terra Draw", () => {
 
 			expect(draw.getSnapshot()).toHaveLength(0);
 			expect(undoEvent.preventDefault).toHaveBeenCalledTimes(1);
+		});
+
+		it("uses custom keyboard shortcuts when configured via injected matcher", () => {
+			const lineStringMode = new TerraDrawLineStringMode();
+			const shortcutMatcher = {
+				isUndoKeyboardShortcut: (event: { key: string }) =>
+					event.key.toLowerCase() === "u",
+				isRedoKeyboardShortcut: (event: { key: string }) =>
+					event.key.toLowerCase() === "r",
+			};
+
+			const draw = new TerraDraw({
+				adapter,
+				modes: [lineStringMode],
+				undoRedo: {
+					drawingLevel: new TerraDrawDrawingUndoRedo(),
+					keyboardShortcuts: shortcutMatcher,
+				},
+			});
+
+			draw.start();
+			draw.setMode("linestring");
+
+			lineStringMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			lineStringMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 0 }));
+			lineStringMode.onClick(MockCursorEvent({ lng: 1, lat: 0 }));
+			expect(draw.getSnapshot()).toHaveLength(2);
+
+			const defaultUndoEvent = MockKeyboardEvent({
+				key: "z",
+				heldKeys: ["Meta", "z"],
+			});
+
+			getRegisteredCallbacks(adapter).onKeyDown(defaultUndoEvent);
+
+			expect(draw.getSnapshot()).toHaveLength(2);
+			expect(defaultUndoEvent.preventDefault).not.toHaveBeenCalled();
+
+			const customUndoEvent = MockKeyboardEvent({
+				key: "u",
+				heldKeys: ["Meta", "u"],
+			});
+
+			getRegisteredCallbacks(adapter).onKeyDown(customUndoEvent);
+
+			expect(draw.getSnapshot()).toHaveLength(1);
+			expect(customUndoEvent.preventDefault).toHaveBeenCalledTimes(1);
+
+			const customRedoEvent = MockKeyboardEvent({
+				key: "r",
+				heldKeys: ["Meta", "r"],
+			});
+
+			getRegisteredCallbacks(adapter).onKeyDown(customRedoEvent);
+
+			expect(draw.getSnapshot()).toHaveLength(2);
+			expect(customRedoEvent.preventDefault).toHaveBeenCalledTimes(1);
+		});
+
+		it("uses an injected keyboard shortcuts matcher class", () => {
+			const lineStringMode = new TerraDrawLineStringMode();
+			const draw = new TerraDraw({
+				adapter,
+				modes: [lineStringMode],
+				undoRedo: {
+					drawingLevel: new TerraDrawDrawingUndoRedo(),
+					keyboardShortcuts: new TerraDrawUndoRedoKeyboardShortcuts({
+						undo: [{ key: "u", heldKeys: ["Meta"] }],
+						redo: [{ key: "r", heldKeys: ["Meta"] }],
+					}),
+				},
+			});
+
+			draw.start();
+			draw.setMode("linestring");
+
+			lineStringMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			lineStringMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 0 }));
+			lineStringMode.onClick(MockCursorEvent({ lng: 1, lat: 0 }));
+			expect(draw.getSnapshot()).toHaveLength(2);
+
+			const customUndoEvent = MockKeyboardEvent({
+				key: "u",
+				heldKeys: ["Meta", "u"],
+			});
+
+			getRegisteredCallbacks(adapter).onKeyDown(customUndoEvent);
+
+			expect(draw.getSnapshot()).toHaveLength(1);
+			expect(customUndoEvent.preventDefault).toHaveBeenCalledTimes(1);
+
+			const customRedoEvent = MockKeyboardEvent({
+				key: "r",
+				heldKeys: ["Meta", "r"],
+			});
+
+			getRegisteredCallbacks(adapter).onKeyDown(customRedoEvent);
+
+			expect(draw.getSnapshot()).toHaveLength(2);
+			expect(customRedoEvent.preventDefault).toHaveBeenCalledTimes(1);
 		});
 	});
 });

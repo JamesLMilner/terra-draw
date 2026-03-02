@@ -93,6 +93,7 @@ export function SetupMapbox(args: StoryArgs): HTMLElement {
 					map,
 				}),
 				modes,
+				undoRedo: args.undoRedoOptions,
 			});
 
 			draw.start();

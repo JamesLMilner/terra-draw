@@ -70,7 +70,20 @@ import { limitPrecision } from "./geometry/limit-decimal-precision";
 import { isValidJSONValue } from "./store/valid-json";
 import { haversineDistanceKilometers } from "./geometry/measure/haversine-distance";
 import { TerraDrawMarkerMode } from "./modes/marker/marker.mode";
-import { setupSessionUndoRedo } from "./undo-redo";
+import {
+	TerraDrawUndoRedoKeyboardShortcuts,
+	type TerraDrawUndoRedoKeyboardShortcutsInterface,
+} from "./undo-redo/keyboard-shortcuts";
+import {
+	TerraDrawDrawingUndoRedo,
+	type TerraDrawDrawingUndoRedoInterface,
+} from "./undo-redo/drawing-undo-redo";
+import {
+	HistoryChangeCause,
+	TerraDrawSessionUndoRedo,
+	TerraDrawSessionUndoRedoInterface,
+} from "./undo-redo/session-undo-redo";
+import { TerraDrawUndoRedoCoordinator } from "./undo-redo/undo-redo-coordinator";
 
 // Helper type to determine the instance type of a class
 type InstanceType<T extends new (...args: any[]) => any> = T extends new (
@@ -87,6 +100,12 @@ type ChangeListener = (
 ) => void;
 type SelectListener = (id: FeatureId) => void;
 type DeselectListener = (id: FeatureId) => void;
+type HistoryChangeListener = (event: {
+	cause: HistoryChangeCause;
+	stack: "session" | "drawing";
+	undoSize: number;
+	redoSize: number;
+}) => void;
 
 interface TerraDrawEventListeners {
 	ready: () => void;
@@ -94,6 +113,7 @@ interface TerraDrawEventListeners {
 	change: ChangeListener;
 	select: SelectListener;
 	deselect: DeselectListener;
+	history: HistoryChangeListener;
 }
 
 type GetFeatureOptions = {
@@ -123,11 +143,14 @@ class TerraDraw {
 		finish: FinishListener[];
 		select: SelectListener[];
 		deselect: DeselectListener[];
+		history: HistoryChangeListener[];
 	};
 	private _instanceSelectModes: string[];
-	private drawingUndoRedoEnabled = true;
-
-	private sessionUndoRedo?: ReturnType<typeof setupSessionUndoRedo>;
+	private sessionUndoRedoEnabled = false;
+	private keyboardShortcutsMatcher?: TerraDrawUndoRedoKeyboardShortcutsInterface;
+	private drawingUndoRedo?: TerraDrawDrawingUndoRedoInterface;
+	private sessionUndoRedo?: TerraDrawSessionUndoRedoInterface;
+	private undoRedoCoordinator?: TerraDrawUndoRedoCoordinator;
 
 	constructor(options: {
 		adapter: TerraDrawAdapter;
@@ -135,18 +158,27 @@ class TerraDraw {
 		idStrategy?: IdStrategy<FeatureId>;
 		tracked?: boolean;
 		undoRedo?: {
-			drawingLevel?: {
-				enabled: boolean;
-			};
-			sessionLevel?: {
-				enabled: boolean;
-			};
+			drawingLevel?: TerraDrawDrawingUndoRedoInterface;
+			sessionLevel?: TerraDrawSessionUndoRedoInterface;
+			keyboardShortcuts?: TerraDrawUndoRedoKeyboardShortcutsInterface;
 		};
 	}) {
 		this._adapter = options.adapter;
 		this._instanceSelectModes = [];
-		this.drawingUndoRedoEnabled =
-			options?.undoRedo?.drawingLevel?.enabled ?? true;
+
+		// Undo/Redo options
+		const drawingLevelUndoRedo = options?.undoRedo?.drawingLevel;
+		if (drawingLevelUndoRedo) {
+			this.drawingUndoRedo = drawingLevelUndoRedo;
+		}
+
+		const keyboardShortcutsMatcher = options?.undoRedo?.keyboardShortcuts;
+		if (keyboardShortcutsMatcher) {
+			this.keyboardShortcutsMatcher = keyboardShortcutsMatcher;
+		}
+
+		this.sessionUndoRedoEnabled = Boolean(options?.undoRedo?.sessionLevel);
+		const sessionLevelUndoRedo = options?.undoRedo?.sessionLevel;
 
 		this._mode = new TerraDrawStaticMode();
 
@@ -189,6 +221,7 @@ class TerraDraw {
 			deselect: [],
 			finish: [],
 			ready: [],
+			history: [],
 		};
 		this._store = new GeoJSONStore<
 			TerraDrawOnChangeContext | undefined,
@@ -226,6 +259,8 @@ class TerraDraw {
 			this._eventListeners.finish.forEach((listener) => {
 				listener(finishedId, context);
 			});
+
+			this.emitHistoryChangeAfterFinish();
 		};
 
 		const onChange: StoreChangeHandler<TerraDrawOnChangeContext | undefined> = (
@@ -240,6 +275,8 @@ class TerraDraw {
 			this._eventListeners.change.forEach((listener) => {
 				listener(ids, event, context);
 			});
+
+			this.emitDrawingPushIfHistoryChangedFromLastSnapshot();
 
 			const { changed, unchanged } = getChanged(ids);
 
@@ -339,9 +376,55 @@ class TerraDraw {
 			});
 		});
 
-		if (options?.undoRedo?.sessionLevel?.enabled) {
-			this.sessionUndoRedo = setupSessionUndoRedo(this);
+		if (this.sessionUndoRedoEnabled && sessionLevelUndoRedo) {
+			this.sessionUndoRedo = sessionLevelUndoRedo;
+			sessionLevelUndoRedo.register({
+				draw: this,
+				onHistoryChange: ({ cause, undoStackSize, redoStackSize }) => {
+					this.undoRedoCoordinator?.emitSessionHistoryChange({
+						cause,
+						undoStackSize,
+						redoStackSize,
+					});
+				},
+			});
 		}
+
+		if (this.drawingUndoRedo) {
+			this.drawingUndoRedo.register({
+				getModeState: () => this.getModeState(),
+				getModeHistorySizes: () => this.getDrawingHistorySizes(),
+				undoMode: () => {
+					if (this._mode.undo) {
+						this._mode.undo();
+					}
+				},
+				redoMode: () => {
+					if (this._mode.redo) {
+						this._mode.redo();
+					}
+				},
+				onHistoryChange: ({ cause, undoStackSize, redoStackSize }) => {
+					this.undoRedoCoordinator?.emitDrawingHistoryChange({
+						cause,
+						undoStackSize,
+						redoStackSize,
+					});
+				},
+			});
+		}
+
+		this.undoRedoCoordinator = new TerraDrawUndoRedoCoordinator({
+			drawing: this.drawingUndoRedo,
+			session: this.sessionUndoRedo,
+			shouldPreferDrawing: () => this.getModeState() === "drawing",
+			onHistoryChange: (historyChange) => {
+				this._eventListeners.history.forEach((listener) => {
+					listener(historyChange);
+				});
+			},
+			shouldEmitHistoryChange: () => this._enabled,
+		});
 	}
 
 	private checkEnabled() {
@@ -353,22 +436,24 @@ class TerraDraw {
 	private handleUndoRedoKeyboardShortcut(
 		event: TerraDrawKeyboardEvent,
 	): boolean {
-		const normalizedHeldKeys = new Set(
-			event.heldKeys.map((heldKey) => heldKey.toLowerCase()),
-		);
-		const normalizedKey = event.key.toLowerCase();
+		if (!this.drawingUndoRedo && !this.sessionUndoRedoEnabled) {
+			return false;
+		}
 
-		const hasMetaKey = normalizedHeldKeys.has("meta");
-		const hasControlKey = normalizedHeldKeys.has("control");
-		const hasShiftKey = normalizedHeldKeys.has("shift");
+		if (!this.keyboardShortcutsMatcher) {
+			return false;
+		}
 
 		const isUndoShortcut =
-			normalizedKey === "z" && (hasMetaKey || hasControlKey) && !hasShiftKey;
+			this.keyboardShortcutsMatcher.isUndoKeyboardShortcut(event);
 		const isRedoShortcut =
-			(normalizedKey === "z" && (hasMetaKey || hasControlKey) && hasShiftKey) ||
-			(normalizedKey === "y" && hasControlKey);
+			this.keyboardShortcutsMatcher.isRedoKeyboardShortcut(event);
 
 		if (isUndoShortcut) {
+			if (!this.canUndo()) {
+				return false;
+			}
+
 			const didUndo = this.undo();
 			if (didUndo) {
 				event.preventDefault();
@@ -377,6 +462,10 @@ class TerraDraw {
 		}
 
 		if (isRedoShortcut) {
+			if (!this.canRedo()) {
+				return false;
+			}
+
 			const didRedo = this.redo();
 			if (didRedo) {
 				event.preventDefault();
@@ -387,8 +476,41 @@ class TerraDraw {
 		return false;
 	}
 
-	private shouldHandleModeUndoRedo() {
-		return this.drawingUndoRedoEnabled && this.getModeState() === "drawing";
+	private getDrawingHistorySizes() {
+		const undoSize =
+			this._mode.undoSize && typeof this._mode.undoSize === "function"
+				? this._mode.undoSize()
+				: 0;
+
+		const redoSize =
+			this._mode.redoSize && typeof this._mode.redoSize === "function"
+				? this._mode.redoSize()
+				: 0;
+
+		return { undoSize, redoSize };
+	}
+
+	private emitDrawingPushIfHistoryChangedFromLastSnapshot() {
+		if (!this.drawingUndoRedo) {
+			return;
+		}
+
+		this.drawingUndoRedo.emitPushIfHistoryChangedFromLastSnapshot();
+	}
+
+	private emitDrawingPushIfHistoryChanged(before: {
+		undoSize: number;
+		redoSize: number;
+	}) {
+		if (!this.drawingUndoRedo) {
+			return;
+		}
+
+		this.drawingUndoRedo.emitPushIfHistoryChanged(before);
+	}
+
+	private emitHistoryChangeAfterFinish() {
+		this.undoRedoCoordinator?.emitPushAfterFinish();
 	}
 
 	private getModeStyles() {
@@ -1190,64 +1312,26 @@ class TerraDraw {
 
 	undo(): boolean {
 		this.checkEnabled();
-		if (this.shouldHandleModeUndoRedo()) {
-			if (this._mode.undo && this._mode.undoSize && this._mode.undoSize() > 0) {
-				this._mode.undo();
-				return true;
-			}
-		} else {
-			if (this.sessionUndoRedo && this.sessionUndoRedo.undoSize() > 0) {
-				this.sessionUndoRedo.undo();
-				return true;
-			}
-		}
-
-		return false;
+		return this.undoRedoCoordinator ? this.undoRedoCoordinator.undo() : false;
 	}
 
 	canUndo(): boolean {
 		this.checkEnabled();
-		if (this.shouldHandleModeUndoRedo()) {
-			return Boolean(
-				Boolean(this._mode.undo) &&
-					this._mode.undoSize &&
-					this._mode.undoSize() > 0,
-			);
-		} else {
-			return Boolean(
-				this.sessionUndoRedo && this.sessionUndoRedo.undoSize() > 0,
-			);
-		}
+		return this.undoRedoCoordinator
+			? this.undoRedoCoordinator.canUndo()
+			: false;
 	}
 
 	canRedo(): boolean {
 		this.checkEnabled();
-		if (this.shouldHandleModeUndoRedo()) {
-			return !!(
-				Boolean(this._mode.redo) &&
-				this._mode.redoSize &&
-				this._mode.redoSize() > 0
-			);
-		} else {
-			return !!(this.sessionUndoRedo && this.sessionUndoRedo.redoSize() > 0);
-		}
+		return this.undoRedoCoordinator
+			? this.undoRedoCoordinator.canRedo()
+			: false;
 	}
 
 	redo(): boolean {
 		this.checkEnabled();
-		if (this.shouldHandleModeUndoRedo()) {
-			if (this._mode.redo && this._mode.redoSize && this._mode.redoSize() > 0) {
-				this._mode.redo();
-				return true;
-			}
-		} else {
-			if (this.sessionUndoRedo && this.sessionUndoRedo.redoSize() > 0) {
-				this.sessionUndoRedo.redo();
-				return true;
-			}
-		}
-
-		return false;
+		return this.undoRedoCoordinator ? this.undoRedoCoordinator.redo() : false;
 	}
 
 	/**
@@ -1338,7 +1422,11 @@ class TerraDraw {
 				return this._mode.state;
 			},
 			onClick: (event) => {
+				const drawingHistoryBeforeClick = this.drawingUndoRedo
+					? this.drawingUndoRedo.getHistorySizes()
+					: { undoSize: 0, redoSize: 0 };
 				this._mode.onClick(event);
+				this.emitDrawingPushIfHistoryChanged(drawingHistoryBeforeClick);
 			},
 			onMouseMove: (event) => {
 				this._mode.onMouseMove(event);
@@ -1351,7 +1439,11 @@ class TerraDraw {
 				this._mode.onKeyDown(event);
 			},
 			onKeyUp: (event) => {
+				const drawingHistoryBeforeKeyUp = this.drawingUndoRedo
+					? this.drawingUndoRedo.getHistorySizes()
+					: { undoSize: 0, redoSize: 0 };
 				this._mode.onKeyUp(event);
+				this.emitDrawingPushIfHistoryChanged(drawingHistoryBeforeKeyUp);
 			},
 			onDragStart: (event, setMapDraggability) => {
 				this._mode.onDragStart(event, setMapDraggability);
@@ -1516,5 +1608,12 @@ export {
 	ValidateMaxAreaSquareMeters,
 	ValidateNotSelfIntersecting,
 	ValidationReasons,
-	setupSessionUndoRedo as setupUndoRedo,
+
+	// Undo Redo
+	type TerraDrawDrawingUndoRedoInterface,
+	TerraDrawDrawingUndoRedo,
+	type TerraDrawUndoRedoKeyboardShortcutsInterface,
+	TerraDrawUndoRedoKeyboardShortcuts,
+	type TerraDrawSessionUndoRedoInterface,
+	TerraDrawSessionUndoRedo,
 };

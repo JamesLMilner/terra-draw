@@ -90,6 +90,7 @@ export function SetupOpenLayers(args: StoryArgs): HTMLElement {
 					...mapConfig,
 				}),
 				modes,
+				undoRedo: args.undoRedoOptions,
 			});
 
 			draw.start();

@@ -85,6 +85,7 @@ export function SetupArcGIS(args: StoryArgs): HTMLElement {
 					map: mapConfig.map,
 				}),
 				modes,
+				undoRedo: args.undoRedoOptions,
 			});
 
 			draw.start();

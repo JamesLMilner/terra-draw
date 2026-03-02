@@ -63,6 +63,7 @@ export function SetupLeaflet(args: StoryArgs): HTMLElement {
 				map,
 			}),
 			modes,
+			undoRedo: args.undoRedoOptions,
 		});
 
 		draw.start();

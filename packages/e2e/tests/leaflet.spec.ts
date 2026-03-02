@@ -70,6 +70,50 @@ test.describe("page setup", () => {
 	});
 });
 
+test.describe("undo/redo", () => {
+	test("supports undo with meta shortcut", async ({ page }) => {
+		const mapDiv = await setupMap({ page });
+		await changeMode({ page, mode: "point" });
+
+		await page.mouse.click(mapDiv.width / 4, mapDiv.height / 4);
+		await page.mouse.click(mapDiv.width / 3, mapDiv.height / 3);
+
+		await expectPaths({ page, count: 2 });
+
+		await page.keyboard.press("Meta+KeyZ");
+
+		await expectPaths({ page, count: 1 });
+	});
+
+	test("supports undo/redo with control shortcuts", async ({ page }) => {
+		const mapDiv = await setupMap({ page });
+		await changeMode({ page, mode: "point" });
+
+		await page.mouse.click(mapDiv.width / 2, mapDiv.height / 2);
+		await expectPaths({ page, count: 1 });
+
+		await page.keyboard.press("Control+KeyZ");
+		await expectPaths({ page, count: 0 });
+
+		await page.keyboard.press("Control+KeyY");
+		await expectPaths({ page, count: 1 });
+	});
+
+	test("supports redo with meta+shift shortcut", async ({ page }) => {
+		const mapDiv = await setupMap({ page });
+		await changeMode({ page, mode: "point" });
+
+		await page.mouse.click(mapDiv.width / 2, mapDiv.height / 2);
+		await expectPaths({ page, count: 1 });
+
+		await page.keyboard.press("Meta+KeyZ");
+		await expectPaths({ page, count: 0 });
+
+		await page.keyboard.press("Meta+Shift+KeyZ");
+		await expectPaths({ page, count: 1 });
+	});
+});
+
 test.describe("point mode", () => {
 	const mode = "point";
 

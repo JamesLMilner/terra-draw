@@ -14,6 +14,9 @@ import {
 	GeoJSONStoreFeatures,
 	HexColor,
 	TerraDrawMarkerMode,
+	TerraDrawSessionUndoRedo,
+	TerraDrawDrawingUndoRedo,
+	TerraDrawUndoRedoKeyboardShortcuts,
 } from "../../../terra-draw/src/terra-draw";
 import {
 	DefaultSize,
@@ -918,6 +921,84 @@ const SelectWithMultipleOfSameModes: Story = {
 	},
 };
 
+const UndoRedo: Story = {
+	...DefaultStory,
+	args: {
+		id: "undo-redo",
+		modes: [
+			() =>
+				new TerraDrawPolygonMode({
+					showCoordinatePoints: true,
+					editable: true,
+					styles: {
+						coordinatePointColor: "#ff0000",
+					},
+				}),
+			() =>
+				new TerraDrawLineStringMode({
+					showCoordinatePoints: true,
+					editable: true,
+					styles: {
+						coordinatePointColor: "#ff0000",
+					},
+				}),
+			() =>
+				new TerraDrawSelectMode({
+					styles: {
+						selectionPointColor: "#0000ff",
+					},
+					flags: {
+						polygon: {
+							feature: {
+								draggable: true,
+								coordinates: {
+									draggable: true,
+									midpoints: {
+										draggable: true,
+									},
+								},
+							},
+						},
+					},
+				}),
+		],
+		undoRedoOptions: {
+			sessionLevel: new TerraDrawSessionUndoRedo(),
+			drawingLevel: new TerraDrawDrawingUndoRedo(),
+			keyboardShortcuts: new TerraDrawUndoRedoKeyboardShortcuts(),
+		},
+		afterRender: (draw: TerraDraw) => {
+			const undoButton = document.createElement("button");
+			undoButton.textContent = "Undo";
+
+			const redoButton = document.createElement("button");
+			redoButton.textContent = "Redo";
+
+			redoButton.disabled = true;
+			undoButton.disabled = true;
+
+			draw.on("history", () => {
+				undoButton.disabled = !draw.canUndo();
+				redoButton.disabled = !draw.canRedo();
+			});
+
+			const element = document.querySelector('[data-testid="container"]');
+
+			undoButton.onclick = () => {
+				console.log("undo button clicked");
+				draw.undo();
+			};
+			redoButton.onclick = () => {
+				console.log("redo button clicked");
+				draw.redo();
+			};
+			element?.appendChild(undoButton);
+			element?.appendChild(redoButton);
+		},
+		...DefaultStory.args,
+	},
+};
+
 const AllStories = {
 	Point,
 	MarkerPNG,
@@ -961,6 +1042,7 @@ const AllStories = {
 	SelectWithMultiSelect,
 	SelectWithMultipleOfSameModes,
 	SelectWithMultipleSelectModes,
+	UndoRedo,
 };
 
 export { AllStories };

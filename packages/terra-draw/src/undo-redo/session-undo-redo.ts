@@ -3,7 +3,7 @@ import { GeoJSONStoreFeatures, TerraDraw } from "../terra-draw";
 
 export type HistoryChangeCause = "undo" | "redo" | "push";
 
-export type HistoryChange = {
+type HistoryChange = {
 	cause: HistoryChangeCause;
 	undoStackSize: number;
 	redoStackSize: number;

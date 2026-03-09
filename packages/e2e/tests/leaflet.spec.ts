@@ -70,7 +70,7 @@ test.describe("page setup", () => {
 	});
 });
 
-test.describe.only("undo/redo", () => {
+test.describe("undo/redo", () => {
 	test.describe("session undo/redo", () => {
 		test("supports undo with meta shortcut", async ({ page }) => {
 			const mapDiv = await setupMap({ page });

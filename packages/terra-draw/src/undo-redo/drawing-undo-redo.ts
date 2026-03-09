@@ -1,6 +1,6 @@
-export type DrawingHistoryChangeCause = "undo" | "redo" | "push";
+type DrawingHistoryChangeCause = "undo" | "redo" | "push";
 
-export type DrawingHistoryChange = {
+type DrawingHistoryChange = {
 	cause: DrawingHistoryChangeCause;
 	undoStackSize: number;
 	redoStackSize: number;

@@ -985,11 +985,9 @@ const UndoRedo: Story = {
 			const element = document.querySelector('[data-testid="container"]');
 
 			undoButton.onclick = () => {
-				console.log("undo button clicked");
 				draw.undo();
 			};
 			redoButton.onclick = () => {
-				console.log("redo button clicked");
 				draw.redo();
 			};
 			element?.appendChild(undoButton);

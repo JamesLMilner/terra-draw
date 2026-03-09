@@ -4,14 +4,14 @@ import { TerraDrawSessionUndoRedoInterface } from "./session-undo-redo";
 type StackType = "drawing" | "session";
 type HistoryCause = "undo" | "redo" | "push";
 
-export type UndoRedoHistoryChange = {
+type UndoRedoHistoryChange = {
 	cause: HistoryCause;
 	stack: StackType;
 	undoSize: number;
 	redoSize: number;
 };
 
-export type TerraDrawUndoRedoCoordinatorOptions = {
+type TerraDrawUndoRedoCoordinatorOptions = {
 	drawing?: TerraDrawDrawingUndoRedoInterface;
 	session?: TerraDrawSessionUndoRedoInterface;
 	shouldPreferDrawing: () => boolean;

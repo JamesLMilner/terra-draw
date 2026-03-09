@@ -1,9 +1,9 @@
-export type UndoRedoHistoryEntry<Coordinates> = {
+type UndoRedoHistoryEntry<Coordinates> = {
 	featureCoordinates: Coordinates;
 	currentCoordinate: number;
 };
 
-export type UndoStepResult<Coordinates> = {
+type UndoStepResult<Coordinates> = {
 	undoneEntry: UndoRedoHistoryEntry<Coordinates>;
 	previousEntry: UndoRedoHistoryEntry<Coordinates> | undefined;
 };

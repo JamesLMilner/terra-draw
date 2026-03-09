@@ -1,6 +1,6 @@
 import { TerraDrawKeyboardEvent } from "../common";
 
-export type UndoRedoKeyboardShortcut = {
+type UndoRedoKeyboardShortcut = {
 	key: KeyboardEvent["key"];
 	heldKeys: KeyboardEvent["key"][];
 };

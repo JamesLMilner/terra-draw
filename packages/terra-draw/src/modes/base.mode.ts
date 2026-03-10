@@ -362,7 +362,7 @@ export abstract class TerraDrawBaseDrawMode<Styling extends CustomStyling> {
 		if (value === undefined) {
 			return defaultValue;
 		} else if (typeof value === "function") {
-			return value(feature) ?? defaultValue; // null coalescing
+			return value(feature) ?? defaultValue;
 		} else {
 			return value;
 		}

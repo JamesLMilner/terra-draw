@@ -2408,6 +2408,10 @@ describe("onDragEnd", () => {
 		);
 
 		expect(mockConfig.onFinish).toHaveBeenCalledTimes(1);
+		expect(mockConfig.onFinish).toHaveBeenNthCalledWith(1, expect.any(String), {
+			action: "edit",
+			mode: "polygon",
+		});
 	});
 });
 

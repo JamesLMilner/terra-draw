@@ -1043,7 +1043,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 
 		this.onFinish(featureId, {
 			mode: this.mode,
-			action: FinishActions.Draw,
+			action: FinishActions.Edit,
 		});
 	}
 

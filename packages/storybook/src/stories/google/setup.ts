@@ -80,7 +80,7 @@ export function SetupGoogle(args: StoryArgs): HTMLElement {
 					const draw = new TerraDraw({
 						adapter,
 						modes,
-						undoRedo: args.undoRedoOptions,
+						undoRedo: args.undoRedoOptions?.(),
 					});
 
 					draw.start();

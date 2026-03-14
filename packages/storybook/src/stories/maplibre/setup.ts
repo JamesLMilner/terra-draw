@@ -79,7 +79,7 @@ export function SetupMapLibre(args: StoryArgs): HTMLElement {
 						map: mapConfig.map,
 					}),
 					modes,
-					undoRedo: args.undoRedoOptions,
+					undoRedo: args.undoRedoOptions?.(),
 				});
 
 				draw.start();

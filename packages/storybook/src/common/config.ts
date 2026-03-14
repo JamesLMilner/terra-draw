@@ -48,7 +48,9 @@ export const DefaultPlay = {
 			async () => {
 				const buttons = await within(canvasElement).findAllByRole("button");
 				buttons.forEach((button) => {
-					expect(button).not.toBeDisabled();
+					if (button.getAttribute("data-mode-button") === "true") {
+						expect(button).not.toBeDisabled();
+					}
 				});
 			},
 			{

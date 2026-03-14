@@ -49,8 +49,8 @@ describe("TerraDrawUndoRedoCoordinator", () => {
 		sessionUndoRedo.canUndo.mockReturnValue(true);
 
 		const coordinator = new TerraDrawUndoRedoCoordinator({
-			mode: drawingUndoRedo,
-			session: sessionUndoRedo,
+			modeLevel: drawingUndoRedo,
+			sessionLevel: sessionUndoRedo,
 			shouldPreferMode: () => shouldPreferDrawing,
 		});
 
@@ -67,8 +67,8 @@ describe("TerraDrawUndoRedoCoordinator", () => {
 		sessionUndoRedo.canUndo.mockReturnValue(true);
 
 		const coordinator = new TerraDrawUndoRedoCoordinator({
-			mode: drawingUndoRedo,
-			session: sessionUndoRedo,
+			modeLevel: drawingUndoRedo,
+			sessionLevel: sessionUndoRedo,
 			shouldPreferMode: () => shouldPreferDrawing,
 		});
 
@@ -87,8 +87,8 @@ describe("TerraDrawUndoRedoCoordinator", () => {
 		sessionUndoRedo.canUndo.mockReturnValue(true);
 
 		const coordinator = new TerraDrawUndoRedoCoordinator({
-			mode: drawingUndoRedo,
-			session: sessionUndoRedo,
+			modeLevel: drawingUndoRedo,
+			sessionLevel: sessionUndoRedo,
 			shouldPreferMode: () => shouldPreferDrawing,
 		});
 
@@ -106,8 +106,8 @@ describe("TerraDrawUndoRedoCoordinator", () => {
 		sessionUndoRedo.canRedo.mockReturnValue(true);
 
 		const coordinator = new TerraDrawUndoRedoCoordinator({
-			mode: drawingUndoRedo,
-			session: sessionUndoRedo,
+			modeLevel: drawingUndoRedo,
+			sessionLevel: sessionUndoRedo,
 			shouldPreferMode: () => shouldPreferDrawing,
 		});
 
@@ -126,8 +126,8 @@ describe("TerraDrawUndoRedoCoordinator", () => {
 		sessionUndoRedo.canRedo.mockReturnValue(false);
 
 		const coordinator = new TerraDrawUndoRedoCoordinator({
-			mode: drawingUndoRedo,
-			session: sessionUndoRedo,
+			modeLevel: drawingUndoRedo,
+			sessionLevel: sessionUndoRedo,
 			shouldPreferMode: () => shouldPreferDrawing,
 		});
 
@@ -145,8 +145,8 @@ describe("TerraDrawUndoRedoCoordinator", () => {
 		sessionUndoRedo.canRedo.mockReturnValue(false);
 
 		const coordinator = new TerraDrawUndoRedoCoordinator({
-			mode: drawingUndoRedo,
-			session: sessionUndoRedo,
+			modeLevel: drawingUndoRedo,
+			sessionLevel: sessionUndoRedo,
 			shouldPreferMode: () => shouldPreferDrawing,
 		});
 
@@ -236,8 +236,8 @@ describe("TerraDrawUndoRedoCoordinator", () => {
 
 		const onHistoryChange = jest.fn();
 		const coordinator = new TerraDrawUndoRedoCoordinator({
-			mode: drawingUndoRedo,
-			session: sessionUndoRedo,
+			modeLevel: drawingUndoRedo,
+			sessionLevel: sessionUndoRedo,
 			shouldPreferMode: () => shouldPreferDrawing,
 			onHistoryChange,
 		});
@@ -260,7 +260,7 @@ describe("TerraDrawUndoRedoCoordinator", () => {
 		const onHistoryChange = jest.fn();
 
 		const coordinator = new TerraDrawUndoRedoCoordinator({
-			mode: drawingUndoRedo,
+			modeLevel: drawingUndoRedo,
 			shouldPreferMode: () => shouldPreferDrawing,
 			onHistoryChange,
 		});

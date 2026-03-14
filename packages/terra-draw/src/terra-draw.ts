@@ -408,8 +408,8 @@ class TerraDraw {
 		}
 
 		this.undoRedoCoordinator = new TerraDrawUndoRedoCoordinator({
-			mode: this.drawingUndoRedo,
-			session: this.sessionUndoRedo,
+			modeLevel: this.drawingUndoRedo,
+			sessionLevel: this.sessionUndoRedo,
 			shouldPreferMode: () => this.getModeState() === "drawing",
 			onHistoryChange: (historyChange) => {
 				this._eventListeners.history.forEach((listener) => {

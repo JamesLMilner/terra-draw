@@ -1604,8 +1604,8 @@ export {
 
 	// Undo Redo
 	type TerraDrawUndoRedoInterface,
-	type TerraDrawModeUndoRedoInterface as TerraDrawDrawingUndoRedoInterface,
-	TerraDrawModeUndoRedo as TerraDrawDrawingUndoRedo,
+	type TerraDrawModeUndoRedoInterface,
+	TerraDrawModeUndoRedo,
 	type TerraDrawUndoRedoKeyboardShortcutsInterface,
 	TerraDrawUndoRedoKeyboardShortcuts,
 	type TerraDrawSessionUndoRedoInterface,

@@ -13,6 +13,7 @@ export type BehaviorConfig = {
 	pointerDistance: number;
 	coordinatePrecision: number;
 	projection: Projection;
+	undoRedoMaxStackSize?: number;
 };
 
 export class TerraDrawModeBehavior {
@@ -23,6 +24,7 @@ export class TerraDrawModeBehavior {
 	protected pointerDistance: number;
 	protected coordinatePrecision: number;
 	protected projection: Projection;
+	protected undoRedoMaxStackSize?: number;
 
 	constructor({
 		store,
@@ -32,6 +34,7 @@ export class TerraDrawModeBehavior {
 		pointerDistance,
 		coordinatePrecision,
 		projection,
+		undoRedoMaxStackSize,
 	}: BehaviorConfig) {
 		this.store = store;
 		this.mode = mode;
@@ -40,5 +43,6 @@ export class TerraDrawModeBehavior {
 		this.pointerDistance = pointerDistance;
 		this.coordinatePrecision = coordinatePrecision;
 		this.projection = projection;
+		this.undoRedoMaxStackSize = undoRedoMaxStackSize;
 	}
 }

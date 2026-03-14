@@ -3,15 +3,12 @@ import { TerraDrawOnChangeContext } from "../common";
 import { GeoJSONStoreFeatures, TerraDraw } from "../terra-draw";
 import {
 	HistoryCause,
+	HistoryChange,
 	HistoryChangeCause,
 	StackType,
-} from "./undo-redo-coordinator";
-
-type HistoryChange = {
-	cause: HistoryCause;
-	undoStackSize: number;
-	redoStackSize: number;
-};
+	TerraDrawUndoRedoInterface,
+	TerraDrawUndoRedoOptions,
+} from "./undo-redo-types";
 
 type BatchEntry = {
 	id: FeatureId;
@@ -23,15 +20,12 @@ type StackEntryMetadata = {
 	entries: BatchEntry[];
 };
 
-export interface TerraDrawSessionUndoRedoInterface {
+export interface TerraDrawSessionUndoRedoInterface
+	extends TerraDrawUndoRedoInterface {
 	register(options: {
 		draw: TerraDraw;
 		onHistoryChange: (historyChange: HistoryChange) => void;
 	}): void;
-	undo(): void;
-	redo(): void;
-	undoSize(): number;
-	redoSize(): number;
 }
 
 type RedoStackEntry = {
@@ -54,12 +48,17 @@ export class TerraDrawSessionUndoRedo
 {
 	private draw: TerraDraw | undefined;
 	private onHistoryChange: ((historyChange: HistoryChange) => void) | undefined;
+	private readonly maxStackSize: number;
 
 	private historyById: { [key: string]: GeoJSONStoreFeatures[] } = {};
 	private undoStack: UndoStackEntry[] = [];
 	private ignoreProgrammaticCreate: Record<FeatureId, boolean> = {};
 	private ignoreProgrammaticDelete: Record<FeatureId, boolean> = {};
 	private redoStack: RedoStackEntry[] = [];
+
+	constructor(options?: TerraDrawUndoRedoOptions) {
+		this.maxStackSize = normaliseMaxStackSize(options?.maxStackSize);
+	}
 
 	register(options: {
 		draw: TerraDraw;
@@ -85,10 +84,33 @@ export class TerraDrawSessionUndoRedo
 		this.onHistoryChange &&
 			this.onHistoryChange({
 				cause,
+				stack: StackType.Session,
 				undoStackSize: this.undoStack.length,
 				redoStackSize: this.redoStack.length,
 			});
 	};
+
+	private pushUndoStackEntry(entry: UndoStackEntry) {
+		if (this.maxStackSize === 0) {
+			return;
+		}
+
+		this.undoStack.push(entry);
+		if (this.undoStack.length > this.maxStackSize) {
+			this.undoStack.shift();
+		}
+	}
+
+	private pushRedoStackEntry(entry: RedoStackEntry) {
+		if (this.maxStackSize === 0) {
+			return;
+		}
+
+		this.redoStack.push(entry);
+		if (this.redoStack.length > this.maxStackSize) {
+			this.redoStack.shift();
+		}
+	}
 
 	private handleChange = (
 		ids: FeatureId[],
@@ -148,7 +170,7 @@ export class TerraDrawSessionUndoRedo
 			}
 
 			if (creationsForBatch.length > 1) {
-				this.undoStack.push({
+				this.pushUndoStackEntry({
 					id: creationsForBatch[0].id,
 					toIndex: creationsForBatch[0].toIndex,
 					action: "batch-create",
@@ -156,7 +178,7 @@ export class TerraDrawSessionUndoRedo
 				});
 			} else if (creationsForBatch.length === 1) {
 				const creation = creationsForBatch[0];
-				this.undoStack.push({
+				this.pushUndoStackEntry({
 					id: creation.id,
 					toIndex: creation.toIndex,
 					action: "single",
@@ -210,7 +232,7 @@ export class TerraDrawSessionUndoRedo
 		}
 
 		if (deletionsForBatch.length > 1) {
-			this.undoStack.push({
+			this.pushUndoStackEntry({
 				id: deletionsForBatch[0].id,
 				toIndex: deletionsForBatch[0].toIndex,
 				action: "batch-delete",
@@ -218,7 +240,7 @@ export class TerraDrawSessionUndoRedo
 			});
 		} else if (deletionsForBatch.length === 1) {
 			const deletion = deletionsForBatch[0];
-			this.undoStack.push({
+			this.pushUndoStackEntry({
 				id: deletion.id,
 				toIndex: deletion.toIndex,
 				action: "single",
@@ -257,7 +279,7 @@ export class TerraDrawSessionUndoRedo
 			}
 
 			// Record both the id and the index in that feature's history for robust undo
-			this.undoStack.push({
+			this.pushUndoStackEntry({
 				id,
 				toIndex: this.historyById[key].length - 1,
 				action: "single",
@@ -270,24 +292,42 @@ export class TerraDrawSessionUndoRedo
 		return this.draw ? this.draw.getModeState() === "drawing" : false;
 	}
 
-	undo() {
+	canUndo() {
 		if (!this.draw || this.isDrawing()) {
-			return;
+			return false;
 		}
 
-		if (this.undoStack.length === 0) return;
+		return this.undoStack.length > 0;
+	}
+
+	canRedo() {
+		if (!this.draw || this.isDrawing()) {
+			return false;
+		}
+
+		return this.redoStack.length > 0;
+	}
+
+	undo(): boolean {
+		if (!this.canUndo()) {
+			return false;
+		}
+
+		if (!this.draw) {
+			return false;
+		}
 
 		const undoStackEntry = this.undoStack.pop();
 		if (!undoStackEntry) {
 			this.emitStackChange(HistoryChangeCause.Undo);
-			return;
+			return false;
 		}
 
 		if (undoStackEntry.action === "batch-create") {
 			const entriesToDelete = undoStackEntry.metadata?.entries || [];
 			if (entriesToDelete.length === 0) {
 				this.emitStackChange(HistoryChangeCause.Undo);
-				return;
+				return false;
 			}
 
 			const idsToDelete = entriesToDelete.map((entry) => entry.id);
@@ -296,21 +336,21 @@ export class TerraDrawSessionUndoRedo
 			});
 
 			this.draw.removeFeatures(idsToDelete);
-			this.redoStack.push({
+			this.pushRedoStackEntry({
 				id: entriesToDelete[0].id,
 				toIndex: entriesToDelete[0].toIndex,
 				action: "batch-create",
 				metadata: { entries: entriesToDelete },
 			});
 			this.emitStackChange(HistoryChangeCause.Undo);
-			return;
+			return true;
 		}
 
 		if (undoStackEntry.action === "batch-delete") {
 			const entriesToRestore = undoStackEntry.metadata?.entries || [];
 			if (entriesToRestore.length === 0) {
 				this.emitStackChange(HistoryChangeCause.Undo);
-				return;
+				return false;
 			}
 
 			const snapshotsToRestore = entriesToRestore
@@ -324,14 +364,14 @@ export class TerraDrawSessionUndoRedo
 				this.draw.addFeatures(snapshotsToRestore);
 			}
 
-			this.redoStack.push({
+			this.pushRedoStackEntry({
 				id: entriesToRestore[0].id,
 				toIndex: entriesToRestore[0].toIndex,
 				action: "batch-delete",
 				metadata: { entries: entriesToRestore },
 			});
 			this.emitStackChange(HistoryChangeCause.Undo);
-			return;
+			return true;
 		}
 
 		const id = undoStackEntry.id;
@@ -341,7 +381,7 @@ export class TerraDrawSessionUndoRedo
 		const stack = this.historyById[key];
 		if (!stack || stack.length === 0) {
 			this.emitStackChange(HistoryChangeCause.Undo);
-			return;
+			return false;
 		}
 
 		// Clamp index in case of any out-of-sync situations
@@ -353,26 +393,26 @@ export class TerraDrawSessionUndoRedo
 			const snapshotToRestore = stack[currentIndex];
 			if (!snapshotToRestore) {
 				this.emitStackChange(HistoryChangeCause.Undo);
-				return;
+				return false;
 			}
 			this.ignoreProgrammaticCreate[id] = true;
 			this.draw.addFeatures([snapshotToRestore]);
 
 			// Allow redo to re-delete the feature; do not change undo stack size here
-			this.redoStack.push({
+			this.pushRedoStackEntry({
 				id,
 				toIndex: currentIndex,
 				action: "delete",
 				snapshot: snapshotToRestore,
 			});
 			this.emitStackChange(HistoryChangeCause.Undo);
-			return;
+			return true;
 		}
 
 		// If there is no previous state, the action was creation -> remove the feature
 		if (currentIndex <= 0) {
 			// Record redo info so we can recreate the feature
-			this.redoStack.push({ id, toIndex: 0, action: "create" });
+			this.pushRedoStackEntry({ id, toIndex: 0, action: "create" });
 
 			this.ignoreProgrammaticDelete[id] = true;
 			this.draw.removeFeatures([id]);
@@ -382,7 +422,7 @@ export class TerraDrawSessionUndoRedo
 				(undoAction) => undoAction.id !== id,
 			);
 			this.emitStackChange(HistoryChangeCause.Undo);
-			return;
+			return true;
 		}
 
 		// Revert to the previous geometry for this action and truncate history to that point
@@ -391,7 +431,7 @@ export class TerraDrawSessionUndoRedo
 
 		// Save redo info before truncating the stack
 		if (nextSnapshot) {
-			this.redoStack.push({
+			this.pushRedoStackEntry({
 				id,
 				toIndex: currentIndex,
 				snapshot: nextSnapshot,
@@ -402,14 +442,17 @@ export class TerraDrawSessionUndoRedo
 		this.draw.updateFeatureGeometry(id, prev.geometry);
 		stack.length = currentIndex; // drop the state we just undid
 		this.emitStackChange(HistoryChangeCause.Undo);
+		return true;
 	}
 
-	redo() {
-		if (!this.draw || this.isDrawing()) {
-			return;
+	redo(): boolean {
+		if (!this.canRedo()) {
+			return false;
 		}
 
-		if (this.redoStack.length === 0) return;
+		if (!this.draw) {
+			return false;
+		}
 
 		const poppedRedoStackEntry = this.redoStack.pop()!;
 		const { id, toIndex, snapshot, action, metadata } = poppedRedoStackEntry;
@@ -418,7 +461,7 @@ export class TerraDrawSessionUndoRedo
 			const entriesToCreate = metadata?.entries || [];
 			if (entriesToCreate.length === 0) {
 				this.emitStackChange(HistoryChangeCause.Redo);
-				return;
+				return false;
 			}
 
 			const snapshotsToCreate = entriesToCreate
@@ -432,21 +475,21 @@ export class TerraDrawSessionUndoRedo
 				this.draw.addFeatures(snapshotsToCreate);
 			}
 
-			this.undoStack.push({
+			this.pushUndoStackEntry({
 				id: entriesToCreate[0].id,
 				toIndex: entriesToCreate[0].toIndex,
 				action: "batch-create",
 				metadata: { entries: entriesToCreate },
 			});
 			this.emitStackChange(HistoryChangeCause.Redo);
-			return;
+			return true;
 		}
 
 		if (action === "batch-delete") {
 			const entriesToDelete = metadata?.entries || [];
 			if (entriesToDelete.length === 0) {
 				this.emitStackChange(HistoryChangeCause.Redo);
-				return;
+				return false;
 			}
 
 			const idsToDelete = entriesToDelete.map((entry) => entry.id);
@@ -456,14 +499,14 @@ export class TerraDrawSessionUndoRedo
 			});
 
 			this.draw.removeFeatures(idsToDelete);
-			this.undoStack.push({
+			this.pushUndoStackEntry({
 				id: entriesToDelete[0].id,
 				toIndex: entriesToDelete[0].toIndex,
 				action: "batch-delete",
 				metadata: { entries: entriesToDelete },
 			});
 			this.emitStackChange(HistoryChangeCause.Redo);
-			return;
+			return true;
 		}
 
 		const key = String(id);
@@ -474,27 +517,31 @@ export class TerraDrawSessionUndoRedo
 			this.ignoreProgrammaticDelete[id] = true;
 			this.draw.removeFeatures([id]);
 			// Reflect that the delete action has been reapplied by pushing back onto the undo stack
-			this.undoStack.push({ id, toIndex, action: "single" });
+			this.pushUndoStackEntry({ id, toIndex, action: "single" });
 			this.emitStackChange(HistoryChangeCause.Redo);
-			return;
+			return true;
 		}
 
 		if (toIndex <= 0) {
 			// Redo creation - recreate the initial feature
 			const initial = stack[0];
-			if (!initial) return;
+			if (!initial) {
+				return false;
+			}
 			this.ignoreProgrammaticCreate[id] = true;
 			this.draw.addFeatures([initial]);
 
 			// Restore the action into the history stacks
-			this.undoStack.push({ id, toIndex: 0, action: "single" });
+			this.pushUndoStackEntry({ id, toIndex: 0, action: "single" });
 			this.emitStackChange(HistoryChangeCause.Redo);
-			return;
+			return true;
 		}
 
 		// Redo an update - reapply the geometry and restore the snapshot in history
 		const next = snapshot || stack[toIndex];
-		if (!next) return;
+		if (!next) {
+			return false;
+		}
 
 		// Ensure the history includes the redone snapshot at the correct index
 		if (stack.length === toIndex) {
@@ -510,8 +557,9 @@ export class TerraDrawSessionUndoRedo
 		this.draw.updateFeatureGeometry(id, next.geometry);
 
 		// Restore the action into the history stacks so it can be undone again
-		this.undoStack.push({ id, toIndex, action: "single" });
+		this.pushUndoStackEntry({ id, toIndex, action: "single" });
 		this.emitStackChange(HistoryChangeCause.Redo);
+		return true;
 	}
 
 	undoSize() {

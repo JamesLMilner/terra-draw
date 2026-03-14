@@ -1,28 +1,26 @@
 import { TerraDrawModeState } from "../common";
+import { normaliseMaxStackSize } from "./undo-redo-coordinator";
 import {
 	HistoryCause,
+	HistoryChange,
 	HistoryChangeCause,
 	StackType,
-} from "./undo-redo-coordinator";
+	TerraDrawUndoRedoInterface,
+	TerraDrawUndoRedoOptions,
+} from "./undo-redo-types";
 
-type DrawingHistoryChange = {
-	cause: HistoryCause;
-	undoStackSize: number;
-	redoStackSize: number;
-};
-
-export interface TerraDrawModeUndoRedoInterface {
+export interface TerraDrawModeUndoRedoInterface
+	extends TerraDrawUndoRedoInterface {
+	getMaxStackSize?(): number;
 	register(options: {
 		getModeState: () => string;
 		getModeHistorySizes: () => { undoSize: number; redoSize: number };
 		undoMode: () => void;
 		redoMode: () => void;
-		onHistoryChange: (historyChange: DrawingHistoryChange) => void;
+		onHistoryChange: (historyChange: HistoryChange) => void;
 	}): void;
 	canUndo(): boolean;
 	canRedo(): boolean;
-	undo(): boolean;
-	redo(): boolean;
 	getHistorySizes(): { undoSize: number; redoSize: number };
 	emitPushIfHistoryChangedFromLastSnapshot(): void;
 	emitPushIfHistoryChanged(before: {
@@ -39,21 +37,28 @@ export class TerraDrawModeUndoRedo implements TerraDrawModeUndoRedoInterface {
 		| undefined;
 	private undoMode: (() => void) | undefined;
 	private redoMode: (() => void) | undefined;
-	private onHistoryChange:
-		| ((historyChange: DrawingHistoryChange) => void)
-		| undefined;
+	private onHistoryChange: ((historyChange: HistoryChange) => void) | undefined;
+	private readonly maxStackSize: number;
 
 	private lastHistorySizes = {
 		undoSize: 0,
 		redoSize: 0,
 	};
 
+	constructor(options?: TerraDrawUndoRedoOptions) {
+		this.maxStackSize = normaliseMaxStackSize(options?.maxStackSize);
+	}
+
+	getMaxStackSize() {
+		return this.maxStackSize;
+	}
+
 	register(options: {
 		getModeState: () => TerraDrawModeState;
 		getModeHistorySizes: () => { undoSize: number; redoSize: number };
 		undoMode: () => void;
 		redoMode: () => void;
-		onHistoryChange: (historyChange: DrawingHistoryChange) => void;
+		onHistoryChange: (historyChange: HistoryChange) => void;
 	}) {
 		this.getModeState = options.getModeState;
 		this.getModeHistorySizes = options.getModeHistorySizes;
@@ -112,6 +117,14 @@ export class TerraDrawModeUndoRedo implements TerraDrawModeUndoRedoInterface {
 		return this.getModeHistorySizes();
 	}
 
+	undoSize() {
+		return this.getHistorySizes().undoSize;
+	}
+
+	redoSize() {
+		return this.getHistorySizes().redoSize;
+	}
+
 	emitPushIfHistoryChangedFromLastSnapshot() {
 		if (!this.inDrawingState()) {
 			return;
@@ -153,6 +166,7 @@ export class TerraDrawModeUndoRedo implements TerraDrawModeUndoRedoInterface {
 
 		this.onHistoryChange({
 			cause,
+			stack: StackType.Mode,
 			undoStackSize: undoSize,
 			redoStackSize: redoSize,
 		});

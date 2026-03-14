@@ -122,7 +122,6 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 	private lastMouseMoveEvent: TerraDrawMouseEvent | undefined;
 	private showCoordinatePoints = false;
 	private finishOnNthCoordinate: number | undefined;
-	private undoRedo = new UndoRedoBehavior<Position[]>();
 
 	// Editable properties
 	private editable: boolean = false;
@@ -142,6 +141,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 	private readFeature!: ReadFeatureBehavior;
 	private closingPoints!: ClosingPointsBehavior;
 	private coordinatePoints!: CoordinatePointBehavior;
+	private undoRedo!: UndoRedoBehavior<Position[]>;
 
 	constructor(options?: TerraDrawLineStringModeOptions<LineStringStyling>) {
 		super(options, true);
@@ -673,6 +673,10 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 			this.readFeature,
 			this.mutateFeature,
 		);
+
+		this.undoRedo = new UndoRedoBehavior<Position[]>({
+			maxStackSize: config.undoRedoMaxStackSize,
+		});
 	}
 
 	/** @internal */

@@ -1,3 +1,4 @@
+import { TerraDrawModeUndoRedoInterface } from "./mode-undo-redo";
 import { TerraDrawUndoRedoCoordinator } from "./undo-redo-coordinator";
 
 describe("TerraDrawUndoRedoCoordinator", () => {
@@ -14,6 +15,8 @@ describe("TerraDrawUndoRedoCoordinator", () => {
 			canRedo: jest.fn(() => false),
 			undo: jest.fn(() => false),
 			redo: jest.fn(() => false),
+			undoSize: jest.fn(() => 0),
+			redoSize: jest.fn(() => 0),
 			getHistorySizes: jest.fn(() => ({ undoSize: 0, redoSize: 0 })),
 			emitPushIfHistoryChangedFromLastSnapshot: jest.fn(),
 			emitPushIfHistoryChanged: jest.fn(),
@@ -26,8 +29,10 @@ describe("TerraDrawUndoRedoCoordinator", () => {
 	const createSessionUndoRedo = () => {
 		const sessionUndoRedo = {
 			register: jest.fn(),
-			undo: jest.fn(),
-			redo: jest.fn(),
+			undo: jest.fn(() => true),
+			redo: jest.fn(() => true),
+			canUndo: jest.fn(() => false),
+			canRedo: jest.fn(() => false),
 			undoSize: jest.fn(() => 0),
 			redoSize: jest.fn(() => 0),
 		};
@@ -41,12 +46,12 @@ describe("TerraDrawUndoRedoCoordinator", () => {
 		drawingUndoRedo.undo.mockReturnValue(true);
 
 		const sessionUndoRedo = createSessionUndoRedo();
-		sessionUndoRedo.undoSize.mockReturnValue(1);
+		sessionUndoRedo.canUndo.mockReturnValue(true);
 
 		const coordinator = new TerraDrawUndoRedoCoordinator({
-			drawing: drawingUndoRedo,
+			mode: drawingUndoRedo,
 			session: sessionUndoRedo,
-			shouldPreferDrawing: () => shouldPreferDrawing,
+			shouldPreferMode: () => shouldPreferDrawing,
 		});
 
 		expect(coordinator.undo()).toBe(true);
@@ -59,12 +64,12 @@ describe("TerraDrawUndoRedoCoordinator", () => {
 		drawingUndoRedo.canUndo.mockReturnValue(false);
 
 		const sessionUndoRedo = createSessionUndoRedo();
-		sessionUndoRedo.undoSize.mockReturnValue(2);
+		sessionUndoRedo.canUndo.mockReturnValue(true);
 
 		const coordinator = new TerraDrawUndoRedoCoordinator({
-			drawing: drawingUndoRedo,
+			mode: drawingUndoRedo,
 			session: sessionUndoRedo,
-			shouldPreferDrawing: () => shouldPreferDrawing,
+			shouldPreferMode: () => shouldPreferDrawing,
 		});
 
 		expect(coordinator.undo()).toBe(true);
@@ -79,12 +84,12 @@ describe("TerraDrawUndoRedoCoordinator", () => {
 		drawingUndoRedo.canUndo.mockReturnValue(true);
 
 		const sessionUndoRedo = createSessionUndoRedo();
-		sessionUndoRedo.undoSize.mockReturnValue(1);
+		sessionUndoRedo.canUndo.mockReturnValue(true);
 
 		const coordinator = new TerraDrawUndoRedoCoordinator({
-			drawing: drawingUndoRedo,
+			mode: drawingUndoRedo,
 			session: sessionUndoRedo,
-			shouldPreferDrawing: () => shouldPreferDrawing,
+			shouldPreferMode: () => shouldPreferDrawing,
 		});
 
 		expect(coordinator.undo()).toBe(true);
@@ -98,12 +103,12 @@ describe("TerraDrawUndoRedoCoordinator", () => {
 		drawingUndoRedo.redo.mockReturnValue(true);
 
 		const sessionUndoRedo = createSessionUndoRedo();
-		sessionUndoRedo.redoSize.mockReturnValue(1);
+		sessionUndoRedo.canRedo.mockReturnValue(true);
 
 		const coordinator = new TerraDrawUndoRedoCoordinator({
-			drawing: drawingUndoRedo,
+			mode: drawingUndoRedo,
 			session: sessionUndoRedo,
-			shouldPreferDrawing: () => shouldPreferDrawing,
+			shouldPreferMode: () => shouldPreferDrawing,
 		});
 
 		expect(coordinator.redo()).toBe(true);
@@ -117,13 +122,13 @@ describe("TerraDrawUndoRedoCoordinator", () => {
 		drawingUndoRedo.canRedo.mockReturnValue(true);
 
 		const sessionUndoRedo = createSessionUndoRedo();
-		sessionUndoRedo.undoSize.mockReturnValue(1);
-		sessionUndoRedo.redoSize.mockReturnValue(0);
+		sessionUndoRedo.canUndo.mockReturnValue(true);
+		sessionUndoRedo.canRedo.mockReturnValue(false);
 
 		const coordinator = new TerraDrawUndoRedoCoordinator({
-			drawing: drawingUndoRedo,
+			mode: drawingUndoRedo,
 			session: sessionUndoRedo,
-			shouldPreferDrawing: () => shouldPreferDrawing,
+			shouldPreferMode: () => shouldPreferDrawing,
 		});
 
 		expect(coordinator.canUndo()).toBe(true);
@@ -136,13 +141,13 @@ describe("TerraDrawUndoRedoCoordinator", () => {
 		drawingUndoRedo.canRedo.mockReturnValue(false);
 
 		const sessionUndoRedo = createSessionUndoRedo();
-		sessionUndoRedo.undoSize.mockReturnValue(0);
-		sessionUndoRedo.redoSize.mockReturnValue(0);
+		sessionUndoRedo.canUndo.mockReturnValue(false);
+		sessionUndoRedo.canRedo.mockReturnValue(false);
 
 		const coordinator = new TerraDrawUndoRedoCoordinator({
-			drawing: drawingUndoRedo,
+			mode: drawingUndoRedo,
 			session: sessionUndoRedo,
-			shouldPreferDrawing: () => shouldPreferDrawing,
+			shouldPreferMode: () => shouldPreferDrawing,
 		});
 
 		expect(coordinator.canUndo()).toBe(false);
@@ -155,12 +160,13 @@ describe("TerraDrawUndoRedoCoordinator", () => {
 		const onHistoryChange = jest.fn();
 
 		const coordinator = new TerraDrawUndoRedoCoordinator({
-			shouldPreferDrawing: () => shouldPreferDrawing,
+			shouldPreferMode: () => shouldPreferDrawing,
 			onHistoryChange,
 		});
 
-		coordinator.emitDrawingHistoryChange({
+		coordinator.emitStackHistoryChange({
 			cause: "push",
+			stack: "mode",
 			undoStackSize: 3,
 			redoStackSize: 1,
 		});
@@ -177,12 +183,13 @@ describe("TerraDrawUndoRedoCoordinator", () => {
 		const onHistoryChange = jest.fn();
 
 		const coordinator = new TerraDrawUndoRedoCoordinator({
-			shouldPreferDrawing: () => shouldPreferDrawing,
+			shouldPreferMode: () => shouldPreferDrawing,
 			onHistoryChange,
 		});
 
-		coordinator.emitSessionHistoryChange({
+		coordinator.emitStackHistoryChange({
 			cause: "undo",
+			stack: "session",
 			undoStackSize: 2,
 			redoStackSize: 4,
 		});
@@ -199,19 +206,21 @@ describe("TerraDrawUndoRedoCoordinator", () => {
 		const onHistoryChange = jest.fn();
 
 		const coordinator = new TerraDrawUndoRedoCoordinator({
-			shouldPreferDrawing: () => shouldPreferDrawing,
+			shouldPreferMode: () => shouldPreferDrawing,
 			onHistoryChange,
 			shouldEmitHistoryChange: () => false,
 		});
 
-		coordinator.emitDrawingHistoryChange({
+		coordinator.emitStackHistoryChange({
 			cause: "redo",
+			stack: "mode",
 			undoStackSize: 1,
 			redoStackSize: 0,
 		});
 
-		coordinator.emitSessionHistoryChange({
+		coordinator.emitStackHistoryChange({
 			cause: "push",
+			stack: "session",
 			undoStackSize: 5,
 			redoStackSize: 2,
 		});
@@ -227,9 +236,9 @@ describe("TerraDrawUndoRedoCoordinator", () => {
 
 		const onHistoryChange = jest.fn();
 		const coordinator = new TerraDrawUndoRedoCoordinator({
-			drawing: drawingUndoRedo,
+			mode: drawingUndoRedo,
 			session: sessionUndoRedo,
-			shouldPreferDrawing: () => shouldPreferDrawing,
+			shouldPreferMode: () => shouldPreferDrawing,
 			onHistoryChange,
 		});
 
@@ -246,16 +255,24 @@ describe("TerraDrawUndoRedoCoordinator", () => {
 
 	it("emits drawing push after finish when session undo/redo is absent", () => {
 		const drawingUndoRedo = createDrawingUndoRedo();
+		drawingUndoRedo.undoSize.mockReturnValue(4);
+		drawingUndoRedo.redoSize.mockReturnValue(2);
 		const onHistoryChange = jest.fn();
 
 		const coordinator = new TerraDrawUndoRedoCoordinator({
-			drawing: drawingUndoRedo,
-			shouldPreferDrawing: () => shouldPreferDrawing,
+			mode: drawingUndoRedo,
+			shouldPreferMode: () => shouldPreferDrawing,
 			onHistoryChange,
 		});
 
 		coordinator.emitPushAfterFinish();
 
-		expect(drawingUndoRedo.emitHistoryChange).toHaveBeenCalledWith("push");
+		expect(onHistoryChange).toHaveBeenCalledWith({
+			cause: "push",
+			stack: "mode",
+			undoSize: 4,
+			redoSize: 2,
+		});
+		expect(drawingUndoRedo.emitHistoryChange).not.toHaveBeenCalled();
 	});
 });

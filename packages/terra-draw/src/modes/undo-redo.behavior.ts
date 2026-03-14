@@ -8,17 +8,68 @@ type UndoStepResult<Coordinates> = {
 	previousEntry: UndoRedoHistoryEntry<Coordinates> | undefined;
 };
 
+type UndoRedoBehaviorOptions = {
+	maxStackSize?: number;
+};
+
 export class UndoRedoBehavior<Coordinates> {
 	private undoHistory: UndoRedoHistoryEntry<Coordinates>[] = [];
 	private redoHistory: UndoRedoHistoryEntry<Coordinates>[] = [];
 	private cloneCoordinatesFunction: (coordinates: Coordinates) => Coordinates;
+	private maxStackSize: number;
 
-	constructor(
-		cloneCoordinatesFunction?: (coordinates: Coordinates) => Coordinates,
-	) {
-		this.cloneCoordinatesFunction =
-			cloneCoordinatesFunction ||
-			((coordinates) => this.cloneRecursively(coordinates) as Coordinates);
+	constructor(options?: UndoRedoBehaviorOptions) {
+		this.cloneCoordinatesFunction = (coordinates) =>
+			this.cloneRecursively(coordinates) as Coordinates;
+
+		const configuredMaxStackSize = options?.maxStackSize;
+		if (
+			configuredMaxStackSize === undefined ||
+			!Number.isFinite(configuredMaxStackSize)
+		) {
+			this.maxStackSize = Number.POSITIVE_INFINITY;
+		} else {
+			this.maxStackSize = Math.max(0, Math.floor(configuredMaxStackSize));
+		}
+	}
+
+	setMaxStackSize(maxStackSize: number) {
+		if (!Number.isFinite(maxStackSize)) {
+			this.maxStackSize = Number.POSITIVE_INFINITY;
+			return;
+		}
+
+		this.maxStackSize = Math.max(0, Math.floor(maxStackSize));
+		this.trimHistoryToMax(this.undoHistory);
+		this.trimHistoryToMax(this.redoHistory);
+	}
+
+	private trimHistoryToMax(history: UndoRedoHistoryEntry<Coordinates>[]) {
+		if (!Number.isFinite(this.maxStackSize)) {
+			return;
+		}
+
+		while (history.length > this.maxStackSize) {
+			history.shift();
+		}
+	}
+
+	private pushUndoEntry(entry: UndoRedoHistoryEntry<Coordinates>) {
+		if (this.maxStackSize === 0) {
+			return;
+		}
+
+		this.undoHistory.push(entry);
+		this.trimHistoryToMax(this.undoHistory);
+	}
+
+	private pushRedoEntry(entry: UndoRedoHistoryEntry<Coordinates>) {
+		if (this.maxStackSize === 0) {
+			return;
+		}
+
+		this.redoHistory.push(entry);
+		this.trimHistoryToMax(this.redoHistory);
 	}
 
 	private cloneRecursively(value: unknown): unknown {
@@ -60,7 +111,7 @@ export class UndoRedoBehavior<Coordinates> {
 	}
 
 	recordSnapshot(entry: UndoRedoHistoryEntry<Coordinates>) {
-		this.undoHistory.push(this.cloneEntry(entry));
+		this.pushUndoEntry(this.cloneEntry(entry));
 		this.redoHistory = [];
 	}
 
@@ -72,7 +123,7 @@ export class UndoRedoBehavior<Coordinates> {
 		}
 
 		const clonedUndoneEntry = this.cloneEntry(undoneEntry);
-		this.redoHistory.push(clonedUndoneEntry);
+		this.pushRedoEntry(clonedUndoneEntry);
 
 		const previousEntry = this.undoHistory[this.undoHistory.length - 1];
 
@@ -93,6 +144,6 @@ export class UndoRedoBehavior<Coordinates> {
 	}
 
 	commitRedo(entry: UndoRedoHistoryEntry<Coordinates>) {
-		this.undoHistory.push(this.cloneEntry(entry));
+		this.pushUndoEntry(this.cloneEntry(entry));
 	}
 }

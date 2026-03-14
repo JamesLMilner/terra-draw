@@ -240,6 +240,7 @@ describe("Undo/Redo", () => {
 			expect(undoEvents).toEqual([
 				{
 					cause: "undo",
+					stack: "session",
 					undoStackSize: 0,
 					redoStackSize: 1,
 				},
@@ -260,6 +261,7 @@ describe("Undo/Redo", () => {
 			// Assert: emitted payload reflects invalidated redo at the moment of push
 			expect(onHistoryChange).toHaveBeenLastCalledWith({
 				cause: "push",
+				stack: "session",
 				undoStackSize: 1,
 				redoStackSize: 0,
 			});
@@ -271,6 +273,7 @@ describe("Undo/Redo", () => {
 			createPolygonFeature(0.1);
 			expect(onHistoryChange).toHaveBeenLastCalledWith({
 				cause: "push",
+				stack: "session",
 				undoStackSize: 1,
 				redoStackSize: 0,
 			});
@@ -279,6 +282,7 @@ describe("Undo/Redo", () => {
 			draw.removeFeatures([drawnFeatureId]);
 			expect(onHistoryChange).toHaveBeenLastCalledWith({
 				cause: "push",
+				stack: "session",
 				undoStackSize: 2,
 				redoStackSize: 0,
 			});
@@ -290,6 +294,7 @@ describe("Undo/Redo", () => {
 			manager.undo();
 			expect(onHistoryChange).toHaveBeenLastCalledWith({
 				cause: "undo",
+				stack: "session",
 				undoStackSize: 0,
 				redoStackSize: 1,
 			});
@@ -297,6 +302,7 @@ describe("Undo/Redo", () => {
 			manager.redo();
 			expect(onHistoryChange).toHaveBeenLastCalledWith({
 				cause: "redo",
+				stack: "session",
 				undoStackSize: 1,
 				redoStackSize: 0,
 			});
@@ -310,6 +316,7 @@ describe("Undo/Redo", () => {
 			manager.undo();
 			expect(onHistoryChange).toHaveBeenLastCalledWith({
 				cause: "undo",
+				stack: "session",
 				undoStackSize: 1,
 				redoStackSize: 1,
 			});
@@ -317,6 +324,7 @@ describe("Undo/Redo", () => {
 			manager.redo();
 			expect(onHistoryChange).toHaveBeenLastCalledWith({
 				cause: "redo",
+				stack: "session",
 				undoStackSize: 2,
 				redoStackSize: 0,
 			});
@@ -351,6 +359,7 @@ describe("Undo/Redo", () => {
 			expect(pushEvents).toEqual([
 				{
 					cause: "push",
+					stack: "session",
 					undoStackSize: 1,
 					redoStackSize: 0,
 				},
@@ -359,6 +368,16 @@ describe("Undo/Redo", () => {
 	});
 
 	describe("undo", () => {
+		it("returns false when undo is unavailable", () => {
+			expect(manager.undo()).toBe(false);
+		});
+
+		it("returns true when undo is performed", () => {
+			createPolygonFeature(0.1);
+
+			expect(manager.undo()).toBe(true);
+		});
+
 		it("tracks initial drawn feature when id strategy starts at zero", () => {
 			let currentIdentifier = 0;
 			const onHistoryChange = jest.fn();
@@ -386,6 +405,7 @@ describe("Undo/Redo", () => {
 
 			expect(onHistoryChange).toHaveBeenLastCalledWith({
 				cause: "push",
+				stack: "session",
 				undoStackSize: 1,
 				redoStackSize: 0,
 			});
@@ -492,6 +512,17 @@ describe("Undo/Redo", () => {
 	});
 
 	describe("redo", () => {
+		it("returns false when redo is unavailable", () => {
+			expect(manager.redo()).toBe(false);
+		});
+
+		it("returns true when redo is performed", () => {
+			createPolygonFeature(0.1);
+			manager.undo();
+
+			expect(manager.redo()).toBe(true);
+		});
+
 		it("can undo and redo a removeFeatures call", () => {
 			createPolygonFeature(0.1);
 
@@ -586,6 +617,63 @@ describe("Undo/Redo", () => {
 		});
 	});
 
+	describe("maxStackSize", () => {
+		it("keeps only the latest undo actions when stack limit is reached", () => {
+			const limitedManager = new TerraDrawSessionUndoRedo({
+				maxStackSize: 2,
+			});
+			limitedManager.register({
+				draw,
+				onHistoryChange,
+			});
+
+			createPolygonFeature(0.1);
+			createPolygonFeature(0.2);
+			createPolygonFeature(0.3);
+
+			expect(draw.getSnapshot().length).toBe(3);
+			expect(limitedManager.undoSize()).toBe(2);
+
+			limitedManager.undo();
+			expect(draw.getSnapshot().length).toBe(2);
+
+			limitedManager.undo();
+			expect(draw.getSnapshot().length).toBe(1);
+
+			limitedManager.undo();
+			expect(draw.getSnapshot().length).toBe(1);
+		});
+
+		it("limits redo stack growth to the configured stack size", () => {
+			const limitedManager = new TerraDrawSessionUndoRedo({
+				maxStackSize: 2,
+			});
+			limitedManager.register({
+				draw,
+				onHistoryChange,
+			});
+
+			createPolygonFeature(0.1);
+			createPolygonFeature(0.2);
+			createPolygonFeature(0.3);
+
+			limitedManager.undo();
+			limitedManager.undo();
+
+			expect(limitedManager.redoSize()).toBe(2);
+
+			limitedManager.redo();
+			expect(draw.getSnapshot().length).toBe(2);
+
+			limitedManager.redo();
+			expect(draw.getSnapshot().length).toBe(3);
+
+			limitedManager.redo();
+			expect(draw.getSnapshot().length).toBe(3);
+			expect(limitedManager.redoSize()).toBe(0);
+		});
+	});
+
 	describe("built-in drawable modes", () => {
 		it.each(builtInDrawableModeCases)(
 			"tracks session undo/redo for $name",
@@ -617,6 +705,7 @@ describe("Undo/Redo", () => {
 				expect(redoStackSizeAfterDraw).toBe(0);
 				expect(modeHistoryChange).toHaveBeenLastCalledWith({
 					cause: "push",
+					stack: "session",
 					undoStackSize: undoStackSizeAfterDraw,
 					redoStackSize: redoStackSizeAfterDraw,
 				});
@@ -632,6 +721,7 @@ describe("Undo/Redo", () => {
 				expect(redoStackSizeAfterUndo).toBe(1);
 				expect(modeHistoryChange).toHaveBeenLastCalledWith({
 					cause: "undo",
+					stack: "session",
 					undoStackSize: undoStackSizeAfterUndo,
 					redoStackSize: redoStackSizeAfterUndo,
 				});
@@ -647,6 +737,7 @@ describe("Undo/Redo", () => {
 				expect(redoStackSizeAfterRedo).toBe(redoStackSizeAfterDraw);
 				expect(modeHistoryChange).toHaveBeenLastCalledWith({
 					cause: "redo",
+					stack: "session",
 					undoStackSize: undoStackSizeAfterRedo,
 					redoStackSize: redoStackSizeAfterRedo,
 				});

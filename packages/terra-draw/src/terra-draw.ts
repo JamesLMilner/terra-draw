@@ -82,11 +82,13 @@ import {
 	TerraDrawSessionUndoRedo,
 	TerraDrawSessionUndoRedoInterface,
 } from "./undo-redo/session-undo-redo";
-import {
+import { TerraDrawUndoRedoCoordinator } from "./undo-redo/undo-redo-coordinator";
+import type {
 	HistoryCause,
+	HistoryEvent,
 	StackType,
-	TerraDrawUndoRedoCoordinator,
-} from "./undo-redo/undo-redo-coordinator";
+	TerraDrawUndoRedoInterface,
+} from "./undo-redo/undo-redo-types";
 
 // Helper type to determine the instance type of a class
 type InstanceType<T extends new (...args: any[]) => any> = T extends new (
@@ -103,12 +105,7 @@ type ChangeListener = (
 ) => void;
 type SelectListener = (id: FeatureId) => void;
 type DeselectListener = (id: FeatureId) => void;
-type HistoryChangeListener = (event: {
-	cause: HistoryCause;
-	stack: StackType;
-	undoSize: number;
-	redoSize: number;
-}) => void;
+type HistoryChangeListener = (event: HistoryEvent) => void;
 
 interface TerraDrawEventListeners {
 	ready: () => void;
@@ -376,6 +373,7 @@ class TerraDraw {
 				onDeselect: onDeselect,
 				onFinish: onFinish,
 				coordinatePrecision: this._adapter.getCoordinatePrecision(),
+				undoRedoMaxStackSize: this.drawingUndoRedo?.getMaxStackSize?.(),
 			});
 		});
 
@@ -383,12 +381,8 @@ class TerraDraw {
 			this.sessionUndoRedo = sessionLevelUndoRedo;
 			sessionLevelUndoRedo.register({
 				draw: this,
-				onHistoryChange: ({ cause, undoStackSize, redoStackSize }) => {
-					this.undoRedoCoordinator?.emitSessionHistoryChange({
-						cause,
-						undoStackSize,
-						redoStackSize,
-					});
+				onHistoryChange: (historyChange) => {
+					this.undoRedoCoordinator?.emitStackHistoryChange(historyChange);
 				},
 			});
 		}
@@ -407,20 +401,16 @@ class TerraDraw {
 						this._mode.redo();
 					}
 				},
-				onHistoryChange: ({ cause, undoStackSize, redoStackSize }) => {
-					this.undoRedoCoordinator?.emitDrawingHistoryChange({
-						cause,
-						undoStackSize,
-						redoStackSize,
-					});
+				onHistoryChange: (historyChange) => {
+					this.undoRedoCoordinator?.emitStackHistoryChange(historyChange);
 				},
 			});
 		}
 
 		this.undoRedoCoordinator = new TerraDrawUndoRedoCoordinator({
-			drawing: this.drawingUndoRedo,
+			mode: this.drawingUndoRedo,
 			session: this.sessionUndoRedo,
-			shouldPreferDrawing: () => this.getModeState() === "drawing",
+			shouldPreferMode: () => this.getModeState() === "drawing",
 			onHistoryChange: (historyChange) => {
 				this._eventListeners.history.forEach((listener) => {
 					listener(historyChange);
@@ -1613,6 +1603,7 @@ export {
 	ValidationReasons,
 
 	// Undo Redo
+	type TerraDrawUndoRedoInterface,
 	type TerraDrawModeUndoRedoInterface as TerraDrawDrawingUndoRedoInterface,
 	TerraDrawModeUndoRedo as TerraDrawDrawingUndoRedo,
 	type TerraDrawUndoRedoKeyboardShortcutsInterface,

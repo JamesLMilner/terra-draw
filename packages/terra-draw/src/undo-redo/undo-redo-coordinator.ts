@@ -1,98 +1,61 @@
 import { TerraDrawModeUndoRedoInterface } from "./mode-undo-redo";
 import { TerraDrawSessionUndoRedoInterface } from "./session-undo-redo";
-
-export type StackType = (typeof StackType)[keyof typeof StackType];
-export type HistoryCause =
-	(typeof HistoryChangeCause)[keyof typeof HistoryChangeCause];
-
-type UndoRedoHistoryChange = {
-	cause: HistoryCause;
-	stack: StackType;
-	undoSize: number;
-	redoSize: number;
-};
+import {
+	HistoryChange,
+	HistoryChangeCause,
+	HistoryEvent,
+	StackType,
+} from "./undo-redo-types";
 
 type TerraDrawUndoRedoCoordinatorOptions = {
-	drawing?: TerraDrawModeUndoRedoInterface;
+	mode?: TerraDrawModeUndoRedoInterface;
 	session?: TerraDrawSessionUndoRedoInterface;
-	shouldPreferDrawing: () => boolean;
-	onHistoryChange?: (historyChange: UndoRedoHistoryChange) => void;
+	shouldPreferMode: () => boolean;
+	onHistoryChange?: (historyChange: HistoryEvent) => void;
 	shouldEmitHistoryChange?: () => boolean;
 };
 
-export const HistoryChangeCause = {
-	Undo: "undo",
-	Redo: "redo",
-	Push: "push",
-} as const;
-
-export const StackType = {
-	Mode: "mode",
-	Session: "session",
-} as const;
-
 export class TerraDrawUndoRedoCoordinator {
-	private drawing?: TerraDrawModeUndoRedoInterface;
+	private mode?: TerraDrawModeUndoRedoInterface;
 	private session?: TerraDrawSessionUndoRedoInterface;
-	private shouldPreferDrawing: () => boolean;
-	private onHistoryChange?: (historyChange: UndoRedoHistoryChange) => void;
+	private shouldPreferMode: () => boolean;
+	private onHistoryChange?: (historyChange: HistoryEvent) => void;
 	private shouldEmitHistoryChange: () => boolean;
 
 	constructor(options: TerraDrawUndoRedoCoordinatorOptions) {
-		this.drawing = options.drawing;
+		this.mode = options.mode;
 		this.session = options.session;
-		this.shouldPreferDrawing = options.shouldPreferDrawing;
+		this.shouldPreferMode = options.shouldPreferMode;
 		this.onHistoryChange = options.onHistoryChange;
 		this.shouldEmitHistoryChange =
 			options.shouldEmitHistoryChange ?? (() => true);
 	}
 
-	private emitHistoryChange(change: UndoRedoHistoryChange) {
+	emitStackHistoryChange(change: HistoryChange) {
 		if (!this.shouldEmitHistoryChange()) {
 			return;
 		}
 
 		if (this.onHistoryChange) {
-			this.onHistoryChange(change);
+			this.onHistoryChange({
+				cause: change.cause,
+				stack: change.stack,
+				undoSize: change.undoStackSize,
+				redoSize: change.redoStackSize,
+			});
 		}
 	}
 
-	emitDrawingHistoryChange(change: {
-		cause: HistoryCause;
-		undoStackSize: number;
-		redoStackSize: number;
-	}) {
-		this.emitHistoryChange({
-			cause: change.cause,
-			stack: StackType.Mode,
-			undoSize: change.undoStackSize,
-			redoSize: change.redoStackSize,
-		});
-	}
-
-	emitSessionHistoryChange(change: {
-		cause: HistoryCause;
-		undoStackSize: number;
-		redoStackSize: number;
-	}) {
-		this.emitHistoryChange({
-			cause: change.cause,
-			stack: StackType.Session,
-			undoSize: change.undoStackSize,
-			redoSize: change.redoStackSize,
-		});
-	}
-
 	private hasSessionUndo() {
-		return Boolean(this.session && this.session.undoSize() > 0);
+		return Boolean(this.session && this.session.canUndo());
 	}
 
 	private hasSessionRedo() {
-		return Boolean(this.session && this.session.redoSize() > 0);
+		return Boolean(this.session && this.session.canRedo());
 	}
 
 	private activeStackForUndo(): StackType | undefined {
-		if (this.shouldPreferDrawing() && this.drawing?.canUndo()) {
+		if (this.shouldPreferMode() && this.mode?.canUndo()) {
 			return StackType.Mode;
 		}
 
@@ -100,7 +63,7 @@ export class TerraDrawUndoRedoCoordinator {
 			return StackType.Session;
 		}
 
-		if (this.drawing?.canUndo()) {
+		if (this.mode?.canUndo()) {
 			return StackType.Mode;
 		}
 
@@ -108,7 +71,7 @@ export class TerraDrawUndoRedoCoordinator {
 	}
 
 	private activeStackForRedo(): StackType | undefined {
-		if (this.shouldPreferDrawing() && this.drawing?.canRedo()) {
+		if (this.shouldPreferMode() && this.mode?.canRedo()) {
 			return StackType.Mode;
 		}
 
@@ -116,7 +79,7 @@ export class TerraDrawUndoRedoCoordinator {
 			return StackType.Session;
 		}
 
-		if (this.drawing?.canRedo()) {
+		if (this.mode?.canRedo()) {
 			return StackType.Mode;
 		}
 
@@ -138,12 +101,11 @@ export class TerraDrawUndoRedoCoordinator {
 		}
 
 		if (stack === StackType.Mode) {
-			return this.drawing ? this.drawing.undo() : false;
+			return this.mode ? this.mode.undo() : false;
 		}
 
-		if (this.session && this.session.undoSize() > 0) {
-			this.session.undo();
-			return true;
+		if (this.session && this.session.canUndo()) {
+			return this.session.undo();
 		}
 
 		return false;
@@ -156,12 +118,11 @@ export class TerraDrawUndoRedoCoordinator {
 		}
 
 		if (stack === StackType.Mode) {
-			return this.drawing ? this.drawing.redo() : false;
+			return this.mode ? this.mode.redo() : false;
 		}
 
-		if (this.session && this.session.redoSize() > 0) {
-			this.session.redo();
-			return true;
+		if (this.session && this.session.canRedo()) {
+			return this.session.redo();
 		}
 
 		return false;
@@ -169,16 +130,30 @@ export class TerraDrawUndoRedoCoordinator {
 
 	emitPushAfterFinish() {
 		if (this.session) {
-			this.emitSessionHistoryChange({
+			this.emitStackHistoryChange({
 				cause: HistoryChangeCause.Push,
 				undoStackSize: this.session.undoSize(),
 				redoStackSize: this.session.redoSize(),
+				stack: StackType.Session,
 			});
 			return;
 		}
 
-		if (this.drawing) {
-			this.drawing.emitHistoryChange(HistoryChangeCause.Push);
+		if (this.mode) {
+			this.emitStackHistoryChange({
+				cause: HistoryChangeCause.Push,
+				undoStackSize: this.mode.undoSize(),
+				redoStackSize: this.mode.redoSize(),
+				stack: StackType.Mode,
+			});
 		}
 	}
+}
+
+export function normaliseMaxStackSize(maxStackSize?: number) {
+	if (maxStackSize === undefined || !Number.isFinite(maxStackSize)) {
+		return Number.POSITIVE_INFINITY;
+	}
+
+	return Math.max(0, Math.floor(maxStackSize));
 }

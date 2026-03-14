@@ -33,6 +33,20 @@ describe("TerraDrawModeUndoRedo", () => {
 		drawingUndoRedo = new TerraDrawModeUndoRedo();
 	});
 
+	describe("getMaxStackSize", () => {
+		it("returns Infinity by default", () => {
+			expect(drawingUndoRedo.getMaxStackSize()).toBe(Number.POSITIVE_INFINITY);
+		});
+
+		it("returns a normalized finite stack size when configured", () => {
+			drawingUndoRedo = new TerraDrawModeUndoRedo({
+				maxStackSize: 3.9,
+			});
+
+			expect(drawingUndoRedo.getMaxStackSize()).toBe(3);
+		});
+	});
+
 	describe("getHistorySizes", () => {
 		it("returns zero sizes before register", () => {
 			expect(drawingUndoRedo.getHistorySizes()).toEqual({
@@ -100,6 +114,7 @@ describe("TerraDrawModeUndoRedo", () => {
 			expect(undoMode).toHaveBeenCalledTimes(1);
 			expect(onHistoryChange).toHaveBeenCalledWith({
 				cause: "undo",
+				stack: "mode",
 				undoStackSize: 2,
 				redoStackSize: 0,
 			});
@@ -127,6 +142,7 @@ describe("TerraDrawModeUndoRedo", () => {
 			expect(redoMode).toHaveBeenCalledTimes(1);
 			expect(onHistoryChange).toHaveBeenCalledWith({
 				cause: "redo",
+				stack: "mode",
 				undoStackSize: 1,
 				redoStackSize: 3,
 			});
@@ -154,6 +170,7 @@ describe("TerraDrawModeUndoRedo", () => {
 			expect(onHistoryChange).toHaveBeenCalledTimes(1);
 			expect(onHistoryChange).toHaveBeenLastCalledWith({
 				cause: "push",
+				stack: "mode",
 				undoStackSize: 1,
 				redoStackSize: 0,
 			});
@@ -166,6 +183,7 @@ describe("TerraDrawModeUndoRedo", () => {
 			expect(onHistoryChange).toHaveBeenCalledTimes(2);
 			expect(onHistoryChange).toHaveBeenLastCalledWith({
 				cause: "push",
+				stack: "mode",
 				undoStackSize: 2,
 				redoStackSize: 0,
 			});
@@ -185,6 +203,7 @@ describe("TerraDrawModeUndoRedo", () => {
 
 			expect(onHistoryChange).toHaveBeenCalledWith({
 				cause: "push",
+				stack: "mode",
 				undoStackSize: 2,
 				redoStackSize: 1,
 			});
@@ -214,6 +233,7 @@ describe("TerraDrawModeUndoRedo", () => {
 
 			expect(onHistoryChange).toHaveBeenCalledWith({
 				cause: "push",
+				stack: "mode",
 				undoStackSize: 7,
 				redoStackSize: 2,
 			});

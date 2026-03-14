@@ -115,7 +115,6 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 	private mouseMove = false;
 	private showCoordinatePoints = false;
 	private lastMouseMoveEvent: TerraDrawMouseEvent | undefined;
-	private undoRedo = new UndoRedoBehavior<Position[][]>();
 
 	// Snapping
 	private snapping: Snapping | undefined;
@@ -138,6 +137,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 	private clickBoundingBox!: ClickBoundingBoxBehavior;
 	private mutateFeature!: MutateFeatureBehavior;
 	private readFeature!: ReadFeatureBehavior;
+	private undoRedo!: UndoRedoBehavior<Position[][]>;
 
 	constructor(options?: TerraDrawPolygonModeOptions<PolygonStyling>) {
 		super(options, true);
@@ -307,6 +307,10 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 			this.readFeature,
 			this.mutateFeature,
 		);
+
+		this.undoRedo = new UndoRedoBehavior<Position[][]>({
+			maxStackSize: config.undoRedoMaxStackSize,
+		});
 	}
 
 	/** @internal */

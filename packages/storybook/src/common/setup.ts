@@ -100,8 +100,6 @@ function createButton({
 }): HTMLButtonElement {
 	const button = document.createElement("button");
 
-	button.setAttribute("data-mode-button", "true");
-
 	button.id = id;
 	button.textContent = label;
 	button.style.background = background || COLORS.background;

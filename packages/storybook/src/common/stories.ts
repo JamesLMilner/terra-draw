@@ -967,32 +967,6 @@ const UndoRedo: Story = {
 			modeLevel: new TerraDrawModeUndoRedo(),
 			keyboardShortcuts: new TerraDrawUndoRedoKeyboardShortcuts(),
 		},
-		afterRender: (draw: TerraDraw) => {
-			const undoButton = document.createElement("button");
-			undoButton.textContent = "Undo";
-
-			const redoButton = document.createElement("button");
-			redoButton.textContent = "Redo";
-
-			redoButton.disabled = true;
-			undoButton.disabled = true;
-
-			draw.on("history", () => {
-				undoButton.disabled = !draw.canUndo();
-				redoButton.disabled = !draw.canRedo();
-			});
-
-			const element = document.querySelector('[data-testid="container"]');
-
-			undoButton.onclick = () => {
-				draw.undo();
-			};
-			redoButton.onclick = () => {
-				draw.redo();
-			};
-			element?.appendChild(undoButton);
-			element?.appendChild(redoButton);
-		},
 		...DefaultStory.args,
 	},
 };

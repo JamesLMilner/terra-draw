@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.25.1](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.25.0...terra-draw@1.25.1) (2026-03-13)
+
+
+### docs
+
+* **terra-draw:** Fix links in Drawing Modes section (#833) ([](https://github.com/JamesLMilner/terra-draw/commit/ec009c2219a6a5b1ae961433177a86bd6fdaf244)), closes [#833](https://github.com/JamesLMilner/terra-draw/issues/833)
+
+
+### fix
+
+* **terra-draw:** emit correct action for finish event for polygon onDragEnd (#836) ([](https://github.com/JamesLMilner/terra-draw/commit/37d730abec3b2e9d4d52586d7f9c46265d73f24c)), closes [#836](https://github.com/JamesLMilner/terra-draw/issues/836)
+* **terra-draw:** fix bug when changing showCoordinatePoints with updateOptions in polygon mode (#835) ([](https://github.com/JamesLMilner/terra-draw/commit/cfff133b725c6df1cf0f279e1fe454a376d38345)), closes [#835](https://github.com/JamesLMilner/terra-draw/issues/835)
+
 ## [1.25.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.24.2...terra-draw@1.25.0) (2026-02-18)
 
 

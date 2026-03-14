@@ -330,6 +330,97 @@ describe("TerraDrawPolygonMode", () => {
 			);
 			expect(coordinatePoints.length).toBe(4);
 		});
+
+		it("does not throw an error when setting showCoordinatePoints true with existing coordinate points", () => {
+			const polygonMode = new TerraDrawPolygonMode({
+				showCoordinatePoints: false,
+			});
+
+			const mockConfig = MockModeConfig(polygonMode.mode);
+
+			polygonMode.register(mockConfig);
+			polygonMode.start();
+
+			const mockPolygon = MockPolygonSquare();
+			mockConfig.store.create([
+				{
+					geometry: mockPolygon.geometry,
+					properties: mockPolygon.properties as JSONObject,
+				},
+			]);
+
+			polygonMode.updateOptions({
+				showCoordinatePoints: true,
+			});
+
+			expect(() => {
+				polygonMode.updateOptions({
+					showCoordinatePoints: true,
+				});
+			}).not.toThrow();
+		});
+
+		it("removes existing coordinate points when setting showCoordinatePoints to false", () => {
+			const polygonMode = new TerraDrawPolygonMode({
+				showCoordinatePoints: false,
+			});
+
+			const mockConfig = MockModeConfig(polygonMode.mode);
+
+			polygonMode.register(mockConfig);
+			polygonMode.start();
+
+			const mockPolygon = MockPolygonSquare();
+			const [featureId] = mockConfig.store.create([
+				{
+					geometry: mockPolygon.geometry,
+					properties: mockPolygon.properties as JSONObject,
+				},
+			]);
+
+			polygonMode.updateOptions({
+				showCoordinatePoints: true,
+			});
+
+			let coordinatePoints = mockConfig.store.copyAllWhere(
+				(properties) =>
+					properties[COMMON_PROPERTIES.COORDINATE_POINT] as boolean,
+			);
+			expect(coordinatePoints.length).toBe(4);
+
+			mockConfig.onChange.mockClear();
+
+			expect(() => {
+				polygonMode.updateOptions({
+					showCoordinatePoints: false,
+				});
+			}).not.toThrow();
+
+			expect(mockConfig.onChange).toHaveBeenCalledTimes(2);
+			expect(mockConfig.onChange).toHaveBeenNthCalledWith(
+				1,
+				[
+					expect.any(String),
+					expect.any(String),
+					expect.any(String),
+					expect.any(String),
+				],
+				"delete",
+				undefined,
+			);
+			expect(mockConfig.onChange).toHaveBeenNthCalledWith(
+				2,
+				[featureId],
+				"update",
+				{ target: "properties" },
+			);
+
+			coordinatePoints = mockConfig.store.copyAllWhere(
+				(properties) =>
+					properties[COMMON_PROPERTIES.COORDINATE_POINT] as boolean,
+			);
+			expect(coordinatePoints.length).toBe(0);
+		});
 	});
 
 	describe("afterFeatureAdded", () => {
@@ -2408,6 +2499,10 @@ describe("onDragEnd", () => {
 		);
 
 		expect(mockConfig.onFinish).toHaveBeenCalledTimes(1);
+		expect(mockConfig.onFinish).toHaveBeenNthCalledWith(1, expect.any(String), {
+			action: "edit",
+			mode: "polygon",
+		});
 	});
 });
 

@@ -12,20 +12,17 @@ import {
 	GeoJSONStoreFeatures,
 	GeoJSONStoreGeometries,
 	TerraDraw,
-	TerraDrawChanges,
-	TerraDrawDrawingUndoRedo,
+	TerraDrawModeUndoRedo,
 	TerraDrawLineStringMode,
 	TerraDrawPointMode,
 	TerraDrawPolygonMode,
 	TerraDrawUndoRedoKeyboardShortcuts,
 	TerraDrawSelectMode,
-	TerraDrawStylingFunction,
 } from "./terra-draw";
 import { TerraDrawSessionUndoRedo } from "./undo-redo/session-undo-redo";
 import { TerraDrawTestAdapter } from "./terra-draw.extensions.spec";
 import { MockKeyboardEvent } from "./test/mock-keyboard-event";
 import { MockCursorEvent } from "./test/mock-cursor-event";
-import { TerraDrawModeUndoRedo } from "./undo-redo/mode-undo-redo";
 
 describe("Terra Draw", () => {
 	let adapter: TerraDrawTestAdapter;
@@ -4191,7 +4188,7 @@ describe("Terra Draw", () => {
 				adapter,
 				modes: [lineStringMode],
 				undoRedo: {
-					modeLevel: new TerraDrawDrawingUndoRedo(),
+					modeLevel: new TerraDrawModeUndoRedo(),
 				},
 			});
 
@@ -4327,7 +4324,7 @@ describe("Terra Draw", () => {
 					adapter,
 					modes: [pointMode],
 					undoRedo: {
-						modeLevel: new TerraDrawDrawingUndoRedo(),
+						modeLevel: new TerraDrawModeUndoRedo(),
 					},
 				});
 
@@ -4835,7 +4832,7 @@ describe("Terra Draw", () => {
 				adapter,
 				modes: [lineStringMode],
 				undoRedo: {
-					modeLevel: new TerraDrawDrawingUndoRedo(),
+					modeLevel: new TerraDrawModeUndoRedo(),
 					keyboardShortcuts: new TerraDrawUndoRedoKeyboardShortcuts(),
 				},
 			});
@@ -4973,7 +4970,7 @@ describe("Terra Draw", () => {
 				adapter,
 				modes: [lineStringMode],
 				undoRedo: {
-					modeLevel: new TerraDrawDrawingUndoRedo(),
+					modeLevel: new TerraDrawModeUndoRedo(),
 					keyboardShortcuts: new TerraDrawUndoRedoKeyboardShortcuts(),
 				},
 			});
@@ -5008,7 +5005,7 @@ describe("Terra Draw", () => {
 				adapter,
 				modes: [lineStringMode],
 				undoRedo: {
-					modeLevel: new TerraDrawDrawingUndoRedo(),
+					modeLevel: new TerraDrawModeUndoRedo(),
 					keyboardShortcuts: shortcutMatcher,
 				},
 			});
@@ -5058,7 +5055,7 @@ describe("Terra Draw", () => {
 				adapter,
 				modes: [lineStringMode],
 				undoRedo: {
-					modeLevel: new TerraDrawDrawingUndoRedo(),
+					modeLevel: new TerraDrawModeUndoRedo(),
 					keyboardShortcuts: new TerraDrawUndoRedoKeyboardShortcuts({
 						undo: [{ key: "u", heldKeys: ["Meta"] }],
 						redo: [{ key: "r", heldKeys: ["Meta"] }],

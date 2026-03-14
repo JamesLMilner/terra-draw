@@ -15,7 +15,7 @@ import {
 	HexColor,
 	TerraDrawMarkerMode,
 	TerraDrawSessionUndoRedo,
-	TerraDrawDrawingUndoRedo,
+	TerraDrawModeUndoRedo,
 	TerraDrawUndoRedoKeyboardShortcuts,
 } from "../../../terra-draw/src/terra-draw";
 import {
@@ -964,7 +964,7 @@ const UndoRedo: Story = {
 		],
 		undoRedoOptions: {
 			sessionLevel: new TerraDrawSessionUndoRedo(),
-			modeLevel: new TerraDrawDrawingUndoRedo(),
+			modeLevel: new TerraDrawModeUndoRedo(),
 			keyboardShortcuts: new TerraDrawUndoRedoKeyboardShortcuts(),
 		},
 		afterRender: (draw: TerraDraw) => {

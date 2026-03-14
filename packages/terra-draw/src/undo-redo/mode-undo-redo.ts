@@ -1,5 +1,5 @@
 import { TerraDrawModeState } from "../common";
-import { normaliseMaxStackSize } from "./undo-redo-coordinator";
+import { normaliseMaxStackSize } from "./normalise-stack-size";
 import {
 	HistoryCause,
 	HistoryChange,

@@ -9,6 +9,7 @@ import {
 	TerraDrawUndoRedoInterface,
 	TerraDrawUndoRedoOptions,
 } from "./undo-redo-types";
+import { normaliseMaxStackSize } from "./normalise-stack-size";
 
 type BatchEntry = {
 	id: FeatureId;

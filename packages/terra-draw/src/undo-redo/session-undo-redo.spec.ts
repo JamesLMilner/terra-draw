@@ -1,4 +1,5 @@
 import { FeatureId } from "../extend";
+import { COMMON_PROPERTIES } from "../common";
 import {
 	GeoJSONStoreFeatures,
 	TerraDraw,
@@ -671,6 +672,115 @@ describe("Undo/Redo", () => {
 			limitedManager.redo();
 			expect(draw.getSnapshot().length).toBe(3);
 			expect(limitedManager.redoSize()).toBe(0);
+		});
+	});
+
+	describe("showCoordinatePoints", () => {
+		const getCoordinatePointCount = (currentDraw: TerraDraw) => {
+			return currentDraw.getSnapshot().filter((feature) => {
+				return Boolean(feature.properties[COMMON_PROPERTIES.COORDINATE_POINT]);
+			}).length;
+		};
+
+		const getExpectedCoordinatePointCount = (currentDraw: TerraDraw) => {
+			return currentDraw
+				.getSnapshot()
+				.filter((feature) => {
+					return (
+						feature.geometry.type === "Polygon" &&
+						feature.properties.mode === "polygon"
+					);
+				})
+				.reduce((count, feature) => {
+					const polygonCoordinates = feature.geometry.coordinates as [
+						number,
+						number,
+					][][];
+					return count + polygonCoordinates[0].length - 1;
+				}, 0);
+		};
+
+		it("keeps coordinate point count correct across undo and redo for a single polygon", () => {
+			const polygonMode = new TerraDrawPolygonMode({
+				showCoordinatePoints: true,
+			});
+			const drawWithCoordinatePoints = new TerraDraw({
+				adapter,
+				modes: [polygonMode],
+			});
+
+			drawWithCoordinatePoints.start();
+			drawWithCoordinatePoints.setMode("polygon");
+
+			const managerWithCoordinatePoints = new TerraDrawSessionUndoRedo();
+			managerWithCoordinatePoints.register({
+				draw: drawWithCoordinatePoints,
+				onHistoryChange: jest.fn(),
+			});
+
+			drawPolygonFeature(polygonMode, 0.1);
+			expect(getCoordinatePointCount(drawWithCoordinatePoints)).toBe(
+				getExpectedCoordinatePointCount(drawWithCoordinatePoints),
+			);
+
+			managerWithCoordinatePoints.undo();
+			expect(getCoordinatePointCount(drawWithCoordinatePoints)).toBe(
+				getExpectedCoordinatePointCount(drawWithCoordinatePoints),
+			);
+
+			managerWithCoordinatePoints.redo();
+			expect(getCoordinatePointCount(drawWithCoordinatePoints)).toBe(
+				getExpectedCoordinatePointCount(drawWithCoordinatePoints),
+			);
+		});
+
+		it("keeps coordinate point count correct across multiple undo and redo operations", () => {
+			const polygonMode = new TerraDrawPolygonMode({
+				showCoordinatePoints: true,
+			});
+			const drawWithCoordinatePoints = new TerraDraw({
+				adapter,
+				modes: [polygonMode],
+			});
+
+			drawWithCoordinatePoints.start();
+			drawWithCoordinatePoints.setMode("polygon");
+
+			const managerWithCoordinatePoints = new TerraDrawSessionUndoRedo();
+			managerWithCoordinatePoints.register({
+				draw: drawWithCoordinatePoints,
+				onHistoryChange: jest.fn(),
+			});
+
+			drawPolygonFeature(polygonMode, 0.1);
+			expect(getCoordinatePointCount(drawWithCoordinatePoints)).toBe(
+				getExpectedCoordinatePointCount(drawWithCoordinatePoints),
+			);
+
+			drawPolygonFeature(polygonMode, 0.2);
+			expect(getCoordinatePointCount(drawWithCoordinatePoints)).toBe(
+				getExpectedCoordinatePointCount(drawWithCoordinatePoints),
+			);
+
+			managerWithCoordinatePoints.undo();
+			expect(getCoordinatePointCount(drawWithCoordinatePoints)).toBe(
+				getExpectedCoordinatePointCount(drawWithCoordinatePoints),
+			);
+
+			managerWithCoordinatePoints.undo();
+			expect(getCoordinatePointCount(drawWithCoordinatePoints)).toBe(
+				getExpectedCoordinatePointCount(drawWithCoordinatePoints),
+			);
+
+			managerWithCoordinatePoints.redo();
+			expect(getCoordinatePointCount(drawWithCoordinatePoints)).toBe(
+				getExpectedCoordinatePointCount(drawWithCoordinatePoints),
+			);
+
+			managerWithCoordinatePoints.redo();
+			expect(getCoordinatePointCount(drawWithCoordinatePoints)).toBe(
+				getExpectedCoordinatePointCount(drawWithCoordinatePoints),
+			);
 		});
 	});
 

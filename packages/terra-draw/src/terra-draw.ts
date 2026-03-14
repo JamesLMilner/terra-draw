@@ -75,15 +75,18 @@ import {
 	type TerraDrawUndoRedoKeyboardShortcutsInterface,
 } from "./undo-redo/keyboard-shortcuts";
 import {
-	TerraDrawDrawingUndoRedo,
-	type TerraDrawDrawingUndoRedoInterface,
-} from "./undo-redo/drawing-undo-redo";
+	TerraDrawModeUndoRedo,
+	type TerraDrawModeUndoRedoInterface,
+} from "./undo-redo/mode-undo-redo";
 import {
-	HistoryChangeCause,
 	TerraDrawSessionUndoRedo,
 	TerraDrawSessionUndoRedoInterface,
 } from "./undo-redo/session-undo-redo";
-import { TerraDrawUndoRedoCoordinator } from "./undo-redo/undo-redo-coordinator";
+import {
+	HistoryCause,
+	StackType,
+	TerraDrawUndoRedoCoordinator,
+} from "./undo-redo/undo-redo-coordinator";
 
 // Helper type to determine the instance type of a class
 type InstanceType<T extends new (...args: any[]) => any> = T extends new (
@@ -101,8 +104,8 @@ type ChangeListener = (
 type SelectListener = (id: FeatureId) => void;
 type DeselectListener = (id: FeatureId) => void;
 type HistoryChangeListener = (event: {
-	cause: HistoryChangeCause;
-	stack: "session" | "drawing";
+	cause: HistoryCause;
+	stack: StackType;
 	undoSize: number;
 	redoSize: number;
 }) => void;
@@ -148,7 +151,7 @@ class TerraDraw {
 	private _instanceSelectModes: string[];
 	private sessionUndoRedoEnabled = false;
 	private keyboardShortcutsMatcher?: TerraDrawUndoRedoKeyboardShortcutsInterface;
-	private drawingUndoRedo?: TerraDrawDrawingUndoRedoInterface;
+	private drawingUndoRedo?: TerraDrawModeUndoRedoInterface;
 	private sessionUndoRedo?: TerraDrawSessionUndoRedoInterface;
 	private undoRedoCoordinator?: TerraDrawUndoRedoCoordinator;
 
@@ -158,7 +161,7 @@ class TerraDraw {
 		idStrategy?: IdStrategy<FeatureId>;
 		tracked?: boolean;
 		undoRedo?: {
-			drawingLevel?: TerraDrawDrawingUndoRedoInterface;
+			modeLevel?: TerraDrawModeUndoRedoInterface;
 			sessionLevel?: TerraDrawSessionUndoRedoInterface;
 			keyboardShortcuts?: TerraDrawUndoRedoKeyboardShortcutsInterface;
 		};
@@ -167,9 +170,9 @@ class TerraDraw {
 		this._instanceSelectModes = [];
 
 		// Undo/Redo options
-		const drawingLevelUndoRedo = options?.undoRedo?.drawingLevel;
-		if (drawingLevelUndoRedo) {
-			this.drawingUndoRedo = drawingLevelUndoRedo;
+		const modeLevelUndoRedo = options?.undoRedo?.modeLevel;
+		if (modeLevelUndoRedo) {
+			this.drawingUndoRedo = modeLevelUndoRedo;
 		}
 
 		const keyboardShortcutsMatcher = options?.undoRedo?.keyboardShortcuts;
@@ -1610,8 +1613,8 @@ export {
 	ValidationReasons,
 
 	// Undo Redo
-	type TerraDrawDrawingUndoRedoInterface,
-	TerraDrawDrawingUndoRedo,
+	type TerraDrawModeUndoRedoInterface as TerraDrawDrawingUndoRedoInterface,
+	TerraDrawModeUndoRedo as TerraDrawDrawingUndoRedo,
 	type TerraDrawUndoRedoKeyboardShortcutsInterface,
 	TerraDrawUndoRedoKeyboardShortcuts,
 	type TerraDrawSessionUndoRedoInterface,

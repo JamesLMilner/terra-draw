@@ -1,8 +1,9 @@
-import { TerraDrawDrawingUndoRedoInterface } from "./drawing-undo-redo";
+import { TerraDrawModeUndoRedoInterface } from "./mode-undo-redo";
 import { TerraDrawSessionUndoRedoInterface } from "./session-undo-redo";
 
-type StackType = "drawing" | "session";
-type HistoryCause = "undo" | "redo" | "push";
+export type StackType = (typeof StackType)[keyof typeof StackType];
+export type HistoryCause =
+	(typeof HistoryChangeCause)[keyof typeof HistoryChangeCause];
 
 type UndoRedoHistoryChange = {
 	cause: HistoryCause;
@@ -12,15 +13,26 @@ type UndoRedoHistoryChange = {
 };
 
 type TerraDrawUndoRedoCoordinatorOptions = {
-	drawing?: TerraDrawDrawingUndoRedoInterface;
+	drawing?: TerraDrawModeUndoRedoInterface;
 	session?: TerraDrawSessionUndoRedoInterface;
 	shouldPreferDrawing: () => boolean;
 	onHistoryChange?: (historyChange: UndoRedoHistoryChange) => void;
 	shouldEmitHistoryChange?: () => boolean;
 };
 
+export const HistoryChangeCause = {
+	Undo: "undo",
+	Redo: "redo",
+	Push: "push",
+} as const;
+
+export const StackType = {
+	Mode: "mode",
+	Session: "session",
+} as const;
+
 export class TerraDrawUndoRedoCoordinator {
-	private drawing?: TerraDrawDrawingUndoRedoInterface;
+	private drawing?: TerraDrawModeUndoRedoInterface;
 	private session?: TerraDrawSessionUndoRedoInterface;
 	private shouldPreferDrawing: () => boolean;
 	private onHistoryChange?: (historyChange: UndoRedoHistoryChange) => void;
@@ -52,7 +64,7 @@ export class TerraDrawUndoRedoCoordinator {
 	}) {
 		this.emitHistoryChange({
 			cause: change.cause,
-			stack: "drawing",
+			stack: StackType.Mode,
 			undoSize: change.undoStackSize,
 			redoSize: change.redoStackSize,
 		});
@@ -65,7 +77,7 @@ export class TerraDrawUndoRedoCoordinator {
 	}) {
 		this.emitHistoryChange({
 			cause: change.cause,
-			stack: "session",
+			stack: StackType.Session,
 			undoSize: change.undoStackSize,
 			redoSize: change.redoStackSize,
 		});
@@ -81,15 +93,15 @@ export class TerraDrawUndoRedoCoordinator {
 
 	private activeStackForUndo(): StackType | undefined {
 		if (this.shouldPreferDrawing() && this.drawing?.canUndo()) {
-			return "drawing";
+			return StackType.Mode;
 		}
 
 		if (this.hasSessionUndo()) {
-			return "session";
+			return StackType.Session;
 		}
 
 		if (this.drawing?.canUndo()) {
-			return "drawing";
+			return StackType.Mode;
 		}
 
 		return undefined;
@@ -97,15 +109,15 @@ export class TerraDrawUndoRedoCoordinator {
 
 	private activeStackForRedo(): StackType | undefined {
 		if (this.shouldPreferDrawing() && this.drawing?.canRedo()) {
-			return "drawing";
+			return StackType.Mode;
 		}
 
 		if (this.hasSessionRedo()) {
-			return "session";
+			return StackType.Session;
 		}
 
 		if (this.drawing?.canRedo()) {
-			return "drawing";
+			return StackType.Mode;
 		}
 
 		return undefined;
@@ -125,7 +137,7 @@ export class TerraDrawUndoRedoCoordinator {
 			return false;
 		}
 
-		if (stack === "drawing") {
+		if (stack === StackType.Mode) {
 			return this.drawing ? this.drawing.undo() : false;
 		}
 
@@ -143,7 +155,7 @@ export class TerraDrawUndoRedoCoordinator {
 			return false;
 		}
 
-		if (stack === "drawing") {
+		if (stack === StackType.Mode) {
 			return this.drawing ? this.drawing.redo() : false;
 		}
 
@@ -158,7 +170,7 @@ export class TerraDrawUndoRedoCoordinator {
 	emitPushAfterFinish() {
 		if (this.session) {
 			this.emitSessionHistoryChange({
-				cause: "push",
+				cause: HistoryChangeCause.Push,
 				undoStackSize: this.session.undoSize(),
 				redoStackSize: this.session.redoSize(),
 			});
@@ -166,7 +178,7 @@ export class TerraDrawUndoRedoCoordinator {
 		}
 
 		if (this.drawing) {
-			this.drawing.emitHistoryChange("push");
+			this.drawing.emitHistoryChange(HistoryChangeCause.Push);
 		}
 	}
 }

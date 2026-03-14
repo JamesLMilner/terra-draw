@@ -158,17 +158,17 @@ test.describe("undo/redo", () => {
 			await page.getByText("Clear", { exact: true }).click();
 			await expectPaths({ page, count: 0 });
 
-			await page.keyboard.press("Control+KeyZ");
-			await expectPaths({ page, count: 1 });
+			await changeMode({ page, mode: "select" });
+			await page.mouse.click(mapDiv.width / 2, mapDiv.height / 2);
 
 			await page.keyboard.press("Control+KeyZ");
 			await expectPaths({ page, count: 2 });
 
 			await page.keyboard.press("Control+KeyY");
-			await expectPaths({ page, count: 1 });
-
-			await page.keyboard.press("Control+KeyY");
 			await expectPaths({ page, count: 0 });
+
+			await page.keyboard.press("Control+KeyZ");
+			await expectPaths({ page, count: 2 });
 		});
 
 		test("undo/redo with multiple modes", async ({ page }) => {

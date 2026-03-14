@@ -1,5 +1,6 @@
 import { FeatureId } from "../extend";
 import {
+	GeoJSONStoreFeatures,
 	TerraDraw,
 	TerraDrawAngledRectangleMode,
 	TerraDrawCircleMode,
@@ -26,6 +27,28 @@ describe("Undo/Redo", () => {
 		polygonMode.onClick(MockCursorEvent({ lng: size, lat: 0 }));
 		polygonMode.onClick(MockCursorEvent({ lng: size, lat: size }));
 		polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+	};
+
+	const createPolygonFeatureForAddFeatures = (
+		size = 0.1,
+	): GeoJSONStoreFeatures => {
+		return {
+			type: "Feature",
+			geometry: {
+				type: "Polygon",
+				coordinates: [
+					[
+						[0, 0],
+						[size, 0],
+						[size, size],
+						[0, 0],
+					],
+				],
+			},
+			properties: {
+				mode: "polygon",
+			},
+		};
 	};
 
 	function expectedStack(onHistoryChange: jest.Mock) {
@@ -414,6 +437,57 @@ describe("Undo/Redo", () => {
 
 			manager.undo();
 			expectFeatures(1);
+		});
+
+		it("undoing clear restores all cleared features with a single undo", () => {
+			createPolygonFeature(0.1);
+			createPolygonFeature(0.2);
+			expectFeatures(2);
+
+			draw.clear();
+			expectFeatures(0);
+
+			manager.undo();
+			expectFeatures(2);
+		});
+
+		it("clearing multiple features adds one undo action", () => {
+			createPolygonFeature(0.1);
+			createPolygonFeature(0.2);
+			expectStack({ undo: 2, redo: 0 });
+
+			draw.clear();
+			expectFeatures(0);
+			expectStack({ undo: 3, redo: 0 });
+		});
+
+		it("tracks addFeatures so programmatically added features can be undone and redone", () => {
+			draw.addFeatures([
+				createPolygonFeatureForAddFeatures(0.1),
+				createPolygonFeatureForAddFeatures(0.2),
+			]);
+
+			expectFeatures(2);
+
+			manager.undo();
+			expectFeatures(0);
+
+			manager.redo();
+			expectFeatures(2);
+		});
+
+		it("undoes clear for features created through addFeatures", () => {
+			draw.addFeatures([
+				createPolygonFeatureForAddFeatures(0.1),
+				createPolygonFeatureForAddFeatures(0.2),
+			]);
+			expectFeatures(2);
+
+			draw.clear();
+			expectFeatures(0);
+
+			manager.undo();
+			expectFeatures(2);
 		});
 	});
 

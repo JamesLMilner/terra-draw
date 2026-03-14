@@ -25,6 +25,7 @@ import { TerraDrawSessionUndoRedo } from "./undo-redo/session-undo-redo";
 import { TerraDrawTestAdapter } from "./terra-draw.extensions.spec";
 import { MockKeyboardEvent } from "./test/mock-keyboard-event";
 import { MockCursorEvent } from "./test/mock-cursor-event";
+import { TerraDrawModeUndoRedo } from "./undo-redo/mode-undo-redo";
 
 describe("Terra Draw", () => {
 	let adapter: TerraDrawTestAdapter;
@@ -4190,7 +4191,7 @@ describe("Terra Draw", () => {
 				adapter,
 				modes: [lineStringMode],
 				undoRedo: {
-					drawingLevel: new TerraDrawDrawingUndoRedo(),
+					modeLevel: new TerraDrawDrawingUndoRedo(),
 				},
 			});
 
@@ -4207,7 +4208,7 @@ describe("Terra Draw", () => {
 			expect(draw.undo()).toBe(true);
 			expect(callback).toHaveBeenCalledWith({
 				cause: "undo",
-				stack: "drawing",
+				stack: "mode",
 				undoSize: 1,
 				redoSize: 1,
 			});
@@ -4215,19 +4216,19 @@ describe("Terra Draw", () => {
 			expect(draw.redo()).toBe(true);
 			expect(callback).toHaveBeenCalledWith({
 				cause: "redo",
-				stack: "drawing",
+				stack: "mode",
 				undoSize: 2,
 				redoSize: 0,
 			});
 		});
 
-		it("it calls on history push while drawing stack grows", () => {
+		it("it calls on history push while mode stack grows", () => {
 			const lineStringMode = new TerraDrawLineStringMode();
 			const draw = new TerraDraw({
 				adapter,
 				modes: [lineStringMode],
 				undoRedo: {
-					drawingLevel: new TerraDrawDrawingUndoRedo(),
+					modeLevel: new TerraDrawModeUndoRedo(),
 				},
 			});
 
@@ -4243,7 +4244,7 @@ describe("Terra Draw", () => {
 
 			expect(callback).toHaveBeenCalledWith({
 				cause: "push",
-				stack: "drawing",
+				stack: "mode",
 				undoSize: 1,
 				redoSize: 0,
 			});
@@ -4326,7 +4327,7 @@ describe("Terra Draw", () => {
 					adapter,
 					modes: [pointMode],
 					undoRedo: {
-						drawingLevel: new TerraDrawDrawingUndoRedo(),
+						modeLevel: new TerraDrawDrawingUndoRedo(),
 					},
 				});
 
@@ -4340,7 +4341,7 @@ describe("Terra Draw", () => {
 
 				expect(callback).toHaveBeenLastCalledWith({
 					cause: "push",
-					stack: "drawing",
+					stack: "mode",
 					undoSize: 0,
 					redoSize: 0,
 				});
@@ -4834,7 +4835,7 @@ describe("Terra Draw", () => {
 				adapter,
 				modes: [lineStringMode],
 				undoRedo: {
-					drawingLevel: new TerraDrawDrawingUndoRedo(),
+					modeLevel: new TerraDrawDrawingUndoRedo(),
 					keyboardShortcuts: new TerraDrawUndoRedoKeyboardShortcuts(),
 				},
 			});
@@ -4972,7 +4973,7 @@ describe("Terra Draw", () => {
 				adapter,
 				modes: [lineStringMode],
 				undoRedo: {
-					drawingLevel: new TerraDrawDrawingUndoRedo(),
+					modeLevel: new TerraDrawDrawingUndoRedo(),
 					keyboardShortcuts: new TerraDrawUndoRedoKeyboardShortcuts(),
 				},
 			});
@@ -5007,7 +5008,7 @@ describe("Terra Draw", () => {
 				adapter,
 				modes: [lineStringMode],
 				undoRedo: {
-					drawingLevel: new TerraDrawDrawingUndoRedo(),
+					modeLevel: new TerraDrawDrawingUndoRedo(),
 					keyboardShortcuts: shortcutMatcher,
 				},
 			});
@@ -5057,7 +5058,7 @@ describe("Terra Draw", () => {
 				adapter,
 				modes: [lineStringMode],
 				undoRedo: {
-					drawingLevel: new TerraDrawDrawingUndoRedo(),
+					modeLevel: new TerraDrawDrawingUndoRedo(),
 					keyboardShortcuts: new TerraDrawUndoRedoKeyboardShortcuts({
 						undo: [{ key: "u", heldKeys: ["Meta"] }],
 						redo: [{ key: "r", heldKeys: ["Meta"] }],

@@ -964,7 +964,7 @@ const UndoRedo: Story = {
 		],
 		undoRedoOptions: {
 			sessionLevel: new TerraDrawSessionUndoRedo(),
-			drawingLevel: new TerraDrawDrawingUndoRedo(),
+			modeLevel: new TerraDrawDrawingUndoRedo(),
 			keyboardShortcuts: new TerraDrawUndoRedoKeyboardShortcuts(),
 		},
 		afterRender: (draw: TerraDraw) => {

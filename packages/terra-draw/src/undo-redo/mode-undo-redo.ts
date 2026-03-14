@@ -1,12 +1,17 @@
-type DrawingHistoryChangeCause = "undo" | "redo" | "push";
+import { TerraDrawModeState } from "../common";
+import {
+	HistoryCause,
+	HistoryChangeCause,
+	StackType,
+} from "./undo-redo-coordinator";
 
 type DrawingHistoryChange = {
-	cause: DrawingHistoryChangeCause;
+	cause: HistoryCause;
 	undoStackSize: number;
 	redoStackSize: number;
 };
 
-export interface TerraDrawDrawingUndoRedoInterface {
+export interface TerraDrawModeUndoRedoInterface {
 	register(options: {
 		getModeState: () => string;
 		getModeHistorySizes: () => { undoSize: number; redoSize: number };
@@ -24,13 +29,11 @@ export interface TerraDrawDrawingUndoRedoInterface {
 		undoSize: number;
 		redoSize: number;
 	}): void;
-	emitHistoryChange(cause: DrawingHistoryChangeCause): void;
+	emitHistoryChange(cause: HistoryCause): void;
 }
 
-export class TerraDrawDrawingUndoRedo
-	implements TerraDrawDrawingUndoRedoInterface
-{
-	private getModeState: (() => string) | undefined;
+export class TerraDrawModeUndoRedo implements TerraDrawModeUndoRedoInterface {
+	private getModeState: (() => TerraDrawModeState) | undefined;
 	private getModeHistorySizes:
 		| (() => { undoSize: number; redoSize: number })
 		| undefined;
@@ -46,7 +49,7 @@ export class TerraDrawDrawingUndoRedo
 	};
 
 	register(options: {
-		getModeState: () => string;
+		getModeState: () => TerraDrawModeState;
 		getModeHistorySizes: () => { undoSize: number; redoSize: number };
 		undoMode: () => void;
 		redoMode: () => void;
@@ -87,7 +90,7 @@ export class TerraDrawDrawingUndoRedo
 		}
 
 		this.undoMode();
-		this.emitHistoryChange("undo");
+		this.emitHistoryChange(HistoryChangeCause.Undo);
 		return true;
 	}
 
@@ -97,7 +100,7 @@ export class TerraDrawDrawingUndoRedo
 		}
 
 		this.redoMode();
-		this.emitHistoryChange("redo");
+		this.emitHistoryChange(HistoryChangeCause.Redo);
 		return true;
 	}
 
@@ -119,7 +122,7 @@ export class TerraDrawDrawingUndoRedo
 			currentHistorySizes.undoSize !== this.lastHistorySizes.undoSize ||
 			currentHistorySizes.redoSize !== this.lastHistorySizes.redoSize
 		) {
-			this.emitHistoryChange("push");
+			this.emitHistoryChange(HistoryChangeCause.Push);
 		}
 	}
 
@@ -133,11 +136,11 @@ export class TerraDrawDrawingUndoRedo
 			after.undoSize !== before.undoSize ||
 			after.redoSize !== before.redoSize
 		) {
-			this.emitHistoryChange("push");
+			this.emitHistoryChange(HistoryChangeCause.Push);
 		}
 	}
 
-	emitHistoryChange(cause: DrawingHistoryChangeCause) {
+	emitHistoryChange(cause: HistoryCause) {
 		if (!this.onHistoryChange) {
 			return;
 		}

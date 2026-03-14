@@ -1,12 +1,26 @@
 import { FeatureId } from "../extend";
+import { TerraDrawOnChangeContext } from "../common";
 import { GeoJSONStoreFeatures, TerraDraw } from "../terra-draw";
-
-export type HistoryChangeCause = "undo" | "redo" | "push";
+import {
+	HistoryCause,
+	HistoryChangeCause,
+	StackType,
+} from "./undo-redo-coordinator";
 
 type HistoryChange = {
-	cause: HistoryChangeCause;
+	cause: HistoryCause;
 	undoStackSize: number;
 	redoStackSize: number;
+};
+
+type BatchEntry = {
+	id: FeatureId;
+	toIndex: number;
+	snapshot: GeoJSONStoreFeatures;
+};
+
+type StackEntryMetadata = {
+	entries: BatchEntry[];
 };
 
 export interface TerraDrawSessionUndoRedoInterface {
@@ -24,12 +38,15 @@ type RedoStackEntry = {
 	id: FeatureId;
 	toIndex: number;
 	snapshot?: GeoJSONStoreFeatures;
-	action?: "create" | "update" | "delete";
+	action: "create" | "update" | "delete" | "batch-create" | "batch-delete";
+	metadata?: StackEntryMetadata;
 };
 
 type UndoStackEntry = {
 	id: FeatureId;
 	toIndex: number;
+	action: "single" | "batch-create" | "batch-delete";
+	metadata?: StackEntryMetadata;
 };
 
 export class TerraDrawSessionUndoRedo
@@ -40,6 +57,7 @@ export class TerraDrawSessionUndoRedo
 
 	private historyById: { [key: string]: GeoJSONStoreFeatures[] } = {};
 	private undoStack: UndoStackEntry[] = [];
+	private ignoreProgrammaticCreate: Record<FeatureId, boolean> = {};
 	private ignoreProgrammaticDelete: Record<FeatureId, boolean> = {};
 	private redoStack: RedoStackEntry[] = [];
 
@@ -63,7 +81,7 @@ export class TerraDrawSessionUndoRedo
 		this.onHistoryChange = options.onHistoryChange;
 	}
 
-	private emitStackChange = (cause: HistoryChangeCause) => {
+	private emitStackChange = (cause: HistoryCause) => {
 		this.onHistoryChange &&
 			this.onHistoryChange({
 				cause,
@@ -72,17 +90,94 @@ export class TerraDrawSessionUndoRedo
 			});
 	};
 
-	private handleChange = (ids: FeatureId[], type: string) => {
-		if (!this.draw || this.draw.getModeState() === "drawing") {
+	private handleChange = (
+		ids: FeatureId[],
+		type: string,
+		context?: TerraDrawOnChangeContext,
+	) => {
+		if (!this.draw || this.isDrawing()) {
 			return;
 		}
 
-		if (type !== "delete") {
+		if (type !== "delete" && type !== "create") {
+			return;
+		}
+
+		if (type === "create") {
+			const isApiOrigin =
+				context !== undefined &&
+				"origin" in context &&
+				context.origin === "api";
+
+			if (!isApiOrigin) {
+				return;
+			}
+
+			let recordedCreate = false;
+			const created = Array.isArray(ids) ? ids : [ids];
+			const creationsForBatch: {
+				id: FeatureId;
+				toIndex: number;
+				snapshot: GeoJSONStoreFeatures;
+			}[] = [];
+
+			for (const id of created) {
+				if (this.ignoreProgrammaticCreate[id]) {
+					delete this.ignoreProgrammaticCreate[id];
+					continue;
+				}
+
+				const key = String(id);
+				const feature = this.draw.getSnapshotFeature(id);
+				if (!feature) {
+					continue;
+				}
+
+				if (!this.historyById[key]) {
+					this.historyById[key] = [];
+				}
+
+				this.historyById[key].push(feature);
+				const toIndex = this.historyById[key].length - 1;
+				creationsForBatch.push({
+					id,
+					toIndex,
+					snapshot: feature,
+				});
+				recordedCreate = true;
+			}
+
+			if (creationsForBatch.length > 1) {
+				this.undoStack.push({
+					id: creationsForBatch[0].id,
+					toIndex: creationsForBatch[0].toIndex,
+					action: "batch-create",
+					metadata: { entries: creationsForBatch },
+				});
+			} else if (creationsForBatch.length === 1) {
+				const creation = creationsForBatch[0];
+				this.undoStack.push({
+					id: creation.id,
+					toIndex: creation.toIndex,
+					action: "single",
+				});
+			}
+
+			if (recordedCreate) {
+				this.redoStack.length = 0;
+				this.emitStackChange(HistoryChangeCause.Push);
+			}
+
 			return;
 		}
 
 		let recorded = false;
 		const deleted = Array.isArray(ids) ? ids : [ids];
+		const deletionsForBatch: {
+			id: FeatureId;
+			toIndex: number;
+			snapshot: GeoJSONStoreFeatures;
+		}[] = [];
 		for (const id of deleted) {
 			const key = String(id);
 
@@ -100,18 +195,40 @@ export class TerraDrawSessionUndoRedo
 			// Treat deletes (including clear) as actions that can be undone by re-adding the last snapshot
 			const lastIndex = this.historyById[key].length - 1;
 			if (lastIndex >= 0) {
-				this.undoStack.push({
+				const snapshot = this.historyById[key][lastIndex];
+				if (!snapshot) {
+					continue;
+				}
+
+				deletionsForBatch.push({
 					id,
 					toIndex: lastIndex,
+					snapshot,
 				});
 				recorded = true;
 			}
 		}
 
+		if (deletionsForBatch.length > 1) {
+			this.undoStack.push({
+				id: deletionsForBatch[0].id,
+				toIndex: deletionsForBatch[0].toIndex,
+				action: "batch-delete",
+				metadata: { entries: deletionsForBatch },
+			});
+		} else if (deletionsForBatch.length === 1) {
+			const deletion = deletionsForBatch[0];
+			this.undoStack.push({
+				id: deletion.id,
+				toIndex: deletion.toIndex,
+				action: "single",
+			});
+		}
+
 		// Any new user-driven delete should invalidate the redo history
 		if (recorded) {
 			this.redoStack.length = 0;
-			this.emitStackChange("push");
+			this.emitStackChange(HistoryChangeCause.Push);
 		}
 	};
 
@@ -143,13 +260,18 @@ export class TerraDrawSessionUndoRedo
 			this.undoStack.push({
 				id,
 				toIndex: this.historyById[key].length - 1,
+				action: "single",
 			});
-			this.emitStackChange("push");
+			this.emitStackChange(HistoryChangeCause.Push);
 		}
 	};
 
+	private isDrawing() {
+		return this.draw ? this.draw.getModeState() === "drawing" : false;
+	}
+
 	undo() {
-		if (!this.draw || this.draw.getModeState() === "drawing") {
+		if (!this.draw || this.isDrawing()) {
 			return;
 		}
 
@@ -157,7 +279,58 @@ export class TerraDrawSessionUndoRedo
 
 		const undoStackEntry = this.undoStack.pop();
 		if (!undoStackEntry) {
-			this.emitStackChange("undo");
+			this.emitStackChange(HistoryChangeCause.Undo);
+			return;
+		}
+
+		if (undoStackEntry.action === "batch-create") {
+			const entriesToDelete = undoStackEntry.metadata?.entries || [];
+			if (entriesToDelete.length === 0) {
+				this.emitStackChange(HistoryChangeCause.Undo);
+				return;
+			}
+
+			const idsToDelete = entriesToDelete.map((entry) => entry.id);
+			idsToDelete.forEach((featureId) => {
+				this.ignoreProgrammaticDelete[featureId] = true;
+			});
+
+			this.draw.removeFeatures(idsToDelete);
+			this.redoStack.push({
+				id: entriesToDelete[0].id,
+				toIndex: entriesToDelete[0].toIndex,
+				action: "batch-create",
+				metadata: { entries: entriesToDelete },
+			});
+			this.emitStackChange(HistoryChangeCause.Undo);
+			return;
+		}
+
+		if (undoStackEntry.action === "batch-delete") {
+			const entriesToRestore = undoStackEntry.metadata?.entries || [];
+			if (entriesToRestore.length === 0) {
+				this.emitStackChange(HistoryChangeCause.Undo);
+				return;
+			}
+
+			const snapshotsToRestore = entriesToRestore
+				.map((entry) => entry.snapshot)
+				.filter((snapshot) => snapshot !== undefined);
+
+			if (snapshotsToRestore.length > 0) {
+				entriesToRestore.forEach((entry) => {
+					this.ignoreProgrammaticCreate[entry.id] = true;
+				});
+				this.draw.addFeatures(snapshotsToRestore);
+			}
+
+			this.redoStack.push({
+				id: entriesToRestore[0].id,
+				toIndex: entriesToRestore[0].toIndex,
+				action: "batch-delete",
+				metadata: { entries: entriesToRestore },
+			});
+			this.emitStackChange(HistoryChangeCause.Undo);
 			return;
 		}
 
@@ -167,7 +340,7 @@ export class TerraDrawSessionUndoRedo
 		const key = String(id);
 		const stack = this.historyById[key];
 		if (!stack || stack.length === 0) {
-			this.emitStackChange("undo");
+			this.emitStackChange(HistoryChangeCause.Undo);
 			return;
 		}
 
@@ -179,9 +352,10 @@ export class TerraDrawSessionUndoRedo
 		if (!featureExists) {
 			const snapshotToRestore = stack[currentIndex];
 			if (!snapshotToRestore) {
-				this.emitStackChange("undo");
+				this.emitStackChange(HistoryChangeCause.Undo);
 				return;
 			}
+			this.ignoreProgrammaticCreate[id] = true;
 			this.draw.addFeatures([snapshotToRestore]);
 
 			// Allow redo to re-delete the feature; do not change undo stack size here
@@ -191,7 +365,7 @@ export class TerraDrawSessionUndoRedo
 				action: "delete",
 				snapshot: snapshotToRestore,
 			});
-			this.emitStackChange("undo");
+			this.emitStackChange(HistoryChangeCause.Undo);
 			return;
 		}
 
@@ -207,7 +381,7 @@ export class TerraDrawSessionUndoRedo
 			this.undoStack = this.undoStack.filter(
 				(undoAction) => undoAction.id !== id,
 			);
-			this.emitStackChange("undo");
+			this.emitStackChange(HistoryChangeCause.Undo);
 			return;
 		}
 
@@ -227,17 +401,71 @@ export class TerraDrawSessionUndoRedo
 
 		this.draw.updateFeatureGeometry(id, prev.geometry);
 		stack.length = currentIndex; // drop the state we just undid
-		this.emitStackChange("undo");
+		this.emitStackChange(HistoryChangeCause.Undo);
 	}
 
 	redo() {
-		if (!this.draw || this.draw.getModeState() === "drawing") {
+		if (!this.draw || this.isDrawing()) {
 			return;
 		}
 
 		if (this.redoStack.length === 0) return;
 
-		const { id, toIndex, snapshot, action } = this.redoStack.pop()!;
+		const poppedRedoStackEntry = this.redoStack.pop()!;
+		const { id, toIndex, snapshot, action, metadata } = poppedRedoStackEntry;
+
+		if (action === "batch-create") {
+			const entriesToCreate = metadata?.entries || [];
+			if (entriesToCreate.length === 0) {
+				this.emitStackChange(HistoryChangeCause.Redo);
+				return;
+			}
+
+			const snapshotsToCreate = entriesToCreate
+				.map((entry) => entry.snapshot)
+				.filter((restoredSnapshot) => restoredSnapshot !== undefined);
+
+			if (snapshotsToCreate.length > 0) {
+				entriesToCreate.forEach((entry) => {
+					this.ignoreProgrammaticCreate[entry.id] = true;
+				});
+				this.draw.addFeatures(snapshotsToCreate);
+			}
+
+			this.undoStack.push({
+				id: entriesToCreate[0].id,
+				toIndex: entriesToCreate[0].toIndex,
+				action: "batch-create",
+				metadata: { entries: entriesToCreate },
+			});
+			this.emitStackChange(HistoryChangeCause.Redo);
+			return;
+		}
+
+		if (action === "batch-delete") {
+			const entriesToDelete = metadata?.entries || [];
+			if (entriesToDelete.length === 0) {
+				this.emitStackChange(HistoryChangeCause.Redo);
+				return;
+			}
+
+			const idsToDelete = entriesToDelete.map((entry) => entry.id);
+
+			idsToDelete.forEach((featureId) => {
+				this.ignoreProgrammaticDelete[featureId] = true;
+			});
+
+			this.draw.removeFeatures(idsToDelete);
+			this.undoStack.push({
+				id: entriesToDelete[0].id,
+				toIndex: entriesToDelete[0].toIndex,
+				action: "batch-delete",
+				metadata: { entries: entriesToDelete },
+			});
+			this.emitStackChange(HistoryChangeCause.Redo);
+			return;
+		}
+
 		const key = String(id);
 		const stack = this.historyById[key] || (this.historyById[key] = []);
 
@@ -246,8 +474,8 @@ export class TerraDrawSessionUndoRedo
 			this.ignoreProgrammaticDelete[id] = true;
 			this.draw.removeFeatures([id]);
 			// Reflect that the delete action has been reapplied by pushing back onto the undo stack
-			this.undoStack.push({ id, toIndex });
-			this.emitStackChange("redo");
+			this.undoStack.push({ id, toIndex, action: "single" });
+			this.emitStackChange(HistoryChangeCause.Redo);
 			return;
 		}
 
@@ -255,11 +483,12 @@ export class TerraDrawSessionUndoRedo
 			// Redo creation - recreate the initial feature
 			const initial = stack[0];
 			if (!initial) return;
+			this.ignoreProgrammaticCreate[id] = true;
 			this.draw.addFeatures([initial]);
 
 			// Restore the action into the history stacks
-			this.undoStack.push({ id, toIndex: 0 });
-			this.emitStackChange("redo");
+			this.undoStack.push({ id, toIndex: 0, action: "single" });
+			this.emitStackChange(HistoryChangeCause.Redo);
 			return;
 		}
 
@@ -281,8 +510,8 @@ export class TerraDrawSessionUndoRedo
 		this.draw.updateFeatureGeometry(id, next.geometry);
 
 		// Restore the action into the history stacks so it can be undone again
-		this.undoStack.push({ id, toIndex });
-		this.emitStackChange("redo");
+		this.undoStack.push({ id, toIndex, action: "single" });
+		this.emitStackChange(HistoryChangeCause.Redo);
 	}
 
 	undoSize() {

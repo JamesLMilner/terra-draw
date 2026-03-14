@@ -167,7 +167,7 @@ describe("TerraDrawUndoRedoCoordinator", () => {
 
 		expect(onHistoryChange).toHaveBeenCalledWith({
 			cause: "push",
-			stack: "drawing",
+			stack: "mode",
 			undoSize: 3,
 			redoSize: 1,
 		});

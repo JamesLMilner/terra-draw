@@ -10,12 +10,12 @@ export interface TerraDrawUndoRedoKeyboardShortcutsInterface {
 	isRedoKeyboardShortcut(event: TerraDrawKeyboardEvent): boolean;
 }
 
-export const defaultUndoKeyboardShortcuts: UndoRedoKeyboardShortcut[] = [
+const defaultUndoKeyboardShortcuts: UndoRedoKeyboardShortcut[] = [
 	{ key: "z", heldKeys: ["meta"] },
 	{ key: "z", heldKeys: ["control"] },
 ];
 
-export const defaultRedoKeyboardShortcuts: UndoRedoKeyboardShortcut[] = [
+const defaultRedoKeyboardShortcuts: UndoRedoKeyboardShortcut[] = [
 	{ key: "z", heldKeys: ["meta", "shift"] },
 	{ key: "z", heldKeys: ["control", "shift"] },
 	{ key: "y", heldKeys: ["control"] },

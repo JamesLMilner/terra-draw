@@ -1,13 +1,14 @@
-import { TerraDrawDrawingUndoRedo } from "./drawing-undo-redo";
+import { TerraDrawModeState } from "../common";
+import { TerraDrawModeUndoRedo } from "./mode-undo-redo";
 
-describe("TerraDrawDrawingUndoRedo", () => {
-	let modeState: string;
+describe("TerraDrawModeUndoRedo", () => {
+	let modeState: TerraDrawModeState;
 	let undoStackSize: number;
 	let redoStackSize: number;
 	let undoMode: jest.Mock;
 	let redoMode: jest.Mock;
 	let onHistoryChange: jest.Mock;
-	let drawingUndoRedo: TerraDrawDrawingUndoRedo;
+	let drawingUndoRedo: TerraDrawModeUndoRedo;
 
 	const registerDrawingUndoRedo = () => {
 		drawingUndoRedo.register({
@@ -29,7 +30,7 @@ describe("TerraDrawDrawingUndoRedo", () => {
 		undoMode = jest.fn();
 		redoMode = jest.fn();
 		onHistoryChange = jest.fn();
-		drawingUndoRedo = new TerraDrawDrawingUndoRedo();
+		drawingUndoRedo = new TerraDrawModeUndoRedo();
 	});
 
 	describe("getHistorySizes", () => {

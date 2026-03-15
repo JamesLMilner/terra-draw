@@ -55,6 +55,7 @@ export class TerraDrawSessionUndoRedo
 	private undoStack: UndoStackEntry[] = [];
 	private ignoreProgrammaticCreate: Record<FeatureId, boolean> = {};
 	private ignoreProgrammaticDelete: Record<FeatureId, boolean> = {};
+	private deletedFeatureIds: Record<FeatureId, boolean> = {};
 	private redoStack: RedoStackEntry[] = [];
 
 	constructor(options?: TerraDrawUndoRedoOptions) {
@@ -122,6 +123,10 @@ export class TerraDrawSessionUndoRedo
 			return;
 		}
 
+		if (this.maxStackSize === 0) {
+			return;
+		}
+
 		if (type !== "delete" && type !== "create") {
 			return;
 		}
@@ -147,6 +152,7 @@ export class TerraDrawSessionUndoRedo
 			for (const id of created) {
 				if (this.ignoreProgrammaticCreate[id]) {
 					delete this.ignoreProgrammaticCreate[id];
+					delete this.deletedFeatureIds[id];
 					continue;
 				}
 
@@ -154,6 +160,11 @@ export class TerraDrawSessionUndoRedo
 				const feature = this.draw.getSnapshotFeature(id);
 				if (!feature) {
 					continue;
+				}
+
+				if (this.deletedFeatureIds[id]) {
+					this.historyById[key] = [];
+					delete this.deletedFeatureIds[id];
 				}
 
 				if (!this.historyById[key]) {
@@ -228,6 +239,7 @@ export class TerraDrawSessionUndoRedo
 					toIndex: lastIndex,
 					snapshot,
 				});
+				this.deletedFeatureIds[id] = true;
 				recorded = true;
 			}
 		}
@@ -257,6 +269,10 @@ export class TerraDrawSessionUndoRedo
 
 	private handleFinish = (ids: FeatureId[] | FeatureId) => {
 		if (!this.draw) {
+			return;
+		}
+
+		if (this.maxStackSize === 0) {
 			return;
 		}
 
@@ -334,6 +350,7 @@ export class TerraDrawSessionUndoRedo
 			const idsToDelete = entriesToDelete.map((entry) => entry.id);
 			idsToDelete.forEach((featureId) => {
 				this.ignoreProgrammaticDelete[featureId] = true;
+				this.deletedFeatureIds[featureId] = true;
 			});
 
 			this.draw.removeFeatures(idsToDelete);
@@ -361,6 +378,7 @@ export class TerraDrawSessionUndoRedo
 			if (snapshotsToRestore.length > 0) {
 				entriesToRestore.forEach((entry) => {
 					this.ignoreProgrammaticCreate[entry.id] = true;
+					delete this.deletedFeatureIds[entry.id];
 				});
 				this.draw.addFeatures(snapshotsToRestore);
 			}
@@ -397,6 +415,7 @@ export class TerraDrawSessionUndoRedo
 				return false;
 			}
 			this.ignoreProgrammaticCreate[id] = true;
+			delete this.deletedFeatureIds[id];
 			this.draw.addFeatures([snapshotToRestore]);
 
 			// Allow redo to re-delete the feature; do not change undo stack size here
@@ -416,6 +435,7 @@ export class TerraDrawSessionUndoRedo
 			this.pushRedoStackEntry({ id, toIndex: 0, action: "create" });
 
 			this.ignoreProgrammaticDelete[id] = true;
+			this.deletedFeatureIds[id] = true;
 			this.draw.removeFeatures([id]);
 
 			// Remove any remaining actions for this id from the undo stack
@@ -497,6 +517,7 @@ export class TerraDrawSessionUndoRedo
 
 			idsToDelete.forEach((featureId) => {
 				this.ignoreProgrammaticDelete[featureId] = true;
+				this.deletedFeatureIds[featureId] = true;
 			});
 
 			this.draw.removeFeatures(idsToDelete);
@@ -516,6 +537,7 @@ export class TerraDrawSessionUndoRedo
 		// If the redo action is a delete, remove the feature again
 		if (action === "delete") {
 			this.ignoreProgrammaticDelete[id] = true;
+			this.deletedFeatureIds[id] = true;
 			this.draw.removeFeatures([id]);
 			// Reflect that the delete action has been reapplied by pushing back onto the undo stack
 			this.pushUndoStackEntry({ id, toIndex, action: "single" });

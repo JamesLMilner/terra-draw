@@ -1,17 +1,27 @@
 /**
  * @jest-environment jsdom
  */
-import { COMMON_PROPERTIES, SELECT_PROPERTIES } from "./common";
+import { Polygon } from "geojson";
+import {
+	COMMON_PROPERTIES,
+	SELECT_PROPERTIES,
+	type TerraDrawCallbacks,
+} from "./common";
 import { FeatureId } from "./extend";
 import {
 	GeoJSONStoreFeatures,
+	GeoJSONStoreGeometries,
 	TerraDraw,
+	TerraDrawModeUndoRedo,
 	TerraDrawLineStringMode,
 	TerraDrawPointMode,
 	TerraDrawPolygonMode,
+	TerraDrawUndoRedoKeyboardShortcuts,
 	TerraDrawSelectMode,
 } from "./terra-draw";
+import { TerraDrawSessionUndoRedo } from "./undo-redo/session-undo-redo";
 import { TerraDrawTestAdapter } from "./terra-draw.extensions.spec";
+import { MockKeyboardEvent } from "./test/mock-keyboard-event";
 import { MockCursorEvent } from "./test/mock-cursor-event";
 
 describe("Terra Draw", () => {
@@ -704,6 +714,541 @@ describe("Terra Draw", () => {
 
 			const feature = draw.getSnapshot()[0];
 			expect(feature.properties.selected).toBe(true);
+		});
+
+		describe("multiple select modes", () => {
+			const featureId = "f8e5a38d-ecfa-4294-8461-d9cff0e0d7f8";
+
+			const getGuidanceFeatures = (
+				feature: GeoJSONStoreFeatures<GeoJSONStoreGeometries>,
+			) =>
+				feature.properties[SELECT_PROPERTIES.SELECTION_POINT] ||
+				feature.properties[SELECT_PROPERTIES.MID_POINT];
+
+			const createPointFeature = (): GeoJSONStoreFeatures => ({
+				id: featureId,
+				type: "Feature",
+				geometry: {
+					type: "Point",
+					coordinates: [-25.431289673, 34.355907891],
+				},
+				properties: {
+					mode: "point",
+				},
+			});
+
+			const createPolygonFeature = (): GeoJSONStoreFeatures => ({
+				id: featureId,
+				type: "Feature",
+				geometry: {
+					type: "Polygon",
+					coordinates: [
+						[
+							[-25.431289673, 34.355907891],
+							[-25.531289673, 34.455907891],
+							[-25.631289673, 34.355907891],
+							[-25.431289673, 34.355907891],
+						],
+					],
+				},
+				properties: {
+					mode: "polygon",
+				},
+			});
+
+			const selectModePointFlags = {
+				flags: {
+					point: {
+						feature: { draggable: true },
+					},
+				},
+			};
+
+			const alternateSelectModePointFlags = {
+				modeName: "alternate-select",
+				flags: {
+					point: {
+						feature: { draggable: true },
+					},
+				},
+			};
+
+			const selectModePolygonFlags = {
+				flags: {
+					polygon: {
+						feature: {
+							coordinates: {
+								draggable: true,
+								midpoints: true,
+							},
+						},
+					},
+				},
+			};
+
+			const alternateSelectModePolygonFlags = {
+				modeName: "alternate-select",
+				flags: {
+					polygon: {
+						feature: {
+							coordinates: {
+								draggable: true,
+								midpoints: false,
+							},
+						},
+					},
+				},
+			};
+
+			it("uses the first select mode by default when multiple are provided", () => {
+				const draw = new TerraDraw({
+					adapter,
+					modes: [
+						new TerraDrawPointMode(),
+						new TerraDrawSelectMode(selectModePointFlags),
+						new TerraDrawSelectMode(alternateSelectModePointFlags),
+					],
+				});
+
+				draw.start();
+				draw.addFeatures([createPointFeature()]);
+
+				draw.selectFeature(featureId);
+
+				expect(draw.getMode()).toBe("select");
+			});
+
+			it("uses constructor order for default select mode when alternate-select is listed first", () => {
+				const draw = new TerraDraw({
+					adapter,
+					modes: [
+						new TerraDrawPointMode(),
+						new TerraDrawSelectMode(alternateSelectModePointFlags),
+						new TerraDrawSelectMode(selectModePointFlags),
+					],
+				});
+
+				draw.start();
+				draw.addFeatures([createPointFeature()]);
+
+				draw.selectFeature(featureId);
+
+				expect(draw.getMode()).toBe("alternate-select");
+			});
+
+			it("uses the provided select mode when passed to selectFeature", () => {
+				const draw = new TerraDraw({
+					adapter,
+					modes: [
+						new TerraDrawPointMode(),
+						new TerraDrawSelectMode(selectModePointFlags),
+						new TerraDrawSelectMode(alternateSelectModePointFlags),
+					],
+				});
+
+				draw.start();
+				draw.addFeatures([createPointFeature()]);
+
+				draw.selectFeature(featureId, "alternate-select");
+
+				expect(draw.getMode()).toBe("alternate-select");
+			});
+
+			it("keeps the active select mode when selecting again without an explicit mode", () => {
+				const draw = new TerraDraw({
+					adapter,
+					modes: [
+						new TerraDrawPolygonMode(),
+						new TerraDrawSelectMode(selectModePolygonFlags),
+						new TerraDrawSelectMode(alternateSelectModePolygonFlags),
+					],
+				});
+
+				draw.start();
+				draw.addFeatures([createPolygonFeature()]);
+
+				draw.selectFeature(featureId, "alternate-select");
+				expect(draw.getMode()).toBe("alternate-select");
+
+				const firstSelectionGuidanceFeatures = draw
+					.getSnapshot()
+					.filter(getGuidanceFeatures);
+
+				expect(firstSelectionGuidanceFeatures).toHaveLength(3);
+
+				draw.selectFeature(featureId);
+
+				expect(draw.getMode()).toBe("alternate-select");
+
+				const secondSelectionGuidanceFeatures = draw
+					.getSnapshot()
+					.filter(getGuidanceFeatures);
+
+				expect(secondSelectionGuidanceFeatures).toHaveLength(3);
+			});
+
+			it("does not re-trigger selection side effects when selecting the same feature in the active select mode", () => {
+				const draw = new TerraDraw({
+					adapter,
+					modes: [
+						new TerraDrawPolygonMode(),
+						new TerraDrawSelectMode(selectModePolygonFlags),
+						new TerraDrawSelectMode(alternateSelectModePolygonFlags),
+					],
+				});
+
+				const onSelect = jest.fn();
+				draw.on("select", onSelect);
+
+				draw.start();
+				draw.addFeatures([createPolygonFeature()]);
+
+				draw.selectFeature(featureId, "alternate-select");
+
+				expect(draw.getMode()).toBe("alternate-select");
+				expect(onSelect).toHaveBeenCalledTimes(1);
+
+				const firstSelectionGuidanceFeatures = draw
+					.getSnapshot()
+					.filter(getGuidanceFeatures);
+
+				expect(firstSelectionGuidanceFeatures).toHaveLength(3);
+
+				draw.selectFeature(featureId);
+
+				expect(draw.getMode()).toBe("alternate-select");
+				expect(onSelect).toHaveBeenCalledTimes(1);
+
+				const secondSelectionGuidanceFeatures = draw
+					.getSnapshot()
+					.filter(getGuidanceFeatures);
+
+				expect(secondSelectionGuidanceFeatures).toHaveLength(3);
+			});
+
+			it("switches from initial select mode to alternate select mode when passed to selectFeature", () => {
+				const draw = new TerraDraw({
+					adapter,
+					modes: [
+						new TerraDrawPointMode(),
+						new TerraDrawSelectMode(selectModePointFlags),
+						new TerraDrawSelectMode(alternateSelectModePointFlags),
+					],
+				});
+
+				draw.start();
+				draw.addFeatures([createPointFeature()]);
+
+				draw.setMode("select");
+				expect(draw.getMode()).toBe("select");
+
+				draw.selectFeature(featureId, "alternate-select");
+
+				expect(draw.getMode()).toBe("alternate-select");
+			});
+
+			it("deselects correctly regardless of select mode", () => {
+				const draw = new TerraDraw({
+					adapter,
+					modes: [
+						new TerraDrawPolygonMode(),
+						new TerraDrawSelectMode(selectModePolygonFlags),
+						new TerraDrawSelectMode(alternateSelectModePolygonFlags),
+					],
+				});
+
+				draw.start();
+				draw.addFeatures([createPolygonFeature()]);
+
+				draw.selectFeature(featureId);
+				draw.deselectFeature(featureId);
+
+				const snapshot = draw.getSnapshot();
+				const selectedFeature = draw.getSnapshotFeature(featureId);
+				const guidanceFeatures = snapshot.filter(getGuidanceFeatures);
+
+				expect(selectedFeature?.properties[SELECT_PROPERTIES.SELECTED]).toBe(
+					false,
+				);
+				expect(guidanceFeatures).toHaveLength(0);
+
+				draw.selectFeature(featureId, "alternate-select");
+				draw.deselectFeature(featureId);
+
+				const snapshotAlternate = draw.getSnapshot();
+				const selectedFeatureAlternate = draw.getSnapshotFeature(featureId);
+				const guidanceFeaturesAlternate =
+					snapshotAlternate.filter(getGuidanceFeatures);
+
+				expect(
+					selectedFeatureAlternate?.properties[SELECT_PROPERTIES.SELECTED],
+				).toBe(false);
+				expect(guidanceFeaturesAlternate).toHaveLength(0);
+			});
+
+			it("correctly handles removing all associated guidance features regardless of select mode", () => {
+				const draw = new TerraDraw({
+					adapter,
+					modes: [
+						new TerraDrawPolygonMode(),
+						new TerraDrawSelectMode(selectModePolygonFlags),
+						new TerraDrawSelectMode(alternateSelectModePolygonFlags),
+					],
+				});
+
+				draw.start();
+				draw.addFeatures([createPolygonFeature()]);
+
+				draw.selectFeature(featureId);
+				draw.removeFeatures([featureId]);
+
+				expect(draw.getSnapshot()).toHaveLength(0);
+
+				draw.addFeatures([createPolygonFeature()]);
+
+				draw.selectFeature(featureId, "alternate-select");
+				draw.removeFeatures([featureId]);
+
+				expect(draw.getSnapshot()).toHaveLength(0);
+			});
+
+			it("keeps the feature selected when switching from 'select' to 'alternate-select'", () => {
+				const draw = new TerraDraw({
+					adapter,
+					modes: [
+						new TerraDrawPolygonMode(),
+						new TerraDrawSelectMode(selectModePolygonFlags),
+						new TerraDrawSelectMode(alternateSelectModePolygonFlags),
+					],
+				});
+
+				draw.start();
+				draw.addFeatures([createPolygonFeature()]);
+
+				draw.selectFeature(featureId);
+				expect(draw.getMode()).toBe("select");
+
+				const selectedFeatureBeforeSwitch = draw.getSnapshotFeature(featureId);
+				expect(
+					selectedFeatureBeforeSwitch?.properties[SELECT_PROPERTIES.SELECTED],
+				).toBe(true);
+
+				const selectGuidanceFeatures = draw
+					.getSnapshot()
+					.filter(getGuidanceFeatures);
+
+				expect(selectGuidanceFeatures).toHaveLength(6);
+
+				draw.selectFeature(featureId, "alternate-select");
+				expect(draw.getMode()).toBe("alternate-select");
+
+				const selectedFeatureAfterSwitch = draw.getSnapshotFeature(featureId);
+				expect(
+					selectedFeatureAfterSwitch?.properties[SELECT_PROPERTIES.SELECTED],
+				).toBe(true);
+
+				const alernateSelectGuidanceFeatures = draw
+					.getSnapshot()
+					.filter(getGuidanceFeatures);
+
+				expect(alernateSelectGuidanceFeatures).toHaveLength(3);
+			});
+
+			it("uses 'alternate-select' selected styling when feature was selected in 'alternate-select'", () => {
+				const render = jest.spyOn(adapter, "render");
+
+				const draw = new TerraDraw({
+					adapter,
+					modes: [
+						new TerraDrawPolygonMode(),
+						new TerraDrawSelectMode(selectModePolygonFlags),
+						new TerraDrawSelectMode({
+							...alternateSelectModePolygonFlags,
+							styles: {
+								selectedPolygonColor: "#000000",
+							},
+						}),
+					],
+				});
+
+				draw.start();
+				const polygon = createPolygonFeature();
+				draw.addFeatures([polygon]);
+
+				draw.selectFeature(featureId, "alternate-select");
+
+				const selectedFeature = draw.getSnapshotFeature(
+					featureId,
+				) as GeoJSONStoreFeatures<Polygon>;
+				expect(selectedFeature?.properties[SELECT_PROPERTIES.SELECTED]).toBe(
+					true,
+				);
+
+				const styling = render.mock.calls[render.mock.calls.length - 1][1];
+
+				expect(
+					styling["alternate-select"](selectedFeature).polygonFillColor,
+				).toBe("#000000");
+			});
+
+			it("is idempotent when selecting the same feature across select modes", () => {
+				const alternateSelectModePolygonFlagsWithMidPoints = {
+					modeName: "alternate-select",
+					flags: {
+						polygon: {
+							feature: {
+								coordinates: {
+									draggable: true,
+									midpoints: true,
+								},
+							},
+						},
+					},
+				};
+
+				const draw = new TerraDraw({
+					adapter,
+					modes: [
+						new TerraDrawPolygonMode(),
+						new TerraDrawSelectMode(selectModePolygonFlags),
+						new TerraDrawSelectMode(
+							alternateSelectModePolygonFlagsWithMidPoints,
+						),
+					],
+				});
+
+				draw.start();
+				draw.addFeatures([createPolygonFeature()]);
+
+				draw.selectFeature(featureId);
+
+				expect(draw.getMode()).toBe("select");
+
+				const firstSelectionSnapshot = draw.getSnapshot();
+				const firstSelectionGuidanceFeatures =
+					firstSelectionSnapshot.filter(getGuidanceFeatures);
+
+				expect(firstSelectionGuidanceFeatures.length).toBe(6);
+
+				draw.selectFeature(featureId, "alternate-select");
+
+				expect(draw.getMode()).toBe("alternate-select");
+
+				const secondSelectionSnapshot = draw.getSnapshot();
+				const secondSelectionGuidanceFeatures =
+					secondSelectionSnapshot.filter(getGuidanceFeatures);
+
+				expect(secondSelectionGuidanceFeatures.length).toBe(
+					firstSelectionGuidanceFeatures.length,
+				);
+				expect(
+					secondSelectionSnapshot.filter((feature) => feature.id === featureId),
+				).toHaveLength(1);
+			});
+
+			it("honors the respective modes flags when selecting the same feature across select modes", () => {
+				const draw = new TerraDraw({
+					adapter,
+					modes: [
+						new TerraDrawPolygonMode(),
+						new TerraDrawSelectMode(selectModePolygonFlags),
+						new TerraDrawSelectMode(alternateSelectModePolygonFlags),
+					],
+				});
+
+				draw.start();
+				draw.addFeatures([createPolygonFeature()]);
+
+				draw.selectFeature(featureId);
+
+				expect(draw.getMode()).toBe("select");
+
+				const firstSelectionSnapshot = draw.getSnapshot();
+				const firstSelectionGuidanceFeatures =
+					firstSelectionSnapshot.filter(getGuidanceFeatures);
+
+				expect(firstSelectionGuidanceFeatures.length).toBe(6);
+
+				draw.selectFeature(featureId, "alternate-select");
+
+				expect(draw.getMode()).toBe("alternate-select");
+
+				const secondSelectionSnapshot = draw.getSnapshot();
+				const secondSelectionGuidanceFeatures =
+					secondSelectionSnapshot.filter(getGuidanceFeatures);
+
+				expect(secondSelectionGuidanceFeatures.length).toBe(3);
+				expect(
+					secondSelectionSnapshot.filter((feature) => feature.id === featureId),
+				).toHaveLength(1);
+
+				draw.selectFeature(featureId, "select");
+
+				const thirdSelectionSnapshot = draw.getSnapshot();
+				const thirdSelectionGuidanceFeatures =
+					thirdSelectionSnapshot.filter(getGuidanceFeatures);
+
+				expect(thirdSelectionGuidanceFeatures.length).toBe(6);
+				expect(
+					thirdSelectionSnapshot.filter((feature) => feature.id === featureId),
+				).toHaveLength(1);
+			});
+
+			it("throws an error if an unknown select mode is provided", () => {
+				const draw = new TerraDraw({
+					adapter,
+					modes: [
+						new TerraDrawPointMode(),
+						new TerraDrawSelectMode(selectModePointFlags),
+						new TerraDrawSelectMode(alternateSelectModePointFlags),
+					],
+				});
+
+				draw.start();
+				draw.addFeatures([createPointFeature()]);
+
+				expect(() => {
+					draw.selectFeature(featureId, "missing");
+				}).toThrow("No select mode with this name present: missing");
+
+				expect(draw.getMode()).toBe("static");
+			});
+
+			it("does not deselect the selected feature when a different id is provided", () => {
+				const draw = new TerraDraw({
+					adapter,
+					modes: [
+						new TerraDrawPolygonMode(),
+						new TerraDrawSelectMode(selectModePolygonFlags),
+						new TerraDrawSelectMode(alternateSelectModePolygonFlags),
+					],
+				});
+
+				const otherFeatureId = "07cbeb25-d7af-4aa7-9f98-0f4f4ed7f999";
+
+				draw.start();
+				draw.addFeatures([
+					createPolygonFeature(),
+					{
+						...createPolygonFeature(),
+						id: otherFeatureId,
+					},
+				]);
+
+				draw.selectFeature(featureId, "alternate-select");
+				expect(draw.getMode()).toBe("alternate-select");
+
+				draw.deselectFeature(otherFeatureId);
+
+				const selectedFeature = draw.getSnapshotFeature(featureId);
+				expect(selectedFeature?.properties[SELECT_PROPERTIES.SELECTED]).toBe(
+					true,
+				);
+
+				const guidanceFeatures = draw.getSnapshot().filter(getGuidanceFeatures);
+
+				expect(guidanceFeatures).toHaveLength(3);
+			});
 		});
 	});
 
@@ -3611,6 +4156,132 @@ describe("Terra Draw", () => {
 			expect(callback).toHaveBeenCalledTimes(2);
 		});
 
+		it("it calls on history for session push", () => {
+			const pointMode = new TerraDrawPointMode();
+			const draw = new TerraDraw({
+				adapter,
+				modes: [pointMode],
+				undoRedo: {
+					sessionLevel: new TerraDrawSessionUndoRedo(),
+				},
+			});
+
+			draw.start();
+			draw.setMode("point");
+
+			const callback = jest.fn();
+			draw.on("history", callback);
+
+			pointMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+			expect(callback).toHaveBeenCalledWith({
+				cause: "push",
+				stack: "session",
+				undoSize: 1,
+				redoSize: 0,
+			});
+		});
+
+		it("it calls on history for drawing undo and redo", () => {
+			const lineStringMode = new TerraDrawLineStringMode();
+			const draw = new TerraDraw({
+				adapter,
+				modes: [lineStringMode],
+				undoRedo: {
+					modeLevel: new TerraDrawModeUndoRedo(),
+				},
+			});
+
+			draw.start();
+			draw.setMode("linestring");
+
+			lineStringMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			lineStringMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 0 }));
+			lineStringMode.onClick(MockCursorEvent({ lng: 1, lat: 0 }));
+
+			const callback = jest.fn();
+			draw.on("history", callback);
+
+			expect(draw.undo()).toBe(true);
+			expect(callback).toHaveBeenCalledWith({
+				cause: "undo",
+				stack: "mode",
+				undoSize: 1,
+				redoSize: 1,
+			});
+
+			expect(draw.redo()).toBe(true);
+			expect(callback).toHaveBeenCalledWith({
+				cause: "redo",
+				stack: "mode",
+				undoSize: 2,
+				redoSize: 0,
+			});
+		});
+
+		it("it calls on history push while mode stack grows", () => {
+			const lineStringMode = new TerraDrawLineStringMode();
+			const draw = new TerraDraw({
+				adapter,
+				modes: [lineStringMode],
+				undoRedo: {
+					modeLevel: new TerraDrawModeUndoRedo(),
+				},
+			});
+
+			draw.start();
+			draw.setMode("linestring");
+
+			const callback = jest.fn();
+			draw.on("history", callback);
+
+			lineStringMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			lineStringMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 0 }));
+			lineStringMode.onClick(MockCursorEvent({ lng: 1, lat: 0 }));
+
+			expect(callback).toHaveBeenCalledWith({
+				cause: "push",
+				stack: "mode",
+				undoSize: 1,
+				redoSize: 0,
+			});
+		});
+
+		it("it calls on history for session undo and redo", () => {
+			const pointMode = new TerraDrawPointMode();
+			const draw = new TerraDraw({
+				adapter,
+				modes: [pointMode],
+				undoRedo: {
+					sessionLevel: new TerraDrawSessionUndoRedo(),
+				},
+			});
+
+			draw.start();
+			draw.setMode("point");
+
+			const callback = jest.fn();
+			draw.on("history", callback);
+
+			pointMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+			expect(draw.undo()).toBe(true);
+			expect(callback).toHaveBeenCalledWith({
+				cause: "undo",
+				stack: "session",
+				undoSize: 0,
+				redoSize: 1,
+			});
+
+			expect(draw.redo()).toBe(true);
+			expect(callback).toHaveBeenCalledWith({
+				cause: "redo",
+				stack: "session",
+				undoSize: 1,
+				redoSize: 0,
+			});
+		});
+
 		describe("finish", () => {
 			it("is called when feature is finished with point mode", async () => {
 				const pointMode = new TerraDrawPointMode();
@@ -3645,6 +4316,58 @@ describe("Terra Draw", () => {
 				// Point can be removed
 				draw.removeFeatures([id]);
 				expect(draw.getSnapshotFeature(id)).toBeUndefined();
+			});
+
+			it("emits history on finish with drawing stack when session level is disabled", () => {
+				const pointMode = new TerraDrawPointMode();
+				const draw = new TerraDraw({
+					adapter,
+					modes: [pointMode],
+					undoRedo: {
+						modeLevel: new TerraDrawModeUndoRedo(),
+					},
+				});
+
+				draw.start();
+				draw.setMode("point");
+
+				const callback = jest.fn();
+				draw.on("history", callback);
+
+				pointMode.onClick(MockCursorEvent({ lng: -25, lat: 34 }));
+
+				expect(callback).toHaveBeenLastCalledWith({
+					cause: "push",
+					stack: "mode",
+					undoSize: 0,
+					redoSize: 0,
+				});
+			});
+
+			it("emits history on finish with session stack when session level is enabled", () => {
+				const pointMode = new TerraDrawPointMode();
+				const draw = new TerraDraw({
+					adapter,
+					modes: [pointMode],
+					undoRedo: {
+						sessionLevel: new TerraDrawSessionUndoRedo(),
+					},
+				});
+
+				draw.start();
+				draw.setMode("point");
+
+				const callback = jest.fn();
+				draw.on("history", callback);
+
+				pointMode.onClick(MockCursorEvent({ lng: -25, lat: 34 }));
+
+				expect(callback).toHaveBeenLastCalledWith({
+					cause: "push",
+					stack: "session",
+					undoSize: 1,
+					redoSize: 0,
+				});
 			});
 
 			it("is called when feature is finished with linestring mode", async () => {
@@ -4085,6 +4808,288 @@ describe("Terra Draw", () => {
 			]);
 
 			expect(callback).not.toHaveBeenCalled();
+		});
+	});
+
+	describe("keyboard shortcuts", () => {
+		const getRegisteredCallbacks = (
+			adapter: TerraDrawTestAdapter,
+		): TerraDrawCallbacks => {
+			const typedAdapter = adapter as unknown as {
+				_currentModeCallbacks?: TerraDrawCallbacks;
+			};
+
+			if (!typedAdapter._currentModeCallbacks) {
+				throw new Error("Adapter callbacks have not been registered");
+			}
+
+			return typedAdapter._currentModeCallbacks;
+		};
+
+		it("uses cmd+z and cmd+shift+z for drawing mode undo and redo", () => {
+			const lineStringMode = new TerraDrawLineStringMode();
+			const draw = new TerraDraw({
+				adapter,
+				modes: [lineStringMode],
+				undoRedo: {
+					modeLevel: new TerraDrawModeUndoRedo(),
+					keyboardShortcuts: new TerraDrawUndoRedoKeyboardShortcuts(),
+				},
+			});
+
+			draw.start();
+			draw.setMode("linestring");
+
+			lineStringMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			lineStringMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 0 }));
+			lineStringMode.onClick(MockCursorEvent({ lng: 1, lat: 0 }));
+			expect(draw.getSnapshot()).toHaveLength(2);
+
+			const undoEvent = MockKeyboardEvent({
+				key: "z",
+				heldKeys: ["Meta", "z"],
+			});
+
+			getRegisteredCallbacks(adapter).onKeyDown(undoEvent);
+
+			expect(draw.getSnapshot()).toHaveLength(1);
+			expect(undoEvent.preventDefault).toHaveBeenCalledTimes(1);
+
+			const redoEvent = MockKeyboardEvent({
+				key: "z",
+				heldKeys: ["Meta", "Shift", "z"],
+			});
+
+			getRegisteredCallbacks(adapter).onKeyDown(redoEvent);
+
+			expect(draw.getSnapshot()).toHaveLength(2);
+			expect(redoEvent.preventDefault).toHaveBeenCalledTimes(1);
+		});
+
+		it("uses ctrl+z and ctrl+y for global undo and redo", () => {
+			const pointMode = new TerraDrawPointMode();
+			const draw = new TerraDraw({
+				adapter,
+				modes: [pointMode],
+				undoRedo: {
+					sessionLevel: new TerraDrawSessionUndoRedo(),
+					keyboardShortcuts: new TerraDrawUndoRedoKeyboardShortcuts(),
+				},
+			});
+
+			draw.start();
+			draw.setMode("point");
+
+			pointMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			expect(draw.getSnapshot()).toHaveLength(1);
+
+			const undoEvent = MockKeyboardEvent({
+				key: "z",
+				heldKeys: ["Control", "z"],
+			});
+
+			getRegisteredCallbacks(adapter).onKeyDown(undoEvent);
+
+			expect(draw.getSnapshot()).toHaveLength(0);
+			expect(undoEvent.preventDefault).toHaveBeenCalledTimes(1);
+
+			const redoEvent = MockKeyboardEvent({
+				key: "y",
+				heldKeys: ["Control", "y"],
+			});
+
+			getRegisteredCallbacks(adapter).onKeyDown(redoEvent);
+
+			expect(draw.getSnapshot()).toHaveLength(1);
+			expect(redoEvent.preventDefault).toHaveBeenCalledTimes(1);
+		});
+
+		it("allows undo again after redo for session-level polygon history", () => {
+			const polygonMode = new TerraDrawPolygonMode();
+			const draw = new TerraDraw({
+				adapter,
+				modes: [polygonMode],
+				undoRedo: {
+					sessionLevel: new TerraDrawSessionUndoRedo(),
+				},
+			});
+
+			draw.start();
+			draw.setMode("polygon");
+
+			polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			polygonMode.onClick(MockCursorEvent({ lng: 0.000001, lat: 0 }));
+			polygonMode.onClick(MockCursorEvent({ lng: 0.000001, lat: 0.000001 }));
+			polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+			expect(draw.canUndo()).toBe(true);
+			expect(draw.getSnapshot()).toHaveLength(1);
+
+			expect(draw.undo()).toBe(true);
+			expect(draw.canRedo()).toBe(true);
+			expect(draw.getSnapshot()).toHaveLength(0);
+
+			expect(draw.redo()).toBe(true);
+			expect(draw.canUndo()).toBe(true);
+			expect(draw.getSnapshot()).toHaveLength(1);
+
+			expect(draw.undo()).toBe(true);
+			expect(draw.getSnapshot()).toHaveLength(0);
+		});
+
+		it("does not handle mode undo while drawing when undoRedo.drawing is disabled", () => {
+			const lineStringMode = new TerraDrawLineStringMode();
+			const draw = new TerraDraw({
+				adapter,
+				modes: [lineStringMode],
+				undoRedo: {
+					keyboardShortcuts: new TerraDrawUndoRedoKeyboardShortcuts(),
+				},
+			});
+
+			draw.start();
+			draw.setMode("linestring");
+
+			lineStringMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			expect(draw.getSnapshot()).toHaveLength(1);
+
+			const undoEvent = MockKeyboardEvent({
+				key: "z",
+				heldKeys: ["Meta", "z"],
+			});
+
+			getRegisteredCallbacks(adapter).onKeyDown(undoEvent);
+
+			expect(draw.getSnapshot()).toHaveLength(1);
+			expect(undoEvent.preventDefault).not.toHaveBeenCalled();
+		});
+
+		it("handles mode undo while drawing when undoRedo.drawing is enabled", () => {
+			const lineStringMode = new TerraDrawLineStringMode();
+			const draw = new TerraDraw({
+				adapter,
+				modes: [lineStringMode],
+				undoRedo: {
+					modeLevel: new TerraDrawModeUndoRedo(),
+					keyboardShortcuts: new TerraDrawUndoRedoKeyboardShortcuts(),
+				},
+			});
+
+			draw.start();
+			draw.setMode("linestring");
+
+			lineStringMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			expect(draw.getSnapshot()).toHaveLength(1);
+
+			const undoEvent = MockKeyboardEvent({
+				key: "z",
+				heldKeys: ["Meta", "z"],
+			});
+
+			getRegisteredCallbacks(adapter).onKeyDown(undoEvent);
+
+			expect(draw.getSnapshot()).toHaveLength(0);
+			expect(undoEvent.preventDefault).toHaveBeenCalledTimes(1);
+		});
+
+		it("uses custom keyboard shortcuts when configured via injected matcher", () => {
+			const lineStringMode = new TerraDrawLineStringMode();
+			const shortcutMatcher = {
+				isUndoKeyboardShortcut: (event: { key: string }) =>
+					event.key.toLowerCase() === "u",
+				isRedoKeyboardShortcut: (event: { key: string }) =>
+					event.key.toLowerCase() === "r",
+			};
+
+			const draw = new TerraDraw({
+				adapter,
+				modes: [lineStringMode],
+				undoRedo: {
+					modeLevel: new TerraDrawModeUndoRedo(),
+					keyboardShortcuts: shortcutMatcher,
+				},
+			});
+
+			draw.start();
+			draw.setMode("linestring");
+
+			lineStringMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			lineStringMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 0 }));
+			lineStringMode.onClick(MockCursorEvent({ lng: 1, lat: 0 }));
+			expect(draw.getSnapshot()).toHaveLength(2);
+
+			const defaultUndoEvent = MockKeyboardEvent({
+				key: "z",
+				heldKeys: ["Meta", "z"],
+			});
+
+			getRegisteredCallbacks(adapter).onKeyDown(defaultUndoEvent);
+
+			expect(draw.getSnapshot()).toHaveLength(2);
+			expect(defaultUndoEvent.preventDefault).not.toHaveBeenCalled();
+
+			const customUndoEvent = MockKeyboardEvent({
+				key: "u",
+				heldKeys: ["Meta", "u"],
+			});
+
+			getRegisteredCallbacks(adapter).onKeyDown(customUndoEvent);
+
+			expect(draw.getSnapshot()).toHaveLength(1);
+			expect(customUndoEvent.preventDefault).toHaveBeenCalledTimes(1);
+
+			const customRedoEvent = MockKeyboardEvent({
+				key: "r",
+				heldKeys: ["Meta", "r"],
+			});
+
+			getRegisteredCallbacks(adapter).onKeyDown(customRedoEvent);
+
+			expect(draw.getSnapshot()).toHaveLength(2);
+			expect(customRedoEvent.preventDefault).toHaveBeenCalledTimes(1);
+		});
+
+		it("uses an injected keyboard shortcuts matcher class", () => {
+			const lineStringMode = new TerraDrawLineStringMode();
+			const draw = new TerraDraw({
+				adapter,
+				modes: [lineStringMode],
+				undoRedo: {
+					modeLevel: new TerraDrawModeUndoRedo(),
+					keyboardShortcuts: new TerraDrawUndoRedoKeyboardShortcuts({
+						undo: [{ key: "u", heldKeys: ["Meta"] }],
+						redo: [{ key: "r", heldKeys: ["Meta"] }],
+					}),
+				},
+			});
+
+			draw.start();
+			draw.setMode("linestring");
+
+			lineStringMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			lineStringMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 0 }));
+			lineStringMode.onClick(MockCursorEvent({ lng: 1, lat: 0 }));
+			expect(draw.getSnapshot()).toHaveLength(2);
+
+			const customUndoEvent = MockKeyboardEvent({
+				key: "u",
+				heldKeys: ["Meta", "u"],
+			});
+
+			getRegisteredCallbacks(adapter).onKeyDown(customUndoEvent);
+
+			expect(draw.getSnapshot()).toHaveLength(1);
+			expect(customUndoEvent.preventDefault).toHaveBeenCalledTimes(1);
+
+			const customRedoEvent = MockKeyboardEvent({
+				key: "r",
+				heldKeys: ["Meta", "r"],
+			});
+
+			getRegisteredCallbacks(adapter).onKeyDown(customRedoEvent);
+
+			expect(draw.getSnapshot()).toHaveLength(2);
+			expect(customRedoEvent.preventDefault).toHaveBeenCalledTimes(1);
 		});
 	});
 });

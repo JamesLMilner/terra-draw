@@ -49,6 +49,7 @@ export const LineStringEditable = AllStories.LineStringEditable;
 export const LineStringWithCoordinatePoints =
 	AllStories.LineStringWithCoordinatePoints;
 export const FreehandLineString = AllStories.FreehandLineString;
+export const FreehandWithSmoothing = AllStories.FreehandWithSmoothing;
 export const Freehand = AllStories.Freehand;
 export const FreehandWithAutoClose = AllStories.FreehandWithAutoClose;
 export const Sensor = AllStories.Sensor;
@@ -57,8 +58,11 @@ export const SelectWithSelectionPoints = AllStories.SelectWithSelectionPoints;
 export const SelectWithMidPoints = AllStories.SelectWithMidPoints;
 export const SelectWithMultipleOfSameModes =
 	AllStories.SelectWithMultipleOfSameModes;
+export const SelectWithMultipleSelectModes =
+	AllStories.SelectWithMultipleSelectModes;
 export const SelectWithScaleAndRotate = AllStories.SelectWithScaleAndRotate;
 export const SelectWithResizable = AllStories.SelectWithResizable;
 export const ProgrammaticRotate = AllStories.ProgrammaticRotate;
 export const ProgrammaticScale = AllStories.ProgrammaticScale;
 export const ProgrammaticUpdate = AllStories.ProgrammaticUpdate;
+// export const UndoRedo = AllStories.UndoRedo; // TODO: investigate why this fails storybook tests

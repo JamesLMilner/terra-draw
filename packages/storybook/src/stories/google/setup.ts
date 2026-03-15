@@ -3,6 +3,7 @@ import {
 	setupMapContainer,
 	setupControls,
 	onNextFrame,
+	SetupUndoRedo,
 } from "../../common/setup";
 import { TerraDraw } from "../../../../terra-draw/src/terra-draw";
 import { TerraDrawGoogleMapsAdapter } from "../../../../terra-draw-google-maps-adapter/src/terra-draw-google-maps-adapter";
@@ -80,6 +81,7 @@ export function SetupGoogle(args: StoryArgs): HTMLElement {
 					const draw = new TerraDraw({
 						adapter,
 						modes,
+						undoRedo: SetupUndoRedo(args),
 					});
 
 					draw.start();

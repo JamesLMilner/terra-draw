@@ -51,14 +51,18 @@ export const LineStringWithCoordinatePoints =
 export const FreehandLineString = AllStories.FreehandLineString;
 export const Freehand = AllStories.Freehand;
 export const FreehandWithAutoClose = AllStories.FreehandWithAutoClose;
+export const FreehandWithSmoothing = AllStories.FreehandWithSmoothing;
 export const Sensor = AllStories.Sensor;
 export const Select = AllStories.Select;
 export const SelectWithSelectionPoints = AllStories.SelectWithSelectionPoints;
 export const SelectWithMidPoints = AllStories.SelectWithMidPoints;
 export const SelectWithMultipleOfSameModes =
 	AllStories.SelectWithMultipleOfSameModes;
+export const SelectWithMultipleSelectModes =
+	AllStories.SelectWithMultipleSelectModes;
 export const SelectWithScaleAndRotate = AllStories.SelectWithScaleAndRotate;
 export const SelectWithResizable = AllStories.SelectWithResizable;
 export const ProgrammaticRotate = AllStories.ProgrammaticRotate;
 export const ProgrammaticScale = AllStories.ProgrammaticScale;
 export const ProgrammaticUpdate = AllStories.ProgrammaticUpdate;
+export const UndoRedo = AllStories.UndoRedo;

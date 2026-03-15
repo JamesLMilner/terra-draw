@@ -14,6 +14,9 @@ import {
 	GeoJSONStoreFeatures,
 	HexColor,
 	TerraDrawMarkerMode,
+	TerraDrawSessionUndoRedo,
+	TerraDrawModeUndoRedo,
+	TerraDrawUndoRedoKeyboardShortcuts,
 } from "../../../terra-draw/src/terra-draw";
 import {
 	DefaultSize,
@@ -502,6 +505,22 @@ const Freehand: Story = {
 	},
 };
 
+// Freehand drawing story
+const FreehandWithSmoothing: Story = {
+	...DefaultStory,
+	args: {
+		id: "freehand-with-smoothing",
+		modes: [
+			() =>
+				new TerraDrawFreehandMode({
+					smoothing: 0.5,
+					preventPointsNearClose: false,
+				}),
+		],
+		...DefaultStory.args,
+	},
+};
+
 // Freehand autoclose drawing story
 const FreehandWithAutoClose: Story = {
 	...DefaultStory,
@@ -644,6 +663,79 @@ const SelectWithMidPoints: Story = {
 									midpoints: {
 										draggable: true,
 									},
+								},
+							},
+						},
+					},
+				}),
+		],
+		...DefaultStory.args,
+	},
+};
+
+const SelectWithMultiSelect: Story = {
+	...DefaultStory,
+	args: {
+		id: "select-with-multiselect",
+		modes: [
+			() => new TerraDrawPolygonMode(),
+			() =>
+				new TerraDrawSelectMode({
+					flags: {
+						polygon: {
+							feature: {
+								draggable: true,
+								coordinates: {},
+							},
+						},
+					},
+				}),
+		],
+		instructions:
+			"Draw a few polygons, then hold Shift and click each feature to multi-select. Shift-click a selected feature to deselect it.",
+		...DefaultStory.args,
+	},
+};
+
+const SelectWithMultipleSelectModes: Story = {
+	...DefaultStory,
+	args: {
+		id: "select-with-multiple-select-modes",
+		modes: [
+			() => new TerraDrawPolygonMode(),
+			() =>
+				new TerraDrawSelectMode({
+					styles: {
+						selectionPointColor: "#0000ff",
+						midPointColor: "#00ffff",
+					},
+					flags: {
+						polygon: {
+							feature: {
+								draggable: true,
+								coordinates: {
+									draggable: true,
+									midpoints: {
+										draggable: true,
+									},
+								},
+							},
+						},
+					},
+				}),
+			() =>
+				new TerraDrawSelectMode({
+					modeName: "alternate-select",
+					styles: {
+						selectionPointColor: "#ff00ff",
+						midPointColor: "#ffff00",
+					},
+					flags: {
+						polygon: {
+							feature: {
+								draggable: true,
+								coordinates: {
+									draggable: true,
 								},
 							},
 						},
@@ -829,6 +921,52 @@ const SelectWithMultipleOfSameModes: Story = {
 	},
 };
 
+const UndoRedo: Story = {
+	...DefaultStory,
+	args: {
+		id: "undo-redo",
+		modes: [
+			() =>
+				new TerraDrawPolygonMode({
+					showCoordinatePoints: true,
+					editable: true,
+					styles: {
+						coordinatePointColor: "#ff0000",
+					},
+				}),
+			() =>
+				new TerraDrawLineStringMode({
+					showCoordinatePoints: true,
+					editable: true,
+					styles: {
+						coordinatePointColor: "#ff0000",
+					},
+				}),
+			() =>
+				new TerraDrawSelectMode({
+					styles: {
+						selectionPointColor: "#0000ff",
+					},
+					flags: {
+						polygon: {
+							feature: {
+								draggable: true,
+								coordinates: {
+									draggable: true,
+									midpoints: {
+										draggable: true,
+									},
+								},
+							},
+						},
+					},
+				}),
+		],
+		enableUndoRedo: true,
+		...DefaultStory.args,
+	},
+};
+
 const AllStories = {
 	Point,
 	MarkerPNG,
@@ -859,6 +997,7 @@ const AllStories = {
 	FreehandLineString,
 	Freehand,
 	FreehandWithAutoClose,
+	FreehandWithSmoothing,
 	Sensor,
 	ProgrammaticScale,
 	ProgrammaticRotate,
@@ -868,7 +1007,10 @@ const AllStories = {
 	SelectWithScaleAndRotate,
 	SelectWithResizable,
 	SelectWithMidPoints,
+	SelectWithMultiSelect,
 	SelectWithMultipleOfSameModes,
+	SelectWithMultipleSelectModes,
+	UndoRedo,
 };
 
 export { AllStories };

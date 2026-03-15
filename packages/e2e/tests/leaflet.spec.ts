@@ -70,6 +70,281 @@ test.describe("page setup", () => {
 	});
 });
 
+test.describe("undo/redo", () => {
+	test.describe("session undo/redo", () => {
+		test("supports undo with meta shortcut", async ({ page }) => {
+			const mapDiv = await setupMap({ page });
+			await changeMode({ page, mode: "point" });
+
+			await page.mouse.click(mapDiv.width / 4, mapDiv.height / 4);
+			await page.mouse.click(mapDiv.width / 3, mapDiv.height / 3);
+
+			await expectPaths({ page, count: 2 });
+
+			await page.keyboard.press("Meta+KeyZ");
+
+			await expectPaths({ page, count: 1 });
+		});
+
+		test("supports undo/redo with control shortcuts", async ({ page }) => {
+			const mapDiv = await setupMap({ page });
+			await changeMode({ page, mode: "point" });
+
+			await page.mouse.click(mapDiv.width / 2, mapDiv.height / 2);
+			await expectPaths({ page, count: 1 });
+
+			await page.keyboard.press("Control+KeyZ");
+			await expectPaths({ page, count: 0 });
+
+			await page.keyboard.press("Control+KeyY");
+			await expectPaths({ page, count: 1 });
+		});
+
+		test("supports redo with meta+shift shortcut", async ({ page }) => {
+			const mapDiv = await setupMap({ page });
+			await changeMode({ page, mode: "point" });
+
+			await page.mouse.click(mapDiv.width / 2, mapDiv.height / 2);
+			await expectPaths({ page, count: 1 });
+
+			await page.keyboard.press("Meta+KeyZ");
+			await expectPaths({ page, count: 0 });
+
+			await page.keyboard.press("Meta+Shift+KeyZ");
+			await expectPaths({ page, count: 1 });
+		});
+
+		test("undo/redo after multiple actions", async ({ page }) => {
+			const mapDiv = await setupMap({ page });
+			await changeMode({ page, mode: "point" });
+
+			// Create 5 points
+			await page.mouse.click(mapDiv.width / 4, mapDiv.height / 4);
+			await page.mouse.click(mapDiv.width / 3, mapDiv.height / 3);
+			await page.mouse.click(mapDiv.width / 2, mapDiv.height / 2);
+			await page.mouse.click(mapDiv.width / 5, mapDiv.height / 5);
+			await page.mouse.click(mapDiv.width / 6, mapDiv.height / 6);
+
+			await expectPaths({ page, count: 5 });
+
+			// Undo 3 times
+			await page.keyboard.press("Control+KeyZ");
+			await page.keyboard.press("Control+KeyZ");
+			await page.keyboard.press("Control+KeyZ");
+			await expectPaths({ page, count: 2 });
+
+			// Redo 2 times
+			await page.keyboard.press("Control+KeyY");
+			await page.keyboard.press("Control+KeyY");
+			await expectPaths({ page, count: 4 });
+
+			// Undo 1 time
+			await page.keyboard.press("Control+KeyZ");
+			await expectPaths({ page, count: 3 });
+
+			// Redo 2 times
+			await page.keyboard.press("Control+KeyY");
+			await page.keyboard.press("Control+KeyY");
+		});
+
+		test("supports undo/redo after clear operation", async ({ page }) => {
+			const mapDiv = await setupMap({ page });
+			await changeMode({ page, mode: "point" });
+
+			await page.mouse.click(mapDiv.width / 3, mapDiv.height / 3);
+			await page.mouse.click(mapDiv.width / 2, mapDiv.height / 2);
+			await expectPaths({ page, count: 2 });
+
+			await page.getByText("Clear", { exact: true }).click();
+			await expectPaths({ page, count: 0 });
+
+			await changeMode({ page, mode: "select" });
+			await page.mouse.click(mapDiv.width / 2, mapDiv.height / 2);
+
+			await page.keyboard.press("Control+KeyZ");
+			await expectPaths({ page, count: 2 });
+
+			await page.keyboard.press("Control+KeyY");
+			await expectPaths({ page, count: 0 });
+
+			await page.keyboard.press("Control+KeyZ");
+			await expectPaths({ page, count: 2 });
+		});
+
+		test("undo/redo with multiple modes", async ({ page }) => {
+			const mapDiv = await setupMap({ page });
+			await changeMode({ page, mode: "point" });
+
+			// Create a point
+			await page.mouse.click(mapDiv.width / 2, mapDiv.height / 2);
+			await expectPaths({ page, count: 1 });
+
+			// Switch to linestring mode and create a line
+			await changeMode({ page, mode: "linestring" });
+			await page.mouse.click(mapDiv.width / 4, mapDiv.height / 4);
+			await page.mouse.click(mapDiv.width / 3, mapDiv.height / 3);
+			await page.mouse.click(mapDiv.width / 3, mapDiv.height / 3);
+
+			// Switch to polygon mode and create a polygon
+			await changeMode({ page, mode: "polygon" });
+			await drawRectangularPolygon({ mapDiv, page });
+
+			await expectPaths({ page, count: 3 });
+
+			// Undo should remove the line and polygon, but not the point
+			await page.keyboard.press("Control+KeyZ");
+			await page.keyboard.press("Control+KeyZ");
+			await expectPaths({ page, count: 1 });
+
+			// Redo should bring the line back
+			await page.keyboard.press("Control+KeyY");
+			await expectPaths({ page, count: 2 });
+
+			// Redo should bring the polygon back
+			await page.keyboard.press("Control+KeyY");
+			await expectPaths({ page, count: 3 });
+		});
+
+		test("clear operation resets drawing and undo/redo are safe no-ops", async ({
+			page,
+		}) => {
+			const mapDiv = await setupMap({
+				page,
+				configQueryParam: ["showCoordinatePoints"],
+			});
+			await changeMode({ page, mode: "polygon" });
+			await drawRectangularPolygon({ mapDiv, page, close: true });
+
+			await expectPaths({ page, count: 5 });
+
+			await page.getByText("Clear", { exact: true }).click();
+			await expectPaths({ page, count: 0 });
+
+			await page.keyboard.press("Control+KeyZ");
+			await expectPaths({ page, count: 0 });
+
+			await page.keyboard.press("Control+KeyY");
+			await expectPaths({ page, count: 0 });
+		});
+	});
+
+	test.describe("drawing undo/redo", () => {
+		test("undo should undo the last click while drawing a polygon", async ({
+			page,
+		}) => {
+			const mapDiv = await setupMap({
+				page,
+				configQueryParam: ["showCoordinatePoints"],
+			});
+			await changeMode({ page, mode: "polygon" });
+			await drawRectangularPolygon({ mapDiv, page, close: false });
+
+			// Polygon 4 points + 1 'moving' point + 2 closing points + 1 polygon path
+			await expectPaths({ page, count: 8 });
+
+			// Undo should remove the last clicked point (middlePoint) but keep the closing points so still 3 paths
+			await page.keyboard.press("Control+KeyZ");
+
+			// Polygon 3 points + 1 'moving' point + 2 closing points + 1 polygon path
+			await expectPaths({ page, count: 7 });
+		});
+
+		test("undo should undo the last click while drawing a polygon and moving the mouse", async ({
+			page,
+		}) => {
+			const mapDiv = await setupMap({
+				page,
+				configQueryParam: ["showCoordinatePoints"],
+			});
+			await changeMode({ page, mode: "polygon" });
+
+			const { bottomLeft } = await drawRectangularPolygon({
+				mapDiv,
+				page,
+				close: false,
+			});
+
+			// Polygon and 2 closing points
+			await expectPaths({ page, count: 8 });
+
+			// Undo should remove the last clicked point (middlePoint) but keep the closing points so still 3 paths
+			await page.keyboard.press("Control+KeyZ");
+			await expectPaths({ page, count: 7 });
+
+			await page.keyboard.press("Control+KeyZ");
+			// Moves the polygon which is line shaped back into a triangle
+			await page.mouse.move(bottomLeft.x, bottomLeft.y, { steps: 10 });
+
+			// There are no closing points because the mouse is moving and 3rd point is not committed with a click
+			await expectPaths({ page, count: 4 });
+		});
+
+		test("redo should redo the last undone click while drawing a polygon", async ({
+			page,
+		}) => {
+			const mapDiv = await setupMap({
+				page,
+				configQueryParam: ["showCoordinatePoints"],
+			});
+			await changeMode({ page, mode: "polygon" });
+			const sideLength = 100;
+			const halfLength = sideLength / 2;
+			const centerX = mapDiv.width / 2;
+			const centerY = mapDiv.height / 2;
+
+			const topLeft = { x: centerX - halfLength, y: centerY - halfLength };
+			const topRight = { x: centerX + halfLength, y: centerY - halfLength };
+			const bottomLeft = { x: centerX - halfLength, y: centerY + halfLength };
+			const bottomRight = { x: centerX + halfLength, y: centerY + halfLength };
+			const middlePoint = {
+				x: (bottomLeft.x + topLeft.x) / 2,
+				y: (bottomLeft.y + topLeft.y) / 2,
+			};
+
+			await page.mouse.click(topLeft.x, topLeft.y);
+			await page.mouse.click(topRight.x, topRight.y);
+
+			await page.mouse.click(bottomRight.x, bottomRight.y);
+			await page.mouse.click(bottomLeft.x, bottomLeft.y);
+
+			// Click a point between bottomLeft and topLeft to create a middle point
+			await page.mouse.click(middlePoint.x, middlePoint.y);
+			// Polygon and 2 closing points
+			await expectPaths({ page, count: 9 });
+
+			// Undo should remove the last clicked point (middlePoint) but keep the closing points so still 3 paths
+			await page.keyboard.press("Control+KeyZ");
+			await expectPaths({ page, count: 8 });
+
+			// Redo should bring back the middlePoint and still have the closing points so still 3 paths
+			await page.keyboard.press("Control+KeyY");
+			await expectPaths({ page, count: 9 });
+		});
+
+		test("clear operation resets drawing and undo/redo are safe no-ops", async ({
+			page,
+		}) => {
+			const mapDiv = await setupMap({
+				page,
+				configQueryParam: ["showCoordinatePoints"],
+			});
+			await changeMode({ page, mode: "polygon" });
+			await drawRectangularPolygon({ mapDiv, page, close: false });
+
+			await expectPaths({ page, count: 8 });
+
+			await page.getByText("Clear", { exact: true }).click();
+			await expectPaths({ page, count: 0 });
+
+			await page.keyboard.press("Control+KeyZ");
+			await expectPaths({ page, count: 0 });
+
+			await page.keyboard.press("Control+KeyY");
+			await expectPaths({ page, count: 0 });
+		});
+	});
+});
+
 test.describe("point mode", () => {
 	const mode = "point";
 
@@ -907,6 +1182,72 @@ test.describe("freehand mode", () => {
 		const mapDiv = await setupMap({ page });
 		await changeMode({ page, mode });
 		await page.mouse.click(mapDiv.width / 2, mapDiv.height / 2);
+
+		await page.mouse.move(mapDiv.width / 2 + 50, mapDiv.height / 2 + 50, {
+			steps: 30,
+		});
+
+		await page.mouse.move(mapDiv.width / 2 + 50, mapDiv.height / 2 - 50, {
+			steps: 30,
+		});
+
+		await page.mouse.move(mapDiv.width / 2 - 50, mapDiv.height / 2 - 50, {
+			steps: 30,
+		});
+
+		await page.mouse.move(mapDiv.width / 2 - 50, mapDiv.height / 2 + 50, {
+			steps: 30,
+		});
+
+		await page.mouse.up();
+
+		await expectPaths({ page, count: 1 });
+		await expectPathDimensions({ page, width: 104, height: 104 }); // Stroke width of 4
+	});
+
+	test("mode can set and used to create a freehand path with smoothing enabled", async ({
+		page,
+	}) => {
+		const mapDiv = await setupMap({
+			page,
+			configQueryParam: ["freehandSmoothing"],
+		});
+		await changeMode({ page, mode });
+		await page.mouse.click(mapDiv.width / 2, mapDiv.height / 2);
+
+		await page.mouse.move(mapDiv.width / 2 + 50, mapDiv.height / 2 + 50, {
+			steps: 30,
+		});
+
+		await page.mouse.move(mapDiv.width / 2 + 50, mapDiv.height / 2 - 50, {
+			steps: 30,
+		});
+
+		await page.mouse.move(mapDiv.width / 2 - 50, mapDiv.height / 2 - 50, {
+			steps: 30,
+		});
+
+		await page.mouse.move(mapDiv.width / 2 - 50, mapDiv.height / 2 + 50, {
+			steps: 30,
+		});
+
+		await page.mouse.up();
+
+		await expectPaths({ page, count: 1 });
+		await expectPathDimensions({ page, width: 104, height: 94 }); // Stroke width of 4
+	});
+
+	test("mode can set and used to create a freehand path with click-drag drawInteraction", async ({
+		page,
+	}) => {
+		const mapDiv = await setupMap({
+			page,
+			configQueryParam: ["freehandClickDrag"],
+		});
+		await changeMode({ page, mode });
+
+		await page.mouse.move(mapDiv.width / 2, mapDiv.height / 2);
+		await page.mouse.down();
 
 		await page.mouse.move(mapDiv.width / 2 + 50, mapDiv.height / 2 + 50, {
 			steps: 30,

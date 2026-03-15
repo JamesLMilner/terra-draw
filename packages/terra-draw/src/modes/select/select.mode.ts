@@ -345,11 +345,15 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 		);
 	}
 
-	public deselectFeature() {
-		this.deselect();
+	public deselectFeature(id: FeatureId) {
+		this.deselect(id);
 	}
 
-	private deselect() {
+	private deselect(id: FeatureId) {
+		if (!this.selected.includes(id)) {
+			return;
+		}
+
 		this.mutateFeature.setDeselected(this.selected);
 
 		this.onDeselect(this.selected[0]);
@@ -572,7 +576,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 			} else {
 				// If it's a different feature set selected
 				// to false on previously selected feature
-				this.deselect();
+				this.deselect(previouslySelectedId);
 			}
 		}
 
@@ -659,7 +663,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 		if (clickedFeature?.id) {
 			this.select(clickedFeature.id, true);
 		} else if (this.selected.length && this.allowManualDeselection) {
-			this.deselect();
+			this.deselect(this.selected[0]);
 			return;
 		}
 	}
@@ -761,7 +765,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 	/** @internal */
 	cleanUp() {
 		if (this.selected.length) {
-			this.deselect();
+			this.deselect(this.selected[0]);
 		}
 	}
 

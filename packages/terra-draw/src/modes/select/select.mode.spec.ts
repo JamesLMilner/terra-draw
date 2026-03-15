@@ -39,7 +39,7 @@ describe("TerraDrawSelectMode", () => {
 	};
 
 	const addPolygonToStore = (coords: Position[]) => {
-		store.create([
+		return store.create([
 			{
 				geometry: {
 					type: "Polygon",
@@ -49,7 +49,7 @@ describe("TerraDrawSelectMode", () => {
 					mode: "polygon",
 				},
 			},
-		]);
+		])[0];
 	};
 
 	const addLineStringToStore = (coords: Position[]) => {
@@ -203,6 +203,51 @@ describe("TerraDrawSelectMode", () => {
 			selectMode.stop();
 
 			expect(selectMode.state).toBe("stopped");
+		});
+	});
+
+	describe("programmatic selection", () => {
+		it("does not deselect when deselectFeature is called with a different id", () => {
+			setSelectMode({
+				flags: {
+					polygon: {
+						feature: {},
+					},
+				},
+			});
+
+			selectMode.start();
+
+			const selectedFeatureId = addPolygonToStore([
+				[0, 0],
+				[0, 1],
+				[1, 1],
+				[1, 0],
+				[0, 0],
+			]);
+
+			const otherFeatureId = addPolygonToStore([
+				[2, 2],
+				[2, 3],
+				[3, 3],
+				[3, 2],
+				[2, 2],
+			]);
+
+			expect(selectedFeatureId).not.toBe(otherFeatureId);
+
+			selectMode.selectFeature(selectedFeatureId);
+
+			onChange.mockClear();
+			onDeselect.mockClear();
+
+			selectMode.deselectFeature(otherFeatureId);
+
+			expect(onDeselect).not.toHaveBeenCalled();
+			expect(
+				store.getPropertiesCopy(selectedFeatureId)[SELECT_PROPERTIES.SELECTED],
+			).toBe(true);
+			expect(onChange).not.toHaveBeenCalled();
 		});
 	});
 

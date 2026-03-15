@@ -14,6 +14,9 @@ import {
 	GeoJSONStoreFeatures,
 	HexColor,
 	TerraDrawMarkerMode,
+	TerraDrawSessionUndoRedo,
+	TerraDrawModeUndoRedo,
+	TerraDrawUndoRedoKeyboardShortcuts,
 } from "../../../terra-draw/src/terra-draw";
 import {
 	DefaultSize,
@@ -918,6 +921,52 @@ const SelectWithMultipleOfSameModes: Story = {
 	},
 };
 
+const UndoRedo: Story = {
+	...DefaultStory,
+	args: {
+		id: "undo-redo",
+		modes: [
+			() =>
+				new TerraDrawPolygonMode({
+					showCoordinatePoints: true,
+					editable: true,
+					styles: {
+						coordinatePointColor: "#ff0000",
+					},
+				}),
+			() =>
+				new TerraDrawLineStringMode({
+					showCoordinatePoints: true,
+					editable: true,
+					styles: {
+						coordinatePointColor: "#ff0000",
+					},
+				}),
+			() =>
+				new TerraDrawSelectMode({
+					styles: {
+						selectionPointColor: "#0000ff",
+					},
+					flags: {
+						polygon: {
+							feature: {
+								draggable: true,
+								coordinates: {
+									draggable: true,
+									midpoints: {
+										draggable: true,
+									},
+								},
+							},
+						},
+					},
+				}),
+		],
+		enableUndoRedo: true,
+		...DefaultStory.args,
+	},
+};
+
 const AllStories = {
 	Point,
 	MarkerPNG,
@@ -961,6 +1010,7 @@ const AllStories = {
 	SelectWithMultiSelect,
 	SelectWithMultipleOfSameModes,
 	SelectWithMultipleSelectModes,
+	UndoRedo,
 };
 
 export { AllStories };

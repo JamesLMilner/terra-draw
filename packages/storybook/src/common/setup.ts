@@ -1,4 +1,7 @@
 import { TerraDrawBaseDrawMode } from "../../../terra-draw/src/extend";
+import { TerraDrawUndoRedoKeyboardShortcuts } from "../../../terra-draw/src/terra-draw";
+import { TerraDrawModeUndoRedo } from "../../../terra-draw/src/undo-redo/mode-undo-redo";
+import { TerraDrawSessionUndoRedo } from "../../../terra-draw/src/undo-redo/session-undo-redo";
 import { StoryArgs } from "./config";
 
 const COLORS = {
@@ -198,3 +201,13 @@ export function setupControls({
 export function onNextFrame(fn: any) {
 	requestAnimationFrame(() => requestAnimationFrame(fn));
 }
+
+export const SetupUndoRedo = (args: StoryArgs) => {
+	return args.enableUndoRedo
+		? {
+				sessionLevel: new TerraDrawSessionUndoRedo({ maxStackSize: 100 }),
+				modeLevel: new TerraDrawModeUndoRedo({ maxStackSize: 100 }),
+				keyboardShortcuts: new TerraDrawUndoRedoKeyboardShortcuts(),
+			}
+		: undefined;
+};

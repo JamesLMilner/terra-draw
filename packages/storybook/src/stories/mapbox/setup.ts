@@ -3,6 +3,7 @@ import {
 	setupMapContainer,
 	setupControls,
 	onNextFrame,
+	SetupUndoRedo,
 } from "../../common/setup";
 import { TerraDraw } from "../../../../terra-draw/src/terra-draw";
 import { TerraDrawMapboxGLAdapter } from "../../../../terra-draw-mapbox-gl-adapter/src/terra-draw-mapbox-gl-adapter";
@@ -93,6 +94,7 @@ export function SetupMapbox(args: StoryArgs): HTMLElement {
 					map,
 				}),
 				modes,
+				undoRedo: SetupUndoRedo(args),
 			});
 
 			draw.start();

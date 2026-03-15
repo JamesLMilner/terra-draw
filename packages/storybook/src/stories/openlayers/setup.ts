@@ -11,6 +11,7 @@ import {
 	setupMapContainer,
 	setupControls,
 	onNextFrame,
+	SetupUndoRedo,
 } from "../../common/setup";
 import { TerraDraw } from "../../../../terra-draw/src/terra-draw";
 import { TerraDrawOpenLayersAdapter } from "../../../../terra-draw-openlayers-adapter/src/terra-draw-openlayers-adapter";
@@ -90,6 +91,7 @@ export function SetupOpenLayers(args: StoryArgs): HTMLElement {
 					...mapConfig,
 				}),
 				modes,
+				undoRedo: SetupUndoRedo(args),
 			});
 
 			draw.start();

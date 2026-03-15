@@ -39,6 +39,7 @@ import {
 	Mutations,
 } from "../mutate-feature.behavior";
 import { ReadFeatureBehavior } from "../read-feature.behavior";
+import { UndoRedoBehavior } from "../undo-redo.behavior";
 
 type TerraDrawPolygonModeKeyEvents = {
 	cancel?: KeyboardEvent["key"] | null;
@@ -136,6 +137,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 	private clickBoundingBox!: ClickBoundingBoxBehavior;
 	private mutateFeature!: MutateFeatureBehavior;
 	private readFeature!: ReadFeatureBehavior;
+	private undoRedo!: UndoRedoBehavior<Position[][]>;
 
 	constructor(options?: TerraDrawPolygonModeOptions<PolygonStyling>) {
 		super(options, true);
@@ -267,6 +269,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 
 		this.currentCoordinate = 0;
 		this.currentId = undefined;
+		this.undoRedo.clear();
 
 		this.onFinish(featureId, {
 			mode: this.mode,
@@ -304,6 +307,10 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 			this.readFeature,
 			this.mutateFeature,
 		);
+
+		this.undoRedo = new UndoRedoBehavior<Position[][]>({
+			maxStackSize: config.undoRedoMaxStackSize,
+		});
 	}
 
 	/** @internal */
@@ -343,6 +350,189 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 			this.mutateFeature.deleteFeatureIfPresent(this.snappedPointId);
 			this.snappedPointId = undefined;
 		}
+	}
+
+	undoSize() {
+		return this.undoRedo.undoSize();
+	}
+
+	private pushHistorySnapshot(featureId: FeatureId, currentCoordinate: number) {
+		const featureGeometry = this.readFeature.getGeometry<Polygon>(featureId);
+
+		this.undoRedo.recordSnapshot({
+			featureCoordinates: featureGeometry.coordinates,
+			currentCoordinate,
+		});
+	}
+
+	private updateSnappedGuidancePointFromLastMouseMove() {
+		if (!this.snapping || !this.lastMouseMoveEvent) {
+			if (this.snappedPointId) {
+				this.mutateFeature.deleteFeatureIfPresent(this.snappedPointId);
+				this.snappedPointId = undefined;
+			}
+			return;
+		}
+
+		this.updateSnappedCoordinate(this.lastMouseMoveEvent);
+	}
+
+	private syncClosingPoints(featureCoordinates: Position[][]) {
+		if (this.currentCoordinate >= 3) {
+			if (this.closingPoints.ids.length) {
+				this.closingPoints.update(featureCoordinates);
+			} else {
+				this.closingPoints.create(featureCoordinates);
+			}
+		} else {
+			this.closingPoints.delete();
+		}
+	}
+
+	public undo() {
+		if (this.state !== "drawing" || !this.currentId) {
+			return;
+		}
+
+		const undoStepResult = this.undoRedo.beginUndo();
+
+		if (!undoStepResult) {
+			return;
+		}
+
+		const { previousEntry: previousHistoryEntry } = undoStepResult;
+
+		if (!previousHistoryEntry) {
+			const removedFeatureId = this.currentId;
+
+			this.currentId = undefined;
+			this.currentCoordinate = 0;
+			this.closingPoints.delete();
+
+			if (this.state === "drawing") {
+				this.setStarted();
+			}
+
+			if (this.showCoordinatePoints) {
+				this.coordinatePoints.deletePointsByFeatureIds([removedFeatureId]);
+			}
+
+			this.mutateFeature.deleteFeatureIfPresent(removedFeatureId);
+			this.updateSnappedGuidancePointFromLastMouseMove();
+			return;
+		}
+
+		const updated = this.mutateFeature.updatePolygon({
+			featureId: this.currentId,
+			coordinateMutations: {
+				type: Mutations.Replace,
+				coordinates: previousHistoryEntry.featureCoordinates,
+			},
+			propertyMutations: {
+				[COMMON_PROPERTIES.CURRENTLY_DRAWING]: true,
+				[COMMON_PROPERTIES.COMMITTED_COORDINATE_COUNT]:
+					previousHistoryEntry.currentCoordinate,
+				[COMMON_PROPERTIES.PROVISIONAL_COORDINATE_COUNT]:
+					previousHistoryEntry.currentCoordinate,
+			},
+			context: { updateType: UpdateTypes.Commit },
+		});
+
+		if (!updated) {
+			return;
+		}
+
+		this.currentCoordinate = previousHistoryEntry.currentCoordinate;
+		this.syncClosingPoints(updated.geometry.coordinates);
+
+		if (this.showCoordinatePoints) {
+			this.coordinatePoints.createOrUpdate({
+				featureId: this.currentId,
+				featureCoordinates: updated.geometry.coordinates,
+			});
+		}
+
+		this.updateSnappedGuidancePointFromLastMouseMove();
+	}
+
+	public redoSize(): number {
+		return this.undoRedo.redoSize();
+	}
+
+	public redo() {
+		const redoneHistoryEntry = this.undoRedo.takeRedo();
+
+		if (!redoneHistoryEntry) {
+			return;
+		}
+
+		if (!this.currentId) {
+			// createPolygon can mutate the coordinates by applying the right hand rule
+			const coordinatesCopy = this.undoRedo.cloneCoordinates(
+				redoneHistoryEntry.featureCoordinates,
+			)[0];
+
+			const { id, geometry } = this.mutateFeature.createPolygon({
+				coordinates: coordinatesCopy,
+				properties: {
+					mode: this.mode,
+					[COMMON_PROPERTIES.CURRENTLY_DRAWING]: true,
+					[COMMON_PROPERTIES.COMMITTED_COORDINATE_COUNT]:
+						redoneHistoryEntry.currentCoordinate,
+					[COMMON_PROPERTIES.PROVISIONAL_COORDINATE_COUNT]:
+						redoneHistoryEntry.currentCoordinate,
+				},
+			});
+
+			this.currentId = id;
+			this.currentCoordinate = redoneHistoryEntry.currentCoordinate;
+
+			if (this.state === "started") {
+				this.setDrawing();
+			}
+			this.syncClosingPoints(geometry.coordinates);
+
+			if (this.showCoordinatePoints) {
+				this.coordinatePoints.createOrUpdate({
+					featureId: id,
+					featureCoordinates: geometry.coordinates,
+				});
+			}
+		} else {
+			const updated = this.mutateFeature.updatePolygon({
+				featureId: this.currentId,
+				coordinateMutations: {
+					type: Mutations.Replace,
+					coordinates: redoneHistoryEntry.featureCoordinates,
+				},
+				propertyMutations: {
+					[COMMON_PROPERTIES.CURRENTLY_DRAWING]: true,
+					[COMMON_PROPERTIES.COMMITTED_COORDINATE_COUNT]:
+						redoneHistoryEntry.currentCoordinate,
+					[COMMON_PROPERTIES.PROVISIONAL_COORDINATE_COUNT]:
+						redoneHistoryEntry.currentCoordinate,
+				},
+				context: { updateType: UpdateTypes.Commit },
+			});
+
+			if (!updated) {
+				return;
+			}
+
+			this.currentCoordinate = redoneHistoryEntry.currentCoordinate;
+			this.syncClosingPoints(updated.geometry.coordinates);
+
+			if (this.showCoordinatePoints) {
+				this.coordinatePoints.createOrUpdate({
+					featureId: this.currentId,
+					featureCoordinates: updated.geometry.coordinates,
+				});
+			}
+		}
+
+		this.undoRedo.commitRedo(redoneHistoryEntry);
+
+		this.updateSnappedGuidancePointFromLastMouseMove();
 	}
 
 	/** @internal */
@@ -625,6 +815,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 
 			this.currentId = id;
 			this.currentCoordinate++;
+			this.pushHistorySnapshot(this.currentId, this.currentCoordinate);
 
 			// Ensure the state is updated to reflect drawing has started
 			this.setDrawing();
@@ -664,6 +855,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 			}
 
 			this.currentCoordinate++;
+			this.pushHistorySnapshot(this.currentId, this.currentCoordinate);
 		} else if (this.currentCoordinate === 2 && this.currentId) {
 			const isIdentical = this.readFeature.coordinateAtIndexIsIdentical({
 				featureId: this.currentId,
@@ -708,6 +900,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 			}
 
 			this.currentCoordinate++;
+			this.pushHistorySnapshot(this.currentId, this.currentCoordinate);
 		} else if (this.currentId) {
 			const { isClosing, isPreviousClosing } =
 				this.closingPoints.isPolygonClosingPoints(event);
@@ -754,6 +947,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 				}
 
 				this.currentCoordinate++;
+				this.pushHistorySnapshot(this.currentId, this.currentCoordinate);
 
 				// Update closing points straight away
 				if (this.closingPoints.ids.length) {
@@ -1061,6 +1255,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 		this.editedInsertIndex = undefined;
 		this.editedSnapType = undefined;
 		this.currentCoordinate = 0;
+		this.undoRedo.clear();
 
 		if (this.state === "drawing") {
 			this.setStarted();
@@ -1271,6 +1466,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 		if (this.currentId === feature.id) {
 			this.currentCoordinate = 0;
 			this.currentId = undefined;
+			this.undoRedo.clear();
 			this.closingPoints.delete();
 
 			// Go back to started state

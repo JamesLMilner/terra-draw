@@ -962,11 +962,7 @@ const UndoRedo: Story = {
 					},
 				}),
 		],
-		undoRedoSetup: {
-			sessionLevel: true,
-			modeLevel: true,
-			keyboardShortcuts: true,
-		},
+		enableUndoRedo: true,
 		...DefaultStory.args,
 	},
 };

@@ -203,17 +203,11 @@ export function onNextFrame(fn: any) {
 }
 
 export const SetupUndoRedo = (args: StoryArgs) => {
-	return args.undoRedoSetup
+	return args.enableUndoRedo
 		? {
-				sessionLevel: args.undoRedoSetup.sessionLevel
-					? new TerraDrawSessionUndoRedo({ maxStackSize: 100 })
-					: undefined,
-				modeLevel: args.undoRedoSetup.modeLevel
-					? new TerraDrawModeUndoRedo({ maxStackSize: 100 })
-					: undefined,
-				keyboardShortcuts: args.undoRedoSetup.keyboardShortcuts
-					? new TerraDrawUndoRedoKeyboardShortcuts()
-					: undefined,
+				sessionLevel: new TerraDrawSessionUndoRedo({ maxStackSize: 100 }),
+				modeLevel: new TerraDrawModeUndoRedo({ maxStackSize: 100 }),
+				keyboardShortcuts: new TerraDrawUndoRedoKeyboardShortcuts(),
 			}
 		: undefined;
 };

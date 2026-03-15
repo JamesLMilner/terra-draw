@@ -1,6 +1,6 @@
-const config = require("../../jest.config");
+import config from "../../jest.config.ts";
 
-module.exports = {
+export default {
 	...config,
 	testPathIgnorePatterns: ["<rootDir>/dist"],
 	coveragePathIgnorePatterns: ["<rootDir>/src/test/", "<rootDir>/dist"],

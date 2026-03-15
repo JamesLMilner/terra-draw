@@ -8,7 +8,7 @@ console.log(
 	`Coverage threshold is ${CoverageThreshold ? "enabled" : "disabled"}\n`,
 );
 
-module.exports = {
+export default {
 	preset: "ts-jest",
 	testEnvironment: "node",
 	testPathIgnorePatterns: [

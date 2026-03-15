@@ -228,6 +228,24 @@ describe("Undo/Redo", () => {
 	});
 
 	describe("onHistoryChange", () => {
+		it("does not emit push events when maxStackSize is 0", () => {
+			const disabledHistoryChange = jest.fn();
+			const disabledUndoRedo = new TerraDrawSessionUndoRedo({
+				maxStackSize: 0,
+			});
+
+			disabledUndoRedo.register({
+				draw,
+				onHistoryChange: disabledHistoryChange,
+			});
+
+			createPolygonFeature(0.1);
+
+			expect(disabledUndoRedo.undoSize()).toBe(0);
+			expect(disabledUndoRedo.redoSize()).toBe(0);
+			expect(disabledHistoryChange).not.toHaveBeenCalled();
+		});
+
 		it("emits a single undo history-change event for a single undo action", () => {
 			createPolygonFeature(0.1);
 
@@ -371,6 +389,62 @@ describe("Undo/Redo", () => {
 	describe("undo", () => {
 		it("returns false when undo is unavailable", () => {
 			expect(manager.undo()).toBe(false);
+		});
+
+		it("removes a recreated feature when undoing its creation with a reused id", () => {
+			const reusedId = "11111111-1111-4111-8111-111111111111";
+
+			const firstCreateValidation = draw.addFeatures([
+				{
+					...createPolygonFeatureForAddFeatures(0.1),
+					id: reusedId,
+				},
+			]);
+			expect(firstCreateValidation[0].valid).toBe(true);
+
+			draw.removeFeatures([reusedId]);
+
+			const secondCreateValidation = draw.addFeatures([
+				{
+					...createPolygonFeatureForAddFeatures(0.2),
+					id: reusedId,
+				},
+			]);
+			expect(secondCreateValidation[0].valid).toBe(true);
+
+			expect(draw.getSnapshot().length).toBe(1);
+
+			manager.undo();
+
+			expect(draw.getSnapshot().length).toBe(0);
+		});
+
+		it("removes a recreated feature when original creation was undone first", () => {
+			const reusedId = "22222222-2222-4222-8222-222222222222";
+
+			const firstCreateValidation = draw.addFeatures([
+				{
+					...createPolygonFeatureForAddFeatures(0.1),
+					id: reusedId,
+				},
+			]);
+			expect(firstCreateValidation[0].valid).toBe(true);
+
+			manager.undo();
+			expect(draw.getSnapshot().length).toBe(0);
+
+			const secondCreateValidation = draw.addFeatures([
+				{
+					...createPolygonFeatureForAddFeatures(0.2),
+					id: reusedId,
+				},
+			]);
+			expect(secondCreateValidation[0].valid).toBe(true);
+			expect(draw.getSnapshot().length).toBe(1);
+
+			manager.undo();
+
+			expect(draw.getSnapshot().length).toBe(0);
 		});
 
 		it("returns true when undo is performed", () => {

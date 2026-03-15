@@ -962,11 +962,11 @@ const UndoRedo: Story = {
 					},
 				}),
 		],
-		undoRedoOptions: () => ({
-			sessionLevel: new TerraDrawSessionUndoRedo(),
-			modeLevel: new TerraDrawModeUndoRedo(),
-			keyboardShortcuts: new TerraDrawUndoRedoKeyboardShortcuts(),
-		}),
+		undoRedoSetup: {
+			sessionLevel: true,
+			modeLevel: true,
+			keyboardShortcuts: true,
+		},
 		...DefaultStory.args,
 	},
 };

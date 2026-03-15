@@ -13,6 +13,7 @@ import {
 	setupMapContainer,
 	setupControls,
 	onNextFrame,
+	SetupUndoRedo,
 } from "../../common/setup";
 import { TerraDraw } from "../../../../terra-draw/src/terra-draw";
 import { TerraDrawArcGISMapsSDKAdapter } from "../../../../terra-draw-arcgis-adapter/src/terra-draw-arcgis-adapter";
@@ -85,7 +86,7 @@ export function SetupArcGIS(args: StoryArgs): HTMLElement {
 					map: mapConfig.map,
 				}),
 				modes,
-				undoRedo: args.undoRedoOptions?.(),
+				undoRedo: SetupUndoRedo(args),
 			});
 
 			draw.start();

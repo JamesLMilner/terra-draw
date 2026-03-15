@@ -3,6 +3,7 @@ import {
 	setupMapContainer,
 	setupControls,
 	onNextFrame,
+	SetupUndoRedo,
 } from "../../common/setup";
 import { TerraDraw } from "../../../../terra-draw/src/terra-draw";
 import { TerraDrawLeafletAdapter } from "../../../../terra-draw-leaflet-adapter/src/terra-draw-leaflet-adapter";
@@ -63,7 +64,7 @@ export function SetupLeaflet(args: StoryArgs): HTMLElement {
 				map,
 			}),
 			modes,
-			undoRedo: args.undoRedoOptions?.(),
+			undoRedo: SetupUndoRedo(args),
 		});
 
 		draw.start();

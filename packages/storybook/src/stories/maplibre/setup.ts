@@ -3,6 +3,7 @@ import {
 	setupMapContainer,
 	setupControls,
 	onNextFrame,
+	SetupUndoRedo,
 } from "../../common/setup";
 import { TerraDraw } from "../../../../terra-draw/src/terra-draw";
 import { TerraDrawMapLibreGLAdapter } from "../../../../terra-draw-maplibre-gl-adapter/src/terra-draw-maplibre-gl-adapter";
@@ -79,7 +80,7 @@ export function SetupMapLibre(args: StoryArgs): HTMLElement {
 						map: mapConfig.map,
 					}),
 					modes,
-					undoRedo: args.undoRedoOptions?.(),
+					undoRedo: SetupUndoRedo(args),
 				});
 
 				draw.start();

@@ -18,9 +18,11 @@ export interface StoryArgs {
 	instructions?: string;
 	afterRender?: (draw: TerraDraw) => void;
 	showButtons?: boolean;
-	undoRedoOptions?: () => ConstructorParameters<
-		typeof TerraDraw
-	>[0]["undoRedo"];
+	undoRedoSetup?: {
+		keyboardShortcuts?: boolean;
+		sessionLevel?: boolean;
+		modeLevel?: boolean;
+	};
 }
 
 export const DefaultZoom = {

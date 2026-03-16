@@ -4,8 +4,12 @@ dotenv.config({ quiet: true });
 
 const config = {
 	stories: ["../src/**/*.stories.@(js|jsx|mjs|ts|tsx|md|mdx)"],
-	addons: ["@storybook/addon-links", "@storybook/addon-essentials"],
-	features: { interactions: false, actions: false },
+	addons: ["@storybook/addon-vitest"],
+	features: {
+		interactions: false,
+		actions: false,
+		sidebarOnboardingChecklist: false,
+	},
 	framework: {
 		name: "@storybook/html-vite",
 		options: {},
@@ -19,7 +23,7 @@ const config = {
 	core: {
 		disableTelemetry: true,
 	},
-	viteFinal: async (config) => {
+	viteFinal: async (config: any) => {
 		return {
 			...config,
 			define: {

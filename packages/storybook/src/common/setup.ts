@@ -198,8 +198,20 @@ export function setupControls({
 	});
 }
 
-export function onNextFrame(fn: any) {
-	requestAnimationFrame(() => requestAnimationFrame(fn));
+export function whenElementExists(
+	selector: string,
+	cb: (el: HTMLElement) => void,
+) {
+	function check() {
+		const el = document.querySelector(selector);
+		if (el) {
+			cb(el as HTMLElement);
+		} else {
+			requestAnimationFrame(check);
+		}
+	}
+
+	check();
 }
 
 export const SetupUndoRedo = (args: StoryArgs) => {

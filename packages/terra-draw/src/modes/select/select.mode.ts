@@ -147,12 +147,14 @@ interface TerraDrawSelectModeOptions<T extends CustomStyling>
 	dragEventThrottle?: number;
 	cursors?: Cursors;
 	allowManualDeselection?: boolean;
+	allowManualSelection?: boolean;
 }
 
 export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStyling> {
 	public mode = "select";
 
 	private allowManualDeselection = true;
+	private allowManualSelection = true;
 	private dragEventThrottle = 5;
 	private dragEventCount = 0;
 	private selected: FeatureId[] = [];
@@ -223,6 +225,10 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 
 		if (options?.allowManualDeselection !== undefined) {
 			this.allowManualDeselection = options.allowManualDeselection;
+		}
+
+		if (options?.allowManualSelection !== undefined) {
+			this.allowManualSelection = options.allowManualSelection;
 		}
 
 		// Flags and Validations
@@ -661,7 +667,9 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 		}
 
 		if (clickedFeature?.id) {
-			this.select(clickedFeature.id, true);
+			if (this.allowManualSelection) {
+				this.select(clickedFeature.id, true);
+			}
 		} else if (this.selected.length && this.allowManualDeselection) {
 			this.deselect(this.selected[0]);
 			return;

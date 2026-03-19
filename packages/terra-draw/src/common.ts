@@ -10,11 +10,11 @@ export type HexColor = `#${string}`;
 
 export type HexColorStyling =
 	| HexColor
-	| ((feature: GeoJSONStoreFeatures) => HexColor);
+	| ((feature: GeoJSONStoreFeatures) => HexColor | null | undefined);
 
 export type NumericStyling =
 	| number
-	| ((feature: GeoJSONStoreFeatures) => number);
+	| ((feature: GeoJSONStoreFeatures) => number | null | undefined);
 
 export type UrlStyling = string | ((feature: GeoJSONStoreFeatures) => string);
 

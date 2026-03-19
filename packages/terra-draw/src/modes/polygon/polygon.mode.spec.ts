@@ -2853,6 +2853,42 @@ describe("validateFeature", () => {
 		});
 	});
 
+	it("returns false with reason for polygon feature with invalid id strategy", () => {
+		const polygonMode = new TerraDrawPolygonMode({
+			validation: () => ({
+				valid: true,
+			}),
+		});
+		polygonMode.register(MockModeConfig("polygon"));
+
+		expect(
+			polygonMode.validateFeature({
+				id: "00000000-00000000-00000000-00000000",
+				type: "Feature",
+				geometry: {
+					type: "Polygon",
+					coordinates: [
+						[
+							[-1.812744141, 52.429222278],
+							[-1.889648438, 51.652110862],
+							[0.505371094, 52.052490476],
+							[-0.417480469, 52.476089041],
+							[-1.812744141, 52.429222278],
+						],
+					],
+				},
+				properties: {
+					mode: "polygon",
+					createdAt: 1685655516297,
+					updatedAt: 1685655518118,
+				},
+			}),
+		).toEqual({
+			valid: false,
+			reason: "Feature must match the id strategy (default is UUID4)",
+		});
+	});
+
 	it("returns true for valid polygon feature", () => {
 		const polygonMode = new TerraDrawPolygonMode({
 			styles: {

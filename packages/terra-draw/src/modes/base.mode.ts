@@ -252,7 +252,11 @@ export abstract class TerraDrawBaseDrawMode<Styling extends CustomStyling> {
 			this.store.idStrategy.isValidId,
 		);
 
-		// We also want tp validate based on any specific valdiations passed in
+		if (!validStoreFeature.valid) {
+			return validStoreFeature;
+		}
+
+		// We also want to validate based on any specific valdiations passed in
 		if (this.validate) {
 			const validation = this.validate(feature as GeoJSONStoreFeatures, {
 				project: this.project,

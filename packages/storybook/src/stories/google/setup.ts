@@ -9,20 +9,7 @@ import { TerraDraw } from "../../../../terra-draw/src/terra-draw";
 import { TerraDrawGoogleMapsAdapter } from "../../../../terra-draw-google-maps-adapter/src/terra-draw-google-maps-adapter";
 import { StoryArgs } from "../../common/config";
 
-// Check for Google Maps API key (can be set via environment or global)
-const apiKey = (import.meta as any).env.GOOGLE_API_KEY;
-
-// If no API key is provided, use empty string (will still work for development)
-if (!apiKey) {
-	throw new Error(
-		"Google Maps API key is required. Please set it in your environment variables or as a global variable.",
-	);
-}
-
-setOptions({
-	key: apiKey,
-	v: "weekly",
-});
+let setOptionsCalled = false;
 
 const initialiseGoogleMap = async ({
 	mapContainer,
@@ -35,6 +22,25 @@ const initialiseGoogleMap = async ({
 	centerLng: number;
 	zoom: number;
 }) => {
+	if (!setOptionsCalled) {
+		// Check for Google Maps API key (can be set via environment or global)
+		const apiKey = (import.meta as any).env.GOOGLE_API_KEY;
+
+		// If no API key is provided, use empty string (will still work for development)
+		if (!apiKey) {
+			throw new Error(
+				"Google Maps API key is required. Please set it in your environment variables or as a global variable.",
+			);
+		}
+
+		setOptions({
+			key: apiKey,
+			v: "weekly",
+		});
+
+		setOptionsCalled = true;
+	}
+
 	// Load Google Maps API (maps for Map/Data/OverlayView, core for LatLng/Point/Size)
 	await Promise.all([importLibrary("maps"), importLibrary("core")]);
 

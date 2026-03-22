@@ -14,10 +14,8 @@ import {
 	GeoJSONStoreFeatures,
 	HexColor,
 	TerraDrawMarkerMode,
-	TerraDrawSessionUndoRedo,
-	TerraDrawModeUndoRedo,
-	TerraDrawUndoRedoKeyboardShortcuts,
 } from "../../../terra-draw/src/terra-draw";
+
 import {
 	DefaultSize,
 	LocationNewYork,

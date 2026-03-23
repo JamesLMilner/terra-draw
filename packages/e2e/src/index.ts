@@ -17,6 +17,9 @@ import {
 	TerraDrawRenderMode,
 	TerraDrawSelectMode,
 	ValidateMaxAreaSquareMeters,
+	TerraDrawUndoRedoKeyboardShortcuts,
+	TerraDrawSessionUndoRedo,
+	TerraDrawModeUndoRedo,
 } from "terra-draw";
 import { TestConfigOptions } from "../tests/setup";
 
@@ -236,6 +239,11 @@ class TestMap {
 					},
 				}),
 			],
+			undoRedo: {
+				keyboardShortcuts: new TerraDrawUndoRedoKeyboardShortcuts(),
+				sessionLevel: new TerraDrawSessionUndoRedo(),
+				modeLevel: new TerraDrawModeUndoRedo(),
+			},
 		});
 
 		draw.start();

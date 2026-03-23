@@ -99,6 +99,7 @@ export abstract class TerraDrawBaseDrawMode<Styling extends CustomStyling> {
 	protected validate: Validation | undefined;
 	protected pointerDistance: number = 40;
 	protected coordinatePrecision!: number;
+	protected undoRedoMaxStackSize?: number;
 	protected onStyleChange!: StoreChangeHandler<
 		TerraDrawOnChangeContext | undefined
 	>;
@@ -216,6 +217,7 @@ export abstract class TerraDrawBaseDrawMode<Styling extends CustomStyling> {
 			this.onStyleChange = config.onChange;
 			this.onFinish = config.onFinish;
 			this.coordinatePrecision = config.coordinatePrecision;
+			this.undoRedoMaxStackSize = config.undoRedoMaxStackSize;
 
 			this.registerBehaviors({
 				mode: config.mode,
@@ -225,6 +227,7 @@ export abstract class TerraDrawBaseDrawMode<Styling extends CustomStyling> {
 				pointerDistance: this.pointerDistance,
 				coordinatePrecision: config.coordinatePrecision,
 				projection: this.projection,
+				undoRedoMaxStackSize: config.undoRedoMaxStackSize,
 			});
 		} else {
 			throw new Error("Can not register unless mode is unregistered");
@@ -249,7 +252,11 @@ export abstract class TerraDrawBaseDrawMode<Styling extends CustomStyling> {
 			this.store.idStrategy.isValidId,
 		);
 
-		// We also want tp validate based on any specific valdiations passed in
+		if (!validStoreFeature.valid) {
+			return validStoreFeature;
+		}
+
+		// We also want to validate based on any specific valdiations passed in
 		if (this.validate) {
 			const validation = this.validate(feature as GeoJSONStoreFeatures, {
 				project: this.project,
@@ -306,6 +313,14 @@ export abstract class TerraDrawBaseDrawMode<Styling extends CustomStyling> {
 	onSelect(selectedId: FeatureId) {}
 	onKeyDown(event: TerraDrawKeyboardEvent) {}
 	onKeyUp(event: TerraDrawKeyboardEvent) {}
+	undo() {}
+	undoSize() {
+		return 0;
+	}
+	redoSize() {
+		return 0;
+	}
+	redo() {}
 	onMouseMove(event: TerraDrawMouseEvent) {}
 	onClick(event: TerraDrawMouseEvent) {}
 	onDragStart(

@@ -128,7 +128,7 @@ describe("GeoJSONStore", () => {
 				{ geometry: { type: "Point", coordinates: [0, 0] } },
 			]);
 
-			store.clear();
+			store.clear({ origin: "api" });
 
 			expect(store.size()).toBe(0);
 

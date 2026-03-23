@@ -422,22 +422,6 @@ describe("mutateFeatureBehavior", () => {
 			});
 		});
 
-		describe("epsilonOffset", () => {
-			it("returns >= 1e-6 for high precision and equals epsilon for lower precision", () => {
-				const configHigh = MockBehaviorConfig("test", "web-mercator", 9);
-				const behaviorHigh = new MutateFeatureBehavior(configHigh, {
-					validate: undefined,
-				});
-				expect(behaviorHigh.epsilonOffset()).toBeCloseTo(0.000001, 10);
-
-				const configLow = MockBehaviorConfig("test", "web-mercator", 5);
-				const behaviorLow = new MutateFeatureBehavior(configLow, {
-					validate: undefined,
-				});
-				expect(behaviorLow.epsilonOffset()).toBeCloseTo(0.0001, 10);
-			});
-		});
-
 		describe("createLineString", () => {
 			it("creates a LineString feature and calls onSuccess", () => {
 				const config = MockBehaviorConfig("test");

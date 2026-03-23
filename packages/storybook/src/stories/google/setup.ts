@@ -2,11 +2,14 @@ import { setOptions, importLibrary } from "@googlemaps/js-api-loader";
 import {
 	setupMapContainer,
 	setupControls,
-	onNextFrame,
+	SetupUndoRedo,
+	whenElementExists,
 } from "../../common/setup";
 import { TerraDraw } from "../../../../terra-draw/src/terra-draw";
 import { TerraDrawGoogleMapsAdapter } from "../../../../terra-draw-google-maps-adapter/src/terra-draw-google-maps-adapter";
 import { StoryArgs } from "../../common/config";
+
+let setOptionsCalled = false;
 
 const initialiseGoogleMap = async ({
 	mapContainer,
@@ -19,20 +22,24 @@ const initialiseGoogleMap = async ({
 	centerLng: number;
 	zoom: number;
 }) => {
-	// Check for Google Maps API key (can be set via environment or global)
-	const apiKey = (import.meta as any).env.GOOGLE_API_KEY;
+	if (!setOptionsCalled) {
+		// Check for Google Maps API key (can be set via environment or global)
+		const apiKey = (import.meta as any).env.GOOGLE_API_KEY;
 
-	// If no API key is provided, use empty string (will still work for development)
-	if (!apiKey) {
-		throw new Error(
-			"Google Maps API key is required. Please set it in your environment variables or as a global variable.",
-		);
+		// If no API key is provided, use empty string (will still work for development)
+		if (!apiKey) {
+			throw new Error(
+				"Google Maps API key is required. Please set it in your environment variables or as a global variable.",
+			);
+		}
+
+		setOptions({
+			key: apiKey,
+			v: "weekly",
+		});
+
+		setOptionsCalled = true;
 	}
-
-	setOptions({
-		key: apiKey,
-		v: "weekly",
-	});
 
 	// Load Google Maps API (maps for Map/Data/OverlayView, core for LatLng/Point/Size)
 	await Promise.all([importLibrary("maps"), importLibrary("core")]);
@@ -61,7 +68,7 @@ export function SetupGoogle(args: StoryArgs): HTMLElement {
 	const { container, controls, mapContainer, modeButtons, clearButton, modes } =
 		setupMapContainer({ ...args, adapter: "google" });
 
-	onNextFrame(() => {
+	whenElementExists(`#${mapContainer.id}`, () => {
 		// Initialize Google Maps asynchronously
 		initialiseGoogleMap({
 			mapContainer,
@@ -80,6 +87,7 @@ export function SetupGoogle(args: StoryArgs): HTMLElement {
 					const draw = new TerraDraw({
 						adapter,
 						modes,
+						undoRedo: SetupUndoRedo(args),
 					});
 
 					draw.start();

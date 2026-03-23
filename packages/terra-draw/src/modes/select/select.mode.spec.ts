@@ -410,6 +410,85 @@ describe("TerraDrawSelectMode", () => {
 					expect(onDeselect).toHaveBeenCalledTimes(0);
 				});
 
+				it("does not select if feature is clicked but allowManualSelection is false", () => {
+					setSelectMode({
+						allowManualSelection: false,
+						flags: {
+							polygon: { feature: {} },
+						},
+					});
+
+					// Square Polygon
+					addPolygonToStore([
+						[0, 0],
+						[0, 1],
+						[1, 1],
+						[1, 0],
+						[0, 0],
+					]);
+
+					selectMode.onClick(MockCursorEvent({ lng: 0.5, lat: 0.5 }));
+
+					expect(onSelect).toHaveBeenCalledTimes(0);
+				});
+
+				it("does select via selectFeature API even when allowManualSelection is false", () => {
+					setSelectMode({
+						allowManualSelection: false,
+						flags: {
+							polygon: { feature: {} },
+						},
+					});
+
+					const id = addPolygonToStore([
+						[0, 0],
+						[0, 1],
+						[1, 1],
+						[1, 0],
+						[0, 0],
+					]);
+
+					selectMode.selectFeature(id);
+
+					expect(onSelect).toHaveBeenCalledTimes(1);
+					expect(onSelect).toHaveBeenCalledWith(id);
+				});
+
+				it("does not switch selection to another feature on click when allowManualSelection is false", () => {
+					setSelectMode({
+						allowManualSelection: false,
+						flags: {
+							polygon: { feature: {} },
+						},
+					});
+
+					const id = addPolygonToStore([
+						[0, 0],
+						[0, 1],
+						[1, 1],
+						[1, 0],
+						[0, 0],
+					]);
+
+					addPolygonToStore([
+						[2, 2],
+						[2, 3],
+						[3, 3],
+						[3, 2],
+						[2, 2],
+					]);
+
+					// Select first polygon via API
+					selectMode.selectFeature(id);
+					expect(onSelect).toHaveBeenCalledTimes(1);
+
+					// Click second polygon - should not change selection
+					selectMode.onClick(MockCursorEvent({ lng: 2.5, lat: 2.5 }));
+
+					expect(onSelect).toHaveBeenCalledTimes(1);
+					expect(onDeselect).toHaveBeenCalledTimes(0);
+				});
+
 				it("does not select if feature is not clicked", () => {
 					// Square Polygon
 					addPolygonToStore([

@@ -3,7 +3,7 @@
 console.log("Loading Jest configuration...");
 console.log("Using ts-jest");
 
-module.exports = {
+export default {
 	transform: {
 		"^.+\\.(t|j)sx?$": "@swc/jest",
 	},

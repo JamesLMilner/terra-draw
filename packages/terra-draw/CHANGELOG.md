@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.26.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.25.1...terra-draw@1.26.0) (2026-03-15)
+
+
+### fix
+
+* **terra-draw:** remove epsilon addition lat lng for new polygons (#814) ([](https://github.com/JamesLMilner/terra-draw/commit/3982738995033c0e0f66f41e2831a0b5a2451d4f)), closes [#814](https://github.com/JamesLMilner/terra-draw/issues/814)
+
+
+### feat
+
+* **terra-draw:** add undo redo functionality  (#829) ([](https://github.com/JamesLMilner/terra-draw/commit/c939c215af173220ba3dc264b4b0d2dce06c3c85)), closes [#829](https://github.com/JamesLMilner/terra-draw/issues/829)
+
 ## [1.25.1](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.25.0...terra-draw@1.25.1) (2026-03-13)
 
 

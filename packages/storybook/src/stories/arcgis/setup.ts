@@ -12,7 +12,8 @@ import SimpleMarkerSymbol from "@arcgis/core/symbols/SimpleMarkerSymbol";
 import {
 	setupMapContainer,
 	setupControls,
-	onNextFrame,
+	SetupUndoRedo,
+	whenElementExists,
 } from "../../common/setup";
 import { TerraDraw } from "../../../../terra-draw/src/terra-draw";
 import { TerraDrawArcGISMapsSDKAdapter } from "../../../../terra-draw-arcgis-adapter/src/terra-draw-arcgis-adapter";
@@ -70,7 +71,7 @@ export function SetupArcGIS(args: StoryArgs): HTMLElement {
 	const { container, controls, mapContainer, modes, modeButtons, clearButton } =
 		setupMapContainer({ ...args, adapter: "arcgis" });
 
-	onNextFrame(() => {
+	whenElementExists(`#${mapContainer.id}`, () => {
 		try {
 			const mapConfig = initialiseArcGISMap({
 				mapContainer,
@@ -85,6 +86,7 @@ export function SetupArcGIS(args: StoryArgs): HTMLElement {
 					map: mapConfig.map,
 				}),
 				modes,
+				undoRedo: SetupUndoRedo(args),
 			});
 
 			draw.start();

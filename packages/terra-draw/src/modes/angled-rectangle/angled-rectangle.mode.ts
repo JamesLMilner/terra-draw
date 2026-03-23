@@ -187,10 +187,6 @@ export class TerraDrawAngledRectangleMode extends TerraDrawBaseDrawMode<PolygonS
 	private getUpdateForSecondCoordinate(
 		event: TerraDrawMouseEvent,
 	): CoordinateMutation[] {
-		// We must add a very small epsilon value so that Mapbox GL
-		// renders the polygon - There might be a cleaner solution?
-		const offset = this.mutateFeature.epsilonOffset();
-
 		return [
 			{
 				type: Mutations.Update,
@@ -200,7 +196,7 @@ export class TerraDrawAngledRectangleMode extends TerraDrawBaseDrawMode<PolygonS
 			{
 				type: Mutations.Update,
 				index: 2,
-				coordinate: [event.lng, event.lat - offset],
+				coordinate: [event.lng, event.lat],
 			},
 		];
 	}

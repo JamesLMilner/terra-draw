@@ -10,7 +10,8 @@ import Projection from "ol/proj/Projection";
 import {
 	setupMapContainer,
 	setupControls,
-	onNextFrame,
+	SetupUndoRedo,
+	whenElementExists,
 } from "../../common/setup";
 import { TerraDraw } from "../../../../terra-draw/src/terra-draw";
 import { TerraDrawOpenLayersAdapter } from "../../../../terra-draw-openlayers-adapter/src/terra-draw-openlayers-adapter";
@@ -75,7 +76,7 @@ export function SetupOpenLayers(args: StoryArgs): HTMLElement {
 	const { container, controls, mapContainer, modeButtons, clearButton, modes } =
 		setupMapContainer({ ...args, adapter: "openlayers" });
 
-	onNextFrame(() => {
+	whenElementExists(`#${mapContainer.id}`, () => {
 		const mapConfig = initialiseOpenLayersMap({
 			mapContainer,
 			centerLat: args.centerLat,
@@ -90,6 +91,7 @@ export function SetupOpenLayers(args: StoryArgs): HTMLElement {
 					...mapConfig,
 				}),
 				modes,
+				undoRedo: SetupUndoRedo(args),
 			});
 
 			draw.start();

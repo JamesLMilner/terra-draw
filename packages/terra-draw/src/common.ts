@@ -126,6 +126,7 @@ export interface TerraDrawModeRegisterConfig {
 	project: Project;
 	unproject: Unproject;
 	coordinatePrecision: number;
+	undoRedoMaxStackSize?: number;
 }
 
 export enum UpdateTypes {

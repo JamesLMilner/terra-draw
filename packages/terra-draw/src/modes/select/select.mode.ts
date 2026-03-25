@@ -130,6 +130,7 @@ interface Cursors {
 	dragStart?: Cursor;
 	dragEnd?: Cursor;
 	insertMidpoint?: Cursor;
+	rotate?: Cursor;
 }
 
 const defaultCursors = {
@@ -137,6 +138,7 @@ const defaultCursors = {
 	dragStart: "move",
 	dragEnd: "move",
 	insertMidpoint: "crosshair",
+	rotate: "grab",
 } as Required<Cursors>;
 
 interface TerraDrawSelectModeOptions<T extends CustomStyling>
@@ -165,6 +167,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 	private dragTarget:
 		| { type: "none" }
 		| { type: "feature"; featureId: FeatureId }
+		| { type: "rotate"; featureId: FeatureId; dragHandleId: FeatureId }
 		| { type: "coordinate"; featureId: FeatureId; coordinateIndex: number }
 		| { type: "resize"; featureId: FeatureId; coordinateIndex: number }
 		| { type: "midpoint"; featureId: FeatureId; midPointId: FeatureId } = {
@@ -308,6 +311,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 			this.coordinatePoints,
 			this.readFeature,
 			this.mutateFeature,
+			this.pixelDistance,
 		);
 
 		this.dragFeature = new DragFeatureBehavior(
@@ -361,6 +365,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 		this.selectionPoints.delete();
 		this.midPoints.delete();
 		this.dragTarget = { type: "none" };
+		this.rotateFeature.reset();
 	}
 
 	private deleteSelected() {
@@ -395,7 +400,8 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 
 		const hasDraggableFlags =
 			featureFlags &&
-			(featureFlags.draggable ||
+			(featureFlags.rotateable ||
+				featureFlags.draggable ||
 				coordinatesFlags?.draggable ||
 				coordinatesFlags?.resizable ||
 				midpointsDraggable);
@@ -597,6 +603,13 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 
 		if (type !== "LineString" && type !== "Polygon") {
 			return;
+		}
+
+		if (featureCoordinates && modeFlags?.feature?.rotateable) {
+			this.rotateFeature.createDragHandle({
+				featureCoordinates,
+				featureId,
+			});
 		}
 
 		if (featureCoordinates && modeFlags && modeFlags.feature.coordinates) {
@@ -884,6 +897,19 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 			}
 		}
 
+		if (featureFlags?.rotateable) {
+			const draggedRotateHandleId =
+				pointerOverTarget.type === "rotate"
+					? pointerOverTarget.dragHandleId
+					: this.rotateFeature.getNearestRotateHandle(event);
+
+			if (this.selected.length && draggedRotateHandleId) {
+				setMapDraggability(false);
+
+				return;
+			}
+		}
+
 		// Drag Feature
 		if (draggableFeature) {
 			this.setCursor(this.cursors.dragStart);
@@ -932,7 +958,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 			modeFlags &&
 			modeFlags.feature &&
 			modeFlags.feature.rotateable &&
-			this.canRotate(event)
+			(this.canRotate(event) || this.dragTarget.type === "rotate")
 		) {
 			setMapDraggability(false);
 			this.rotateFeature.rotate(event, selectedId);
@@ -1029,7 +1055,6 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 		this.dragCoordinate.stopDragging();
 		this.dragFeature.stopDragging();
 		this.dragCoordinateResizeFeature.stopDragging();
-		this.rotateFeature.reset();
 		this.scaleFeature.reset();
 		setMapDraggability(true);
 	}
@@ -1124,6 +1149,13 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 			return;
 		}
 
+		const dragHandleId = this.rotateFeature.getNearestRotateHandle(event);
+		if (featureFlags.rotateable && dragHandleId) {
+			this.dragTarget = { type: "rotate", featureId: selectedId, dragHandleId };
+			this.setCursor(this.cursors.rotate);
+			return;
+		}
+
 		if (!nearbyMidPoint) {
 			this.clearDragTargetAndCursor();
 		}
@@ -1173,6 +1205,52 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 					2,
 					feature,
 				);
+
+				styles.zIndex = Z_INDEX.LAYER_THREE;
+
+				return styles;
+			}
+
+			if (feature.properties[SELECT_PROPERTIES.ROTATION_POINT]) {
+				styles.pointColor = this.getHexColorStylingValue(
+					this.styles.selectionPointColor,
+					styles.pointColor,
+					feature,
+				);
+
+				styles.pointColor = "#ff0000";
+
+				styles.pointOpacity = this.getNumericStylingValue(
+					this.styles.selectionPointOpacity,
+					1,
+					feature,
+				);
+
+				styles.pointOutlineColor = this.getHexColorStylingValue(
+					this.styles.selectionPointOutlineColor,
+					styles.pointOutlineColor,
+					feature,
+				);
+
+				styles.pointWidth =
+					this.getNumericStylingValue(
+						this.styles.selectionPointWidth,
+						styles.pointWidth,
+						feature,
+					) * 2;
+
+				styles.pointOutlineOpacity = this.getNumericStylingValue(
+					this.styles.selectionPointOutlineOpacity,
+					1,
+					feature,
+				);
+
+				styles.pointOutlineWidth =
+					this.getNumericStylingValue(
+						this.styles.selectionPointOutlineWidth,
+						2,
+						feature,
+					) * 2;
 
 				styles.zIndex = Z_INDEX.LAYER_THREE;
 

@@ -1,4 +1,4 @@
-import { Feature, LineString, Polygon, Position } from "geojson";
+import { Feature, LineString, Polygon, Position, Point } from "geojson";
 import { centroid } from "../centroid";
 import { rhumbBearing } from "../measure/rhumb-bearing";
 import { rhumbDestination } from "../measure/rhumb-destination";
@@ -15,6 +15,7 @@ import { CartesianPoint } from "../../common";
 export function transformRotate(
 	feature: Feature<Polygon | LineString>,
 	angle: number,
+	pivot?: Position,
 ) {
 	// Shortcut no-rotation
 	if (angle === 0 || angle === 360 || angle === -360) {
@@ -22,7 +23,7 @@ export function transformRotate(
 	}
 
 	// Use centroid of GeoJSON if pivot is not provided
-	const pivot = centroid(feature);
+	const rotatePivot = pivot ?? centroid(feature);
 
 	const coordinates =
 		feature.geometry.type === "Polygon"
@@ -30,10 +31,10 @@ export function transformRotate(
 			: feature.geometry.coordinates;
 
 	coordinates.forEach((pointCoords: Position) => {
-		const initialAngle = rhumbBearing(pivot, pointCoords);
+		const initialAngle = rhumbBearing(rotatePivot, pointCoords);
 		const finalAngle = initialAngle + angle;
-		const distance = rhumbDistance(pivot, pointCoords);
-		const newCoords = rhumbDestination(pivot, distance, finalAngle);
+		const distance = rhumbDistance(rotatePivot, pointCoords);
+		const newCoords = rhumbDestination(rotatePivot, distance, finalAngle);
 		pointCoords[0] = newCoords[0];
 		pointCoords[1] = newCoords[1];
 	});
@@ -48,8 +49,9 @@ export function transformRotate(
  * @returns - rotated GeoJSON Polygon geometry
  */
 export const transformRotateWebMercator = (
-	feature: Feature<Polygon> | Feature<LineString>,
+	feature: Feature<Polygon> | Feature<LineString> | Feature<Point>,
 	angle: number,
+	pivot?: CartesianPoint,
 ) => {
 	if (angle === 0 || angle === 360 || angle === -360) {
 		return feature;
@@ -58,9 +60,11 @@ export const transformRotateWebMercator = (
 	const DEGREES_TO_RADIANS = 0.017453292519943295 as const; // Math.PI / 180
 
 	const coordinates =
-		feature.geometry.type === "Polygon"
-			? feature.geometry.coordinates[0]
-			: feature.geometry.coordinates;
+		feature.geometry.type === "Point"
+			? [feature.geometry.coordinates]
+			: feature.geometry.type === "Polygon"
+				? feature.geometry.coordinates[0]
+				: feature.geometry.coordinates;
 	const angleRad = angle * DEGREES_TO_RADIANS;
 
 	// Convert polygon coordinates to Web Mercator
@@ -79,16 +83,18 @@ export const transformRotateWebMercator = (
 	centroid.x /= webMercatorCoords.length;
 	centroid.y /= webMercatorCoords.length;
 
+	const rotatePivot = pivot ?? centroid;
+
 	// Rotate the coordinates around the centroid
 	const rotatedWebMercatorCoords = webMercatorCoords.map((coord) => ({
 		x:
-			centroid.x +
-			(coord.x - centroid.x) * Math.cos(angleRad) -
-			(coord.y - centroid.y) * Math.sin(angleRad),
+			rotatePivot.x +
+			(coord.x - rotatePivot.x) * Math.cos(angleRad) -
+			(coord.y - rotatePivot.y) * Math.sin(angleRad),
 		y:
-			centroid.y +
-			(coord.x - centroid.x) * Math.sin(angleRad) +
-			(coord.y - centroid.y) * Math.cos(angleRad),
+			rotatePivot.y +
+			(coord.x - rotatePivot.x) * Math.sin(angleRad) +
+			(coord.y - rotatePivot.y) * Math.cos(angleRad),
 	}));
 
 	// Convert rotated Web Mercator coordinates back to geographic
@@ -100,7 +106,9 @@ export const transformRotateWebMercator = (
 			] as Position,
 	);
 
-	if (feature.geometry.type === "Polygon") {
+	if (feature.geometry.type === "Point") {
+		feature.geometry.coordinates = rotatedCoordinates[0];
+	} else if (feature.geometry.type === "Polygon") {
 		feature.geometry.coordinates[0] = rotatedCoordinates;
 	} else {
 		feature.geometry.coordinates = rotatedCoordinates;

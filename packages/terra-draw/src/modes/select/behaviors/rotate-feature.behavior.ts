@@ -1,11 +1,11 @@
 import {
 	CartesianPoint,
+	SELECT_PROPERTIES,
 	TerraDrawMouseEvent,
 	UpdateTypes,
-	Validation,
 } from "../../../common";
 import { BehaviorConfig, TerraDrawModeBehavior } from "../../base.behavior";
-import { Feature, LineString, Polygon, Position } from "geojson";
+import { Feature, LineString, Polygon, Position, Point } from "geojson";
 import { SelectionPointBehavior } from "./selection-point.behavior";
 import { MidPointBehavior } from "./midpoint.behavior";
 import {
@@ -26,6 +26,9 @@ import {
 	Mutations,
 	UpdateGeometry,
 } from "../../mutate-feature.behavior";
+import { PixelDistanceBehavior } from "../../pixel-distance.behavior";
+
+const DRAG_HANDLE_THRESHOLD_PX = 15;
 
 export class RotateFeatureBehavior extends TerraDrawModeBehavior {
 	constructor(
@@ -35,6 +38,7 @@ export class RotateFeatureBehavior extends TerraDrawModeBehavior {
 		private readonly coordinatePoints: CoordinatePointBehavior,
 		private readonly readFeature: ReadFeatureBehavior,
 		private readonly mutateFeature: MutateFeatureBehavior,
+		private readonly pixelDistance: PixelDistanceBehavior,
 	) {
 		super(config);
 	}
@@ -43,12 +47,84 @@ export class RotateFeatureBehavior extends TerraDrawModeBehavior {
 	private selectedGeometry: Polygon | LineString | undefined;
 	private selectedGeometryCentroid: Position | undefined;
 	private selectedGeometryWebMercatorCentroid: CartesianPoint | undefined;
+	private dragHandleId!: FeatureId | undefined;
+	private dragHandleInitialPosition?: Position;
 
 	reset() {
 		this.lastBearing = undefined;
 		this.selectedGeometry = undefined;
 		this.selectedGeometryWebMercatorCentroid = undefined;
 		this.selectedGeometryCentroid = undefined;
+		this.destroyDragHandle();
+	}
+
+	public getNearestRotateHandle(event: TerraDrawMouseEvent) {
+		if (!this.dragHandleId) return;
+
+		const distancePixles = this.pixelDistance.measure(
+			event,
+			this.readFeature.getGeometry<Point>(this.dragHandleId).coordinates,
+		);
+
+		if (distancePixles <= DRAG_HANDLE_THRESHOLD_PX) {
+			return this.dragHandleId;
+		}
+
+		return;
+	}
+
+	public createDragHandle({
+		featureId,
+		featureCoordinates,
+	}: {
+		featureId: FeatureId;
+		featureCoordinates: Position[] | Position[][];
+	}) {
+		const [minX, _, maxX, maxY] = bbox(featureCoordinates);
+		const x = minX + (maxX - minX) / 2;
+		const y = maxY + 0.0025;
+		const dragHandlePosition = [x, y];
+
+		const id = this.mutateFeature.createGuidancePoint({
+			coordinate: dragHandlePosition,
+			type: "rotationPoint",
+			additionalProperties: {
+				[SELECT_PROPERTIES.ROTATION_POINT]: featureId,
+			},
+		});
+
+		this.dragHandleId = id;
+		this.dragHandleInitialPosition = dragHandlePosition;
+
+		return id;
+	}
+
+	public updateDragHandleInPlace({
+		featureCoordinates,
+	}: {
+		featureCoordinates: Position[] | Position[][];
+	}) {
+		if (!this.dragHandleId || !this.dragHandleInitialPosition) return;
+
+		const [minX, _, maxX, maxY] = bbox(featureCoordinates);
+		const x = minX + (maxX - minX) / 2;
+		const y = maxY + 0.0025;
+
+		this.mutateFeature.updatePoint({
+			featureId: this.dragHandleId,
+			coordinateMutations: {
+				coordinates: [x, y],
+				type: Mutations.Replace,
+			},
+			context: {
+				updateType: UpdateTypes.Commit,
+			},
+		});
+	}
+
+	public destroyDragHandle() {
+		this.mutateFeature.deleteFeatureIfPresent(this.dragHandleId);
+		this.dragHandleId = undefined;
 	}
 
 	rotate(event: TerraDrawMouseEvent, selectedId: FeatureId) {
@@ -58,7 +134,12 @@ export class RotateFeatureBehavior extends TerraDrawModeBehavior {
 			>(selectedId);
 		}
 
+		let dragHandleGeom: Point | undefined;
 		const geometry = this.selectedGeometry;
+
+		if (this.dragHandleId) {
+			dragHandleGeom = this.readFeature.getGeometry<Point>(this.dragHandleId);
+		}
 
 		// Update the geometry of the dragged feature
 		if (geometry.type !== "Polygon" && geometry.type !== "LineString") {
@@ -68,9 +149,18 @@ export class RotateFeatureBehavior extends TerraDrawModeBehavior {
 		const mouseCoord = [event.lng, event.lat];
 
 		let bearing: number;
+		let updateDragHandleFeature: Feature<Point> | undefined;
 		const updatedFeature = { type: "Feature", geometry, properties: {} } as
 			| Feature<Polygon>
 			| Feature<LineString>;
+
+		if (dragHandleGeom) {
+			updateDragHandleFeature = {
+				type: "Feature",
+				geometry: dragHandleGeom,
+				properties: {},
+			} as Feature<Point>;
+		}
 
 		if (this.config.projection === "web-mercator") {
 			// Cache the centroid of the selected geometry
@@ -98,7 +188,18 @@ export class RotateFeatureBehavior extends TerraDrawModeBehavior {
 
 			const angle = this.lastBearing - bearing;
 
-			transformRotateWebMercator(updatedFeature, -angle);
+			transformRotateWebMercator(
+				updatedFeature,
+				-angle,
+				this.selectedGeometryWebMercatorCentroid,
+			);
+
+			updateDragHandleFeature &&
+				transformRotateWebMercator(
+					updateDragHandleFeature,
+					-angle,
+					this.selectedGeometryWebMercatorCentroid,
+				);
 		} else if (this.config.projection === "globe") {
 			// Cache the centroid of the selected geometry
 			// to avoid recalculating it on every cursor move
@@ -149,6 +250,20 @@ export class RotateFeatureBehavior extends TerraDrawModeBehavior {
 			},
 		};
 
+		if (updateDragHandleFeature) {
+			console.log(updateDragHandleFeature.geometry.coordinates);
+			this.mutateFeature.updatePoint({
+				featureId: this.dragHandleId!,
+				coordinateMutations: {
+					coordinates: updateDragHandleFeature.geometry.coordinates,
+					type: Mutations.Replace,
+				},
+				context: {
+					updateType: UpdateTypes.Commit,
+				},
+			});
+		}
+
 		let updated: GeoJSONStoreFeatures<Polygon | LineString> | null = null;
 		if (updatedFeature.geometry.type === "Polygon") {
 			updated = this.mutateFeature.updatePolygon(
@@ -182,4 +297,26 @@ export class RotateFeatureBehavior extends TerraDrawModeBehavior {
 			this.lastBearing = bearing + 180;
 		}
 	}
+}
+
+type BBox = [number, number, number, number]; // [minX, minY, maxX, maxY]
+
+function bbox(coordinates: Position[] | Position[][]): BBox {
+	const isSingleRing = typeof coordinates[0]?.[0] === "number";
+	const allPoints = isSingleRing
+		? (coordinates as Position[])
+		: (coordinates as Position[][]).flat();
+	let minX = Infinity,
+		minY = Infinity,
+		maxX = -Infinity,
+		maxY = -Infinity;
+
+	for (const [x, y] of allPoints) {
+		if (x <= minX) minX = x;
+		if (x >= maxX) maxX = x;
+		if (y <= minY) minY = y;
+		if (y >= maxY) maxY = y;
+	}
+
+	return [minX, minY, maxX, maxY];
 }

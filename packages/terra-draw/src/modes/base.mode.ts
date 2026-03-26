@@ -337,7 +337,10 @@ export abstract class TerraDrawBaseDrawMode<Styling extends CustomStyling> {
 	) {}
 
 	protected getHexColorStylingValue(
-		value: HexColor | ((feature: GeoJSONStoreFeatures) => HexColor) | undefined,
+		value:
+			| HexColor
+			| ((feature: GeoJSONStoreFeatures) => HexColor | undefined)
+			| undefined,
 		defaultValue: HexColor,
 		feature: GeoJSONStoreFeatures,
 	): HexColor {
@@ -345,7 +348,10 @@ export abstract class TerraDrawBaseDrawMode<Styling extends CustomStyling> {
 	}
 
 	protected getNumericStylingValue(
-		value: number | ((feature: GeoJSONStoreFeatures) => number) | undefined,
+		value:
+			| number
+			| ((feature: GeoJSONStoreFeatures) => number | undefined)
+			| undefined,
 		defaultValue: number,
 		feature: GeoJSONStoreFeatures,
 	): number {
@@ -361,14 +367,14 @@ export abstract class TerraDrawBaseDrawMode<Styling extends CustomStyling> {
 	}
 
 	private getStylingValue<T extends string | number>(
-		value: T | ((feature: GeoJSONStoreFeatures) => T) | undefined,
+		value: T | ((feature: GeoJSONStoreFeatures) => T | undefined) | undefined,
 		defaultValue: T,
 		feature: GeoJSONStoreFeatures,
 	) {
 		if (value === undefined) {
 			return defaultValue;
 		} else if (typeof value === "function") {
-			return value(feature);
+			return value(feature) ?? defaultValue;
 		} else {
 			return value;
 		}

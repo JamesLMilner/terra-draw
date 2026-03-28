@@ -2,6 +2,32 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.27.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.26.0...terra-draw@1.27.0) (2026-03-28)
+
+
+### fix
+
+* **terra-draw:** fallback to default styling when style callbacks in select mode return undefined (#832) ([](https://github.com/JamesLMilner/terra-draw/commit/c93bfdb15fa3bc7af279412f842f31b61427d702)), closes [#832](https://github.com/JamesLMilner/terra-draw/issues/832)
+* **terra-draw:** fixed scenario where validation reason would be undefined (#844) ([](https://github.com/JamesLMilner/terra-draw/commit/6bc4fa91dd386d4310ba6224bc3b0828616be229)), closes [#844](https://github.com/JamesLMilner/terra-draw/issues/844)
+* **terra-draw:** minor bug fixes to session undo redo (#838) ([](https://github.com/JamesLMilner/terra-draw/commit/c8d5bc02e38c4b01648927eafe62a03b2c78a6be)), closes [#838](https://github.com/JamesLMilner/terra-draw/issues/838)
+
+
+### chore
+
+* **terra-draw:** only call set options once for Google Maps in storybook (#845) ([](https://github.com/JamesLMilner/terra-draw/commit/131e914ca4d2f4750796fa7c6cb191c2653447b6)), closes [#845](https://github.com/JamesLMilner/terra-draw/issues/845)
+* **terra-draw:** stabilise Storybook stories (#840) ([](https://github.com/JamesLMilner/terra-draw/commit/890a1cb920f6e4438a7f820af35b027c74b334c3)), closes [#840](https://github.com/JamesLMilner/terra-draw/issues/840)
+* **terra-draw:** use ES module syntax for jest configs (#839) ([](https://github.com/JamesLMilner/terra-draw/commit/1c0400901af48fa1d582970c1c79ec18db30e59b)), closes [#839](https://github.com/JamesLMilner/terra-draw/issues/839)
+
+
+### feat
+
+* **terra-draw:** add allowManualSelection option to TerraDrawSelectMode (#842) ([](https://github.com/JamesLMilner/terra-draw/commit/79d59197411710885361b7b5dbe3dface2c9a59c)), closes [#842](https://github.com/JamesLMilner/terra-draw/issues/842)
+
+
+### docs
+
+* **terra-draw:** improve the undo redo documentation (#837) ([](https://github.com/JamesLMilner/terra-draw/commit/d501283603cc5588e79f16defdb3774d8c98d5f4)), closes [#837](https://github.com/JamesLMilner/terra-draw/issues/837)
+
 ## [1.26.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.25.1...terra-draw@1.26.0) (2026-03-15)
 
 

@@ -133,7 +133,10 @@ export class RotateFeatureBehavior extends TerraDrawModeBehavior {
 		featureCoordinates: Position[] | Position[][];
 	}) {
 		this.updateDragHandleInPlace({ featureCoordinates });
-		this.lastBearing = 0;
+		this.lastBearing = undefined;
+		this.selectedGeometry = undefined;
+		this.selectedGeometryWebMercatorCentroid = undefined;
+		this.selectedGeometryCentroid = undefined;
 	}
 
 	public isDragging() {

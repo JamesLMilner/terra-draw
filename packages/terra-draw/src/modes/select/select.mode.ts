@@ -348,6 +348,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 			this.readFeature,
 			this.mutateFeature,
 		);
+
 		this.dragCoordinate = new DragCoordinateBehavior(
 			config,
 			this.pixelDistance,
@@ -360,6 +361,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 			this.readFeature,
 			this.mutateFeature,
 		);
+
 		this.dragCoordinateResizeFeature = new DragCoordinateResizeBehavior(
 			config,
 			this.pixelDistance,
@@ -370,6 +372,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 			this.readFeature,
 			this.mutateFeature,
 		);
+
 		this.scaleFeature = new ScaleFeatureBehavior(
 			config,
 			this.dragCoordinateResizeFeature,
@@ -1079,12 +1082,22 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 				mode: this.mode,
 				action: FinishActions.DragCoordinateResize,
 			});
+		} else if (this.rotateFeature.isDragging()) {
+			this.onFinish(this.selected[0], {
+				mode: this.mode,
+				action: FinishActions.DragRotate,
+			});
 		}
+
+		const selectedFeatureId = this.selected[0];
+		const featureCoordinates =
+			this.readFeature.getCoordinates(selectedFeatureId);
 
 		this.dragCoordinate.stopDragging();
 		this.dragFeature.stopDragging();
 		this.dragCoordinateResizeFeature.stopDragging();
 		this.scaleFeature.reset();
+		this.rotateFeature.stopDragging({ featureCoordinates });
 		setMapDraggability(true);
 	}
 

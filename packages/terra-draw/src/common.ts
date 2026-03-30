@@ -128,6 +128,7 @@ export const FinishActions = {
 	DragCoordinate: "dragCoordinate",
 	DragFeature: "dragFeature",
 	DragCoordinateResize: "dragCoordinateResize",
+	DragRotate: "dragRotate",
 } as const;
 
 export type DrawInteractions =

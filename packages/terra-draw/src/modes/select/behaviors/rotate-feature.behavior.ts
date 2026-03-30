@@ -122,6 +122,24 @@ export class RotateFeatureBehavior extends TerraDrawModeBehavior {
 		});
 	}
 
+	public destroyDragHandle() {
+		this.mutateFeature.deleteFeatureIfPresent(this.dragHandleId);
+		this.dragHandleId = undefined;
+	}
+
+	public stopDragging({
+		featureCoordinates,
+	}: {
+		featureCoordinates: Position[] | Position[][];
+	}) {
+		this.updateDragHandleInPlace({ featureCoordinates });
+		this.lastBearing = 0;
+	}
+
+	public isDragging() {
+		return !!this.dragHandleId;
+	}
+
 	private calculateHandlePosition({
 		featureCoordinates,
 	}: {
@@ -140,11 +158,6 @@ export class RotateFeatureBehavior extends TerraDrawModeBehavior {
 			handlePositionPixelSpace.y,
 		);
 		return [handlePositionWorldSpace.lng, handlePositionWorldSpace.lat];
-	}
-
-	public destroyDragHandle() {
-		this.mutateFeature.deleteFeatureIfPresent(this.dragHandleId);
-		this.dragHandleId = undefined;
 	}
 
 	rotate(event: TerraDrawMouseEvent, selectedId: FeatureId) {

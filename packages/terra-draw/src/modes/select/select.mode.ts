@@ -344,6 +344,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 			this.selectionPoints,
 			this.midPoints,
 			this.coordinatePoints,
+			this.rotateFeature,
 			this.readFeature,
 			this.mutateFeature,
 		);
@@ -353,6 +354,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 			this.selectionPoints,
 			this.midPoints,
 			this.coordinatePoints,
+			this.rotateFeature,
 			this.coordinateSnap,
 			this.lineSnap,
 			this.readFeature,
@@ -364,6 +366,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 			this.selectionPoints,
 			this.midPoints,
 			this.coordinatePoints,
+			this.rotateFeature,
 			this.readFeature,
 			this.mutateFeature,
 		);

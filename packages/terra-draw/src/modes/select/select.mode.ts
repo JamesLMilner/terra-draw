@@ -138,7 +138,7 @@ const defaultCursors = {
 	dragStart: "move",
 	dragEnd: "move",
 	insertMidpoint: "crosshair",
-	rotate: "grab",
+	rotate: "move",
 } as Required<Cursors>;
 
 interface TerraDrawSelectModeOptions<T extends CustomStyling>
@@ -1218,8 +1218,6 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 					feature,
 				);
 
-				styles.pointColor = "#ff0000";
-
 				styles.pointOpacity = this.getNumericStylingValue(
 					this.styles.selectionPointOpacity,
 					1,
@@ -1232,12 +1230,11 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 					feature,
 				);
 
-				styles.pointWidth =
-					this.getNumericStylingValue(
-						this.styles.selectionPointWidth,
-						styles.pointWidth,
-						feature,
-					) * 2;
+				styles.pointWidth = this.getNumericStylingValue(
+					this.styles.selectionPointWidth,
+					8,
+					feature,
+				);
 
 				styles.pointOutlineOpacity = this.getNumericStylingValue(
 					this.styles.selectionPointOutlineOpacity,
@@ -1245,12 +1242,11 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 					feature,
 				);
 
-				styles.pointOutlineWidth =
-					this.getNumericStylingValue(
-						this.styles.selectionPointOutlineWidth,
-						2,
-						feature,
-					) * 2;
+				styles.pointOutlineWidth = this.getNumericStylingValue(
+					this.styles.selectionPointOutlineWidth,
+					2,
+					feature,
+				);
 
 				styles.zIndex = Z_INDEX.LAYER_THREE;
 

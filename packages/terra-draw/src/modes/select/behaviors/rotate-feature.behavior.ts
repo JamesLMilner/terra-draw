@@ -28,6 +28,7 @@ import {
 } from "../../mutate-feature.behavior";
 import { PixelDistanceBehavior } from "../../pixel-distance.behavior";
 
+const DRAG_HANDLE_OFFSET_PX = 60;
 const DRAG_HANDLE_THRESHOLD_PX = 15;
 
 export class RotateFeatureBehavior extends TerraDrawModeBehavior {
@@ -81,9 +82,21 @@ export class RotateFeatureBehavior extends TerraDrawModeBehavior {
 		featureCoordinates: Position[] | Position[][];
 	}) {
 		const [minX, _, maxX, maxY] = bbox(featureCoordinates);
-		const x = minX + (maxX - minX) / 2;
-		const y = maxY + 0.0025;
-		const dragHandlePosition = [x, y];
+		const lng = minX + (maxX - minX) / 2;
+		const lat = maxY;
+		const referencePointPixelSpace = this.project(lng, lat);
+		const handlePositionPixelSpace = {
+			...referencePointPixelSpace,
+			y: referencePointPixelSpace.y - DRAG_HANDLE_OFFSET_PX,
+		};
+		const handlePositionWorldSpace = this.unproject(
+			handlePositionPixelSpace.x,
+			handlePositionPixelSpace.y,
+		);
+		const dragHandlePosition = [
+			handlePositionWorldSpace.lng,
+			handlePositionWorldSpace.lat,
+		];
 
 		const id = this.mutateFeature.createGuidancePoint({
 			coordinate: dragHandlePosition,
@@ -251,7 +264,6 @@ export class RotateFeatureBehavior extends TerraDrawModeBehavior {
 		};
 
 		if (updateDragHandleFeature) {
-			console.log(updateDragHandleFeature.geometry.coordinates);
 			this.mutateFeature.updatePoint({
 				featureId: this.dragHandleId!,
 				coordinateMutations: {

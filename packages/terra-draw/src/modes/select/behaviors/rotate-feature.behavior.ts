@@ -81,22 +81,9 @@ export class RotateFeatureBehavior extends TerraDrawModeBehavior {
 		featureId: FeatureId;
 		featureCoordinates: Position[] | Position[][];
 	}) {
-		const [minX, _, maxX, maxY] = bbox(featureCoordinates);
-		const lng = minX + (maxX - minX) / 2;
-		const lat = maxY;
-		const referencePointPixelSpace = this.project(lng, lat);
-		const handlePositionPixelSpace = {
-			...referencePointPixelSpace,
-			y: referencePointPixelSpace.y - DRAG_HANDLE_OFFSET_PX,
-		};
-		const handlePositionWorldSpace = this.unproject(
-			handlePositionPixelSpace.x,
-			handlePositionPixelSpace.y,
-		);
-		const dragHandlePosition = [
-			handlePositionWorldSpace.lng,
-			handlePositionWorldSpace.lat,
-		];
+		const dragHandlePosition = this.calculateHandlePosition({
+			featureCoordinates,
+		});
 
 		const id = this.mutateFeature.createGuidancePoint({
 			coordinate: dragHandlePosition,
@@ -119,20 +106,40 @@ export class RotateFeatureBehavior extends TerraDrawModeBehavior {
 	}) {
 		if (!this.dragHandleId || !this.dragHandleInitialPosition) return;
 
-		const [minX, _, maxX, maxY] = bbox(featureCoordinates);
-		const x = minX + (maxX - minX) / 2;
-		const y = maxY + 0.0025;
+		const dragHandlePosition = this.calculateHandlePosition({
+			featureCoordinates,
+		});
 
 		this.mutateFeature.updatePoint({
 			featureId: this.dragHandleId,
 			coordinateMutations: {
-				coordinates: [x, y],
+				coordinates: dragHandlePosition,
 				type: Mutations.Replace,
 			},
 			context: {
 				updateType: UpdateTypes.Commit,
 			},
 		});
+	}
+
+	private calculateHandlePosition({
+		featureCoordinates,
+	}: {
+		featureCoordinates: Position[] | Position[][];
+	}): Position {
+		const [minX, _, maxX, maxY] = bbox(featureCoordinates);
+		const lng = minX + (maxX - minX) / 2;
+		const lat = maxY;
+		const referencePointPixelSpace = this.project(lng, lat);
+		const handlePositionPixelSpace = {
+			...referencePointPixelSpace,
+			y: referencePointPixelSpace.y - DRAG_HANDLE_OFFSET_PX,
+		};
+		const handlePositionWorldSpace = this.unproject(
+			handlePositionPixelSpace.x,
+			handlePositionPixelSpace.y,
+		);
+		return [handlePositionWorldSpace.lng, handlePositionWorldSpace.lat];
 	}
 
 	public destroyDragHandle() {

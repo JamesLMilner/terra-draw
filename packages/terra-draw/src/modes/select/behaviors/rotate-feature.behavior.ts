@@ -15,7 +15,12 @@ import {
 import { centroid } from "../../../geometry/centroid";
 import { rhumbBearing } from "../../../geometry/measure/rhumb-bearing";
 import { limitPrecision } from "../../../geometry/limit-decimal-precision";
-import { FeatureId, GeoJSONStoreFeatures } from "../../../store/store";
+import {
+	BBoxPolygon,
+	FeatureId,
+	GeoJSONStoreFeatures,
+	JSON,
+} from "../../../store/store";
 import { webMercatorCentroid } from "../../../geometry/web-mercator-centroid";
 import { lngLatToWebMercatorXY } from "../../../geometry/project/web-mercator";
 import { webMercatorBearing } from "../../../geometry/measure/bearing";
@@ -28,7 +33,7 @@ import {
 } from "../../mutate-feature.behavior";
 import { PixelDistanceBehavior } from "../../pixel-distance.behavior";
 
-const DRAG_HANDLE_OFFSET_PX = 60;
+const DRAG_HANDLE_OFFSET_PX = 30;
 const DRAG_HANDLE_THRESHOLD_PX = 15;
 
 export class RotateFeatureBehavior extends TerraDrawModeBehavior {
@@ -48,8 +53,9 @@ export class RotateFeatureBehavior extends TerraDrawModeBehavior {
 	private selectedGeometry: Polygon | LineString | undefined;
 	private selectedGeometryCentroid: Position | undefined;
 	private selectedGeometryWebMercatorCentroid: CartesianPoint | undefined;
-	private dragHandleId!: FeatureId | undefined;
-	private dragHandleInitialPosition?: Position;
+	private dragHandleId: FeatureId | undefined;
+	private dragHandleGuideId: FeatureId | undefined;
+	private boundingBoxGuideId: FeatureId | undefined;
 
 	reset() {
 		this.lastBearing = undefined;
@@ -81,11 +87,11 @@ export class RotateFeatureBehavior extends TerraDrawModeBehavior {
 		featureId: FeatureId;
 		featureCoordinates: Position[] | Position[][];
 	}) {
-		const dragHandlePosition = this.calculateHandlePosition({
-			featureCoordinates,
-		});
+		const featureBBox = bbox(featureCoordinates);
+		const featureBBoxPolygon = bboxPolygon(featureBBox);
+		const dragHandlePosition = this.calculateHandlePosition({ featureBBox });
 
-		const id = this.mutateFeature.createGuidancePoint({
+		const dragHandleId = this.mutateFeature.createGuidancePoint({
 			coordinate: dragHandlePosition,
 			type: "rotationPoint",
 			additionalProperties: {
@@ -93,10 +99,29 @@ export class RotateFeatureBehavior extends TerraDrawModeBehavior {
 			},
 		});
 
-		this.dragHandleId = id;
-		this.dragHandleInitialPosition = dragHandlePosition;
+		const boundingBoxGuideId = this.mutateFeature.createPolygon({
+			coordinates: featureBBoxPolygon.geometry.coordinates[0],
+			properties: {
+				mode: this.mode,
+				[SELECT_PROPERTIES.ROTATION_BBOX_GUIDE]: featureId,
+			},
+		});
 
-		return id;
+		const [minX, _, maxX, maxY] = featureBBox;
+		const bboxTopCenter: Position = [minX + (maxX - minX) / 2, maxY];
+		const dragHandleGuideId = this.mutateFeature.createLineString({
+			coordinates: [bboxTopCenter, dragHandlePosition],
+			properties: {
+				mode: this.mode,
+				[SELECT_PROPERTIES.ROTATION_POINT_GUIDE]: featureId,
+			},
+		});
+
+		this.dragHandleId = dragHandleId;
+		this.dragHandleGuideId = dragHandleGuideId.id;
+		this.boundingBoxGuideId = boundingBoxGuideId.id;
+
+		return dragHandleId;
 	}
 
 	public updateDragHandleInPlace({
@@ -104,11 +129,10 @@ export class RotateFeatureBehavior extends TerraDrawModeBehavior {
 	}: {
 		featureCoordinates: Position[] | Position[][];
 	}) {
-		if (!this.dragHandleId || !this.dragHandleInitialPosition) return;
+		if (!this.dragHandleId) return;
 
-		const dragHandlePosition = this.calculateHandlePosition({
-			featureCoordinates,
-		});
+		const featureBBox = bbox(featureCoordinates);
+		const dragHandlePosition = this.calculateHandlePosition({ featureBBox });
 
 		this.mutateFeature.updatePoint({
 			featureId: this.dragHandleId,
@@ -120,11 +144,44 @@ export class RotateFeatureBehavior extends TerraDrawModeBehavior {
 				updateType: UpdateTypes.Commit,
 			},
 		});
+
+		if (this.boundingBoxGuideId) {
+			const updatedBBoxPolygon = bboxPolygon(featureBBox);
+			this.mutateFeature.updatePolygon({
+				featureId: this.boundingBoxGuideId,
+				coordinateMutations: {
+					coordinates: updatedBBoxPolygon.geometry.coordinates,
+					type: Mutations.Replace,
+				},
+				context: {
+					updateType: UpdateTypes.Commit,
+				},
+			});
+		}
+
+		if (this.dragHandleGuideId) {
+			const [minX, _, maxX, maxY] = featureBBox;
+			const bboxTopCenter: Position = [minX + (maxX - minX) / 2, maxY];
+			this.mutateFeature.updateLineString({
+				featureId: this.dragHandleGuideId,
+				coordinateMutations: {
+					coordinates: [bboxTopCenter, dragHandlePosition],
+					type: Mutations.Replace,
+				},
+				context: {
+					updateType: UpdateTypes.Commit,
+				},
+			});
+		}
 	}
 
 	public destroyDragHandle() {
 		this.mutateFeature.deleteFeatureIfPresent(this.dragHandleId);
 		this.dragHandleId = undefined;
+		this.mutateFeature.deleteFeatureIfPresent(this.boundingBoxGuideId);
+		this.boundingBoxGuideId = undefined;
+		this.mutateFeature.deleteFeatureIfPresent(this.dragHandleGuideId);
+		this.dragHandleGuideId = undefined;
 	}
 
 	public stopDragging({
@@ -140,15 +197,15 @@ export class RotateFeatureBehavior extends TerraDrawModeBehavior {
 	}
 
 	public isDragging() {
-		return !!this.dragHandleId;
+		return this.lastBearing !== undefined;
 	}
 
 	private calculateHandlePosition({
-		featureCoordinates,
+		featureBBox,
 	}: {
-		featureCoordinates: Position[] | Position[][];
+		featureBBox: BBox;
 	}): Position {
-		const [minX, _, maxX, maxY] = bbox(featureCoordinates);
+		const [minX, _, maxX, maxY] = featureBBox;
 		const lng = minX + (maxX - minX) / 2;
 		const lat = maxY;
 		const referencePointPixelSpace = this.project(lng, lat);
@@ -171,10 +228,22 @@ export class RotateFeatureBehavior extends TerraDrawModeBehavior {
 		}
 
 		let dragHandleGeom: Point | undefined;
+		let bboxGuideGeom: Polygon | undefined;
+		let dragHandleGuideGeom: LineString | undefined;
 		const geometry = this.selectedGeometry;
 
 		if (this.dragHandleId) {
 			dragHandleGeom = this.readFeature.getGeometry<Point>(this.dragHandleId);
+		}
+		if (this.boundingBoxGuideId) {
+			bboxGuideGeom = this.readFeature.getGeometry<Polygon>(
+				this.boundingBoxGuideId,
+			);
+		}
+		if (this.dragHandleGuideId) {
+			dragHandleGuideGeom = this.readFeature.getGeometry<LineString>(
+				this.dragHandleGuideId,
+			);
 		}
 
 		// Update the geometry of the dragged feature
@@ -186,6 +255,8 @@ export class RotateFeatureBehavior extends TerraDrawModeBehavior {
 
 		let bearing: number;
 		let updateDragHandleFeature: Feature<Point> | undefined;
+		let updateBBoxGuideFeature: Feature<Polygon> | undefined;
+		let updateDragHandleGuideFeature: Feature<LineString> | undefined;
 		const updatedFeature = { type: "Feature", geometry, properties: {} } as
 			| Feature<Polygon>
 			| Feature<LineString>;
@@ -196,6 +267,20 @@ export class RotateFeatureBehavior extends TerraDrawModeBehavior {
 				geometry: dragHandleGeom,
 				properties: {},
 			} as Feature<Point>;
+		}
+		if (bboxGuideGeom) {
+			updateBBoxGuideFeature = {
+				type: "Feature",
+				geometry: bboxGuideGeom,
+				properties: {},
+			} as Feature<Polygon>;
+		}
+		if (dragHandleGuideGeom) {
+			updateDragHandleGuideFeature = {
+				type: "Feature",
+				geometry: dragHandleGuideGeom,
+				properties: {},
+			} as Feature<LineString>;
 		}
 
 		if (this.config.projection === "web-mercator") {
@@ -236,6 +321,18 @@ export class RotateFeatureBehavior extends TerraDrawModeBehavior {
 					-angle,
 					this.selectedGeometryWebMercatorCentroid,
 				);
+			updateBBoxGuideFeature &&
+				transformRotateWebMercator(
+					updateBBoxGuideFeature,
+					-angle,
+					this.selectedGeometryWebMercatorCentroid,
+				);
+			updateDragHandleGuideFeature &&
+				transformRotateWebMercator(
+					updateDragHandleGuideFeature,
+					-angle,
+					this.selectedGeometryWebMercatorCentroid,
+				);
 		} else if (this.config.projection === "globe") {
 			// Cache the centroid of the selected geometry
 			// to avoid recalculating it on every cursor move
@@ -258,6 +355,11 @@ export class RotateFeatureBehavior extends TerraDrawModeBehavior {
 			const angle = this.lastBearing - (bearing + 180);
 
 			transformRotate(updatedFeature, -angle);
+			updateDragHandleFeature &&
+				transformRotate(updateDragHandleFeature, -angle);
+			updateBBoxGuideFeature && transformRotate(updateBBoxGuideFeature, -angle);
+			updateDragHandleGuideFeature &&
+				transformRotate(updateDragHandleGuideFeature, -angle);
 		} else {
 			throw new Error("Unsupported projection");
 		}
@@ -326,6 +428,28 @@ export class RotateFeatureBehavior extends TerraDrawModeBehavior {
 			featureCoordinates,
 		});
 
+		if (updateBBoxGuideFeature && this.boundingBoxGuideId) {
+			this.mutateFeature.updatePolygon({
+				featureId: this.boundingBoxGuideId,
+				coordinateMutations: {
+					coordinates: updateBBoxGuideFeature.geometry.coordinates,
+					type: Mutations.Replace,
+				},
+				context: { updateType: UpdateTypes.Provisional as const },
+			});
+		}
+
+		if (updateDragHandleGuideFeature && this.dragHandleGuideId) {
+			this.mutateFeature.updateLineString({
+				featureId: this.dragHandleGuideId,
+				coordinateMutations: {
+					coordinates: updateDragHandleGuideFeature.geometry.coordinates,
+					type: Mutations.Replace,
+				},
+				context: { updateType: UpdateTypes.Provisional as const },
+			});
+		}
+
 		if (this.projection === "web-mercator") {
 			this.lastBearing = bearing;
 		} else if (this.projection === "globe") {
@@ -354,4 +478,28 @@ function bbox(coordinates: Position[] | Position[][]): BBox {
 	}
 
 	return [minX, minY, maxX, maxY];
+}
+
+function bboxPolygon(
+	bbox: BBox,
+	properties?: Record<string, JSON>,
+): BBoxPolygon {
+	const [minX, minY, maxX, maxY] = bbox;
+
+	return {
+		type: "Feature",
+		properties: properties ?? {},
+		geometry: {
+			type: "Polygon",
+			coordinates: [
+				[
+					[minX, minY],
+					[maxX, minY],
+					[maxX, maxY],
+					[minX, maxY],
+					[minX, minY],
+				],
+			],
+		},
+	};
 }

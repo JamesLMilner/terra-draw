@@ -16,7 +16,7 @@ import {
 	MutateFeatureBehavior,
 	Mutations,
 } from "../../mutate-feature.behavior";
-import { getUnclosedCoordinates } from "../../../geometry/get-coordinates";
+import { RotateFeatureBehavior } from "./rotate-feature.behavior";
 
 export class DragFeatureBehavior extends TerraDrawModeBehavior {
 	constructor(
@@ -25,6 +25,7 @@ export class DragFeatureBehavior extends TerraDrawModeBehavior {
 		private readonly selectionPoints: SelectionPointBehavior,
 		private readonly midPoints: MidPointBehavior,
 		private readonly coordinatePoints: CoordinatePointBehavior,
+		private readonly rotateFeature: RotateFeatureBehavior,
 		private readonly readFeature: ReadFeatureBehavior,
 		private readonly mutateFeature: MutateFeatureBehavior,
 	) {
@@ -203,6 +204,7 @@ export class DragFeatureBehavior extends TerraDrawModeBehavior {
 			this.midPoints.updateAllInPlace({ featureCoordinates });
 			this.selectionPoints.updateAllInPlace({ featureCoordinates });
 			this.coordinatePoints.updateAllInPlace({ featureId, featureCoordinates });
+			this.rotateFeature.updateDragHandleInPlace({ featureCoordinates });
 
 			this.dragPosition = [event.lng, event.lat];
 

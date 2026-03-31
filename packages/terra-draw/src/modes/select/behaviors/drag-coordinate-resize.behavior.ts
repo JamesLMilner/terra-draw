@@ -29,6 +29,7 @@ import {
 	MutateFeatureBehavior,
 	Mutations,
 } from "../../mutate-feature.behavior";
+import { RotateFeatureBehavior } from "./rotate-feature.behavior";
 
 export type ResizeOptions =
 	| "center"
@@ -56,6 +57,7 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 		private readonly selectionPoints: SelectionPointBehavior,
 		private readonly midPoints: MidPointBehavior,
 		private readonly coordinatePoints: CoordinatePointBehavior,
+		private readonly rotateFeature: RotateFeatureBehavior,
 		private readonly readFeature: ReadFeatureBehavior,
 		private readonly mutateFeature: MutateFeatureBehavior,
 	) {
@@ -773,6 +775,7 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 		this.midPoints.updateAllInPlace({ featureCoordinates });
 		this.selectionPoints.updateAllInPlace({ featureCoordinates });
 		this.coordinatePoints.updateAllInPlace({ featureId, featureCoordinates });
+		this.rotateFeature.updateDragHandleInPlace({ featureCoordinates });
 
 		return true;
 	}

@@ -888,6 +888,90 @@ const ProgrammaticRotate: Story = {
 	},
 };
 
+const SelectWithRotateDragHandle: Story = {
+	...DefaultStory,
+	args: {
+		id: "select-with-rotate-drag-handle",
+		modes: [
+			() => new TerraDrawPolygonMode(),
+			() => new TerraDrawLineStringMode(),
+			() => new TerraDrawPointMode(),
+			() =>
+				new TerraDrawSelectMode({
+					flags: {
+						polygon: {
+							feature: {
+								draggable: true,
+								rotateable: true,
+								scaleable: true,
+								coordinates: {
+									draggable: true,
+									deletable: true,
+									midpoints: {
+										draggable: true,
+									},
+								},
+							},
+						},
+						linestring: {
+							feature: {
+								draggable: true,
+								rotateable: true,
+								scaleable: true,
+								coordinates: {
+									draggable: true,
+									deletable: true,
+									midpoints: {
+										draggable: true,
+									},
+								},
+							},
+						},
+						point: {
+							feature: {
+								draggable: true,
+							},
+						},
+					},
+				}),
+		],
+		instructions:
+			"Draw polygons, lines or points. Select a feature to drag it, drag its vertices or midpoints, scale it, or rotate it using the drag handle.",
+		afterRender: (draw: TerraDraw) => {
+			draw.setMode("select");
+			draw.addFeatures([
+				{
+					type: "Feature",
+					properties: { mode: "polygon" },
+					geometry: {
+						type: "Polygon",
+						coordinates: [
+							[
+								[-74.038722584, 40.722453105],
+								[-74.038010582, 40.694425875],
+								[-74.011091022, 40.690276426],
+								[-73.965516447, 40.700735274],
+								[-73.993717494, 40.719557628],
+								[-74.009944188, 40.718106646],
+								[-73.997596639, 40.715943582],
+								[-73.984724884, 40.707134934],
+								[-74.011338936, 40.698161375],
+								[-74.028487508, 40.701626592],
+								[-74.031811409, 40.7198993],
+								[-74.02094347, 40.718185311],
+								[-74.013184583, 40.70915356],
+								[-74.019012189, 40.722733848],
+								[-74.038722584, 40.722453105],
+							],
+						],
+					},
+				},
+			]);
+		},
+		...DefaultStory.args,
+	},
+};
+
 const SelectWithMultipleOfSameModes: Story = {
 	...DefaultStory,
 	args: {
@@ -1008,6 +1092,7 @@ const AllStories = {
 	SelectWithMultiSelect,
 	SelectWithMultipleOfSameModes,
 	SelectWithMultipleSelectModes,
+	SelectWithRotateDragHandle,
 	UndoRedo,
 };
 

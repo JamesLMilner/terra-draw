@@ -2,7 +2,8 @@ import * as L from "leaflet";
 import {
 	setupMapContainer,
 	setupControls,
-	onNextFrame,
+	SetupUndoRedo,
+	whenElementExists,
 } from "../../common/setup";
 import { TerraDraw } from "../../../../terra-draw/src/terra-draw";
 import { TerraDrawLeafletAdapter } from "../../../../terra-draw-leaflet-adapter/src/terra-draw-leaflet-adapter";
@@ -49,7 +50,7 @@ export function SetupLeaflet(args: StoryArgs): HTMLElement {
 	const { container, controls, mapContainer, modeButtons, clearButton, modes } =
 		setupMapContainer({ ...args, adapter: "leaflet" });
 
-	onNextFrame(() => {
+	whenElementExists(`#${mapContainer.id}`, () => {
 		const { lib, map } = initialiseLeafletMap({
 			mapContainer,
 			centerLat: args.centerLat,
@@ -63,6 +64,7 @@ export function SetupLeaflet(args: StoryArgs): HTMLElement {
 				map,
 			}),
 			modes,
+			undoRedo: SetupUndoRedo(args),
 		});
 
 		draw.start();

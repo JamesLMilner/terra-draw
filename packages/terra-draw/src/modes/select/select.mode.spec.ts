@@ -410,6 +410,85 @@ describe("TerraDrawSelectMode", () => {
 					expect(onDeselect).toHaveBeenCalledTimes(0);
 				});
 
+				it("does not select if feature is clicked but allowManualSelection is false", () => {
+					setSelectMode({
+						allowManualSelection: false,
+						flags: {
+							polygon: { feature: {} },
+						},
+					});
+
+					// Square Polygon
+					addPolygonToStore([
+						[0, 0],
+						[0, 1],
+						[1, 1],
+						[1, 0],
+						[0, 0],
+					]);
+
+					selectMode.onClick(MockCursorEvent({ lng: 0.5, lat: 0.5 }));
+
+					expect(onSelect).toHaveBeenCalledTimes(0);
+				});
+
+				it("does select via selectFeature API even when allowManualSelection is false", () => {
+					setSelectMode({
+						allowManualSelection: false,
+						flags: {
+							polygon: { feature: {} },
+						},
+					});
+
+					const id = addPolygonToStore([
+						[0, 0],
+						[0, 1],
+						[1, 1],
+						[1, 0],
+						[0, 0],
+					]);
+
+					selectMode.selectFeature(id);
+
+					expect(onSelect).toHaveBeenCalledTimes(1);
+					expect(onSelect).toHaveBeenCalledWith(id);
+				});
+
+				it("does not switch selection to another feature on click when allowManualSelection is false", () => {
+					setSelectMode({
+						allowManualSelection: false,
+						flags: {
+							polygon: { feature: {} },
+						},
+					});
+
+					const id = addPolygonToStore([
+						[0, 0],
+						[0, 1],
+						[1, 1],
+						[1, 0],
+						[0, 0],
+					]);
+
+					addPolygonToStore([
+						[2, 2],
+						[2, 3],
+						[3, 3],
+						[3, 2],
+						[2, 2],
+					]);
+
+					// Select first polygon via API
+					selectMode.selectFeature(id);
+					expect(onSelect).toHaveBeenCalledTimes(1);
+
+					// Click second polygon - should not change selection
+					selectMode.onClick(MockCursorEvent({ lng: 2.5, lat: 2.5 }));
+
+					expect(onSelect).toHaveBeenCalledTimes(1);
+					expect(onDeselect).toHaveBeenCalledTimes(0);
+				});
+
 				it("does not select if feature is not clicked", () => {
 					// Square Polygon
 					addPolygonToStore([
@@ -3276,6 +3355,112 @@ describe("TerraDrawSelectMode", () => {
 				polygonFillColor: "#3f97e0",
 				polygonFillOpacity: 0.3,
 				polygonOutlineColor: "#3f97e0",
+			});
+		});
+
+		it("returns the default styles for polygon from polygon mode when using a function that returns undefined", () => {
+			const polygonMode = new TerraDrawSelectMode({
+				styles: {
+					selectedPolygonOutlineWidth: () => undefined,
+					selectedPolygonColor: () => undefined,
+					selectedPolygonOutlineColor: () => undefined,
+					selectedPolygonFillOpacity: () => undefined,
+				},
+			});
+
+			expect(
+				polygonMode.styleFeature({
+					type: "Feature",
+					geometry: { type: "Polygon", coordinates: [] },
+					properties: { mode: "polygon", selected: true },
+				}),
+			).toMatchObject({
+				polygonFillColor: "#3f97e0",
+				polygonOutlineColor: "#3f97e0",
+				polygonOutlineWidth: 4,
+				polygonFillOpacity: 0.3,
+			});
+
+			expect(
+				polygonMode.styleFeature({
+					type: "Feature",
+					geometry: { type: "Polygon", coordinates: [] },
+					properties: { mode: "polygon" },
+				}),
+			).toMatchObject({
+				polygonFillColor: "#3f97e0",
+				polygonFillOpacity: 0.3,
+				polygonOutlineColor: "#3f97e0",
+			});
+		});
+
+		it("returns the default styles for linestring from linestring mode when using a function that returns undefined", () => {
+			const lineStringMode = new TerraDrawSelectMode({
+				styles: {
+					selectedLineStringColor: () => undefined,
+					selectedLineStringWidth: () => undefined,
+					selectedLineStringOpacity: () => undefined,
+				},
+			});
+
+			expect(
+				lineStringMode.styleFeature({
+					type: "Feature",
+					geometry: { type: "LineString", coordinates: [] },
+					properties: { mode: "linestring", selected: true },
+				}),
+			).toMatchObject({
+				lineStringColor: "#3f97e0",
+				lineStringWidth: 4,
+				lineStringOpacity: 1,
+			});
+
+			expect(
+				lineStringMode.styleFeature({
+					type: "Feature",
+					geometry: { type: "LineString", coordinates: [] },
+					properties: { mode: "linestring" },
+				}),
+			).toMatchObject({
+				lineStringColor: "#3f97e0",
+				lineStringWidth: 4,
+				lineStringOpacity: 1,
+			});
+		});
+
+		it("returns the default styles for point from point mode when using a function that returns undefined", () => {
+			const pointMode = new TerraDrawSelectMode({
+				styles: {
+					selectedPointColor: () => undefined,
+					selectedPointOutlineWidth: () => undefined,
+					selectedPointOpacity: () => undefined,
+				},
+			});
+
+			expect(
+				pointMode.styleFeature({
+					type: "Feature",
+					geometry: { type: "Point", coordinates: [] },
+					properties: { mode: "point", selected: true },
+				}),
+			).toMatchObject({
+				pointColor: "#3f97e0",
+				pointOpacity: 1,
+				pointOutlineOpacity: 1,
+				pointOutlineWidth: 0,
+			});
+
+			expect(
+				pointMode.styleFeature({
+					type: "Feature",
+					geometry: { type: "Point", coordinates: [] },
+					properties: { mode: "point" },
+				}),
+			).toMatchObject({
+				pointColor: "#3f97e0",
+				pointOpacity: 1,
+				pointOutlineColor: "#ffffff",
+				pointOutlineOpacity: 1,
 			});
 		});
 

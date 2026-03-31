@@ -99,6 +99,7 @@ export abstract class TerraDrawBaseDrawMode<Styling extends CustomStyling> {
 	protected validate: Validation | undefined;
 	protected pointerDistance: number = 40;
 	protected coordinatePrecision!: number;
+	protected undoRedoMaxStackSize?: number;
 	protected onStyleChange!: StoreChangeHandler<
 		TerraDrawOnChangeContext | undefined
 	>;
@@ -216,6 +217,7 @@ export abstract class TerraDrawBaseDrawMode<Styling extends CustomStyling> {
 			this.onStyleChange = config.onChange;
 			this.onFinish = config.onFinish;
 			this.coordinatePrecision = config.coordinatePrecision;
+			this.undoRedoMaxStackSize = config.undoRedoMaxStackSize;
 
 			this.registerBehaviors({
 				mode: config.mode,
@@ -225,6 +227,7 @@ export abstract class TerraDrawBaseDrawMode<Styling extends CustomStyling> {
 				pointerDistance: this.pointerDistance,
 				coordinatePrecision: config.coordinatePrecision,
 				projection: this.projection,
+				undoRedoMaxStackSize: config.undoRedoMaxStackSize,
 			});
 		} else {
 			throw new Error("Can not register unless mode is unregistered");
@@ -249,7 +252,11 @@ export abstract class TerraDrawBaseDrawMode<Styling extends CustomStyling> {
 			this.store.idStrategy.isValidId,
 		);
 
-		// We also want tp validate based on any specific valdiations passed in
+		if (!validStoreFeature.valid) {
+			return validStoreFeature;
+		}
+
+		// We also want to validate based on any specific valdiations passed in
 		if (this.validate) {
 			const validation = this.validate(feature as GeoJSONStoreFeatures, {
 				project: this.project,
@@ -306,6 +313,14 @@ export abstract class TerraDrawBaseDrawMode<Styling extends CustomStyling> {
 	onSelect(selectedId: FeatureId) {}
 	onKeyDown(event: TerraDrawKeyboardEvent) {}
 	onKeyUp(event: TerraDrawKeyboardEvent) {}
+	undo() {}
+	undoSize() {
+		return 0;
+	}
+	redoSize() {
+		return 0;
+	}
+	redo() {}
 	onMouseMove(event: TerraDrawMouseEvent) {}
 	onClick(event: TerraDrawMouseEvent) {}
 	onDragStart(
@@ -322,7 +337,10 @@ export abstract class TerraDrawBaseDrawMode<Styling extends CustomStyling> {
 	) {}
 
 	protected getHexColorStylingValue(
-		value: HexColor | ((feature: GeoJSONStoreFeatures) => HexColor) | undefined,
+		value:
+			| HexColor
+			| ((feature: GeoJSONStoreFeatures) => HexColor | undefined)
+			| undefined,
 		defaultValue: HexColor,
 		feature: GeoJSONStoreFeatures,
 	): HexColor {
@@ -330,7 +348,10 @@ export abstract class TerraDrawBaseDrawMode<Styling extends CustomStyling> {
 	}
 
 	protected getNumericStylingValue(
-		value: number | ((feature: GeoJSONStoreFeatures) => number) | undefined,
+		value:
+			| number
+			| ((feature: GeoJSONStoreFeatures) => number | undefined)
+			| undefined,
 		defaultValue: number,
 		feature: GeoJSONStoreFeatures,
 	): number {
@@ -346,14 +367,14 @@ export abstract class TerraDrawBaseDrawMode<Styling extends CustomStyling> {
 	}
 
 	private getStylingValue<T extends string | number>(
-		value: T | ((feature: GeoJSONStoreFeatures) => T) | undefined,
+		value: T | ((feature: GeoJSONStoreFeatures) => T | undefined) | undefined,
 		defaultValue: T,
 		feature: GeoJSONStoreFeatures,
 	) {
 		if (value === undefined) {
 			return defaultValue;
 		} else if (typeof value === "function") {
-			return value(feature);
+			return value(feature) ?? defaultValue;
 		} else {
 			return value;
 		}

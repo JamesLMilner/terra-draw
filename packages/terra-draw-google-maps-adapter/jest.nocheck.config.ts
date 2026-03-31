@@ -1,6 +1,6 @@
-const noCheckConfig = require("../../jest.nocheck.config");
+import noCheckConfig from "../../jest.nocheck.config.ts";
 
-module.exports = {
+export default {
 	...noCheckConfig,
 	testPathIgnorePatterns: ["<rootDir>/dist"],
 	coveragePathIgnorePatterns: ["<rootDir>/src/test/", "<rootDir>/dist"],

@@ -1,7 +1,6 @@
 import { StoryObj } from "@storybook/html";
 import { TerraDraw } from "../../../terra-draw/src/terra-draw";
 import { waitFor, within, expect } from "@storybook/test";
-import { canvas } from "leaflet";
 
 export type Story = StoryObj<StoryArgs>;
 
@@ -19,6 +18,7 @@ export interface StoryArgs {
 	instructions?: string;
 	afterRender?: (draw: TerraDraw) => void;
 	showButtons?: boolean;
+	enableUndoRedo?: boolean;
 }
 
 export const DefaultZoom = {
@@ -47,7 +47,6 @@ export const DefaultPlay = {
 		await waitFor(
 			async () => {
 				const buttons = await within(canvasElement).findAllByRole("button");
-
 				buttons.forEach((button) => {
 					expect(button).not.toBeDisabled();
 				});

@@ -180,6 +180,7 @@ export const drawRectangularPolygon = async ({
 	mapDiv,
 	page,
 	size = "regular",
+	close = true,
 }: {
 	mapDiv: {
 		x: number;
@@ -189,6 +190,7 @@ export const drawRectangularPolygon = async ({
 	};
 	page: Page;
 	size?: "regular" | "small";
+	close?: boolean;
 }) => {
 	// Draw a rectangle
 	const sideLength = size === "regular" ? 100 : 70;
@@ -203,7 +205,10 @@ export const drawRectangularPolygon = async ({
 	await page.mouse.click(topRight.x, topRight.y);
 	await page.mouse.click(bottomRight.x, bottomRight.y);
 	await page.mouse.click(bottomLeft.x, bottomLeft.y);
-	await page.mouse.click(bottomLeft.x, bottomLeft.y); // Closed
+
+	if (close) {
+		await page.mouse.click(bottomLeft.x, bottomLeft.y); // Closed
+	}
 
 	return { topLeft, topRight, bottomRight, bottomLeft };
 };

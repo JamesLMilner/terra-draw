@@ -409,9 +409,11 @@ export class GeoJSONStore<
 		);
 	}
 
-	clear(): void {
+	clear(context: OnChangeContext): void {
+		const keys = Object.keys(this.store);
 		this.store = {};
 		this.spatialIndex.clear();
+		this._onChange(keys, "delete", context);
 	}
 
 	size(): number {

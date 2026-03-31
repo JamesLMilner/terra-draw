@@ -1248,7 +1248,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 
 				styles.pointWidth = this.getNumericStylingValue(
 					this.styles.selectionPointWidth,
-					8,
+					6,
 					feature,
 				);
 
@@ -1310,6 +1310,35 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 
 				return styles;
 			}
+		} else if (
+			feature.properties.mode === this.mode &&
+			feature.geometry.type === "Polygon" &&
+			feature.properties[SELECT_PROPERTIES.ROTATION_BBOX_GUIDE]
+		) {
+			styles.polygonFillOpacity = 0;
+			styles.polygonOutlineColor = this.getHexColorStylingValue(
+				this.styles.selectionPointColor,
+				styles.polygonOutlineColor,
+				feature,
+			);
+			styles.polygonOutlineOpacity = 1;
+			styles.polygonOutlineWidth = 2;
+			styles.zIndex = Z_INDEX.LAYER_TWO;
+			return styles;
+		} else if (
+			feature.properties.mode === this.mode &&
+			feature.geometry.type === "LineString" &&
+			feature.properties[SELECT_PROPERTIES.ROTATION_POINT_GUIDE]
+		) {
+			styles.lineStringColor = this.getHexColorStylingValue(
+				this.styles.selectionPointColor,
+				styles.lineStringColor,
+				feature,
+			);
+			styles.lineStringOpacity = 1;
+			styles.lineStringWidth = 2;
+			styles.zIndex = Z_INDEX.LAYER_TWO;
+			return styles;
 		} else if (feature.properties[SELECT_PROPERTIES.SELECTED]) {
 			// Select mode shortcuts the styling of a feature if it is selected
 			// A selected feature from another mode will end up in this block

@@ -2,6 +2,57 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.27.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.26.0...terra-draw@1.27.0) (2026-03-28)
+
+
+### fix
+
+* **terra-draw:** fallback to default styling when style callbacks in select mode return undefined (#832) ([](https://github.com/JamesLMilner/terra-draw/commit/c93bfdb15fa3bc7af279412f842f31b61427d702)), closes [#832](https://github.com/JamesLMilner/terra-draw/issues/832)
+* **terra-draw:** fixed scenario where validation reason would be undefined (#844) ([](https://github.com/JamesLMilner/terra-draw/commit/6bc4fa91dd386d4310ba6224bc3b0828616be229)), closes [#844](https://github.com/JamesLMilner/terra-draw/issues/844)
+* **terra-draw:** minor bug fixes to session undo redo (#838) ([](https://github.com/JamesLMilner/terra-draw/commit/c8d5bc02e38c4b01648927eafe62a03b2c78a6be)), closes [#838](https://github.com/JamesLMilner/terra-draw/issues/838)
+
+
+### chore
+
+* **terra-draw:** only call set options once for Google Maps in storybook (#845) ([](https://github.com/JamesLMilner/terra-draw/commit/131e914ca4d2f4750796fa7c6cb191c2653447b6)), closes [#845](https://github.com/JamesLMilner/terra-draw/issues/845)
+* **terra-draw:** stabilise Storybook stories (#840) ([](https://github.com/JamesLMilner/terra-draw/commit/890a1cb920f6e4438a7f820af35b027c74b334c3)), closes [#840](https://github.com/JamesLMilner/terra-draw/issues/840)
+* **terra-draw:** use ES module syntax for jest configs (#839) ([](https://github.com/JamesLMilner/terra-draw/commit/1c0400901af48fa1d582970c1c79ec18db30e59b)), closes [#839](https://github.com/JamesLMilner/terra-draw/issues/839)
+
+
+### feat
+
+* **terra-draw:** add allowManualSelection option to TerraDrawSelectMode (#842) ([](https://github.com/JamesLMilner/terra-draw/commit/79d59197411710885361b7b5dbe3dface2c9a59c)), closes [#842](https://github.com/JamesLMilner/terra-draw/issues/842)
+
+
+### docs
+
+* **terra-draw:** improve the undo redo documentation (#837) ([](https://github.com/JamesLMilner/terra-draw/commit/d501283603cc5588e79f16defdb3774d8c98d5f4)), closes [#837](https://github.com/JamesLMilner/terra-draw/issues/837)
+
+## [1.26.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.25.1...terra-draw@1.26.0) (2026-03-15)
+
+
+### fix
+
+* **terra-draw:** remove epsilon addition lat lng for new polygons (#814) ([](https://github.com/JamesLMilner/terra-draw/commit/3982738995033c0e0f66f41e2831a0b5a2451d4f)), closes [#814](https://github.com/JamesLMilner/terra-draw/issues/814)
+
+
+### feat
+
+* **terra-draw:** add undo redo functionality  (#829) ([](https://github.com/JamesLMilner/terra-draw/commit/c939c215af173220ba3dc264b4b0d2dce06c3c85)), closes [#829](https://github.com/JamesLMilner/terra-draw/issues/829)
+
+## [1.25.1](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.25.0...terra-draw@1.25.1) (2026-03-13)
+
+
+### docs
+
+* **terra-draw:** Fix links in Drawing Modes section (#833) ([](https://github.com/JamesLMilner/terra-draw/commit/ec009c2219a6a5b1ae961433177a86bd6fdaf244)), closes [#833](https://github.com/JamesLMilner/terra-draw/issues/833)
+
+
+### fix
+
+* **terra-draw:** emit correct action for finish event for polygon onDragEnd (#836) ([](https://github.com/JamesLMilner/terra-draw/commit/37d730abec3b2e9d4d52586d7f9c46265d73f24c)), closes [#836](https://github.com/JamesLMilner/terra-draw/issues/836)
+* **terra-draw:** fix bug when changing showCoordinatePoints with updateOptions in polygon mode (#835) ([](https://github.com/JamesLMilner/terra-draw/commit/cfff133b725c6df1cf0f279e1fe454a376d38345)), closes [#835](https://github.com/JamesLMilner/terra-draw/issues/835)
+
 ## [1.25.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.24.2...terra-draw@1.25.0) (2026-02-18)
 
 

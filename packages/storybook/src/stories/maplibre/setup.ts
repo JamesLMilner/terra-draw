@@ -2,7 +2,8 @@ import maplibregl, { StyleSpecification } from "maplibre-gl";
 import {
 	setupMapContainer,
 	setupControls,
-	onNextFrame,
+	SetupUndoRedo,
+	whenElementExists,
 } from "../../common/setup";
 import { TerraDraw } from "../../../../terra-draw/src/terra-draw";
 import { TerraDrawMapLibreGLAdapter } from "../../../../terra-draw-maplibre-gl-adapter/src/terra-draw-maplibre-gl-adapter";
@@ -63,7 +64,7 @@ export function SetupMapLibre(args: StoryArgs): HTMLElement {
 	const { container, controls, mapContainer, modeButtons, clearButton, modes } =
 		setupMapContainer({ ...args, adapter: "maplibre" });
 
-	onNextFrame(() => {
+	whenElementExists(`#${mapContainer.id}`, () => {
 		try {
 			const mapConfig = initialiseMapLibreMap({
 				mapContainer,
@@ -79,6 +80,7 @@ export function SetupMapLibre(args: StoryArgs): HTMLElement {
 						map: mapConfig.map,
 					}),
 					modes,
+					undoRedo: SetupUndoRedo(args),
 				});
 
 				draw.start();

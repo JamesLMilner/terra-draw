@@ -10,11 +10,11 @@ export type HexColor = `#${string}`;
 
 export type HexColorStyling =
 	| HexColor
-	| ((feature: GeoJSONStoreFeatures) => HexColor);
+	| ((feature: GeoJSONStoreFeatures) => HexColor | undefined);
 
 export type NumericStyling =
 	| number
-	| ((feature: GeoJSONStoreFeatures) => number);
+	| ((feature: GeoJSONStoreFeatures) => number | undefined);
 
 export type UrlStyling = string | ((feature: GeoJSONStoreFeatures) => string);
 
@@ -127,6 +127,7 @@ export interface TerraDrawModeRegisterConfig {
 	project: Project;
 	unproject: Unproject;
 	coordinatePrecision: number;
+	undoRedoMaxStackSize?: number;
 }
 
 export enum UpdateTypes {

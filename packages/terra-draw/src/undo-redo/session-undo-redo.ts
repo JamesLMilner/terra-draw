@@ -586,7 +586,17 @@ export class TerraDrawSessionUndoRedo
 	}
 
 	clearHistory() {
-		this.historyById = {};
+		const snapshotHistoryById: { [key: string]: GeoJSONStoreFeatures[] } = {};
+
+		if (this.draw && !this.isDrawing()) {
+			const existingFeatures = this.draw.getSnapshot();
+			for (const feature of existingFeatures) {
+				const featureId = feature.id as FeatureId;
+				snapshotHistoryById[String(featureId)] = [feature];
+			}
+		}
+
+		this.historyById = snapshotHistoryById;
 		this.undoStack = [];
 		this.ignoreProgrammaticCreate = {};
 		this.ignoreProgrammaticDelete = {};

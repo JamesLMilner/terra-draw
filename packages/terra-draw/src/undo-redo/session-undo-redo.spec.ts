@@ -584,6 +584,88 @@ describe("Undo/Redo", () => {
 			manager.undo();
 			expectFeatures(2);
 		});
+
+		it("undoes a clear after clearHistory for all current features", () => {
+			createPolygonFeature(0.1);
+			draw.addFeatures([
+				createPolygonFeatureForAddFeatures(0.2),
+				createPolygonFeatureForAddFeatures(0.3),
+			]);
+			expectFeatures(3);
+
+			manager.clearHistory();
+			expect(manager.undoSize()).toBe(0);
+			expect(manager.redoSize()).toBe(0);
+
+			draw.clear();
+			expectFeatures(0);
+			expect(manager.undoSize()).toBe(1);
+
+			expect(manager.undo()).toBe(true);
+			expectFeatures(3);
+			expect(manager.redoSize()).toBe(1);
+		});
+
+		it("can redo clear after undo when clear follows clearHistory", () => {
+			createPolygonFeature(0.1);
+			draw.addFeatures([
+				createPolygonFeatureForAddFeatures(0.2),
+				createPolygonFeatureForAddFeatures(0.3),
+			]);
+			expectFeatures(3);
+
+			manager.clearHistory();
+			draw.clear();
+			expectFeatures(0);
+
+			expect(manager.undo()).toBe(true);
+			expectFeatures(3);
+
+			expect(manager.redo()).toBe(true);
+			expectFeatures(0);
+		});
+
+		it("undoes removeFeatures after clearHistory for an existing feature", () => {
+			createPolygonFeature(0.1);
+			draw.addFeatures([
+				createPolygonFeatureForAddFeatures(0.2),
+				createPolygonFeatureForAddFeatures(0.3),
+			]);
+			expectFeatures(3);
+
+			manager.clearHistory();
+			expect(manager.undoSize()).toBe(0);
+
+			const featureToDeleteId = draw.getSnapshot()[1].id as FeatureId;
+			draw.removeFeatures([featureToDeleteId]);
+			expectFeatures(2);
+			expect(manager.undoSize()).toBe(1);
+
+			expect(manager.undo()).toBe(true);
+			expectFeatures(3);
+		});
+
+		it("undoes batch removeFeatures after clearHistory for existing features", () => {
+			createPolygonFeature(0.1);
+			draw.addFeatures([
+				createPolygonFeatureForAddFeatures(0.2),
+				createPolygonFeatureForAddFeatures(0.3),
+			]);
+			expectFeatures(3);
+
+			manager.clearHistory();
+			expect(manager.undoSize()).toBe(0);
+
+			const allFeatureIds = draw
+				.getSnapshot()
+				.map((feature) => feature.id as FeatureId);
+			draw.removeFeatures(allFeatureIds);
+			expectFeatures(0);
+			expect(manager.undoSize()).toBe(1);
+
+			expect(manager.undo()).toBe(true);
+			expectFeatures(3);
+		});
 	});
 
 	describe("redo", () => {

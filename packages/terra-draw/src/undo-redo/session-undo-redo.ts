@@ -27,7 +27,6 @@ export interface TerraDrawSessionUndoRedoInterface
 		draw: TerraDraw;
 		onHistoryChange: (historyChange: HistoryChange) => void;
 	}): void;
-	prepareForClear(): void;
 }
 
 type RedoStackEntry = {
@@ -113,61 +112,6 @@ export class TerraDrawSessionUndoRedo
 		if (this.redoStack.length > this.maxStackSize) {
 			this.redoStack.shift();
 		}
-	}
-
-	prepareForClear() {
-		if (!this.draw || this.isDrawing()) {
-			return;
-		}
-
-		if (this.maxStackSize === 0) {
-			return;
-		}
-
-		const featuresToClear = this.draw.getSnapshot();
-		if (featuresToClear.length === 0) {
-			return;
-		}
-
-		const deletionsForBatch: BatchEntry[] = [];
-		for (const feature of featuresToClear) {
-			const featureId = feature.id as FeatureId;
-			const key = String(featureId);
-
-			if (!this.historyById[key]) {
-				this.historyById[key] = [];
-			}
-
-			this.historyById[key].push(feature);
-			const toIndex = this.historyById[key].length - 1;
-
-			deletionsForBatch.push({
-				id: featureId,
-				toIndex,
-				snapshot: feature,
-			});
-			this.deletedFeatureIds[featureId] = true;
-			this.ignoreProgrammaticDelete[featureId] = true;
-		}
-
-		if (deletionsForBatch.length > 1) {
-			this.pushUndoStackEntry({
-				id: deletionsForBatch[0].id,
-				toIndex: deletionsForBatch[0].toIndex,
-				action: "batch-delete",
-				metadata: { entries: deletionsForBatch },
-			});
-		} else {
-			const deletion = deletionsForBatch[0];
-			this.pushUndoStackEntry({
-				id: deletion.id,
-				toIndex: deletion.toIndex,
-				action: "single",
-			});
-		}
-
-		this.redoStack.length = 0;
-		this.emitStackChange(HistoryChangeCause.Push);
 	}
 
 	private handleChange = (
@@ -642,7 +586,17 @@ export class TerraDrawSessionUndoRedo
 	}
 
 	clearHistory() {
-		this.historyById = {};
+		const snapshotHistoryById: { [key: string]: GeoJSONStoreFeatures[] } = {};
+
+		if (this.draw && !this.isDrawing()) {
+			const existingFeatures = this.draw.getSnapshot();
+			for (const feature of existingFeatures) {
+				const featureId = feature.id as FeatureId;
+				snapshotHistoryById[String(featureId)] = [feature];
+			}
+		}
+
+		this.historyById = snapshotHistoryById;
 		this.undoStack = [];
 		this.ignoreProgrammaticCreate = {};
 		this.ignoreProgrammaticDelete = {};

@@ -30,7 +30,6 @@ describe("TerraDrawUndoRedoCoordinator", () => {
 	const createSessionUndoRedo = () => {
 		const sessionUndoRedo = {
 			register: jest.fn(),
-			prepareForClear: jest.fn(),
 			undo: jest.fn(() => true),
 			redo: jest.fn(() => true),
 			clearHistory: jest.fn(),

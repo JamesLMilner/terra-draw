@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.28.1](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.28.0...terra-draw@1.28.1) (2026-04-07)
+
+
+### fix
+
+* **terra-draw:** ensure clear can be undone correctly (#857) ([](https://github.com/JamesLMilner/terra-draw/commit/c1d93cd8b650635920dddbf4c9bbc220a06897d5)), closes [#857](https://github.com/JamesLMilner/terra-draw/issues/857)
+
 ## [1.28.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.27.0...terra-draw@1.28.0) (2026-04-07)
 
 

@@ -401,6 +401,13 @@ class TerraDraw {
 						this._mode.redo();
 					}
 				},
+				clearModeHistory: () => {
+					const modeWithClearHistory = this._mode;
+
+					if (modeWithClearHistory.clearHistory) {
+						modeWithClearHistory.clearHistory();
+					}
+				},
 				onHistoryChange: (historyChange) => {
 					this.undoRedoCoordinator?.emitStackHistoryChange(historyChange);
 				},
@@ -1325,6 +1332,13 @@ class TerraDraw {
 	redo(): boolean {
 		this.checkEnabled();
 		return this.undoRedoCoordinator ? this.undoRedoCoordinator.redo() : false;
+	}
+
+	clearUndoRedoHistory() {
+		this.checkEnabled();
+		if (this.undoRedoCoordinator) {
+			this.undoRedoCoordinator.clearHistory();
+		}
 	}
 
 	/**

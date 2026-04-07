@@ -256,7 +256,7 @@ export abstract class TerraDrawBaseDrawMode<Styling extends CustomStyling> {
 			return validStoreFeature;
 		}
 
-		// We also want to validate based on any specific valdiations passed in
+		// We also want tp validate based on any specific valdiations passed in
 		if (this.validate) {
 			const validation = this.validate(feature as GeoJSONStoreFeatures, {
 				project: this.project,
@@ -268,12 +268,11 @@ export abstract class TerraDrawBaseDrawMode<Styling extends CustomStyling> {
 			return {
 				// validatedFeature: feature as GeoJSONStoreFeatures,
 				valid: validStoreFeature.valid && validation.valid,
-				reason: validation.reason,
+				reason: validStoreFeature.reason || validation.reason,
 			};
 		}
 
 		return {
-			// validatedFeature: feature as GeoJSONStoreFeatures,
 			valid: validStoreFeature.valid,
 			reason: validStoreFeature.reason,
 		};
@@ -314,6 +313,7 @@ export abstract class TerraDrawBaseDrawMode<Styling extends CustomStyling> {
 	onKeyDown(event: TerraDrawKeyboardEvent) {}
 	onKeyUp(event: TerraDrawKeyboardEvent) {}
 	undo() {}
+	clearHistory() {}
 	undoSize() {
 		return 0;
 	}

@@ -690,6 +690,21 @@ describe("Undo/Redo", () => {
 
 			expect(manager.redoSize()).toBe(0);
 		});
+
+		it("clears undo and redo stack sizes", () => {
+			createPolygonFeature(0.1);
+			manager.undo();
+
+			expect(manager.undoSize()).toBe(0);
+			expect(manager.redoSize()).toBe(1);
+
+			manager.clearHistory();
+
+			expect(manager.undoSize()).toBe(0);
+			expect(manager.redoSize()).toBe(0);
+			expect(manager.undo()).toBe(false);
+			expect(manager.redo()).toBe(false);
+		});
 	});
 
 	describe("maxStackSize", () => {

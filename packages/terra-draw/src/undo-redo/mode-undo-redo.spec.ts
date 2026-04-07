@@ -7,6 +7,7 @@ describe("TerraDrawModeUndoRedo", () => {
 	let redoStackSize: number;
 	let undoMode: jest.Mock;
 	let redoMode: jest.Mock;
+	let clearModeHistory: jest.Mock;
 	let onHistoryChange: jest.Mock;
 	let drawingUndoRedo: TerraDrawModeUndoRedo;
 
@@ -19,6 +20,7 @@ describe("TerraDrawModeUndoRedo", () => {
 			}),
 			undoMode,
 			redoMode,
+			clearModeHistory,
 			onHistoryChange,
 		});
 	};
@@ -29,6 +31,7 @@ describe("TerraDrawModeUndoRedo", () => {
 		redoStackSize = 0;
 		undoMode = jest.fn();
 		redoMode = jest.fn();
+		clearModeHistory = jest.fn();
 		onHistoryChange = jest.fn();
 		drawingUndoRedo = new TerraDrawModeUndoRedo();
 	});
@@ -237,6 +240,16 @@ describe("TerraDrawModeUndoRedo", () => {
 				undoStackSize: 7,
 				redoStackSize: 2,
 			});
+		});
+	});
+
+	describe("clearHistory", () => {
+		it("clears mode history via registered callback", () => {
+			registerDrawingUndoRedo();
+
+			drawingUndoRedo.clearHistory();
+
+			expect(clearModeHistory).toHaveBeenCalledTimes(1);
 		});
 	});
 });

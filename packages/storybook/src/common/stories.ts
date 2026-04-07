@@ -962,6 +962,12 @@ const UndoRedo: Story = {
 		],
 		enableUndoRedo: true,
 		...DefaultStory.args,
+		afterRender: (draw: TerraDraw) => {
+			setTimeout(() => {
+				console.log("Clearing undo/redo history");
+				draw.clearUndoRedoHistory();
+			}, 5000);
+		},
 	},
 };
 

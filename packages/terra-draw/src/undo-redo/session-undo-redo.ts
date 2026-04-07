@@ -585,6 +585,15 @@ export class TerraDrawSessionUndoRedo
 		return true;
 	}
 
+	clearHistory() {
+		this.historyById = {};
+		this.undoStack = [];
+		this.ignoreProgrammaticCreate = {};
+		this.ignoreProgrammaticDelete = {};
+		this.deletedFeatureIds = {};
+		this.redoStack = [];
+	}
+
 	undoSize() {
 		return this.undoStack.length;
 	}

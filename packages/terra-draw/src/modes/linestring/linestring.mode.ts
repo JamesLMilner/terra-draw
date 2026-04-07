@@ -476,6 +476,10 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 		return this.undoRedo.undoSize();
 	}
 
+	clearHistory() {
+		this.undoRedo.clear();
+	}
+
 	private pushHistorySnapshot(featureId: FeatureId, currentCoordinate: number) {
 		const featureGeometry = this.readFeature.getGeometry<LineString>(featureId);
 

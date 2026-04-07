@@ -15,6 +15,7 @@ describe("TerraDrawUndoRedoCoordinator", () => {
 			canRedo: jest.fn(() => false),
 			undo: jest.fn(() => false),
 			redo: jest.fn(() => false),
+			clearHistory: jest.fn(),
 			undoSize: jest.fn(() => 0),
 			redoSize: jest.fn(() => 0),
 			getHistorySizes: jest.fn(() => ({ undoSize: 0, redoSize: 0 })),
@@ -31,6 +32,7 @@ describe("TerraDrawUndoRedoCoordinator", () => {
 			register: jest.fn(),
 			undo: jest.fn(() => true),
 			redo: jest.fn(() => true),
+			clearHistory: jest.fn(),
 			canUndo: jest.fn(() => false),
 			canRedo: jest.fn(() => false),
 			undoSize: jest.fn(() => 0),
@@ -274,5 +276,34 @@ describe("TerraDrawUndoRedoCoordinator", () => {
 			redoSize: 2,
 		});
 		expect(drawingUndoRedo.emitHistoryChange).not.toHaveBeenCalled();
+	});
+
+	it("clears mode and session history when both are present", () => {
+		const drawingUndoRedo = createDrawingUndoRedo();
+		const sessionUndoRedo = createSessionUndoRedo();
+
+		const coordinator = new TerraDrawUndoRedoCoordinator({
+			modeLevel: drawingUndoRedo,
+			sessionLevel: sessionUndoRedo,
+			shouldPreferMode: () => shouldPreferDrawing,
+		});
+
+		coordinator.clearHistory();
+
+		expect(drawingUndoRedo.clearHistory).toHaveBeenCalledTimes(1);
+		expect(sessionUndoRedo.clearHistory).toHaveBeenCalledTimes(1);
+	});
+
+	it("clears only mode history when session undo/redo is absent", () => {
+		const drawingUndoRedo = createDrawingUndoRedo();
+
+		const coordinator = new TerraDrawUndoRedoCoordinator({
+			modeLevel: drawingUndoRedo,
+			shouldPreferMode: () => shouldPreferDrawing,
+		});
+
+		coordinator.clearHistory();
+
+		expect(drawingUndoRedo.clearHistory).toHaveBeenCalledTimes(1);
 	});
 });

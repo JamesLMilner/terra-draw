@@ -266,14 +266,12 @@ export abstract class TerraDrawBaseDrawMode<Styling extends CustomStyling> {
 			});
 
 			return {
-				// validatedFeature: feature as GeoJSONStoreFeatures,
 				valid: validStoreFeature.valid && validation.valid,
 				reason: validation.reason,
 			};
 		}
 
 		return {
-			// validatedFeature: feature as GeoJSONStoreFeatures,
 			valid: validStoreFeature.valid,
 			reason: validStoreFeature.reason,
 		};
@@ -314,6 +312,7 @@ export abstract class TerraDrawBaseDrawMode<Styling extends CustomStyling> {
 	onKeyDown(event: TerraDrawKeyboardEvent) {}
 	onKeyUp(event: TerraDrawKeyboardEvent) {}
 	undo() {}
+	clearHistory() {}
 	undoSize() {
 		return 0;
 	}

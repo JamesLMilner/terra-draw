@@ -17,6 +17,7 @@ export interface TerraDrawModeUndoRedoInterface
 		getModeHistorySizes: () => { undoSize: number; redoSize: number };
 		undoMode: () => void;
 		redoMode: () => void;
+		clearModeHistory: () => void;
 		onHistoryChange: (historyChange: HistoryChange) => void;
 	}): void;
 	canUndo(): boolean;
@@ -37,6 +38,7 @@ export class TerraDrawModeUndoRedo implements TerraDrawModeUndoRedoInterface {
 		| undefined;
 	private undoMode: (() => void) | undefined;
 	private redoMode: (() => void) | undefined;
+	private clearModeHistory: (() => void) | undefined;
 	private onHistoryChange: ((historyChange: HistoryChange) => void) | undefined;
 	private readonly maxStackSize: number;
 
@@ -58,12 +60,14 @@ export class TerraDrawModeUndoRedo implements TerraDrawModeUndoRedoInterface {
 		getModeHistorySizes: () => { undoSize: number; redoSize: number };
 		undoMode: () => void;
 		redoMode: () => void;
+		clearModeHistory: () => void;
 		onHistoryChange: (historyChange: HistoryChange) => void;
 	}) {
 		this.getModeState = options.getModeState;
 		this.getModeHistorySizes = options.getModeHistorySizes;
 		this.undoMode = options.undoMode;
 		this.redoMode = options.redoMode;
+		this.clearModeHistory = options.clearModeHistory;
 		this.onHistoryChange = options.onHistoryChange;
 	}
 
@@ -107,6 +111,17 @@ export class TerraDrawModeUndoRedo implements TerraDrawModeUndoRedoInterface {
 		this.redoMode();
 		this.emitHistoryChange(HistoryChangeCause.Redo);
 		return true;
+	}
+
+	clearHistory() {
+		if (this.clearModeHistory) {
+			this.clearModeHistory();
+		}
+
+		this.lastHistorySizes = {
+			undoSize: 0,
+			redoSize: 0,
+		};
 	}
 
 	getHistorySizes() {

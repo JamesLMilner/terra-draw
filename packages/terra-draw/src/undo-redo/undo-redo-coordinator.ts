@@ -128,6 +128,16 @@ export class TerraDrawUndoRedoCoordinator {
 		return false;
 	}
 
+	clearHistory() {
+		if (this.modeLevel) {
+			this.modeLevel.clearHistory();
+		}
+
+		if (this.sessionLevel) {
+			this.sessionLevel.clearHistory();
+		}
+	}
+
 	emitPushAfterFinish() {
 		if (this.sessionLevel) {
 			this.emitStackHistoryChange({

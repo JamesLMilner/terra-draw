@@ -3,6 +3,7 @@ export interface TerraDrawUndoRedoInterface {
 	redo(): boolean;
 	canUndo(): boolean;
 	canRedo(): boolean;
+	clearHistory(): void;
 	undoSize(): number;
 	redoSize(): number;
 }

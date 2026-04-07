@@ -356,6 +356,10 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 		return this.undoRedo.undoSize();
 	}
 
+	clearHistory() {
+		this.undoRedo.clear();
+	}
+
 	private pushHistorySnapshot(featureId: FeatureId, currentCoordinate: number) {
 		const featureGeometry = this.readFeature.getGeometry<Polygon>(featureId);
 

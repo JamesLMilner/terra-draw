@@ -4937,6 +4937,60 @@ describe("Terra Draw", () => {
 			expect(draw.getSnapshot()).toHaveLength(0);
 		});
 
+		it("clears session undo/redo history via clearUndoRedoHistory", () => {
+			const polygonMode = new TerraDrawPolygonMode();
+			const draw = new TerraDraw({
+				adapter,
+				modes: [polygonMode],
+				undoRedo: {
+					sessionLevel: new TerraDrawSessionUndoRedo(),
+				},
+			});
+
+			draw.start();
+			draw.setMode("polygon");
+
+			polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			polygonMode.onClick(MockCursorEvent({ lng: 0.000001, lat: 0 }));
+			polygonMode.onClick(MockCursorEvent({ lng: 0.000001, lat: 0.000001 }));
+			polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+			expect(draw.canUndo()).toBe(true);
+
+			draw.clearUndoRedoHistory();
+
+			expect(draw.canUndo()).toBe(false);
+			expect(draw.canRedo()).toBe(false);
+			expect(draw.undo()).toBe(false);
+			expect(draw.redo()).toBe(false);
+			expect(draw.getSnapshot()).toHaveLength(1);
+		});
+
+		it("clears mode undo/redo history via clearUndoRedoHistory", () => {
+			const lineStringMode = new TerraDrawLineStringMode();
+			const draw = new TerraDraw({
+				adapter,
+				modes: [lineStringMode],
+				undoRedo: {
+					modeLevel: new TerraDrawModeUndoRedo(),
+				},
+			});
+
+			draw.start();
+			draw.setMode("linestring");
+
+			lineStringMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			expect(draw.canUndo()).toBe(true);
+
+			draw.clearUndoRedoHistory();
+
+			expect(draw.canUndo()).toBe(false);
+			expect(draw.canRedo()).toBe(false);
+			expect(draw.undo()).toBe(false);
+			expect(draw.redo()).toBe(false);
+			expect(draw.getSnapshot()).toHaveLength(1);
+		});
+
 		it("does not handle mode undo while drawing when undoRedo.drawing is disabled", () => {
 			const lineStringMode = new TerraDrawLineStringMode();
 			const draw = new TerraDraw({

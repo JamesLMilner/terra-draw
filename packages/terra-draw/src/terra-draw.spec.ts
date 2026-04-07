@@ -4966,6 +4966,122 @@ describe("Terra Draw", () => {
 			expect(draw.getSnapshot()).toHaveLength(1);
 		});
 
+		it("undoes clear after clearUndoRedoHistory for all current features", () => {
+			const polygonMode = new TerraDrawPolygonMode();
+			const draw = new TerraDraw({
+				adapter,
+				modes: [polygonMode],
+				undoRedo: {
+					sessionLevel: new TerraDrawSessionUndoRedo(),
+				},
+			});
+
+			draw.start();
+			draw.setMode("polygon");
+
+			polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			polygonMode.onClick(MockCursorEvent({ lng: 0.000001, lat: 0 }));
+			polygonMode.onClick(MockCursorEvent({ lng: 0.000001, lat: 0.000001 }));
+			polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+			draw.addFeatures([
+				{
+					type: "Feature",
+					geometry: {
+						type: "Polygon",
+						coordinates: [
+							[
+								[1, 1],
+								[1.000001, 1],
+								[1.000001, 1.000001],
+								[1, 1],
+							],
+						],
+					},
+					properties: {
+						mode: "polygon",
+					},
+				},
+				{
+					type: "Feature",
+					geometry: {
+						type: "Polygon",
+						coordinates: [
+							[
+								[2, 2],
+								[2.000001, 2],
+								[2.000001, 2.000001],
+								[2, 2],
+							],
+						],
+					},
+					properties: {
+						mode: "polygon",
+					},
+				},
+			]);
+
+			expect(draw.getSnapshot()).toHaveLength(3);
+
+			draw.clearUndoRedoHistory();
+			expect(draw.canUndo()).toBe(false);
+
+			draw.clear();
+			expect(draw.getSnapshot()).toHaveLength(0);
+
+			expect(draw.undo()).toBe(true);
+			expect(draw.getSnapshot()).toHaveLength(3);
+		});
+
+		it("can redo clear after undo when clear follows clearUndoRedoHistory", () => {
+			const polygonMode = new TerraDrawPolygonMode();
+			const draw = new TerraDraw({
+				adapter,
+				modes: [polygonMode],
+				undoRedo: {
+					sessionLevel: new TerraDrawSessionUndoRedo(),
+				},
+			});
+
+			draw.start();
+			draw.setMode("polygon");
+
+			polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			polygonMode.onClick(MockCursorEvent({ lng: 0.000001, lat: 0 }));
+			polygonMode.onClick(MockCursorEvent({ lng: 0.000001, lat: 0.000001 }));
+			polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+			draw.addFeatures([
+				{
+					type: "Feature",
+					geometry: {
+						type: "Polygon",
+						coordinates: [
+							[
+								[1, 1],
+								[1.000001, 1],
+								[1.000001, 1.000001],
+								[1, 1],
+							],
+						],
+					},
+					properties: {
+						mode: "polygon",
+					},
+				},
+			]);
+
+			expect(draw.getSnapshot()).toHaveLength(2);
+
+			draw.clearUndoRedoHistory();
+			draw.clear();
+
+			expect(draw.undo()).toBe(true);
+			expect(draw.getSnapshot()).toHaveLength(2);
+			expect(draw.redo()).toBe(true);
+			expect(draw.getSnapshot()).toHaveLength(0);
+		});
+
 		it("clears mode undo/redo history via clearUndoRedoHistory", () => {
 			const lineStringMode = new TerraDrawLineStringMode();
 			const draw = new TerraDraw({

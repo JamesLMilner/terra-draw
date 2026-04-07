@@ -876,6 +876,9 @@ class TerraDraw {
 	 */
 	clear() {
 		this.checkEnabled();
+		if (this.sessionUndoRedo) {
+			this.sessionUndoRedo.prepareForClear();
+		}
 		this._adapter.clear();
 	}
 

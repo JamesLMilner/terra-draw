@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.28.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.27.0...terra-draw@1.28.0) (2026-04-07)
+
+
+### feat
+
+* **terra-draw:** add clearUndoRedoHistory method  (#856) ([](https://github.com/JamesLMilner/terra-draw/commit/aac5e77eab4740fa5286998cff6197710053d65d)), closes [#856](https://github.com/JamesLMilner/terra-draw/issues/856)
+
 ## [1.27.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.26.0...terra-draw@1.27.0) (2026-03-28)
 
 

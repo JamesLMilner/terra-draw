@@ -34,6 +34,7 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawExtend.TerraDrawBaseAda
 	private _lib: typeof google.maps;
 	private _map: google.maps.Map;
 	private _overlay: google.maps.OverlayView | undefined;
+	private _markerClickListener: any | undefined;
 	private _clickEventListener: google.maps.MapsEventListener | undefined;
 	private _mouseMoveEventListener: google.maps.MapsEventListener | undefined;
 	private _readyCalled = false;
@@ -81,6 +82,24 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawExtend.TerraDrawBaseAda
 		this._overlay.onRemove = () => {
 			// No-op
 		};
+
+		this._markerClickListener = (event) => {
+			const target = event.target as HTMLElement;
+
+			if (target?.tagName !== "GMP-ADVANCED-MARKER") {
+				return;
+			}
+
+			const drawEvent = this.getDrawEventFromEvent(event);
+			if (drawEvent) {
+				callbacks.onClick(drawEvent);
+			}
+		};
+
+		this.getMapEventElement().addEventListener(
+			"click",
+			this._markerClickListener,
+		);
 
 		// Clicking on data geometries triggers
 		// swallows the map onclick event,

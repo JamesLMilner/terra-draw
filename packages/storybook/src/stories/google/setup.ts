@@ -42,10 +42,15 @@ const initialiseGoogleMap = async ({
 	}
 
 	// Load Google Maps API (maps for Map/Data/OverlayView, core for LatLng/Point/Size)
-	await Promise.all([importLibrary("maps"), importLibrary("core")]);
+	await Promise.all([
+		importLibrary("maps"),
+		importLibrary("core"),
+		importLibrary("marker"),
+	]);
 
 	// Create Google Maps instance
 	const map = new google.maps.Map(mapContainer, {
+		mapId: "c306b3c6dd3ed8d9",
 		disableDefaultUI: true,
 		center: { lat: centerLat, lng: centerLng },
 		zoom: zoom + 1, // adjusted to match other map libraries
@@ -78,7 +83,14 @@ export function SetupGoogle(args: StoryArgs): HTMLElement {
 		})
 			.then((mapConfig) => {
 				// Wait for projection to be ready
-				mapConfig.map.addListener("projection_changed", () => {
+				mapConfig.map.addListener("projection_changed", async () => {
+					const { AdvancedMarkerElement } = await mapConfig.lib.marker;
+
+					const advancedMarker = new AdvancedMarkerElement({
+						position: mapConfig.map.getCenter(),
+						map: mapConfig.map,
+					});
+
 					const adapter = new TerraDrawGoogleMapsAdapter({
 						lib: mapConfig.lib,
 						map: mapConfig.map,

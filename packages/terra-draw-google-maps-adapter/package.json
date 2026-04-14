@@ -10,6 +10,7 @@
 		"@types/google.maps": "^3.49.2"
 	},
 	"scripts": {
+		"postbump": "node ../../update.mjs && npm --prefix ../.. install --package-lock-only && git add ../../packages/*/package.json ../../package-lock.json",
 		"release": "TYPE=$(node ../../bump.mjs) && commit-and-tag-version .versionrc.cjs -t terra-draw-google-maps-adapter@ --release-as $TYPE",
 		"release:dryrun": "TYPE=$(node ../../bump.mjs) && commit-and-tag-version .versionrc.cjs -t terra-draw-google-maps-adapter@ --dry-run --release-as $TYPE",
 		"build": "microbundle",

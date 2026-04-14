@@ -1,0 +1,64 @@
+name: Deploy GitHub Pages
+
+on:
+  push:
+    tags:
+      - "terra-draw*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: deploy-pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24.14.1"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build docs
+        run: npm run docs
+
+      - name: Publish docs to gh-pages/docs
+        run: |
+          set -euo pipefail
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          # gh-pages branch is expected to exist.
+          git fetch origin gh-pages:gh-pages
+
+          rm -rf /tmp/gh-pages
+
+          git worktree add /tmp/gh-pages gh-pages
+
+          rm -rf /tmp/gh-pages/docs
+          rsync -a docs/ /tmp/gh-pages/docs/
+
+          cd /tmp/gh-pages
+          git add -A docs
+
+          if git diff --cached --quiet; then
+            echo "No changes to deploy"
+            exit 0
+          fi
+
+          git commit -m "chore(terra-draw): deploy docs from ${GITHUB_SHA}"
+          git push origin gh-pages

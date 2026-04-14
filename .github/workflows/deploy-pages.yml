@@ -29,8 +29,30 @@ jobs:
           node-version: "24.14.1"
           cache: npm
 
+      # The package is still publishing to npm, so we need to retry on install failure
       - name: Install dependencies
-        run: npm ci
+        run: |
+          set -euo pipefail
+
+          max_attempts=10
+
+          for attempt in $(seq 1 $max_attempts); do
+            echo "npm ci attempt ${attempt}/${max_attempts}"
+
+            if npm ci; then
+              echo "npm ci succeeded"
+              exit 0
+            fi
+
+            if [ "$attempt" -eq "$max_attempts" ]; then
+              echo "npm ci failed after ${max_attempts} attempts"
+              exit 1
+            fi
+
+            sleep_seconds=$((attempt * 15))
+            echo "Retrying in ${sleep_seconds}s..."
+            sleep "${sleep_seconds}"
+          done
 
       - name: Build docs
         run: npm run docs

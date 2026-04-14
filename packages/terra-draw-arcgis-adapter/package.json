@@ -7,6 +7,7 @@
 		"@arcgis/core": "^4.31.6"
 	},
 	"scripts": {
+		"postbump": "cd ../.. && node update.mjs && npm install --package-lock-only && git add packages/*/package.json package-lock.json",
 		"release": "TYPE=$(node ../../bump.mjs) && commit-and-tag-version .versionrc.cjs -t terra-draw-arcgis-adapter@ --release-as $TYPE",
 		"release:dryrun": "TYPE=$(node ../../bump.mjs) && commit-and-tag-version .versionrc.cjs -t terra-draw-arcgis-adapter@ --dry-run --release-as $TYPE",
 		"build": "microbundle",

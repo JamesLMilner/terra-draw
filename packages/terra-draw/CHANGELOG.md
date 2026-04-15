@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.28.5](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.28.4...terra-draw@1.28.5) (2026-04-15)
+
+
+### chore
+
+* **terra-draw:** ensure package-lock.json files are updated on release (#864) ([](https://github.com/JamesLMilner/terra-draw/commit/327e0c8d3a05d10fba9905f19461e4360538ab0e)), closes [#864](https://github.com/JamesLMilner/terra-draw/issues/864)
+* **terra-draw:** fix package.json versions for Terra Draw (#865) ([](https://github.com/JamesLMilner/terra-draw/commit/40536011c1a9f4747e67981dfcca0f45f893960e)), closes [#865](https://github.com/JamesLMilner/terra-draw/issues/865)
+
 ## [1.28.4](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.28.3...terra-draw@1.28.4) (2026-04-14)
 
 

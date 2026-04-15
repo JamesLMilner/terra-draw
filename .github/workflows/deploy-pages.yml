@@ -55,24 +55,35 @@ jobs:
           done
 
       - name: Build docs
-        run: HUSKY=0 npm run docs
+        run: npm run docs
 
-      - name: Publish docs to gh-pages/docs
+      - name: Configure git identity
         run: |
           set -euo pipefail
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
+      - name: Prepare gh-pages worktree
+        run: |
+          set -euo pipefail
+
           # gh-pages branch is expected to exist.
           git fetch origin gh-pages:gh-pages
 
           rm -rf /tmp/gh-pages
-
           git worktree add /tmp/gh-pages gh-pages
+
+      - name: Copy docs into gh-pages/docs
+        run: |
+          set -euo pipefail
 
           rm -rf /tmp/gh-pages/docs
           rsync -a docs/ /tmp/gh-pages/docs/
+
+      - name: Commit and push docs
+        run: |
+          set -euo pipefail
 
           cd /tmp/gh-pages
           git add -A docs
@@ -82,5 +93,5 @@ jobs:
             exit 0
           fi
 
-          HUSKY=0 git commit -m "chore(terra-draw): deploy docs from ${GITHUB_SHA}"
+          git commit --no-verify -m "chore(terra-draw): deploy docs from ${GITHUB_SHA}"
           git push origin gh-pages

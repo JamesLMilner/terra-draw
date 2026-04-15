@@ -1,9 +1,8 @@
 {
 	"name": "terra-draw",
-	"version": "1.28.4",
+	"version": "1.28.7",
 	"description": "Frictionless map drawing across mapping provider",
 	"scripts": {
-		"postbump": "cd ../.. && node update.mjs && npm install --package-lock-only && git add packages/*/package.json package-lock.json",
 		"release": "TYPE=$(node ../../bump.mjs) && commit-and-tag-version .versionrc.cjs -t terra-draw@ --release-as $TYPE",
 		"release:dryrun": "TYPE=$(node ../../bump.mjs) && commit-and-tag-version .versionrc.cjs -t terra-draw@ --dry-run --release-as $TYPE",
 		"build": "microbundle",

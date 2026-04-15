@@ -28,6 +28,8 @@ module.exports = (packageName, packageJsonPath, changelogPath) => ({
 		postbump:
 			"cd ../.. && node update.mjs && npm install --package-lock-only --no-audit --no-fund && git add packages/*/package.json package-lock.json",
 	},
+	// Include files staged by postbump in the release commit.
+	commitAll: true,
 	changelogFile: changelogPath,
 	releaseCommitMessageFormat: `chore(${packageName}): release version {{currentTag}}`,
 });

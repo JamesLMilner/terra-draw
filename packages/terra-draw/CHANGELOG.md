@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.28.6](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.28.5...terra-draw@1.28.6) (2026-04-15)
+
+
+### chore
+
+* **terra-draw:** enable commitAll for release.js to ensure files committed (#866) ([](https://github.com/JamesLMilner/terra-draw/commit/96b8d6f65f47fac5fde23f32a7966f96e1218078)), closes [#866](https://github.com/JamesLMilner/terra-draw/issues/866)
+
 ## [1.28.5](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.28.4...terra-draw@1.28.5) (2026-04-15)
 
 

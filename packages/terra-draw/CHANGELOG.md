@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.28.7](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.28.6...terra-draw@1.28.7) (2026-04-15)
+
+
+### chore
+
+* **terra-draw:** disable husky checks when gh-pages is being commit (#867) ([](https://github.com/JamesLMilner/terra-draw/commit/63cb482df1d205b320460c066db55f066e9176c3)), closes [#867](https://github.com/JamesLMilner/terra-draw/issues/867)
+
 ## [1.28.6](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.28.5...terra-draw@1.28.6) (2026-04-15)
 
 

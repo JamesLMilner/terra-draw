@@ -55,7 +55,7 @@ jobs:
           done
 
       - name: Build docs
-        run: npm run docs
+        run: HUSKY=0 npm run docs
 
       - name: Publish docs to gh-pages/docs
         run: |
@@ -82,5 +82,5 @@ jobs:
             exit 0
           fi
 
-          git commit -m "chore(terra-draw): deploy docs from ${GITHUB_SHA}"
+          HUSKY=0 git commit -m "chore(terra-draw): deploy docs from ${GITHUB_SHA}"
           git push origin gh-pages

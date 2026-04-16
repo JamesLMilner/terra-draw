@@ -57,7 +57,10 @@ export class FeatureAtPointerEventBehavior extends TerraDrawModeBehavior {
 					clickedPoint = feature;
 				}
 			} else if (geometry.type === "LineString") {
-				if (clickedPoint) {
+				if (
+					clickedPoint ||
+					feature.properties[SELECT_PROPERTIES.ROTATION_POINT_GUIDE]
+				) {
 					continue;
 				}
 
@@ -79,7 +82,11 @@ export class FeatureAtPointerEventBehavior extends TerraDrawModeBehavior {
 					}
 				}
 			} else if (geometry.type === "Polygon") {
-				if (clickedPoint || clickedLineString) {
+				if (
+					clickedPoint ||
+					clickedLineString ||
+					feature.properties[SELECT_PROPERTIES.ROTATION_BBOX_GUIDE]
+				) {
 					// We already have a clicked feature
 					// so we can ignore the polygon
 					continue;

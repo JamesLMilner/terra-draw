@@ -151,11 +151,19 @@ export class MutateFeatureBehavior extends TerraDrawModeBehavior {
 	public createGuidancePoint({
 		coordinate,
 		type,
+		additionalProperties,
 	}: {
 		coordinate: Position;
 		type: GuidancePointProperties;
+		additionalProperties?: JSONObject;
 	}) {
-		return this.createGuidancePoints({ coordinates: [coordinate], type })[0];
+		return this.createGuidancePoints({
+			coordinates: [coordinate],
+			type,
+			additionalProperties: additionalProperties
+				? () => additionalProperties
+				: undefined,
+		})[0];
 	}
 
 	public createGuidancePoints({

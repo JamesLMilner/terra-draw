@@ -61,6 +61,7 @@ export const SelectWithMultipleOfSameModes =
 export const SelectWithMultipleSelectModes =
 	AllStories.SelectWithMultipleSelectModes;
 export const SelectWithScaleAndRotate = AllStories.SelectWithScaleAndRotate;
+export const SelectWithRotateDragHandle = AllStories.SelectWithRotateDragHandle;
 export const SelectWithResizable = AllStories.SelectWithResizable;
 export const ProgrammaticRotate = AllStories.ProgrammaticRotate;
 export const ProgrammaticScale = AllStories.ProgrammaticScale;

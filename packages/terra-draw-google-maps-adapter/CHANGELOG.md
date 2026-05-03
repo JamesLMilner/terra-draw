@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.4.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw-google-maps-adapter@1.3.1...terra-draw-google-maps-adapter@1.4.0) (2026-05-03)
+
+
+### feat
+
+* **terra-draw-google-maps-adapter:** add property allow interactions on AdvancedMarkerElements (#871) ([](https://github.com/JamesLMilner/terra-draw/commit/73c7c5590649afd9f70a67d1d826cd7201abe7fd)), closes [#871](https://github.com/JamesLMilner/terra-draw/issues/871)
+
 ## [1.3.1](https://github.com/JamesLMilner/terra-draw/compare/terra-draw-google-maps-adapter@1.3.0...terra-draw-google-maps-adapter@1.3.1) (2026-02-11)
 
 

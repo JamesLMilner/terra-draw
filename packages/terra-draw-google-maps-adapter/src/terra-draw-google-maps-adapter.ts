@@ -25,7 +25,7 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawExtend.TerraDrawBaseAda
 		this._forwardMapElementEvents =
 			typeof config.forwardMapElementEvents === "boolean"
 				? config.forwardMapElementEvents
-				: true;
+				: false;
 
 		this._coordinatePrecision =
 			typeof config.coordinatePrecision === "number"
@@ -33,7 +33,7 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawExtend.TerraDrawBaseAda
 				: 9;
 	}
 
-	private _forwardMapElementEvents: boolean = true;
+	private _forwardMapElementEvents: boolean = false;
 	private _cursor: string | undefined;
 	private _cursorStyleSheet: HTMLStyleElement | undefined;
 	private _lib: typeof google.maps;

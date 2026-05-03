@@ -264,6 +264,7 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 					})),
 				} as any,
 				map: mockMap,
+				forwardMapElementEvents: true,
 			});
 
 			const callbackMock = MockCallbacks();
@@ -284,225 +285,243 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 			);
 		});
 
-		it("calls onReady once even if overlay onAdd runs multiple times", () => {
-			const overlay = {
-				setMap: jest.fn(),
-				onAdd: undefined as undefined | (() => void),
-			};
+		describe("forwardMapElementEvents set to true", () => {
+			it("calls onReady once even if overlay onAdd runs multiple times", () => {
+				const overlay = {
+					setMap: jest.fn(),
+					onAdd: undefined as undefined | (() => void),
+				};
 
-			const div = {
-				addEventListener: jest.fn(),
-			} as unknown as HTMLDivElement;
+				const div = {
+					addEventListener: jest.fn(),
+				} as unknown as HTMLDivElement;
 
-			const mockMap = createMockGoogleMap({
-				getDiv: jest.fn(() => ({
-					id: "map",
-					querySelector: jest.fn(() => div),
+				const mockMap = createMockGoogleMap({
+					getDiv: jest.fn(() => ({
+						id: "map",
+						querySelector: jest.fn(() => div),
+						addEventListener: jest.fn(),
+						removeEventListener: jest.fn(),
+					})) as any,
+					data: {
+						addListener: jest.fn(),
+					} as any,
+				});
+
+				const callbacks = MockCallbacks();
+				const adapter = new TerraDrawGoogleMapsAdapter({
+					lib: {
+						OverlayView: jest.fn(() => overlay),
+					} as any,
+					map: mockMap,
+					forwardMapElementEvents: true,
+				});
+
+				adapter.register(callbacks);
+
+				overlay.onAdd?.();
+				overlay.onAdd?.();
+
+				expect(callbacks.onReady).toHaveBeenCalledTimes(1);
+			});
+
+			it("does not register forwarded map element listeners when disabled", () => {
+				const div = {
+					addEventListener: jest.fn(),
+				} as unknown as HTMLDivElement;
+
+				const keyboardDiv = {
 					addEventListener: jest.fn(),
 					removeEventListener: jest.fn(),
-				})) as any,
-				data: {
-					addListener: jest.fn(),
-				} as any,
+				} as unknown as HTMLDivElement;
+
+				const mockMap = createMockGoogleMap({
+					getDiv: jest.fn(() => ({
+						id: "map",
+						querySelector: jest.fn(() => div),
+						addEventListener: keyboardDiv.addEventListener,
+						removeEventListener: keyboardDiv.removeEventListener,
+					})) as any,
+					data: {
+						addListener: jest.fn(),
+					} as any,
+				});
+
+				const adapter = new TerraDrawGoogleMapsAdapter({
+					lib: {
+						OverlayView: jest.fn(() => ({
+							setMap: jest.fn(),
+						})),
+					} as any,
+					map: mockMap,
+					forwardMapElementEvents: false,
+				});
+
+				adapter.register(MockCallbacks());
+
+				expect(
+					getEventListenerCalls(
+						div.addEventListener as jest.Mock,
+						"pointerdown",
+					),
+				).toHaveLength(1);
+				expect(
+					getEventListenerCalls(
+						div.addEventListener as jest.Mock,
+						"pointermove",
+					),
+				).toHaveLength(1);
+				expect(
+					getEventListenerCalls(
+						div.addEventListener as jest.Mock,
+						"pointercancel",
+					),
+				).toHaveLength(0);
 			});
 
-			const callbacks = MockCallbacks();
-			const adapter = new TerraDrawGoogleMapsAdapter({
-				lib: {
-					OverlayView: jest.fn(() => overlay),
-				} as any,
-				map: mockMap,
-			});
+			it("handles pointer capture edge cases without throwing", () => {
+				const setPointerCapture = jest.fn(() => {
+					throw new Error("pointer not active");
+				});
+				const releasePointerCapture = jest.fn(() => {
+					throw new Error("already released");
+				});
+				const hasPointerCapture = jest.fn(() => false);
 
-			adapter.register(callbacks);
-
-			overlay.onAdd?.();
-			overlay.onAdd?.();
-
-			expect(callbacks.onReady).toHaveBeenCalledTimes(1);
-		});
-
-		it("does not register forwarded map element listeners when disabled", () => {
-			const div = {
-				addEventListener: jest.fn(),
-			} as unknown as HTMLDivElement;
-
-			const keyboardDiv = {
-				addEventListener: jest.fn(),
-				removeEventListener: jest.fn(),
-			} as unknown as HTMLDivElement;
-
-			const mockMap = createMockGoogleMap({
-				getDiv: jest.fn(() => ({
-					id: "map",
-					querySelector: jest.fn(() => div),
-					addEventListener: keyboardDiv.addEventListener,
-					removeEventListener: keyboardDiv.removeEventListener,
-				})) as any,
-				data: {
-					addListener: jest.fn(),
-				} as any,
-			});
-
-			const adapter = new TerraDrawGoogleMapsAdapter({
-				lib: {
-					OverlayView: jest.fn(() => ({
-						setMap: jest.fn(),
-					})),
-				} as any,
-				map: mockMap,
-				forwardMapElementEvents: false,
-			});
-
-			adapter.register(MockCallbacks());
-
-			expect(
-				getEventListenerCalls(div.addEventListener as jest.Mock, "pointerdown"),
-			).toHaveLength(1);
-			expect(
-				getEventListenerCalls(div.addEventListener as jest.Mock, "pointermove"),
-			).toHaveLength(1);
-			expect(
-				getEventListenerCalls(
-					div.addEventListener as jest.Mock,
-					"pointercancel",
-				),
-			).toHaveLength(0);
-		});
-
-		it("handles pointer capture edge cases without throwing", () => {
-			const setPointerCapture = jest.fn(() => {
-				throw new Error("pointer not active");
-			});
-			const releasePointerCapture = jest.fn(() => {
-				throw new Error("already released");
-			});
-			const hasPointerCapture = jest.fn(() => false);
-
-			const div = {
-				addEventListener: jest.fn(),
-				setPointerCapture,
-				hasPointerCapture,
-				releasePointerCapture,
-			} as unknown as HTMLDivElement;
-
-			const mockMap = createMockGoogleMap({
-				getDiv: jest.fn(() => ({
-					id: "map",
-					querySelector: jest.fn(() => div),
+				const div = {
 					addEventListener: jest.fn(),
-					removeEventListener: jest.fn(),
-				})) as any,
-				data: {
-					addListener: jest.fn(),
-				} as any,
+					setPointerCapture,
+					hasPointerCapture,
+					releasePointerCapture,
+				} as unknown as HTMLDivElement;
+
+				const mockMap = createMockGoogleMap({
+					getDiv: jest.fn(() => ({
+						id: "map",
+						querySelector: jest.fn(() => div),
+						addEventListener: jest.fn(),
+						removeEventListener: jest.fn(),
+					})) as any,
+					data: {
+						addListener: jest.fn(),
+					} as any,
+				});
+
+				const adapter = new TerraDrawGoogleMapsAdapter({
+					lib: {
+						OverlayView: jest.fn(() => ({
+							setMap: jest.fn(),
+						})),
+					} as any,
+					map: mockMap,
+					forwardMapElementEvents: true,
+				});
+
+				adapter.register(MockCallbacks());
+
+				const pointerDownListener = (adapter as any)
+					._pointerCaptureDownListener;
+				const pointerUpListener = (adapter as any)._pointerCaptureUpListener;
+
+				expect(() =>
+					pointerDownListener({
+						isPrimary: false,
+						pointerId: 1,
+					} as PointerEvent),
+				).not.toThrow();
+				expect(setPointerCapture).not.toHaveBeenCalled();
+
+				expect(() =>
+					pointerDownListener({
+						isPrimary: true,
+						pointerId: 1,
+					} as PointerEvent),
+				).not.toThrow();
+				expect(setPointerCapture).toHaveBeenCalledWith(1);
+
+				expect(() =>
+					pointerUpListener({ pointerId: 1 } as PointerEvent),
+				).not.toThrow();
+				expect(releasePointerCapture).not.toHaveBeenCalled();
+
+				hasPointerCapture.mockReturnValueOnce(true);
+				expect(() =>
+					pointerUpListener({ pointerId: 2 } as PointerEvent),
+				).not.toThrow();
+				expect(releasePointerCapture).toHaveBeenCalledWith(2);
 			});
 
-			const adapter = new TerraDrawGoogleMapsAdapter({
-				lib: {
-					OverlayView: jest.fn(() => ({
-						setMap: jest.fn(),
-					})),
-				} as any,
-				map: mockMap,
-			});
-
-			adapter.register(MockCallbacks());
-
-			const pointerDownListener = (adapter as any)._pointerCaptureDownListener;
-			const pointerUpListener = (adapter as any)._pointerCaptureUpListener;
-
-			expect(() =>
-				pointerDownListener({ isPrimary: false, pointerId: 1 } as PointerEvent),
-			).not.toThrow();
-			expect(setPointerCapture).not.toHaveBeenCalled();
-
-			expect(() =>
-				pointerDownListener({ isPrimary: true, pointerId: 1 } as PointerEvent),
-			).not.toThrow();
-			expect(setPointerCapture).toHaveBeenCalledWith(1);
-
-			expect(() =>
-				pointerUpListener({ pointerId: 1 } as PointerEvent),
-			).not.toThrow();
-			expect(releasePointerCapture).not.toHaveBeenCalled();
-
-			hasPointerCapture.mockReturnValueOnce(true);
-			expect(() =>
-				pointerUpListener({ pointerId: 2 } as PointerEvent),
-			).not.toThrow();
-			expect(releasePointerCapture).toHaveBeenCalledWith(2);
-		});
-
-		it("forwards marker pointer events only for advanced marker targets", () => {
-			const div = {
-				addEventListener: jest.fn(),
-			} as unknown as HTMLDivElement;
-
-			const mockMap = createMockGoogleMap({
-				getDiv: jest.fn(() => ({
-					id: "map",
-					querySelector: jest.fn(() => div),
+			it("forwards marker pointer events only for advanced marker targets", () => {
+				const div = {
 					addEventListener: jest.fn(),
-					removeEventListener: jest.fn(),
-				})) as any,
-				data: {
-					addListener: jest.fn(),
-				} as any,
+				} as unknown as HTMLDivElement;
+
+				const mockMap = createMockGoogleMap({
+					getDiv: jest.fn(() => ({
+						id: "map",
+						querySelector: jest.fn(() => div),
+						addEventListener: jest.fn(),
+						removeEventListener: jest.fn(),
+					})) as any,
+					data: {
+						addListener: jest.fn(),
+					} as any,
+				});
+
+				const callbacks = MockCallbacks();
+				const adapter = new TerraDrawGoogleMapsAdapter({
+					lib: {
+						OverlayView: jest.fn(() => ({
+							setMap: jest.fn(),
+						})),
+					} as any,
+					map: mockMap,
+					forwardMapElementEvents: true,
+				});
+
+				const drawEvent = {
+					lng: 0,
+					lat: 0,
+					containerX: 0,
+					containerY: 0,
+					button: "left",
+					heldKeys: [],
+					isContextMenu: false,
+				} as TerraDrawMouseEvent;
+
+				jest
+					.spyOn(adapter as any, "getDrawEventFromEvent")
+					.mockReturnValue(drawEvent)
+					.mockReturnValueOnce(null)
+					.mockReturnValue(drawEvent);
+
+				adapter.register(callbacks);
+
+				const markerTarget = {
+					closest: jest.fn(() => ({})),
+				} as unknown as HTMLElement;
+				const nonMarkerTarget = {
+					closest: jest.fn(() => null),
+				} as unknown as HTMLElement;
+
+				const markerPointerDown = (adapter as any)._markerClickListener;
+				const markerPointerMove = (adapter as any)._markerMouseMoveListener;
+
+				markerPointerDown({ target: nonMarkerTarget } as unknown as MouseEvent);
+				expect(callbacks.onClick).not.toHaveBeenCalled();
+
+				markerPointerDown({ target: markerTarget } as unknown as MouseEvent);
+				expect(callbacks.onClick).not.toHaveBeenCalled();
+
+				markerPointerDown({ target: markerTarget } as unknown as MouseEvent);
+				expect(callbacks.onClick).toHaveBeenCalledTimes(1);
+
+				markerPointerMove({ target: nonMarkerTarget } as unknown as MouseEvent);
+				expect(callbacks.onMouseMove).not.toHaveBeenCalled();
+
+				markerPointerMove({ target: markerTarget } as unknown as MouseEvent);
+				expect(callbacks.onMouseMove).toHaveBeenCalledTimes(1);
 			});
-
-			const callbacks = MockCallbacks();
-			const adapter = new TerraDrawGoogleMapsAdapter({
-				lib: {
-					OverlayView: jest.fn(() => ({
-						setMap: jest.fn(),
-					})),
-				} as any,
-				map: mockMap,
-			});
-
-			const drawEvent = {
-				lng: 0,
-				lat: 0,
-				containerX: 0,
-				containerY: 0,
-				button: "left",
-				heldKeys: [],
-				isContextMenu: false,
-			} as TerraDrawMouseEvent;
-
-			jest
-				.spyOn(adapter as any, "getDrawEventFromEvent")
-				.mockReturnValue(drawEvent)
-				.mockReturnValueOnce(null)
-				.mockReturnValue(drawEvent);
-
-			adapter.register(callbacks);
-
-			const markerTarget = {
-				closest: jest.fn(() => ({})),
-			} as unknown as HTMLElement;
-			const nonMarkerTarget = {
-				closest: jest.fn(() => null),
-			} as unknown as HTMLElement;
-
-			const markerPointerDown = (adapter as any)._markerClickListener;
-			const markerPointerMove = (adapter as any)._markerMouseMoveListener;
-
-			markerPointerDown({ target: nonMarkerTarget } as unknown as MouseEvent);
-			expect(callbacks.onClick).not.toHaveBeenCalled();
-
-			markerPointerDown({ target: markerTarget } as unknown as MouseEvent);
-			expect(callbacks.onClick).not.toHaveBeenCalled();
-
-			markerPointerDown({ target: markerTarget } as unknown as MouseEvent);
-			expect(callbacks.onClick).toHaveBeenCalledTimes(1);
-
-			markerPointerMove({ target: nonMarkerTarget } as unknown as MouseEvent);
-			expect(callbacks.onMouseMove).not.toHaveBeenCalled();
-
-			markerPointerMove({ target: markerTarget } as unknown as MouseEvent);
-			expect(callbacks.onMouseMove).toHaveBeenCalledTimes(1);
 		});
 	});
 
@@ -571,6 +590,7 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 					})),
 				} as any,
 				map: mockMap,
+				forwardMapElementEvents: true,
 			});
 
 			adapter.register(MockCallbacks());

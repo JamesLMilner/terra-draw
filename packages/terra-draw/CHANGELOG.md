@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.29.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.28.8...terra-draw@1.29.0) (2026-05-03)
+
+
+### feat
+
+* **terra-draw:** add additional cursors for select mode (#872) ([](https://github.com/JamesLMilner/terra-draw/commit/7298bf8b061f1669c2742b341a99d9ca031b2c2f)), closes [#872](https://github.com/JamesLMilner/terra-draw/issues/872)
+
 ## [1.28.8](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.28.7...terra-draw@1.28.8) (2026-04-15)
 
 

@@ -10,18 +10,22 @@ import {
 } from "terra-draw";
 
 import { GeoJsonObject } from "geojson";
-import { JSONObject } from "terra-draw/src/store/store";
 
 export class TerraDrawGoogleMapsAdapter extends TerraDrawExtend.TerraDrawBaseAdapter {
 	constructor(
 		config: {
 			lib: typeof google.maps;
 			map: google.maps.Map;
+			forwardMapElementEvents?: boolean;
 		} & TerraDrawExtend.BaseAdapterConfig,
 	) {
 		super(config);
 		this._lib = config.lib;
 		this._map = config.map;
+		this._forwardMapElementEvents =
+			typeof config.forwardMapElementEvents === "boolean"
+				? config.forwardMapElementEvents
+				: false;
 
 		this._coordinatePrecision =
 			typeof config.coordinatePrecision === "number"
@@ -29,11 +33,20 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawExtend.TerraDrawBaseAda
 				: 9;
 	}
 
+	private _forwardMapElementEvents: boolean = false;
 	private _cursor: string | undefined;
 	private _cursorStyleSheet: HTMLStyleElement | undefined;
 	private _lib: typeof google.maps;
 	private _map: google.maps.Map;
 	private _overlay: google.maps.OverlayView | undefined;
+	private _markerClickListener: any | undefined;
+	private _markerMouseMoveListener: ((event: MouseEvent) => void) | undefined;
+	private _pointerCaptureDownListener:
+		| ((event: PointerEvent) => void)
+		| undefined;
+	private _pointerCaptureUpListener:
+		| ((event: PointerEvent) => void)
+		| undefined;
 	private _clickEventListener: google.maps.MapsEventListener | undefined;
 	private _mouseMoveEventListener: google.maps.MapsEventListener | undefined;
 	private _readyCalled = false;
@@ -81,6 +94,88 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawExtend.TerraDrawBaseAda
 		this._overlay.onRemove = () => {
 			// No-op
 		};
+
+		if (this._forwardMapElementEvents) {
+			const AdvancedMarkerElementTag = "gmp-advanced-marker";
+
+			const mapEventElement = this.getMapEventElement();
+			this._pointerCaptureDownListener = (event: PointerEvent) => {
+				if (!event.isPrimary) {
+					return;
+				}
+
+				if (typeof mapEventElement.setPointerCapture === "function") {
+					try {
+						mapEventElement.setPointerCapture(event.pointerId);
+					} catch {
+						// Pointer capture can throw if the pointer is not active.
+					}
+				}
+			};
+
+			this._pointerCaptureUpListener = (event: PointerEvent) => {
+				if (
+					typeof mapEventElement.releasePointerCapture === "function" &&
+					typeof mapEventElement.hasPointerCapture === "function" &&
+					mapEventElement.hasPointerCapture(event.pointerId)
+				) {
+					try {
+						mapEventElement.releasePointerCapture(event.pointerId);
+					} catch {
+						// Pointer may already be released by browser.
+					}
+				}
+			};
+
+			mapEventElement.addEventListener(
+				"pointerdown",
+				this._pointerCaptureDownListener,
+			);
+			mapEventElement.addEventListener(
+				"pointerup",
+				this._pointerCaptureUpListener,
+			);
+			mapEventElement.addEventListener(
+				"pointercancel",
+				this._pointerCaptureUpListener,
+			);
+
+			this._markerClickListener = (event: MouseEvent) => {
+				const target = event.target as HTMLElement;
+
+				if (!target?.closest(AdvancedMarkerElementTag)) {
+					return;
+				}
+
+				const drawEvent = this.getDrawEventFromEvent(event);
+				if (drawEvent) {
+					callbacks.onClick(drawEvent);
+				}
+			};
+
+			mapEventElement.addEventListener(
+				"pointerdown",
+				this._markerClickListener,
+			);
+
+			this._markerMouseMoveListener = (event: MouseEvent) => {
+				const target = event.target as HTMLElement;
+
+				if (!target?.closest(AdvancedMarkerElementTag)) {
+					return;
+				}
+
+				const drawEvent = this.getDrawEventFromEvent(event);
+				if (drawEvent) {
+					callbacks.onMouseMove(drawEvent);
+				}
+			};
+
+			mapEventElement.addEventListener(
+				"pointermove",
+				this._markerMouseMoveListener,
+			);
+		}
 
 		// Clicking on data geometries triggers
 		// swallows the map onclick event,
@@ -233,6 +328,38 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawExtend.TerraDrawBaseAda
 		super.unregister();
 		this._clickEventListener?.remove();
 		this._mouseMoveEventListener?.remove();
+
+		if (this._markerClickListener) {
+			this.getMapEventElement().removeEventListener(
+				"click",
+				this._markerClickListener,
+			);
+		}
+
+		if (this._markerMouseMoveListener) {
+			this.getMapEventElement().removeEventListener(
+				"mousemove",
+				this._markerMouseMoveListener,
+			);
+		}
+
+		if (this._pointerCaptureDownListener) {
+			this.getMapEventElement().removeEventListener(
+				"pointerdown",
+				this._pointerCaptureDownListener,
+			);
+		}
+
+		if (this._pointerCaptureUpListener) {
+			this.getMapEventElement().removeEventListener(
+				"pointerup",
+				this._pointerCaptureUpListener,
+			);
+			this.getMapEventElement().removeEventListener(
+				"pointercancel",
+				this._pointerCaptureUpListener,
+			);
+		}
 
 		if (this._overlay && this._overlay.getMap()) {
 			this._overlay.setMap(null);
@@ -530,7 +657,7 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawExtend.TerraDrawBaseAda
 						Object.keys(updatedFeature.properties).forEach((property) => {
 							featureToUpdate.setProperty(
 								property,
-								(updatedFeature.properties as JSONObject)[property],
+								updatedFeature.properties[property],
 							);
 						});
 

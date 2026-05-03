@@ -127,6 +127,9 @@ type SelectionStyling = {
 
 interface Cursors {
 	pointerOver?: Cursor;
+	pointerOverFeature?: Cursor;
+	pointerOverCoordinate?: Cursor;
+	pointerOverResizeHandle?: Cursor;
 	dragStart?: Cursor;
 	dragEnd?: Cursor;
 	insertMidpoint?: Cursor;
@@ -189,6 +192,18 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 	private lineSnap!: LineSnappingBehavior;
 	private mutateFeature!: MutateFeatureBehavior;
 	private readFeature!: ReadFeatureBehavior;
+
+	private getPointerOverFeatureCursor() {
+		return this.cursors.pointerOverFeature ?? this.cursors.pointerOver;
+	}
+
+	private getPointerOverCoordinateCursor() {
+		return this.cursors.pointerOverCoordinate ?? this.cursors.pointerOver;
+	}
+
+	private getPointerOverResizeHandleCursor() {
+		return this.cursors.pointerOverResizeHandle ?? this.cursors.pointerOver;
+	}
 
 	constructor(options?: TerraDrawSelectModeOptions<SelectionStyling>) {
 		super(options, true);
@@ -587,7 +602,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 		}
 
 		if (fromCursor) {
-			this.setCursor(this.cursors.pointerOver);
+			this.setCursor(this.getPointerOverFeatureCursor());
 		}
 
 		// Select feature
@@ -1101,7 +1116,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 					featureId: selectedId,
 					coordinateIndex: index,
 				};
-				this.setCursor(this.cursors.pointerOver);
+				this.setCursor(this.getPointerOverCoordinateCursor());
 				return;
 			}
 		}
@@ -1117,7 +1132,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 					featureId: selectedId,
 					coordinateIndex: index,
 				};
-				this.setCursor(this.cursors.pointerOver);
+				this.setCursor(this.getPointerOverResizeHandleCursor());
 				return;
 			}
 		}
@@ -1128,7 +1143,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 			}
 
 			this.dragTarget = { type: "feature", featureId: selectedId };
-			this.setCursor(this.cursors.pointerOver);
+			this.setCursor(this.getPointerOverFeatureCursor());
 			return;
 		}
 

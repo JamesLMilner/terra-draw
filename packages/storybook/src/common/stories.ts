@@ -644,6 +644,48 @@ const SelectWithResizable: Story = {
 	},
 };
 
+const SelectWithHoverCursors: Story = {
+	...DefaultStory,
+	args: {
+		id: "select-with-hover-cursors",
+		modes: [
+			() => new TerraDrawPolygonMode(),
+			() => new TerraDrawLineStringMode(),
+			() =>
+				new TerraDrawSelectMode({
+					cursors: {
+						pointerOver: "move",
+						pointerOverFeature: "grab",
+						pointerOverCoordinate: "pointer",
+						pointerOverResizeHandle: "wait",
+					},
+					flags: {
+						polygon: {
+							feature: {
+								draggable: true,
+								coordinates: {
+									resizable: "center",
+									draggable: false,
+								},
+							},
+						},
+						linestring: {
+							feature: {
+								draggable: true,
+								coordinates: {
+									draggable: true,
+								},
+							},
+						},
+					},
+				}),
+		],
+		instructions:
+			"Draw a polygon and a linestring, then switch to select. Hover polygon fill for feature cursor (grab), linestring vertices for coordinate cursor (pointer), and polygon corner resize handles for resize cursor (wait).",
+		...DefaultStory.args,
+	},
+};
+
 const SelectWithMidPoints: Story = {
 	...DefaultStory,
 	args: {
@@ -1004,6 +1046,7 @@ const AllStories = {
 	SelectWithSelectionPoints,
 	SelectWithScaleAndRotate,
 	SelectWithResizable,
+	SelectWithHoverCursors,
 	SelectWithMidPoints,
 	SelectWithMultiSelect,
 	SelectWithMultipleOfSameModes,

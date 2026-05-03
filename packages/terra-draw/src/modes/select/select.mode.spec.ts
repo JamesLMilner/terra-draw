@@ -3199,7 +3199,9 @@ describe("TerraDrawSelectMode", () => {
 
 	describe("onMouseMove", () => {
 		let selectMode: TerraDrawSelectMode;
+		let store: TerraDrawGeoJSONStore;
 		let onChange: jest.Mock;
+		let setCursor: jest.Mock;
 		let project: jest.Mock;
 		let onSelect: jest.Mock;
 		let onDeselect: jest.Mock;
@@ -3209,12 +3211,36 @@ describe("TerraDrawSelectMode", () => {
 
 			const mockConfig = MockModeConfig(selectMode.mode);
 			onChange = mockConfig.onChange;
+			setCursor = mockConfig.setCursor;
 			project = mockConfig.project;
 			onSelect = mockConfig.onSelect;
 			onDeselect = mockConfig.onDeselect;
+			store = mockConfig.store;
 
 			selectMode.register(mockConfig);
 		});
+
+		const addPolygonFeature = () => {
+			return store.create([
+				{
+					geometry: {
+						type: "Polygon",
+						coordinates: [
+							[
+								[0, 0],
+								[0, 100],
+								[100, 100],
+								[100, 0],
+								[0, 0],
+							],
+						],
+					},
+					properties: {
+						mode: "polygon",
+					},
+				},
+			])[0];
+		};
 
 		it("does nothing", () => {
 			selectMode.onMouseMove(
@@ -3228,6 +3254,136 @@ describe("TerraDrawSelectMode", () => {
 			expect(onDeselect).toHaveBeenCalledTimes(0);
 			expect(onSelect).toHaveBeenCalledTimes(0);
 			expect(project).toHaveBeenCalledTimes(0);
+		});
+
+		it("uses specific hover cursors for feature, coordinate and resize handle", () => {
+			selectMode = new TerraDrawSelectMode({
+				cursors: {
+					pointerOver: "move",
+					pointerOverFeature: "grab",
+					pointerOverCoordinate: "pointer",
+					pointerOverResizeHandle: "wait",
+				},
+				flags: {
+					polygon: {
+						feature: {
+							draggable: true,
+							coordinates: {
+								draggable: true,
+								resizable: "center",
+							},
+						},
+					},
+				},
+			});
+
+			let mockConfig = MockModeConfig(selectMode.mode);
+			setCursor = mockConfig.setCursor;
+			store = mockConfig.store;
+			selectMode.register(mockConfig);
+
+			addPolygonFeature();
+			selectMode.onClick(MockCursorEvent({ lng: 50, lat: 50 }));
+
+			setCursor.mockClear();
+			selectMode.onMouseMove(MockCursorEvent({ lng: 50, lat: 50 }));
+			expect(setCursor).toHaveBeenCalledWith("grab");
+
+			setCursor.mockClear();
+			selectMode.onMouseMove(MockCursorEvent({ lng: 0, lat: 0 }));
+			expect(setCursor).toHaveBeenCalledWith("pointer");
+
+			selectMode = new TerraDrawSelectMode({
+				cursors: {
+					pointerOver: "move",
+					pointerOverResizeHandle: "wait",
+				},
+				flags: {
+					polygon: {
+						feature: {
+							coordinates: {
+								draggable: false,
+								resizable: "center",
+							},
+						},
+					},
+				},
+			});
+
+			mockConfig = MockModeConfig(selectMode.mode);
+			setCursor = mockConfig.setCursor;
+			store = mockConfig.store;
+			selectMode.register(mockConfig);
+
+			addPolygonFeature();
+			selectMode.onClick(MockCursorEvent({ lng: 50, lat: 50 }));
+
+			setCursor.mockClear();
+			selectMode.onMouseMove(MockCursorEvent({ lng: 0, lat: 0 }));
+			expect(setCursor).toHaveBeenCalledWith("wait");
+		});
+
+		it("falls back to pointerOver for feature, coordinate and resize handle", () => {
+			selectMode = new TerraDrawSelectMode({
+				cursors: {
+					pointerOver: "crosshair",
+				},
+				flags: {
+					polygon: {
+						feature: {
+							draggable: true,
+							coordinates: {
+								draggable: true,
+								resizable: "center",
+							},
+						},
+					},
+				},
+			});
+
+			let mockConfig = MockModeConfig(selectMode.mode);
+			setCursor = mockConfig.setCursor;
+			store = mockConfig.store;
+			selectMode.register(mockConfig);
+
+			addPolygonFeature();
+			selectMode.onClick(MockCursorEvent({ lng: 50, lat: 50 }));
+
+			setCursor.mockClear();
+			selectMode.onMouseMove(MockCursorEvent({ lng: 50, lat: 50 }));
+			expect(setCursor).toHaveBeenCalledWith("crosshair");
+
+			setCursor.mockClear();
+			selectMode.onMouseMove(MockCursorEvent({ lng: 0, lat: 0 }));
+			expect(setCursor).toHaveBeenCalledWith("crosshair");
+
+			selectMode = new TerraDrawSelectMode({
+				cursors: {
+					pointerOver: "crosshair",
+				},
+				flags: {
+					polygon: {
+						feature: {
+							coordinates: {
+								draggable: false,
+								resizable: "center",
+							},
+						},
+					},
+				},
+			});
+
+			mockConfig = MockModeConfig(selectMode.mode);
+			setCursor = mockConfig.setCursor;
+			store = mockConfig.store;
+			selectMode.register(mockConfig);
+
+			addPolygonFeature();
+			selectMode.onClick(MockCursorEvent({ lng: 50, lat: 50 }));
+
+			setCursor.mockClear();
+			selectMode.onMouseMove(MockCursorEvent({ lng: 0, lat: 0 }));
+			expect(setCursor).toHaveBeenCalledWith("crosshair");
 		});
 	});
 

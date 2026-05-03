@@ -62,6 +62,7 @@ export const SelectWithMultipleSelectModes =
 	AllStories.SelectWithMultipleSelectModes;
 export const SelectWithScaleAndRotate = AllStories.SelectWithScaleAndRotate;
 export const SelectWithResizable = AllStories.SelectWithResizable;
+export const SelectWithHoverCursors = AllStories.SelectWithHoverCursors;
 export const ProgrammaticRotate = AllStories.ProgrammaticRotate;
 export const ProgrammaticScale = AllStories.ProgrammaticScale;
 export const ProgrammaticUpdate = AllStories.ProgrammaticUpdate;

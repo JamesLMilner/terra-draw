@@ -27,7 +27,6 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawExtend.TerraDrawBaseAdapt
 		} & TerraDrawExtend.BaseAdapterConfig,
 	) {
 		super(config);
-
 		this._map = config.map;
 		this._container = this._map.getContainer();
 
@@ -45,6 +44,28 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawExtend.TerraDrawBaseAdapt
 	private _nextRender: number | undefined;
 	private _map: mapboxgl.Map;
 	private _container: HTMLElement;
+
+	private toGlDashArrayFromPixels(
+		dash: [number, number] | undefined,
+		lineWidth: number,
+	): [number, number] | null {
+		if (!dash) {
+			return null;
+		}
+
+		const [onPx, offPx] = dash;
+		if (
+			!Number.isFinite(onPx) ||
+			!Number.isFinite(offPx) ||
+			onPx < 0 ||
+			offPx < 0
+		) {
+			return null;
+		}
+
+		const width = Math.max(0.0001, lineWidth);
+		return [onPx / width, offPx / width];
+	}
 
 	// Marker state
 	private markerCounter = 0;
@@ -123,6 +144,14 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawExtend.TerraDrawBaseAdapt
 	}
 
 	private _addLineLayer(id: string) {
+		const paint: { "line-dasharray"?: any[] } = {};
+
+		paint["line-dasharray"] = [
+			"coalesce",
+			["get", "lineStringDash"],
+			["literal", []],
+		];
+
 		const layer = this._map.addLayer({
 			id,
 			source: id,
@@ -132,6 +161,7 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawExtend.TerraDrawBaseAdapt
 			},
 			// No need for filters as style is driven by properties
 			paint: {
+				...paint,
 				"line-width": ["get", "lineStringWidth"],
 				"line-color": ["get", "lineStringColor"],
 				"line-opacity": ["get", "lineStringOpacity"],
@@ -461,6 +491,12 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawExtend.TerraDrawBaseAdapt
 
 					points.push(feature);
 				} else if (feature.geometry.type === "LineString") {
+					properties.lineStringDash = this.toGlDashArrayFromPixels(
+						// Backwards compatible read: pre Terra Draw v1.24.0 will not have this field in the interface
+						(styles as { lineStringDash?: [number, number] }).lineStringDash,
+						styles.lineStringWidth,
+					);
+
 					properties.lineStringColor = styles.lineStringColor;
 					properties.lineStringWidth = styles.lineStringWidth;
 					// Backwards compatible read: pre Terra Draw v1.24.0 will not have this field in the interface

@@ -15,6 +15,7 @@ import {
 	LineLayerSpecification,
 	Map as MaplibreMap,
 	PointLike,
+	getVersion,
 } from "maplibre-gl";
 import { Feature, LineString, Point, Polygon } from "geojson";
 
@@ -83,6 +84,65 @@ export class TerraDrawMapLibreGLAdapter<
 	private _map: MaplibreMap;
 	private _container: HTMLElement;
 
+	private toGlDashArrayFromPixels(
+		dash: [number, number] | undefined,
+		lineWidth: number,
+	): [number, number] | null {
+		if (!dash) {
+			return null;
+		}
+
+		const [onPx, offPx] = dash;
+		if (
+			!Number.isFinite(onPx) ||
+			!Number.isFinite(offPx) ||
+			onPx < 0 ||
+			offPx < 0
+		) {
+			return null;
+		}
+
+		const width = Math.max(0.0001, lineWidth);
+		return [onPx / width, offPx / width];
+	}
+
+	private isMapLibreAtLeast(minVersion = "5.8.0") {
+		const runtimeVersion =
+			getVersion?.() || (this._map as unknown as { version?: string }).version;
+
+		// If version cannot be resolved, prefer enabling dashed lines rather than silently disabling them.
+		if (!runtimeVersion) {
+			return true;
+		}
+
+		const parse = (v: string): [number, number, number] | null => {
+			const match = v.match(/(\d+)\.(\d+)\.(\d+)/);
+			if (!match) {
+				return null;
+			}
+
+			return [
+				parseInt(match[1], 10),
+				parseInt(match[2], 10),
+				parseInt(match[3], 10),
+			];
+		};
+
+		const actual = parse(runtimeVersion);
+		const minimum = parse(minVersion);
+
+		if (!actual || !minimum) {
+			return true;
+		}
+
+		const [a1, b1, c1] = actual;
+		const [a2, b2, c2] = minimum;
+
+		if (a1 !== a2) return a1 > a2;
+		if (b1 !== b2) return b1 > b2;
+		return c1 >= c2;
+	}
+
 	private _addGeoJSONSource(id: string, features: Feature[]) {
 		this._map.addSource(id, {
 			type: "geojson",
@@ -130,6 +190,17 @@ export class TerraDrawMapLibreGLAdapter<
 	}
 
 	private _addLineLayer(id: string) {
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		const paint: { "line-dasharray"?: any[] } = {};
+
+		if (this.isMapLibreAtLeast("5.8.0")) {
+			paint["line-dasharray"] = [
+				"coalesce",
+				["get", "lineStringDash"],
+				["literal", []],
+			];
+		}
+
 		const layer = this._map.addLayer({
 			id,
 			source: id,
@@ -139,6 +210,7 @@ export class TerraDrawMapLibreGLAdapter<
 			},
 			// No need for filters as style is driven by properties
 			paint: {
+				...paint,
 				"line-width": ["get", "lineStringWidth"],
 				"line-color": ["get", "lineStringColor"],
 				"line-opacity": ["get", "lineStringOpacity"],
@@ -450,6 +522,12 @@ export class TerraDrawMapLibreGLAdapter<
 
 					points.push(feature);
 				} else if (feature.geometry.type === "LineString") {
+					properties.lineStringDash = this.toGlDashArrayFromPixels(
+						// Backwards compatible read: pre Terra Draw v1.24.0 will not have this field in the interface
+						(styles as { lineStringDash?: [number, number] }).lineStringDash,
+						styles.lineStringWidth,
+					);
+
 					properties.lineStringColor = styles.lineStringColor;
 					properties.lineStringWidth = styles.lineStringWidth;
 

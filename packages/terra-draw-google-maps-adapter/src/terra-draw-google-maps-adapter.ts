@@ -331,14 +331,14 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawExtend.TerraDrawBaseAda
 
 		if (this._markerClickListener) {
 			this.getMapEventElement().removeEventListener(
-				"click",
+				"pointerdown",
 				this._markerClickListener,
 			);
 		}
 
 		if (this._markerMouseMoveListener) {
 			this.getMapEventElement().removeEventListener(
-				"mousemove",
+				"pointermove",
 				this._markerMouseMoveListener,
 			);
 		}

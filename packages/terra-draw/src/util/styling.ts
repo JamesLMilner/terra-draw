@@ -20,5 +20,6 @@ export const getDefaultStyling = (): TerraDrawAdapterStyling => {
 		markerUrl: undefined,
 		markerHeight: undefined,
 		markerWidth: undefined,
+		lineStringDash: undefined,
 	};
 };

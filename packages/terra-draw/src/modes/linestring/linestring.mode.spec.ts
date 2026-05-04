@@ -1963,6 +1963,7 @@ describe("TerraDrawLineStringMode", () => {
 					lineStringColor: "#ffffff",
 					lineStringWidth: 4,
 					lineStringOpacity: 0.5,
+					lineStringDash: [5, 3],
 					closingPointColor: "#111111",
 					closingPointWidth: 3,
 					closingPointOutlineColor: "#222222",
@@ -1980,6 +1981,7 @@ describe("TerraDrawLineStringMode", () => {
 				lineStringColor: "#ffffff",
 				lineStringWidth: 4,
 				lineStringOpacity: 0.5,
+				lineStringDash: [5, 3],
 			});
 		});
 

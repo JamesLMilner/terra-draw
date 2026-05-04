@@ -172,6 +172,12 @@ export class TerraDrawLeafletAdapter extends TerraDrawExtend.TerraDrawBaseAdapte
 					const lineStringOpacity = (
 						featureStyles as { lineStringOpacity?: number }
 					).lineStringOpacity;
+					// Backwards compatible read: pre Terra Draw v1.24.0 will not have this field in the interface
+					const lineStringDash = (
+						featureStyles as {
+							lineStringDash?: [number, number];
+						}
+					).lineStringDash;
 
 					return {
 						interactive: false, // Removes mouse hover cursor styles
@@ -179,6 +185,9 @@ export class TerraDrawLeafletAdapter extends TerraDrawExtend.TerraDrawBaseAdapte
 						weight: featureStyles.lineStringWidth,
 						pane: paneId,
 						opacity: lineStringOpacity === undefined ? 1 : lineStringOpacity,
+						dashArray: lineStringDash
+							? `${lineStringDash[0]} ${lineStringDash[1]}`
+							: undefined,
 					};
 				} else if (feature.geometry.type === "Polygon") {
 					const polygonOutlineOpacity = (

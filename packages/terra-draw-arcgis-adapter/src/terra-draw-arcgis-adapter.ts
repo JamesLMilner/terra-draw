@@ -211,6 +211,36 @@ export class TerraDrawArcGISMapsSDKAdapter extends TerraDrawExtend.TerraDrawBase
 		this._featureLayer.remove(feature);
 	}
 
+	private pxToArcGisPoints(value: number): number {
+		return Math.max(0.0001, value) * 0.75;
+	}
+
+	private toArcGisDashTemplate(
+		dash: [number, number] | undefined,
+	): [number, number] | null {
+		if (!dash) {
+			return null;
+		}
+
+		const [onPx, offPx] = dash;
+		if (
+			!Number.isFinite(onPx) ||
+			!Number.isFinite(offPx) ||
+			onPx < 0 ||
+			offPx < 0
+		) {
+			return null;
+		}
+
+		return [this.pxToArcGisPoints(onPx), this.pxToArcGisPoints(offPx)];
+	}
+
+	private toArcGisAlpha(opacity: number | undefined): number {
+		const normalized =
+			opacity === undefined ? 1 : Math.max(0, Math.min(1, opacity));
+		return Math.round(normalized * 255);
+	}
+
 	private addFeature(
 		feature: GeoJSONStoreFeatures,
 		styling: TerraDrawStylingFunction,
@@ -267,15 +297,61 @@ export class TerraDrawArcGISMapsSDKAdapter extends TerraDrawExtend.TerraDrawBase
 				// Backwards compatible read: pre Terra Draw v1.24.0 will not have this field in the interface
 				const lineStringOpacity = (style as { lineStringOpacity?: number })
 					.lineStringOpacity;
+				const lineColor = this.getColorFromHex(
+					style.lineStringColor,
+					lineStringOpacity === undefined ? 1 : lineStringOpacity,
+				);
 
 				geometry = new this._lib.Polyline({ paths: [coordinates] });
-				symbol = new this._lib.SimpleLineSymbol({
-					color: this.getColorFromHex(
-						style.lineStringColor,
-						lineStringOpacity === undefined ? 1 : lineStringOpacity,
-					),
-					width: style.lineStringWidth + "px",
-				});
+
+				// Backwards compatible read: pre Terra Draw v1.24.0 will not have this field in the interface
+				const lineStringDash = (
+					style as {
+						lineStringDash?: [number, number];
+					}
+				).lineStringDash;
+				const dashTemplate = this.toArcGisDashTemplate(lineStringDash);
+
+				if (dashTemplate) {
+					symbol = {
+						type: "cim",
+						data: {
+							type: "CIMSymbolReference",
+							symbol: {
+								type: "CIMLineSymbol",
+								symbolLayers: [
+									{
+										type: "CIMSolidStroke",
+										enable: true,
+										width: this.pxToArcGisPoints(style.lineStringWidth),
+										color: [
+											lineColor.r,
+											lineColor.g,
+											lineColor.b,
+											this.toArcGisAlpha(lineStringOpacity),
+										],
+										capStyle: "Butt",
+										joinStyle: "Round",
+										effects: [
+											{
+												type: "CIMGeometricEffectDashes",
+												dashTemplate,
+												lineDashEnding: "FullGap",
+												offsetAlongLine: 0,
+												// controlPointEnding: "NoConstraint"
+											},
+										],
+									},
+								],
+							},
+						},
+					} as any;
+				} else {
+					symbol = new this._lib.SimpleLineSymbol({
+						color: lineColor,
+						width: style.lineStringWidth + "px",
+					});
+				}
 				break;
 			case "Polygon":
 				const polygonOutlineOpacity = (

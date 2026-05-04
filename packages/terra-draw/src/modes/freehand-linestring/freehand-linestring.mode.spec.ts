@@ -606,6 +606,7 @@ describe("TerraDrawFreehandLineStringMode", () => {
 					lineStringColor: "#ffffff",
 					lineStringWidth: 2,
 					lineStringOpacity: 0.5,
+					lineStringDash: [5, 3],
 				},
 			});
 
@@ -619,6 +620,7 @@ describe("TerraDrawFreehandLineStringMode", () => {
 				lineStringColor: "#ffffff",
 				lineStringWidth: 2,
 				lineStringOpacity: 0.5,
+				lineStringDash: [5, 3],
 			});
 		});
 

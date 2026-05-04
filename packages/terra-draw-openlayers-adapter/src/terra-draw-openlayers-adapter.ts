@@ -181,6 +181,10 @@ export class TerraDrawOpenLayersAdapter extends TerraDrawExtend.TerraDrawBaseAda
 				const lineStringOpacity = (style as { lineStringOpacity?: number })
 					.lineStringOpacity;
 
+				// Backwards compatible read: pre Terra Draw v1.24.0 will not have this field in the interface
+				const lineStringDash = (style as { lineStringDash?: [number, number] })
+					.lineStringDash;
+
 				const color = `rgba(${r},${g},${b},${lineStringOpacity === undefined ? 1 : lineStringOpacity})`;
 
 				return new this._lib.Style({
@@ -188,6 +192,7 @@ export class TerraDrawOpenLayersAdapter extends TerraDrawExtend.TerraDrawBaseAda
 					stroke: new this._lib.Stroke({
 						color,
 						width: style.lineStringWidth,
+						lineDash: lineStringDash,
 					}),
 				});
 			},

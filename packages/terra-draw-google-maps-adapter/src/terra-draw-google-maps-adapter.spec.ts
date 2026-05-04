@@ -526,6 +526,53 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 	});
 
 	describe("unregister", () => {
+		it("removes all forwardMapElementEvents listeners on unregister", () => {
+			const div = {
+				addEventListener: jest.fn(),
+				removeEventListener: jest.fn(),
+			} as unknown as HTMLDivElement;
+
+			const mockMap = createMockGoogleMap({
+				getDiv: jest.fn(() => ({
+					id: "map",
+					querySelector: jest.fn(() => div),
+					addEventListener: jest.fn(),
+					removeEventListener: jest.fn(),
+				})) as any,
+				data: {
+					addListener: jest.fn(() => ({ remove: jest.fn() })),
+					setStyle: jest.fn(),
+				} as any,
+			});
+
+			const adapter = new TerraDrawGoogleMapsAdapter({
+				lib: {
+					OverlayView: jest.fn(() => ({
+						setMap: jest.fn(),
+						getMap: jest.fn(() => ({})),
+					})),
+				} as any,
+				map: mockMap,
+				forwardMapElementEvents: true,
+			});
+
+			adapter.register(MockCallbacks());
+
+			const registeredListeners = (
+				div.addEventListener as jest.Mock
+			).mock.calls.map(([event, fn]) => ({ event, fn }));
+
+			adapter.unregister();
+
+			const removedListeners = (
+				div.removeEventListener as jest.Mock
+			).mock.calls.map(([event, fn]) => ({ event, fn }));
+
+			for (const { event, fn } of registeredListeners) {
+				expect(removedListeners).toContainEqual({ event, fn });
+			}
+		});
+
 		it("is safe to call without listeners", () => {
 			const div = {
 				addEventListener: jest.fn(),

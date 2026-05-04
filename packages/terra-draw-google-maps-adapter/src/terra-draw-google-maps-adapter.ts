@@ -297,21 +297,27 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawExtend.TerraDrawBaseAda
 				const lineStringOpacity = (
 					calculatedStyles as { lineStringOpacity?: number }
 				).lineStringOpacity;
+				// Backwards compatible read: pre Terra Draw v1.24.0 will not have this field in the interface
+				const lineStringDash = (
+					calculatedStyles as {
+						lineStringDash?: [number, number];
+					}
+				).lineStringDash;
 
-				const dashedLineStyles = calculatedStyles.lineStringDash
+				const dashedLineStyles = lineStringDash
 					? {
 							strokeOpacity: 0,
 							icons: [
 								{
 									icon: {
-										path: "M 0,0 0," + calculatedStyles.lineStringDash[0],
+										path: "M 0,0 0," + lineStringDash[0],
 										strokeOpacity: 1,
 										strokeWeight: calculatedStyles.lineStringWidth,
 										color: calculatedStyles.lineStringColor,
 										scale: 1,
 									},
 									offset: "0",
-									repeat: `${calculatedStyles.lineStringDash[0] + calculatedStyles.lineStringDash[1]}px`,
+									repeat: `${lineStringDash[0] + lineStringDash[1]}px`,
 									fixedRotation: false,
 								},
 							],

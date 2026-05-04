@@ -181,6 +181,10 @@ export class TerraDrawOpenLayersAdapter extends TerraDrawExtend.TerraDrawBaseAda
 				const lineStringOpacity = (style as { lineStringOpacity?: number })
 					.lineStringOpacity;
 
+				// Backwards compatible read: pre Terra Draw v1.24.0 will not have this field in the interface
+				const lineStringDash = (style as { lineStringDash?: [number, number] })
+					.lineStringDash;
+
 				const color = `rgba(${r},${g},${b},${lineStringOpacity === undefined ? 1 : lineStringOpacity})`;
 
 				return new this._lib.Style({
@@ -188,7 +192,7 @@ export class TerraDrawOpenLayersAdapter extends TerraDrawExtend.TerraDrawBaseAda
 					stroke: new this._lib.Stroke({
 						color,
 						width: style.lineStringWidth,
-						lineDash: style.lineStringDash,
+						lineDash: lineStringDash,
 					}),
 				});
 			},
@@ -301,16 +305,12 @@ export class TerraDrawOpenLayersAdapter extends TerraDrawExtend.TerraDrawBaseAda
 		// these in the order they are added to the map. The last canvas is the one that is on top
 		// so we need to add the event listeners to this canvas so that the events are captured.
 		const canvases = Array.from(this._container.querySelectorAll("canvas"));
-		if (canvases.length === 0) {
-			return this._container;
-		}
-
 		const sortedCanvases = this.sortElementsByDOMOrder(
 			canvases,
 		) as HTMLCanvasElement[];
 		const topCanvas = sortedCanvases[sortedCanvases.length - 1];
 
-		return topCanvas ?? this._container;
+		return topCanvas;
 	}
 
 	/**

@@ -304,7 +304,13 @@ export class TerraDrawArcGISMapsSDKAdapter extends TerraDrawExtend.TerraDrawBase
 
 				geometry = new this._lib.Polyline({ paths: [coordinates] });
 
-				const dashTemplate = this.toArcGisDashTemplate(style.lineStringDash);
+				// Backwards compatible read: pre Terra Draw v1.24.0 will not have this field in the interface
+				const lineStringDash = (
+					style as {
+						lineStringDash?: [number, number];
+					}
+				).lineStringDash;
+				const dashTemplate = this.toArcGisDashTemplate(lineStringDash);
 
 				if (dashTemplate) {
 					symbol = {

@@ -492,7 +492,8 @@ export class TerraDrawMapboxGLAdapter extends TerraDrawExtend.TerraDrawBaseAdapt
 					points.push(feature);
 				} else if (feature.geometry.type === "LineString") {
 					properties.lineStringDash = this.toGlDashArrayFromPixels(
-						styles.lineStringDash,
+						// Backwards compatible read: pre Terra Draw v1.24.0 will not have this field in the interface
+						(styles as { lineStringDash?: [number, number] }).lineStringDash,
 						styles.lineStringWidth,
 					);
 

@@ -316,6 +316,15 @@ export abstract class TerraDrawBaseDrawMode<Styling extends CustomStyling> {
 	onSelect(selectedId: FeatureId) {}
 	onKeyDown(event: TerraDrawKeyboardEvent) {}
 	onKeyUp(event: TerraDrawKeyboardEvent) {}
+	undo() {}
+	clearHistory() {}
+	undoSize() {
+		return 0;
+	}
+	redoSize() {
+		return 0;
+	}
+	redo() {}
 	onMouseMove(event: TerraDrawMouseEvent) {}
 	onClick(event: TerraDrawMouseEvent) {}
 	onDragStart(

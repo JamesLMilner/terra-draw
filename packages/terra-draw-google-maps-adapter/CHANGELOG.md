@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.4.1](https://github.com/JamesLMilner/terra-draw/compare/terra-draw-google-maps-adapter@1.4.0...terra-draw-google-maps-adapter@1.4.1) (2026-05-04)
+
+
+### fix
+
+* **terra-draw-google-maps-adapter:** fix event listeners not being removed on unregister (#874) ([](https://github.com/JamesLMilner/terra-draw/commit/62b1f98bf723b0393db70abcac04da3d35fc4870)), closes [#874](https://github.com/JamesLMilner/terra-draw/issues/874) [#873](https://github.com/JamesLMilner/terra-draw/issues/873)
+
 ## [1.4.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw-google-maps-adapter@1.3.1...terra-draw-google-maps-adapter@1.4.0) (2026-05-03)
 
 

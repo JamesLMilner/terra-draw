@@ -107,12 +107,40 @@ export class TerraDrawMapLibreGLAdapter<
 	}
 
 	private isMapLibreAtLeast(minVersion = "5.8.0") {
-		const version = getVersion();
+		console.log(minVersion);
 
-		const parse = (v: string) => v.split(".").map((n) => parseInt(n, 10) || 0);
+		const runtimeVersion =
+			getVersion?.() || (this._map as unknown as { version?: string }).version;
 
-		const [a1, b1, c1] = parse(version);
-		const [a2, b2, c2] = parse(minVersion);
+		console.log({ runtimeVersion });
+
+		// If version cannot be resolved, prefer enabling dashed lines rather than silently disabling them.
+		if (!runtimeVersion) {
+			return true;
+		}
+
+		const parse = (v: string): [number, number, number] | null => {
+			const match = v.match(/(\d+)\.(\d+)\.(\d+)/);
+			if (!match) {
+				return null;
+			}
+
+			return [
+				parseInt(match[1], 10),
+				parseInt(match[2], 10),
+				parseInt(match[3], 10),
+			];
+		};
+
+		const actual = parse(runtimeVersion);
+		const minimum = parse(minVersion);
+
+		if (!actual || !minimum) {
+			return true;
+		}
+
+		const [a1, b1, c1] = actual;
+		const [a2, b2, c2] = minimum;
 
 		if (a1 !== a2) return a1 > a2;
 		if (b1 !== b2) return b1 > b2;

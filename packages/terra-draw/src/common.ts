@@ -33,6 +33,8 @@ export interface TerraDrawAdapterStyling {
 	lineStringWidth: number;
 	lineStringColor: HexColor;
 	lineStringOpacity?: number;
+	/** lineStringDash - Tuple representing the dash pattern for the line string, where the first number is the length of the dash and the second number is the length of the gap in pixels */
+	lineStringDash?: [number, number];
 	zIndex: number;
 	markerUrl?: string;
 	markerHeight?: number;

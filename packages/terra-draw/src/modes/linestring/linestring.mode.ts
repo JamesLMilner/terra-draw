@@ -74,6 +74,7 @@ type LineStringStyling = {
 	coordinatePointOutlineColor: HexColorStyling;
 	coordinatePointOutlineWidth: NumericStyling;
 	coordinatePointOutlineOpacity: NumericStyling;
+	lineStringDash: [number, number];
 };
 
 interface Cursors {
@@ -1160,6 +1161,8 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 			feature.geometry.type === "LineString" &&
 			feature.properties.mode === this.mode
 		) {
+			styles.lineStringDash = this.styles.lineStringDash;
+
 			styles.lineStringColor = this.getHexColorStylingValue(
 				this.styles.lineStringColor,
 				styles.lineStringColor,

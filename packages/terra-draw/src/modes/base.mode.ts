@@ -26,7 +26,12 @@ import { ValidationReasonModeMismatch } from "../validations/common-validations"
 
 export type CustomStyling = Record<
 	string,
-	string | number | HexColorStyling | NumericStyling | UrlStyling
+	| string
+	| number
+	| HexColorStyling
+	| NumericStyling
+	| UrlStyling
+	| [number, number]
 >;
 
 export enum ModeTypes {

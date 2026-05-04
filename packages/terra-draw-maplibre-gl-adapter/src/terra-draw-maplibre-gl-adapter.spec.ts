@@ -2,12 +2,15 @@
  * @jest-environment jsdom
  */
 import { TerraDrawAdapterStyling, TerraDrawExtend } from "terra-draw";
-import { TerraDrawMapLibreGLAdapter } from "./terra-draw-maplibre-gl-adapter";
-import * as maplibregl from "maplibre-gl";
 
 import { TextDecoder, TextEncoder } from "util";
 global.TextDecoder = TextDecoder as typeof global.TextDecoder;
 global.TextEncoder = TextEncoder as typeof global.TextEncoder;
+global.URL.createObjectURL = jest.fn();
+
+import { TerraDrawMapLibreGLAdapter } from "./terra-draw-maplibre-gl-adapter";
+
+import * as maplibregl from "maplibre-gl";
 
 describe("TerraDrawMapLibreGLAdapter", () => {
 	const createMapLibreGLMap = () => {

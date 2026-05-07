@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.30.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.29.0...terra-draw@1.30.0) (2026-05-07)
+
+
+### feat
+
+* **terra-draw:** add initial support for dashed lines (#884) ([](https://github.com/JamesLMilner/terra-draw/commit/074bd05e7108708192155249aa778efc69dbf4c2)), closes [#884](https://github.com/JamesLMilner/terra-draw/issues/884)
+
+
+### chore
+
+* **terra-draw:** bump storybook maplibre to 5.24.0 (#878) ([](https://github.com/JamesLMilner/terra-draw/commit/c4aef67745aa0958eb9cd2b8b91321ffa6568dbb)), closes [#878](https://github.com/JamesLMilner/terra-draw/issues/878)
+* **terra-draw:** remove development package reference from package-lock.json (#877) ([](https://github.com/JamesLMilner/terra-draw/commit/4515f37e3f24a1452e2ed5ba67479d1297e487ac)), closes [#877](https://github.com/JamesLMilner/terra-draw/issues/877)
+
 ## [1.29.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.28.8...terra-draw@1.29.0) (2026-05-03)
 
 

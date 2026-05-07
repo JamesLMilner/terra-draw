@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.5.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw-google-maps-adapter@1.4.1...terra-draw-google-maps-adapter@1.5.0) (2026-05-07)
+
+
+### feat
+
+* **terra-draw-google-maps-adapter:** add initial support for dashed lines (#880) ([](https://github.com/JamesLMilner/terra-draw/commit/edf98c8e996f57f90c9dcec09f7c58597e41dd86)), closes [#880](https://github.com/JamesLMilner/terra-draw/issues/880)
+
 ## [1.4.1](https://github.com/JamesLMilner/terra-draw/compare/terra-draw-google-maps-adapter@1.4.0...terra-draw-google-maps-adapter@1.4.1) (2026-05-04)
 
 

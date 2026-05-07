@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.3.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw-leaflet-adapter@1.2.0...terra-draw-leaflet-adapter@1.3.0) (2026-05-07)
+
+
+### feat
+
+* **terra-draw-leaflet-adapter:** add initial support for dashed lines (#879) ([](https://github.com/JamesLMilner/terra-draw/commit/1e2232173439fe1b88504330487898355e70c3b3)), closes [#879](https://github.com/JamesLMilner/terra-draw/issues/879)
+
 ## [1.2.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw-leaflet-adapter@1.1.0...terra-draw-leaflet-adapter@1.2.0) (2026-02-01)
 
 

@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.3.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw-arcgis-adapter@1.2.0...terra-draw-arcgis-adapter@1.3.0) (2026-05-07)
+
+
+### feat
+
+* **terra-draw-arcgis-adapter:** add initial support for dashed lines (#881) ([](https://github.com/JamesLMilner/terra-draw/commit/febd232f2b76153d6348e1f80fd8b5b5442ccf46)), closes [#881](https://github.com/JamesLMilner/terra-draw/issues/881)
+
 ## [1.2.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw-arcgis-adapter@1.1.1...terra-draw-arcgis-adapter@1.2.0) (2026-02-01)
 
 

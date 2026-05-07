@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.4.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw-mapbox-gl-adapter@1.3.0...terra-draw-mapbox-gl-adapter@1.4.0) (2026-05-07)
+
+
+### feat
+
+* **terra-draw-mapbox-gl-adapter:** add initial support for dashed lines (#882) ([](https://github.com/JamesLMilner/terra-draw/commit/449aab6d732b9e771b186315501150573f18949a)), closes [#882](https://github.com/JamesLMilner/terra-draw/issues/882)
+
 ## [1.3.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw-mapbox-gl-adapter@1.2.0...terra-draw-mapbox-gl-adapter@1.3.0) (2026-02-01)
 
 

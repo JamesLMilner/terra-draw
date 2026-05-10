@@ -85,6 +85,12 @@
 	},
 	"knip": {
 		"$schema": "https://unpkg.com/knip@5/schema.json",
+		"workspaces": {
+			"packages/storybook": {
+				"vite": false,
+				"vitest": false
+			}
+		},
 		"entry": [
 			"packages/terra-draw/src/terra-draw.ts",
 			"packages/terra-draw-arcgis-adapter/src/terra-draw-arcgis-adapter.ts",

@@ -110,6 +110,7 @@
 			"packages/terra-draw-openlayers-adapter/src/**/*.ts"
 		],
 		"ignore": [
+			"**/vitest.config.ts",
 			"**/jest.config.ts",
 			"**/jest.nocheck.config.ts",
 			"**/.versionrc.cjs"

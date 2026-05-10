@@ -1,6 +1,6 @@
 import { StoryObj } from "@storybook/html";
 import { TerraDraw } from "../../../terra-draw/src/terra-draw";
-import { waitFor, within, expect } from "@storybook/test";
+import { waitFor, within, expect } from "storybook/test";
 
 export type Story = StoryObj<StoryArgs>;
 

@@ -110,9 +110,16 @@
 			"packages/terra-draw-openlayers-adapter/src/**/*.ts"
 		],
 		"ignore": [
+			"update.mjs",
+			"release.js",
+			".versionrc.js",
 			"**/jest.config.ts",
 			"**/jest.nocheck.config.ts",
-			"**/.versionrc.cjs"
+			"**/.versionrc.cjs",
+			"docs",
+			"packages/storybook/vitest.config.ts",
+			"packages/storybook/vitest.shims.d.ts",
+			"packages/storybook/.storybook/vitest.setup.ts"
 		],
 		"include": [
 			"files",

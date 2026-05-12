@@ -10,7 +10,7 @@
 		"docs": "typedoc",
 		"docs:serve": "serve ./docs",
 		"prepare": "husky install",
-		"unused": "knip",
+		"unused": "VITE_CJS_IGNORE_WARNING=true knip",
 		"lint": "eslint --config eslint.config.mjs",
 		"lint:quiet": "eslint --quiet --config eslint.config.mjs",
 		"lint:fix": "eslint --fix --config eslint.config.mjs",

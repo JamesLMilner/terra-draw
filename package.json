@@ -10,7 +10,7 @@
 		"docs": "typedoc",
 		"docs:serve": "serve ./docs",
 		"prepare": "husky install",
-		"unused": "knip",
+		"unused": "VITE_CJS_IGNORE_WARNING=true knip",
 		"lint": "eslint --config eslint.config.mjs",
 		"lint:quiet": "eslint --quiet --config eslint.config.mjs",
 		"lint:fix": "eslint --fix --config eslint.config.mjs",
@@ -85,6 +85,15 @@
 	},
 	"knip": {
 		"$schema": "https://unpkg.com/knip@5/schema.json",
+		"workspaces": {
+			"packages/e2e": {
+				"vite": false
+			},
+			"packages/storybook": {
+				"vite": false,
+				"vitest": false
+			}
+		},
 		"entry": [
 			"packages/terra-draw/src/terra-draw.ts",
 			"packages/terra-draw-arcgis-adapter/src/terra-draw-arcgis-adapter.ts",
@@ -104,9 +113,16 @@
 			"packages/terra-draw-openlayers-adapter/src/**/*.ts"
 		],
 		"ignore": [
+			"update.mjs",
+			"release.js",
+			".versionrc.js",
 			"**/jest.config.ts",
 			"**/jest.nocheck.config.ts",
-			"**/.versionrc.cjs"
+			"**/.versionrc.cjs",
+			"docs",
+			"packages/e2e/vite.config.mts",
+			"packages/storybook/vitest.config.ts",
+			"packages/storybook/vitest.shims.d.ts"
 		],
 		"include": [
 			"files",

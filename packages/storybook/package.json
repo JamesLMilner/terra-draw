@@ -9,7 +9,7 @@
 		"storybook:build": "storybook build",
 		"storybook:build:memory": "NODE_OPTIONS=--max-old-space-size=4096 storybook build",
 		"storybook:serve": "http-server storybook-static --port 6006 --silent",
-		"storybook:test": "test-storybook --no-cache --ci --disable-telemetry --failOnConsole --excludeTags exclude",
+		"storybook:test": "vitest --project=storybook --maxWorkers=2 --run",
 		"storybook:help": "test-storybook --help"
 	},
 	"author": "James Milner",
@@ -24,16 +24,17 @@
 		"ol": "10.9.0"
 	},
 	"devDependencies": {
-		"@storybook/addon-essentials": "8.6.14",
-		"@storybook/addon-interactions": "8.6.14",
-		"@storybook/addon-links": "8.6.14",
-		"@storybook/html": "8.6.14",
-		"@storybook/html-vite": "8.6.14",
+		"@storybook/addon-docs": "10.3.6",
+		"@storybook/addon-vitest": "10.3.6",
+		"@storybook/html": "10.3.6",
+		"@storybook/html-vite": "10.3.6",
 		"@storybook/mdx2-csf": "1.1.0",
-		"@storybook/test": "8.6.14",
-		"@storybook/test-runner": "0.23.0",
+		"@vitest/browser-playwright": "4.1.0",
+		"@vitest/coverage-v8": "4.1.0",
 		"http-server": "14.1.1",
-		"storybook": "8.6.15",
-		"typescript": "5.6.3"
+		"playwright": "1.58.2",
+		"storybook": "10.3.6",
+		"typescript": "5.6.3",
+		"vitest": "4.1.0"
 	}
 }

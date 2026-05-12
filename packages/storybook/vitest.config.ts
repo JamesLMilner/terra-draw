@@ -23,7 +23,9 @@ export default defineConfig({
 						provider: playwright({}),
 						instances: [{ browser: "chromium" }],
 					},
-					setupFiles: [".storybook/vitest.setup.ts"],
+				},
+				server: {
+					port: 63315,
 				},
 			},
 		],

@@ -122,8 +122,7 @@
 			"docs",
 			"packages/e2e/vite.config.mts",
 			"packages/storybook/vitest.config.ts",
-			"packages/storybook/vitest.shims.d.ts",
-			"packages/storybook/.storybook/vitest.setup.ts"
+			"packages/storybook/vitest.shims.d.ts"
 		],
 		"include": [
 			"files",

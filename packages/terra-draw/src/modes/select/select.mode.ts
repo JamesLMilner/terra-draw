@@ -133,6 +133,7 @@ interface Cursors {
 	dragStart?: Cursor;
 	dragEnd?: Cursor;
 	insertMidpoint?: Cursor;
+	rotate?: Cursor;
 }
 
 const defaultCursors = {
@@ -140,6 +141,7 @@ const defaultCursors = {
 	dragStart: "move",
 	dragEnd: "move",
 	insertMidpoint: "crosshair",
+	rotate: "move",
 } as Required<Cursors>;
 
 interface TerraDrawSelectModeOptions<T extends CustomStyling>
@@ -170,6 +172,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 	private dragTarget:
 		| { type: "none" }
 		| { type: "feature"; featureId: FeatureId }
+		| { type: "rotate"; featureId: FeatureId; dragHandleId: FeatureId }
 		| { type: "coordinate"; featureId: FeatureId; coordinateIndex: number }
 		| { type: "resize"; featureId: FeatureId; coordinateIndex: number }
 		| { type: "midpoint"; featureId: FeatureId; midPointId: FeatureId } = {
@@ -329,6 +332,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 			this.coordinatePoints,
 			this.readFeature,
 			this.mutateFeature,
+			this.pixelDistance,
 		);
 
 		this.dragFeature = new DragFeatureBehavior(
@@ -337,29 +341,35 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 			this.selectionPoints,
 			this.midPoints,
 			this.coordinatePoints,
+			this.rotateFeature,
 			this.readFeature,
 			this.mutateFeature,
 		);
+
 		this.dragCoordinate = new DragCoordinateBehavior(
 			config,
 			this.pixelDistance,
 			this.selectionPoints,
 			this.midPoints,
 			this.coordinatePoints,
+			this.rotateFeature,
 			this.coordinateSnap,
 			this.lineSnap,
 			this.readFeature,
 			this.mutateFeature,
 		);
+
 		this.dragCoordinateResizeFeature = new DragCoordinateResizeBehavior(
 			config,
 			this.pixelDistance,
 			this.selectionPoints,
 			this.midPoints,
 			this.coordinatePoints,
+			this.rotateFeature,
 			this.readFeature,
 			this.mutateFeature,
 		);
+
 		this.scaleFeature = new ScaleFeatureBehavior(
 			config,
 			this.dragCoordinateResizeFeature,
@@ -382,6 +392,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 		this.selectionPoints.delete();
 		this.midPoints.delete();
 		this.dragTarget = { type: "none" };
+		this.rotateFeature.reset();
 	}
 
 	private deleteSelected() {
@@ -416,7 +427,8 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 
 		const hasDraggableFlags =
 			featureFlags &&
-			(featureFlags.draggable ||
+			(featureFlags.rotateable ||
+				featureFlags.draggable ||
 				coordinatesFlags?.draggable ||
 				coordinatesFlags?.resizable ||
 				midpointsDraggable);
@@ -618,6 +630,13 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 
 		if (type !== "LineString" && type !== "Polygon") {
 			return;
+		}
+
+		if (featureCoordinates && modeFlags?.feature?.rotateable) {
+			this.rotateFeature.createDragHandle({
+				featureCoordinates,
+				featureId,
+			});
 		}
 
 		if (featureCoordinates && modeFlags && modeFlags.feature.coordinates) {
@@ -907,6 +926,19 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 			}
 		}
 
+		if (featureFlags?.rotateable) {
+			const draggedRotateHandleId =
+				pointerOverTarget.type === "rotate"
+					? pointerOverTarget.dragHandleId
+					: this.rotateFeature.getNearestRotateHandle(event);
+
+			if (this.selected.length && draggedRotateHandleId) {
+				setMapDraggability(false);
+
+				return;
+			}
+		}
+
 		// Drag Feature
 		if (draggableFeature) {
 			this.setCursor(this.cursors.dragStart);
@@ -955,7 +987,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 			modeFlags &&
 			modeFlags.feature &&
 			modeFlags.feature.rotateable &&
-			this.canRotate(event)
+			(this.canRotate(event) || this.dragTarget.type === "rotate")
 		) {
 			setMapDraggability(false);
 			this.rotateFeature.rotate(event, selectedId);
@@ -1047,13 +1079,22 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 				mode: this.mode,
 				action: FinishActions.DragCoordinateResize,
 			});
+		} else if (this.rotateFeature.isDragging()) {
+			this.onFinish(this.selected[0], {
+				mode: this.mode,
+				action: FinishActions.DragRotate,
+			});
 		}
+
+		const selectedFeatureId = this.selected[0];
+		const featureCoordinates =
+			this.readFeature.getCoordinates(selectedFeatureId);
 
 		this.dragCoordinate.stopDragging();
 		this.dragFeature.stopDragging();
 		this.dragCoordinateResizeFeature.stopDragging();
-		this.rotateFeature.reset();
 		this.scaleFeature.reset();
+		this.rotateFeature.stopDragging({ featureCoordinates });
 		setMapDraggability(true);
 	}
 
@@ -1147,6 +1188,13 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 			return;
 		}
 
+		const dragHandleId = this.rotateFeature.getNearestRotateHandle(event);
+		if (featureFlags.rotateable && dragHandleId) {
+			this.dragTarget = { type: "rotate", featureId: selectedId, dragHandleId };
+			this.setCursor(this.cursors.rotate);
+			return;
+		}
+
 		if (!nearbyMidPoint) {
 			this.clearDragTargetAndCursor();
 		}
@@ -1182,6 +1230,48 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 				styles.pointWidth = this.getNumericStylingValue(
 					this.styles.selectionPointWidth,
 					styles.pointWidth,
+					feature,
+				);
+
+				styles.pointOutlineOpacity = this.getNumericStylingValue(
+					this.styles.selectionPointOutlineOpacity,
+					1,
+					feature,
+				);
+
+				styles.pointOutlineWidth = this.getNumericStylingValue(
+					this.styles.selectionPointOutlineWidth,
+					2,
+					feature,
+				);
+
+				styles.zIndex = Z_INDEX.LAYER_THREE;
+
+				return styles;
+			}
+
+			if (feature.properties[SELECT_PROPERTIES.ROTATION_POINT]) {
+				styles.pointColor = this.getHexColorStylingValue(
+					this.styles.selectionPointColor,
+					styles.pointColor,
+					feature,
+				);
+
+				styles.pointOpacity = this.getNumericStylingValue(
+					this.styles.selectionPointOpacity,
+					1,
+					feature,
+				);
+
+				styles.pointOutlineColor = this.getHexColorStylingValue(
+					this.styles.selectionPointOutlineColor,
+					styles.pointOutlineColor,
+					feature,
+				);
+
+				styles.pointWidth = this.getNumericStylingValue(
+					this.styles.selectionPointWidth,
+					6,
 					feature,
 				);
 
@@ -1243,6 +1333,35 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 
 				return styles;
 			}
+		} else if (
+			feature.properties.mode === this.mode &&
+			feature.geometry.type === "Polygon" &&
+			feature.properties[SELECT_PROPERTIES.ROTATION_BBOX_GUIDE]
+		) {
+			styles.polygonFillOpacity = 0;
+			styles.polygonOutlineColor = this.getHexColorStylingValue(
+				this.styles.selectionPointColor,
+				styles.polygonOutlineColor,
+				feature,
+			);
+			styles.polygonOutlineOpacity = 1;
+			styles.polygonOutlineWidth = 2;
+			styles.zIndex = Z_INDEX.LAYER_TWO;
+			return styles;
+		} else if (
+			feature.properties.mode === this.mode &&
+			feature.geometry.type === "LineString" &&
+			feature.properties[SELECT_PROPERTIES.ROTATION_POINT_GUIDE]
+		) {
+			styles.lineStringColor = this.getHexColorStylingValue(
+				this.styles.selectionPointColor,
+				styles.lineStringColor,
+				feature,
+			);
+			styles.lineStringOpacity = 1;
+			styles.lineStringWidth = 2;
+			styles.zIndex = Z_INDEX.LAYER_TWO;
+			return styles;
 		} else if (feature.properties[SELECT_PROPERTIES.SELECTED]) {
 			// Select mode shortcuts the styling of a feature if it is selected
 			// A selected feature from another mode will end up in this block

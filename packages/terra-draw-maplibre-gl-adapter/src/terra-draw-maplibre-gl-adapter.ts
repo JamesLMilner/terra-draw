@@ -26,6 +26,7 @@ export class TerraDrawMapLibreGLAdapter<
 		config: {
 			map: MapType;
 			renderBelowLayerId?: string;
+			renderAboveLayerId?: string;
 			prefixId?: string;
 		} & TerraDrawExtend.BaseAdapterConfig,
 	) {
@@ -38,6 +39,7 @@ export class TerraDrawMapLibreGLAdapter<
 		this._initialDragRotate = this._map.dragRotate.isEnabled();
 		this._initialDragPan = this._map.dragPan.isEnabled();
 		this._renderBeforeLayerId = config.renderBelowLayerId;
+		this._renderAfterLayerId = config.renderAboveLayerId;
 		this._prefixId = config.prefixId || "td";
 	}
 
@@ -77,6 +79,7 @@ export class TerraDrawMapLibreGLAdapter<
 	}
 
 	private _renderBeforeLayerId: string | undefined;
+	private _renderAfterLayerId: string | undefined;
 	private _prefixId: string;
 	private _initialDragPan: boolean;
 	private _initialDragRotate: boolean;
@@ -661,8 +664,13 @@ export class TerraDrawMapLibreGLAdapter<
 			[] as Feature<Point>[],
 		);
 
-		if (this._renderBeforeLayerId) {
-			this._map.moveLayer(pointId, this._renderBeforeLayerId);
+		if (this._renderBeforeLayerId || this._renderAfterLayerId) {
+			if (this._renderBeforeLayerId) {
+				this._map.moveLayer(pointId, this._renderBeforeLayerId);
+			} 
+			else if (this._renderAfterLayerId) {
+				this._map.moveLayer(this._renderAfterLayerId, pointId);
+			}
 			this._map.moveLayer(lineStringId, pointId);
 			this._map.moveLayer(`${polygonStringId}-outline`, lineStringId);
 			this._map.moveLayer(polygonStringId, `${polygonStringId}-outline`);

@@ -1,6 +1,8 @@
 import { AllStories } from "../../common/stories";
 import { DefaultMeta } from "../../common/meta";
 import { SetupGoogle } from "./setup";
+import { SetupGoogleMultipleInstances } from "./multiple-instances";
+import { DefaultSize, LocationNewYork, DefaultZoom } from "../../common/config";
 
 const meta = {
 	...DefaultMeta,
@@ -67,3 +69,14 @@ export const ProgrammaticRotate = AllStories.ProgrammaticRotate;
 export const ProgrammaticScale = AllStories.ProgrammaticScale;
 export const ProgrammaticUpdate = AllStories.ProgrammaticUpdate;
 export const UndoRedo = AllStories.UndoRedo;
+export const MultipleInstances = {
+	args: {
+		id: "multiple-instances",
+		modes: [],
+		...DefaultSize,
+		...LocationNewYork,
+		...DefaultZoom,
+		showButtons: false,
+	},
+	render: SetupGoogleMultipleInstances,
+};

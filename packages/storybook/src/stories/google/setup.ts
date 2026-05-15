@@ -11,7 +11,7 @@ import { StoryArgs } from "../../common/config";
 
 let setOptionsCalled = false;
 
-const initialiseGoogleMap = async ({
+export const initialiseGoogleMap = async ({
 	mapContainer,
 	centerLat,
 	centerLng,

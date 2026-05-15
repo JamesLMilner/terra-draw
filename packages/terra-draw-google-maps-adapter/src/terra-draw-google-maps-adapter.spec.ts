@@ -8,9 +8,37 @@ import {
 	TerraDrawMouseEvent,
 } from "terra-draw";
 
+const createMockDataLayer = (
+	overrides?: Partial<{
+		addListener: jest.Mock;
+		getStyle: jest.Mock;
+		setStyle: jest.Mock;
+		addGeoJson: jest.Mock;
+		remove: jest.Mock;
+		getFeatureById: jest.Mock;
+		forEach: jest.Mock;
+		setMap: jest.Mock;
+	}>,
+) => {
+	let currentStyle: unknown = null;
+	return {
+		addListener: jest.fn(() => ({ remove: jest.fn() })),
+		getStyle: jest.fn(() => currentStyle),
+		setStyle: jest.fn((s: unknown) => {
+			currentStyle = s;
+		}),
+		addGeoJson: jest.fn(),
+		remove: jest.fn(),
+		getFeatureById: jest.fn(),
+		forEach: jest.fn(),
+		setMap: jest.fn(),
+		...overrides,
+	};
+};
+
 const createMockGoogleMap = (overrides?: Partial<google.maps.Map>) => {
 	// Minimal emulation of google.maps.Data styling behavior.
-	// The adapter calls `map.data.getStyle()` to check if a style function is set.
+	// The adapter calls `_dataLayer.getStyle()` to check if a style function is set.
 	let currentStyle: unknown = null;
 
 	return {
@@ -30,6 +58,7 @@ const createMockGoogleMap = (overrides?: Partial<google.maps.Map>) => {
 			setStyle: jest.fn((style) => {
 				currentStyle = style;
 			}),
+			setMap: jest.fn(),
 		} as unknown as google.maps.Data,
 		fitBounds: jest.fn(),
 		getCenter: jest.fn(),
@@ -217,6 +246,7 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 					OverlayView: jest.fn().mockImplementation(() => ({
 						setMap: jest.fn(),
 					})),
+					Data: jest.fn(() => createMockDataLayer()),
 				} as any,
 				map: createMockGoogleMap(),
 				minPixelDragDistance: 1,
@@ -237,7 +267,7 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 
 	describe("register", () => {
 		it("registers event listeners", () => {
-			const addListenerMock = jest.fn();
+			const addListenerMock = jest.fn(() => ({ remove: jest.fn() }));
 
 			const div = {
 				addEventListener: jest.fn(),
@@ -255,6 +285,7 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 				})) as any,
 				data: {
 					addListener: addListenerMock,
+					setMap: jest.fn(),
 				} as any,
 			});
 			const adapter = new TerraDrawGoogleMapsAdapter({
@@ -262,6 +293,7 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 					OverlayView: jest.fn(() => ({
 						setMap: jest.fn(),
 					})),
+					Data: jest.fn(() => mockMap.data),
 				} as any,
 				map: mockMap,
 				forwardMapElementEvents: true,
@@ -296,6 +328,7 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 					addEventListener: jest.fn(),
 				} as unknown as HTMLDivElement;
 
+				const mockDataLayer = createMockDataLayer();
 				const mockMap = createMockGoogleMap({
 					getDiv: jest.fn(() => ({
 						id: "map",
@@ -303,15 +336,13 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 						addEventListener: jest.fn(),
 						removeEventListener: jest.fn(),
 					})) as any,
-					data: {
-						addListener: jest.fn(),
-					} as any,
 				});
 
 				const callbacks = MockCallbacks();
 				const adapter = new TerraDrawGoogleMapsAdapter({
 					lib: {
 						OverlayView: jest.fn(() => overlay),
+						Data: jest.fn(() => mockDataLayer),
 					} as any,
 					map: mockMap,
 					forwardMapElementEvents: true,
@@ -342,9 +373,6 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 						addEventListener: keyboardDiv.addEventListener,
 						removeEventListener: keyboardDiv.removeEventListener,
 					})) as any,
-					data: {
-						addListener: jest.fn(),
-					} as any,
 				});
 
 				const adapter = new TerraDrawGoogleMapsAdapter({
@@ -352,6 +380,7 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 						OverlayView: jest.fn(() => ({
 							setMap: jest.fn(),
 						})),
+						Data: jest.fn(() => mockMap.data),
 					} as any,
 					map: mockMap,
 					forwardMapElementEvents: false,
@@ -402,9 +431,6 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 						addEventListener: jest.fn(),
 						removeEventListener: jest.fn(),
 					})) as any,
-					data: {
-						addListener: jest.fn(),
-					} as any,
 				});
 
 				const adapter = new TerraDrawGoogleMapsAdapter({
@@ -412,6 +438,7 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 						OverlayView: jest.fn(() => ({
 							setMap: jest.fn(),
 						})),
+						Data: jest.fn(() => mockMap.data),
 					} as any,
 					map: mockMap,
 					forwardMapElementEvents: true,
@@ -463,9 +490,6 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 						addEventListener: jest.fn(),
 						removeEventListener: jest.fn(),
 					})) as any,
-					data: {
-						addListener: jest.fn(),
-					} as any,
 				});
 
 				const callbacks = MockCallbacks();
@@ -474,6 +498,7 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 						OverlayView: jest.fn(() => ({
 							setMap: jest.fn(),
 						})),
+						Data: jest.fn(() => mockMap.data),
 					} as any,
 					map: mockMap,
 					forwardMapElementEvents: true,
@@ -542,6 +567,7 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 				data: {
 					addListener: jest.fn(() => ({ remove: jest.fn() })),
 					setStyle: jest.fn(),
+					setMap: jest.fn(),
 				} as any,
 			});
 
@@ -551,6 +577,7 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 						setMap: jest.fn(),
 						getMap: jest.fn(() => ({})),
 					})),
+					Data: jest.fn(() => mockMap.data),
 				} as any,
 				map: mockMap,
 				forwardMapElementEvents: true,
@@ -585,15 +612,13 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 					addEventListener: jest.fn(),
 					removeEventListener: jest.fn(),
 				})) as any,
-				data: {
-					setStyle: jest.fn(),
-				} as any,
 			});
 			const adapter = new TerraDrawGoogleMapsAdapter({
 				lib: {
 					OverlayView: jest.fn(() => ({
 						setMap: jest.fn(),
 					})),
+					Data: jest.fn(() => mockMap.data),
 				} as any,
 				map: mockMap,
 			});
@@ -627,6 +652,7 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 				data: {
 					addListener: addListenerMock,
 					setStyle: jest.fn(),
+					setMap: jest.fn(),
 				} as any,
 			});
 			const adapter = new TerraDrawGoogleMapsAdapter({
@@ -635,6 +661,7 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 						setMap: jest.fn(),
 						getMap: jest.fn(() => ({})),
 					})),
+					Data: jest.fn(() => mockMap.data),
 				} as any,
 				map: mockMap,
 				forwardMapElementEvents: true,
@@ -665,6 +692,7 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 						setMap: jest.fn(),
 						getProjection: jest.fn(() => undefined),
 					})),
+					Data: jest.fn(() => mapMock.data),
 				} as any,
 				map: mapMock,
 			});
@@ -707,6 +735,7 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 						setMap: jest.fn(),
 						getProjection: getProjectionMock,
 					})),
+					Data: jest.fn(() => mapMock.data),
 				} as any,
 				map: mapMock,
 			});
@@ -757,6 +786,7 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 						setMap: jest.fn(),
 						getProjection: getProjectionMock,
 					})),
+					Data: jest.fn(() => mapMock.data),
 				} as any,
 				map: mapMock,
 			});
@@ -837,6 +867,7 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 						setMap: jest.fn(),
 						getProjection: getProjectionMock,
 					})),
+					Data: jest.fn(() => mapMock.data),
 				} as any,
 				map: mapMock,
 			});
@@ -884,6 +915,7 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 						setMap: jest.fn(),
 						getProjection: jest.fn(() => undefined),
 					})),
+					Data: jest.fn(() => mapMock.data),
 				} as any,
 				map: mapMock,
 			});
@@ -907,6 +939,7 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 						setMap: jest.fn(),
 						getProjection: jest.fn(() => undefined),
 					})),
+					Data: jest.fn(() => mapMock.data),
 				} as any,
 				map: mapMock,
 			});
@@ -934,6 +967,7 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 						setMap: jest.fn(),
 						getProjection: getProjectionMock,
 					})),
+					Data: jest.fn(() => mapMock.data),
 				} as any,
 				map: mapMock,
 			});
@@ -964,6 +998,7 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 						setMap: jest.fn(),
 						getProjection: getProjectionMock,
 					})),
+					Data: jest.fn(() => mapMock.data),
 				} as any,
 				map: mapMock,
 			});
@@ -997,6 +1032,7 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 						setMap: jest.fn(),
 						getProjection: getProjectionMock,
 					})),
+					Data: jest.fn(() => mapMock.data),
 				} as any,
 				map: mapMock,
 			});
@@ -1023,6 +1059,7 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 						setMap: jest.fn(),
 						getProjection: getProjectionMock,
 					})),
+					Data: jest.fn(() => createMockDataLayer()),
 				} as any,
 				map: createMockGoogleMap(),
 			});
@@ -1036,6 +1073,7 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 
 		it("throws when projection unavailable", () => {
 			const getProjectionMock = jest.fn(() => undefined);
+			const mapMock = createMockGoogleMap();
 
 			const adapter = new TerraDrawGoogleMapsAdapter({
 				lib: {
@@ -1044,8 +1082,9 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 						setMap: jest.fn(),
 						getProjection: getProjectionMock,
 					})),
+					Data: jest.fn(() => mapMock.data),
 				} as any,
-				map: createMockGoogleMap(),
+				map: mapMock,
 			});
 
 			adapter.register(MockCallbacks());
@@ -1064,6 +1103,7 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 					lat: () => testLat,
 				})),
 			}));
+			const mapMock = createMockGoogleMap();
 
 			const adapter = new TerraDrawGoogleMapsAdapter({
 				lib: {
@@ -1073,8 +1113,9 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 						getProjection: getProjectionMock,
 					})),
 					Point: jest.fn(),
+					Data: jest.fn(() => mapMock.data),
 				} as any,
-				map: createMockGoogleMap(),
+				map: mapMock,
 			});
 
 			adapter.register(MockCallbacks());
@@ -1106,6 +1147,7 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 						setMap: jest.fn(),
 						getProjection: jest.fn(),
 					})),
+					Data: jest.fn(() => createMockDataLayer()),
 				} as any,
 				map,
 			});
@@ -1139,6 +1181,7 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 						setMap: jest.fn(),
 						getProjection: jest.fn(),
 					})),
+					Data: jest.fn(() => createMockDataLayer()),
 				} as any,
 				map,
 			});
@@ -1179,6 +1222,7 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 						setMap: jest.fn(),
 						getProjection: jest.fn(),
 					})),
+					Data: jest.fn(() => createMockDataLayer()),
 				} as any,
 				map,
 			});
@@ -1219,6 +1263,7 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 						setMap: () => {},
 						getProjection: () => {},
 					})),
+					Data: jest.fn(() => mockMap.data),
 				} as any,
 				map: mockMap,
 			});
@@ -1279,9 +1324,12 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 						getProjection: jest.fn(),
 					})),
 					LatLng: jest.fn(),
-					Data: {
-						Point: jest.fn(),
-					},
+					Data: Object.assign(
+						jest.fn(() => mockMap.data),
+						{
+							Point: jest.fn(),
+						},
+					),
 				} as any,
 				map: mockMap,
 			});
@@ -1346,6 +1394,7 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 							setMap: jest.fn(),
 							getProjection: jest.fn(),
 						})),
+						Data: jest.fn(() => mockMap.data),
 					} as any,
 					map: mockMap,
 				});
@@ -1427,6 +1476,7 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 							setMap: jest.fn(),
 							getProjection: jest.fn(),
 						})),
+						Data: jest.fn(() => mockMap.data),
 					} as any,
 					map: mockMap,
 				});
@@ -1498,6 +1548,7 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 							setMap: jest.fn(),
 							getProjection: jest.fn(),
 						})),
+						Data: jest.fn(() => mockMap.data),
 					} as any,
 					map: mockMap,
 				});
@@ -1566,6 +1617,7 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 							setMap: jest.fn(),
 							getProjection: jest.fn(),
 						})),
+						Data: jest.fn(() => mockMap.data),
 					} as any,
 					map: mockMap,
 				});
@@ -1628,11 +1680,14 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 							getProjection: jest.fn(),
 						})),
 						LatLng: jest.fn(),
-						Data: {
-							LineString: jest.fn(),
-							Polygon: jest.fn(),
-							Point: jest.fn(),
-						},
+						Data: Object.assign(
+							jest.fn(() => mockMap.data),
+							{
+								LineString: jest.fn(),
+								Polygon: jest.fn(),
+								Point: jest.fn(),
+							},
+						),
 					} as any,
 					map: mockMap,
 				});
@@ -1694,6 +1749,7 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 							setMap: jest.fn(),
 							getProjection: jest.fn(),
 						})),
+						Data: jest.fn(() => mockMap.data),
 					} as unknown as typeof google.maps,
 					map: mockMap,
 				});
@@ -1773,6 +1829,7 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 							setMap: jest.fn(),
 							getProjection: jest.fn(),
 						})),
+						Data: jest.fn(() => mockMap.data),
 					} as unknown as typeof google.maps,
 					map: mockMap,
 				});
@@ -1841,6 +1898,7 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 							setMap: jest.fn(),
 							getProjection: jest.fn(),
 						})),
+						Data: jest.fn(() => mockMap.data),
 					} as any,
 					map: mockMap,
 				});
@@ -1906,6 +1964,7 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 							setMap: jest.fn(),
 							getProjection: jest.fn(),
 						})),
+						Data: jest.fn(() => mockMap.data),
 					} as unknown as typeof google.maps,
 					map: mockMap,
 				});
@@ -1970,11 +2029,14 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 							getProjection: jest.fn(),
 						})),
 						LatLng: jest.fn(),
-						Data: {
-							LineString: jest.fn(),
-							Polygon: jest.fn(),
-							Point: jest.fn(),
-						},
+						Data: Object.assign(
+							jest.fn(() => mockMap.data),
+							{
+								LineString: jest.fn(),
+								Polygon: jest.fn(),
+								Point: jest.fn(),
+							},
+						),
 					} as unknown as typeof google.maps,
 					map: mockMap,
 				});
@@ -2032,6 +2094,7 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 							setMap: jest.fn(),
 							getProjection: jest.fn(),
 						})),
+						Data: jest.fn(() => mockMap.data),
 					} as unknown as typeof google.maps,
 					map: mockMap,
 				});
@@ -2111,6 +2174,7 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 							setMap: jest.fn(),
 							getProjection: jest.fn(),
 						})),
+						Data: jest.fn(() => mockMap.data),
 					} as any,
 					map: mockMap,
 				});
@@ -2165,6 +2229,7 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 							setMap: jest.fn(),
 							getProjection: jest.fn(),
 						})),
+						Data: jest.fn(() => mockMap.data),
 					} as any,
 					map: mockMap,
 				});
@@ -2227,11 +2292,14 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 							getProjection: jest.fn(),
 						})),
 						LatLng: jest.fn(),
-						Data: {
-							LineString: jest.fn(),
-							Polygon: jest.fn(),
-							Point: jest.fn(),
-						},
+						Data: Object.assign(
+							jest.fn(() => mockMap.data),
+							{
+								LineString: jest.fn(),
+								Polygon: jest.fn(),
+								Point: jest.fn(),
+							},
+						),
 					} as any,
 					map: mockMap,
 				});
@@ -2339,11 +2407,14 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 						LatLngBounds: jest.fn(),
 						Point: jest.fn(),
 						Size: jest.fn(),
-						Data: {
-							Point: jest.fn(),
-							LineString: jest.fn(),
-							Polygon: jest.fn(),
-						},
+						Data: Object.assign(
+							jest.fn(() => mockMap.data),
+							{
+								Point: jest.fn(),
+								LineString: jest.fn(),
+								Polygon: jest.fn(),
+							},
+						),
 					} as any,
 					map: mockMap,
 				});
@@ -2558,6 +2629,7 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 						setMap: jest.fn(),
 						getProjection: jest.fn(),
 					})),
+					Data: jest.fn(() => createMockDataLayer()),
 				} as unknown as typeof google.maps,
 				map: createMockGoogleMap(),
 			});
@@ -2582,6 +2654,7 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 						setMap: jest.fn(),
 						getProjection: jest.fn(),
 					})),
+					Data: jest.fn(() => mockMap.data),
 				} as unknown as typeof google.maps,
 				map: mockMap,
 			});

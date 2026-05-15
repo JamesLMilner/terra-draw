@@ -31,6 +31,8 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawExtend.TerraDrawBaseAda
 			typeof config.coordinatePrecision === "number"
 				? config.coordinatePrecision
 				: 9;
+
+		this._dataLayer = new this._lib.Data();
 	}
 
 	private _forwardMapElementEvents: boolean = false;
@@ -38,6 +40,7 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawExtend.TerraDrawBaseAda
 	private _cursorStyleSheet: HTMLStyleElement | undefined;
 	private _lib: typeof google.maps;
 	private _map: google.maps.Map;
+	private _dataLayer: google.maps.Data;
 	private _overlay: google.maps.OverlayView | undefined;
 	private _markerClickListener: any | undefined;
 	private _markerMouseMoveListener: ((event: MouseEvent) => void) | undefined;
@@ -94,6 +97,11 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawExtend.TerraDrawBaseAda
 		this._overlay.onRemove = () => {
 			// No-op
 		};
+
+		// Attach our own data layer to this map instance so multiple adapters
+		// can coexist against the same google.maps.Map without sharing the
+		// default map.data layer.
+		this._dataLayer.setMap(this._map);
 
 		if (this._forwardMapElementEvents) {
 			const AdvancedMarkerElementTag = "gmp-advanced-marker";
@@ -180,7 +188,7 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawExtend.TerraDrawBaseAda
 		// Clicking on data geometries triggers
 		// swallows the map onclick event,
 		// so we need to forward it to the click callback handler
-		this._clickEventListener = this._map.data.addListener(
+		this._clickEventListener = this._dataLayer.addListener(
 			"click",
 			(
 				event: google.maps.MapMouseEvent & {
@@ -196,7 +204,7 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawExtend.TerraDrawBaseAda
 			},
 		);
 
-		this._mouseMoveEventListener = this._map.data.addListener(
+		this._mouseMoveEventListener = this._dataLayer.addListener(
 			"mousemove",
 			(
 				event: google.maps.MapMouseEvent & {
@@ -392,6 +400,9 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawExtend.TerraDrawBaseAda
 			this._overlay.setMap(null);
 		}
 		this._overlay = undefined;
+
+		this._dataLayer.setMap(null);
+
 		this._readyCalled = false;
 	}
 
@@ -581,8 +592,8 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawExtend.TerraDrawBaseAda
 	render(changes: TerraDrawChanges, styling: TerraDrawStylingFunction) {
 		this.styling = styling;
 
-		if (!this._map.data.getStyle()) {
-			this._map.data.setStyle((feature) => this.style(feature));
+		if (!this._dataLayer.getStyle()) {
+			this._dataLayer.setStyle((feature) => this.style(feature));
 		}
 
 		// Ensure scheduler state exists
@@ -656,9 +667,9 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawExtend.TerraDrawBaseAda
 				if (this._hasRenderedFeatures) {
 					// Deletes
 					for (const deletedId of deletedIds) {
-						const featureToDelete = this._map.data.getFeatureById(deletedId);
+						const featureToDelete = this._dataLayer.getFeatureById(deletedId);
 						if (featureToDelete) {
-							this._map.data.remove(featureToDelete);
+							this._dataLayer.remove(featureToDelete);
 							this.renderedFeatureIds.delete(deletedId);
 						}
 					}
@@ -667,7 +678,7 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawExtend.TerraDrawBaseAda
 					for (const updatedFeature of updated) {
 						if (!updatedFeature?.id) throw new Error("Feature is not valid");
 
-						const featureToUpdate = this._map.data.getFeatureById(
+						const featureToUpdate = this._dataLayer.getFeatureById(
 							String(updatedFeature.id),
 						);
 
@@ -730,7 +741,7 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawExtend.TerraDrawBaseAda
 					// Creates
 					for (const createdFeature of created) {
 						this.renderedFeatureIds.add(String(createdFeature.id));
-						this._map.data.addGeoJson(createdFeature);
+						this._dataLayer.addGeoJson(createdFeature);
 					}
 				} else {
 					// First render: treat everything as a feature collection create
@@ -744,7 +755,7 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawExtend.TerraDrawBaseAda
 					}
 
 					if (features.length) {
-						this._map.data.addGeoJson({
+						this._dataLayer.addGeoJson({
 							type: "FeatureCollection",
 							features,
 						} as GeoJsonObject);
@@ -769,11 +780,11 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawExtend.TerraDrawBaseAda
 
 	private clearLayers() {
 		if (this._hasRenderedFeatures) {
-			this._map.data.forEach((feature) => {
+			this._dataLayer.forEach((feature) => {
 				const id = feature.getId() as string;
 				const hasFeature = this.renderedFeatureIds.has(id);
 				if (hasFeature) {
-					this._map.data.remove(feature);
+					this._dataLayer.remove(feature);
 				}
 			});
 			this.renderedFeatureIds = new Set();
@@ -793,10 +804,8 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawExtend.TerraDrawBaseAda
 			this.clearLayers();
 		}
 
-		// clean up any styles set on the default data layer
-		if (this._map.data) {
-			this._map.data.setStyle(null);
-		}
+		// clean up any styles set on this adapter's data layer
+		this._dataLayer.setStyle(null);
 	}
 
 	public getCoordinatePrecision(): number {

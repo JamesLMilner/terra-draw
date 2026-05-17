@@ -9,13 +9,12 @@ import {
 	GeoJSONStoreGeometries,
 } from "terra-draw";
 import {
-	CircleLayerSpecification,
-	FillLayerSpecification,
-	GeoJSONSource,
-	LineLayerSpecification,
-	Map as MaplibreMap,
-	PointLike,
-	getVersion,
+	type CircleLayerSpecification,
+	type FillLayerSpecification,
+	type GeoJSONSource,
+	type LineLayerSpecification,
+	type Map as MaplibreMap,
+	type PointLike,
 } from "maplibre-gl";
 import { Feature, LineString, Point, Polygon } from "geojson";
 
@@ -106,13 +105,12 @@ export class TerraDrawMapLibreGLAdapter<MapType>
 		return [onPx / width, offPx / width];
 	}
 
-	private isMapLibreAtLeast(minVersion = "5.8.0") {
-		const runtimeVersion =
-			getVersion?.() || (this._map as unknown as { version?: string }).version;
+	private isMapLibreAtLeast(minVersion: string): boolean {
+		const runtimeVersion = this._map.version;
 
-		// If version cannot be resolved, prefer enabling dashed lines rather than silently disabling them.
+		// Default to not supporting features if we can't determine the version, as we know some features we use require a minimum version.
 		if (!runtimeVersion) {
-			return true;
+			return false;
 		}
 
 		const parse = (v: string): [number, number, number] | null => {

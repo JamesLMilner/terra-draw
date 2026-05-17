@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.4.1](https://github.com/JamesLMilner/terra-draw/compare/terra-draw-maplibre-gl-adapter@1.4.0...terra-draw-maplibre-gl-adapter@1.4.1) (2026-05-17)
+
+
+### fix
+
+* **terra-draw-maplibre-gl-adapter:** fix linestring rendering (#893) ([](https://github.com/JamesLMilner/terra-draw/commit/fc2f74de2b7b124f6a1a3cb3966b659eae3cf8fa)), closes [#893](https://github.com/JamesLMilner/terra-draw/issues/893)
+* **terra-draw-maplibre-gl-adapter:** use version off of map rather than getVersion import (#894) ([](https://github.com/JamesLMilner/terra-draw/commit/e63fe7990dfe1bd7d85358ee3439589c66d0dc7e)), closes [#894](https://github.com/JamesLMilner/terra-draw/issues/894)
+
 ## [1.4.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw-maplibre-gl-adapter@1.3.0...terra-draw-maplibre-gl-adapter@1.4.0) (2026-05-07)
 
 

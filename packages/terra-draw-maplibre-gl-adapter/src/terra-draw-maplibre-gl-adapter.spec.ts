@@ -627,6 +627,56 @@ describe("TerraDrawMapLibreGLAdapter", () => {
 			deletedIds: [],
 		};
 
+		it("adds line-dasharray support when maplibre version is high enough", () => {
+			const map = createMapLibreGLMap();
+			(map as unknown as { version: string }).version = "5.8.0";
+
+			const adapter = new TerraDrawMapLibreGLAdapter({
+				map: map as maplibregl.Map,
+			});
+
+			adapter.register(MockCallbacks());
+
+			const lineLayerCall = (map.addLayer as jest.Mock).mock.calls.find(
+				([layer]) => (layer as { id?: string }).id === "td-linestring",
+			);
+
+			expect(lineLayerCall).toBeDefined();
+
+			const lineLayer = lineLayerCall?.[0] as {
+				paint?: { "line-dasharray"?: unknown };
+			};
+
+			expect(lineLayer.paint?.["line-dasharray"]).toEqual([
+				"coalesce",
+				["get", "lineStringDash"],
+				["literal", [1, 0]],
+			]);
+		});
+
+		it("does not add line-dasharray support when maplibre version is too low", () => {
+			const map = createMapLibreGLMap();
+			(map as unknown as { version: string }).version = "5.7.9";
+
+			const adapter = new TerraDrawMapLibreGLAdapter({
+				map: map as maplibregl.Map,
+			});
+
+			adapter.register(MockCallbacks());
+
+			const lineLayerCall = (map.addLayer as jest.Mock).mock.calls.find(
+				([layer]) => (layer as { id?: string }).id === "td-linestring",
+			);
+
+			expect(lineLayerCall).toBeDefined();
+
+			const lineLayer = lineLayerCall?.[0] as {
+				paint?: { "line-dasharray"?: unknown };
+			};
+
+			expect(lineLayer.paint?.["line-dasharray"]).toBeUndefined();
+		});
+
 		it("can register then unregister successfully", () => {
 			jest.spyOn(window, "requestAnimationFrame");
 

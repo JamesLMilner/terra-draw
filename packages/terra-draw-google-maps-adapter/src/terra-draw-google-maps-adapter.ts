@@ -17,6 +17,7 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawExtend.TerraDrawBaseAda
 			lib: typeof google.maps;
 			map: google.maps.Map;
 			forwardMapElementEvents?: boolean;
+			isolatedData?: boolean;
 		} & TerraDrawExtend.BaseAdapterConfig,
 	) {
 		super(config);
@@ -26,6 +27,7 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawExtend.TerraDrawBaseAda
 			typeof config.forwardMapElementEvents === "boolean"
 				? config.forwardMapElementEvents
 				: false;
+		this._isolatedData = config.isolatedData || false;
 
 		this._coordinatePrecision =
 			typeof config.coordinatePrecision === "number"
@@ -34,6 +36,8 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawExtend.TerraDrawBaseAda
 	}
 
 	private _forwardMapElementEvents: boolean = false;
+	private _isolatedData: boolean = false;
+	private _data: google.maps.Data | undefined;
 	private _cursor: string | undefined;
 	private _cursorStyleSheet: HTMLStyleElement | undefined;
 	private _lib: typeof google.maps;
@@ -180,7 +184,7 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawExtend.TerraDrawBaseAda
 		// Clicking on data geometries triggers
 		// swallows the map onclick event,
 		// so we need to forward it to the click callback handler
-		this._clickEventListener = this._map.data.addListener(
+		this._clickEventListener = this.data().addListener(
 			"click",
 			(
 				event: google.maps.MapMouseEvent & {
@@ -196,7 +200,7 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawExtend.TerraDrawBaseAda
 			},
 		);
 
-		this._mouseMoveEventListener = this._map.data.addListener(
+		this._mouseMoveEventListener = this.data().addListener(
 			"mousemove",
 			(
 				event: google.maps.MapMouseEvent & {
@@ -211,6 +215,18 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawExtend.TerraDrawBaseAda
 				}
 			},
 		);
+
+		if (this._isolatedData) {
+			this._data = new this._lib.Data();
+			this._data.setMap(this._map);
+		}
+	}
+
+	protected data() {
+		if (this._isolatedData && this._data) {
+			return this._data;
+		}
+		return this._map.data;
 	}
 
 	private styling: TerraDrawStylingFunction | undefined;
@@ -259,9 +275,9 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawExtend.TerraDrawBaseAda
 							scaledSize:
 								calculatedStyles.markerWidth && calculatedStyles.markerHeight
 									? new this._lib.Size(
-											calculatedStyles.markerWidth,
-											calculatedStyles.markerHeight,
-										)
+										calculatedStyles.markerWidth,
+										calculatedStyles.markerHeight,
+									)
 									: undefined,
 						},
 						zIndex: calculatedStyles.zIndex,
@@ -306,22 +322,22 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawExtend.TerraDrawBaseAda
 
 				const dashedLineStyles = lineStringDash
 					? {
-							strokeOpacity: 0,
-							icons: [
-								{
-									icon: {
-										path: "M 0,0 0," + lineStringDash[0],
-										strokeOpacity: 1,
-										strokeWeight: calculatedStyles.lineStringWidth,
-										color: calculatedStyles.lineStringColor,
-										scale: 1,
-									},
-									offset: "0",
-									repeat: `${lineStringDash[0] + lineStringDash[1]}px`,
-									fixedRotation: false,
+						strokeOpacity: 0,
+						icons: [
+							{
+								icon: {
+									path: "M 0,0 0," + lineStringDash[0],
+									strokeOpacity: 1,
+									strokeWeight: calculatedStyles.lineStringWidth,
+									color: calculatedStyles.lineStringColor,
+									scale: 1,
 								},
-							],
-						}
+								offset: "0",
+								repeat: `${lineStringDash[0] + lineStringDash[1]}px`,
+								fixedRotation: false,
+							},
+						],
+					}
 					: {};
 
 				return {
@@ -393,6 +409,11 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawExtend.TerraDrawBaseAda
 		}
 		this._overlay = undefined;
 		this._readyCalled = false;
+
+		if (this._isolatedData && this._data) {
+			this._data.setMap(null);
+			this._data = undefined;
+		}
 	}
 
 	/**
@@ -442,7 +463,7 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawExtend.TerraDrawBaseAda
 	 */
 	public getMapEventElement(
 		eventType?: // TODO: Import TerraDrawHandledEvents - however is a breaking change currently
-		| "pointerdown"
+			| "pointerdown"
 			| "pointerup"
 			| "pointermove"
 			| "contextmenu"
@@ -581,8 +602,8 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawExtend.TerraDrawBaseAda
 	render(changes: TerraDrawChanges, styling: TerraDrawStylingFunction) {
 		this.styling = styling;
 
-		if (!this._map.data.getStyle()) {
-			this._map.data.setStyle((feature) => this.style(feature));
+		if (!this.data().getStyle()) {
+			this.data().setStyle((feature) => this.style(feature));
 		}
 
 		// Ensure scheduler state exists
@@ -656,9 +677,9 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawExtend.TerraDrawBaseAda
 				if (this._hasRenderedFeatures) {
 					// Deletes
 					for (const deletedId of deletedIds) {
-						const featureToDelete = this._map.data.getFeatureById(deletedId);
+						const featureToDelete = this.data().getFeatureById(deletedId);
 						if (featureToDelete) {
-							this._map.data.remove(featureToDelete);
+							this.data().remove(featureToDelete);
 							this.renderedFeatureIds.delete(deletedId);
 						}
 					}
@@ -667,7 +688,7 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawExtend.TerraDrawBaseAda
 					for (const updatedFeature of updated) {
 						if (!updatedFeature?.id) throw new Error("Feature is not valid");
 
-						const featureToUpdate = this._map.data.getFeatureById(
+						const featureToUpdate = this.data().getFeatureById(
 							String(updatedFeature.id),
 						);
 
@@ -730,7 +751,7 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawExtend.TerraDrawBaseAda
 					// Creates
 					for (const createdFeature of created) {
 						this.renderedFeatureIds.add(String(createdFeature.id));
-						this._map.data.addGeoJson(createdFeature);
+						this.data().addGeoJson(createdFeature);
 					}
 				} else {
 					// First render: treat everything as a feature collection create
@@ -744,7 +765,7 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawExtend.TerraDrawBaseAda
 					}
 
 					if (features.length) {
-						this._map.data.addGeoJson({
+						this.data().addGeoJson({
 							type: "FeatureCollection",
 							features,
 						} as GeoJsonObject);
@@ -769,11 +790,11 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawExtend.TerraDrawBaseAda
 
 	private clearLayers() {
 		if (this._hasRenderedFeatures) {
-			this._map.data.forEach((feature) => {
+			this.data().forEach((feature) => {
 				const id = feature.getId() as string;
 				const hasFeature = this.renderedFeatureIds.has(id);
 				if (hasFeature) {
-					this._map.data.remove(feature);
+					this.data().remove(feature);
 				}
 			});
 			this.renderedFeatureIds = new Set();
@@ -794,8 +815,8 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawExtend.TerraDrawBaseAda
 		}
 
 		// clean up any styles set on the default data layer
-		if (this._map.data) {
-			this._map.data.setStyle(null);
+		if (this.data()) {
+			this.data().setStyle(null);
 		}
 	}
 

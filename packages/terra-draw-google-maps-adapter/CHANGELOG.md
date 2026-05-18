@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.6.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw-google-maps-adapter@1.5.0...terra-draw-google-maps-adapter@1.6.0) (2026-05-18)
+
+
+### feat
+
+* **terra-draw-google-maps-adapter:** provide an option to have an isolated data layer (#756) ([](https://github.com/JamesLMilner/terra-draw/commit/4d304f85e68f5e5639dcb093246ebfb1f871d8f8)), closes [#756](https://github.com/JamesLMilner/terra-draw/issues/756)
+
 ## [1.5.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw-google-maps-adapter@1.4.1...terra-draw-google-maps-adapter@1.5.0) (2026-05-07)
 
 

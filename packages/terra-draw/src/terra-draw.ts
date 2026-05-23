@@ -797,9 +797,9 @@ class TerraDraw {
 	private isGuidanceFeature(feature: GeoJSONStoreFeatures): boolean {
 		return Boolean(
 			feature.properties[SELECT_PROPERTIES.MID_POINT] ||
-				feature.properties[SELECT_PROPERTIES.SELECTION_POINT] ||
-				feature.properties[COMMON_PROPERTIES.COORDINATE_POINT] ||
-				feature.properties[COMMON_PROPERTIES.SNAPPING_POINT],
+			feature.properties[SELECT_PROPERTIES.SELECTION_POINT] ||
+			feature.properties[COMMON_PROPERTIES.COORDINATE_POINT] ||
+			feature.properties[COMMON_PROPERTIES.SNAPPING_POINT],
 		);
 	}
 
@@ -1121,6 +1121,8 @@ class TerraDraw {
 			})),
 			{ origin: "api" }, // origin is used to indicate that this update has come from an API call
 		);
+
+		this.emitHistoryChangeAfterFinish();
 	}
 
 	/**
@@ -1189,6 +1191,8 @@ class TerraDraw {
 				selectModePresent.afterFeatureUpdated(updatedFeature);
 			}
 		}
+
+		this.emitHistoryChangeAfterFinish();
 	}
 
 	/**
@@ -1308,6 +1312,8 @@ class TerraDraw {
 				selectModePresent.afterFeatureUpdated(feature);
 			}
 		}
+
+		this.emitHistoryChangeAfterFinish();
 	}
 
 	undo(): boolean {

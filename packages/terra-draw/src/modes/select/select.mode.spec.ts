@@ -293,6 +293,41 @@ describe("TerraDrawSelectMode", () => {
 					expect(onSelect).toHaveBeenCalledTimes(0);
 				});
 
+				it("clicks through non-selectable overlays to selectable features", () => {
+					setSelectMode({
+						flags: {
+							polygon: {
+								feature: {},
+							},
+							render: {},
+						},
+					});
+
+					store.create([
+						{
+							geometry: {
+								type: "Point",
+								coordinates: [0, 0],
+							},
+							properties: {
+								mode: "render",
+							},
+						},
+					]);
+
+					addPolygonToStore([
+						[0, 0],
+						[0, 1],
+						[1, 1],
+						[1, 0],
+						[0, 0],
+					]);
+
+					selectMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+					expect(onSelect).toHaveBeenCalledTimes(1);
+				});
+
 				it("deselects selected when click is not on same or different feature", () => {
 					addPointToStore([0, 0]);
 

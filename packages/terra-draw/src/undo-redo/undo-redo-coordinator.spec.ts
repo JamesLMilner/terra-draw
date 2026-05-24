@@ -244,7 +244,7 @@ describe("TerraDrawUndoRedoCoordinator", () => {
 			onHistoryChange,
 		});
 
-		coordinator.emitPushAfterFinish();
+		coordinator.emitHistoryPushForCompletedAction();
 
 		expect(onHistoryChange).toHaveBeenCalledWith({
 			cause: "push",
@@ -267,7 +267,7 @@ describe("TerraDrawUndoRedoCoordinator", () => {
 			onHistoryChange,
 		});
 
-		coordinator.emitPushAfterFinish();
+		coordinator.emitHistoryPushForCompletedAction();
 
 		expect(onHistoryChange).toHaveBeenCalledWith({
 			cause: "push",

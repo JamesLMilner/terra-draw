@@ -1897,6 +1897,92 @@ describe("Terra Draw", () => {
 					.anotherProperty,
 			).toBe(undefined);
 		});
+
+		it("records property edits for session undo/redo", () => {
+			const draw = new TerraDraw({
+				adapter: new TerraDrawTestAdapter({
+					lib: {},
+					coordinatePrecision: 3,
+				}),
+				modes: [new TerraDrawPolygonMode()],
+				undoRedo: {
+					sessionLevel: new TerraDrawSessionUndoRedo(),
+				},
+			});
+
+			draw.start();
+			draw.addFeatures([{ ...baseFeature }]);
+
+			draw.updateFeatureProperties(baseFeature.id as FeatureId, {
+				customProperty: "customValue",
+			});
+
+			expect(draw.canUndo()).toBe(true);
+			expect(draw.canRedo()).toBe(false);
+			expect(
+				draw.getSnapshotFeature(baseFeature.id as FeatureId)?.properties
+					.customProperty,
+			).toBe("customValue");
+
+			expect(draw.undo()).toBe(true);
+			expect(draw.canUndo()).toBe(true);
+			expect(draw.canRedo()).toBe(true);
+			expect(
+				draw.getSnapshotFeature(baseFeature.id as FeatureId)?.properties
+					.customProperty,
+			).toBe(undefined);
+
+			expect(draw.canRedo()).toBe(true);
+			expect(draw.redo()).toBe(true);
+			expect(draw.canUndo()).toBe(true);
+			expect(draw.canRedo()).toBe(false);
+			expect(
+				draw.getSnapshotFeature(baseFeature.id as FeatureId)?.properties
+					.customProperty,
+			).toBe("customValue");
+		});
+
+		it("emits one history push and no finish callback for api property updates", () => {
+			const draw = new TerraDraw({
+				adapter: new TerraDrawTestAdapter({
+					lib: {},
+					coordinatePrecision: 3,
+				}),
+				modes: [new TerraDrawPolygonMode()],
+				undoRedo: {
+					sessionLevel: new TerraDrawSessionUndoRedo(),
+				},
+			});
+
+			const onFinish = jest.fn();
+			const onHistory = jest.fn();
+
+			draw.on("finish", onFinish);
+			draw.on("history", onHistory);
+
+			draw.start();
+			draw.addFeatures([{ ...baseFeature }]);
+
+			onFinish.mockClear();
+			onHistory.mockClear();
+
+			draw.updateFeatureProperties(baseFeature.id as FeatureId, {
+				customProperty: "customValue",
+			});
+
+			expect(draw.canUndo()).toBe(true);
+			expect(draw.canRedo()).toBe(false);
+
+			expect(onFinish).not.toHaveBeenCalled();
+			const sessionHistoryEvents = onHistory.mock.calls
+				.map((call) => call[0])
+				.filter((event) => event.stack === "session");
+
+			expect(sessionHistoryEvents.length).toBeGreaterThan(0);
+			expect(
+				sessionHistoryEvents.every((event) => event.cause === "push"),
+			).toBe(true);
+		});
 	});
 
 	describe("updateFeatureGeometry", () => {
@@ -2429,6 +2515,334 @@ describe("Terra Draw", () => {
 				});
 			}).toThrow("Guidance features are not allowed to be updated directly");
 		});
+
+		it("records coordinate deletion for session undo/redo", () => {
+			const draw = new TerraDraw({
+				adapter: new TerraDrawTestAdapter({
+					lib: {},
+					coordinatePrecision: 3,
+				}),
+				modes: [new TerraDrawPolygonMode(), new TerraDrawSelectMode()],
+				undoRedo: {
+					sessionLevel: new TerraDrawSessionUndoRedo(),
+				},
+			});
+
+			draw.start();
+			const [result] = draw.addFeatures([
+				{
+					id: "f8e5a38d-ecfa-4294-8461-d9cff0e0d7f8",
+					type: "Feature",
+					geometry: {
+						type: "Polygon",
+						coordinates: [
+							[
+								[25, 34],
+								[26, 35],
+								[27, 34],
+								[26, 33], // This coordinate will be deleted in the update
+								[25, 34],
+							],
+						],
+					},
+					properties: {
+						mode: "polygon",
+					},
+				},
+			]);
+
+			expect(result.valid).toBe(true);
+
+			draw.updateFeatureGeometry(result.id as FeatureId, {
+				type: "Polygon",
+				coordinates: [
+					[
+						[25, 34],
+						[26, 35],
+						[27, 34],
+						// [26, 33] is deleted here!
+						[25, 34],
+					],
+				],
+			});
+
+			expect(draw.canUndo()).toBe(true);
+
+			const undone = draw.undo();
+			expect(undone).toBe(true);
+
+			const snapshotAfterUndo = draw.getSnapshot();
+			expect(snapshotAfterUndo).toHaveLength(1);
+			expect(snapshotAfterUndo[0].geometry).toEqual({
+				type: "Polygon",
+				coordinates: [
+					[
+						[25, 34],
+						[26, 35],
+						[27, 34],
+						[26, 33],
+						[25, 34],
+					],
+				],
+			});
+
+			expect(draw.canRedo()).toBe(true);
+
+			const redone = draw.redo();
+			expect(redone).toBe(true);
+
+			const snapshotAfterRedo = draw.getSnapshot();
+			expect(snapshotAfterRedo).toHaveLength(1);
+			expect(snapshotAfterRedo[0].geometry).toEqual({
+				type: "Polygon",
+				coordinates: [
+					[
+						[25, 34],
+						[26, 35],
+						[27, 34],
+						[25, 34],
+					],
+				],
+			});
+		});
+
+		it("emits one history event for api geometry updates and replay does not push", () => {
+			const draw = new TerraDraw({
+				adapter: new TerraDrawTestAdapter({
+					lib: {},
+					coordinatePrecision: 3,
+				}),
+				modes: [
+					new TerraDrawPolygonMode(),
+					new TerraDrawSelectMode({
+						flags: {
+							polygon: {
+								feature: {
+									coordinates: {
+										draggable: true,
+									},
+								},
+							},
+						},
+					}),
+				],
+				undoRedo: {
+					sessionLevel: new TerraDrawSessionUndoRedo(),
+				},
+			});
+
+			const onHistory = jest.fn();
+			draw.on("history", onHistory);
+
+			draw.start();
+			const [result] = draw.addFeatures([
+				{
+					id: "f8e5a38d-ecfa-4294-8461-d9cff0e0d7f8",
+					type: "Feature",
+					geometry: {
+						type: "Polygon",
+						coordinates: [
+							[
+								[25, 34],
+								[26, 35],
+								[27, 34],
+								[25, 34],
+							],
+						],
+					},
+					properties: {
+						mode: "polygon",
+					},
+				},
+			]);
+
+			draw.selectFeature(result.id as FeatureId);
+			onHistory.mockClear();
+
+			draw.updateFeatureGeometry(result.id as FeatureId, {
+				type: "Polygon",
+				coordinates: [
+					[
+						[30, 40],
+						[31, 41],
+						[32, 40],
+						[30, 40],
+					],
+				],
+			});
+
+			expect(draw.canUndo()).toBe(true);
+			expect(draw.canRedo()).toBe(false);
+
+			const updateSessionCauses = onHistory.mock.calls
+				.map((call) => call[0])
+				.filter((event) => event.stack === "session")
+				.map((event) => event.cause);
+
+			expect(updateSessionCauses.length).toBeGreaterThan(0);
+			expect(updateSessionCauses.every((cause) => cause === "push")).toBe(true);
+
+			onHistory.mockClear();
+			expect(draw.undo()).toBe(true);
+			expect(draw.canRedo()).toBe(true);
+			const undoSessionCauses = onHistory.mock.calls
+				.map((call) => call[0])
+				.filter((event) => event.stack === "session")
+				.map((event) => event.cause);
+			expect(undoSessionCauses.length).toBeGreaterThan(0);
+			expect(undoSessionCauses.some((cause) => cause === "undo")).toBe(true);
+			expect(undoSessionCauses.some((cause) => cause === "push")).toBe(false);
+
+			onHistory.mockClear();
+			expect(draw.redo()).toBe(true);
+			expect(draw.canRedo()).toBe(false);
+			const redoSessionCauses = onHistory.mock.calls
+				.map((call) => call[0])
+				.filter((event) => event.stack === "session")
+				.map((event) => event.cause);
+			expect(redoSessionCauses.length).toBeGreaterThan(0);
+			expect(redoSessionCauses.some((cause) => cause === "redo")).toBe(true);
+			expect(redoSessionCauses.some((cause) => cause === "push")).toBe(false);
+		});
+
+		it("replays mixed geometry and property updates in order", () => {
+			const draw = new TerraDraw({
+				adapter: new TerraDrawTestAdapter({
+					lib: {},
+					coordinatePrecision: 3,
+				}),
+				modes: [new TerraDrawPolygonMode()],
+				undoRedo: {
+					sessionLevel: new TerraDrawSessionUndoRedo(),
+				},
+			});
+
+			draw.start();
+			const [result] = draw.addFeatures([
+				{
+					id: "f8e5a38d-ecfa-4294-8461-d9cff0e0d7f8",
+					type: "Feature",
+					geometry: {
+						type: "Polygon",
+						coordinates: [
+							[
+								[25, 34],
+								[26, 35],
+								[27, 34],
+								[25, 34],
+							],
+						],
+					},
+					properties: {
+						mode: "polygon",
+					},
+				},
+			]);
+
+			const featureId = result.id as FeatureId;
+			const initialGeometry: GeoJSONStoreGeometries = {
+				type: "Polygon",
+				coordinates: [
+					[
+						[25, 34],
+						[26, 35],
+						[27, 34],
+						[25, 34],
+					],
+				],
+			};
+
+			const firstGeometry: GeoJSONStoreGeometries = {
+				type: "Polygon",
+				coordinates: [
+					[
+						[28, 34],
+						[29, 35],
+						[30, 34],
+						[28, 34],
+					],
+				],
+			};
+
+			const secondGeometry: GeoJSONStoreGeometries = {
+				type: "Polygon",
+				coordinates: [
+					[
+						[31, 34],
+						[32, 35],
+						[33, 34],
+						[31, 34],
+					],
+				],
+			};
+
+			draw.updateFeatureGeometry(featureId, firstGeometry);
+			draw.updateFeatureProperties(featureId, {
+				customProperty: "v1",
+			});
+			draw.updateFeatureGeometry(featureId, secondGeometry);
+
+			expect(draw.canUndo()).toBe(true);
+			expect(draw.canRedo()).toBe(false);
+
+			expect(draw.getSnapshotFeature(featureId)?.geometry).toEqual(
+				secondGeometry,
+			);
+			expect(
+				draw.getSnapshotFeature(featureId)?.properties.customProperty,
+			).toBe("v1");
+
+			expect(draw.undo()).toBe(true);
+			expect(draw.canRedo()).toBe(true);
+			expect(draw.getSnapshotFeature(featureId)?.geometry).toEqual(
+				firstGeometry,
+			);
+			expect(
+				draw.getSnapshotFeature(featureId)?.properties.customProperty,
+			).toBe("v1");
+
+			expect(draw.undo()).toBe(true);
+			expect(draw.getSnapshotFeature(featureId)?.geometry).toEqual(
+				firstGeometry,
+			);
+			expect(
+				draw.getSnapshotFeature(featureId)?.properties.customProperty,
+			).toBe(undefined);
+
+			expect(draw.undo()).toBe(true);
+			expect(draw.getSnapshotFeature(featureId)?.geometry).toEqual(
+				initialGeometry,
+			);
+			expect(
+				draw.getSnapshotFeature(featureId)?.properties.customProperty,
+			).toBe(undefined);
+
+			expect(draw.redo()).toBe(true);
+			expect(draw.getSnapshotFeature(featureId)?.geometry).toEqual(
+				firstGeometry,
+			);
+			expect(
+				draw.getSnapshotFeature(featureId)?.properties.customProperty,
+			).toBe(undefined);
+
+			expect(draw.redo()).toBe(true);
+			expect(draw.getSnapshotFeature(featureId)?.geometry).toEqual(
+				firstGeometry,
+			);
+			expect(
+				draw.getSnapshotFeature(featureId)?.properties.customProperty,
+			).toBe("v1");
+
+			expect(draw.redo()).toBe(true);
+			expect(draw.getSnapshotFeature(featureId)?.geometry).toEqual(
+				secondGeometry,
+			);
+			expect(
+				draw.getSnapshotFeature(featureId)?.properties.customProperty,
+			).toBe("v1");
+			expect(draw.canUndo()).toBe(true);
+			expect(draw.canRedo()).toBe(false);
+		});
 	});
 
 	describe("transformFeatureGeometry", () => {
@@ -2874,6 +3288,144 @@ describe("Terra Draw", () => {
 					}).toThrow(
 						"Guidance features are not allowed to be updated directly",
 					);
+				});
+
+				it("records transforms for session undo/redo", () => {
+					const draw = new TerraDraw({
+						adapter: new TerraDrawTestAdapter({
+							lib: {},
+							coordinatePrecision: 3,
+						}),
+						modes: [new TerraDrawLineStringMode(), new TerraDrawSelectMode()],
+						undoRedo: {
+							sessionLevel: new TerraDrawSessionUndoRedo(),
+						},
+					});
+
+					draw.start();
+					const [result] = draw.addFeatures([
+						{
+							id: "f8e5a38d-ecfa-4294-8461-d9cff0e0d7f8",
+							type: "Feature",
+							geometry: {
+								type: "LineString",
+								coordinates: [
+									[25, 34],
+									[26, 35],
+								],
+							},
+							properties: {
+								mode: "linestring",
+							},
+						},
+					]);
+
+					expect(result.valid).toBe(true);
+
+					draw.transformFeatureGeometry(result.id as FeatureId, {
+						type: transformType,
+						projection: "web-mercator",
+						origin: [25, 34],
+						options: options as any,
+					});
+
+					expect(draw.canUndo()).toBe(true);
+					expect(draw.canRedo()).toBe(false);
+
+					const undone = draw.undo();
+					expect(undone).toBe(true);
+
+					const snapshotAfterUndo = draw.getSnapshot();
+					expect(snapshotAfterUndo).toHaveLength(1);
+					expect(snapshotAfterUndo[0].geometry).toEqual({
+						type: "LineString",
+						coordinates: [
+							[25, 34],
+							[26, 35],
+						],
+					});
+
+					expect(draw.canRedo()).toBe(true);
+
+					const redone = draw.redo();
+					expect(redone).toBe(true);
+					expect(draw.canUndo()).toBe(true);
+					expect(draw.canRedo()).toBe(false);
+
+					const snapshotAfterRedo = draw.getSnapshot();
+					expect(snapshotAfterRedo).toHaveLength(1);
+					expect(snapshotAfterRedo[0].geometry).toEqual({
+						type: "LineString",
+						coordinates:
+							transformType === "rotate"
+								? [
+										[26.107, 34.088],
+										[24.893, 34.913],
+									]
+								: [
+										[25, 34],
+										[27, 35.988],
+									],
+					});
+				});
+
+				it("emits one history push and no finish callback for api transforms", () => {
+					const draw = new TerraDraw({
+						adapter: new TerraDrawTestAdapter({
+							lib: {},
+							coordinatePrecision: 3,
+						}),
+						modes: [new TerraDrawLineStringMode(), new TerraDrawSelectMode()],
+						undoRedo: {
+							sessionLevel: new TerraDrawSessionUndoRedo(),
+						},
+					});
+
+					const onFinish = jest.fn();
+					const onHistory = jest.fn();
+
+					draw.on("finish", onFinish);
+					draw.on("history", onHistory);
+
+					draw.start();
+					const [result] = draw.addFeatures([
+						{
+							id: "f8e5a38d-ecfa-4294-8461-d9cff0e0d7f8",
+							type: "Feature",
+							geometry: {
+								type: "LineString",
+								coordinates: [
+									[25, 34],
+									[26, 35],
+								],
+							},
+							properties: {
+								mode: "linestring",
+							},
+						},
+					]);
+
+					onFinish.mockClear();
+					onHistory.mockClear();
+
+					draw.transformFeatureGeometry(result.id as FeatureId, {
+						type: transformType,
+						projection: "web-mercator",
+						origin: [25, 34],
+						options: options as any,
+					});
+
+					expect(draw.canUndo()).toBe(true);
+					expect(draw.canRedo()).toBe(false);
+
+					expect(onFinish).not.toHaveBeenCalled();
+					const sessionCauses = onHistory.mock.calls
+						.map((call) => call[0])
+						.filter((event) => event.stack === "session")
+						.map((event) => event.cause);
+
+					expect(sessionCauses.length).toBeGreaterThan(0);
+					expect(sessionCauses.every((cause) => cause === "push")).toBe(true);
 				});
 			},
 		);

@@ -21,8 +21,7 @@ type StackEntryMetadata = {
 	entries: BatchEntry[];
 };
 
-export interface TerraDrawSessionUndoRedoInterface
-	extends TerraDrawUndoRedoInterface {
+export interface TerraDrawSessionUndoRedoInterface extends TerraDrawUndoRedoInterface {
 	register(options: {
 		draw: TerraDraw;
 		onHistoryChange: (historyChange: HistoryChange) => void;
@@ -44,9 +43,7 @@ type UndoStackEntry = {
 	metadata?: StackEntryMetadata;
 };
 
-export class TerraDrawSessionUndoRedo
-	implements TerraDrawSessionUndoRedoInterface
-{
+export class TerraDrawSessionUndoRedo implements TerraDrawSessionUndoRedoInterface {
 	private draw: TerraDraw | undefined;
 	private onHistoryChange: ((historyChange: HistoryChange) => void) | undefined;
 	private readonly maxStackSize: number;
@@ -57,6 +54,7 @@ export class TerraDrawSessionUndoRedo
 	private ignoreProgrammaticDelete: Record<FeatureId, boolean> = {};
 	private deletedFeatureIds: Record<FeatureId, boolean> = {};
 	private redoStack: RedoStackEntry[] = [];
+	private isReplayingHistory = false;
 
 	constructor(options?: TerraDrawUndoRedoOptions) {
 		this.maxStackSize = normaliseMaxStackSize(options?.maxStackSize);
@@ -124,6 +122,51 @@ export class TerraDrawSessionUndoRedo
 		}
 
 		if (this.maxStackSize === 0) {
+			return;
+		}
+
+		if (type === "update") {
+			const isApiOrigin =
+				context !== undefined &&
+				"origin" in context &&
+				context.origin === "api";
+
+			if (!isApiOrigin || this.isReplayingHistory) {
+				return;
+			}
+
+			const changed = Array.isArray(ids) ? ids : [ids];
+			let recordedUpdate = false;
+
+			for (const id of changed) {
+				if (id === undefined || id === null) {
+					continue;
+				}
+
+				const key = String(id);
+				const feature = this.draw.getSnapshotFeature(id);
+				if (!feature) {
+					continue;
+				}
+
+				if (!this.historyById[key]) {
+					this.historyById[key] = [];
+				}
+
+				this.historyById[key].push(feature);
+				this.pushUndoStackEntry({
+					id,
+					toIndex: this.historyById[key].length - 1,
+					action: "single",
+				});
+				recordedUpdate = true;
+			}
+
+			if (recordedUpdate) {
+				this.redoStack.length = 0;
+				this.emitStackChange(HistoryChangeCause.Push);
+			}
+
 			return;
 		}
 
@@ -276,6 +319,10 @@ export class TerraDrawSessionUndoRedo
 			return;
 		}
 
+		if (this.isReplayingHistory) {
+			return;
+		}
+
 		const changed = Array.isArray(ids) ? ids : [ids];
 		let recordedFinishAction = false;
 		for (const id of changed) {
@@ -307,6 +354,31 @@ export class TerraDrawSessionUndoRedo
 
 	private isDrawing() {
 		return this.draw ? this.draw.getModeState() === "drawing" : false;
+	}
+
+	// When replaying history, we want to apply the snapshot without recording
+	// new undo action or treating it as a user-driven change
+	private applySnapshotDuringReplay(
+		id: FeatureId,
+		snapshot: GeoJSONStoreFeatures,
+	) {
+		if (!this.draw) {
+			return;
+		}
+
+		this.isReplayingHistory = true;
+		try {
+			if (this.draw.hasFeature(id)) {
+				this.ignoreProgrammaticDelete[id] = true;
+				this.draw.removeFeatures([id]);
+			}
+
+			this.ignoreProgrammaticCreate[id] = true;
+			delete this.deletedFeatureIds[id];
+			this.draw.addFeatures([snapshot]);
+		} finally {
+			this.isReplayingHistory = false;
+		}
 	}
 
 	canUndo() {
@@ -448,7 +520,7 @@ export class TerraDrawSessionUndoRedo
 
 		// Revert to the previous geometry for this action and truncate history to that point
 		const nextSnapshot = stack[currentIndex]; // the state we are undoing
-		const prev = stack[currentIndex - 1];
+		const previousSnapshot = stack[currentIndex - 1]; // the state we are reverting to
 
 		// Save redo info before truncating the stack
 		if (nextSnapshot) {
@@ -460,7 +532,7 @@ export class TerraDrawSessionUndoRedo
 			});
 		}
 
-		this.draw.updateFeatureGeometry(id, prev.geometry);
+		this.applySnapshotDuringReplay(id, previousSnapshot);
 		stack.length = currentIndex; // drop the state we just undid
 		this.emitStackChange(HistoryChangeCause.Undo);
 		return true;
@@ -577,7 +649,7 @@ export class TerraDrawSessionUndoRedo
 			stack.length = toIndex + 1;
 		}
 
-		this.draw.updateFeatureGeometry(id, next.geometry);
+		this.applySnapshotDuringReplay(id, next);
 
 		// Restore the action into the history stacks so it can be undone again
 		this.pushUndoStackEntry({ id, toIndex, action: "single" });

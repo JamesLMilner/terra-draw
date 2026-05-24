@@ -569,7 +569,6 @@ const Select: Story = {
 	args: {
 		id: "select",
 		modes: [
-			() => new TerraDrawPolyLineMode(),
 			() =>
 				new TerraDrawPolygonMode({
 					showCoordinatePoints: true,
@@ -583,14 +582,6 @@ const Select: Story = {
 						selectionPointColor: "#0000ff",
 					},
 					flags: {
-						polyline: {
-							feature: {
-								draggable: true,
-								coordinates: {
-									draggable: true,
-								},
-							},
-						},
 						polygon: {
 							feature: {
 								draggable: true,

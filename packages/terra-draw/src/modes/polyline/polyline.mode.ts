@@ -626,6 +626,25 @@ export class TerraDrawPolyLineMode extends TerraDrawBaseDrawMode<PolyLineStyling
 		return styles;
 	}
 
+	afterFeatureAdded(_feature: GeoJSONStoreFeatures) {}
+
+	afterFeatureUpdated(feature: GeoJSONStoreFeatures) {
+		if (this.snappedPointId) {
+			this.mutateFeature.deleteFeatureIfPresent(this.snappedPointId);
+			this.snappedPointId = undefined;
+		}
+
+		if (this.currentId === feature.id) {
+			this.currentCoordinate = 0;
+			this.currentId = undefined;
+			this.closingPoints.delete();
+
+			if (this.state === "drawing") {
+				this.setStarted();
+			}
+		}
+	}
+
 	validateFeature(feature: unknown): StoreValidation {
 		return this.validateModeFeature(feature, (validatedFeature) => {
 			if (validatedFeature.geometry.type === "LineString") {

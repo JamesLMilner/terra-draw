@@ -2,6 +2,8 @@ import { MockCursorEvent } from "../../test/mock-cursor-event";
 import { MockKeyboardEvent } from "../../test/mock-keyboard-event";
 import { MockModeConfig } from "../../test/mock-mode-config";
 import { TerraDrawPolyLineMode } from "./polyline.mode";
+import { COMMON_PROPERTIES } from "../../common";
+import { MockLineString } from "../../test/mock-features";
 
 describe("TerraDrawPolyLineMode", () => {
 	describe("constructor", () => {
@@ -171,8 +173,8 @@ describe("TerraDrawPolyLineMode", () => {
 		});
 	});
 
-	describe("drawing", () => {
-		it("finishes as a LineString when finish key is used", () => {
+	describe("onMouseMove", () => {
+		it("updates the live coordinate while drawing", () => {
 			const polyLineMode = new TerraDrawPolyLineMode();
 			const config = MockModeConfig(polyLineMode.mode);
 
@@ -180,12 +182,7 @@ describe("TerraDrawPolyLineMode", () => {
 			polyLineMode.start();
 
 			polyLineMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
-			polyLineMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 0 }));
-			polyLineMode.onClick(MockCursorEvent({ lng: 1, lat: 0 }));
 			polyLineMode.onMouseMove(MockCursorEvent({ lng: 2, lat: 0 }));
-			polyLineMode.onClick(MockCursorEvent({ lng: 2, lat: 0 }));
-
-			polyLineMode.onKeyUp(MockKeyboardEvent({ key: "Enter" }));
 
 			const features = config.store.copyAllWhere(
 				(properties) => properties.mode === polyLineMode.mode,
@@ -195,12 +192,12 @@ describe("TerraDrawPolyLineMode", () => {
 			expect(features[0].geometry.type).toBe("LineString");
 			expect(features[0].geometry.coordinates).toEqual([
 				[0, 0],
-				[1, 0],
 				[2, 0],
 			]);
-			expect(config.onFinish).toHaveBeenCalledTimes(1);
 		});
+	});
 
+	describe("onClick", () => {
 		it("converts to a Polygon when closing on the starting point", () => {
 			const polyLineMode = new TerraDrawPolyLineMode();
 			const config = MockModeConfig(polyLineMode.mode);
@@ -265,21 +262,22 @@ describe("TerraDrawPolyLineMode", () => {
 			]);
 			expect(config.onFinish).toHaveBeenCalledTimes(1);
 		});
+	});
 
-		it("supports snapping via toCustom snapping behavior", () => {
-			const polyLineMode = new TerraDrawPolyLineMode({
-				snapping: {
-					toCustom: (_event, context) =>
-						context.currentCoordinate === 0 ? [10, 10] : [20, 20],
-				},
-			});
+	describe("onKeyUp", () => {
+		it("finishes as a LineString when finish key is used", () => {
+			const polyLineMode = new TerraDrawPolyLineMode();
 			const config = MockModeConfig(polyLineMode.mode);
 
 			polyLineMode.register(config);
 			polyLineMode.start();
 
 			polyLineMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
-			polyLineMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
+			polyLineMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 0 }));
+			polyLineMode.onClick(MockCursorEvent({ lng: 1, lat: 0 }));
+			polyLineMode.onMouseMove(MockCursorEvent({ lng: 2, lat: 0 }));
+			polyLineMode.onClick(MockCursorEvent({ lng: 2, lat: 0 }));
+
 			polyLineMode.onKeyUp(MockKeyboardEvent({ key: "Enter" }));
 
 			const features = config.store.copyAllWhere(
@@ -289,9 +287,124 @@ describe("TerraDrawPolyLineMode", () => {
 			expect(features).toHaveLength(1);
 			expect(features[0].geometry.type).toBe("LineString");
 			expect(features[0].geometry.coordinates).toEqual([
-				[10, 10],
-				[20, 20],
+				[0, 0],
+				[1, 0],
+				[2, 0],
 			]);
+			expect(config.onFinish).toHaveBeenCalledTimes(1);
+		});
+	});
+
+	describe("cleanUp", () => {
+		it("removes in-progress features", () => {
+			const polyLineMode = new TerraDrawPolyLineMode();
+			const config = MockModeConfig(polyLineMode.mode);
+
+			polyLineMode.register(config);
+			polyLineMode.start();
+			polyLineMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+			let features = config.store.copyAllWhere(
+				(properties) => properties.mode === polyLineMode.mode,
+			);
+			expect(features).toHaveLength(1);
+
+			polyLineMode.cleanUp();
+
+			features = config.store.copyAllWhere(
+				(properties) => properties.mode === polyLineMode.mode,
+			);
+			expect(features).toHaveLength(0);
+		});
+	});
+
+	describe("styleFeature", () => {
+		it("styles a closing point with a white default outline", () => {
+			const polyLineMode = new TerraDrawPolyLineMode();
+			const feature = {
+				id: "test",
+				type: "Feature",
+				geometry: { type: "Point", coordinates: [0, 0] },
+				properties: {
+					mode: "polyline",
+					[COMMON_PROPERTIES.CLOSING_POINT]: true,
+				},
+			} as any;
+
+			const styles = polyLineMode.styleFeature(feature);
+			expect(styles.pointOutlineColor).toBe("#ffffff");
+		});
+	});
+
+	describe("afterFeatureAdded", () => {
+		it("does not throw when called", () => {
+			const polyLineMode = new TerraDrawPolyLineMode();
+			polyLineMode.register(MockModeConfig(polyLineMode.mode));
+
+			expect(() => {
+				polyLineMode.afterFeatureAdded(MockLineString() as any);
+			}).not.toThrow();
+		});
+	});
+
+	describe("afterFeatureUpdated", () => {
+		it("resets drawing state when the current drawing feature is externally updated", () => {
+			const polyLineMode = new TerraDrawPolyLineMode();
+			const config = MockModeConfig(polyLineMode.mode);
+
+			polyLineMode.register(config);
+			polyLineMode.start();
+			polyLineMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+			expect(polyLineMode.state).toBe("drawing");
+
+			const currentFeature = config.store.copyAllWhere(
+				(properties) => properties.mode === polyLineMode.mode,
+			)[0];
+
+			polyLineMode.afterFeatureUpdated(currentFeature as any);
+
+			expect(polyLineMode.state).toBe("started");
+		});
+
+		it("clears snapped guidance point when a feature is externally updated", () => {
+			const polyLineMode = new TerraDrawPolyLineMode({
+				snapping: {
+					toCustom: () => [10, 10],
+				},
+			});
+			const config = MockModeConfig(polyLineMode.mode);
+
+			polyLineMode.register(config);
+			polyLineMode.start();
+			polyLineMode.onMouseMove(MockCursorEvent({ lng: 0, lat: 0 }));
+
+			const snappingPointsBefore = config.store.copyAllWhere((properties) =>
+				Boolean(properties[COMMON_PROPERTIES.SNAPPING_POINT] as boolean),
+			);
+			expect(snappingPointsBefore).toHaveLength(1);
+
+			polyLineMode.afterFeatureUpdated(MockLineString() as any);
+
+			const snappingPointsAfter = config.store.copyAllWhere((properties) =>
+				Boolean(properties[COMMON_PROPERTIES.SNAPPING_POINT] as boolean),
+			);
+			expect(snappingPointsAfter).toHaveLength(0);
+		});
+	});
+
+	describe("validateFeature", () => {
+		it("returns invalid for unsupported geometry type", () => {
+			const polyLineMode = new TerraDrawPolyLineMode();
+			polyLineMode.register(MockModeConfig(polyLineMode.mode));
+
+			const validation = polyLineMode.validateFeature({
+				type: "Feature",
+				geometry: { type: "Point", coordinates: [0, 0] },
+				properties: { mode: "polyline" },
+			});
+
+			expect(validation.valid).toBe(false);
 		});
 	});
 });

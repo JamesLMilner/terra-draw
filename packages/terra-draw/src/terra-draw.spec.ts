@@ -1918,12 +1918,15 @@ describe("Terra Draw", () => {
 			});
 
 			expect(draw.canUndo()).toBe(true);
+			expect(draw.canRedo()).toBe(false);
 			expect(
 				draw.getSnapshotFeature(baseFeature.id as FeatureId)?.properties
 					.customProperty,
 			).toBe("customValue");
 
 			expect(draw.undo()).toBe(true);
+			expect(draw.canUndo()).toBe(true);
+			expect(draw.canRedo()).toBe(true);
 			expect(
 				draw.getSnapshotFeature(baseFeature.id as FeatureId)?.properties
 					.customProperty,
@@ -1931,6 +1934,8 @@ describe("Terra Draw", () => {
 
 			expect(draw.canRedo()).toBe(true);
 			expect(draw.redo()).toBe(true);
+			expect(draw.canUndo()).toBe(true);
+			expect(draw.canRedo()).toBe(false);
 			expect(
 				draw.getSnapshotFeature(baseFeature.id as FeatureId)?.properties
 					.customProperty,
@@ -1964,6 +1969,9 @@ describe("Terra Draw", () => {
 			draw.updateFeatureProperties(baseFeature.id as FeatureId, {
 				customProperty: "customValue",
 			});
+
+			expect(draw.canUndo()).toBe(true);
+			expect(draw.canRedo()).toBe(false);
 
 			expect(onFinish).not.toHaveBeenCalled();
 			const sessionHistoryEvents = onHistory.mock.calls
@@ -2663,6 +2671,9 @@ describe("Terra Draw", () => {
 				],
 			});
 
+			expect(draw.canUndo()).toBe(true);
+			expect(draw.canRedo()).toBe(false);
+
 			const updateSessionCauses = onHistory.mock.calls
 				.map((call) => call[0])
 				.filter((event) => event.stack === "session")
@@ -2673,6 +2684,7 @@ describe("Terra Draw", () => {
 
 			onHistory.mockClear();
 			expect(draw.undo()).toBe(true);
+			expect(draw.canRedo()).toBe(true);
 			const undoSessionCauses = onHistory.mock.calls
 				.map((call) => call[0])
 				.filter((event) => event.stack === "session")
@@ -2683,6 +2695,7 @@ describe("Terra Draw", () => {
 
 			onHistory.mockClear();
 			expect(draw.redo()).toBe(true);
+			expect(draw.canRedo()).toBe(false);
 			const redoSessionCauses = onHistory.mock.calls
 				.map((call) => call[0])
 				.filter((event) => event.stack === "session")
@@ -2769,6 +2782,9 @@ describe("Terra Draw", () => {
 			});
 			draw.updateFeatureGeometry(featureId, secondGeometry);
 
+			expect(draw.canUndo()).toBe(true);
+			expect(draw.canRedo()).toBe(false);
+
 			expect(draw.getSnapshotFeature(featureId)?.geometry).toEqual(
 				secondGeometry,
 			);
@@ -2777,6 +2793,7 @@ describe("Terra Draw", () => {
 			).toBe("v1");
 
 			expect(draw.undo()).toBe(true);
+			expect(draw.canRedo()).toBe(true);
 			expect(draw.getSnapshotFeature(featureId)?.geometry).toEqual(
 				firstGeometry,
 			);
@@ -2823,6 +2840,8 @@ describe("Terra Draw", () => {
 			expect(
 				draw.getSnapshotFeature(featureId)?.properties.customProperty,
 			).toBe("v1");
+			expect(draw.canUndo()).toBe(true);
+			expect(draw.canRedo()).toBe(false);
 		});
 	});
 
@@ -3311,6 +3330,7 @@ describe("Terra Draw", () => {
 					});
 
 					expect(draw.canUndo()).toBe(true);
+					expect(draw.canRedo()).toBe(false);
 
 					const undone = draw.undo();
 					expect(undone).toBe(true);
@@ -3329,6 +3349,8 @@ describe("Terra Draw", () => {
 
 					const redone = draw.redo();
 					expect(redone).toBe(true);
+					expect(draw.canUndo()).toBe(true);
+					expect(draw.canRedo()).toBe(false);
 
 					const snapshotAfterRedo = draw.getSnapshot();
 					expect(snapshotAfterRedo).toHaveLength(1);
@@ -3392,6 +3414,9 @@ describe("Terra Draw", () => {
 						origin: [25, 34],
 						options: options as any,
 					});
+
+					expect(draw.canUndo()).toBe(true);
+					expect(draw.canRedo()).toBe(false);
 
 					expect(onFinish).not.toHaveBeenCalled();
 					const sessionCauses = onHistory.mock.calls

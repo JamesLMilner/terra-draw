@@ -356,6 +356,8 @@ export class TerraDrawSessionUndoRedo implements TerraDrawSessionUndoRedoInterfa
 		return this.draw ? this.draw.getModeState() === "drawing" : false;
 	}
 
+	// When replaying history, we want to apply the snapshot without recording
+	// new undo action or treating it as a user-driven change
 	private applySnapshotDuringReplay(
 		id: FeatureId,
 		snapshot: GeoJSONStoreFeatures,
@@ -518,7 +520,7 @@ export class TerraDrawSessionUndoRedo implements TerraDrawSessionUndoRedoInterfa
 
 		// Revert to the previous geometry for this action and truncate history to that point
 		const nextSnapshot = stack[currentIndex]; // the state we are undoing
-		const prev = stack[currentIndex - 1];
+		const previousSnapshot = stack[currentIndex - 1]; // the state we are reverting to
 
 		// Save redo info before truncating the stack
 		if (nextSnapshot) {
@@ -530,7 +532,7 @@ export class TerraDrawSessionUndoRedo implements TerraDrawSessionUndoRedoInterfa
 			});
 		}
 
-		this.applySnapshotDuringReplay(id, prev);
+		this.applySnapshotDuringReplay(id, previousSnapshot);
 		stack.length = currentIndex; // drop the state we just undid
 		this.emitStackChange(HistoryChangeCause.Undo);
 		return true;

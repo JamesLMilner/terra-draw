@@ -260,7 +260,7 @@ class TerraDraw {
 				listener(finishedId, context);
 			});
 
-			this.emitHistoryChangeAfterFinish();
+			this.undoRedoCoordinator?.emitHistoryPushForCompletedAction();
 		};
 
 		const onChange: StoreChangeHandler<TerraDrawOnChangeContext | undefined> = (
@@ -507,10 +507,6 @@ class TerraDraw {
 		}
 
 		this.drawingUndoRedo.emitPushIfHistoryChanged(before);
-	}
-
-	private emitHistoryChangeAfterFinish() {
-		this.undoRedoCoordinator?.emitPushAfterFinish();
 	}
 
 	private getModeStyles() {
@@ -1122,7 +1118,7 @@ class TerraDraw {
 			{ origin: "api" }, // origin is used to indicate that this update has come from an API call
 		);
 
-		this.emitHistoryChangeAfterFinish();
+		this.undoRedoCoordinator?.emitHistoryPushForCompletedAction();
 	}
 
 	/**
@@ -1192,7 +1188,7 @@ class TerraDraw {
 			}
 		}
 
-		this.emitHistoryChangeAfterFinish();
+		this.undoRedoCoordinator?.emitHistoryPushForCompletedAction();
 	}
 
 	/**
@@ -1313,7 +1309,7 @@ class TerraDraw {
 			}
 		}
 
-		this.emitHistoryChangeAfterFinish();
+		this.undoRedoCoordinator?.emitHistoryPushForCompletedAction();
 	}
 
 	undo(): boolean {

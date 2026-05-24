@@ -138,7 +138,7 @@ export class TerraDrawUndoRedoCoordinator {
 		}
 	}
 
-	emitPushAfterFinish() {
+	emitHistoryPushForCompletedAction() {
 		if (this.sessionLevel) {
 			this.emitStackHistoryChange({
 				cause: HistoryChangeCause.Push,

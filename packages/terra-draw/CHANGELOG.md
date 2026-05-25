@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.30.1](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.30.0...terra-draw@1.30.1) (2026-05-24)
+
+
+### chore
+
+* **terra-draw:** nest unit tests correctly for polygon mode (#897) ([](https://github.com/JamesLMilner/terra-draw/commit/b01c4285e4f0356848afef58bbf5932a2a9106f7)), closes [#897](https://github.com/JamesLMilner/terra-draw/issues/897)
+* **terra-draw:** upgrade to Storybook v10 (#886) ([](https://github.com/JamesLMilner/terra-draw/commit/57397d2f64b753d7959eff0be9775ecf840089b4)), closes [#886](https://github.com/JamesLMilner/terra-draw/issues/886)
+
+
+### fix
+
+* **terra-draw:** capture programmatic geometry and property edits in undo redo stack (#896) ([](https://github.com/JamesLMilner/terra-draw/commit/8e37e02d6bdff34c8fcd1a3e8a1a8f31c63a3420)), closes [#896](https://github.com/JamesLMilner/terra-draw/issues/896)
+
 ## [1.30.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.29.0...terra-draw@1.30.0) (2026-05-07)
 
 

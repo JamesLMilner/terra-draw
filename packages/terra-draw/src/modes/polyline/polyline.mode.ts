@@ -221,26 +221,22 @@ export class TerraDrawPolyLineMode extends TerraDrawBaseDrawMode<PolyLineStyling
 		const featureIdToRemove = this.currentId;
 		const closedCoordinates = [...committed, committed[0]];
 
-		this.mutateFeature.deleteFeatureIfPresent(featureIdToRemove);
-
 		const created = this.mutateFeature.createPolygon({
 			coordinates: closedCoordinates,
 			properties: {
 				mode: this.mode,
 			},
+			context: {
+				updateType: UpdateTypes.Finish,
+				action: FinishActions.Draw,
+			},
 		});
 
 		if (!created) {
-			this.currentCoordinate = 0;
-			this.currentId = undefined;
-			this.closingPoints.delete();
-
-			if (this.state === "drawing") {
-				this.setStarted();
-			}
-
 			return;
 		}
+
+		this.mutateFeature.deleteFeatureIfPresent(featureIdToRemove);
 
 		this.currentCoordinate = 0;
 		this.currentId = undefined;

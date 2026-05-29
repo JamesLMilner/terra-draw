@@ -14,6 +14,7 @@ import {
 	GeoJSONStoreFeatures,
 	HexColor,
 	TerraDrawMarkerMode,
+	TerraDrawPolyLineMode,
 } from "../../../terra-draw/src/terra-draw";
 
 import {
@@ -400,6 +401,24 @@ const LineString: Story = {
 	args: {
 		id: "linestring",
 		modes: [() => new TerraDrawLineStringMode()],
+		...DefaultStory.args,
+	},
+};
+
+// Polyline drawing story
+const PolyLine: Story = {
+	...DefaultStory,
+	args: {
+		id: "polyline",
+		modes: [
+			() =>
+				new TerraDrawPolyLineMode({
+					snapping: {
+						toCoordinate: true,
+						toLine: true,
+					},
+				}),
+		],
 		...DefaultStory.args,
 	},
 };
@@ -1028,6 +1047,7 @@ const AllStories = {
 	RectangleWithClickMoveOrDragInteraction,
 	AngledRectangle,
 	Sector,
+	PolyLine,
 	LineString,
 	LineStringFinishOnNthCoordinate,
 	LineStringWithCoordinatePoints,

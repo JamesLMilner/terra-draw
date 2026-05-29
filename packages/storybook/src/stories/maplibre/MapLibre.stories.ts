@@ -39,6 +39,7 @@ export const RectangleWithClickMoveOrDragInteraction =
 	AllStories.RectangleWithClickMoveOrDragInteraction;
 export const AngledRectangle = AllStories.AngledRectangle;
 export const Sector = AllStories.Sector;
+export const PolyLine = AllStories.PolyLine;
 export const LineString = AllStories.LineString;
 export const LineStringFinishOnNthCoordinate =
 	AllStories.LineStringFinishOnNthCoordinate;

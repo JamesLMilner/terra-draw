@@ -133,17 +133,49 @@ export class MutateFeatureBehavior extends TerraDrawModeBehavior {
 	}: {
 		coordinates: Polygon["coordinates"][0];
 		properties: JSONObject;
-	}) {
+	}): GeoJSONStoreFeatures<Polygon> & { id: FeatureId };
+	public createPolygon({
+		coordinates,
+		properties,
+		context,
+	}: {
+		coordinates: Polygon["coordinates"][0];
+		properties: JSONObject;
+		context: FinishContext;
+	}): (GeoJSONStoreFeatures<Polygon> & { id: FeatureId }) | undefined;
+	public createPolygon({
+		coordinates,
+		properties,
+		context,
+	}: {
+		coordinates: Polygon["coordinates"][0];
+		properties: JSONObject;
+		context?: FinishContext;
+	}): (GeoJSONStoreFeatures<Polygon> & { id: FeatureId }) | undefined {
 		const corrected = ensureRightHandRule({
 			type: "Polygon",
 			coordinates: [coordinates],
 		});
 
+		const polygon = {
+			type: "Polygon",
+			coordinates: corrected ? corrected.coordinates : [coordinates],
+		} as Polygon;
+
+		if (context?.updateType === UpdateTypes.Finish) {
+			const valid = this.validateGeometryWithUpdateType({
+				geometry: polygon,
+				properties,
+				updateType: UpdateTypes.Finish,
+			});
+
+			if (!valid) {
+				return;
+			}
+		}
+
 		return this.handleCreateFeature({
-			geometry: {
-				type: "Polygon",
-				coordinates: corrected ? corrected.coordinates : [coordinates],
-			},
+			geometry: polygon,
 			properties,
 		});
 	}

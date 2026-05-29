@@ -142,8 +142,9 @@ const defaultCursors = {
 	insertMidpoint: "crosshair",
 } as Required<Cursors>;
 
-interface TerraDrawSelectModeOptions<T extends CustomStyling>
-	extends BaseModeOptions<T> {
+interface TerraDrawSelectModeOptions<
+	T extends CustomStyling,
+> extends BaseModeOptions<T> {
 	pointerDistance?: number;
 	flags?: { [mode: string]: ModeFlags };
 	keyEvents?: TerraDrawSelectModeKeyEvents | null;

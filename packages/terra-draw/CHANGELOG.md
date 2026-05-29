@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.31.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.30.1...terra-draw@1.31.0) (2026-05-29)
+
+
+### feat
+
+* **terra-draw:** add polyline mode (#898) ([](https://github.com/JamesLMilner/terra-draw/commit/61a87e4e818622bc35b76a413aae78e3cecf51be)), closes [#898](https://github.com/JamesLMilner/terra-draw/issues/898)
+
 ## [1.30.1](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.30.0...terra-draw@1.30.1) (2026-05-24)
 
 

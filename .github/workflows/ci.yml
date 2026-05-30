@@ -65,6 +65,7 @@ jobs:
         run: cd packages/terra-draw && npm run build
       - name: Install Playwright
         run: cd packages/storybook && npx playwright install
+        timeout-minutes: 10
       - name: Run storybook smoke tests
         run: cd packages/storybook && npm run storybook:test
         env:
@@ -145,9 +146,11 @@ jobs:
       run: npm ci --ignore-scripts
     - run: npx playwright install --with-deps
       working-directory: ./packages/e2e
+      timeout-minutes: 10
       if: steps.playwright-cache.outputs.cache-hit != 'true'
     - run: npx playwright install-deps
       working-directory: ./packages/e2e
+      timeout-minutes: 10
       if: steps.playwright-cache.outputs.cache-hit != 'true'
     - name: Run Playwright tests
       working-directory: ./packages/e2e

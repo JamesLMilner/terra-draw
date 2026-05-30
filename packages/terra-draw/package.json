@@ -3,7 +3,6 @@
 	"version": "1.31.0",
 	"description": "Frictionless map drawing across mapping provider",
 	"scripts": {
-		"tsc": "tsc --build",
 		"release": "TYPE=$(node ../../bump.mjs) && commit-and-tag-version .versionrc.cjs -t terra-draw@ --release-as $TYPE",
 		"release:dryrun": "TYPE=$(node ../../bump.mjs) && commit-and-tag-version .versionrc.cjs -t terra-draw@ --dry-run --release-as $TYPE",
 		"build": "microbundle",

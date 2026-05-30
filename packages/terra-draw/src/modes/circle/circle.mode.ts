@@ -58,8 +58,9 @@ const defaultCursors = {
 	start: "crosshair",
 } as Required<Cursors>;
 
-interface TerraDrawCircleModeOptions<T extends CustomStyling>
-	extends BaseModeOptions<T> {
+interface TerraDrawCircleModeOptions<
+	T extends CustomStyling,
+> extends BaseModeOptions<T> {
 	keyEvents?: TerraDrawCircleModeKeyEvents | null;
 	cursors?: Cursors;
 	startingRadiusKilometers?: number;

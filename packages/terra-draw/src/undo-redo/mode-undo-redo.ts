@@ -9,8 +9,7 @@ import {
 	TerraDrawUndoRedoOptions,
 } from "./undo-redo-types";
 
-export interface TerraDrawModeUndoRedoInterface
-	extends TerraDrawUndoRedoInterface {
+export interface TerraDrawModeUndoRedoInterface extends TerraDrawUndoRedoInterface {
 	getMaxStackSize?(): number;
 	register(options: {
 		getModeState: () => string;

@@ -96,8 +96,9 @@ interface InertCoordinates {
 	value: number;
 }
 
-interface TerraDrawLineStringModeOptions<T extends CustomStyling>
-	extends BaseModeOptions<T> {
+interface TerraDrawLineStringModeOptions<
+	T extends CustomStyling,
+> extends BaseModeOptions<T> {
 	snapping?: Snapping;
 	pointerDistance?: number;
 	keyEvents?: TerraDrawLineStringModeKeyEvents | null;
@@ -1291,8 +1292,8 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 	private lineStringFilter(feature: Feature) {
 		return Boolean(
 			feature.geometry.type === "LineString" &&
-				feature.properties &&
-				feature.properties.mode === this.mode,
+			feature.properties &&
+			feature.properties.mode === this.mode,
 		);
 	}
 

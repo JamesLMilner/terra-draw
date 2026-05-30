@@ -10,7 +10,9 @@ import {
 } from "terra-draw";
 import L from "leaflet";
 
-export class TerraDrawLeafletAdapter extends TerraDrawExtend.TerraDrawBaseAdapter {
+export class TerraDrawLeafletAdapter
+	extends TerraDrawExtend.TerraDrawBaseAdapter
+{
 	constructor(
 		config: {
 			lib: typeof L;

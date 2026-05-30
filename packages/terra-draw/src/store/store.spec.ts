@@ -447,9 +447,9 @@ describe("GeoJSONStore", () => {
 				(feature) => ({
 					valid: Boolean(
 						feature &&
-							typeof feature === "object" &&
-							"type" in feature &&
-							feature.type === "Polygon",
+						typeof feature === "object" &&
+						"type" in feature &&
+						feature.type === "Polygon",
 					),
 					reason: "Test",
 				}),
@@ -537,9 +537,9 @@ describe("GeoJSONStore", () => {
 				(feature) => ({
 					valid: Boolean(
 						feature &&
-							typeof feature === "object" &&
-							"type" in feature &&
-							(feature as GeoJSONStoreFeatures).geometry.type === "Point",
+						typeof feature === "object" &&
+						"type" in feature &&
+						(feature as GeoJSONStoreFeatures).geometry.type === "Point",
 					),
 				}),
 			);
@@ -602,9 +602,9 @@ describe("GeoJSONStore", () => {
 				(feature) => ({
 					valid: Boolean(
 						feature &&
-							typeof feature === "object" &&
-							"type" in feature &&
-							(feature as GeoJSONStoreFeatures).geometry.type === "Point", // Must be Point to be valid
+						typeof feature === "object" &&
+						"type" in feature &&
+						(feature as GeoJSONStoreFeatures).geometry.type === "Point", // Must be Point to be valid
 					),
 					reason: "Feature must be valid Point",
 				}),
@@ -653,9 +653,9 @@ describe("GeoJSONStore", () => {
 				(feature) => ({
 					valid: Boolean(
 						feature &&
-							typeof feature === "object" &&
-							"type" in feature &&
-							(feature as GeoJSONStoreFeatures).geometry.type === "Point",
+						typeof feature === "object" &&
+						"type" in feature &&
+						(feature as GeoJSONStoreFeatures).geometry.type === "Point",
 					),
 				}),
 				afterFeatureAddedMock,
@@ -735,9 +735,9 @@ describe("GeoJSONStore", () => {
 				(feature) => ({
 					valid: Boolean(
 						feature &&
-							typeof feature === "object" &&
-							"type" in feature &&
-							(feature as GeoJSONStoreFeatures).geometry.type === "Point", // Must be Point to be valid
+						typeof feature === "object" &&
+						"type" in feature &&
+						(feature as GeoJSONStoreFeatures).geometry.type === "Point", // Must be Point to be valid
 					),
 					reason: "Feature must be valid Point",
 				}),

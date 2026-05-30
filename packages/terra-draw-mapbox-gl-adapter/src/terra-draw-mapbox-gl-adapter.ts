@@ -18,7 +18,9 @@ import {
 	PointLike,
 } from "mapbox-gl";
 
-export class TerraDrawMapboxGLAdapter extends TerraDrawExtend.TerraDrawBaseAdapter {
+export class TerraDrawMapboxGLAdapter
+	extends TerraDrawExtend.TerraDrawBaseAdapter
+{
 	constructor(
 		config: {
 			map: mapboxgl.Map;

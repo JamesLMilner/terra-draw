@@ -54,9 +54,7 @@ export const matchesShortcut = (
 	return true;
 };
 
-export class TerraDrawUndoRedoKeyboardShortcuts
-	implements TerraDrawUndoRedoKeyboardShortcutsInterface
-{
+export class TerraDrawUndoRedoKeyboardShortcuts implements TerraDrawUndoRedoKeyboardShortcutsInterface {
 	private undoKeyboardShortcuts: UndoRedoKeyboardShortcut[];
 	private redoKeyboardShortcuts: UndoRedoKeyboardShortcut[];
 

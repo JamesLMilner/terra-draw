@@ -71,8 +71,9 @@ const defaultCursors = {
 	close: "pointer",
 } as Required<Cursors>;
 
-interface TerraDrawSensorModeOptions<T extends CustomStyling>
-	extends BaseModeOptions<T> {
+interface TerraDrawSensorModeOptions<
+	T extends CustomStyling,
+> extends BaseModeOptions<T> {
 	arcPoints?: number;
 	pointerDistance?: number;
 	keyEvents?: TerraDrawSensorModeKeyEvents | null;

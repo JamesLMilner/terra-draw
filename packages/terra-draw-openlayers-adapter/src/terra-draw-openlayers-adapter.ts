@@ -41,7 +41,9 @@ export type InjectableOL = {
 	toLonLat: typeof toLonLat;
 };
 
-export class TerraDrawOpenLayersAdapter extends TerraDrawExtend.TerraDrawBaseAdapter {
+export class TerraDrawOpenLayersAdapter
+	extends TerraDrawExtend.TerraDrawBaseAdapter
+{
 	constructor(
 		config: {
 			map: Map;

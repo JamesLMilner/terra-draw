@@ -32,8 +32,8 @@ export class CoordinateSnappingBehavior extends TerraDrawModeBehavior {
 		const snappable = this.getSnappable(event, (feature) => {
 			return Boolean(
 				feature.properties &&
-					feature.properties.mode === this.mode &&
-					feature.id !== currentFeatureId,
+				feature.properties.mode === this.mode &&
+				feature.id !== currentFeatureId,
 			);
 		});
 

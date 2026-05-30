@@ -121,8 +121,8 @@ export class DragCoordinateBehavior extends TerraDrawModeBehavior {
 		const filter = (feature: Feature) => {
 			return Boolean(
 				feature.properties &&
-					feature.properties.mode === draggedFeature.properties.mode &&
-					feature.id !== this.draggedCoordinate.id,
+				feature.properties.mode === draggedFeature.properties.mode &&
+				feature.id !== this.draggedCoordinate.id,
 			);
 		};
 

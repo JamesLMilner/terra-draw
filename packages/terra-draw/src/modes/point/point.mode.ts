@@ -53,8 +53,9 @@ const defaultCursors = {
 	dragEnd: "crosshair",
 } as Required<Cursors>;
 
-interface TerraDrawPointModeOptions<T extends CustomStyling>
-	extends BaseModeOptions<T> {
+interface TerraDrawPointModeOptions<
+	T extends CustomStyling,
+> extends BaseModeOptions<T> {
 	cursors?: Cursors;
 	editable?: boolean;
 }

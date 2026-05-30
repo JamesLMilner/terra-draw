@@ -94,8 +94,9 @@ const defaultCursors = {
 	dragEnd: "crosshair",
 } as Required<Cursors>;
 
-interface TerraDrawPolygonModeOptions<T extends CustomStyling>
-	extends BaseModeOptions<T> {
+interface TerraDrawPolygonModeOptions<
+	T extends CustomStyling,
+> extends BaseModeOptions<T> {
 	snapping?: Snapping;
 	pointerDistance?: number;
 	keyEvents?: TerraDrawPolygonModeKeyEvents | null;
@@ -677,8 +678,8 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 	private polygonFilter(feature: Feature) {
 		return Boolean(
 			feature.geometry.type === "Polygon" &&
-				feature.properties &&
-				feature.properties.mode === this.mode,
+			feature.properties &&
+			feature.properties.mode === this.mode,
 		);
 	}
 

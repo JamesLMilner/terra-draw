@@ -62,8 +62,9 @@ const defaultCursors = {
 	close: "pointer",
 } as Required<Cursors>;
 
-interface TerraDrawFreehandModeOptions<T extends CustomStyling>
-	extends BaseModeOptions<T> {
+interface TerraDrawFreehandModeOptions<
+	T extends CustomStyling,
+> extends BaseModeOptions<T> {
 	minDistance?: number;
 	smoothing?: number;
 	preventPointsNearClose?: boolean;

@@ -39,7 +39,9 @@ type InjectableArcGISMapsSDK = {
 	PictureMarkerSymbol: typeof PictureMarkerSymbol;
 };
 
-export class TerraDrawArcGISMapsSDKAdapter extends TerraDrawExtend.TerraDrawBaseAdapter {
+export class TerraDrawArcGISMapsSDKAdapter
+	extends TerraDrawExtend.TerraDrawBaseAdapter
+{
 	private readonly _lib: InjectableArcGISMapsSDK;
 	private readonly _mapView: MapView;
 	private readonly _container: HTMLElement;

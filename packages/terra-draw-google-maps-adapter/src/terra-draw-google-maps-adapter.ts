@@ -11,7 +11,9 @@ import {
 
 import { GeoJsonObject } from "geojson";
 
-export class TerraDrawGoogleMapsAdapter extends TerraDrawExtend.TerraDrawBaseAdapter {
+export class TerraDrawGoogleMapsAdapter
+	extends TerraDrawExtend.TerraDrawBaseAdapter
+{
 	constructor(
 		config: {
 			lib: typeof google.maps;
@@ -275,9 +277,9 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawExtend.TerraDrawBaseAda
 							scaledSize:
 								calculatedStyles.markerWidth && calculatedStyles.markerHeight
 									? new this._lib.Size(
-										calculatedStyles.markerWidth,
-										calculatedStyles.markerHeight,
-									)
+											calculatedStyles.markerWidth,
+											calculatedStyles.markerHeight,
+										)
 									: undefined,
 						},
 						zIndex: calculatedStyles.zIndex,
@@ -322,22 +324,22 @@ export class TerraDrawGoogleMapsAdapter extends TerraDrawExtend.TerraDrawBaseAda
 
 				const dashedLineStyles = lineStringDash
 					? {
-						strokeOpacity: 0,
-						icons: [
-							{
-								icon: {
-									path: "M 0,0 0," + lineStringDash[0],
-									strokeOpacity: 1,
-									strokeWeight: calculatedStyles.lineStringWidth,
-									color: calculatedStyles.lineStringColor,
-									scale: 1,
+							strokeOpacity: 0,
+							icons: [
+								{
+									icon: {
+										path: "M 0,0 0," + lineStringDash[0],
+										strokeOpacity: 1,
+										strokeWeight: calculatedStyles.lineStringWidth,
+										color: calculatedStyles.lineStringColor,
+										scale: 1,
+									},
+									offset: "0",
+									repeat: `${lineStringDash[0] + lineStringDash[1]}px`,
+									fixedRotation: false,
 								},
-								offset: "0",
-								repeat: `${lineStringDash[0] + lineStringDash[1]}px`,
-								fixedRotation: false,
-							},
-						],
-					}
+							],
+						}
 					: {};
 
 				return {

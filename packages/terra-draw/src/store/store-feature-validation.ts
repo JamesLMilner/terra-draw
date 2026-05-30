@@ -20,9 +20,9 @@ function isObject(
 ): feature is Record<string | number, unknown> {
 	return Boolean(
 		feature &&
-			typeof feature === "object" &&
-			feature !== null &&
-			!Array.isArray(feature),
+		typeof feature === "object" &&
+		feature !== null &&
+		!Array.isArray(feature),
 	);
 }
 
@@ -31,11 +31,11 @@ export function hasModeProperty(
 ): feature is { properties: { mode: string } } {
 	return Boolean(
 		feature &&
-			typeof feature === "object" &&
-			"properties" in feature &&
-			typeof feature.properties === "object" &&
-			feature.properties !== null &&
-			"mode" in feature.properties,
+		typeof feature === "object" &&
+		"properties" in feature &&
+		typeof feature.properties === "object" &&
+		feature.properties !== null &&
+		"mode" in feature.properties,
 	);
 }
 

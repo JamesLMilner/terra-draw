@@ -94,8 +94,9 @@ export class TerraDrawTestAdapter extends TerraDrawBaseAdapter {
  * custom draw modes for Terra Draw exclusively relying on the public API of the library.
  */
 
-interface TerraDrawTestModeOptions<T extends CustomStyling>
-	extends TerraDrawExtend.BaseModeOptions<T> {
+interface TerraDrawTestModeOptions<
+	T extends CustomStyling,
+> extends TerraDrawExtend.BaseModeOptions<T> {
 	customProperty: string;
 }
 

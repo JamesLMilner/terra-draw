@@ -69,8 +69,9 @@ const defaultCursors = {
 	close: "pointer",
 } as Required<Cursors>;
 
-interface TerraDrawAngledRectangleModeOptions<T extends CustomStyling>
-	extends BaseModeOptions<T> {
+interface TerraDrawAngledRectangleModeOptions<
+	T extends CustomStyling,
+> extends BaseModeOptions<T> {
 	pointerDistance?: number;
 	keyEvents?: TerraDrawPolygonModeKeyEvents | null;
 	cursors?: Cursors;

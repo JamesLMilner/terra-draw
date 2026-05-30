@@ -53,8 +53,9 @@ const defaultCursors = {
 	start: "crosshair",
 } as Required<Cursors>;
 
-interface TerraDrawRectangleModeOptions<T extends CustomStyling>
-	extends BaseModeOptions<T> {
+interface TerraDrawRectangleModeOptions<
+	T extends CustomStyling,
+> extends BaseModeOptions<T> {
 	keyEvents?: TerraDrawRectangleModeKeyEvents | null;
 	cursors?: Cursors;
 	drawInteraction?: DrawInteractions;

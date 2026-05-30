@@ -61,8 +61,9 @@ const defaultCursors = {
 	close: "pointer",
 } as Required<Cursors>;
 
-interface TerraDrawFreehandLineStringModeOptions<T extends CustomStyling>
-	extends BaseModeOptions<T> {
+interface TerraDrawFreehandLineStringModeOptions<
+	T extends CustomStyling,
+> extends BaseModeOptions<T> {
 	minDistance?: number;
 	keyEvents?: TerraDrawFreehandLineStringModeKeyEvents | null;
 	cursors?: Cursors;

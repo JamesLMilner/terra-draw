@@ -99,6 +99,7 @@ export type SetCursor = (
 		| "se-resize"
 		| "sw-resize"
 		| "text"
+		| "unset"
 		| "vertical-text"
 		| "w-resize"
 		| "wait"

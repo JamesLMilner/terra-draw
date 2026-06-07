@@ -140,7 +140,7 @@ export abstract class TerraDrawBaseDrawMode<Styling extends CustomStyling> {
 			this.styles = { ...this._styles, ...options.styles };
 		}
 
-		if (options?.pointerDistance) {
+		if (options?.pointerDistance !== undefined) {
 			this.pointerDistance = options.pointerDistance;
 		}
 		if (options?.validation) {

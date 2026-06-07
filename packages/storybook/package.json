@@ -10,6 +10,7 @@
 		"storybook:build:memory": "NODE_OPTIONS=--max-old-space-size=4096 storybook build",
 		"storybook:serve": "http-server storybook-static --port 6006 --silent",
 		"storybook:test": "vitest --project=storybook --maxWorkers=2 --run",
+		"storybook:test:subset": "STORYBOOK_TEST_SUBSET=true vitest --project=storybook --maxWorkers=2 --run",
 		"storybook:help": "test-storybook --help"
 	},
 	"author": "James Milner",

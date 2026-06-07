@@ -30,12 +30,12 @@
 		"@storybook/html": "10.3.6",
 		"@storybook/html-vite": "10.3.6",
 		"@storybook/mdx2-csf": "1.1.0",
-		"@vitest/browser-playwright": "4.1.7",
-		"@vitest/coverage-v8": "4.1.7",
+		"@vitest/browser-playwright": "4.1.8",
+		"@vitest/coverage-v8": "4.1.8",
 		"http-server": "14.1.1",
 		"playwright": "1.60.0",
 		"storybook": "10.3.6",
 		"typescript": "5.6.3",
-		"vitest": "4.1.7"
+		"vitest": "4.1.8"
 	}
 }

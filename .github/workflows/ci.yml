@@ -67,10 +67,14 @@ jobs:
         run: cd packages/storybook && npx playwright install
         timeout-minutes: 10
       - name: Run storybook smoke tests
+        if: ${{ secrets.GOOGLE_API_KEY != '' && secrets.MAPBOX_ACCESS_TOKEN != '' }}
         run: cd packages/storybook && npm run storybook:test
         env:
           GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
           MAPBOX_ACCESS_TOKEN: ${{ secrets.MAPBOX_ACCESS_TOKEN }}
+      - name: Run storybook smoke tests (subset)
+        if: ${{ secrets.GOOGLE_API_KEY == '' || secrets.MAPBOX_ACCESS_TOKEN == '' }}
+        run: cd packages/storybook && npm run storybook:test:subset
 
   build:
     runs-on: ubuntu-latest

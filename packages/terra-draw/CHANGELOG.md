@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.31.1](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.31.0...terra-draw@1.31.1) (2026-06-07)
+
+
+### fix
+
+* **terra-draw:** extend the list of possible cursor types (#908) ([](https://github.com/JamesLMilner/terra-draw/commit/99c09884cf2a9c40bc21816e30548b61bcfb9e9c)), closes [#908](https://github.com/JamesLMilner/terra-draw/issues/908)
+* **terra-draw:** respect zero pointer distance (#907) ([](https://github.com/JamesLMilner/terra-draw/commit/92b1d61c5d5e731da886bfc8cfbe9090d9166384)), closes [#907](https://github.com/JamesLMilner/terra-draw/issues/907)
+
+
+### chore
+
+* **terra-draw:** rerun prettier to get formatting changes (#902) ([](https://github.com/JamesLMilner/terra-draw/commit/9c8ba0813272327922c4101189f837016659ab68)), closes [#902](https://github.com/JamesLMilner/terra-draw/issues/902)
+* **terra-draw:** run subset of storybook tests when env vars are not set (#909) ([](https://github.com/JamesLMilner/terra-draw/commit/632baa4805fc777d47c06266fda9b4f4f1f573e5)), closes [#909](https://github.com/JamesLMilner/terra-draw/issues/909)
+* **terra-draw:** update playwright version to 1.60.0 and add timeout to installs (#901) ([](https://github.com/JamesLMilner/terra-draw/commit/4084a55a0e5a24b3d6b2f9ec58c9dc3aff1b8e31)), closes [#901](https://github.com/JamesLMilner/terra-draw/issues/901)
+
 ## [1.31.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.30.1...terra-draw@1.31.0) (2026-05-29)
 
 

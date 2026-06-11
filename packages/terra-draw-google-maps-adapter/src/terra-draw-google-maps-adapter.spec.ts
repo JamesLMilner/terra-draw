@@ -2443,7 +2443,7 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 				);
 			});
 
-			it("delete wins over update/create in the same frame", () => {
+			it("preserves delete+create for the same id in the same frame", () => {
 				const { adapter, spies } = createAdapterWithMapSpies();
 				const pointOne = MockPoint("point-1") as GeoJSONStoreFeatures;
 
@@ -2475,9 +2475,10 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 				);
 				flushRaf();
 
-				// Deleted applies, update/create should be suppressed
+				// Deleted applies, update is suppressed, and create is preserved.
 				expect(spies.remove).toHaveBeenCalledTimes(1);
-				expect(spies.addGeoJson).toHaveBeenCalledTimes(0);
+				expect(spies.addGeoJson).toHaveBeenCalledTimes(1);
+				expect(spies.addGeoJson).toHaveBeenCalledWith(pointOne);
 				expect(gmFeature.setGeometry).toHaveBeenCalledTimes(0);
 			});
 

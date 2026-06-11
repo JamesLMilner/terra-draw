@@ -653,7 +653,9 @@ export class TerraDrawGoogleMapsAdapter
 			if (!feature?.id) throw new Error("Feature is not valid");
 
 			const id = String(feature.id);
-			if (this._rafState.deletedSet.has(id)) continue; // delete wins
+
+			// Preserve delete+create cycles for the same id in one frame (e.g. undo/redo).
+			// Flush order is delete -> update -> create, so recreation still occurs.
 
 			this._rafState.createdById.set(id, feature); // latest create wins
 			this._rafState.updatedById.delete(id); // creation supersedes update in same frame

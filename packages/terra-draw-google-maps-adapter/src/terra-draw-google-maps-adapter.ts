@@ -57,8 +57,54 @@ export class TerraDrawGoogleMapsAdapter
 	private _mouseMoveEventListener: google.maps.MapsEventListener | undefined;
 	private _readyCalled = false;
 
+	private _interactiveTargetSelector = [
+		'[role="dialog"]',
+		"a",
+		"button",
+		"input",
+		"select",
+		"textarea",
+		"summary",
+		'[role="button"]',
+		'[role="link"]',
+		'[contenteditable=""]',
+		'[contenteditable="true"]',
+	].join(", ");
+
+	private _advancedMarkerElementTag = "gmp-advanced-marker";
+
 	private get _hasRenderedFeatures(): boolean {
 		return Boolean(this.renderedFeatureIds?.size > 0);
+	}
+
+	private getPointerTargetElement(target: EventTarget | null) {
+		if (!target) {
+			return null;
+		}
+
+		if (target instanceof Element) {
+			return target;
+		}
+
+		if (target instanceof Node) {
+			return target.parentElement;
+		}
+
+		return null;
+	}
+
+	private shouldCapturePointer(event: PointerEvent) {
+		const targetElement = this.getPointerTargetElement(event.target);
+		if (!targetElement) {
+			return true;
+		}
+
+		if (targetElement.closest(this._advancedMarkerElementTag)) {
+			return true;
+		}
+
+		// Avoid pointer capture on interactive controls so native map UI keeps working.
+		return !targetElement.closest(this._interactiveTargetSelector);
 	}
 
 	/**
@@ -102,11 +148,13 @@ export class TerraDrawGoogleMapsAdapter
 		};
 
 		if (this._forwardMapElementEvents) {
-			const AdvancedMarkerElementTag = "gmp-advanced-marker";
-
 			const mapEventElement = this.getMapEventElement();
 			this._pointerCaptureDownListener = (event: PointerEvent) => {
 				if (!event.isPrimary) {
+					return;
+				}
+
+				if (!this.shouldCapturePointer(event)) {
 					return;
 				}
 
@@ -149,7 +197,7 @@ export class TerraDrawGoogleMapsAdapter
 			this._markerClickListener = (event: MouseEvent) => {
 				const target = event.target as HTMLElement;
 
-				if (!target?.closest(AdvancedMarkerElementTag)) {
+				if (!target?.closest(this._advancedMarkerElementTag)) {
 					return;
 				}
 
@@ -167,7 +215,7 @@ export class TerraDrawGoogleMapsAdapter
 			this._markerMouseMoveListener = (event: MouseEvent) => {
 				const target = event.target as HTMLElement;
 
-				if (!target?.closest(AdvancedMarkerElementTag)) {
+				if (!target?.closest(this._advancedMarkerElementTag)) {
 					return;
 				}
 

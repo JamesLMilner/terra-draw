@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.6.1](https://github.com/JamesLMilner/terra-draw/compare/terra-draw-google-maps-adapter@1.6.0...terra-draw-google-maps-adapter@1.6.1) (2026-06-11)
+
+
+### fix
+
+* **terra-draw-google-maps-adapter:** fix issues with undo redo (#914) ([](https://github.com/JamesLMilner/terra-draw/commit/51f1b8baee17a6fccc520c33ee76bc04d70b0523)), closes [#914](https://github.com/JamesLMilner/terra-draw/issues/914)
+* **terra-draw-google-maps-adapter:** handle info window closing when forwardMapElementEvents enabled (#913) ([](https://github.com/JamesLMilner/terra-draw/commit/64cedd2a396b7df70bb9be3c2a133e0a54b31cc2)), closes [#913](https://github.com/JamesLMilner/terra-draw/issues/913)
+
 ## [1.6.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw-google-maps-adapter@1.5.0...terra-draw-google-maps-adapter@1.6.0) (2026-05-18)
 
 

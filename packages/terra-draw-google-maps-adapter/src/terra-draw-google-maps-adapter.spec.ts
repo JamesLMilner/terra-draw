@@ -451,6 +451,66 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 				expect(releasePointerCapture).toHaveBeenCalledWith(2);
 			});
 
+			it("does not capture pointer for native InfoWindow targets", () => {
+				const setPointerCapture = jest.fn();
+
+				const div = {
+					addEventListener: jest.fn(),
+					setPointerCapture,
+				} as unknown as HTMLDivElement;
+
+				const mockMap = createMockGoogleMap({
+					getDiv: jest.fn(() => ({
+						id: "map",
+						querySelector: jest.fn(() => div),
+						addEventListener: jest.fn(),
+						removeEventListener: jest.fn(),
+					})) as any,
+					data: {
+						addListener: jest.fn(),
+					} as any,
+				});
+
+				const adapter = new TerraDrawGoogleMapsAdapter({
+					lib: {
+						OverlayView: jest.fn(() => ({
+							setMap: jest.fn(),
+						})),
+					} as any,
+					map: mockMap,
+					forwardMapElementEvents: true,
+				});
+
+				adapter.register(MockCallbacks());
+
+				const pointerDownListener = (adapter as any)
+					._pointerCaptureDownListener;
+
+				const infoWindow = document.createElement("div");
+				infoWindow.setAttribute("role", "dialog");
+				const infoWindowLink = document.createElement("a");
+				infoWindow.appendChild(infoWindowLink);
+
+				expect(() =>
+					pointerDownListener({
+						isPrimary: true,
+						pointerId: 1,
+						target: infoWindowLink,
+					} as unknown as PointerEvent),
+				).not.toThrow();
+				expect(setPointerCapture).not.toHaveBeenCalled();
+
+				const mapSurface = document.createElement("div");
+				expect(() =>
+					pointerDownListener({
+						isPrimary: true,
+						pointerId: 2,
+						target: mapSurface,
+					} as unknown as PointerEvent),
+				).not.toThrow();
+				expect(setPointerCapture).toHaveBeenCalledWith(2);
+			});
+
 			it("forwards marker pointer events only for advanced marker targets", () => {
 				const div = {
 					addEventListener: jest.fn(),

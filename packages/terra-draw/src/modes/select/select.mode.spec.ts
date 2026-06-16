@@ -3478,6 +3478,28 @@ describe("TerraDrawSelectMode", () => {
 			});
 		});
 
+		it("returns the correct styles for linestring from linestring mode", () => {
+			const selectMode = new TerraDrawSelectMode({
+				styles: {
+					selectedLineStringColor: "#222222",
+					selectedLineStringWidth: 4,
+					selectedLineStringOpacity: 0.5,
+				},
+			});
+
+			expect(
+				selectMode.styleFeature({
+					type: "Feature",
+					geometry: { type: "LineString", coordinates: [] },
+					properties: { mode: "linestring", selected: true },
+				}),
+			).toMatchObject({
+				lineStringColor: "#222222",
+				lineStringWidth: 4,
+				lineStringOpacity: 0.5,
+			});
+		});
+
 		it("returns the correct styles for polygon from polygon mode when using a function", () => {
 			const polygonMode = new TerraDrawSelectMode({
 				styles: {

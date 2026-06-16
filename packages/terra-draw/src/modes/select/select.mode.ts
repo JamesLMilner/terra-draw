@@ -1314,6 +1314,12 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 					feature,
 				);
 
+				styles.lineStringOpacity = this.getNumericStylingValue(
+					this.styles.selectedLineStringOpacity,
+					1,
+					feature,
+				);
+
 				styles.zIndex = Z_INDEX.LAYER_ONE;
 				return styles;
 			} else if (feature.geometry.type === "Point") {

@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.31.2](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.31.1...terra-draw@1.31.2) (2026-06-17)
+
+
+### fix
+
+* **terra-draw:** ensure line opacity is respected in select mode (#921) ([](https://github.com/JamesLMilner/terra-draw/commit/f3bd5253f90203df94c86cdc7d47f0c8cf1022a6)), closes [#921](https://github.com/JamesLMilner/terra-draw/issues/921)
+
+
+### chore
+
+* **terra-draw:** fix npm build from failing (#910) ([](https://github.com/JamesLMilner/terra-draw/commit/b1344f879752f95677112db22fdad1aff9e16add)), closes [#910](https://github.com/JamesLMilner/terra-draw/issues/910)
+* **terra-draw:** override microbundles picomatch to prevent build issues (#916) ([](https://github.com/JamesLMilner/terra-draw/commit/4adc19787807da2af9e78874f1e1390eec465e76)), closes [#916](https://github.com/JamesLMilner/terra-draw/issues/916)
+
 ## [1.31.1](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.31.0...terra-draw@1.31.1) (2026-06-07)
 
 

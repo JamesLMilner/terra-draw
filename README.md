@@ -46,7 +46,7 @@ You can check out the official Terra Draw website at [terradraw.io](https://www.
 
 ### Sponsorship
 
-Terra Draw is made possible by companies and organisations that want to see it thrive. Please see the [Sponsorship] page for more information about how to sponsor the work done here.
+Terra Draw is made possible by companies and organisations that want to see it thrive. Please see the [Sponsorship](./guides/) page for more information about how to sponsor the work done here.
 
 ### Contact
 

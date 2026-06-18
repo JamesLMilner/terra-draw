@@ -44,10 +44,14 @@ Please see the [the getting started guide](./guides/1.GETTING_STARTED.md) - this
 
 You can check out the official Terra Draw website at [terradraw.io](https://www.terradraw.io). If you are interested in contributing to the website please see [this repository](https://www.github.com/JamesLMilner/terra-draw-website).
 
+### Sponsorship
+
+Terra Draw is made possible by companies and organisations that want to see it thrive. Please see the [Sponsorship] page for more information about how to sponsor the work done here.
+
 ### Contact
 
 Email: [contact@terradraw.io](mailto:contact@terradraw.io)
 
 ### License
 
-MIT
+[MIT](./LICENSE.md)

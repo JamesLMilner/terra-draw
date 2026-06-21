@@ -9,6 +9,7 @@ import {
 	COMMON_PROPERTIES,
 	Z_INDEX,
 	FinishActions,
+	DashArrayStyling,
 } from "../../common";
 
 import {

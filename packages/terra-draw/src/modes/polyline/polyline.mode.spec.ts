@@ -4,6 +4,7 @@ import { MockModeConfig } from "../../test/mock-mode-config";
 import { TerraDrawPolyLineMode } from "./polyline.mode";
 import { COMMON_PROPERTIES } from "../../common";
 import { MockLineString } from "../../test/mock-features";
+import { GeoJSONStoreFeatures } from "../../terra-draw";
 
 describe("TerraDrawPolyLineMode", () => {
 	describe("constructor", () => {
@@ -329,10 +330,66 @@ describe("TerraDrawPolyLineMode", () => {
 					mode: "polyline",
 					[COMMON_PROPERTIES.CLOSING_POINT]: true,
 				},
-			} as any;
+			} as GeoJSONStoreFeatures;
 
 			const styles = polyLineMode.styleFeature(feature);
 			expect(styles.pointOutlineColor).toBe("#ffffff");
+		});
+
+		it("styles the line with static styling values", () => {
+			const polyLineMode = new TerraDrawPolyLineMode({
+				styles: {
+					lineStringColor: "#ffffff",
+					lineStringWidth: 2,
+					lineStringDash: [5, 3],
+				},
+			});
+			const feature = {
+				id: "test",
+				type: "Feature",
+				geometry: {
+					type: "LineString",
+					coordinates: [
+						[0, 0],
+						[1, 1],
+					],
+				},
+				properties: { mode: "polyline" },
+			} as GeoJSONStoreFeatures;
+
+			expect(polyLineMode.styleFeature(feature)).toMatchObject({
+				lineStringColor: "#ffffff",
+				lineStringWidth: 2,
+				lineStringDash: [5, 3],
+			});
+		});
+
+		it("styles the line with dynamic styling values", () => {
+			const polyLineMode = new TerraDrawPolyLineMode({
+				styles: {
+					lineStringColor: () => "#ffffff",
+					lineStringWidth: () => 2,
+					lineStringDash: () => [5, 3],
+				},
+			});
+			const feature = {
+				id: "test",
+				type: "Feature",
+				geometry: {
+					type: "LineString",
+					coordinates: [
+						[0, 0],
+						[1, 1],
+					],
+				},
+				properties: { mode: "polyline" },
+			} as GeoJSONStoreFeatures;
+
+			expect(polyLineMode.styleFeature(feature)).toMatchObject({
+				lineStringColor: "#ffffff",
+				lineStringWidth: 2,
+				lineStringDash: [5, 3],
+			});
 		});
 	});
 

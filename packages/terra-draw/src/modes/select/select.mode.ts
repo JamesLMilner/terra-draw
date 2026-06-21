@@ -14,6 +14,7 @@ import {
 	COMMON_PROPERTIES,
 	MARKER_URL_DEFAULT,
 	FinishActions,
+	DashArrayStyling,
 } from "../../common";
 import { LineString, Point, Polygon, Position } from "geojson";
 import {
@@ -100,6 +101,7 @@ type SelectionStyling = {
 	selectedLineStringColor: HexColorStyling;
 	selectedLineStringWidth: NumericStyling;
 	selectedLineStringOpacity: NumericStyling;
+	selectedLineStringDash: DashArrayStyling;
 
 	// Polygon
 	selectedPolygonColor: HexColorStyling;
@@ -1317,6 +1319,12 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 				styles.lineStringOpacity = this.getNumericStylingValue(
 					this.styles.selectedLineStringOpacity,
 					1,
+					feature,
+				);
+
+				styles.lineStringDash = this.getDashArrayStylingValue(
+					this.styles.selectedLineStringDash,
+					undefined,
 					feature,
 				);
 

@@ -11,6 +11,7 @@ import {
 	Snapping,
 	COMMON_PROPERTIES,
 	FinishActions,
+	DashArrayStyling,
 } from "../../common";
 import { Feature, LineString, Position } from "geojson";
 import {
@@ -74,7 +75,7 @@ type LineStringStyling = {
 	coordinatePointOutlineColor: HexColorStyling;
 	coordinatePointOutlineWidth: NumericStyling;
 	coordinatePointOutlineOpacity: NumericStyling;
-	lineStringDash: [number, number];
+	lineStringDash: DashArrayStyling;
 };
 
 interface Cursors {
@@ -1162,7 +1163,11 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 			feature.geometry.type === "LineString" &&
 			feature.properties.mode === this.mode
 		) {
-			styles.lineStringDash = this.styles.lineStringDash;
+			styles.lineStringDash = this.getDashArrayStylingValue(
+				this.styles.lineStringDash,
+				undefined,
+				feature,
+			);
 
 			styles.lineStringColor = this.getHexColorStylingValue(
 				this.styles.lineStringColor,

@@ -42,7 +42,7 @@ type FreehandLineStringStyling = {
 	lineStringWidth: NumericStyling;
 	lineStringColor: HexColorStyling;
 	lineStringOpacity: NumericStyling;
-	lineStringDash: [number, number];
+	lineStringDash: DashArrayStyling;
 	closingPointColor: HexColorStyling;
 	closingPointOpacity: NumericStyling;
 	closingPointWidth: NumericStyling;
@@ -312,7 +312,11 @@ export class TerraDrawFreehandLineStringMode extends TerraDrawBaseDrawMode<Freeh
 			feature.geometry.type === "LineString" &&
 			feature.properties.mode === this.mode
 		) {
-			styles.lineStringDash = this.styles.lineStringDash;
+			styles.lineStringDash = this.getDashArrayStylingValue(
+				this.styles.lineStringDash,
+				undefined,
+				feature,
+			);
 
 			styles.lineStringColor = this.getHexColorStylingValue(
 				this.styles.lineStringColor,

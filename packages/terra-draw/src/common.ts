@@ -16,6 +16,10 @@ export type NumericStyling =
 	| number
 	| ((feature: GeoJSONStoreFeatures) => number | undefined);
 
+export type DashArrayStyling =
+	| [number, number]
+	| ((feature: GeoJSONStoreFeatures) => [number, number] | undefined);
+
 export type UrlStyling = string | ((feature: GeoJSONStoreFeatures) => string);
 
 export interface TerraDrawAdapterStyling {
@@ -34,7 +38,7 @@ export interface TerraDrawAdapterStyling {
 	lineStringColor: HexColor;
 	lineStringOpacity?: number;
 	/** lineStringDash - Tuple representing the dash pattern for the line string, where the first number is the length of the dash and the second number is the length of the gap in pixels */
-	lineStringDash?: [number, number];
+	lineStringDash?: DashArrayStyling;
 	zIndex: number;
 	markerUrl?: string;
 	markerHeight?: number;

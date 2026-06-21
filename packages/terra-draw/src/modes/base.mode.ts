@@ -15,6 +15,7 @@ import {
 	HexColorStyling,
 	NumericStyling,
 	UrlStyling,
+	DashArrayStyling,
 } from "../common";
 import {
 	FeatureId,
@@ -31,7 +32,7 @@ export type CustomStyling = Record<
 	| HexColorStyling
 	| NumericStyling
 	| UrlStyling
-	| [number, number]
+	| DashArrayStyling
 >;
 
 export enum ModeTypes {
@@ -370,7 +371,22 @@ export abstract class TerraDrawBaseDrawMode<Styling extends CustomStyling> {
 		return this.getStylingValue(value, defaultValue, feature);
 	}
 
-	private getStylingValue<T extends string | number>(
+	protected getDashArrayStylingValue(
+		value:
+			| [number, number]
+			| ((feature: GeoJSONStoreFeatures) => [number, number] | undefined)
+			| undefined,
+		defaultValue: [number, number] | undefined,
+		feature: GeoJSONStoreFeatures,
+	): [number, number] | undefined {
+		return this.getStylingValue(
+			value,
+			defaultValue as unknown as [number, number],
+			feature,
+		);
+	}
+
+	private getStylingValue<T extends string | number | [number, number]>(
 		value: T | ((feature: GeoJSONStoreFeatures) => T | undefined) | undefined,
 		defaultValue: T,
 		feature: GeoJSONStoreFeatures,

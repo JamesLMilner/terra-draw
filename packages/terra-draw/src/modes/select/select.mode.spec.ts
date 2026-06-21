@@ -3484,6 +3484,7 @@ describe("TerraDrawSelectMode", () => {
 					selectedLineStringColor: "#222222",
 					selectedLineStringWidth: 4,
 					selectedLineStringOpacity: 0.5,
+					selectedLineStringDash: [2, 2],
 				},
 			});
 
@@ -3497,6 +3498,7 @@ describe("TerraDrawSelectMode", () => {
 				lineStringColor: "#222222",
 				lineStringWidth: 4,
 				lineStringOpacity: 0.5,
+				lineStringDash: [2, 2],
 			});
 		});
 
@@ -3533,6 +3535,30 @@ describe("TerraDrawSelectMode", () => {
 				polygonFillColor: "#3f97e0",
 				polygonFillOpacity: 0.3,
 				polygonOutlineColor: "#3f97e0",
+			});
+		});
+
+		it("returns the correct styles for linestring from linestring mode when using a function", () => {
+			const lineStringMode = new TerraDrawSelectMode({
+				styles: {
+					selectedLineStringColor: () => "#222222",
+					selectedLineStringWidth: () => 4,
+					selectedLineStringOpacity: () => 0.5,
+					selectedLineStringDash: () => [2, 2],
+				},
+			});
+
+			expect(
+				lineStringMode.styleFeature({
+					type: "Feature",
+					geometry: { type: "LineString", coordinates: [] },
+					properties: { mode: "linestring", selected: true },
+				}),
+			).toMatchObject({
+				lineStringColor: "#222222",
+				lineStringWidth: 4,
+				lineStringOpacity: 0.5,
+				lineStringDash: [2, 2],
 			});
 		});
 

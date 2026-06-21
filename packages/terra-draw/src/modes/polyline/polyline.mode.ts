@@ -10,6 +10,7 @@ import {
 	COMMON_PROPERTIES,
 	FinishActions,
 	Snapping,
+	DashArrayStyling,
 } from "../../common";
 import { LineString, Polygon, Position } from "geojson";
 import {
@@ -46,6 +47,7 @@ type PolyLineStyling = {
 	lineStringWidth: NumericStyling;
 	lineStringColor: HexColorStyling;
 	lineStringOpacity: NumericStyling;
+	lineStringDash: DashArrayStyling;
 	polygonFillColor: HexColorStyling;
 	polygonFillOpacity: NumericStyling;
 	polygonOutlineColor: HexColorStyling;
@@ -516,6 +518,12 @@ export class TerraDrawPolyLineMode extends TerraDrawBaseDrawMode<PolyLineStyling
 			styles.lineStringOpacity = this.getNumericStylingValue(
 				this.styles.lineStringOpacity,
 				1,
+				feature,
+			);
+
+			styles.lineStringDash = this.getDashArrayStylingValue(
+				this.styles.lineStringDash,
+				undefined,
 				feature,
 			);
 

@@ -400,7 +400,14 @@ const LineString: Story = {
 	...DefaultStory,
 	args: {
 		id: "linestring",
-		modes: [() => new TerraDrawLineStringMode()],
+		modes: [
+			() =>
+				new TerraDrawLineStringMode({
+					styles: {
+						lineStringDash: () => [5, 5],
+					},
+				}),
+		],
 		...DefaultStory.args,
 	},
 };

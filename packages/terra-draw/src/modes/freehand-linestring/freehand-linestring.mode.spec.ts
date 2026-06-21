@@ -629,6 +629,7 @@ describe("TerraDrawFreehandLineStringMode", () => {
 				styles: {
 					lineStringColor: () => "#ffffff",
 					lineStringWidth: () => 2,
+					lineStringDash: () => [5, 3],
 				},
 			});
 
@@ -643,6 +644,7 @@ describe("TerraDrawFreehandLineStringMode", () => {
 			).toMatchObject({
 				lineStringColor: "#ffffff",
 				lineStringWidth: 2,
+				lineStringDash: [5, 3],
 			});
 		});
 

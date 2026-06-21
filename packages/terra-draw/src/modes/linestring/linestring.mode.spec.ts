@@ -1990,6 +1990,7 @@ describe("TerraDrawLineStringMode", () => {
 				styles: {
 					lineStringColor: () => "#ffffff",
 					lineStringWidth: () => 4,
+					lineStringDash: () => [5, 3],
 					closingPointColor: () => "#111111",
 					closingPointWidth: () => 3,
 					closingPointOutlineColor: () => "#222222",
@@ -2006,6 +2007,7 @@ describe("TerraDrawLineStringMode", () => {
 			).toMatchObject({
 				lineStringColor: "#ffffff",
 				lineStringWidth: 4,
+				lineStringDash: [5, 3],
 			});
 		});
 	});

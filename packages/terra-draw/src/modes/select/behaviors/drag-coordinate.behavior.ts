@@ -20,6 +20,7 @@ import {
 	MutateFeatureBehavior,
 	Mutations,
 } from "../../mutate-feature.behavior";
+import { RotateFeatureBehavior } from "./rotate-feature.behavior";
 
 export class DragCoordinateBehavior extends TerraDrawModeBehavior {
 	constructor(
@@ -28,6 +29,7 @@ export class DragCoordinateBehavior extends TerraDrawModeBehavior {
 		private readonly selectionPoints: SelectionPointBehavior,
 		private readonly midPoints: MidPointBehavior,
 		private readonly coordinatePoints: CoordinatePointBehavior,
+		private readonly rotateFeature: RotateFeatureBehavior,
 		private readonly coordinateSnapping: CoordinateSnappingBehavior,
 		private readonly lineSnapping: LineSnappingBehavior,
 		private readonly readFeature: ReadFeatureBehavior,
@@ -283,6 +285,9 @@ export class DragCoordinateBehavior extends TerraDrawModeBehavior {
 		this.midPoints.updateOneAtIndex(index, updatedCoordinates);
 		this.selectionPoints.updateOneAtIndex(index, updatedCoordinate);
 		this.coordinatePoints.updateOneAtIndex(featureId, index, updatedCoordinate);
+		this.rotateFeature.updateDragHandleInPlace({
+			featureCoordinates: updatedCoordinates,
+		});
 
 		return true;
 	}

@@ -16,7 +16,7 @@ import {
 	FinishActions,
 	DashArrayStyling,
 } from "../../common";
-import { LineString, Point, Polygon, Position } from "geojson";
+import { Feature, LineString, Point, Polygon, Position } from "geojson";
 import {
 	BaseModeOptions,
 	CustomStyling,
@@ -38,6 +38,9 @@ import { RotateFeatureBehavior } from "./behaviors/rotate-feature.behavior";
 import { ScaleFeatureBehavior } from "./behaviors/scale-feature.behavior";
 import { FeatureId, GeoJSONStoreFeatures } from "../../store/store";
 import { getDefaultStyling } from "../../util/styling";
+import { circle, circleWebMercator } from "../../geometry/shape/create-circle";
+import { centroid } from "../../geometry/centroid";
+import { haversineDistanceKilometers } from "../../geometry/measure/haversine-distance";
 import {
 	DragCoordinateResizeBehavior,
 	ResizeOptions,
@@ -178,6 +181,10 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 		| { type: "midpoint"; featureId: FeatureId; midPointId: FeatureId } = {
 		type: "none",
 	};
+
+	// Cached center position for circle resize — captured once at drag start
+	// to avoid centroid drift during progressive updates
+	private circleResizeCenter: Position | null = null;
 
 	// Behaviors
 	private selectionPoints!: SelectionPointBehavior;
@@ -863,6 +870,22 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 				resizableCoordinateIndex,
 			);
 
+			// For circle features, capture the center at drag start so it
+			// stays fixed throughout the resize operation
+			const resizeProps = this.readFeature.getProperties(selectedId);
+			if (
+				resizeProps.mode === "circle" &&
+				typeof resizeProps.radiusKilometers === "number"
+			) {
+				const geometry = this.readFeature.getGeometry<Polygon>(selectedId);
+				const feature = {
+					type: "Feature" as const,
+					geometry,
+					properties: {},
+				};
+				this.circleResizeCenter = centroid(feature as Feature<Polygon>);
+			}
+
 			setMapDraggability(false);
 			return;
 		}
@@ -984,6 +1007,19 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 			modeFlags.feature.coordinates &&
 			modeFlags.feature.coordinates.resizable
 		) {
+			// Circle features must be resized by regenerating the circle from
+			// center + new radius, not by bbox scaling which distorts the shape.
+			// This applies to both globe and web-mercator projections.
+			const properties = this.readFeature.getProperties(selectedId);
+			if (
+				properties.mode === "circle" &&
+				typeof properties.radiusKilometers === "number"
+			) {
+				setMapDraggability(false);
+				this.resizeCircle(event, selectedId);
+				return;
+			}
+
 			if (this.projection === "globe") {
 				throw new Error(
 					"Globe is currently unsupported projection for resizable",
@@ -1057,6 +1093,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 		this.dragCoordinateResizeFeature.stopDragging();
 		this.rotateFeature.reset();
 		this.scaleFeature.reset();
+		this.circleResizeCenter = null;
 		setMapDraggability(true);
 	}
 
@@ -1373,6 +1410,69 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 		}
 
 		return styles;
+	}
+
+	/**
+	 * Resize a circle feature by recomputing it from its center and the
+	 * haversine distance to the cursor. Uses geodesic circle for globe
+	 * projection and web-mercator circle for web-mercator projection.
+	 */
+	private resizeCircle(event: TerraDrawMouseEvent, featureId: FeatureId) {
+		const geometry = this.readFeature.getGeometry<Polygon>(featureId);
+
+		// Use the center captured at drag start to avoid drift
+		const center = this.circleResizeCenter;
+		if (!center) {
+			return;
+		}
+
+		const newRadius = haversineDistanceKilometers(center, [
+			event.lng,
+			event.lat,
+		]);
+
+		if (newRadius <= 0) {
+			return;
+		}
+
+		const steps = geometry.coordinates[0].length - 1; // -1 for closing coord
+
+		const updatedCircle =
+			this.projection === "globe"
+				? circle({
+						center,
+						radiusKilometers: newRadius,
+						coordinatePrecision: this.coordinatePrecision,
+						steps,
+					})
+				: circleWebMercator({
+						center,
+						radiusKilometers: newRadius,
+						coordinatePrecision: this.coordinatePrecision,
+						steps,
+					});
+
+		const updated = this.mutateFeature.updatePolygon({
+			featureId,
+			coordinateMutations: {
+				type: Mutations.Replace,
+				coordinates: updatedCircle.geometry.coordinates,
+			},
+			propertyMutations: {
+				radiusKilometers: newRadius,
+			},
+			context: {
+				updateType: UpdateTypes.Provisional,
+			},
+		});
+
+		if (!updated) {
+			return;
+		}
+
+		const featureCoordinates = updated.geometry.coordinates;
+		this.midPoints.updateAllInPlace({ featureCoordinates });
+		this.selectionPoints.updateAllInPlace({ featureCoordinates });
 	}
 
 	afterFeatureUpdated(feature: GeoJSONStoreFeatures) {

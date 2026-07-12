@@ -22,6 +22,7 @@ export const PolygonWithCoordinatePoints =
 export const PolygonWithCoordinateSnapping =
 	AllStories.PolygonWithCoordinateSnapping;
 export const PolygonWithLineSnapping = AllStories.PolygonWithLineSnapping;
+export const PolygonWithSnapToFeature = AllStories.PolygonWithSnapToFeature;
 export const PolygonWithEditableEnabled = AllStories.PolygonWithEditableEnabled;
 export const PolygonWithCoordinateCounts =
 	AllStories.PolygonWithCoordinateCounts;

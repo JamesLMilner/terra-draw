@@ -1,5 +1,5 @@
 import { BehaviorConfig, TerraDrawModeBehavior } from "./base.behavior";
-import { TerraDrawMouseEvent } from "../common";
+import { Snappable, TerraDrawMouseEvent } from "../common";
 import { Feature, Position } from "geojson";
 import { ClickBoundingBoxBehavior } from "./click-bounding-box.behavior";
 import { BBoxPolygon, FeatureId } from "../store/store";
@@ -65,18 +65,13 @@ export class LineSnappingBehavior extends TerraDrawModeBehavior {
 			: undefined;
 	};
 
-	public getSnappable(
+	public getSnappable = (
 		event: TerraDrawMouseEvent,
 		filter?: (feature: Feature) => boolean,
-	) {
+	) => {
 		const boundingBox = this.clickBoundingBox.create(event) as BBoxPolygon;
 		const features = this.store.search(boundingBox, filter);
-		const closest: {
-			coordinate: undefined | Position;
-			minDistance: number;
-			featureId: undefined | FeatureId;
-			featureCoordinateIndex: undefined | number;
-		} = {
+		const closest: Snappable = {
 			featureId: undefined,
 			featureCoordinateIndex: undefined,
 			coordinate: undefined,
@@ -137,5 +132,5 @@ export class LineSnappingBehavior extends TerraDrawModeBehavior {
 		});
 
 		return closest;
-	}
+	};
 }

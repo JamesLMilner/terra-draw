@@ -20,6 +20,9 @@ import {
 	TerraDrawOnChangeContext,
 	Projection,
 	TerraDrawHandledEvents,
+	SnapToCustom,
+	SnappableContext,
+	Snappable,
 } from "./common";
 import {
 	ModeTypes,
@@ -44,7 +47,6 @@ import {
 	GeoJSONStoreGeometries,
 	IdStrategy,
 	JSON,
-	JSONObject,
 	StoreChangeHandler,
 	StoreValidation,
 } from "./store/store";
@@ -85,9 +87,7 @@ import {
 } from "./undo-redo/session-undo-redo";
 import { TerraDrawUndoRedoCoordinator } from "./undo-redo/undo-redo-coordinator";
 import type {
-	HistoryCause,
 	HistoryEvent,
-	StackType,
 	TerraDrawUndoRedoInterface,
 } from "./undo-redo/undo-redo-types";
 
@@ -1601,10 +1601,12 @@ export {
 	type GeoJSONStoreFeatures,
 	type GeoJSONStoreGeometries,
 	type HexColor,
+	type Snappable,
+	type SnappableContext,
+	type SnapToCustom,
 	type TerraDrawMouseEvent,
 	type TerraDrawAdapterStyling,
 	type TerraDrawKeyboardEvent,
-
 	// TerraDrawBaseAdapter
 	type TerraDrawHandledEvents,
 	type TerraDrawChanges,

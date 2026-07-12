@@ -53,6 +53,27 @@ describe("CoordinateSnappingBehavior", () => {
 
 				expect(snappedCoord).toStrictEqual([0, 0]);
 			});
+
+			it("returns a snappable coordinate for point features", () => {
+				config.store.create([
+					{
+						geometry: {
+							type: "Point",
+							coordinates: [10, 10],
+						},
+						properties: {
+							mode: "test",
+						},
+					},
+				]);
+
+				const snappedCoord = coordinateSnappingBehavior.getSnappableCoordinate(
+					MockCursorEvent({ lng: 10, lat: 10 }),
+					"currentId",
+				);
+
+				expect(snappedCoord).toStrictEqual([10, 10]);
+			});
 		});
 	});
 });

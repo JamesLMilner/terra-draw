@@ -219,6 +219,39 @@ const PolygonWithLineSnapping: Story = {
 	...DefaultPlay,
 };
 
+// Polygon with custom snapToFeature story
+const PolygonWithSnapToFeature: Story = {
+	args: {
+		id: "polygon-snap-to-feature",
+		...DefaultSize,
+		...LocationNewYork,
+		...DefaultZoom,
+		modes: [
+			() => new TerraDrawPointMode(),
+			() => new TerraDrawLineStringMode(),
+			() =>
+				new TerraDrawPolygonMode({
+					snapping: {
+						toFeature: {
+							filter: (feature) => {
+								console.log(
+									"Snap to feature filter called with feature:",
+									feature,
+								);
+								return (
+									feature.geometry.type === "Point" ||
+									feature.geometry.type === "LineString"
+								);
+							},
+							toLine: true,
+							toCoordinate: true,
+						},
+					},
+				}),
+		],
+	},
+};
+
 // Polygon styling story - changes fill color based on a property on the feature
 const Styling: Story = {
 	...DefaultStory,
@@ -1042,6 +1075,7 @@ const AllStories = {
 	PolygonWithCoordinatePoints,
 	PolygonWithCoordinateSnapping,
 	PolygonWithLineSnapping,
+	PolygonWithSnapToFeature,
 	PolygonWithEditableEnabled,
 	PolygonWithCoordinateCounts,
 	Styling,

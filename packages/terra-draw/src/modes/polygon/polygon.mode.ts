@@ -32,6 +32,7 @@ import {
 import { ValidatePolygonFeature } from "../../validations/polygon.validation";
 import { LineSnappingBehavior } from "../line-snapping.behavior";
 import { CoordinateSnappingBehavior } from "../coordinate-snapping.behavior";
+import { FeatureSnappingBehavior } from "../feature-snapping.behavior";
 import { CoordinatePointBehavior } from "../select/behaviors/coordinate-point.behavior";
 import {
 	CoordinateMutation,
@@ -133,6 +134,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 	private coordinatePoints!: CoordinatePointBehavior;
 	private lineSnapping!: LineSnappingBehavior;
 	private coordinateSnapping!: CoordinateSnappingBehavior;
+	private featureSnapping!: FeatureSnappingBehavior;
 	private pixelDistance!: PixelDistanceBehavior;
 	private closingPoints!: ClosingPointsBehavior;
 	private clickBoundingBox!: ClickBoundingBoxBehavior;
@@ -295,6 +297,10 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 			config,
 			this.pixelDistance,
 			this.clickBoundingBox,
+		);
+		this.featureSnapping = new FeatureSnappingBehavior(
+			this.coordinateSnapping,
+			this.lineSnapping,
 		);
 		this.closingPoints = new ClosingPointsBehavior(
 			config,
@@ -652,6 +658,22 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 
 			if (snapped) {
 				snappedCoordinate = snapped;
+			}
+		}
+
+		if (this.snapping?.toFeature) {
+			const snappable = this.featureSnapping.getSnappable(
+				event,
+				this.currentId,
+				this.snapping?.toFeature.filter,
+				{
+					toLine: this.snapping.toFeature.toLine,
+					toCoordinate: this.snapping.toFeature.toCoordinate,
+				},
+			);
+
+			if (snappable.coordinate) {
+				snappedCoordinate = snappable.coordinate;
 			}
 		}
 

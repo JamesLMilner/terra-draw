@@ -1,4 +1,4 @@
-import { LineString, Polygon, Position } from "geojson";
+import { Feature, LineString, Polygon, Position } from "geojson";
 import {
 	StoreChangeHandler,
 	GeoJSONStore,
@@ -186,19 +186,44 @@ export type Validation = (
 	reason?: string;
 };
 
+export type Snappable = {
+	coordinate: Position | undefined;
+	featureId: FeatureId | undefined;
+	featureCoordinateIndex: number | undefined;
+	minDistance: number;
+};
+
+export type SnappableContext = {
+	currentId?: FeatureId;
+	currentCoordinate?: number;
+	getCurrentGeometrySnapshot: () => (Polygon | LineString) | null;
+	project: Project;
+	unproject: Unproject;
+};
+
+export type SnapToCustom = (
+	event: TerraDrawMouseEvent,
+	context: SnappableContext,
+) => Position | undefined;
+
+export type SnapToFeatureBehavior = {
+	getSnappable: (
+		event: TerraDrawMouseEvent,
+		currentFeatureId?: FeatureId,
+		filter?: (feature: Feature) => boolean,
+		options?: { toLine?: boolean; toCoordinate?: boolean },
+	) => Snappable;
+};
+
 export interface Snapping {
 	toLine?: boolean;
 	toCoordinate?: boolean;
-	toCustom?: (
-		event: TerraDrawMouseEvent,
-		context: {
-			currentId?: FeatureId;
-			currentCoordinate?: number;
-			getCurrentGeometrySnapshot: () => (Polygon | LineString) | null;
-			project: Project;
-			unproject: Unproject;
-		},
-	) => Position | undefined;
+	toFeature?: {
+		filter: (feature: Feature) => boolean;
+		toLine?: boolean;
+		toCoordinate?: boolean;
+	};
+	toCustom?: SnapToCustom;
 }
 
 export type TerraDrawModeState =

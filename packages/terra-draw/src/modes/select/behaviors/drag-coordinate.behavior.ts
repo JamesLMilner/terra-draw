@@ -15,6 +15,7 @@ import { FeatureId, GeoJSONStoreFeatures } from "../../../store/store";
 import { CoordinatePointBehavior } from "./coordinate-point.behavior";
 import { CoordinateSnappingBehavior } from "../../coordinate-snapping.behavior";
 import { LineSnappingBehavior } from "../../line-snapping.behavior";
+import { FeatureSnappingBehavior } from "../../feature-snapping.behavior";
 import { ReadFeatureBehavior } from "../../read-feature.behavior";
 import {
 	MutateFeatureBehavior,
@@ -22,6 +23,8 @@ import {
 } from "../../mutate-feature.behavior";
 
 export class DragCoordinateBehavior extends TerraDrawModeBehavior {
+	private readonly featureSnapping: FeatureSnappingBehavior;
+
 	constructor(
 		readonly config: BehaviorConfig,
 		private readonly pixelDistance: PixelDistanceBehavior,
@@ -34,6 +37,10 @@ export class DragCoordinateBehavior extends TerraDrawModeBehavior {
 		private readonly mutateFeature: MutateFeatureBehavior,
 	) {
 		super(config);
+		this.featureSnapping = new FeatureSnappingBehavior(
+			this.coordinateSnapping,
+			this.lineSnapping,
+		);
 	}
 
 	private draggedCoordinate: { id: null | FeatureId; index: number } = {
@@ -143,6 +150,22 @@ export class DragCoordinateBehavior extends TerraDrawModeBehavior {
 
 			if (snapped) {
 				snappedCoordinate = snapped;
+			}
+		}
+
+		if (snapping?.toFeature) {
+			const snappable = this.featureSnapping.getSnappable(
+				event,
+				draggedFeature.id as FeatureId,
+				snapping.toFeature.filter,
+				{
+					toLine: snapping.toFeature.toLine,
+					toCoordinate: snapping.toFeature.toCoordinate,
+				},
+			);
+
+			if (snappable.coordinate) {
+				snappedCoordinate = snappable.coordinate;
 			}
 		}
 

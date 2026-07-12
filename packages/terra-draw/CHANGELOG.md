@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.32.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.31.2...terra-draw@1.32.0) (2026-07-12)
+
+
+### feat
+
+* **terra-draw:** add support for snapping to arbitary features in the store (#925) ([](https://github.com/JamesLMilner/terra-draw/commit/afbb03b5939f578f3cb1d1c8675544e150687944)), closes [#925](https://github.com/JamesLMilner/terra-draw/issues/925)
+
+
+### chore
+
+* **terra-draw:** add blocktype as a sponsor (#924) ([](https://github.com/JamesLMilner/terra-draw/commit/cbaa2b27e3749eee41e2eb170c9e91431883177a)), closes [#924](https://github.com/JamesLMilner/terra-draw/issues/924)
+* **terra-draw:** add sponsorship section in README (#922) ([](https://github.com/JamesLMilner/terra-draw/commit/e020ceb3bd017a84c5986ddd9bb06cd57a87ca4d)), closes [#922](https://github.com/JamesLMilner/terra-draw/issues/922)
+
+
+### fix
+
+* **terra-draw:** support dash lined styling functions (#923) ([](https://github.com/JamesLMilner/terra-draw/commit/c698c94bbef4a99ea5af8b4ac77d20193dc0c298)), closes [#923](https://github.com/JamesLMilner/terra-draw/issues/923)
+
 ## [1.31.2](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.31.1...terra-draw@1.31.2) (2026-06-17)
 
 

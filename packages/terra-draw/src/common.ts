@@ -206,23 +206,16 @@ export type SnapToCustom = (
 	context: SnappableContext,
 ) => Position | undefined;
 
-export type SnapToFeatureBehavior = {
-	getSnappable: (
-		event: TerraDrawMouseEvent,
-		currentFeatureId?: FeatureId,
-		filter?: (feature: Feature) => boolean,
-		options?: { toLine?: boolean; toCoordinate?: boolean },
-	) => Snappable;
+type SnapToFeature = {
+	filter: (feature: Feature) => boolean;
+	toLine?: boolean;
+	toCoordinate?: boolean;
 };
 
 export interface Snapping {
 	toLine?: boolean;
 	toCoordinate?: boolean;
-	toFeature?: {
-		filter: (feature: Feature) => boolean;
-		toLine?: boolean;
-		toCoordinate?: boolean;
-	};
+	toFeature?: SnapToFeature;
 	toCustom?: SnapToCustom;
 }
 

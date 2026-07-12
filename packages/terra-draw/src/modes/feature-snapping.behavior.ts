@@ -4,11 +4,6 @@ import { FeatureId } from "../store/store";
 import { CoordinateSnappingBehavior } from "./coordinate-snapping.behavior";
 import { LineSnappingBehavior } from "./line-snapping.behavior";
 
-export type FeatureSnappingOptions = {
-	toLine?: boolean;
-	toCoordinate?: boolean;
-};
-
 export class FeatureSnappingBehavior {
 	constructor(
 		private readonly coordinateSnapping: CoordinateSnappingBehavior,
@@ -19,7 +14,10 @@ export class FeatureSnappingBehavior {
 		event: TerraDrawMouseEvent,
 		currentFeatureId?: FeatureId,
 		filter?: (feature: Feature) => boolean,
-		options?: FeatureSnappingOptions,
+		options?: {
+			toLine?: boolean;
+			toCoordinate?: boolean;
+		},
 	): Snappable {
 		const toCoordinate = options?.toCoordinate !== false;
 		const toLine = options?.toLine !== false;

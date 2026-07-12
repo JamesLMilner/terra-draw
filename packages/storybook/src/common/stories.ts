@@ -234,10 +234,6 @@ const PolygonWithSnapToFeature: Story = {
 					snapping: {
 						toFeature: {
 							filter: (feature) => {
-								console.log(
-									"Snap to feature filter called with feature:",
-									feature,
-								);
 								return (
 									feature.geometry.type === "Point" ||
 									feature.geometry.type === "LineString"

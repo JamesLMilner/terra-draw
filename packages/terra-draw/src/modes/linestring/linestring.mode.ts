@@ -35,6 +35,7 @@ import { haversineDistanceKilometers } from "../../geometry/measure/haversine-di
 import { coordinatesIdentical } from "../../geometry/coordinates-identical";
 import { ValidateLineStringFeature } from "../../validations/linestring.validation";
 import { LineSnappingBehavior } from "../line-snapping.behavior";
+import { FeatureSnappingBehavior } from "../feature-snapping.behavior";
 import {
 	MutateFeatureBehavior,
 	Mutations,
@@ -138,6 +139,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 	private coordinateSnapping!: CoordinateSnappingBehavior;
 	private insertPoint!: InsertCoordinatesBehavior;
 	private lineSnapping!: LineSnappingBehavior;
+	private featureSnapping!: FeatureSnappingBehavior;
 	private pixelDistance!: PixelDistanceBehavior;
 	private clickBoundingBox!: ClickBoundingBoxBehavior;
 	private mutateFeature!: MutateFeatureBehavior;
@@ -664,6 +666,10 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 			config,
 			this.pixelDistance,
 			this.clickBoundingBox,
+		);
+		this.featureSnapping = new FeatureSnappingBehavior(
+			this.coordinateSnapping,
+			this.lineSnapping,
 		);
 		this.readFeature = new ReadFeatureBehavior(config);
 		this.mutateFeature = new MutateFeatureBehavior(config, {
@@ -1354,6 +1360,22 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 
 			if (snapped) {
 				snappedCoordinate = snapped;
+			}
+		}
+
+		if (this.snapping?.toFeature) {
+			const snappable = this.featureSnapping.getSnappable(
+				event,
+				this.currentId,
+				this.snapping.toFeature.filter,
+				{
+					toLine: this.snapping.toFeature.toLine,
+					toCoordinate: this.snapping.toFeature.toCoordinate,
+				},
+			);
+
+			if (snappable.coordinate) {
+				snappedCoordinate = snappable.coordinate;
 			}
 		}
 

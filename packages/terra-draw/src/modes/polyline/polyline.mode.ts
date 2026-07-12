@@ -24,6 +24,7 @@ import { ClickBoundingBoxBehavior } from "../click-bounding-box.behavior";
 import { PixelDistanceBehavior } from "../pixel-distance.behavior";
 import { LineSnappingBehavior } from "../line-snapping.behavior";
 import { CoordinateSnappingBehavior } from "../coordinate-snapping.behavior";
+import { FeatureSnappingBehavior } from "../feature-snapping.behavior";
 import { getDefaultStyling } from "../../util/styling";
 import {
 	FeatureId,
@@ -103,6 +104,7 @@ export class TerraDrawPolyLineMode extends TerraDrawBaseDrawMode<PolyLineStyling
 	private clickBoundingBox!: ClickBoundingBoxBehavior;
 	private lineSnapping!: LineSnappingBehavior;
 	private coordinateSnapping!: CoordinateSnappingBehavior;
+	private featureSnapping!: FeatureSnappingBehavior;
 
 	constructor(options?: TerraDrawPolyLineModeOptions<PolyLineStyling>) {
 		super(options, true);
@@ -142,6 +144,10 @@ export class TerraDrawPolyLineMode extends TerraDrawBaseDrawMode<PolyLineStyling
 			config,
 			this.pixelDistance,
 			this.clickBoundingBox,
+		);
+		this.featureSnapping = new FeatureSnappingBehavior(
+			this.coordinateSnapping,
+			this.lineSnapping,
 		);
 		this.readFeature = new ReadFeatureBehavior(config);
 		this.mutateFeature = new MutateFeatureBehavior(config, {
@@ -469,6 +475,22 @@ export class TerraDrawPolyLineMode extends TerraDrawBaseDrawMode<PolyLineStyling
 
 			if (snapped) {
 				snappedCoordinate = snapped;
+			}
+		}
+
+		if (this.snapping?.toFeature) {
+			const snappable = this.featureSnapping.getSnappable(
+				event,
+				this.currentId,
+				this.snapping.toFeature.filter,
+				{
+					toLine: this.snapping.toFeature.toLine,
+					toCoordinate: this.snapping.toFeature.toCoordinate,
+				},
+			);
+
+			if (snappable.coordinate) {
+				snappedCoordinate = snappable.coordinate;
 			}
 		}
 

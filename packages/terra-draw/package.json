@@ -1,5 +1,5 @@
 {
-	"name": "terra-draw",
+	"name": "@zaslavskyioleksii/terra-draw",
 	"version": "1.31.2",
 	"description": "Frictionless map drawing across mapping provider",
 	"scripts": {

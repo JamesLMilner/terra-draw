@@ -26,6 +26,7 @@ export class TerraDrawMapLibreGLAdapter<MapType>
 			map: MapType;
 			renderBelowLayerId?: string;
 			prefixId?: string;
+			onCursorChange?: (cursor: Parameters<SetCursor>[0]) => void;
 		} & TerraDrawExtend.BaseAdapterConfig,
 	) {
 		super(config);
@@ -38,6 +39,7 @@ export class TerraDrawMapLibreGLAdapter<MapType>
 		this._initialDragPan = this._map.dragPan.isEnabled();
 		this._renderBeforeLayerId = config.renderBelowLayerId;
 		this._prefixId = config.prefixId || "td";
+		this._onCursorChange = config.onCursorChange;
 	}
 
 	private hashCode(str: string): number {
@@ -82,6 +84,9 @@ export class TerraDrawMapLibreGLAdapter<MapType>
 	private _nextRender: number | undefined;
 	private _map: MaplibreMap;
 	private _container: HTMLElement;
+	private _onCursorChange:
+		| ((cursor: Parameters<SetCursor>[0]) => void)
+		| undefined;
 
 	private toGlDashArrayFromPixels(
 		dash: [number, number] | undefined,
@@ -406,6 +411,14 @@ export class TerraDrawMapLibreGLAdapter<MapType>
 	 * @param cursor The CSS cursor style to apply, or 'unset' to remove any previously applied cursor style.
 	 */
 	public setCursor(cursor: Parameters<SetCursor>[0]) {
+		// When a host application opts in via `onCursorChange`, it takes ownership of
+		// cursor rendering (e.g. so a single source of truth drives the map cursor).
+		// Terra Draw then only emits its intent and never mutates the canvas directly.
+		if (this._onCursorChange) {
+			this._onCursorChange(cursor);
+			return;
+		}
+
 		const canvas = this._map.getCanvas();
 		if (cursor === "unset") {
 			canvas.style.removeProperty("cursor");

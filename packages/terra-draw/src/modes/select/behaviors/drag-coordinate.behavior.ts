@@ -204,6 +204,11 @@ export class DragCoordinateBehavior extends TerraDrawModeBehavior {
 			return false;
 		}
 
+		if (this.readFeature.hasFeature(draggedFeatureId) === false) {
+			this.stopDragging();
+			return false;
+		}
+
 		const index = this.draggedCoordinate.index;
 		const geometry = this.readFeature.getGeometry(draggedFeatureId);
 		const properties = this.readFeature.getProperties(draggedFeatureId);

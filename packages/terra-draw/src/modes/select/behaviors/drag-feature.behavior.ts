@@ -66,6 +66,11 @@ export class DragFeatureBehavior extends TerraDrawModeBehavior {
 			return;
 		}
 
+		if (this.readFeature.hasFeature(this.draggedFeatureId) === false) {
+			this.stopDragging();
+			return false;
+		}
+
 		const geometry = this.readFeature.getGeometry(this.draggedFeatureId);
 		const cursorCoord = [event.lng, event.lat];
 

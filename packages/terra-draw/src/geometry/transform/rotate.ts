@@ -13,7 +13,7 @@ import { CartesianPoint } from "../../common";
 // https://github.com/Turfjs/turf/tree/master/packages/turf-transform-rotate
 
 export function transformRotate(
-	feature: Feature<Polygon | LineString>,
+	feature: Feature<Polygon | LineString | Point>,
 	angle: number,
 	pivot?: Position,
 ) {
@@ -23,12 +23,19 @@ export function transformRotate(
 	}
 
 	// Use centroid of GeoJSON if pivot is not provided
-	const rotatePivot = pivot ?? centroid(feature);
+	// (the centroid of a single Point is the point itself)
+	const rotatePivot =
+		pivot ??
+		(feature.geometry.type === "Point"
+			? feature.geometry.coordinates
+			: centroid(feature as Feature<Polygon | LineString>));
 
 	const coordinates =
-		feature.geometry.type === "Polygon"
-			? feature.geometry.coordinates[0]
-			: feature.geometry.coordinates;
+		feature.geometry.type === "Point"
+			? [feature.geometry.coordinates]
+			: feature.geometry.type === "Polygon"
+				? feature.geometry.coordinates[0]
+				: feature.geometry.coordinates;
 
 	coordinates.forEach((pointCoords: Position) => {
 		const initialAngle = rhumbBearing(rotatePivot, pointCoords);

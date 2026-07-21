@@ -10,6 +10,7 @@ import { CoordinatePointBehavior } from "./coordinate-point.behavior";
 import { DragFeatureBehavior } from "./drag-feature.behavior";
 import { FeatureAtPointerEventBehavior } from "./feature-at-pointer-event.behavior";
 import { MidPointBehavior } from "./midpoint.behavior";
+import { RotateFeatureBehavior } from "./rotate-feature.behavior";
 import { SelectionPointBehavior } from "./selection-point.behavior";
 
 describe("DragFeatureBehavior", () => {
@@ -50,6 +51,15 @@ describe("DragFeatureBehavior", () => {
 				selectionPointBehavior,
 				midpointBehavior,
 				coordinatePointBehavior,
+				new RotateFeatureBehavior(
+					config,
+					selectionPointBehavior,
+					midpointBehavior,
+					coordinatePointBehavior,
+					readFeatureBehavior,
+					mutateFeatureBehavior,
+					new PixelDistanceBehavior(config),
+				),
 				readFeatureBehavior,
 				mutateFeatureBehavior,
 			);
@@ -101,6 +111,15 @@ describe("DragFeatureBehavior", () => {
 				selectionPointBehavior,
 				midpointBehavior,
 				coordinatePointBehavior,
+				new RotateFeatureBehavior(
+					config,
+					selectionPointBehavior,
+					midpointBehavior,
+					coordinatePointBehavior,
+					readFeatureBehavior,
+					mutateFeatureBehavior,
+					new PixelDistanceBehavior(config),
+				),
 				readFeatureBehavior,
 				mutateFeatureBehavior,
 			);

@@ -8,6 +8,7 @@ import { BehaviorConfig } from "../../base.behavior";
 import { PixelDistanceBehavior } from "../../pixel-distance.behavior";
 import { DragCoordinateBehavior } from "./drag-coordinate.behavior";
 import { MidPointBehavior } from "./midpoint.behavior";
+import { RotateFeatureBehavior } from "./rotate-feature.behavior";
 import { SelectionPointBehavior } from "./selection-point.behavior";
 import { MockCursorEvent } from "../../../test/mock-cursor-event";
 import { CoordinatePointBehavior } from "./coordinate-point.behavior";
@@ -84,6 +85,15 @@ describe("DragCoordinateBehavior", () => {
 				selectionPointBehavior,
 				midpointBehavior,
 				coordinatePointBehavior,
+				new RotateFeatureBehavior(
+					config,
+					selectionPointBehavior,
+					midpointBehavior,
+					coordinatePointBehavior,
+					readFeatureBehavior,
+					mutateFeatureBehavior,
+					pixelDistanceBehavior,
+				),
 				coordinateBehavior,
 				lineSnappingBehavior,
 				readFeatureBehavior,
@@ -140,6 +150,15 @@ describe("DragCoordinateBehavior", () => {
 				selectionPointBehavior,
 				midpointBehavior,
 				coordinatePointBehavior,
+				new RotateFeatureBehavior(
+					config,
+					selectionPointBehavior,
+					midpointBehavior,
+					coordinatePointBehavior,
+					readFeatureBehavior,
+					mutateFeatureBehavior,
+					pixelDistanceBehavior,
+				),
 				coordinateBehavior,
 				lineSnappingBehavior,
 				readFeatureBehavior,

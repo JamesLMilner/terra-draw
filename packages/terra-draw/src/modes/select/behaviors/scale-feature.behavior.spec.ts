@@ -12,6 +12,7 @@ import { ReadFeatureBehavior } from "../../read-feature.behavior";
 import { CoordinatePointBehavior } from "./coordinate-point.behavior";
 import { DragCoordinateResizeBehavior } from "./drag-coordinate-resize.behavior";
 import { MidPointBehavior } from "./midpoint.behavior";
+import { RotateFeatureBehavior } from "./rotate-feature.behavior";
 import { ScaleFeatureBehavior } from "./scale-feature.behavior";
 import { SelectionPointBehavior } from "./selection-point.behavior";
 
@@ -46,6 +47,22 @@ describe("ScaleFeatureBehavior", () => {
 					new PixelDistanceBehavior(config),
 				),
 				coordinatePointBehavior,
+				new RotateFeatureBehavior(
+					config,
+					selectionPointBehavior,
+					new MidPointBehavior(
+						config,
+						selectionPointBehavior,
+						coordinatePointBehavior,
+						mutateFeatureBehavior,
+						readFeatureBehavior,
+						new PixelDistanceBehavior(config),
+					),
+					coordinatePointBehavior,
+					readFeatureBehavior,
+					mutateFeatureBehavior,
+					new PixelDistanceBehavior(config),
+				),
 				readFeatureBehavior,
 				mutateFeatureBehavior,
 			);
@@ -88,6 +105,22 @@ describe("ScaleFeatureBehavior", () => {
 					new PixelDistanceBehavior(config),
 				),
 				coordinatePointBehavior,
+				new RotateFeatureBehavior(
+					config,
+					selectionPointBehavior,
+					new MidPointBehavior(
+						config,
+						selectionPointBehavior,
+						coordinatePointBehavior,
+						mutateFeatureBehavior,
+						readFeatureBehavior,
+						new PixelDistanceBehavior(config),
+					),
+					coordinatePointBehavior,
+					readFeatureBehavior,
+					mutateFeatureBehavior,
+					new PixelDistanceBehavior(config),
+				),
 				readFeatureBehavior,
 				mutateFeatureBehavior,
 			);

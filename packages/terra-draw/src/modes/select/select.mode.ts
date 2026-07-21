@@ -1090,8 +1090,9 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 		}
 
 		const selectedFeatureId = this.selected[0];
-		const featureCoordinates =
-			this.readFeature.getCoordinates(selectedFeatureId);
+		const featureCoordinates = selectedFeatureId
+			? this.readFeature.getCoordinates(selectedFeatureId)
+			: undefined;
 
 		this.dragCoordinate.stopDragging();
 		this.dragFeature.stopDragging();

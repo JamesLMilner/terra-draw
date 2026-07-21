@@ -56,6 +56,7 @@ describe("RotateFeatureBehavior", () => {
 				coordinatePointBehavior,
 				readFeatureBehavior,
 				mutateFeatureBehavior,
+				new PixelDistanceBehavior(config),
 			);
 		});
 	});
@@ -94,6 +95,7 @@ describe("RotateFeatureBehavior", () => {
 				coordinatePointBehavior,
 				readFeatureBehavior,
 				mutateFeatureBehavior,
+				new PixelDistanceBehavior(config),
 			);
 
 			(

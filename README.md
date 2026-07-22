@@ -34,9 +34,9 @@ Terra Draw uses the concept of 'adapters' to allow it to work with a host of dif
 
 Please see the [the getting started guide](./guides/1.GETTING_STARTED.md) - this provides a host of information on how to get up and running with Terra Draw. You can see the auto generated [API docs on the Terra Draw website](https://terradraw.io/#/api).
 
-### Changelogs
+### Releases and Changelogs
 
-Automated changelogs are created for each package upon release, based off of the [conventional commits](https://www.conventionalcommits.org/en/v1.0.0/) format. You can find the generated CHANGELOG.md file in the [corresponding package folder](https://github.com/JamesLMilner/terra-draw/tree/main/packages).
+We create GitHub releases when we release new packages. We also keep automated changelogs that are created for each package upon release, based off of the [conventional commits](https://www.conventionalcommits.org/en/v1.0.0/) format. You can find the generated CHANGELOG.md file in the [corresponding package folder](https://github.com/JamesLMilner/terra-draw/tree/main/packages).
 
 
 ### Development & Contributing

@@ -50,5 +50,19 @@ jobs:
       - name: Push tags upstream
         run: git push origin main --tags
 
-      - run: npm publish
+      - name: Publish package
+        run: npm publish
         working-directory: ./packages/terra-draw-mapbox-gl-adapter
+
+      - name: Generate package release notes
+        id: package_release_notes
+        env:
+          PACKAGE_NAME: terra-draw-mapbox-gl-adapter
+          PACKAGE_DIR: packages/terra-draw-mapbox-gl-adapter
+        run: node ./github-release.mjs
+
+      - name: Create package GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${{ steps.package_release_notes.outputs.tag }}" --verify-tag --title "${{ steps.package_release_notes.outputs.title }}" --notes-file "${{ steps.package_release_notes.outputs.notes_file }}"

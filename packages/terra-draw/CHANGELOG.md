@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.32.2](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.32.1...terra-draw@1.32.2) (2026-07-22)
+
+
+### chore
+
+* **terra-draw:** create a github release upon release of a new version (#932) ([](https://github.com/JamesLMilner/terra-draw/commit/b5fdeb63ac5901d16ce3b24299387055dcdddc44)), closes [#932](https://github.com/JamesLMilner/terra-draw/issues/932)
+
 ## [1.32.1](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.32.0...terra-draw@1.32.1) (2026-07-21)
 
 

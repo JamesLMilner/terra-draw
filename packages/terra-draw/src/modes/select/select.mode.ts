@@ -125,6 +125,24 @@ type SelectionStyling = {
 	midPointWidth: NumericStyling;
 	midPointOutlineWidth: NumericStyling;
 	midPointOutlineOpacity: NumericStyling;
+
+	// Rotation handle (point dragged to rotate the selected feature)
+	rotationPointColor: HexColorStyling;
+	rotationPointWidth: NumericStyling;
+	rotationPointOpacity: NumericStyling;
+	rotationPointOutlineColor: HexColorStyling;
+	rotationPointOutlineWidth: NumericStyling;
+	rotationPointOutlineOpacity: NumericStyling;
+
+	// Rotation bounding box (outline drawn around the selected feature while rotating)
+	rotationBBoxColor: HexColorStyling;
+	rotationBBoxWidth: NumericStyling;
+	rotationBBoxOpacity: NumericStyling;
+
+	// Rotation guide line (connects the bounding box to the rotation handle)
+	rotationGuideColor: HexColorStyling;
+	rotationGuideWidth: NumericStyling;
+	rotationGuideOpacity: NumericStyling;
 };
 
 interface Cursors {
@@ -1256,37 +1274,37 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 
 			if (feature.properties[SELECT_PROPERTIES.ROTATION_POINT]) {
 				styles.pointColor = this.getHexColorStylingValue(
-					this.styles.selectionPointColor,
+					this.styles.rotationPointColor,
 					styles.pointColor,
 					feature,
 				);
 
 				styles.pointOpacity = this.getNumericStylingValue(
-					this.styles.selectionPointOpacity,
+					this.styles.rotationPointOpacity,
 					1,
 					feature,
 				);
 
 				styles.pointOutlineColor = this.getHexColorStylingValue(
-					this.styles.selectionPointOutlineColor,
+					this.styles.rotationPointOutlineColor,
 					styles.pointOutlineColor,
 					feature,
 				);
 
 				styles.pointWidth = this.getNumericStylingValue(
-					this.styles.selectionPointWidth,
+					this.styles.rotationPointWidth,
 					6,
 					feature,
 				);
 
 				styles.pointOutlineOpacity = this.getNumericStylingValue(
-					this.styles.selectionPointOutlineOpacity,
+					this.styles.rotationPointOutlineOpacity,
 					1,
 					feature,
 				);
 
 				styles.pointOutlineWidth = this.getNumericStylingValue(
-					this.styles.selectionPointOutlineWidth,
+					this.styles.rotationPointOutlineWidth,
 					2,
 					feature,
 				);
@@ -1344,12 +1362,20 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 		) {
 			styles.polygonFillOpacity = 0;
 			styles.polygonOutlineColor = this.getHexColorStylingValue(
-				this.styles.selectionPointColor,
+				this.styles.rotationBBoxColor,
 				styles.polygonOutlineColor,
 				feature,
 			);
-			styles.polygonOutlineOpacity = 1;
-			styles.polygonOutlineWidth = 2;
+			styles.polygonOutlineOpacity = this.getNumericStylingValue(
+				this.styles.rotationBBoxOpacity,
+				1,
+				feature,
+			);
+			styles.polygonOutlineWidth = this.getNumericStylingValue(
+				this.styles.rotationBBoxWidth,
+				2,
+				feature,
+			);
 			styles.zIndex = Z_INDEX.LAYER_TWO;
 			return styles;
 		} else if (
@@ -1358,12 +1384,20 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 			feature.properties[SELECT_PROPERTIES.ROTATION_POINT_GUIDE]
 		) {
 			styles.lineStringColor = this.getHexColorStylingValue(
-				this.styles.selectionPointColor,
+				this.styles.rotationGuideColor,
 				styles.lineStringColor,
 				feature,
 			);
-			styles.lineStringOpacity = 1;
-			styles.lineStringWidth = 2;
+			styles.lineStringOpacity = this.getNumericStylingValue(
+				this.styles.rotationGuideOpacity,
+				1,
+				feature,
+			);
+			styles.lineStringWidth = this.getNumericStylingValue(
+				this.styles.rotationGuideWidth,
+				2,
+				feature,
+			);
 			styles.zIndex = Z_INDEX.LAYER_TWO;
 			return styles;
 		} else if (feature.properties[SELECT_PROPERTIES.SELECTED]) {

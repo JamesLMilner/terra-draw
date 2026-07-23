@@ -36,6 +36,8 @@ import { DragCoordinateBehavior } from "./behaviors/drag-coordinate.behavior";
 import { BehaviorConfig } from "../base.behavior";
 import { RotateFeatureBehavior } from "./behaviors/rotate-feature.behavior";
 import { ScaleFeatureBehavior } from "./behaviors/scale-feature.behavior";
+import { BoundingBoxBehavior } from "./behaviors/bounding-box.behavior";
+import { ScaleHandleBehavior } from "./behaviors/scale-handle.behavior";
 import { FeatureId, GeoJSONStoreFeatures } from "../../store/store";
 import { getDefaultStyling } from "../../util/styling";
 import {
@@ -125,6 +127,32 @@ type SelectionStyling = {
 	midPointWidth: NumericStyling;
 	midPointOutlineWidth: NumericStyling;
 	midPointOutlineOpacity: NumericStyling;
+
+	// Rotation handle (point dragged to rotate the selected feature)
+	rotationPointColor: HexColorStyling;
+	rotationPointWidth: NumericStyling;
+	rotationPointOpacity: NumericStyling;
+	rotationPointOutlineColor: HexColorStyling;
+	rotationPointOutlineWidth: NumericStyling;
+	rotationPointOutlineOpacity: NumericStyling;
+
+	// Rotation bounding box (outline drawn around the selected feature while rotating)
+	rotationBBoxColor: HexColorStyling;
+	rotationBBoxWidth: NumericStyling;
+	rotationBBoxOpacity: NumericStyling;
+
+	// Rotation guide line (connects the bounding box to the rotation handle)
+	rotationGuideColor: HexColorStyling;
+	rotationGuideWidth: NumericStyling;
+	rotationGuideOpacity: NumericStyling;
+
+	// Scale handles (points at the bounding box corners used to scale the feature)
+	scaleHandleColor: HexColorStyling;
+	scaleHandleWidth: NumericStyling;
+	scaleHandleOpacity: NumericStyling;
+	scaleHandleOutlineColor: HexColorStyling;
+	scaleHandleOutlineWidth: NumericStyling;
+	scaleHandleOutlineOpacity: NumericStyling;
 };
 
 interface Cursors {
@@ -135,6 +163,8 @@ interface Cursors {
 	dragStart?: Cursor;
 	dragEnd?: Cursor;
 	insertMidpoint?: Cursor;
+	rotate?: Cursor;
+	scaleHandle?: Cursor;
 }
 
 const defaultCursors = {
@@ -142,7 +172,12 @@ const defaultCursors = {
 	dragStart: "move",
 	dragEnd: "move",
 	insertMidpoint: "crosshair",
+	rotate: "move",
+	scaleHandle: "nesw-resize",
 } as Required<Cursors>;
+
+// The modifier key that switches corner-scaling to scale about the centre.
+const SCALE_CENTER_KEY = "Shift";
 
 interface TerraDrawSelectModeOptions<
 	T extends CustomStyling,
@@ -173,9 +208,16 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 	private dragTarget:
 		| { type: "none" }
 		| { type: "feature"; featureId: FeatureId }
+		| { type: "rotate"; featureId: FeatureId; dragHandleId: FeatureId }
 		| { type: "coordinate"; featureId: FeatureId; coordinateIndex: number }
 		| { type: "resize"; featureId: FeatureId; coordinateIndex: number }
-		| { type: "midpoint"; featureId: FeatureId; midPointId: FeatureId } = {
+		| { type: "midpoint"; featureId: FeatureId; midPointId: FeatureId }
+		| {
+				type: "scaleHandle";
+				featureId: FeatureId;
+				scaleHandleId: FeatureId;
+				cornerIndex: number;
+		  } = {
 		type: "none",
 	};
 
@@ -191,6 +233,8 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 	private rotateFeature!: RotateFeatureBehavior;
 	private scaleFeature!: ScaleFeatureBehavior;
 	private dragCoordinateResizeFeature!: DragCoordinateResizeBehavior;
+	private boundingBox!: BoundingBoxBehavior;
+	private scaleHandles!: ScaleHandleBehavior;
 	private coordinatePoints!: CoordinatePointBehavior;
 	private lineSnap!: LineSnappingBehavior;
 	private mutateFeature!: MutateFeatureBehavior;
@@ -325,6 +369,20 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 			this.pixelDistance,
 			this.clickBoundingBox,
 		);
+		this.boundingBox = new BoundingBoxBehavior(
+			config,
+			this.readFeature,
+			this.mutateFeature,
+		);
+
+		this.scaleHandles = new ScaleHandleBehavior(
+			config,
+			this.boundingBox,
+			this.readFeature,
+			this.mutateFeature,
+			this.pixelDistance,
+		);
+
 		this.rotateFeature = new RotateFeatureBehavior(
 			config,
 			this.selectionPoints,
@@ -332,6 +390,9 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 			this.coordinatePoints,
 			this.readFeature,
 			this.mutateFeature,
+			this.pixelDistance,
+			this.boundingBox,
+			this.scaleHandles,
 		);
 
 		this.dragFeature = new DragFeatureBehavior(
@@ -340,32 +401,45 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 			this.selectionPoints,
 			this.midPoints,
 			this.coordinatePoints,
+			this.rotateFeature,
 			this.readFeature,
 			this.mutateFeature,
+			this.boundingBox,
+			this.scaleHandles,
 		);
+
 		this.dragCoordinate = new DragCoordinateBehavior(
 			config,
 			this.pixelDistance,
 			this.selectionPoints,
 			this.midPoints,
 			this.coordinatePoints,
+			this.rotateFeature,
 			this.coordinateSnap,
 			this.lineSnap,
 			this.readFeature,
 			this.mutateFeature,
+			this.boundingBox,
+			this.scaleHandles,
 		);
+
 		this.dragCoordinateResizeFeature = new DragCoordinateResizeBehavior(
 			config,
 			this.pixelDistance,
 			this.selectionPoints,
 			this.midPoints,
 			this.coordinatePoints,
+			this.rotateFeature,
 			this.readFeature,
 			this.mutateFeature,
+			this.boundingBox,
+			this.scaleHandles,
 		);
+
 		this.scaleFeature = new ScaleFeatureBehavior(
 			config,
 			this.dragCoordinateResizeFeature,
+			this.boundingBox,
 		);
 	}
 
@@ -385,6 +459,10 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 		this.selectionPoints.delete();
 		this.midPoints.delete();
 		this.dragTarget = { type: "none" };
+		this.rotateFeature.reset();
+		this.scaleFeature.reset();
+		this.scaleHandles.destroy();
+		this.boundingBox.destroy();
 	}
 
 	private deleteSelected() {
@@ -419,7 +497,9 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 
 		const hasDraggableFlags =
 			featureFlags &&
-			(featureFlags.draggable ||
+			(featureFlags.rotateable ||
+				featureFlags.scaleable ||
+				featureFlags.draggable ||
 				coordinatesFlags?.draggable ||
 				coordinatesFlags?.resizable ||
 				midpointsDraggable);
@@ -621,6 +701,27 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 
 		if (type !== "LineString" && type !== "Polygon") {
 			return;
+		}
+
+		const rotateable = Boolean(modeFlags?.feature?.rotateable);
+		// Corner scaling reuses the resize behavior, which is web-mercator only.
+		const scaleable =
+			Boolean(modeFlags?.feature?.scaleable) &&
+			this.projection === "web-mercator";
+
+		// The bounding box is shared by rotation and scaling — create it once.
+		if (featureCoordinates && (rotateable || scaleable)) {
+			this.boundingBox.create({ featureId, featureCoordinates });
+		}
+
+		if (featureCoordinates && rotateable) {
+			this.rotateFeature.createHandle({
+				featureId,
+			});
+		}
+
+		if (featureCoordinates && scaleable) {
+			this.scaleHandles.create({ featureId });
 		}
 
 		if (featureCoordinates && modeFlags && modeFlags.feature.coordinates) {
@@ -910,6 +1011,37 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 			}
 		}
 
+		if (featureFlags?.rotateable) {
+			const draggedRotateHandleId =
+				pointerOverTarget.type === "rotate"
+					? pointerOverTarget.dragHandleId
+					: this.rotateFeature.getNearestRotateHandle(event);
+
+			if (this.selected.length && draggedRotateHandleId) {
+				setMapDraggability(false);
+
+				return;
+			}
+		}
+
+		// Scale Handle (bbox corner)
+		if (featureFlags?.scaleable) {
+			const scaleHandle =
+				pointerOverTarget.type === "scaleHandle"
+					? {
+							id: pointerOverTarget.scaleHandleId,
+							index: pointerOverTarget.cornerIndex,
+						}
+					: this.scaleHandles.getNearestScaleHandle(event);
+
+			if (this.selected.length && scaleHandle) {
+				this.setCursor(this.cursors.scaleHandle);
+				this.scaleFeature.startCornerScaling(selectedId, scaleHandle.index);
+				setMapDraggability(false);
+				return;
+			}
+		}
+
 		// Drag Feature
 		if (draggableFeature) {
 			this.setCursor(this.cursors.dragStart);
@@ -958,14 +1090,29 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 			modeFlags &&
 			modeFlags.feature &&
 			modeFlags.feature.rotateable &&
-			this.canRotate(event)
+			(this.canRotate(event) || this.dragTarget.type === "rotate")
 		) {
 			setMapDraggability(false);
 			this.rotateFeature.rotate(event, selectedId);
 			return;
 		}
 
-		// Check if should scale
+		// Check if a bbox corner handle is being dragged (corner scaling)
+		if (
+			modeFlags &&
+			modeFlags.feature &&
+			modeFlags.feature.scaleable &&
+			this.scaleFeature.isCornerScaling()
+		) {
+			setMapDraggability(false);
+			this.scaleFeature.scaleFromCorner(
+				event,
+				event.heldKeys.includes(SCALE_CENTER_KEY),
+			);
+			return;
+		}
+
+		// Check if should scale (key-chord scale, e.g. Control+s)
 		if (
 			modeFlags &&
 			modeFlags.feature &&
@@ -1045,18 +1192,35 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 				mode: this.mode,
 				action: FinishActions.DragFeature,
 			});
+		} else if (this.scaleFeature.isCornerScaling()) {
+			// Corner scaling drives the resize behavior, so this must be checked
+			// before the DragCoordinateResize branch below.
+			this.onFinish(this.selected[0], {
+				mode: this.mode,
+				action: FinishActions.DragScale,
+			});
 		} else if (this.dragCoordinateResizeFeature.isDragging()) {
 			this.onFinish(this.selected[0], {
 				mode: this.mode,
 				action: FinishActions.DragCoordinateResize,
 			});
+		} else if (this.rotateFeature.isDragging()) {
+			this.onFinish(this.selected[0], {
+				mode: this.mode,
+				action: FinishActions.DragRotate,
+			});
 		}
+
+		const selectedFeatureId = this.selected[0];
+		const featureCoordinates = selectedFeatureId
+			? this.readFeature.getCoordinates(selectedFeatureId)
+			: undefined;
 
 		this.dragCoordinate.stopDragging();
 		this.dragFeature.stopDragging();
 		this.dragCoordinateResizeFeature.stopDragging();
-		this.rotateFeature.reset();
 		this.scaleFeature.reset();
+		this.rotateFeature.stopDragging({ featureCoordinates });
 		setMapDraggability(true);
 	}
 
@@ -1140,6 +1304,21 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 			}
 		}
 
+		// Scale Handle (bbox corner)
+		if (featureFlags.scaleable) {
+			const scaleHandle = this.scaleHandles.getNearestScaleHandle(event);
+			if (scaleHandle) {
+				this.dragTarget = {
+					type: "scaleHandle",
+					featureId: selectedId,
+					scaleHandleId: scaleHandle.id,
+					cornerIndex: scaleHandle.index,
+				};
+				this.setCursor(this.cursors.scaleHandle);
+				return;
+			}
+		}
+
 		if (featureFlags.draggable && this.dragFeature.canDrag(event, selectedId)) {
 			if (nearbyMidPoint) {
 				return;
@@ -1147,6 +1326,13 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 
 			this.dragTarget = { type: "feature", featureId: selectedId };
 			this.setCursor(this.getPointerOverFeatureCursor());
+			return;
+		}
+
+		const dragHandleId = this.rotateFeature.getNearestRotateHandle(event);
+		if (featureFlags.rotateable && dragHandleId) {
+			this.dragTarget = { type: "rotate", featureId: selectedId, dragHandleId };
+			this.setCursor(this.cursors.rotate);
 			return;
 		}
 
@@ -1205,6 +1391,90 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 				return styles;
 			}
 
+			if (feature.properties[SELECT_PROPERTIES.ROTATION_POINT]) {
+				styles.pointColor = this.getHexColorStylingValue(
+					this.styles.rotationPointColor,
+					styles.pointColor,
+					feature,
+				);
+
+				styles.pointOpacity = this.getNumericStylingValue(
+					this.styles.rotationPointOpacity,
+					1,
+					feature,
+				);
+
+				styles.pointOutlineColor = this.getHexColorStylingValue(
+					this.styles.rotationPointOutlineColor,
+					styles.pointOutlineColor,
+					feature,
+				);
+
+				styles.pointWidth = this.getNumericStylingValue(
+					this.styles.rotationPointWidth,
+					6,
+					feature,
+				);
+
+				styles.pointOutlineOpacity = this.getNumericStylingValue(
+					this.styles.rotationPointOutlineOpacity,
+					1,
+					feature,
+				);
+
+				styles.pointOutlineWidth = this.getNumericStylingValue(
+					this.styles.rotationPointOutlineWidth,
+					2,
+					feature,
+				);
+
+				styles.zIndex = Z_INDEX.LAYER_THREE;
+
+				return styles;
+			}
+
+			if (feature.properties[SELECT_PROPERTIES.SCALE_HANDLE]) {
+				styles.pointColor = this.getHexColorStylingValue(
+					this.styles.scaleHandleColor,
+					styles.pointColor,
+					feature,
+				);
+
+				styles.pointOpacity = this.getNumericStylingValue(
+					this.styles.scaleHandleOpacity,
+					1,
+					feature,
+				);
+
+				styles.pointOutlineColor = this.getHexColorStylingValue(
+					this.styles.scaleHandleOutlineColor,
+					styles.pointOutlineColor,
+					feature,
+				);
+
+				styles.pointWidth = this.getNumericStylingValue(
+					this.styles.scaleHandleWidth,
+					6,
+					feature,
+				);
+
+				styles.pointOutlineOpacity = this.getNumericStylingValue(
+					this.styles.scaleHandleOutlineOpacity,
+					1,
+					feature,
+				);
+
+				styles.pointOutlineWidth = this.getNumericStylingValue(
+					this.styles.scaleHandleOutlineWidth,
+					2,
+					feature,
+				);
+
+				styles.zIndex = Z_INDEX.LAYER_THREE;
+
+				return styles;
+			}
+
 			if (feature.properties[SELECT_PROPERTIES.MID_POINT]) {
 				styles.pointColor = this.getHexColorStylingValue(
 					this.styles.midPointColor,
@@ -1246,6 +1516,51 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 
 				return styles;
 			}
+		} else if (
+			feature.properties.mode === this.mode &&
+			feature.geometry.type === "Polygon" &&
+			feature.properties[SELECT_PROPERTIES.ROTATION_BBOX_GUIDE]
+		) {
+			styles.polygonFillOpacity = 0;
+			styles.polygonOutlineColor = this.getHexColorStylingValue(
+				this.styles.rotationBBoxColor,
+				styles.polygonOutlineColor,
+				feature,
+			);
+			styles.polygonOutlineOpacity = this.getNumericStylingValue(
+				this.styles.rotationBBoxOpacity,
+				1,
+				feature,
+			);
+			styles.polygonOutlineWidth = this.getNumericStylingValue(
+				this.styles.rotationBBoxWidth,
+				2,
+				feature,
+			);
+			styles.zIndex = Z_INDEX.LAYER_TWO;
+			return styles;
+		} else if (
+			feature.properties.mode === this.mode &&
+			feature.geometry.type === "LineString" &&
+			feature.properties[SELECT_PROPERTIES.ROTATION_POINT_GUIDE]
+		) {
+			styles.lineStringColor = this.getHexColorStylingValue(
+				this.styles.rotationGuideColor,
+				styles.lineStringColor,
+				feature,
+			);
+			styles.lineStringOpacity = this.getNumericStylingValue(
+				this.styles.rotationGuideOpacity,
+				1,
+				feature,
+			);
+			styles.lineStringWidth = this.getNumericStylingValue(
+				this.styles.rotationGuideWidth,
+				2,
+				feature,
+			);
+			styles.zIndex = Z_INDEX.LAYER_TWO;
+			return styles;
 		} else if (feature.properties[SELECT_PROPERTIES.SELECTED]) {
 			// Select mode shortcuts the styling of a feature if it is selected
 			// A selected feature from another mode will end up in this block

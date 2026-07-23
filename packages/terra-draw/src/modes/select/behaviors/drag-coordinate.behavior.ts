@@ -21,6 +21,9 @@ import {
 	MutateFeatureBehavior,
 	Mutations,
 } from "../../mutate-feature.behavior";
+import { RotateFeatureBehavior } from "./rotate-feature.behavior";
+import { BoundingBoxBehavior } from "./bounding-box.behavior";
+import { ScaleHandleBehavior } from "./scale-handle.behavior";
 
 export class DragCoordinateBehavior extends TerraDrawModeBehavior {
 	private readonly featureSnapping: FeatureSnappingBehavior;
@@ -31,10 +34,13 @@ export class DragCoordinateBehavior extends TerraDrawModeBehavior {
 		private readonly selectionPoints: SelectionPointBehavior,
 		private readonly midPoints: MidPointBehavior,
 		private readonly coordinatePoints: CoordinatePointBehavior,
+		private readonly rotateFeature: RotateFeatureBehavior,
 		private readonly coordinateSnapping: CoordinateSnappingBehavior,
 		private readonly lineSnapping: LineSnappingBehavior,
 		private readonly readFeature: ReadFeatureBehavior,
 		private readonly mutateFeature: MutateFeatureBehavior,
+		private readonly boundingBox: BoundingBoxBehavior,
+		private readonly scaleHandles: ScaleHandleBehavior,
 	) {
 		super(config);
 		this.featureSnapping = new FeatureSnappingBehavior(
@@ -311,6 +317,11 @@ export class DragCoordinateBehavior extends TerraDrawModeBehavior {
 		this.midPoints.updateOneAtIndex(index, updatedCoordinates);
 		this.selectionPoints.updateOneAtIndex(index, updatedCoordinate);
 		this.coordinatePoints.updateOneAtIndex(featureId, index, updatedCoordinate);
+		this.boundingBox.updateInPlace({
+			featureCoordinates: updatedCoordinates,
+		});
+		this.rotateFeature.updateInPlace();
+		this.scaleHandles.updateInPlace();
 
 		return true;
 	}

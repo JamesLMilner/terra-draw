@@ -8,6 +8,7 @@ import { BehaviorConfig } from "../../base.behavior";
 import { PixelDistanceBehavior } from "../../pixel-distance.behavior";
 import { DragCoordinateResizeBehavior } from "./drag-coordinate-resize.behavior";
 import { MidPointBehavior } from "./midpoint.behavior";
+import { buildGuideBehaviors } from "../../../test/build-guide-behaviors";
 import { SelectionPointBehavior } from "./selection-point.behavior";
 import { MockCursorEvent } from "../../../test/mock-cursor-event";
 import { CoordinatePointBehavior } from "./coordinate-point.behavior";
@@ -64,14 +65,26 @@ describe("DragCoordinateResizeBehavior", () => {
 				new PixelDistanceBehavior(config),
 			);
 
+			const { rotateFeature, boundingBox, scaleHandles } = buildGuideBehaviors(
+				config,
+				selectionPointBehavior,
+				midpointBehavior,
+				coordinatePointBehavior,
+				readFeatureBehavior,
+				mutateFeatureBehavior,
+			);
+
 			new DragCoordinateResizeBehavior(
 				config,
 				pixelDistanceBehavior,
 				selectionPointBehavior,
 				midpointBehavior,
 				coordinatePointBehavior,
+				rotateFeature,
 				readFeatureBehavior,
 				mutateFeatureBehavior,
+				boundingBox,
+				scaleHandles,
 			);
 		});
 
@@ -111,14 +124,26 @@ describe("DragCoordinateResizeBehavior", () => {
 					new PixelDistanceBehavior(config),
 				);
 
+				const guides = buildGuideBehaviors(
+					config,
+					selectionPointBehavior,
+					midpointBehavior,
+					coordinatePointBehavior,
+					readFeatureBehavior,
+					mutateFeatureBehavior,
+				);
+
 				dragMaintainedShapeBehavior = new DragCoordinateResizeBehavior(
 					config,
 					pixelDistanceBehavior,
 					selectionPointBehavior,
 					midpointBehavior,
 					coordinatePointBehavior,
+					guides.rotateFeature,
 					readFeatureBehavior,
 					mutateFeatureBehavior,
+					guides.boundingBox,
+					guides.scaleHandles,
 				);
 			});
 

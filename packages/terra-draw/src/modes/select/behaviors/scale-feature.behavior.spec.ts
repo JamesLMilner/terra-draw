@@ -12,6 +12,9 @@ import { ReadFeatureBehavior } from "../../read-feature.behavior";
 import { CoordinatePointBehavior } from "./coordinate-point.behavior";
 import { DragCoordinateResizeBehavior } from "./drag-coordinate-resize.behavior";
 import { MidPointBehavior } from "./midpoint.behavior";
+import { buildGuideBehaviors } from "../../../test/build-guide-behaviors";
+import { BoundingBoxBehavior } from "./bounding-box.behavior";
+import { Polygon } from "geojson";
 import { ScaleFeatureBehavior } from "./scale-feature.behavior";
 import { SelectionPointBehavior } from "./selection-point.behavior";
 
@@ -33,9 +36,8 @@ describe("ScaleFeatureBehavior", () => {
 				mutateFeatureBehavior,
 			);
 
-			const dragCoordinatePointBehavior = new DragCoordinateResizeBehavior(
+			const guides = buildGuideBehaviors(
 				config,
-				new PixelDistanceBehavior(config),
 				selectionPointBehavior,
 				new MidPointBehavior(
 					config,
@@ -50,13 +52,38 @@ describe("ScaleFeatureBehavior", () => {
 				mutateFeatureBehavior,
 			);
 
-			new ScaleFeatureBehavior(config, dragCoordinatePointBehavior);
+			const dragCoordinatePointBehavior = new DragCoordinateResizeBehavior(
+				config,
+				new PixelDistanceBehavior(config),
+				selectionPointBehavior,
+				new MidPointBehavior(
+					config,
+					selectionPointBehavior,
+					coordinatePointBehavior,
+					mutateFeatureBehavior,
+					readFeatureBehavior,
+					new PixelDistanceBehavior(config),
+				),
+				coordinatePointBehavior,
+				guides.rotateFeature,
+				readFeatureBehavior,
+				mutateFeatureBehavior,
+				guides.boundingBox,
+				guides.scaleHandles,
+			);
+
+			new ScaleFeatureBehavior(
+				config,
+				dragCoordinatePointBehavior,
+				guides.boundingBox,
+			);
 		});
 	});
 
 	describe("api", () => {
 		let scaleFeatureBehavior: ScaleFeatureBehavior;
 		let config: BehaviorConfig;
+		let boundingBox: BoundingBoxBehavior;
 
 		beforeEach(() => {
 			config = MockBehaviorConfig("test");
@@ -75,9 +102,8 @@ describe("ScaleFeatureBehavior", () => {
 				mutateFeatureBehavior,
 			);
 
-			const dragCoordinatePointBehavior = new DragCoordinateResizeBehavior(
+			const guides = buildGuideBehaviors(
 				config,
-				new PixelDistanceBehavior(config),
 				selectionPointBehavior,
 				new MidPointBehavior(
 					config,
@@ -92,10 +118,32 @@ describe("ScaleFeatureBehavior", () => {
 				mutateFeatureBehavior,
 			);
 
+			const dragCoordinatePointBehavior = new DragCoordinateResizeBehavior(
+				config,
+				new PixelDistanceBehavior(config),
+				selectionPointBehavior,
+				new MidPointBehavior(
+					config,
+					selectionPointBehavior,
+					coordinatePointBehavior,
+					mutateFeatureBehavior,
+					readFeatureBehavior,
+					new PixelDistanceBehavior(config),
+				),
+				coordinatePointBehavior,
+				guides.rotateFeature,
+				readFeatureBehavior,
+				mutateFeatureBehavior,
+				guides.boundingBox,
+				guides.scaleHandles,
+			);
+
 			scaleFeatureBehavior = new ScaleFeatureBehavior(
 				config,
 				dragCoordinatePointBehavior,
+				guides.boundingBox,
 			);
+			boundingBox = guides.boundingBox;
 
 			jest.spyOn(config.store, "updateGeometry");
 		});
@@ -121,6 +169,109 @@ describe("ScaleFeatureBehavior", () => {
 
 				scaleFeatureBehavior.scale(MockCursorEvent({ lng: 0, lat: 0 }), id);
 				expect(config.store.updateGeometry).toHaveBeenCalledTimes(1);
+			});
+		});
+
+		describe("corner scaling", () => {
+			// Default polygon is the unit square [0,0]..[1,1]; bbox corners are
+			// SW[0,0] SE[1,0] NE[1,1] NW[0,1].
+			const setupSquare = () => {
+				const id = createStorePolygon(config);
+				boundingBox.create({
+					featureId: id,
+					featureCoordinates:
+						config.store.getGeometryCopy<Polygon>(id).coordinates,
+				});
+				return id;
+			};
+
+			it("isCornerScaling reflects start/reset", () => {
+				const id = setupSquare();
+				expect(scaleFeatureBehavior.isCornerScaling()).toBe(false);
+				scaleFeatureBehavior.startCornerScaling(id, 2);
+				expect(scaleFeatureBehavior.isCornerScaling()).toBe(true);
+				scaleFeatureBehavior.reset();
+				expect(scaleFeatureBehavior.isCornerScaling()).toBe(false);
+			});
+
+			it("scaleFromCorner is a no-op when not corner scaling", () => {
+				setupSquare();
+				scaleFeatureBehavior.scaleFromCorner(
+					MockCursorEvent({ lng: 2, lat: 2 }),
+					false,
+				);
+				expect(config.store.updateGeometry).toHaveBeenCalledTimes(0);
+			});
+
+			it("scales the feature from the opposite corner", () => {
+				const id = setupSquare();
+				scaleFeatureBehavior.startCornerScaling(id, 2); // grab NE corner
+
+				// Drag the NE corner out to [2,2] — SW [0,0] stays fixed.
+				scaleFeatureBehavior.scaleFromCorner(
+					MockCursorEvent({ lng: 2, lat: 2 }),
+					false,
+				);
+
+				expect(config.store.updateGeometry).toHaveBeenCalled();
+				const coords = config.store.getGeometryCopy<Polygon>(id).coordinates[0];
+				// SW corner is the fixed pivot and must not move.
+				expect(coords).toContainEqual([0, 0]);
+				// The feature grew beyond the original unit square.
+				const maxX = Math.max(...coords.map((c) => c[0]));
+				expect(maxX).toBeGreaterThan(1);
+			});
+
+			it("scales about the centre when scaleFromCenter is true", () => {
+				const id = setupSquare();
+				scaleFeatureBehavior.startCornerScaling(id, 2);
+
+				scaleFeatureBehavior.scaleFromCorner(
+					MockCursorEvent({ lng: 2, lat: 2 }),
+					true,
+				);
+
+				expect(config.store.updateGeometry).toHaveBeenCalled();
+				const coords = config.store.getGeometryCopy<Polygon>(id).coordinates[0];
+				// Scaling about the centre moves the SW corner below/left of origin.
+				const minX = Math.min(...coords.map((c) => c[0]));
+				expect(minX).toBeLessThan(0);
+			});
+
+			it("opposite scaling after a centre scaling still pins the opposite corner", () => {
+				const id = setupSquare();
+
+				// Gesture 1: centre scaling.
+				scaleFeatureBehavior.startCornerScaling(id, 2);
+				scaleFeatureBehavior.scaleFromCorner(
+					MockCursorEvent({ lng: 2, lat: 2 }),
+					true,
+				);
+				scaleFeatureBehavior.reset();
+
+				const before = config.store.getGeometryCopy<Polygon>(id).coordinates[0];
+				const swBefore = [
+					Math.min(...before.map((c) => c[0])),
+					Math.min(...before.map((c) => c[1])),
+				];
+
+				// Gesture 2: opposite-fixed scaling (no centre). The opposite (SW)
+				// corner must stay fixed — i.e. a prior centre gesture must not make
+				// subsequent gestures behave as centre.
+				scaleFeatureBehavior.startCornerScaling(id, 2);
+				scaleFeatureBehavior.scaleFromCorner(
+					MockCursorEvent({ lng: 5, lat: 5 }),
+					false,
+				);
+
+				const after = config.store.getGeometryCopy<Polygon>(id).coordinates[0];
+				const swAfter = [
+					Math.min(...after.map((c) => c[0])),
+					Math.min(...after.map((c) => c[1])),
+				];
+
+				expect(swAfter[0]).toBeCloseTo(swBefore[0], 5);
+				expect(swAfter[1]).toBeCloseTo(swBefore[1], 5);
 			});
 		});
 

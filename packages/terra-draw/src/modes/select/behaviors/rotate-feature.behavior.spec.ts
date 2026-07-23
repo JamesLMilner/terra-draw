@@ -14,6 +14,8 @@ import { RotateFeatureBehavior } from "./rotate-feature.behavior";
 import { SelectionPointBehavior } from "./selection-point.behavior";
 import { webMercatorCentroid } from "../../../geometry/web-mercator-centroid";
 import { PixelDistanceBehavior } from "../../pixel-distance.behavior";
+import { BoundingBoxBehavior } from "./bounding-box.behavior";
+import { ScaleHandleBehavior } from "./scale-handle.behavior";
 
 jest.mock("../../../geometry/web-mercator-centroid", () => {
 	const actual = jest.requireActual("../../../geometry/web-mercator-centroid");
@@ -49,6 +51,19 @@ describe("RotateFeatureBehavior", () => {
 				new PixelDistanceBehavior(config),
 			);
 
+			const boundingBoxBehavior = new BoundingBoxBehavior(
+				config,
+				readFeatureBehavior,
+				mutateFeatureBehavior,
+			);
+			const scaleHandleBehavior = new ScaleHandleBehavior(
+				config,
+				boundingBoxBehavior,
+				readFeatureBehavior,
+				mutateFeatureBehavior,
+				new PixelDistanceBehavior(config),
+			);
+
 			new RotateFeatureBehavior(
 				config,
 				selectionPointBehavior,
@@ -57,6 +72,8 @@ describe("RotateFeatureBehavior", () => {
 				readFeatureBehavior,
 				mutateFeatureBehavior,
 				new PixelDistanceBehavior(config),
+				boundingBoxBehavior,
+				scaleHandleBehavior,
 			);
 		});
 	});
@@ -81,6 +98,19 @@ describe("RotateFeatureBehavior", () => {
 				mutateFeatureBehavior,
 			);
 
+			const boundingBoxBehavior = new BoundingBoxBehavior(
+				config,
+				readFeatureBehavior,
+				mutateFeatureBehavior,
+			);
+			const scaleHandleBehavior = new ScaleHandleBehavior(
+				config,
+				boundingBoxBehavior,
+				readFeatureBehavior,
+				mutateFeatureBehavior,
+				new PixelDistanceBehavior(config),
+			);
+
 			rotateFeatureBehavior = new RotateFeatureBehavior(
 				config,
 				selectionPointBehavior,
@@ -96,6 +126,8 @@ describe("RotateFeatureBehavior", () => {
 				readFeatureBehavior,
 				mutateFeatureBehavior,
 				new PixelDistanceBehavior(config),
+				boundingBoxBehavior,
+				scaleHandleBehavior,
 			);
 
 			(

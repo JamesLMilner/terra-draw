@@ -30,6 +30,8 @@ import {
 	Mutations,
 } from "../../mutate-feature.behavior";
 import { RotateFeatureBehavior } from "./rotate-feature.behavior";
+import { BoundingBoxBehavior } from "./bounding-box.behavior";
+import { ScaleHandleBehavior } from "./scale-handle.behavior";
 
 export type ResizeOptions =
 	| "center"
@@ -60,13 +62,19 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 		private readonly rotateFeature: RotateFeatureBehavior,
 		private readonly readFeature: ReadFeatureBehavior,
 		private readonly mutateFeature: MutateFeatureBehavior,
+		private readonly boundingBox: BoundingBoxBehavior,
+		private readonly scaleHandles: ScaleHandleBehavior,
 	) {
 		super(config);
 	}
 
 	private minimumScale = 0.0001;
 
-	private draggedCoordinate: { id: null | FeatureId; index: number } = {
+	private draggedCoordinate: {
+		id: null | FeatureId;
+		index: number;
+		referenceBBoxIndex?: BoundingBoxIndex;
+	} = {
 		id: null,
 		index: -1,
 	};
@@ -196,7 +204,11 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 	}
 
 	private getSelectedFeatureDataWebMercator() {
-		if (!this.draggedCoordinate.id || this.draggedCoordinate.index === -1) {
+		if (
+			!this.draggedCoordinate.id ||
+			(this.draggedCoordinate.index === -1 &&
+				this.draggedCoordinate.referenceBBoxIndex === undefined)
+		) {
 			return null;
 		}
 
@@ -208,11 +220,20 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 		const updatedCoords = this.getNormalisedCoordinates(feature.geometry);
 		const boundingBox = this.getBBoxWebMercator(updatedCoords);
 
+		let selectedCoordinate: Position;
+		if (this.draggedCoordinate.referenceBBoxIndex !== undefined) {
+			const [x, y] = boundingBox[this.draggedCoordinate.referenceBBoxIndex];
+			const { lng, lat } = webMercatorXYToLngLat(x, y);
+			selectedCoordinate = [lng, lat];
+		} else {
+			selectedCoordinate = updatedCoords[this.draggedCoordinate.index];
+		}
+
 		return {
 			boundingBox,
 			feature,
 			updatedCoords,
-			selectedCoordinate: updatedCoords[this.draggedCoordinate.index],
+			selectedCoordinate,
 		};
 	}
 
@@ -660,6 +681,33 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 	}
 
 	/**
+	 * Starts resizing driven by a bounding-box corner rather than a feature vertex
+	 * @param id - feature id being scaled
+	 * @param cornerCoordinate - lng/lat of the grabbed bbox corner
+	 */
+	public startDraggingFromCorner(id: FeatureId, cornerCoordinate: Position) {
+		const geometry = this.readFeature.getGeometry(id);
+		if (geometry.type !== "Polygon" && geometry.type !== "LineString") {
+			return;
+		}
+
+		// Lock the grabbed bbox corner index for the duration of the drag
+		const boundingBox = this.getBBoxWebMercator(
+			this.getNormalisedCoordinates(geometry),
+		);
+		const { closestBBoxIndex } = this.getIndexesWebMercator(
+			boundingBox,
+			lngLatToWebMercatorXY(cornerCoordinate[0], cornerCoordinate[1]),
+		);
+
+		this.draggedCoordinate = {
+			id,
+			index: -1,
+			referenceBBoxIndex: closestBBoxIndex,
+		};
+	}
+
+	/**
 	 * Stops the resizing of the feature
 	 * @returns - void	 *
 	 */
@@ -775,7 +823,9 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 		this.midPoints.updateAllInPlace({ featureCoordinates });
 		this.selectionPoints.updateAllInPlace({ featureCoordinates });
 		this.coordinatePoints.updateAllInPlace({ featureId, featureCoordinates });
-		this.rotateFeature.updateDragHandleInPlace({ featureCoordinates });
+		this.boundingBox.updateInPlace({ featureCoordinates });
+		this.rotateFeature.updateInPlace();
+		this.scaleHandles.updateInPlace();
 
 		return true;
 	}

@@ -1033,7 +1033,7 @@ const SelectWithRotateDragHandle: Story = {
 				}),
 		],
 		instructions:
-			"Draw polygons, lines or points. Select a feature to drag it, drag its vertices or midpoints, scale it, or rotate it using the drag handle.",
+			"Draw polygons, lines or points. Select a feature to drag it, drag its vertices or midpoints, or rotate it using the top drag handle. Drag a bounding-box corner handle to scale from the opposite corner (hold Shift to scale about the centre).",
 		afterRender: (draw: TerraDraw) => {
 			draw.setMode("select");
 			draw.addFeatures([

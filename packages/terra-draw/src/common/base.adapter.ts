@@ -105,6 +105,23 @@ export abstract class TerraDrawBaseAdapter implements TerraDrawAdapter {
 		};
 	}
 
+	private reconcileModifierKeys(event: PointerEvent | MouseEvent) {
+		const modifiers: [string, boolean][] = [
+			["Shift", event.shiftKey],
+			["Control", event.ctrlKey],
+			["Alt", event.altKey],
+			["Meta", event.metaKey],
+		];
+
+		for (const [key, held] of modifiers) {
+			if (held) {
+				this._heldKeys.add(key);
+			} else {
+				this._heldKeys.delete(key);
+			}
+		}
+	}
+
 	protected getDrawEventFromEvent(
 		event: PointerEvent | MouseEvent,
 		isContextMenu = false,
@@ -118,6 +135,8 @@ export abstract class TerraDrawBaseAdapter implements TerraDrawAdapter {
 		const { lng, lat } = latLng;
 		const { containerX, containerY } = this.getMapElementXYPosition(event);
 		const button = this.getButton(event);
+
+		this.reconcileModifierKeys(event);
 		const heldKeys = Array.from(this._heldKeys);
 
 		return {

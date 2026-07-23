@@ -10,7 +10,7 @@ import { CoordinatePointBehavior } from "./coordinate-point.behavior";
 import { DragFeatureBehavior } from "./drag-feature.behavior";
 import { FeatureAtPointerEventBehavior } from "./feature-at-pointer-event.behavior";
 import { MidPointBehavior } from "./midpoint.behavior";
-import { RotateFeatureBehavior } from "./rotate-feature.behavior";
+import { buildGuideBehaviors } from "../../../test/build-guide-behaviors";
 import { SelectionPointBehavior } from "./selection-point.behavior";
 
 describe("DragFeatureBehavior", () => {
@@ -45,23 +45,26 @@ describe("DragFeatureBehavior", () => {
 				new PixelDistanceBehavior(config),
 			);
 
+			const { rotateFeature, boundingBox, scaleHandles } = buildGuideBehaviors(
+				config,
+				selectionPointBehavior,
+				midpointBehavior,
+				coordinatePointBehavior,
+				readFeatureBehavior,
+				mutateFeatureBehavior,
+			);
+
 			new DragFeatureBehavior(
 				config,
 				featureAtPointerEventBehavior,
 				selectionPointBehavior,
 				midpointBehavior,
 				coordinatePointBehavior,
-				new RotateFeatureBehavior(
-					config,
-					selectionPointBehavior,
-					midpointBehavior,
-					coordinatePointBehavior,
-					readFeatureBehavior,
-					mutateFeatureBehavior,
-					new PixelDistanceBehavior(config),
-				),
+				rotateFeature,
 				readFeatureBehavior,
 				mutateFeatureBehavior,
+				boundingBox,
+				scaleHandles,
 			);
 		});
 	});
@@ -105,23 +108,26 @@ describe("DragFeatureBehavior", () => {
 				new PixelDistanceBehavior(config),
 			);
 
+			const { rotateFeature, boundingBox, scaleHandles } = buildGuideBehaviors(
+				config,
+				selectionPointBehavior,
+				midpointBehavior,
+				coordinatePointBehavior,
+				readFeatureBehavior,
+				mutateFeatureBehavior,
+			);
+
 			dragFeatureBehavior = new DragFeatureBehavior(
 				config,
 				featureAtPointerEventBehavior,
 				selectionPointBehavior,
 				midpointBehavior,
 				coordinatePointBehavior,
-				new RotateFeatureBehavior(
-					config,
-					selectionPointBehavior,
-					midpointBehavior,
-					coordinatePointBehavior,
-					readFeatureBehavior,
-					mutateFeatureBehavior,
-					new PixelDistanceBehavior(config),
-				),
+				rotateFeature,
 				readFeatureBehavior,
 				mutateFeatureBehavior,
+				boundingBox,
+				scaleHandles,
 			);
 		});
 

@@ -17,6 +17,8 @@ import {
 	Mutations,
 } from "../../mutate-feature.behavior";
 import { RotateFeatureBehavior } from "./rotate-feature.behavior";
+import { BoundingBoxBehavior } from "./bounding-box.behavior";
+import { ScaleHandleBehavior } from "./scale-handle.behavior";
 
 export class DragFeatureBehavior extends TerraDrawModeBehavior {
 	constructor(
@@ -28,6 +30,8 @@ export class DragFeatureBehavior extends TerraDrawModeBehavior {
 		private readonly rotateFeature: RotateFeatureBehavior,
 		private readonly readFeature: ReadFeatureBehavior,
 		private readonly mutateFeature: MutateFeatureBehavior,
+		private readonly boundingBox: BoundingBoxBehavior,
+		private readonly scaleHandles: ScaleHandleBehavior,
 	) {
 		super(config);
 	}
@@ -209,7 +213,9 @@ export class DragFeatureBehavior extends TerraDrawModeBehavior {
 			this.midPoints.updateAllInPlace({ featureCoordinates });
 			this.selectionPoints.updateAllInPlace({ featureCoordinates });
 			this.coordinatePoints.updateAllInPlace({ featureId, featureCoordinates });
-			this.rotateFeature.updateDragHandleInPlace({ featureCoordinates });
+			this.boundingBox.updateInPlace({ featureCoordinates });
+			this.rotateFeature.updateInPlace();
+			this.scaleHandles.updateInPlace();
 
 			this.dragPosition = [event.lng, event.lat];
 

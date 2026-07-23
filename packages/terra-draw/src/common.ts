@@ -129,6 +129,7 @@ export const FinishActions = {
 	DragFeature: "dragFeature",
 	DragCoordinateResize: "dragCoordinateResize",
 	DragRotate: "dragRotate",
+	DragScale: "dragScale",
 } as const;
 
 export type DrawInteractions =
@@ -297,7 +298,10 @@ export const SELECT_PROPERTIES = {
 	SELECTION_POINT: "selectionPoint",
 	ROTATION_POINT: "rotationPoint",
 	ROTATION_POINT_GUIDE: "rotationPointGuide",
+	// Shared selection bounding box (name kept for back-compat; also used by scaling)
 	ROTATION_BBOX_GUIDE: "rotationBBoxGuide",
+	SCALE_HANDLE: "scaleHandle",
+	SCALE_HANDLE_INDEX: "scaleHandleIndex",
 } as const;
 
 export const COMMON_PROPERTIES = {
@@ -321,6 +325,7 @@ const GUIDANCE_POINT_PROPERTY_KEYS = [
 	SELECT_PROPERTIES.ROTATION_POINT,
 	SELECT_PROPERTIES.ROTATION_POINT_GUIDE,
 	SELECT_PROPERTIES.ROTATION_BBOX_GUIDE,
+	SELECT_PROPERTIES.SCALE_HANDLE,
 	COMMON_PROPERTIES.CLOSING_POINT,
 	COMMON_PROPERTIES.SNAPPING_POINT,
 	COMMON_PROPERTIES.COORDINATE_POINT,

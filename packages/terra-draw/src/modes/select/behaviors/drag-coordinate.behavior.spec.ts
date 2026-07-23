@@ -8,7 +8,7 @@ import { BehaviorConfig } from "../../base.behavior";
 import { PixelDistanceBehavior } from "../../pixel-distance.behavior";
 import { DragCoordinateBehavior } from "./drag-coordinate.behavior";
 import { MidPointBehavior } from "./midpoint.behavior";
-import { RotateFeatureBehavior } from "./rotate-feature.behavior";
+import { buildGuideBehaviors } from "../../../test/build-guide-behaviors";
 import { SelectionPointBehavior } from "./selection-point.behavior";
 import { MockCursorEvent } from "../../../test/mock-cursor-event";
 import { CoordinatePointBehavior } from "./coordinate-point.behavior";
@@ -79,25 +79,28 @@ describe("DragCoordinateBehavior", () => {
 				new ClickBoundingBoxBehavior(config),
 			);
 
+			const { rotateFeature, boundingBox, scaleHandles } = buildGuideBehaviors(
+				config,
+				selectionPointBehavior,
+				midpointBehavior,
+				coordinatePointBehavior,
+				readFeatureBehavior,
+				mutateFeatureBehavior,
+			);
+
 			new DragCoordinateBehavior(
 				config,
 				pixelDistanceBehavior,
 				selectionPointBehavior,
 				midpointBehavior,
 				coordinatePointBehavior,
-				new RotateFeatureBehavior(
-					config,
-					selectionPointBehavior,
-					midpointBehavior,
-					coordinatePointBehavior,
-					readFeatureBehavior,
-					mutateFeatureBehavior,
-					pixelDistanceBehavior,
-				),
+				rotateFeature,
 				coordinateBehavior,
 				lineSnappingBehavior,
 				readFeatureBehavior,
 				mutateFeatureBehavior,
+				boundingBox,
+				scaleHandles,
 			);
 		});
 	});
@@ -144,25 +147,28 @@ describe("DragCoordinateBehavior", () => {
 				new ClickBoundingBoxBehavior(config),
 			);
 
+			const { rotateFeature, boundingBox, scaleHandles } = buildGuideBehaviors(
+				config,
+				selectionPointBehavior,
+				midpointBehavior,
+				coordinatePointBehavior,
+				readFeatureBehavior,
+				mutateFeatureBehavior,
+			);
+
 			dragCoordinateBehavior = new DragCoordinateBehavior(
 				config,
 				pixelDistanceBehavior,
 				selectionPointBehavior,
 				midpointBehavior,
 				coordinatePointBehavior,
-				new RotateFeatureBehavior(
-					config,
-					selectionPointBehavior,
-					midpointBehavior,
-					coordinatePointBehavior,
-					readFeatureBehavior,
-					mutateFeatureBehavior,
-					pixelDistanceBehavior,
-				),
+				rotateFeature,
 				coordinateBehavior,
 				lineSnappingBehavior,
 				readFeatureBehavior,
 				mutateFeatureBehavior,
+				boundingBox,
+				scaleHandles,
 			);
 		});
 

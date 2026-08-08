@@ -170,7 +170,7 @@ export class TerraDrawPointMode extends TerraDrawBaseDrawMode<PointModeStyling> 
 	/** @internal */
 	onDrag(
 		event: TerraDrawMouseEvent,
-		setMapDraggability: (enabled: boolean) => void,
+		_setMapDraggability: (enabled: boolean) => void,
 	) {
 		if (!this.allowPointerEvent(this.pointerEvents.onDrag, event)) {
 			return;

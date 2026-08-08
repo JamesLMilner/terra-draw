@@ -2,18 +2,13 @@ import {
 	CartesianPoint,
 	TerraDrawMouseEvent,
 	UpdateTypes,
-	Validation,
 } from "../../../common";
 import { BehaviorConfig, TerraDrawModeBehavior } from "../../base.behavior";
-import { LineString, Polygon, Position, Point, Feature } from "geojson";
+import { LineString, Polygon, Position, Point } from "geojson";
 import { PixelDistanceBehavior } from "../../pixel-distance.behavior";
 import { MidPointBehavior } from "./midpoint.behavior";
 import { SelectionPointBehavior } from "./selection-point.behavior";
-import {
-	FeatureId,
-	GeoJSONStoreFeatures,
-	GeoJSONStoreGeometries,
-} from "../../../store/store";
+import { FeatureId, GeoJSONStoreFeatures } from "../../../store/store";
 import { limitPrecision } from "../../../geometry/limit-decimal-precision";
 import { cartesianDistance } from "../../../geometry/measure/pixel-distance";
 import { coordinatePrecisionIsValid } from "../../../geometry/boolean/is-valid-coordinate";

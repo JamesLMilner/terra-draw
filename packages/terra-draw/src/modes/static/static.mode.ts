@@ -2,6 +2,7 @@ import { TerraDrawAdapterStyling } from "../../common";
 import { getDefaultStyling } from "../../util/styling";
 import { ModeTypes, TerraDrawBaseDrawMode } from "../base.mode";
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 type StaticModeStylingExt<T extends TerraDrawAdapterStyling> = {};
 type StaticModeStyling = StaticModeStylingExt<TerraDrawAdapterStyling>;
 

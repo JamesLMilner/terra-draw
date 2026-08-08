@@ -347,7 +347,6 @@ describe("TerraDrawFreehandLineStringMode", () => {
 		let freehandMode: TerraDrawFreehandLineStringMode;
 		let store: TerraDrawGeoJSONStore;
 		let onChange: jest.Mock;
-		let onFinish: jest.Mock;
 
 		beforeEach(() => {
 			freehandMode = new TerraDrawFreehandLineStringMode();
@@ -355,7 +354,6 @@ describe("TerraDrawFreehandLineStringMode", () => {
 			const mockConfig = MockModeConfig(freehandMode.mode);
 			store = mockConfig.store;
 			onChange = mockConfig.onChange;
-			onFinish = mockConfig.onFinish;
 			freehandMode.register(mockConfig);
 			freehandMode.start();
 		});

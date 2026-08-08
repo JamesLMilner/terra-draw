@@ -33,7 +33,6 @@ import { Polygon } from "geojson";
 import { calculateWebMercatorDistortion } from "../../geometry/shape/web-mercator-distortion";
 import { BehaviorConfig } from "../base.behavior";
 import { MutateFeatureBehavior, Mutations } from "../mutate-feature.behavior";
-import { ReadFeatureBehavior } from "../read-feature.behavior";
 
 type TerraDrawCircleModeKeyEvents = {
 	cancel: KeyboardEvent["key"] | null;
@@ -282,7 +281,7 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 	/** @internal */
 	onDrag(
 		event: TerraDrawMouseEvent,
-		setMapDraggability: (enabled: boolean) => void,
+		_setMapDraggability: (enabled: boolean) => void,
 	) {
 		if (
 			this.allowPointerEvent(this.pointerEvents.onDrag, event) &&

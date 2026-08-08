@@ -1,9 +1,8 @@
 import { Position } from "geojson";
-import { COMMON_PROPERTIES, SELECT_PROPERTIES } from "../../../common";
+import { SELECT_PROPERTIES } from "../../../common";
 import { MockBehaviorConfig } from "../../../test/mock-behavior-config";
 import { BehaviorConfig } from "../../base.behavior";
 import { MutateFeatureBehavior } from "../../mutate-feature.behavior";
-import { ReadFeatureBehavior } from "../../read-feature.behavior";
 import { SelectionPointBehavior } from "./selection-point.behavior";
 
 describe("SelectionPointBehavior", () => {
@@ -21,7 +20,6 @@ describe("SelectionPointBehavior", () => {
 			const mutateFeatureBehavior = new MutateFeatureBehavior(config, {
 				validate: jest.fn(() => ({ valid: true })),
 			});
-			const readFeatureBehavior = new ReadFeatureBehavior(config);
 			selectionPointBehavior = new SelectionPointBehavior(
 				config,
 				mutateFeatureBehavior,

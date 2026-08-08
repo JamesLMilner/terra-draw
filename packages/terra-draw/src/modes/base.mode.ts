@@ -116,7 +116,7 @@ export abstract class TerraDrawBaseDrawMode<Styling extends CustomStyling> {
 	protected unproject!: TerraDrawModeRegisterConfig["unproject"];
 	protected project!: TerraDrawModeRegisterConfig["project"];
 	protected setCursor!: TerraDrawModeRegisterConfig["setCursor"];
-	protected registerBehaviors(behaviorConfig: BehaviorConfig): void {}
+	protected registerBehaviors(_behaviorConfig: BehaviorConfig): void {}
 
 	private isInitialUpdate = false;
 
@@ -244,9 +244,9 @@ export abstract class TerraDrawBaseDrawMode<Styling extends CustomStyling> {
 		return this.performFeatureValidation(feature);
 	}
 
-	afterFeatureAdded(feature: GeoJSONStoreFeatures) {}
+	afterFeatureAdded(_feature: GeoJSONStoreFeatures) {}
 
-	afterFeatureUpdated(feature: GeoJSONStoreFeatures) {}
+	afterFeatureUpdated(_feature: GeoJSONStoreFeatures) {}
 
 	private performFeatureValidation(feature: unknown): ReturnType<Validation> {
 		if (this._state === "unregistered") {
@@ -312,11 +312,11 @@ export abstract class TerraDrawBaseDrawMode<Styling extends CustomStyling> {
 	abstract cleanUp(): void;
 	abstract styleFeature(feature: GeoJSONStoreFeatures): TerraDrawAdapterStyling;
 
-	onFinish(finishedId: FeatureId, context: OnFinishContext) {}
-	onDeselect(deselectedId: FeatureId) {}
-	onSelect(selectedId: FeatureId) {}
-	onKeyDown(event: TerraDrawKeyboardEvent) {}
-	onKeyUp(event: TerraDrawKeyboardEvent) {}
+	onFinish(_finishedId: FeatureId, _context: OnFinishContext) {}
+	onDeselect(_deselectedId: FeatureId) {}
+	onSelect(_selectedId: FeatureId) {}
+	onKeyDown(_event: TerraDrawKeyboardEvent) {}
+	onKeyUp(_event: TerraDrawKeyboardEvent) {}
 	undo() {}
 	clearHistory() {}
 	undoSize() {
@@ -326,19 +326,19 @@ export abstract class TerraDrawBaseDrawMode<Styling extends CustomStyling> {
 		return 0;
 	}
 	redo() {}
-	onMouseMove(event: TerraDrawMouseEvent) {}
-	onClick(event: TerraDrawMouseEvent) {}
+	onMouseMove(_event: TerraDrawMouseEvent) {}
+	onClick(_event: TerraDrawMouseEvent) {}
 	onDragStart(
-		event: TerraDrawMouseEvent,
-		setMapDraggability: (enabled: boolean) => void,
+		_event: TerraDrawMouseEvent,
+		_setMapDraggability: (enabled: boolean) => void,
 	) {}
 	onDrag(
-		event: TerraDrawMouseEvent,
-		setMapDraggability: (enabled: boolean) => void,
+		_event: TerraDrawMouseEvent,
+		_setMapDraggability: (enabled: boolean) => void,
 	) {}
 	onDragEnd(
-		event: TerraDrawMouseEvent,
-		setMapDraggability: (enabled: boolean) => void,
+		_event: TerraDrawMouseEvent,
+		_setMapDraggability: (enabled: boolean) => void,
 	) {}
 
 	protected getHexColorStylingValue(

@@ -1,4 +1,4 @@
-import { Feature, Point, Position, LineString } from "geojson";
+import { Position } from "geojson";
 import { degreesToRadians, radiansToDegrees } from "./helpers";
 import { haversineDistanceKilometers } from "./measure/haversine-distance";
 

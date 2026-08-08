@@ -6,7 +6,7 @@ import {
 	JSONObject,
 	JSON,
 } from "../store/store";
-import { Polygon, Position, LineString, Point, Feature } from "geojson";
+import { Polygon, Position, LineString, Point } from "geojson";
 import {
 	Actions,
 	GuidancePointProperties,

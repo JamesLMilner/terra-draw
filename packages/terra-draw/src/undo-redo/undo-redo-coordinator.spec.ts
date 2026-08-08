@@ -1,4 +1,3 @@
-import { TerraDrawModeUndoRedoInterface } from "./mode-undo-redo";
 import { TerraDrawUndoRedoCoordinator } from "./undo-redo-coordinator";
 
 describe("TerraDrawUndoRedoCoordinator", () => {

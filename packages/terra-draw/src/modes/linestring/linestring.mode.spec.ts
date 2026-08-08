@@ -1,9 +1,4 @@
-import {
-	FeatureId,
-	GeoJSONStore,
-	GeoJSONStoreFeatures,
-	JSONObject,
-} from "../../store/store";
+import { FeatureId, GeoJSONStoreFeatures, JSONObject } from "../../store/store";
 import { MockModeConfig } from "../../test/mock-mode-config";
 import { MockCursorEvent } from "../../test/mock-cursor-event";
 import { ValidateNotSelfIntersecting } from "../../validations/not-self-intersecting.validation";
@@ -2237,7 +2232,7 @@ describe("TerraDrawLineStringMode", () => {
 			// Create an initial square to snap to
 			const mockLineString =
 				MockLineString() as GeoJSONStoreFeatures<LineString>;
-			const [featureId] = mockConfig.store.create([
+			const [_featureId] = mockConfig.store.create([
 				{
 					geometry: mockLineString.geometry,
 					properties: mockLineString.properties as JSONObject,

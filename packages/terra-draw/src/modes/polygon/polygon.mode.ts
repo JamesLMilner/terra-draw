@@ -1088,7 +1088,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 	/** @internal */
 	onDrag(
 		event: TerraDrawMouseEvent,
-		setMapDraggability: (enabled: boolean) => void,
+		_setMapDraggability: (enabled: boolean) => void,
 	) {
 		if (!this.allowPointerEvent(this.pointerEvents.onDrag, event)) {
 			return;

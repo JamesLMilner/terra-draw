@@ -665,7 +665,6 @@ test.describe("polygon mode", () => {
 		// Coordinates of the four corners of the square
 		const topLeft = { x: centerX - halfLength, y: centerY - halfLength };
 		const topRight = { x: centerX + halfLength, y: centerY - halfLength };
-		const bottomLeft = { x: centerX - halfLength, y: centerY + halfLength };
 		const bottomRight = { x: centerX + halfLength, y: centerY + halfLength };
 
 		// Perform clicks at each corner

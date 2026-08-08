@@ -63,6 +63,16 @@ export default [
 		rules: {
 			"@typescript-eslint/no-empty-function": "warn",
 			"@typescript-eslint/no-explicit-any": "warn",
+			"no-unused-vars": "off",
+			"@typescript-eslint/no-unused-vars": [
+				"error",
+				{
+					argsIgnorePattern: "^_",
+					varsIgnorePattern: "^_",
+					caughtErrorsIgnorePattern: "^_",
+					ignoreRestSiblings: true,
+				}
+			],
 			"no-console": process.env.CI ? "error" : "warn",
 		},
 	},

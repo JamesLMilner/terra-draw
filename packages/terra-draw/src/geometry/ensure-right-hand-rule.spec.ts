@@ -1,5 +1,4 @@
 import { Polygon } from "geojson";
-import { followsRightHandRule } from "./boolean/right-hand-rule";
 import { ensureRightHandRule } from "./ensure-right-hand-rule";
 
 describe("ensureRightHandRule", () => {

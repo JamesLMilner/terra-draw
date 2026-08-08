@@ -1,6 +1,6 @@
-import { Feature, Position } from "geojson";
+import { Position } from "geojson";
 import { COMMON_PROPERTIES } from "../../../common";
-import { GeoJSONStoreFeatures, JSONObject } from "../../../store/store";
+import { JSONObject } from "../../../store/store";
 import { MockBehaviorConfig } from "../../../test/mock-behavior-config";
 import { MockPolygonSquare } from "../../../test/mock-features";
 import { CoordinatePointBehavior } from "./coordinate-point.behavior";

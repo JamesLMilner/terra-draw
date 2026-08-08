@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.32.3](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.32.2...terra-draw@1.32.3) (2026-08-08)
+
+
+### chore
+
+* **terra-draw:** export the TerraDrawEventListeners (#934) ([](https://github.com/JamesLMilner/terra-draw/commit/5bb308e0405a1f6cc2dbac0f2ccebff2f5a4d5f0)), closes [#934](https://github.com/JamesLMilner/terra-draw/issues/934)
+
 ## [1.32.2](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.32.1...terra-draw@1.32.2) (2026-07-22)
 
 

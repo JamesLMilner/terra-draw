@@ -4,7 +4,6 @@ import { FeatureId } from "../../../store/store";
 import { SELECT_PROPERTIES } from "../../../common";
 import { MutateFeatureBehavior } from "../../mutate-feature.behavior";
 import { getUnclosedCoordinates } from "../../../geometry/get-coordinates";
-import { ReadFeatureBehavior } from "../../read-feature.behavior";
 
 export type SelectionPointProperties = {
 	mode: string;

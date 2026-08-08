@@ -1,9 +1,4 @@
-import {
-	Snapping,
-	TerraDrawMouseEvent,
-	UpdateTypes,
-	Validation,
-} from "../../../common";
+import { Snapping, TerraDrawMouseEvent, UpdateTypes } from "../../../common";
 import { BehaviorConfig, TerraDrawModeBehavior } from "../../base.behavior";
 
 import { LineString, Polygon, Position, Point, Feature } from "geojson";

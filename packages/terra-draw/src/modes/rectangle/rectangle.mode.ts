@@ -288,7 +288,7 @@ export class TerraDrawRectangleMode extends TerraDrawBaseDrawMode<RectanglePolyg
 	/** @internal */
 	onDrag(
 		event: TerraDrawMouseEvent,
-		setMapDraggability: (enabled: boolean) => void,
+		_setMapDraggability: (enabled: boolean) => void,
 	) {
 		if (
 			this.allowPointerEvent(this.pointerEvents.onDrag, event) &&

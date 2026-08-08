@@ -2,7 +2,6 @@ import {
 	CartesianPoint,
 	TerraDrawMouseEvent,
 	UpdateTypes,
-	Validation,
 } from "../../../common";
 import { BehaviorConfig, TerraDrawModeBehavior } from "../../base.behavior";
 import { Feature, LineString, Polygon, Position } from "geojson";

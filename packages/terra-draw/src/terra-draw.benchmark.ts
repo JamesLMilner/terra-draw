@@ -1,8 +1,4 @@
-import {
-	TerraDraw,
-	TerraDrawMouseEvent,
-	TerraDrawPolygonMode,
-} from "./terra-draw";
+import { TerraDraw, TerraDrawPolygonMode } from "./terra-draw";
 
 import {
 	BenchmarkTask,
@@ -17,8 +13,6 @@ import {
 	const DrawAPI: TerraDraw = createDraw();
 
 	const benchmarkName = "Terra Draw API";
-
-	const featureCount = 100;
 
 	const benchmarkTasks: BenchmarkTask[] = [
 		{

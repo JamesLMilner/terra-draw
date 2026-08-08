@@ -1,4 +1,4 @@
-import { Feature, Polygon } from "geojson";
+import { Polygon } from "geojson";
 import { followsRightHandRule } from "./boolean/right-hand-rule";
 
 export function ensureRightHandRule(polygon: Polygon): undefined | Polygon {

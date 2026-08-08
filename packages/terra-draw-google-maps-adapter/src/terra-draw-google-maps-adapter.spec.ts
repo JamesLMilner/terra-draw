@@ -2537,12 +2537,12 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 				const gmFeature = {
 					id: "point-1",
 					getId: () => "point-1",
-					forEachProperty: jest.fn((cb: any) => {
+					forEachProperty: jest.fn((_cb: unknown) => {
 						// no existing props
 					}),
 					setProperty: jest.fn(),
 					setGeometry: jest.fn(),
-				} as any;
+				};
 				spies.getFeatureById.mockReturnValue(gmFeature);
 
 				const pointOneUpdate1 = MockPoint(
@@ -2550,13 +2550,19 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 					1,
 					1,
 				) as GeoJSONStoreFeatures;
-				(pointOneUpdate1.properties as any) = { mode: "point", a: 1 };
+				(pointOneUpdate1.properties as { mode: string; a: number }) = {
+					mode: "point",
+					a: 1,
+				};
 				const pointOneUpdate2 = MockPoint(
 					"point-1",
 					2,
 					2,
 				) as GeoJSONStoreFeatures;
-				(pointOneUpdate2.properties as any) = { mode: "point", a: 2 };
+				(pointOneUpdate2.properties as { mode: string; a: number }) = {
+					mode: "point",
+					a: 2,
+				};
 
 				adapter.render(
 					{

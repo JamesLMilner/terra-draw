@@ -1,4 +1,4 @@
-import { TerraDrawMouseEvent, UpdateTypes, Validation } from "../../../common";
+import { TerraDrawMouseEvent, UpdateTypes } from "../../../common";
 import { BehaviorConfig, TerraDrawModeBehavior } from "../../base.behavior";
 import { FeatureAtPointerEventBehavior } from "./feature-at-pointer-event.behavior";
 import { LineString, Polygon, Position } from "geojson";
@@ -16,7 +16,6 @@ import {
 	MutateFeatureBehavior,
 	Mutations,
 } from "../../mutate-feature.behavior";
-import { getUnclosedCoordinates } from "../../../geometry/get-coordinates";
 
 export class DragFeatureBehavior extends TerraDrawModeBehavior {
 	constructor(

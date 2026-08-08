@@ -12,7 +12,7 @@ import {
 	Snapping,
 	DashArrayStyling,
 } from "../../common";
-import { LineString, Polygon, Position } from "geojson";
+import { LineString, Position } from "geojson";
 import {
 	BaseModeOptions,
 	CustomStyling,

@@ -6,7 +6,6 @@ import {
 	NumericStyling,
 	Cursor,
 	UpdateTypes,
-	CartesianPoint,
 	Z_INDEX,
 	Snapping,
 	COMMON_PROPERTIES,
@@ -987,7 +986,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 	/** @internal */
 	onDrag(
 		event: TerraDrawMouseEvent,
-		setMapDraggability: (enabled: boolean) => void,
+		_setMapDraggability: (enabled: boolean) => void,
 	) {
 		if (!this.allowPointerEvent(this.pointerEvents.onDrag, event)) {
 			return;

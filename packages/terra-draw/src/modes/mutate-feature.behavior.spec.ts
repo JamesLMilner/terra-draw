@@ -74,7 +74,7 @@ describe("mutateFeatureBehavior", () => {
 				const pointId = createStorePoint(config);
 
 				expect(() => {
-					const res = behavior.updatePolygon({
+					behavior.updatePolygon({
 						featureId: pointId,
 						context: { updateType: UpdateTypes.Commit },
 						coordinateMutations: [

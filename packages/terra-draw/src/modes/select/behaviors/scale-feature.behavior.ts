@@ -1,4 +1,4 @@
-import { TerraDrawMouseEvent, Validation } from "../../../common";
+import { TerraDrawMouseEvent } from "../../../common";
 import { BehaviorConfig, TerraDrawModeBehavior } from "../../base.behavior";
 import { FeatureId } from "../../../store/store";
 import { DragCoordinateResizeBehavior } from "./drag-coordinate-resize.behavior";

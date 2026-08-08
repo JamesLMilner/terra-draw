@@ -1,4 +1,4 @@
-import { Point, Position } from "geojson";
+import { Position } from "geojson";
 import { BehaviorConfig, TerraDrawModeBehavior } from "../../base.behavior";
 import { FeatureId } from "../../../store/store";
 import { COMMON_PROPERTIES, UpdateTypes } from "../../../common";

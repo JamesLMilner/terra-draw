@@ -1,8 +1,4 @@
-import {
-	GeoJSONStore,
-	GeoJSONStoreFeatures,
-	JSONObject,
-} from "../../store/store";
+import { GeoJSONStore, GeoJSONStoreFeatures } from "../../store/store";
 import { MockModeConfig } from "../../test/mock-mode-config";
 import { MockCursorEvent } from "../../test/mock-cursor-event";
 import { TerraDrawCircleMode } from "./circle.mode";
@@ -11,7 +7,6 @@ import { followsRightHandRule } from "../../geometry/boolean/right-hand-rule";
 import { MockKeyboardEvent } from "../../test/mock-keyboard-event";
 import { COMMON_PROPERTIES, TerraDrawGeoJSONStore } from "../../common";
 import { DefaultPointerEvents } from "../base.mode";
-import { MockPolygonSquare } from "../../test/mock-features";
 
 describe("TerraDrawCircleMode", () => {
 	describe("constructor", () => {

@@ -157,7 +157,6 @@ export const expectGroupPosition = async ({
 	page,
 	x,
 	y,
-	item,
 }: {
 	page: Page;
 	x: number;

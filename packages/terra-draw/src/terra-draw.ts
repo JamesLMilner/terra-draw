@@ -98,6 +98,7 @@ type InstanceType<T extends new (...args: any[]) => any> = T extends new (
 	? R
 	: never;
 
+type ReadyListener = () => void;
 type FinishListener = (id: FeatureId, context: OnFinishContext) => void;
 type ChangeListener = (
 	ids: FeatureId[],
@@ -109,13 +110,15 @@ type DeselectListener = (id: FeatureId) => void;
 type HistoryChangeListener = (event: HistoryEvent) => void;
 
 interface TerraDrawEventListeners {
-	ready: () => void;
+	ready: ReadyListener;
 	finish: FinishListener;
 	change: ChangeListener;
 	select: SelectListener;
 	deselect: DeselectListener;
 	history: HistoryChangeListener;
 }
+
+type TerraDrawEvents = keyof TerraDrawEventListeners;
 
 type GetFeatureOptions = {
 	pointerDistance?: number;
@@ -127,8 +130,6 @@ type GetFeatureOptions = {
 	ignoreSnappingPoints?: boolean;
 	addClosestCoordinateInfoToProperties?: boolean;
 };
-
-type TerraDrawEvents = keyof TerraDrawEventListeners;
 
 class TerraDraw {
 	private _modes: {
@@ -1574,6 +1575,8 @@ class TerraDraw {
 export {
 	TerraDraw,
 	type IdStrategy,
+
+	// Events
 	type TerraDrawEvents,
 	type TerraDrawEventListeners,
 

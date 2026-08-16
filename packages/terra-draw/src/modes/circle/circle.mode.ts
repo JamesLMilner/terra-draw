@@ -81,6 +81,9 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 	private cursorMovedAfterInitialCursorDown = false;
 	private drawInteraction = "click-move";
 	private drawType: DrawType | undefined;
+	private cancelled = false;
+
+	private minimumSegments = 3;
 
 	// Behaviors
 	private mutateFeature!: MutateFeatureBehavior;
@@ -119,7 +122,7 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 			this.keyEvents = { ...this.keyEvents, ...options.keyEvents };
 		}
 
-		if (options?.startingRadiusKilometers) {
+		if (options?.startingRadiusKilometers !== undefined) {
 			this.startingRadiusKilometers = options.startingRadiusKilometers;
 		}
 
@@ -127,8 +130,11 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 			this.drawInteraction = options.drawInteraction;
 		}
 
-		if (options?.segments) {
-			this.segments = options.segments < 3 ? 3 : options.segments;
+		if (options?.segments !== undefined) {
+			this.segments =
+				options.segments < this.minimumSegments
+					? this.minimumSegments
+					: options.segments;
 		}
 	}
 
@@ -254,6 +260,7 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 	/** @internal */
 	onKeyUp(event: TerraDrawKeyboardEvent) {
 		if (event.key === this.keyEvents.cancel) {
+			this.cancelled = this.drawType === "drag";
 			this.cleanUp();
 		} else if (event.key === this.keyEvents.finish) {
 			this.close();
@@ -273,6 +280,7 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 			this.allowPointerEvent(this.pointerEvents.onDragStart, event) &&
 			this.dragDrawAllowed()
 		) {
+			this.cancelled = false;
 			this.beginDrawing(event, "drag");
 			setMapDraggability(false);
 		}
@@ -299,6 +307,12 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 		event: TerraDrawMouseEvent,
 		setMapDraggability: (enabled: boolean) => void,
 	) {
+		if (this.cancelled) {
+			this.cancelled = false;
+			setMapDraggability(true);
+			return;
+		}
+
 		if (
 			this.allowPointerEvent(this.pointerEvents.onDragEnd, event) &&
 			this.dragDrawAllowed() &&
@@ -426,7 +440,7 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 			[COMMON_PROPERTIES.CURRENTLY_DRAWING]?: boolean;
 		} = {};
 
-		if (updatedCircle && newRadius) {
+		if (updatedCircle && newRadius !== undefined) {
 			propertyMutations.radiusKilometers = newRadius;
 		}
 

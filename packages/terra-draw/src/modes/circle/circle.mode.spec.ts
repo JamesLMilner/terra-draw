@@ -1136,6 +1136,36 @@ describe("TerraDrawCircleMode", () => {
 		describe.each([["click-drag" as const], ["click-move-or-drag" as const]])(
 			"with drawInteraction %s",
 			(drawInteraction) => {
+				it("restores map draggability after Escape cancel during drag", () => {
+					circleMode = new TerraDrawCircleMode({
+						drawInteraction,
+					});
+
+					const mockConfig = MockModeConfig(circleMode.mode);
+					onChange = mockConfig.onChange;
+					onFinish = mockConfig.onFinish;
+					circleMode.register(mockConfig);
+					circleMode.start();
+
+					circleMode.onDragStart(
+						MockCursorEvent({ lng: 0, lat: 0 }),
+						setMapDraggability,
+					);
+
+					setMapDraggability.mockClear();
+
+					circleMode.onKeyUp(MockKeyboardEvent({ key: "Escape" }));
+
+					circleMode.onDragEnd(
+						MockCursorEvent({ lng: 0, lat: 0 }),
+						setMapDraggability,
+					);
+
+					expect(onFinish).toHaveBeenCalledTimes(0);
+					expect(setMapDraggability).toHaveBeenCalledTimes(1);
+					expect(setMapDraggability).toHaveBeenCalledWith(true);
+				});
+
 				it("finishes the circle", () => {
 					circleMode = new TerraDrawCircleMode({
 						drawInteraction,

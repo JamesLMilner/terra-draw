@@ -130,11 +130,13 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 			this.drawInteraction = options.drawInteraction;
 		}
 
-		if (options?.segments !== undefined) {
+		if (options?.segments !== undefined && Number.isFinite(options.segments)) {
+			const integerSegments = Math.trunc(options.segments);
+
 			this.segments =
-				options.segments < this.minimumSegments
+				integerSegments < this.minimumSegments
 					? this.minimumSegments
-					: options.segments;
+					: integerSegments;
 		}
 	}
 
@@ -177,6 +179,7 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 			center: this.center,
 			radiusKilometers: this.startingRadiusKilometers,
 			coordinatePrecision: this.coordinatePrecision,
+			steps: this.segments,
 		});
 
 		const created = this.mutateFeature.createPolygon({

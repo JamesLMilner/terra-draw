@@ -109,7 +109,7 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 	): void {
 		super.updateOptions(options);
 
-		if (options?.minDistance) {
+		if (options?.minDistance !== undefined) {
 			this.minDistance = options.minDistance;
 		}
 
@@ -130,7 +130,7 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 			this.autoClose = options.autoClose;
 		}
 
-		if (options?.autoCloseTimeout) {
+		if (options?.autoCloseTimeout !== undefined) {
 			this.autoCloseTimeout = options.autoCloseTimeout;
 		}
 
@@ -229,6 +229,7 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 				}, this.autoCloseTimeout);
 
 				this.close();
+				return;
 			}
 
 			this.setCursor(this.cursors.close);
@@ -368,6 +369,10 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 			if (this.canClose === false) {
 				this.beginDrawing(event);
 
+				return;
+			}
+
+			if (!this.hasLeftStartingPoint) {
 				return;
 			}
 

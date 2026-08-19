@@ -10,6 +10,8 @@ import {
 	COMMON_PROPERTIES,
 	FinishActions,
 } from "../../common";
+import { KeyboardEventKey } from "../../common/keys";
+import { CursorValues } from "../../common/cursors";
 import { LineString, Point, Polygon, Position } from "geojson";
 import {
 	TerraDrawBaseDrawMode,
@@ -39,13 +41,21 @@ import { limitPrecision } from "../../geometry/limit-decimal-precision";
 import { BehaviorConfig } from "../base.behavior";
 import { ReadFeatureBehavior } from "../read-feature.behavior";
 import { MutateFeatureBehavior, Mutations } from "../mutate-feature.behavior";
+import {
+	isFiniteNonNegativeNumber,
+	isNonNullObject,
+	isNull,
+} from "../../common/checks";
 
 type TerraDrawSensorModeKeyEvents = {
 	cancel?: KeyboardEvent["key"] | null;
 	finish?: KeyboardEvent["key"] | null;
 };
 
-const defaultKeyEvents = { cancel: "Escape", finish: "Enter" };
+const defaultKeyEvents = {
+	cancel: KeyboardEventKey.Escape,
+	finish: KeyboardEventKey.Enter,
+};
 
 type SensorPolygonStyling = {
 	centerPointColor: HexColorStyling;
@@ -67,8 +77,8 @@ interface Cursors {
 }
 
 const defaultCursors = {
-	start: "crosshair",
-	close: "pointer",
+	start: CursorValues.Crosshair,
+	close: CursorValues.Pointer,
 } as Required<Cursors>;
 
 interface TerraDrawSensorModeOptions<
@@ -109,17 +119,20 @@ export class TerraDrawSensorMode extends TerraDrawBaseDrawMode<SensorPolygonStyl
 	): void {
 		super.updateOptions(options);
 
-		if (options?.cursors) {
+		if (isNonNullObject(options?.cursors)) {
 			this.cursors = { ...this.cursors, ...options.cursors };
 		}
 
-		if (options?.keyEvents === null) {
+		if (isNull(options?.keyEvents)) {
 			this.keyEvents = { cancel: null, finish: null };
-		} else if (options?.keyEvents) {
+		} else if (isNonNullObject(options?.keyEvents)) {
 			this.keyEvents = { ...this.keyEvents, ...options.keyEvents };
 		}
 
-		if (options?.arcPoints) {
+		if (
+			isFiniteNonNegativeNumber(options?.arcPoints) &&
+			options.arcPoints > 0
+		) {
 			this.arcPoints = options.arcPoints;
 		}
 	}
@@ -134,7 +147,7 @@ export class TerraDrawSensorMode extends TerraDrawBaseDrawMode<SensorPolygonStyl
 	stop() {
 		this.cleanUp();
 		this.setStopped();
-		this.setCursor("unset");
+		this.setCursor(CursorValues.Unset);
 	}
 
 	/** @internal */

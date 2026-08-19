@@ -13,6 +13,8 @@ import {
 	DrawInteractions,
 	DrawType,
 } from "../../common";
+import { KeyboardEventKey } from "../../common/keys";
+import { CursorValues } from "../../common/cursors";
 import {
 	FeatureId,
 	GeoJSONStoreFeatures,
@@ -28,14 +30,21 @@ import {
 import { ValidateNonIntersectingPolygonFeature } from "../../validations/polygon.validation";
 import { BehaviorConfig } from "../base.behavior";
 import { MutateFeatureBehavior, Mutations } from "../mutate-feature.behavior";
-import { ReadFeatureBehavior } from "../read-feature.behavior";
+import {
+	isDrawInteraction,
+	isNonNullObject,
+	isNull,
+} from "../../common/checks";
 
 type TerraDrawRectangleModeKeyEvents = {
 	cancel: KeyboardEvent["key"] | null;
 	finish: KeyboardEvent["key"] | null;
 };
 
-const defaultKeyEvents = { cancel: "Escape", finish: "Enter" };
+const defaultKeyEvents = {
+	cancel: KeyboardEventKey.Escape,
+	finish: KeyboardEventKey.Enter,
+};
 
 type RectanglePolygonStyling = {
 	fillColor: HexColorStyling;
@@ -50,7 +59,7 @@ interface Cursors {
 }
 
 const defaultCursors = {
-	start: "crosshair",
+	start: CursorValues.Crosshair,
 } as Required<Cursors>;
 
 interface TerraDrawRectangleModeOptions<
@@ -73,7 +82,6 @@ export class TerraDrawRectangleMode extends TerraDrawBaseDrawMode<RectanglePolyg
 
 	// Behaviors
 	private mutateFeature!: MutateFeatureBehavior;
-	private readFeature!: ReadFeatureBehavior;
 
 	constructor(
 		options?: TerraDrawRectangleModeOptions<RectanglePolygonStyling>,
@@ -89,17 +97,17 @@ export class TerraDrawRectangleMode extends TerraDrawBaseDrawMode<RectanglePolyg
 	) {
 		super.updateOptions(options);
 
-		if (options?.cursors) {
+		if (isNonNullObject(options?.cursors)) {
 			this.cursors = { ...this.cursors, ...options.cursors };
 		}
 
-		if (options?.keyEvents === null) {
+		if (isNull(options?.keyEvents)) {
 			this.keyEvents = { cancel: null, finish: null };
-		} else if (options?.keyEvents) {
+		} else if (isNonNullObject(options?.keyEvents)) {
 			this.keyEvents = { ...this.keyEvents, ...options.keyEvents };
 		}
 
-		if (options?.drawInteraction) {
+		if (isDrawInteraction(options?.drawInteraction)) {
 			this.drawInteraction = options.drawInteraction;
 		}
 	}
@@ -225,7 +233,7 @@ export class TerraDrawRectangleMode extends TerraDrawBaseDrawMode<RectanglePolyg
 	stop() {
 		this.cleanUp();
 		this.setStopped();
-		this.setCursor("unset");
+		this.setCursor(CursorValues.Unset);
 	}
 
 	/** @internal */
@@ -403,7 +411,6 @@ export class TerraDrawRectangleMode extends TerraDrawBaseDrawMode<RectanglePolyg
 	}
 
 	registerBehaviors(config: BehaviorConfig) {
-		this.readFeature = new ReadFeatureBehavior(config);
 		this.mutateFeature = new MutateFeatureBehavior(config, {
 			validate: this.validate,
 		});

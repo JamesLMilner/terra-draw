@@ -138,6 +138,25 @@ describe("TerraDrawPointMode", () => {
 				0, 1,
 			]);
 		});
+
+		it("can disable editable", () => {
+			const pointMode = new TerraDrawPointMode({ editable: true });
+			const mockConfig = MockModeConfig(pointMode.mode);
+
+			pointMode.register(mockConfig);
+			pointMode.start();
+
+			pointMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			pointMode.updateOptions({ editable: false });
+
+			pointMode.onDragStart(MockCursorEvent({ lng: 0, lat: 0 }), jest.fn());
+			pointMode.onDrag(MockCursorEvent({ lng: 0, lat: 1 }), jest.fn());
+			pointMode.onDragEnd(MockCursorEvent({ lng: 0, lat: 1 }), jest.fn());
+
+			expect(mockConfig.store.copyAll()[0].geometry.coordinates).toEqual([
+				0, 0,
+			]);
+		});
 	});
 
 	describe("onClick", () => {

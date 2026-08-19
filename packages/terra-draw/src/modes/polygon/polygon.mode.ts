@@ -11,6 +11,8 @@ import {
 	Snapping,
 	FinishActions,
 } from "../../common";
+import { KeyboardEventKey } from "../../common/keys";
+import { CursorValues } from "../../common/cursors";
 import { Feature, Polygon, Position } from "geojson";
 import {
 	TerraDrawBaseDrawMode,
@@ -41,13 +43,17 @@ import {
 } from "../mutate-feature.behavior";
 import { ReadFeatureBehavior } from "../read-feature.behavior";
 import { UndoRedoBehavior } from "../undo-redo.behavior";
+import { isBoolean, isNonNullObject, isNull } from "../../common/checks";
 
 type TerraDrawPolygonModeKeyEvents = {
 	cancel?: KeyboardEvent["key"] | null;
 	finish?: KeyboardEvent["key"] | null;
 };
 
-const defaultKeyEvents = { cancel: "Escape", finish: "Enter" };
+const defaultKeyEvents = {
+	cancel: KeyboardEventKey.Escape,
+	finish: KeyboardEventKey.Enter,
+};
 
 type PolygonStyling = {
 	fillColor: HexColorStyling;
@@ -89,10 +95,10 @@ interface Cursors {
 }
 
 const defaultCursors = {
-	start: "crosshair",
-	close: "pointer",
-	dragStart: "grabbing",
-	dragEnd: "crosshair",
+	start: CursorValues.Crosshair,
+	close: CursorValues.Pointer,
+	dragStart: CursorValues.Grabbing,
+	dragEnd: CursorValues.Crosshair,
 } as Required<Cursors>;
 
 interface TerraDrawPolygonModeOptions<
@@ -152,30 +158,30 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 	) {
 		super.updateOptions(options);
 
-		if (options?.cursors) {
+		if (isNonNullObject(options?.cursors)) {
 			this.cursors = { ...this.cursors, ...options.cursors };
 		}
 
 		// null is the case where we want to explicitly turn key bindings off
-		if (options?.keyEvents === null) {
+		if (isNull(options?.keyEvents)) {
 			this.keyEvents = { cancel: null, finish: null };
-		} else if (options?.keyEvents) {
+		} else if (isNonNullObject(options?.keyEvents)) {
 			this.keyEvents = { ...this.keyEvents, ...options.keyEvents };
 		}
 
-		if (options?.snapping) {
+		if (isNonNullObject(options?.snapping)) {
 			this.snapping = options.snapping;
 		}
 
-		if (options?.editable !== undefined) {
+		if (isBoolean(options?.editable)) {
 			this.editable = options.editable;
 		}
 
-		if (options?.pointerEvents !== undefined) {
+		if (isNonNullObject(options?.pointerEvents)) {
 			this.pointerEvents = options.pointerEvents;
 		}
 
-		if (options?.showCoordinatePoints !== undefined) {
+		if (isBoolean(options?.showCoordinatePoints)) {
 			this.showCoordinatePoints = options.showCoordinatePoints;
 
 			// If we are not showing coordinate points, we need to add them all
@@ -330,7 +336,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 	stop() {
 		this.cleanUp();
 		this.setStopped();
-		this.setCursor("unset");
+		this.setCursor(CursorValues.Unset);
 	}
 
 	private updateSnappedCoordinate(event: TerraDrawMouseEvent) {

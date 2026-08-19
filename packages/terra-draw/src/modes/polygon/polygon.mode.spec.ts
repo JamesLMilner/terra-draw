@@ -190,6 +190,36 @@ describe("TerraDrawPolygonMode", () => {
 			]);
 		});
 
+		it("can disable editable", () => {
+			const polygonMode = new TerraDrawPolygonMode({ editable: true });
+			const mockConfig = MockModeConfig(polygonMode.mode);
+
+			const mockPolygon = MockPolygonSquare();
+			mockConfig.store.create([
+				{
+					geometry: mockPolygon.geometry,
+					properties: mockPolygon.properties as JSONObject,
+				},
+			]);
+
+			polygonMode.register(mockConfig);
+			polygonMode.start();
+			polygonMode.updateOptions({ editable: false });
+
+			polygonMode.onDragStart(MockCursorEvent({ lng: 0, lat: 0 }), jest.fn());
+			polygonMode.onDrag(MockCursorEvent({ lng: -1, lat: -1 }), jest.fn());
+			polygonMode.onDragEnd(MockCursorEvent({ lng: -1, lat: -1 }), jest.fn());
+
+			const [feature] = mockConfig.store.copyAll();
+			expect(feature.geometry.coordinates[0]).toStrictEqual([
+				[0, 0],
+				[0, 1],
+				[1, 1],
+				[1, 0],
+				[0, 0],
+			]);
+		});
+
 		it("can set editable which ignores non polygon mode features", () => {
 			const polygonMode = new TerraDrawPolygonMode();
 			polygonMode.updateOptions({

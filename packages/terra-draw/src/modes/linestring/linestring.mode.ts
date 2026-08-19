@@ -12,6 +12,8 @@ import {
 	FinishActions,
 	DashArrayStyling,
 } from "../../common";
+import { KeyboardEventKey } from "../../common/keys";
+import { CursorValues } from "../../common/cursors";
 import { Feature, LineString, Position } from "geojson";
 import {
 	BaseModeOptions,
@@ -45,13 +47,17 @@ import { ReadFeatureBehavior } from "../read-feature.behavior";
 import { ClosingPointsBehavior } from "../closing-points.behavior";
 import { CoordinatePointBehavior } from "../select/behaviors/coordinate-point.behavior";
 import { UndoRedoBehavior } from "../undo-redo.behavior";
+import { isBoolean, isNonNullObject, isNull } from "../../common/checks";
 
 type TerraDrawLineStringModeKeyEvents = {
 	cancel: KeyboardEvent["key"] | null;
 	finish: KeyboardEvent["key"] | null;
 };
 
-const defaultKeyEvents = { cancel: "Escape", finish: "Enter" } as const;
+const defaultKeyEvents = {
+	cancel: KeyboardEventKey.Escape,
+	finish: KeyboardEventKey.Enter,
+} as const;
 
 type LineStringStyling = {
 	lineStringWidth: NumericStyling;
@@ -86,10 +92,10 @@ interface Cursors {
 }
 
 const defaultCursors = {
-	start: "crosshair",
-	close: "pointer",
-	dragStart: "grabbing",
-	dragEnd: "crosshair",
+	start: CursorValues.Crosshair,
+	close: CursorValues.Pointer,
+	dragStart: CursorValues.Grabbing,
+	dragEnd: CursorValues.Crosshair,
 } as Required<Cursors>;
 
 interface InertCoordinates {
@@ -167,25 +173,25 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 			this.finishOnNthCoordinate = Math.floor(options.finishOnNthCoordinate);
 		}
 
-		if (options?.cursors) {
+		if (isNonNullObject(options?.cursors)) {
 			this.cursors = { ...this.cursors, ...options.cursors };
 		}
 
-		if (options?.snapping) {
+		if (isNonNullObject(options?.snapping)) {
 			this.snapping = options.snapping;
 		}
 
-		if (options?.keyEvents === null) {
+		if (isNull(options?.keyEvents)) {
 			this.keyEvents = { cancel: null, finish: null };
-		} else if (options?.keyEvents) {
+		} else if (isNonNullObject(options?.keyEvents)) {
 			this.keyEvents = { ...this.keyEvents, ...options.keyEvents };
 		}
 
-		if (options?.insertCoordinates) {
+		if (isNonNullObject(options?.insertCoordinates)) {
 			this.insertCoordinates = options.insertCoordinates;
 		}
 
-		if (options && options.editable) {
+		if (isBoolean(options?.editable)) {
 			this.editable = options.editable;
 		}
 
@@ -701,7 +707,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 	stop() {
 		this.cleanUp();
 		this.setStopped();
-		this.setCursor("unset");
+		this.setCursor(CursorValues.Unset);
 	}
 
 	/** @internal */

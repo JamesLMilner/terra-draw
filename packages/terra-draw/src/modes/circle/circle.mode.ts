@@ -14,6 +14,8 @@ import {
 	DrawInteractions,
 	DrawType,
 } from "../../common";
+import { KeyboardEventKey } from "../../common/keys";
+import { CursorValues } from "../../common/cursors";
 import { haversineDistanceKilometers } from "../../geometry/measure/haversine-distance";
 import { circle, circleWebMercator } from "../../geometry/shape/create-circle";
 import {
@@ -33,13 +35,22 @@ import { Polygon } from "geojson";
 import { calculateWebMercatorDistortion } from "../../geometry/shape/web-mercator-distortion";
 import { BehaviorConfig } from "../base.behavior";
 import { MutateFeatureBehavior, Mutations } from "../mutate-feature.behavior";
+import {
+	isFiniteNonNegativeNumber,
+	isDrawInteraction,
+	isNonNullObject,
+	isNull,
+} from "../../common/checks";
 
 type TerraDrawCircleModeKeyEvents = {
 	cancel: KeyboardEvent["key"] | null;
 	finish: KeyboardEvent["key"] | null;
 };
 
-const defaultKeyEvents = { cancel: "Escape", finish: "Enter" };
+const defaultKeyEvents = {
+	cancel: KeyboardEventKey.Escape,
+	finish: KeyboardEventKey.Enter,
+};
 
 type CirclePolygonStyling = {
 	fillColor: HexColorStyling;
@@ -54,7 +65,7 @@ interface Cursors {
 }
 
 const defaultCursors = {
-	start: "crosshair",
+	start: CursorValues.Crosshair,
 } as Required<Cursors>;
 
 interface TerraDrawCircleModeOptions<
@@ -109,25 +120,25 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 	) {
 		super.updateOptions(options);
 
-		if (options?.cursors) {
+		if (isNonNullObject(options?.cursors)) {
 			this.cursors = { ...this.cursors, ...options.cursors };
 		}
 
-		if (options?.keyEvents === null) {
+		if (isNull(options?.keyEvents)) {
 			this.keyEvents = { cancel: null, finish: null };
-		} else if (options?.keyEvents) {
+		} else if (isNonNullObject(options?.keyEvents)) {
 			this.keyEvents = { ...this.keyEvents, ...options.keyEvents };
 		}
 
-		if (options?.startingRadiusKilometers) {
+		if (isFiniteNonNegativeNumber(options?.startingRadiusKilometers)) {
 			this.startingRadiusKilometers = options.startingRadiusKilometers;
 		}
 
-		if (options?.drawInteraction) {
+		if (isDrawInteraction(options?.drawInteraction)) {
 			this.drawInteraction = options.drawInteraction;
 		}
 
-		if (options?.segments) {
+		if (isFiniteNonNegativeNumber(options?.segments)) {
 			this.segments = options.segments < 3 ? 3 : options.segments;
 		}
 	}
@@ -216,7 +227,7 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 	stop() {
 		this.cleanUp();
 		this.setStopped();
-		this.setCursor("unset");
+		this.setCursor(CursorValues.Unset);
 	}
 
 	/** @internal */

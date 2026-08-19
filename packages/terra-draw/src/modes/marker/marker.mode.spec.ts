@@ -147,6 +147,25 @@ describe("TerraDrawMarkerMode", () => {
 			]);
 		});
 
+		it("can disable editable", () => {
+			const markerMode = new TerraDrawMarkerMode({ editable: true });
+			const mockConfig = MockModeConfig(markerMode.mode);
+
+			markerMode.register(mockConfig);
+			markerMode.start();
+
+			markerMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			markerMode.updateOptions({ editable: false });
+
+			markerMode.onDragStart(MockCursorEvent({ lng: 0, lat: 0 }), jest.fn());
+			markerMode.onDrag(MockCursorEvent({ lng: 0, lat: 1 }), jest.fn());
+			markerMode.onDragEnd(MockCursorEvent({ lng: 0, lat: 1 }), jest.fn());
+
+			expect(mockConfig.store.copyAll()[0].geometry.coordinates).toEqual([
+				0, 0,
+			]);
+		});
+
 		it("does not update mode name if passed", () => {
 			const markerMode = new TerraDrawMarkerMode();
 			markerMode.updateOptions({ modeName: "custom-marker" } as any);

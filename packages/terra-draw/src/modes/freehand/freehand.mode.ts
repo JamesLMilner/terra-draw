@@ -241,6 +241,7 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 				}, this.autoCloseTimeout);
 
 				this.close();
+				return;
 			}
 
 			this.setCursor(this.cursors.close);
@@ -380,6 +381,10 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 			if (this.canClose === false) {
 				this.beginDrawing(event);
 
+				return;
+			}
+
+			if (!this.hasLeftStartingPoint) {
 				return;
 			}
 

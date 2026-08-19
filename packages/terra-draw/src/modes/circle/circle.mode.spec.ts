@@ -194,6 +194,42 @@ describe("TerraDrawCircleMode", () => {
 
 			expect(mockConfig.onChange).toHaveBeenCalledTimes(1);
 		});
+
+		it("allows setting startingRadiusKilometers to 0", () => {
+			const circleMode = new TerraDrawCircleMode({
+				startingRadiusKilometers: 10,
+			});
+
+			const mockConfig = MockModeConfig(circleMode.mode);
+			circleMode.register(mockConfig);
+			circleMode.start();
+
+			circleMode.updateOptions({ startingRadiusKilometers: 0 });
+			circleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+			const features = mockConfig.store.copyAll();
+			expect(features.length).toBe(1);
+			expect(features[0].properties.radiusKilometers).toStrictEqual(0);
+		});
+
+		it("allows setting segments to 0 and clamps to minimum", () => {
+			const circleMode = new TerraDrawCircleMode({
+				segments: 8,
+			});
+
+			const mockConfig = MockModeConfig(circleMode.mode);
+			circleMode.register(mockConfig);
+			circleMode.start();
+
+			circleMode.updateOptions({ segments: 0 });
+			circleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			circleMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
+			circleMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
+
+			const features = mockConfig.store.copyAll();
+			expect(features.length).toBe(1);
+			expect((features[0].geometry as Polygon).coordinates[0].length).toBe(4);
+		});
 	});
 
 	describe("onClick", () => {
@@ -432,6 +468,21 @@ describe("TerraDrawCircleMode", () => {
 					expect(onFinish).toHaveBeenCalledTimes(1);
 				});
 
+				it("uses segments value when finishing with no cursor movement", () => {
+					circleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+					circleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+					const features = store.copyAll();
+					expect(features.length).toBe(1);
+
+					// A circle polygon is closed, so it will be steps + 1 coordinates
+					expect((features[0].geometry as Polygon).coordinates[0].length).toBe(
+						9,
+					);
+
+					expect(onFinish).toHaveBeenCalledTimes(1);
+				});
+
 				it("defaults to 64 segments", () => {
 					circleMode = new TerraDrawCircleMode();
 					const mockConfig = MockModeConfig(circleMode.mode);
@@ -481,6 +532,42 @@ describe("TerraDrawCircleMode", () => {
 					// Minimum of 3 steps, plus the closing coordinate
 					expect((features[0].geometry as Polygon).coordinates[0].length).toBe(
 						4,
+					);
+
+					expect(onFinish).toHaveBeenCalledTimes(1);
+				});
+
+				it("ignores Infinity segments and keeps previous finite value", () => {
+					circleMode.updateOptions({ segments: Infinity });
+
+					circleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+					circleMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
+					circleMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
+
+					const features = store.copyAll();
+					expect(features.length).toBe(1);
+
+					// Initial finite value remains 8, so ring has 8 steps + closing coordinate
+					expect((features[0].geometry as Polygon).coordinates[0].length).toBe(
+						9,
+					);
+
+					expect(onFinish).toHaveBeenCalledTimes(1);
+				});
+
+				it("parses decimal segments as an integer", () => {
+					circleMode.updateOptions({ segments: 8.9 });
+
+					circleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+					circleMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
+					circleMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
+
+					const features = store.copyAll();
+					expect(features.length).toBe(1);
+
+					// 8.9 is truncated to 8 steps, plus the closing coordinate
+					expect((features[0].geometry as Polygon).coordinates[0].length).toBe(
+						9,
 					);
 
 					expect(onFinish).toHaveBeenCalledTimes(1);
@@ -1157,6 +1244,36 @@ describe("TerraDrawCircleMode", () => {
 		describe.each([["click-drag" as const], ["click-move-or-drag" as const]])(
 			"with drawInteraction %s",
 			(drawInteraction) => {
+				it("restores map draggability after Escape cancel during drag", () => {
+					circleMode = new TerraDrawCircleMode({
+						drawInteraction,
+					});
+
+					const mockConfig = MockModeConfig(circleMode.mode);
+					onChange = mockConfig.onChange;
+					onFinish = mockConfig.onFinish;
+					circleMode.register(mockConfig);
+					circleMode.start();
+
+					circleMode.onDragStart(
+						MockCursorEvent({ lng: 0, lat: 0 }),
+						setMapDraggability,
+					);
+
+					setMapDraggability.mockClear();
+
+					circleMode.onKeyUp(MockKeyboardEvent({ key: "Escape" }));
+
+					circleMode.onDragEnd(
+						MockCursorEvent({ lng: 0, lat: 0 }),
+						setMapDraggability,
+					);
+
+					expect(onFinish).toHaveBeenCalledTimes(0);
+					expect(setMapDraggability).toHaveBeenCalledTimes(1);
+					expect(setMapDraggability).toHaveBeenCalledWith(true);
+				});
+
 				it("finishes the circle", () => {
 					circleMode = new TerraDrawCircleMode({
 						drawInteraction,

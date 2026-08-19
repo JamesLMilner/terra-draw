@@ -201,6 +201,22 @@ describe("TerraDrawFreehandMode", () => {
 
 			expect(mockConfig.onChange).toHaveBeenCalledTimes(1);
 		});
+
+		it("accepts minDistance set to 0", () => {
+			const freehandMode = new TerraDrawFreehandMode({ minDistance: 10 });
+
+			freehandMode.updateOptions({ minDistance: 0 });
+
+			expect((freehandMode as any).minDistance).toBe(0);
+		});
+
+		it("accepts autoCloseTimeout set to 0", () => {
+			const freehandMode = new TerraDrawFreehandMode({ autoCloseTimeout: 10 });
+
+			freehandMode.updateOptions({ autoCloseTimeout: 0 });
+
+			expect((freehandMode as any).autoCloseTimeout).toBe(0);
+		});
 	});
 
 	describe("onClick", () => {
@@ -302,6 +318,22 @@ describe("TerraDrawFreehandMode", () => {
 				expect(onFinish).toHaveBeenCalledTimes(1);
 			});
 
+			it("does not finish drawing polygon on second click without moving from the starting coordinate", () => {
+				freehandMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+				let features = store.copyAll();
+				expect(features.length).toBe(2);
+
+				freehandMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
+
+				features = store.copyAll();
+				expect(features.length).toBe(2);
+				expect(
+					features[0].properties[COMMON_PROPERTIES.CURRENTLY_DRAWING],
+				).toBe(true);
+				expect(onFinish).toHaveBeenCalledTimes(0);
+			});
+
 			describe("with leftClick pointer event set to false", () => {
 				beforeEach(() => {
 					freehandMode = new TerraDrawFreehandMode({
@@ -373,7 +405,9 @@ describe("TerraDrawFreehandMode", () => {
 				let features = store.copyAll();
 				expect(features.length).toBe(2);
 
-				freehandMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
+				freehandMode.onMouseMove(MockCursorEvent({ lng: 45, lat: 45 }));
+
+				freehandMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
 
 				// Closing coordinate should be removed
 				features = store.copyAll();

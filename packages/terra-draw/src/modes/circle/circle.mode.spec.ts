@@ -414,6 +414,27 @@ describe("TerraDrawCircleMode", () => {
 						1000,
 					);
 				});
+
+				it("accepts a startingRadiusKilometers value of 0", () => {
+					circleMode = new TerraDrawCircleMode({
+						startingRadiusKilometers: 0,
+					});
+					const mockConfig = MockModeConfig(circleMode.mode);
+
+					store = mockConfig.store;
+					onChange = mockConfig.onChange;
+					onFinish = mockConfig.onFinish;
+
+					circleMode.register(mockConfig);
+					circleMode.start();
+
+					circleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+					expect(onChange).toHaveBeenCalledTimes(1);
+					expect(store.copyAll()[0].properties.radiusKilometers).toStrictEqual(
+						0,
+					);
+				});
 			});
 
 			describe("segments option", () => {

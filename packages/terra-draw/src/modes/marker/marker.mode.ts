@@ -10,6 +10,7 @@ import {
 	MARKER_URL_DEFAULT,
 	FinishActions,
 } from "../../common";
+import { CursorValues } from "../../common/cursors";
 import {
 	FeatureId,
 	GeoJSONStoreFeatures,
@@ -28,6 +29,7 @@ import { ClickBoundingBoxBehavior } from "../click-bounding-box.behavior";
 import { PixelDistanceBehavior } from "../pixel-distance.behavior";
 import { MutateFeatureBehavior, Mutations } from "../mutate-feature.behavior";
 import { PointSearchBehavior } from "../point-search.behavior";
+import { isBoolean, isNonNullObject } from "../../common/checks";
 
 type MarkerModeStyling = {
 	/** Marker must be a PNG or JPG  */
@@ -43,9 +45,9 @@ interface Cursors {
 }
 
 const defaultCursors = {
-	create: "crosshair",
-	dragStart: "grabbing",
-	dragEnd: "crosshair",
+	create: CursorValues.Crosshair,
+	dragStart: CursorValues.Grabbing,
+	dragEnd: CursorValues.Crosshair,
 } as Required<Cursors>;
 
 interface TerraDrawMarkerModeOptions<
@@ -81,11 +83,11 @@ export class TerraDrawMarkerMode extends TerraDrawBaseDrawMode<MarkerModeStyling
 	): void {
 		super.updateOptions(options);
 
-		if (options?.cursors) {
+		if (isNonNullObject(options?.cursors)) {
 			this.cursors = { ...this.cursors, ...options.cursors };
 		}
 
-		if (options?.editable) {
+		if (isBoolean(options?.editable)) {
 			this.editable = options.editable;
 		}
 	}
@@ -100,7 +102,7 @@ export class TerraDrawMarkerMode extends TerraDrawBaseDrawMode<MarkerModeStyling
 	stop() {
 		this.cleanUp();
 		this.setStopped();
-		this.setCursor("unset");
+		this.setCursor(CursorValues.Unset);
 	}
 
 	/** @internal */

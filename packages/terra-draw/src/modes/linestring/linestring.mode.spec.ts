@@ -890,6 +890,42 @@ describe("TerraDrawLineStringMode", () => {
 			]);
 		});
 
+		it("does not delete a point when editable is disabled via updateOptions", () => {
+			lineStringMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			lineStringMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
+			lineStringMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
+			lineStringMode.onMouseMove(MockCursorEvent({ lng: 2, lat: 2 }));
+			lineStringMode.onClick(MockCursorEvent({ lng: 2, lat: 2 }));
+			lineStringMode.onClick(MockCursorEvent({ lng: 2, lat: 2 }));
+
+			const [lineStringBefore] = store.copyAll();
+			expect(lineStringBefore.geometry.coordinates).toStrictEqual([
+				[0, 0],
+				[1, 1],
+				[2, 2],
+			]);
+
+			lineStringMode.updateOptions({ editable: false });
+			onChange.mockClear();
+
+			lineStringMode.onClick(
+				MockCursorEvent({ lng: 1, lat: 1, button: "right" }),
+			);
+
+			expect(onChange).not.toHaveBeenCalledWith(
+				[expect.any(String)],
+				"update",
+				expect.objectContaining({ target: "geometry" }),
+			);
+
+			const [lineStringAfter] = store.copyAll();
+			expect(lineStringAfter.geometry.coordinates).toStrictEqual([
+				[0, 0],
+				[1, 1],
+				[2, 2],
+			]);
+		});
+
 		describe("with leftClick pointer event set to false", () => {
 			beforeEach(() => {
 				lineStringMode = new TerraDrawLineStringMode({

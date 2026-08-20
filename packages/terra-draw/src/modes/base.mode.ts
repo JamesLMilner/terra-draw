@@ -24,6 +24,12 @@ import {
 } from "../store/store";
 import { isValidStoreFeature } from "../store/store-feature-validation";
 import { ValidationReasonModeMismatch } from "../validations/common-validations";
+import {
+	isFiniteNonNegativeNumber,
+	isFunction,
+	isNonNullObject,
+	isNonEmptyString,
+} from "../common/checks";
 
 export type CustomStyling = Record<
 	string,
@@ -135,27 +141,27 @@ export abstract class TerraDrawBaseDrawMode<Styling extends CustomStyling> {
 	}
 
 	updateOptions(options?: BaseModeOptions<Styling>) {
-		if (options?.styles) {
+		if (isNonNullObject(options?.styles)) {
 			// Note: we are updating this.styles and not this._styles - this is because
 			// once registered we want to trigger the onStyleChange
 			this.styles = { ...this._styles, ...options.styles };
 		}
 
-		if (options?.pointerDistance !== undefined) {
+		if (isFiniteNonNegativeNumber(options?.pointerDistance)) {
 			this.pointerDistance = options.pointerDistance;
 		}
-		if (options?.validation) {
-			this.validate = options && options.validation;
+		if (isFunction(options?.validation)) {
+			this.validate = options.validation;
 		}
-		if (options?.projection) {
+		if (isNonEmptyString(options?.projection)) {
 			this.projection = options.projection;
 		}
 
-		if (options?.pointerEvents !== undefined) {
+		if (isNonNullObject(options?.pointerEvents)) {
 			this.pointerEvents = options.pointerEvents;
 		}
 
-		if (options?.modeName && this.isInitialUpdate === true) {
+		if (isNonEmptyString(options?.modeName) && this.isInitialUpdate === true) {
 			this.mode = options.modeName;
 		}
 

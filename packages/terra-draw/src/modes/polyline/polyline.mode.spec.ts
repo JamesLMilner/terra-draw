@@ -172,6 +172,19 @@ describe("TerraDrawPolyLineMode", () => {
 				[20, 20],
 			]);
 		});
+
+		it("ignores non-object cursors", () => {
+			const polyLineMode = new TerraDrawPolyLineMode();
+			polyLineMode.updateOptions({
+				cursors: "pointer" as unknown as { start?: "pointer" },
+			});
+
+			const mockConfig = MockModeConfig(polyLineMode.mode);
+			polyLineMode.register(mockConfig);
+			polyLineMode.start();
+
+			expect(mockConfig.setCursor).toHaveBeenCalledWith("crosshair");
+		});
 	});
 
 	describe("onMouseMove", () => {

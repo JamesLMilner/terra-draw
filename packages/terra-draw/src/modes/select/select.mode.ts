@@ -47,6 +47,14 @@ import { CoordinateSnappingBehavior } from "../coordinate-snapping.behavior";
 import { LineSnappingBehavior } from "../line-snapping.behavior";
 import { MutateFeatureBehavior, Mutations } from "../mutate-feature.behavior";
 import { ReadFeatureBehavior } from "../read-feature.behavior";
+import {
+	isBoolean,
+	isFiniteNonNegativeNumber,
+	isNonNullObject,
+	isNull,
+} from "../../common/checks";
+import { KeyboardEventKey } from "../../common/keys";
+import { CursorValues } from "../../common/cursors";
 
 type TerraDrawSelectModeKeyEvents = {
 	deselect: KeyboardEvent["key"] | null;
@@ -56,11 +64,11 @@ type TerraDrawSelectModeKeyEvents = {
 };
 
 const defaultKeyEvents = {
-	deselect: "Escape",
-	delete: "Delete",
+	deselect: KeyboardEventKey.Escape,
+	delete: KeyboardEventKey.Delete,
 	rotate: ["Control", "r"],
 	scale: ["Control", "s"],
-};
+} as Required<TerraDrawSelectModeKeyEvents>;
 
 type ModeFlags = {
 	feature?: {
@@ -138,10 +146,10 @@ interface Cursors {
 }
 
 const defaultCursors = {
-	pointerOver: "move",
-	dragStart: "move",
-	dragEnd: "move",
-	insertMidpoint: "crosshair",
+	pointerOver: CursorValues.Move,
+	dragStart: CursorValues.Move,
+	dragEnd: CursorValues.Move,
+	insertMidpoint: CursorValues.Crosshair,
 } as Required<Cursors>;
 
 interface TerraDrawSelectModeOptions<
@@ -218,7 +226,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 	) {
 		super.updateOptions(options);
 
-		if (options && options.cursors) {
+		if (isNonNullObject(options?.cursors)) {
 			this.cursors = { ...this.cursors, ...options.cursors };
 		} else {
 			this.cursors = defaultCursors;
@@ -226,31 +234,31 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 
 		// We want to have some defaults, but also allow key bindings
 		// to be explicitly turned off
-		if (options?.keyEvents === null) {
+		if (isNull(options?.keyEvents)) {
 			this.keyEvents = {
 				deselect: null,
 				delete: null,
 				rotate: null,
 				scale: null,
 			};
-		} else if (options?.keyEvents) {
+		} else if (isNonNullObject(options?.keyEvents)) {
 			this.keyEvents = { ...this.keyEvents, ...options.keyEvents };
 		}
 
-		if (options?.dragEventThrottle !== undefined) {
+		if (isFiniteNonNegativeNumber(options?.dragEventThrottle)) {
 			this.dragEventThrottle = options.dragEventThrottle;
 		}
 
-		if (options?.allowManualDeselection !== undefined) {
+		if (isBoolean(options?.allowManualDeselection)) {
 			this.allowManualDeselection = options.allowManualDeselection;
 		}
 
-		if (options?.allowManualSelection !== undefined) {
+		if (isBoolean(options?.allowManualSelection)) {
 			this.allowManualSelection = options.allowManualSelection;
 		}
 
 		// Flags and Validations
-		if (options?.flags) {
+		if (isNonNullObject(options?.flags)) {
 			this.flags = { ...this.flags, ...options.flags };
 			this.validations = {};
 
@@ -403,7 +411,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 
 	private clearDragTargetAndCursor() {
 		this.dragTarget = { type: "none" };
-		this.setCursor("unset");
+		this.setCursor(CursorValues.Unset);
 	}
 
 	private getSelectedFlags(featureId: FeatureId) {
@@ -918,7 +926,7 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 			return;
 		}
 
-		this.setCursor("unset");
+		this.setCursor(CursorValues.Unset);
 	}
 
 	/** @internal */

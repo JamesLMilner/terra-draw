@@ -1,6 +1,6 @@
 import type { DrawInteractions } from "../common";
 
-export type Check<T> = (value: unknown) => value is T;
+type Check<T> = (value: unknown) => value is T;
 
 /**
  * Checks whether a value is a finite, non-negative number.

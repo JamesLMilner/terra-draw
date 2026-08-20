@@ -23,7 +23,7 @@ export default {
 	],
 	coveragePathIgnorePatterns: [
 		"<rootDir>/packages/terra-draw/src/benchmark/",
-		"<rootDir>/packages/terra-draw/src/benchmark.ts",
+		"<rootDir>/packages/terra-draw/src/terra-draw.benchmark.ts",
 		"<rootDir>/packages/.*/dist/",
 		"<rootDir>/packages/.*/src/test",
 		"<rootDir>/packages/e2e/",

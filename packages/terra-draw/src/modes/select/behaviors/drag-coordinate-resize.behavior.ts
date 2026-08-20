@@ -64,6 +64,9 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 		index: -1,
 	};
 
+	private centerOrigin: CartesianPoint | null = null;
+	private oppositeOrigin: CartesianPoint | null = null;
+
 	// This map provides the oppsite corner of the bbox
 	// to the index of the coordinate provided
 	//   0    1    2
@@ -217,11 +220,17 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 		const { feature, boundingBox, updatedCoords, selectedCoordinate } =
 			featureData;
 
-		const webMercatorOrigin = webMercatorCentroid(feature);
+		const webMercatorOrigin = this.centerOrigin ?? webMercatorCentroid(feature);
 
-		if (!webMercatorOrigin) {
+		if (
+			!webMercatorOrigin ||
+			!Number.isFinite(webMercatorOrigin.x) ||
+			!Number.isFinite(webMercatorOrigin.y)
+		) {
 			return null;
 		}
+
+		this.centerOrigin = webMercatorOrigin;
 
 		const webMercatorSelected = lngLatToWebMercatorXY(
 			selectedCoordinate[0],
@@ -235,15 +244,13 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 
 		const webMercatorCursor = lngLatToWebMercatorXY(event.lng, event.lat);
 
-		this.scaleWebMercator({
+		return this.scaleWebMercator({
 			closestBBoxIndex,
 			updatedCoords,
 			webMercatorCursor,
 			webMercatorSelected,
 			webMercatorOrigin,
 		});
-
-		return updatedCoords;
 	}
 
 	private centerFixedWebMercatorDrag(event: TerraDrawMouseEvent) {
@@ -254,11 +261,17 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 		const { feature, boundingBox, updatedCoords, selectedCoordinate } =
 			featureData;
 
-		const webMercatorOrigin = webMercatorCentroid(feature);
+		const webMercatorOrigin = this.centerOrigin ?? webMercatorCentroid(feature);
 
-		if (!webMercatorOrigin) {
+		if (
+			!webMercatorOrigin ||
+			!Number.isFinite(webMercatorOrigin.x) ||
+			!Number.isFinite(webMercatorOrigin.y)
+		) {
 			return null;
 		}
+
+		this.centerOrigin = webMercatorOrigin;
 
 		const webMercatorSelected = lngLatToWebMercatorXY(
 			selectedCoordinate[0],
@@ -272,7 +285,7 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 
 		const webMercatorCursor = lngLatToWebMercatorXY(event.lng, event.lat);
 
-		this.scaleFixedWebMercator({
+		const scaledCoords = this.scaleFixedWebMercator({
 			closestBBoxIndex,
 			updatedCoords,
 			webMercatorCursor,
@@ -280,7 +293,7 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 			webMercatorOrigin,
 		});
 
-		return updatedCoords;
+		return scaledCoords;
 	}
 
 	private scaleFixedWebMercator({
@@ -306,14 +319,18 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 		);
 
 		if (!valid) {
-			return null;
+			return updatedCoords;
 		}
 
 		let scale =
 			cartesianDistance(webMercatorOrigin, webMercatorCursor) /
 			cartesianDistance(webMercatorOrigin, webMercatorSelected);
 
-		if (scale < 0) {
+		if (!Number.isFinite(scale)) {
+			return null;
+		}
+
+		if (scale < this.minimumScale) {
 			scale = this.minimumScale;
 		}
 
@@ -324,14 +341,6 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 			xScale: scale,
 			yScale: scale,
 		});
-
-		// this.performWebMercatorScale(
-		// 	updatedCoords,
-		// 	webMercatorOrigin.x,
-		// 	webMercatorOrigin.y,
-		// 	scale,
-		// 	scale,
-		// );
 
 		return updatedCoords;
 	}
@@ -354,13 +363,22 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 			webMercatorSelected,
 		);
 
-		const webMercatorOrigin = {
+		const webMercatorOrigin = this.oppositeOrigin ?? {
 			x: boundingBox[oppositeBboxIndex][0],
 			y: boundingBox[oppositeBboxIndex][1],
 		};
+
+		if (
+			!Number.isFinite(webMercatorOrigin.x) ||
+			!Number.isFinite(webMercatorOrigin.y)
+		) {
+			return null;
+		}
+
+		this.oppositeOrigin = webMercatorOrigin;
 		const webMercatorCursor = lngLatToWebMercatorXY(event.lng, event.lat);
 
-		this.scaleFixedWebMercator({
+		const scaledCoords = this.scaleFixedWebMercator({
 			closestBBoxIndex,
 			updatedCoords,
 			webMercatorCursor,
@@ -368,7 +386,7 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 			webMercatorOrigin,
 		});
 
-		return updatedCoords;
+		return scaledCoords;
 	}
 
 	private oppositeWebMercatorDrag(event: TerraDrawMouseEvent) {
@@ -389,21 +407,28 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 			webMercatorSelected,
 		);
 
-		const webMercatorOrigin = {
+		const webMercatorOrigin = this.oppositeOrigin ?? {
 			x: boundingBox[oppositeBboxIndex][0],
 			y: boundingBox[oppositeBboxIndex][1],
 		};
+
+		if (
+			!Number.isFinite(webMercatorOrigin.x) ||
+			!Number.isFinite(webMercatorOrigin.y)
+		) {
+			return null;
+		}
+
+		this.oppositeOrigin = webMercatorOrigin;
 		const webMercatorCursor = lngLatToWebMercatorXY(event.lng, event.lat);
 
-		this.scaleWebMercator({
+		return this.scaleWebMercator({
 			closestBBoxIndex,
 			updatedCoords,
 			webMercatorCursor,
 			webMercatorSelected,
 			webMercatorOrigin,
 		});
-
-		return updatedCoords;
 	}
 
 	private scaleWebMercator({
@@ -505,8 +530,8 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 	}
 
 	private validateScale(xScale: number, yScale: number) {
-		const validX = !isNaN(xScale) && yScale < Number.MAX_SAFE_INTEGER;
-		const validY = !isNaN(yScale) && yScale < Number.MAX_SAFE_INTEGER;
+		const validX = Number.isFinite(xScale) && xScale < Number.MAX_SAFE_INTEGER;
+		const validY = Number.isFinite(yScale) && yScale < Number.MAX_SAFE_INTEGER;
 
 		return validX && validY;
 	}
@@ -650,6 +675,8 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 			id,
 			index,
 		};
+		this.centerOrigin = null;
+		this.oppositeOrigin = null;
 	}
 
 	/**
@@ -661,6 +688,8 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 			id: null,
 			index: -1,
 		};
+		this.centerOrigin = null;
+		this.oppositeOrigin = null;
 	}
 
 	/**

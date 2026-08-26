@@ -204,7 +204,7 @@ describe("DragCoordinateResizeBehavior", () => {
 						jest.spyOn(config.store, "updateGeometry");
 
 						dragMaintainedShapeBehavior.drag(
-							MockCursorEvent({ lng: -1, lat: -1 }),
+							MockCursorEvent({ lng: 0, lat: 0 }),
 							"center",
 						);
 
@@ -221,7 +221,7 @@ describe("DragCoordinateResizeBehavior", () => {
 						jest.spyOn(config.store, "updateGeometry");
 
 						dragMaintainedShapeBehavior.drag(
-							MockCursorEvent({ lng: -1, lat: -1 }),
+							MockCursorEvent({ lng: 0, lat: 0 }),
 							"center-fixed",
 						);
 
@@ -255,11 +255,11 @@ describe("DragCoordinateResizeBehavior", () => {
 					it("keeps the Polygon center fixed across drag events", () => {
 						const id = createStorePolygon(config, [
 							[
-								[0.1234567891, 0.1234567891],
-								[0.1234567891, 1.2345678912],
-								[2.3456789123, 1.2345678912],
-								[2.3456789123, 0.1234567891],
-								[0.1234567891, 0.1234567891],
+								[0, 0],
+								[0, 1],
+								[2, 1],
+								[2, 0],
+								[0, 0],
 							],
 						]);
 						dragMaintainedShapeBehavior.startDragging(id, 0);
@@ -344,11 +344,11 @@ describe("DragCoordinateResizeBehavior", () => {
 					it("keeps the opposite reference point fixed across drag events", () => {
 						const id = createStorePolygon(config, [
 							[
-								[0.1234567891, 0.1234567891],
-								[0.1234567891, 1.2345678912],
-								[2.3456789123, 1.2345678912],
-								[2.3456789123, 0.1234567891],
-								[0.1234567891, 0.1234567891],
+								[0, 0],
+								[0, 1],
+								[2, 1],
+								[2, 0],
+								[0, 0],
 							],
 						]);
 						dragMaintainedShapeBehavior.startDragging(id, 0);
@@ -490,11 +490,11 @@ describe("DragCoordinateResizeBehavior", () => {
 					it("keeps the Polygon center fixed across drag events", () => {
 						const id = createStorePolygon(config, [
 							[
-								[0.1234567891, 0.1234567891],
-								[0.1234567891, 1.2345678912],
-								[2.3456789123, 1.2345678912],
-								[2.3456789123, 0.1234567891],
-								[0.1234567891, 0.1234567891],
+								[0, 0],
+								[0, 1],
+								[2, 1],
+								[2, 0],
+								[0, 0],
 							],
 						]);
 						dragMaintainedShapeBehavior.startDragging(id, 0);
@@ -563,11 +563,11 @@ describe("DragCoordinateResizeBehavior", () => {
 					it("keeps the opposite reference point fixed across drag events", () => {
 						const id = createStorePolygon(config, [
 							[
-								[0.1234567891, 0.1234567891],
-								[0.1234567891, 1.2345678912],
-								[2.3456789123, 1.2345678912],
-								[2.3456789123, 0.1234567891],
-								[0.1234567891, 0.1234567891],
+								[0, 0],
+								[0, 1],
+								[2, 1],
+								[2, 0],
+								[0, 0],
 							],
 						]);
 						dragMaintainedShapeBehavior.startDragging(id, 0);

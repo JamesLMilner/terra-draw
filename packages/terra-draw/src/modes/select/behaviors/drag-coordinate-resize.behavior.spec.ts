@@ -341,6 +341,53 @@ describe("DragCoordinateResizeBehavior", () => {
 				});
 
 				describe("opposite", () => {
+					it("keeps the initial handle axes across drag events", () => {
+						const id = createStorePolygon(config, [
+							[
+								[0, 0],
+								[0, 1],
+								[2, 1],
+								[2, 0],
+								[0, 0],
+							],
+						]);
+						dragMaintainedShapeBehavior.startDragging(id, 0);
+
+						const getIndexes = jest.spyOn(
+							dragMaintainedShapeBehavior as unknown as {
+								getIndexesWebMercator: () => unknown;
+							},
+							"getIndexesWebMercator",
+						);
+						getIndexes
+							.mockReturnValueOnce({
+								oppositeBboxIndex: 2,
+								closestBBoxIndex: 6,
+							})
+							.mockReturnValueOnce({
+								oppositeBboxIndex: 5,
+								closestBBoxIndex: 1,
+							});
+
+						dragMaintainedShapeBehavior.drag(
+							MockCursorEvent({ lng: -1, lat: -1 }),
+							"opposite",
+						);
+						const coordinateAfterFirstDrag =
+							readFeatureBehavior.getGeometry<Polygon>(id).coordinates[0][0];
+
+						dragMaintainedShapeBehavior.drag(
+							MockCursorEvent({ lng: -2, lat: -2 }),
+							"opposite",
+						);
+						const coordinateAfterSecondDrag =
+							readFeatureBehavior.getGeometry<Polygon>(id).coordinates[0][0];
+
+						expect(coordinateAfterSecondDrag[0]).not.toBe(
+							coordinateAfterFirstDrag[0],
+						);
+					});
+
 					it("keeps the opposite reference point fixed across drag events", () => {
 						const id = createStorePolygon(config, [
 							[
@@ -487,6 +534,22 @@ describe("DragCoordinateResizeBehavior", () => {
 				});
 
 				describe("center-fixed", () => {
+					it("does not update the Polygon for an invalid drag direction", () => {
+						const id = createStorePolygon(config);
+
+						dragMaintainedShapeBehavior.startDragging(id, 0);
+
+						jest.spyOn(config.store, "updateGeometry");
+
+						const didResize = dragMaintainedShapeBehavior.drag(
+							MockCursorEvent({ lng: 1, lat: 1 }),
+							"center-fixed",
+						);
+
+						expect(didResize).toBe(false);
+						expect(config.store.updateGeometry).not.toHaveBeenCalled();
+					});
+
 					it("keeps the Polygon center fixed across drag events", () => {
 						const id = createStorePolygon(config, [
 							[
@@ -551,7 +614,7 @@ describe("DragCoordinateResizeBehavior", () => {
 						dragMaintainedShapeBehavior.startDragging(id, 0);
 
 						dragMaintainedShapeBehavior.drag(
-							MockCursorEvent({ lng: 0, lat: 0 }),
+							MockCursorEvent({ lng: 1, lat: 0 }),
 							"center-fixed",
 						);
 
@@ -612,7 +675,7 @@ describe("DragCoordinateResizeBehavior", () => {
 						dragMaintainedShapeBehavior.startDragging(id, 0);
 
 						dragMaintainedShapeBehavior.drag(
-							MockCursorEvent({ lng: 0, lat: 0 }),
+							MockCursorEvent({ lng: 1, lat: 0 }),
 							"opposite-fixed",
 						);
 

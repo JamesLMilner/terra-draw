@@ -66,6 +66,7 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 
 	private centerOrigin: CartesianPoint | null = null;
 	private oppositeOrigin: CartesianPoint | null = null;
+	private oppositeClosestBBoxIndex: BoundingBoxIndex | null = null;
 
 	// This map provides the oppsite corner of the bbox
 	// to the index of the coordinate provided
@@ -319,7 +320,7 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 		);
 
 		if (!valid) {
-			return updatedCoords;
+			return null;
 		}
 
 		let scale =
@@ -358,14 +359,17 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 			selectedCoordinate[1],
 		);
 
-		const { oppositeBboxIndex, closestBBoxIndex } = this.getIndexesWebMercator(
+		const indexes = this.getIndexesWebMercator(
 			boundingBox,
 			webMercatorSelected,
 		);
+		const closestBBoxIndex =
+			this.oppositeClosestBBoxIndex ?? indexes.closestBBoxIndex;
+		this.oppositeClosestBBoxIndex = closestBBoxIndex;
 
 		const webMercatorOrigin = this.oppositeOrigin ?? {
-			x: boundingBox[oppositeBboxIndex][0],
-			y: boundingBox[oppositeBboxIndex][1],
+			x: boundingBox[indexes.oppositeBboxIndex][0],
+			y: boundingBox[indexes.oppositeBboxIndex][1],
 		};
 
 		if (
@@ -402,14 +406,17 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 			selectedCoordinate[1],
 		);
 
-		const { oppositeBboxIndex, closestBBoxIndex } = this.getIndexesWebMercator(
+		const indexes = this.getIndexesWebMercator(
 			boundingBox,
 			webMercatorSelected,
 		);
+		const closestBBoxIndex =
+			this.oppositeClosestBBoxIndex ?? indexes.closestBBoxIndex;
+		this.oppositeClosestBBoxIndex = closestBBoxIndex;
 
 		const webMercatorOrigin = this.oppositeOrigin ?? {
-			x: boundingBox[oppositeBboxIndex][0],
-			y: boundingBox[oppositeBboxIndex][1],
+			x: boundingBox[indexes.oppositeBboxIndex][0],
+			y: boundingBox[indexes.oppositeBboxIndex][1],
 		};
 
 		if (
@@ -677,6 +684,7 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 		};
 		this.centerOrigin = null;
 		this.oppositeOrigin = null;
+		this.oppositeClosestBBoxIndex = null;
 	}
 
 	/**
@@ -690,6 +698,7 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 		};
 		this.centerOrigin = null;
 		this.oppositeOrigin = null;
+		this.oppositeClosestBBoxIndex = null;
 	}
 
 	/**

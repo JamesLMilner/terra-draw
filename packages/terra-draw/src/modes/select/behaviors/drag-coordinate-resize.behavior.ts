@@ -193,7 +193,10 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 	}
 
 	private getSelectedFeatureDataWebMercator() {
-		if (!this.draggedCoordinate.id || this.draggedCoordinate.index === -1) {
+		if (
+			this.draggedCoordinate.id === null ||
+			this.draggedCoordinate.index === -1
+		) {
 			return null;
 		}
 
@@ -731,7 +734,7 @@ export class DragCoordinateResizeBehavior extends TerraDrawModeBehavior {
 		event: TerraDrawMouseEvent,
 		resizeOption: ResizeOptions,
 	): boolean {
-		if (!this.draggedCoordinate.id) {
+		if (this.draggedCoordinate.id === null) {
 			return false;
 		}
 

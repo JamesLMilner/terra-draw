@@ -170,6 +170,39 @@ describe("DragCoordinateResizeBehavior", () => {
 			});
 
 			describe("drag", () => {
+				it("resizes a feature with numeric id zero", () => {
+					config.store.load([
+						{
+							type: "Feature",
+							id: 0,
+							geometry: {
+								type: "Polygon",
+								coordinates: [
+									[
+										[0, 0],
+										[0, 1],
+										[1, 1],
+										[1, 0],
+										[0, 0],
+									],
+								],
+							},
+							properties: {},
+						},
+					]);
+					dragMaintainedShapeBehavior.startDragging(0, 0);
+
+					jest.spyOn(config.store, "updateGeometry");
+
+					const didResize = dragMaintainedShapeBehavior.drag(
+						MockCursorEvent({ lng: -1, lat: -1 }),
+						"center",
+					);
+
+					expect(didResize).toBe(true);
+					expect(config.store.updateGeometry).toHaveBeenCalledTimes(1);
+				});
+
 				it("returns early if nothing is being dragged", () => {
 					jest.spyOn(config.store, "updateGeometry");
 

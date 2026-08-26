@@ -179,6 +179,28 @@ describe("TerraDrawFreehandLineStringMode", () => {
 
 			expect(mockConfig.onChange).toHaveBeenCalledTimes(1);
 		});
+
+		it("accepts minDistance set to 0", () => {
+			const freehandMode = new TerraDrawFreehandLineStringMode({
+				minDistance: 0,
+			});
+			const mockConfig = MockModeConfig(freehandMode.mode);
+
+			freehandMode.register(mockConfig);
+			freehandMode.start();
+
+			freehandMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			freehandMode.onMouseMove(MockCursorEvent({ lng: 0.1, lat: 0.1 }));
+
+			const lineString = mockConfig.store
+				.copyAll()
+				.find((feature) => feature.geometry.type === "LineString");
+
+			expect(lineString).toBeDefined();
+			expect(
+				(lineString as GeoJSONStoreFeatures).geometry.coordinates,
+			).toHaveLength(3);
+		});
 	});
 
 	describe("onClick", () => {

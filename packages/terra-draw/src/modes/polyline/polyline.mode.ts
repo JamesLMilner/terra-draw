@@ -12,6 +12,8 @@ import {
 	Snapping,
 	DashArrayStyling,
 } from "../../common";
+import { KeyboardEventKey } from "../../common/keys";
+import { CursorValues } from "../../common/cursors";
 import { LineString, Position } from "geojson";
 import {
 	BaseModeOptions,
@@ -36,13 +38,17 @@ import { ValidatePolygonFeature } from "../../validations/polygon.validation";
 import { ClosingPointsBehavior } from "../closing-points.behavior";
 import { MutateFeatureBehavior, Mutations } from "../mutate-feature.behavior";
 import { ReadFeatureBehavior } from "../read-feature.behavior";
+import { isNonNullObject, isNull } from "../../common/checks";
 
 type TerraDrawPolyLineModeKeyEvents = {
 	cancel: KeyboardEvent["key"] | null;
 	finish: KeyboardEvent["key"] | null;
 };
 
-const defaultKeyEvents = { cancel: "Escape", finish: "Enter" } as const;
+const defaultKeyEvents = {
+	cancel: KeyboardEventKey.Escape,
+	finish: KeyboardEventKey.Enter,
+} as const;
 
 type PolyLineStyling = {
 	lineStringWidth: NumericStyling;
@@ -74,8 +80,8 @@ interface Cursors {
 }
 
 const defaultCursors = {
-	start: "crosshair",
-	close: "pointer",
+	start: CursorValues.Crosshair,
+	close: CursorValues.Pointer,
 } as Required<Cursors>;
 
 interface TerraDrawPolyLineModeOptions<
@@ -116,17 +122,17 @@ export class TerraDrawPolyLineMode extends TerraDrawBaseDrawMode<PolyLineStyling
 	) {
 		super.updateOptions(options);
 
-		if (options?.cursors) {
+		if (isNonNullObject(options?.cursors)) {
 			this.cursors = { ...this.cursors, ...options.cursors };
 		}
 
-		if (options?.snapping) {
+		if (isNonNullObject(options?.snapping)) {
 			this.snapping = options.snapping;
 		}
 
-		if (options?.keyEvents === null) {
+		if (isNull(options?.keyEvents)) {
 			this.keyEvents = { cancel: null, finish: null };
-		} else if (options?.keyEvents) {
+		} else if (isNonNullObject(options?.keyEvents)) {
 			this.keyEvents = { ...this.keyEvents, ...options.keyEvents };
 		}
 	}
@@ -171,7 +177,7 @@ export class TerraDrawPolyLineMode extends TerraDrawBaseDrawMode<PolyLineStyling
 	stop() {
 		this.cleanUp();
 		this.setStopped();
-		this.setCursor("unset");
+		this.setCursor(CursorValues.Unset);
 	}
 
 	private finishLine() {

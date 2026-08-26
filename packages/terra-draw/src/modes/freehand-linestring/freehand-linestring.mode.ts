@@ -11,6 +11,8 @@ import {
 	FinishActions,
 	DashArrayStyling,
 } from "../../common";
+import { KeyboardEventKey } from "../../common/keys";
+import { CursorValues } from "../../common/cursors";
 
 import {
 	BaseModeOptions,
@@ -31,13 +33,21 @@ import { ReadFeatureBehavior } from "../read-feature.behavior";
 import { BehaviorConfig } from "../base.behavior";
 import { ClosingPointsBehavior } from "../closing-points.behavior";
 import { PixelDistanceBehavior } from "../pixel-distance.behavior";
+import {
+	isFiniteNonNegativeNumber,
+	isNonNullObject,
+	isNull,
+} from "../../common/checks";
 
 type TerraDrawFreehandLineStringModeKeyEvents = {
 	cancel: KeyboardEvent["key"] | null;
 	finish: KeyboardEvent["key"] | null;
 };
 
-const defaultKeyEvents = { cancel: "Escape", finish: "Enter" };
+const defaultKeyEvents = {
+	cancel: KeyboardEventKey.Escape,
+	finish: KeyboardEventKey.Enter,
+};
 
 type FreehandLineStringStyling = {
 	lineStringWidth: NumericStyling;
@@ -58,8 +68,8 @@ interface Cursors {
 }
 
 const defaultCursors = {
-	start: "crosshair",
-	close: "pointer",
+	start: CursorValues.Crosshair,
+	close: CursorValues.Pointer,
 } as Required<Cursors>;
 
 interface TerraDrawFreehandLineStringModeOptions<
@@ -101,17 +111,17 @@ export class TerraDrawFreehandLineStringMode extends TerraDrawBaseDrawMode<Freeh
 	): void {
 		super.updateOptions(options);
 
-		if (options?.minDistance) {
+		if (isFiniteNonNegativeNumber(options?.minDistance)) {
 			this.minDistance = options.minDistance;
 		}
 
-		if (options?.keyEvents === null) {
+		if (isNull(options?.keyEvents)) {
 			this.keyEvents = { cancel: null, finish: null };
-		} else if (options?.keyEvents) {
+		} else if (isNonNullObject(options?.keyEvents)) {
 			this.keyEvents = { ...this.keyEvents, ...options.keyEvents };
 		}
 
-		if (options?.cursors) {
+		if (isNonNullObject(options?.cursors)) {
 			this.cursors = { ...this.cursors, ...options.cursors };
 		}
 	}
@@ -161,7 +171,7 @@ export class TerraDrawFreehandLineStringMode extends TerraDrawBaseDrawMode<Freeh
 	stop() {
 		this.cleanUp();
 		this.setStopped();
-		this.setCursor("unset");
+		this.setCursor(CursorValues.Unset);
 	}
 
 	/** @internal */

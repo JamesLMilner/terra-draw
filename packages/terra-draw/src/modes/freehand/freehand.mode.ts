@@ -12,6 +12,8 @@ import {
 	DrawInteractions,
 	DrawType,
 } from "../../common";
+import { KeyboardEventKey } from "../../common/keys";
+import { CursorValues } from "../../common/cursors";
 
 import {
 	BaseModeOptions,
@@ -30,13 +32,23 @@ import { ValidatePolygonFeature } from "../../validations/polygon.validation";
 import { MutateFeatureBehavior, Mutations } from "../mutate-feature.behavior";
 import { BehaviorConfig } from "../base.behavior";
 import { ReadFeatureBehavior } from "../read-feature.behavior";
+import {
+	isBoolean,
+	isDrawInteraction,
+	isFiniteNonNegativeNumber,
+	isNonNullObject,
+	isNull,
+} from "../../common/checks";
 
 type TerraDrawFreehandModeKeyEvents = {
 	cancel: KeyboardEvent["key"] | null;
 	finish: KeyboardEvent["key"] | null;
 };
 
-const defaultKeyEvents = { cancel: "Escape", finish: "Enter" };
+const defaultKeyEvents = {
+	cancel: KeyboardEventKey.Escape,
+	finish: KeyboardEventKey.Enter,
+};
 
 type FreehandPolygonStyling = {
 	fillColor: HexColorStyling;
@@ -58,8 +70,8 @@ interface Cursors {
 }
 
 const defaultCursors = {
-	start: "crosshair",
-	close: "pointer",
+	start: CursorValues.Crosshair,
+	close: CursorValues.Pointer,
 } as Required<Cursors>;
 
 interface TerraDrawFreehandModeOptions<
@@ -109,11 +121,11 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 	): void {
 		super.updateOptions(options);
 
-		if (options?.minDistance !== undefined && options.minDistance >= 0) {
+		if (isFiniteNonNegativeNumber(options?.minDistance)) {
 			this.minDistance = options.minDistance;
 		}
 
-		if (options?.smoothing !== undefined) {
+		if (isFiniteNonNegativeNumber(options?.smoothing)) {
 			const minimumSmoothing = 0;
 			const maximumSmoothing = 0.999;
 			this.smoothing = Math.min(
@@ -122,32 +134,29 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 			);
 		}
 
-		if (options?.preventPointsNearClose !== undefined) {
+		if (isBoolean(options?.preventPointsNearClose)) {
 			this.preventPointsNearClose = options.preventPointsNearClose;
 		}
 
-		if (options?.autoClose !== undefined) {
+		if (isBoolean(options?.autoClose)) {
 			this.autoClose = options.autoClose;
 		}
 
-		if (
-			options?.autoCloseTimeout !== undefined &&
-			options.autoCloseTimeout >= 0
-		) {
+		if (isFiniteNonNegativeNumber(options?.autoCloseTimeout)) {
 			this.autoCloseTimeout = options.autoCloseTimeout;
 		}
 
-		if (options?.keyEvents === null) {
+		if (isNull(options?.keyEvents)) {
 			this.keyEvents = { cancel: null, finish: null };
-		} else if (options?.keyEvents) {
+		} else if (isNonNullObject(options?.keyEvents)) {
 			this.keyEvents = { ...this.keyEvents, ...options.keyEvents };
 		}
 
-		if (options?.cursors) {
+		if (isNonNullObject(options?.cursors)) {
 			this.cursors = { ...this.cursors, ...options.cursors };
 		}
 
-		if (options?.drawInteraction) {
+		if (isDrawInteraction(options?.drawInteraction)) {
 			this.drawInteraction = options.drawInteraction;
 		}
 	}
@@ -342,7 +351,7 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 	stop() {
 		this.cleanUp();
 		this.setStopped();
-		this.setCursor("unset");
+		this.setCursor(CursorValues.Unset);
 	}
 
 	/** @internal */

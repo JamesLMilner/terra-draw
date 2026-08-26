@@ -10,6 +10,8 @@ import {
 	COMMON_PROPERTIES,
 	FinishActions,
 } from "../../common";
+import { KeyboardEventKey } from "../../common/keys";
+import { CursorValues } from "../../common/cursors";
 import {
 	TerraDrawBaseDrawMode,
 	BaseModeOptions,
@@ -43,13 +45,17 @@ import {
 } from "../mutate-feature.behavior";
 import { BehaviorConfig } from "../base.behavior";
 import { ReadFeatureBehavior } from "../read-feature.behavior";
+import { isNonNullObject, isNull } from "../../common/checks";
 
 type TerraDrawPolygonModeKeyEvents = {
 	cancel?: KeyboardEvent["key"] | null;
 	finish?: KeyboardEvent["key"] | null;
 };
 
-const defaultKeyEvents = { cancel: "Escape", finish: "Enter" };
+const defaultKeyEvents = {
+	cancel: KeyboardEventKey.Escape,
+	finish: KeyboardEventKey.Enter,
+};
 
 type PolygonStyling = {
 	fillColor: HexColorStyling;
@@ -65,8 +71,8 @@ interface Cursors {
 }
 
 const defaultCursors = {
-	start: "crosshair",
-	close: "pointer",
+	start: CursorValues.Crosshair,
+	close: CursorValues.Pointer,
 } as Required<Cursors>;
 
 interface TerraDrawAngledRectangleModeOptions<
@@ -102,13 +108,13 @@ export class TerraDrawAngledRectangleMode extends TerraDrawBaseDrawMode<PolygonS
 	) {
 		super.updateOptions(options);
 
-		if (options?.cursors) {
+		if (isNonNullObject(options?.cursors)) {
 			this.cursors = { ...this.cursors, ...options.cursors };
 		}
 
-		if (options?.keyEvents === null) {
+		if (isNull(options?.keyEvents)) {
 			this.keyEvents = { cancel: null, finish: null };
-		} else if (options?.keyEvents) {
+		} else if (isNonNullObject(options?.keyEvents)) {
 			this.keyEvents = { ...this.keyEvents, ...options.keyEvents };
 		}
 	}
@@ -156,7 +162,7 @@ export class TerraDrawAngledRectangleMode extends TerraDrawBaseDrawMode<PolygonS
 	stop() {
 		this.cleanUp();
 		this.setStopped();
-		this.setCursor("unset");
+		this.setCursor(CursorValues.Unset);
 	}
 
 	/** @internal */

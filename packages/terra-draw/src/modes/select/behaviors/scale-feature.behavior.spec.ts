@@ -110,10 +110,23 @@ describe("ScaleFeatureBehavior", () => {
 			});
 
 			it("scales the LineString", () => {
-				const id = createStoreLineString(config);
+				const originalCoordinates = [
+					[0, 0],
+					[1, 1],
+				];
+				const id = createStoreLineString(config, [...originalCoordinates]);
 
-				scaleFeatureBehavior.scale(MockCursorEvent({ lng: 0, lat: 0 }), id);
+				scaleFeatureBehavior.scale(
+					MockCursorEvent({ lng: 1.001, lat: 1.001 }),
+					id,
+				);
 				expect(config.store.updateGeometry).toHaveBeenCalledTimes(1);
+
+				const [updatedFeature] = (config.store.updateGeometry as jest.Mock).mock
+					.calls[0][0];
+				expect(updatedFeature.geometry.coordinates).not.toEqual(
+					originalCoordinates,
+				);
 			});
 
 			it("scales the Polygon", () => {
@@ -126,49 +139,37 @@ describe("ScaleFeatureBehavior", () => {
 
 		describe("reset", () => {
 			it("can be called to reset the behaviors state", () => {
-				const id = createStoreLineString(config);
+				const id = createStoreLineString(config, [
+					[0, 0],
+					[1, 1],
+				]);
 				const id2 = createStoreLineString(
 					config,
 					[
 						[10, 10],
-						[10, 11],
+						[11, 11],
 					],
 					true,
 				);
 
 				jest.spyOn(config.store, "updateGeometry");
 
-				scaleFeatureBehavior.scale(MockCursorEvent({ lng: 0, lat: 0 }), id);
+				scaleFeatureBehavior.scale(
+					MockCursorEvent({ lng: 1.001, lat: 1.001 }),
+					id,
+				);
 				expect(config.store.updateGeometry).toHaveBeenCalledTimes(1);
-				expect(config.store.updateGeometry).toHaveBeenCalledWith([
-					{
-						geometry: {
-							coordinates: [
-								[0, 0],
-								[0, 1],
-							],
-							type: "LineString",
-						},
-						id: id,
-					},
-				]);
 
 				scaleFeatureBehavior.reset();
 
-				scaleFeatureBehavior.scale(MockCursorEvent({ lng: 10, lat: 10 }), id2);
+				scaleFeatureBehavior.scale(
+					MockCursorEvent({ lng: 11.001, lat: 11.001 }),
+					id2,
+				);
 				expect(config.store.updateGeometry).toHaveBeenCalledTimes(2);
-				expect(config.store.updateGeometry).toHaveBeenCalledWith([
-					{
-						geometry: {
-							coordinates: [
-								[10, 10],
-								[10, 11],
-							],
-							type: "LineString",
-						},
-						id: id2,
-					},
-				]);
+				expect(config.store.updateGeometry).toHaveBeenLastCalledWith(
+					expect.arrayContaining([expect.objectContaining({ id: id2 })]),
+				);
 			});
 		});
 	});

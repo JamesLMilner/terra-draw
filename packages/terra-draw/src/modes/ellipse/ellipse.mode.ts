@@ -35,6 +35,12 @@ import {
 	ModeUpdateOptions,
 	TerraDrawBaseDrawMode,
 } from "../base.mode";
+import {
+	isDrawInteraction,
+	isFiniteNonNegativeNumber,
+	isNonNullObject,
+	isNull,
+} from "../../common/checks";
 
 type TerraDrawEllipseModeKeyEvents = {
 	cancel: KeyboardEvent["key"] | null;
@@ -79,6 +85,9 @@ export class TerraDrawEllipseMode extends TerraDrawBaseDrawMode<EllipsePolygonSt
 	private cursorMovedAfterInitialCursorDown = false;
 	private drawInteraction: DrawInteractions = "click-move";
 	private drawType: DrawType | undefined;
+	private minimumSegments = 3;
+
+	// Behaviors
 	private mutateFeature!: MutateFeatureBehavior;
 
 	constructor(options?: TerraDrawEllipseModeOptions<EllipsePolygonStyling>) {
@@ -92,30 +101,54 @@ export class TerraDrawEllipseMode extends TerraDrawBaseDrawMode<EllipsePolygonSt
 		>,
 	) {
 		super.updateOptions(options);
-		if (options?.cursors)
+
+		if (isNonNullObject(options?.cursors)) {
 			this.cursors = { ...this.cursors, ...options.cursors };
-		if (options?.keyEvents === null)
+		}
+
+		if (isNull(options?.keyEvents)) {
 			this.keyEvents = { cancel: null, finish: null };
-		else if (options?.keyEvents)
+		} else if (isNonNullObject(options?.keyEvents)) {
 			this.keyEvents = { ...this.keyEvents, ...options.keyEvents };
-		if (options?.startingRadiusKilometers)
+		}
+
+		if (isFiniteNonNegativeNumber(options?.startingRadiusKilometers)) {
 			this.startingRadiusKilometers = options.startingRadiusKilometers;
-		if (options?.drawInteraction)
+		}
+
+		if (isDrawInteraction(options?.drawInteraction)) {
 			this.drawInteraction = options.drawInteraction;
-		if (options?.segments)
-			this.segments = options.segments < 3 ? 3 : options.segments;
+		}
+
+		if (isFiniteNonNegativeNumber(options?.segments)) {
+			const integerSegments = Math.trunc(options.segments);
+
+			this.segments =
+				integerSegments < this.minimumSegments
+					? this.minimumSegments
+					: integerSegments;
+		}
 	}
 
 	private close() {
-		if (this.currentEllipseId === undefined || this.endPosition === undefined)
+		if (this.currentEllipseId === undefined || this.endPosition === undefined) {
 			return;
-		if (!this.updateEllipse(this.endPosition, UpdateTypes.Finish)) return;
+		}
+
+		if (!this.updateEllipse(this.endPosition, UpdateTypes.Finish)) {
+			return;
+		}
+
 		const featureId = this.currentEllipseId;
 		this.cursorMovedAfterInitialCursorDown = false;
 		this.center = undefined;
 		this.currentEllipseId = undefined;
 		this.drawType = undefined;
-		if (this.state === "drawing") this.setStarted();
+
+		if (this.state === "drawing") {
+			this.setStarted();
+		}
+
 		this.onFinish(featureId, { mode: this.mode, action: FinishActions.Draw });
 	}
 
@@ -125,12 +158,14 @@ export class TerraDrawEllipseMode extends TerraDrawBaseDrawMode<EllipsePolygonSt
 	) {
 		this.center = [event.lng, event.lat];
 		this.endPosition = [event.lng, event.lat];
+
 		const startingEllipse = ellipse({
 			center: this.center,
 			xRadiusKilometers: this.startingRadiusKilometers,
 			yRadiusKilometers: this.startingRadiusKilometers,
 			coordinatePrecision: this.coordinatePrecision,
 		});
+
 		const created = this.mutateFeature.createPolygon({
 			coordinates: startingEllipse.geometry.coordinates[0],
 			properties: {
@@ -140,7 +175,11 @@ export class TerraDrawEllipseMode extends TerraDrawBaseDrawMode<EllipsePolygonSt
 				[COMMON_PROPERTIES.CURRENTLY_DRAWING]: true,
 			},
 		});
-		if (!created) return;
+
+		if (!created) {
+			return;
+		}
+
 		this.currentEllipseId = created.id;
 		this.cursorMovedAfterInitialCursorDown = false;
 		this.drawType = drawType;
@@ -183,9 +222,13 @@ export class TerraDrawEllipseMode extends TerraDrawBaseDrawMode<EllipsePolygonSt
 				this.allowPointerEvent(this.pointerEvents.leftClick, event)) ||
 			(event.isContextMenu &&
 				this.allowPointerEvent(this.pointerEvents.contextMenu, event));
-		if (!this.moveDrawAllowed() || !allowed) return;
-		if (!this.center) this.beginDrawing(event);
-		else if (this.currentEllipseId !== undefined) {
+
+		if (!this.moveDrawAllowed() || !allowed) {
+			return;
+		}
+		if (!this.center) {
+			this.beginDrawing(event);
+		} else if (this.currentEllipseId !== undefined) {
 			this.endPosition = [event.lng, event.lat];
 			this.close();
 		}
@@ -203,8 +246,11 @@ export class TerraDrawEllipseMode extends TerraDrawBaseDrawMode<EllipsePolygonSt
 
 	/** @internal */
 	onKeyUp(event: TerraDrawKeyboardEvent) {
-		if (event.key === this.keyEvents.cancel) this.cleanUp();
-		else if (event.key === this.keyEvents.finish) this.close();
+		if (event.key === this.keyEvents.cancel) {
+			this.cleanUp();
+		} else if (event.key === this.keyEvents.finish) {
+			this.close();
+		}
 	}
 
 	/** @internal */
@@ -212,7 +258,9 @@ export class TerraDrawEllipseMode extends TerraDrawBaseDrawMode<EllipsePolygonSt
 		event: TerraDrawMouseEvent,
 		setMapDraggability: (enabled: boolean) => void,
 	) {
-		if (this.state === "drawing") return;
+		if (this.state === "drawing") {
+			return;
+		}
 		if (
 			this.allowPointerEvent(this.pointerEvents.onDragStart, event) &&
 			this.dragDrawAllowed()
@@ -260,7 +308,11 @@ export class TerraDrawEllipseMode extends TerraDrawBaseDrawMode<EllipsePolygonSt
 		this.center = undefined;
 		this.currentEllipseId = undefined;
 		this.drawType = undefined;
-		if (this.state === "drawing") this.setStarted();
+
+		if (this.state === "drawing") {
+			this.setStarted();
+		}
+
 		this.mutateFeature.deleteFeatureIfPresent(currentId);
 	}
 
@@ -312,8 +364,10 @@ export class TerraDrawEllipseMode extends TerraDrawBaseDrawMode<EllipsePolygonSt
 	}
 
 	private updateEllipse(endPosition: Position, updateType: UpdateTypes) {
-		if (this.currentEllipseId === undefined || this.center === undefined)
+		if (this.currentEllipseId === undefined || this.center === undefined) {
 			return;
+		}
+
 		const isFinish = updateType === UpdateTypes.Finish;
 		let updatedEllipse: Feature<Polygon> | undefined;
 		let xRadiusKilometers: number | undefined;
@@ -348,7 +402,9 @@ export class TerraDrawEllipseMode extends TerraDrawBaseDrawMode<EllipsePolygonSt
 					coordinatePrecision: this.coordinatePrecision,
 					steps: this.segments,
 				});
-			} else throw new Error("Invalid projection");
+			} else {
+				throw new Error("Invalid projection");
+			}
 		}
 
 		const propertyMutations: {
@@ -356,6 +412,7 @@ export class TerraDrawEllipseMode extends TerraDrawBaseDrawMode<EllipsePolygonSt
 			yRadiusKilometers?: number;
 			[COMMON_PROPERTIES.CURRENTLY_DRAWING]?: boolean;
 		} = {};
+
 		if (
 			updatedEllipse &&
 			xRadiusKilometers !== undefined &&
@@ -364,8 +421,11 @@ export class TerraDrawEllipseMode extends TerraDrawBaseDrawMode<EllipsePolygonSt
 			propertyMutations.xRadiusKilometers = xRadiusKilometers;
 			propertyMutations.yRadiusKilometers = yRadiusKilometers;
 		}
-		if (isFinish)
+
+		if (isFinish) {
 			propertyMutations[COMMON_PROPERTIES.CURRENTLY_DRAWING] = undefined;
+		}
+
 		return this.mutateFeature.updatePolygon({
 			featureId: this.currentEllipseId,
 			coordinateMutations: updatedEllipse

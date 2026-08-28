@@ -29,6 +29,7 @@ export const PolygonWithCoordinateCounts =
 export const ZIndexOrdering = AllStories.ZIndexOrdering;
 export const Styling = AllStories.Styling;
 export const Circle = AllStories.Circle;
+export const Ellipse = AllStories.Ellipse;
 export const CircleWithClickDragInteraction =
 	AllStories.CircleWithClickDragInteraction;
 export const CircleWithClickMoveOrDragInteraction =

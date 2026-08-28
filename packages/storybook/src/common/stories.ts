@@ -2,6 +2,7 @@ import {
 	TerraDrawPointMode,
 	TerraDrawPolygonMode,
 	TerraDrawCircleMode,
+	TerraDrawEllipseMode,
 	TerraDrawRectangleMode,
 	TerraDrawAngledRectangleMode,
 	TerraDrawSectorMode,
@@ -330,6 +331,31 @@ const Circle: Story = {
 	args: {
 		id: "circle",
 		modes: [() => new TerraDrawCircleMode()],
+		...DefaultStory.args,
+	},
+};
+
+// Ellipse drawing story
+const Ellipse: Story = {
+	...DefaultStory,
+	args: {
+		id: "ellipse",
+		modes: [
+			() => new TerraDrawEllipseMode(),
+			() =>
+				new TerraDrawSelectMode({
+					flags: {
+						ellipse: {
+							feature: {
+								draggable: true,
+								coordinates: {
+									resizable: "center",
+								},
+							},
+						},
+					},
+				}),
+		],
 		...DefaultStory.args,
 	},
 };
@@ -1077,6 +1103,7 @@ const AllStories = {
 	Styling,
 	ZIndexOrdering,
 	Circle,
+	Ellipse,
 	CircleWithClickDragInteraction,
 	CircleWithClickMoveOrDragInteraction,
 	Rectangle,

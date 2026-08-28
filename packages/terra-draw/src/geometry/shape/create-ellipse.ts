@@ -1,37 +1,10 @@
 import { Feature, Polygon, Position } from "geojson";
-import {
-	degreesToRadians,
-	lengthToRadians,
-	radiansToDegrees,
-} from "../helpers";
 import { limitPrecision } from "../limit-decimal-precision";
 import {
 	lngLatToWebMercatorXY,
 	webMercatorXYToLngLat,
 } from "../project/web-mercator";
-
-function destination(
-	origin: Position,
-	distance: number,
-	bearing: number,
-): Position {
-	const longitude1 = degreesToRadians(origin[0]);
-	const latitude1 = degreesToRadians(origin[1]);
-	const bearingRad = degreesToRadians(bearing);
-	const radians = lengthToRadians(distance);
-	const latitude2 = Math.asin(
-		Math.sin(latitude1) * Math.cos(radians) +
-			Math.cos(latitude1) * Math.sin(radians) * Math.cos(bearingRad),
-	);
-	const longitude2 =
-		longitude1 +
-		Math.atan2(
-			Math.sin(bearingRad) * Math.sin(radians) * Math.cos(latitude1),
-			Math.cos(radians) - Math.sin(latitude1) * Math.sin(latitude2),
-		);
-
-	return [radiansToDegrees(longitude2), radiansToDegrees(latitude2)];
-}
+import { destination } from "../measure/destination";
 
 function ellipseRadius(
 	xRadiusKilometers: number,

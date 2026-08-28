@@ -86,6 +86,7 @@ export class TerraDrawEllipseMode extends TerraDrawBaseDrawMode<EllipsePolygonSt
 	private drawInteraction: DrawInteractions = "click-move";
 	private drawType: DrawType | undefined;
 	private minimumSegments = 3;
+	private cancelled = false;
 
 	// Behaviors
 	private mutateFeature!: MutateFeatureBehavior;
@@ -156,6 +157,7 @@ export class TerraDrawEllipseMode extends TerraDrawBaseDrawMode<EllipsePolygonSt
 		event: TerraDrawMouseEvent,
 		drawType: DrawType = "click",
 	) {
+		this.cancelled = false;
 		this.center = [event.lng, event.lat];
 		this.endPosition = [event.lng, event.lat];
 
@@ -177,13 +179,15 @@ export class TerraDrawEllipseMode extends TerraDrawBaseDrawMode<EllipsePolygonSt
 		});
 
 		if (!created) {
-			return;
+			return false;
 		}
 
 		this.currentEllipseId = created.id;
 		this.cursorMovedAfterInitialCursorDown = false;
 		this.drawType = drawType;
 		this.setDrawing();
+
+		return true;
 	}
 
 	private dragDrawAllowed() {
@@ -247,6 +251,7 @@ export class TerraDrawEllipseMode extends TerraDrawBaseDrawMode<EllipsePolygonSt
 	/** @internal */
 	onKeyUp(event: TerraDrawKeyboardEvent) {
 		if (event.key === this.keyEvents.cancel) {
+			this.cancelled = this.drawType === "drag";
 			this.cleanUp();
 		} else if (event.key === this.keyEvents.finish) {
 			this.close();
@@ -265,7 +270,10 @@ export class TerraDrawEllipseMode extends TerraDrawBaseDrawMode<EllipsePolygonSt
 			this.allowPointerEvent(this.pointerEvents.onDragStart, event) &&
 			this.dragDrawAllowed()
 		) {
-			this.beginDrawing(event, "drag");
+			const created = this.beginDrawing(event, "drag");
+			if (!created) {
+				return;
+			}
 			setMapDraggability(false);
 		}
 	}
@@ -291,6 +299,12 @@ export class TerraDrawEllipseMode extends TerraDrawBaseDrawMode<EllipsePolygonSt
 		event: TerraDrawMouseEvent,
 		setMapDraggability: (enabled: boolean) => void,
 	) {
+		if (this.cancelled) {
+			this.cancelled = false;
+			setMapDraggability(true);
+			return;
+		}
+
 		if (
 			this.allowPointerEvent(this.pointerEvents.onDragEnd, event) &&
 			this.dragDrawAllowed() &&

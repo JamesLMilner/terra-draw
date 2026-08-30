@@ -23,7 +23,9 @@ import {
 	SnapToCustom,
 	SnappableContext,
 	Snappable,
+	DegreeSnapping,
 } from "./common";
+import { DegreeSnappingBehavior } from "./modes/degree-snapping.behavior";
 import {
 	ModeTypes,
 	TerraDrawBaseDrawMode,
@@ -1609,6 +1611,8 @@ export {
 	type Snappable,
 	type SnappableContext,
 	type SnapToCustom,
+	type DegreeSnapping,
+	DegreeSnappingBehavior,
 	type TerraDrawMouseEvent,
 	type TerraDrawAdapterStyling,
 	type TerraDrawKeyboardEvent,

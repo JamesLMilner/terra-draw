@@ -44,6 +44,7 @@ import {
 import { ReadFeatureBehavior } from "../read-feature.behavior";
 import { UndoRedoBehavior } from "../undo-redo.behavior";
 import { isBoolean, isNonNullObject, isNull } from "../../common/checks";
+import { DegreeSnappingBehavior } from "../degree-snapping.behavior";
 
 type TerraDrawPolygonModeKeyEvents = {
 	cancel?: KeyboardEvent["key"] | null;
@@ -141,6 +142,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 	private lineSnapping!: LineSnappingBehavior;
 	private coordinateSnapping!: CoordinateSnappingBehavior;
 	private featureSnapping!: FeatureSnappingBehavior;
+	private degreeSnapping!: DegreeSnappingBehavior;
 	private pixelDistance!: PixelDistanceBehavior;
 	private closingPoints!: ClosingPointsBehavior;
 	private clickBoundingBox!: ClickBoundingBoxBehavior;
@@ -308,6 +310,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 			this.coordinateSnapping,
 			this.lineSnapping,
 		);
+		this.degreeSnapping = new DegreeSnappingBehavior(config);
 		this.closingPoints = new ClosingPointsBehavior(
 			config,
 			this.pixelDistance,
@@ -633,6 +636,15 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 
 	private snapCoordinate(event: TerraDrawMouseEvent): undefined | Position {
 		let snappedCoordinate: Position | undefined = undefined;
+
+		if (this.snapping?.toDegree && this.currentId) {
+			snappedCoordinate = this.degreeSnapping.getSnappableCoordinate(
+				event,
+				this.readFeature.getGeometry<Polygon>(this.currentId),
+				this.currentCoordinate,
+				this.snapping.toDegree,
+			);
+		}
 
 		if (this.snapping?.toLine) {
 			let snapped: Position | undefined;

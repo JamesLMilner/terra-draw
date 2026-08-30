@@ -489,7 +489,7 @@ describe("TerraDrawEllipseMode", () => {
 
 					// The starting geometry is created with the segments option
 					expect((features[0].geometry as Polygon).coordinates[0].length).toBe(
-						8,
+						9,
 					);
 
 					expect(onFinish).toHaveBeenCalledTimes(1);

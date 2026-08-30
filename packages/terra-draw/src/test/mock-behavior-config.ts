@@ -1,9 +1,10 @@
+import { Projection } from "../common";
 import { BehaviorConfig } from "../modes/base.behavior";
 import { GeoJSONStore } from "../store/store";
 
 export const MockBehaviorConfig = (
 	mode: string,
-	projection?: "web-mercator" | "globe",
+	projection?: Projection,
 	coordinatePrecision: number = 9,
 ) =>
 	({

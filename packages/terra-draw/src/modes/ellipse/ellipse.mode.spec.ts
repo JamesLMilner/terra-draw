@@ -487,9 +487,9 @@ describe("TerraDrawEllipseMode", () => {
 					const features = store.copyAll();
 					expect(features.length).toBe(1);
 
-					// beginDrawing creates the initial ellipse with the helper default of 64 steps.
+					// The starting geometry is created with the segments option
 					expect((features[0].geometry as Polygon).coordinates[0].length).toBe(
-						65,
+						9,
 					);
 
 					expect(onFinish).toHaveBeenCalledTimes(1);

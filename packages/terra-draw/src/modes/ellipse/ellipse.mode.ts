@@ -161,12 +161,26 @@ export class TerraDrawEllipseMode extends TerraDrawBaseDrawMode<EllipsePolygonSt
 		this.center = [event.lng, event.lat];
 		this.endPosition = [event.lng, event.lat];
 
-		const startingEllipse = ellipse({
-			center: this.center,
-			xRadiusKilometers: this.startingRadiusKilometers,
-			yRadiusKilometers: this.startingRadiusKilometers,
-			coordinatePrecision: this.coordinatePrecision,
-		});
+		let startingEllipse: Feature<Polygon> | undefined;
+		if (this.projection === "globe") {
+			startingEllipse = ellipse({
+				steps: this.segments,
+				center: this.center,
+				xRadiusKilometers: this.startingRadiusKilometers,
+				yRadiusKilometers: this.startingRadiusKilometers,
+				coordinatePrecision: this.coordinatePrecision,
+			});
+		} else if (this.projection === "web-mercator") {
+			startingEllipse = ellipseWebMercator({
+				steps: this.segments,
+				center: this.center,
+				xRadiusKilometers: this.startingRadiusKilometers,
+				yRadiusKilometers: this.startingRadiusKilometers,
+				coordinatePrecision: this.coordinatePrecision,
+			});
+		} else {
+			throw new Error(`Unsupported projection: ${this.projection}`);
+		}
 
 		const created = this.mutateFeature.createPolygon({
 			coordinates: startingEllipse.geometry.coordinates[0],

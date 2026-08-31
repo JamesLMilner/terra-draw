@@ -23,6 +23,7 @@ import {
 	SnapToCustom,
 	SnappableContext,
 	Snappable,
+	SnapToDegree,
 } from "./common";
 import {
 	ModeTypes,
@@ -1609,6 +1610,7 @@ export {
 	type Snappable,
 	type SnappableContext,
 	type SnapToCustom,
+	type SnapToDegree,
 	type TerraDrawMouseEvent,
 	type TerraDrawAdapterStyling,
 	type TerraDrawKeyboardEvent,

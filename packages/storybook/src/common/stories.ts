@@ -220,6 +220,26 @@ const PolygonWithLineSnapping: Story = {
 	...DefaultPlay,
 };
 
+const PolygonWithDegreeSnapping: Story = {
+	args: {
+		id: "polygon-degree-snapping",
+		...DefaultSize,
+		...LocationNewYork,
+		...DefaultZoom,
+		modes: [
+			() =>
+				new TerraDrawPolygonMode({
+					snapping: {
+						toDegree: {},
+					},
+				}),
+		],
+		instructions:
+			"Draw a polygon to snap each segment, including its closing segment, to 90° intervals.",
+	},
+	...DefaultPlay,
+};
+
 // Polygon with custom snapToFeature story
 const PolygonWithSnapToFeature: Story = {
 	args: {
@@ -560,6 +580,23 @@ const LineStringWithLineSnapping: Story = {
 					},
 				}),
 		],
+		...DefaultStory.args,
+	},
+};
+
+const LineStringWithDegreeSnapping: Story = {
+	...DefaultStory,
+	args: {
+		id: "linestring-degree-snapping",
+		modes: [
+			() =>
+				new TerraDrawLineStringMode({
+					snapping: {
+						toDegree: {},
+					},
+				}),
+		],
+		instructions: "Draw a line whose segments snap to 90° intervals.",
 		...DefaultStory.args,
 	},
 };
@@ -1097,6 +1134,7 @@ const AllStories = {
 	PolygonWithCoordinatePoints,
 	PolygonWithCoordinateSnapping,
 	PolygonWithLineSnapping,
+	PolygonWithDegreeSnapping,
 	PolygonWithSnapToFeature,
 	PolygonWithEditableEnabled,
 	PolygonWithCoordinateCounts,
@@ -1118,6 +1156,7 @@ const AllStories = {
 	LineStringEditable,
 	LineStringWithCoordinateSnapping,
 	LineStringWithLineSnapping,
+	LineStringWithDegreeSnapping,
 	FreehandLineString,
 	Freehand,
 	FreehandWithAutoClose,

@@ -22,6 +22,7 @@ export const PolygonWithCoordinatePoints =
 export const PolygonWithCoordinateSnapping =
 	AllStories.PolygonWithCoordinateSnapping;
 export const PolygonWithLineSnapping = AllStories.PolygonWithLineSnapping;
+export const PolygonWithDegreeSnapping = AllStories.PolygonWithDegreeSnapping;
 export const PolygonWithSnapToFeature = AllStories.PolygonWithSnapToFeature;
 export const PolygonWithEditableEnabled = AllStories.PolygonWithEditableEnabled;
 export const PolygonWithCoordinateCounts =
@@ -48,6 +49,8 @@ export const LineStringFinishOnNthCoordinate =
 export const LineStringWithCoordinateSnapping =
 	AllStories.LineStringWithCoordinateSnapping;
 export const LineStringWithLineSnapping = AllStories.LineStringWithLineSnapping;
+export const LineStringWithDegreeSnapping =
+	AllStories.LineStringWithDegreeSnapping;
 export const LineStringEditable = AllStories.LineStringEditable;
 export const LineStringWithCoordinatePoints =
 	AllStories.LineStringWithCoordinatePoints;

@@ -48,6 +48,7 @@ import { ClosingPointsBehavior } from "../closing-points.behavior";
 import { CoordinatePointBehavior } from "../select/behaviors/coordinate-point.behavior";
 import { UndoRedoBehavior } from "../undo-redo.behavior";
 import { isBoolean, isNonNullObject, isNull } from "../../common/checks";
+import { DegreeSnappingBehavior } from "../degree-snapping.behavior";
 
 type TerraDrawLineStringModeKeyEvents = {
 	cancel: KeyboardEvent["key"] | null;
@@ -145,6 +146,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 	private insertPoint!: InsertCoordinatesBehavior;
 	private lineSnapping!: LineSnappingBehavior;
 	private featureSnapping!: FeatureSnappingBehavior;
+	private degreeSnapping!: DegreeSnappingBehavior;
 	private pixelDistance!: PixelDistanceBehavior;
 	private clickBoundingBox!: ClickBoundingBoxBehavior;
 	private mutateFeature!: MutateFeatureBehavior;
@@ -676,6 +678,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 			this.coordinateSnapping,
 			this.lineSnapping,
 		);
+		this.degreeSnapping = new DegreeSnappingBehavior(config);
 		this.readFeature = new ReadFeatureBehavior(config);
 		this.mutateFeature = new MutateFeatureBehavior(config, {
 			validate: this.validate,
@@ -1315,6 +1318,15 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 
 	private snapCoordinate(event: TerraDrawMouseEvent) {
 		let snappedCoordinate: Position | undefined;
+
+		if (this.snapping?.toDegree && this.currentId) {
+			snappedCoordinate = this.degreeSnapping.getSnappableCoordinate(
+				event,
+				this.readFeature.getGeometry<LineString>(this.currentId),
+				this.currentCoordinate,
+				this.snapping.toDegree,
+			);
+		}
 
 		if (this.snapping?.toLine) {
 			let snapped: Position | undefined;

@@ -1,5 +1,5 @@
 import { LineString, Polygon, Position } from "geojson";
-import { CartesianPoint, DegreeSnapping, TerraDrawMouseEvent } from "../common";
+import { CartesianPoint, SnapToDegree, TerraDrawMouseEvent } from "../common";
 import { destination } from "../geometry/measure/destination";
 import { bearing } from "../geometry/measure/bearing";
 import { haversineDistanceKilometers } from "../geometry/measure/haversine-distance";
@@ -22,7 +22,7 @@ export class DegreeSnappingBehavior extends TerraDrawModeBehavior {
 		event: TerraDrawMouseEvent,
 		geometry: LineString | Polygon,
 		currentCoordinate: number,
-		options: DegreeSnapping = {},
+		options: SnapToDegree = {},
 	): Position | undefined {
 		if (currentCoordinate < 2) {
 			return undefined;

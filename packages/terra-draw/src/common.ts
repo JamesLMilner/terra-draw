@@ -212,7 +212,7 @@ type SnapToFeature = {
 	toCoordinate?: boolean;
 };
 
-export type DegreeSnapping = {
+export type SnapToDegree = {
 	/** The angle interval to snap to, in degrees. Defaults to 90. */
 	degree?: number;
 	/** Allow a new segment to snap back over the previous segment. */
@@ -224,7 +224,7 @@ export interface Snapping {
 	toCoordinate?: boolean;
 	toFeature?: SnapToFeature;
 	toCustom?: SnapToCustom;
-	toDegree?: DegreeSnapping;
+	toDegree?: SnapToDegree;
 }
 
 export type TerraDrawModeState =

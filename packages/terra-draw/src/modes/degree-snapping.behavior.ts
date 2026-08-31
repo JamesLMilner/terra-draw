@@ -135,7 +135,10 @@ export class DegreeSnappingBehavior extends TerraDrawModeBehavior {
 		degree: number,
 		allowBackTracking: boolean,
 	) {
-		const baseBearing = bearing(previous, current);
+		// The initial bearing from previous to current is not necessarily the
+		// bearing on arrival at current. Reverse the bearing from current so the
+		// snapping rays start on the segment's actual forward tangent.
+		const baseBearing = bearing(current, previous) + 180;
 		const cursorBearing = bearing(current, cursor);
 		const cursorDistance = haversineDistanceKilometers(current, cursor);
 		let closest: Position | undefined;
@@ -146,7 +149,7 @@ export class DegreeSnappingBehavior extends TerraDrawModeBehavior {
 			const difference = this.angleDifference(cursorBearing, candidateBearing);
 			const alongDistance =
 				cursorDistance * Math.cos((difference * Math.PI) / 180);
-			if (alongDistance < 0) continue;
+			if (alongDistance <= this.EPSILON) continue;
 
 			const candidate = destination(current, alongDistance, candidateBearing);
 			const distanceToCursor = haversineDistanceKilometers(cursor, candidate);
@@ -174,7 +177,7 @@ export class DegreeSnappingBehavior extends TerraDrawModeBehavior {
 			const unitX = Math.cos(angle);
 			const unitY = Math.sin(angle);
 			const distance = (target.x - end.x) * unitX + (target.y - end.y) * unitY;
-			if (distance < 0) continue;
+			if (distance <= this.EPSILON) continue;
 			candidates.push({
 				x: end.x + distance * unitX,
 				y: end.y + distance * unitY,
@@ -200,10 +203,6 @@ export class DegreeSnappingBehavior extends TerraDrawModeBehavior {
 			origin.y - previousPoint.y,
 			origin.x - previousPoint.x,
 		);
-		const alpha = (degree * Math.PI) / 180;
-		const sine = Math.sin(alpha);
-		if (Math.abs(sine) < this.EPSILON) return undefined;
-
 		const candidates: CartesianPoint[] = [];
 		for (const offset of this.offsets(degree, allowBackTracking)) {
 			const angle = baseAngle + (offset * Math.PI) / 180;
@@ -216,21 +215,36 @@ export class DegreeSnappingBehavior extends TerraDrawModeBehavior {
 				0,
 				dx * dx + dy * dy - projection * projection,
 			);
-			const adjustment =
-				(Math.abs(Math.cos(alpha)) / Math.abs(sine)) *
-				Math.sqrt(perpendicularSquared);
+			const cursorProjection = Math.max(
+				this.EPSILON,
+				(cursorPoint.x - origin.x) * unitX + (cursorPoint.y - origin.y) * unitY,
+			);
+			const projectedCursor = {
+				x: origin.x + cursorProjection * unitX,
+				y: origin.y + cursorProjection * unitY,
+			};
+			const cursorDegree = this.angle(origin, projectedCursor, closingPoint);
+			if (cursorDegree === undefined) continue;
 
-			for (const distance of [
-				projection - adjustment,
-				projection + adjustment,
-			]) {
-				if (distance <= this.EPSILON) continue;
-				const candidate = {
-					x: origin.x + distance * unitX,
-					y: origin.y + distance * unitY,
-				};
-				if (this.hasAngle(origin, candidate, closingPoint, degree)) {
-					candidates.push(candidate);
+			for (const closingDegree of this.closingDegrees(degree, cursorDegree)) {
+				const alpha = (closingDegree * Math.PI) / 180;
+				const sine = Math.sin(alpha);
+				const adjustment =
+					(Math.abs(Math.cos(alpha)) / Math.abs(sine)) *
+					Math.sqrt(perpendicularSquared);
+
+				for (const distance of [
+					projection - adjustment,
+					projection + adjustment,
+				]) {
+					if (distance <= this.EPSILON) continue;
+					const candidate = {
+						x: origin.x + distance * unitX,
+						y: origin.y + distance * unitY,
+					};
+					if (this.hasAngle(origin, candidate, closingPoint, closingDegree)) {
+						candidates.push(candidate);
+					}
 				}
 			}
 		}
@@ -239,21 +253,41 @@ export class DegreeSnappingBehavior extends TerraDrawModeBehavior {
 		return closest ? this.fromLocalPoint(closest, current) : undefined;
 	}
 
+	private closingDegrees(degree: number, targetDegree: number) {
+		const maximumMultiple = Math.ceil(180 / degree) - 1;
+		if (maximumMultiple < 1) return [];
+
+		const targetMultiple = targetDegree / degree;
+		const lower = Math.max(
+			1,
+			Math.min(maximumMultiple, Math.floor(targetMultiple)),
+		);
+		const upper = Math.max(
+			1,
+			Math.min(maximumMultiple, Math.ceil(targetMultiple)),
+		);
+		return [...new Set([lower * degree, upper * degree])];
+	}
+
 	private hasAngle(
 		a: CartesianPoint,
 		vertex: CartesianPoint,
 		b: CartesianPoint,
 		degree: number,
 	) {
+		const angle = this.angle(a, vertex, b);
+		return angle !== undefined && Math.abs(angle - degree) < 1e-6;
+	}
+
+	private angle(a: CartesianPoint, vertex: CartesianPoint, b: CartesianPoint) {
 		const ax = a.x - vertex.x;
 		const ay = a.y - vertex.y;
 		const bx = b.x - vertex.x;
 		const by = b.y - vertex.y;
 		const denominator = Math.hypot(ax, ay) * Math.hypot(bx, by);
-		if (denominator === 0) return false;
+		if (denominator === 0) return undefined;
 		const cosine = Math.max(-1, Math.min(1, (ax * bx + ay * by) / denominator));
-		const angle = (Math.acos(cosine) * 180) / Math.PI;
-		return Math.abs(angle - degree) < 1e-6;
+		return (Math.acos(cosine) * 180) / Math.PI;
 	}
 
 	private toLocalPoint(coordinate: Position, origin: Position): CartesianPoint {

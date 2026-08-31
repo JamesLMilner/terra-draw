@@ -45,6 +45,8 @@ export class TerraDrawGoogleMapsAdapter
 	private _lib: typeof google.maps;
 	private _map: google.maps.Map;
 	private _overlay: google.maps.OverlayView | undefined;
+	// Cached so listeners are always removed from the element they were added to
+	private _mapEventElement: HTMLElement | undefined;
 	private _markerClickListener: any | undefined;
 	private _markerMouseMoveListener: ((event: MouseEvent) => void) | undefined;
 	private _pointerCaptureDownListener:
@@ -459,6 +461,7 @@ export class TerraDrawGoogleMapsAdapter
 		}
 		this._overlay = undefined;
 		this._readyCalled = false;
+		this._mapEventElement = undefined;
 
 		if (this._isolatedData && this._data) {
 			this._data.setMap(null);
@@ -524,9 +527,15 @@ export class TerraDrawGoogleMapsAdapter
 			return this._map.getDiv();
 		}
 
-		// TODO: This is a bit hacky, maybe there is a better solution here
-		const selector = 'div[style*="z-index: 3;"]';
-		return this._map.getDiv().querySelector(selector) as HTMLDivElement;
+		if (!this._mapEventElement) {
+			// TODO: This is a bit hacky, maybe there is a better solution here
+			const selector = 'div[style*="z-index: 3;"]';
+			this._mapEventElement = this._map
+				.getDiv()
+				.querySelector(selector) as HTMLElement;
+		}
+
+		return this._mapEventElement;
 	}
 
 	/**

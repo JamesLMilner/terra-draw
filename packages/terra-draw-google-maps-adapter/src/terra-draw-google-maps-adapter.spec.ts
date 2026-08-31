@@ -713,6 +713,67 @@ describe("TerraDrawGoogleMapsAdapter", () => {
 			expect(div.removeEventListener).toHaveBeenCalledTimes(9);
 			expect(keyboardDiv.removeEventListener).toHaveBeenCalledTimes(2);
 		});
+
+		it("removes listeners from the element they were registered on", () => {
+			// Google Maps can rebuild its panes, so the lookup can resolve to a different element after registration
+			const registeredOn = {
+				addEventListener: jest.fn(),
+				removeEventListener: jest.fn(),
+			} as unknown as HTMLDivElement;
+
+			const replacement = {
+				addEventListener: jest.fn(),
+				removeEventListener: jest.fn(),
+			} as unknown as HTMLDivElement;
+
+			const mapDiv = {
+				id: "map",
+				querySelector: jest
+					.fn()
+					.mockReturnValueOnce(registeredOn)
+					.mockReturnValue(replacement),
+				addEventListener: jest.fn(),
+				removeEventListener: jest.fn(),
+			} as unknown as HTMLDivElement;
+
+			const mockMap = createMockGoogleMap({
+				getDiv: jest.fn(() => mapDiv) as any,
+				data: {
+					addListener: jest.fn(() => ({ remove: jest.fn() })),
+					setStyle: jest.fn(),
+				} as any,
+			});
+
+			const adapter = new TerraDrawGoogleMapsAdapter({
+				lib: {
+					OverlayView: jest.fn(() => ({
+						setMap: jest.fn(),
+						getMap: jest.fn(() => ({})),
+					})),
+				} as any,
+				map: mockMap,
+				forwardMapElementEvents: true,
+			});
+
+			adapter.register(MockCallbacks());
+			adapter.unregister();
+
+			const registered = (
+				registeredOn.addEventListener as jest.Mock
+			).mock.calls.map(([event, fn]) => ({ event, fn }));
+			const removed = (
+				registeredOn.removeEventListener as jest.Mock
+			).mock.calls.map(([event, fn]) => ({ event, fn }));
+
+			expect(registered.length).toBeGreaterThan(0);
+			for (const listener of registered) {
+				expect(removed).toContainEqual(listener);
+			}
+			expect(replacement.addEventListener).not.toHaveBeenCalled();
+
+			// The element is released, so the next registration resolves it again
+			expect(adapter.getMapEventElement()).toBe(replacement);
+		});
 	});
 
 	describe("getLngLatFromEvent", () => {

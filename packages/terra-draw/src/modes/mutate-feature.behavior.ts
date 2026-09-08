@@ -398,7 +398,7 @@ export class MutateFeatureBehavior extends TerraDrawModeBehavior {
 		propertyMutations?: ValidProperties;
 		context: MutateContext & { correctRightHandRule?: boolean };
 	}): boolean {
-		if (!featureId) {
+		if (featureId === null || featureId === undefined) {
 			return false;
 		}
 

@@ -36,6 +36,7 @@ import {
 import { ValidateLineStringFeature } from "../../validations/linestring.validation";
 import { ValidatePolygonFeature } from "../../validations/polygon.validation";
 import { ClosingPointsBehavior } from "../closing-points.behavior";
+import { DegreeSnappingBehavior } from "../degree-snapping.behavior";
 import { MutateFeatureBehavior, Mutations } from "../mutate-feature.behavior";
 import { ReadFeatureBehavior } from "../read-feature.behavior";
 import { isNonNullObject, isNull } from "../../common/checks";
@@ -111,6 +112,7 @@ export class TerraDrawPolyLineMode extends TerraDrawBaseDrawMode<PolyLineStyling
 	private lineSnapping!: LineSnappingBehavior;
 	private coordinateSnapping!: CoordinateSnappingBehavior;
 	private featureSnapping!: FeatureSnappingBehavior;
+	private degreeSnapping!: DegreeSnappingBehavior;
 
 	constructor(options?: TerraDrawPolyLineModeOptions<PolyLineStyling>) {
 		super(options, true);
@@ -155,6 +157,7 @@ export class TerraDrawPolyLineMode extends TerraDrawBaseDrawMode<PolyLineStyling
 			this.coordinateSnapping,
 			this.lineSnapping,
 		);
+		this.degreeSnapping = new DegreeSnappingBehavior(config);
 		this.readFeature = new ReadFeatureBehavior(config);
 		this.mutateFeature = new MutateFeatureBehavior(config, {
 			validate: this.validate,
@@ -450,6 +453,15 @@ export class TerraDrawPolyLineMode extends TerraDrawBaseDrawMode<PolyLineStyling
 
 	private snapCoordinate(event: TerraDrawMouseEvent) {
 		let snappedCoordinate: Position | undefined;
+
+		if (this.snapping?.toDegree && this.currentId) {
+			snappedCoordinate = this.degreeSnapping.getSnappableCoordinate(
+				event,
+				this.readFeature.getGeometry<LineString>(this.currentId),
+				this.currentCoordinate,
+				this.snapping.toDegree,
+			);
+		}
 
 		if (this.snapping?.toLine) {
 			let snapped: Position | undefined;

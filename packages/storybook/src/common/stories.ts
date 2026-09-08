@@ -2,6 +2,7 @@ import {
 	TerraDrawPointMode,
 	TerraDrawPolygonMode,
 	TerraDrawCircleMode,
+	TerraDrawEllipseMode,
 	TerraDrawRectangleMode,
 	TerraDrawAngledRectangleMode,
 	TerraDrawSectorMode,
@@ -219,6 +220,26 @@ const PolygonWithLineSnapping: Story = {
 	...DefaultPlay,
 };
 
+const PolygonWithDegreeSnapping: Story = {
+	args: {
+		id: "polygon-degree-snapping",
+		...DefaultSize,
+		...LocationNewYork,
+		...DefaultZoom,
+		modes: [
+			() =>
+				new TerraDrawPolygonMode({
+					snapping: {
+						toDegree: {},
+					},
+				}),
+		],
+		instructions:
+			"Draw a polygon to snap each segment, including its closing segment, to 90° intervals.",
+	},
+	...DefaultPlay,
+};
+
 // Polygon with custom snapToFeature story
 const PolygonWithSnapToFeature: Story = {
 	args: {
@@ -330,6 +351,31 @@ const Circle: Story = {
 	args: {
 		id: "circle",
 		modes: [() => new TerraDrawCircleMode()],
+		...DefaultStory.args,
+	},
+};
+
+// Ellipse drawing story
+const Ellipse: Story = {
+	...DefaultStory,
+	args: {
+		id: "ellipse",
+		modes: [
+			() => new TerraDrawEllipseMode(),
+			() =>
+				new TerraDrawSelectMode({
+					flags: {
+						ellipse: {
+							feature: {
+								draggable: true,
+								coordinates: {
+									resizable: "center",
+								},
+							},
+						},
+					},
+				}),
+		],
 		...DefaultStory.args,
 	},
 };
@@ -534,6 +580,23 @@ const LineStringWithLineSnapping: Story = {
 					},
 				}),
 		],
+		...DefaultStory.args,
+	},
+};
+
+const LineStringWithDegreeSnapping: Story = {
+	...DefaultStory,
+	args: {
+		id: "linestring-degree-snapping",
+		modes: [
+			() =>
+				new TerraDrawLineStringMode({
+					snapping: {
+						toDegree: {},
+					},
+				}),
+		],
+		instructions: "Draw a line whose segments snap to 90° intervals.",
 		...DefaultStory.args,
 	},
 };
@@ -1071,12 +1134,14 @@ const AllStories = {
 	PolygonWithCoordinatePoints,
 	PolygonWithCoordinateSnapping,
 	PolygonWithLineSnapping,
+	PolygonWithDegreeSnapping,
 	PolygonWithSnapToFeature,
 	PolygonWithEditableEnabled,
 	PolygonWithCoordinateCounts,
 	Styling,
 	ZIndexOrdering,
 	Circle,
+	Ellipse,
 	CircleWithClickDragInteraction,
 	CircleWithClickMoveOrDragInteraction,
 	Rectangle,
@@ -1091,6 +1156,7 @@ const AllStories = {
 	LineStringEditable,
 	LineStringWithCoordinateSnapping,
 	LineStringWithLineSnapping,
+	LineStringWithDegreeSnapping,
 	FreehandLineString,
 	Freehand,
 	FreehandWithAutoClose,

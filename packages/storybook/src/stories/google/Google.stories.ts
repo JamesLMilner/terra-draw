@@ -22,6 +22,7 @@ export const PolygonWithCoordinatePoints =
 export const PolygonWithCoordinateSnapping =
 	AllStories.PolygonWithCoordinateSnapping;
 export const PolygonWithLineSnapping = AllStories.PolygonWithLineSnapping;
+export const PolygonWithDegreeSnapping = AllStories.PolygonWithDegreeSnapping;
 export const PolygonWithSnapToFeature = AllStories.PolygonWithSnapToFeature;
 export const PolygonWithEditableEnabled = AllStories.PolygonWithEditableEnabled;
 export const PolygonWithCoordinateCounts =
@@ -29,6 +30,7 @@ export const PolygonWithCoordinateCounts =
 export const ZIndexOrdering = AllStories.ZIndexOrdering;
 export const Styling = AllStories.Styling;
 export const Circle = AllStories.Circle;
+export const Ellipse = AllStories.Ellipse;
 export const CircleWithClickDragInteraction =
 	AllStories.CircleWithClickDragInteraction;
 export const CircleWithClickMoveOrDragInteraction =
@@ -47,6 +49,8 @@ export const LineStringFinishOnNthCoordinate =
 export const LineStringWithCoordinateSnapping =
 	AllStories.LineStringWithCoordinateSnapping;
 export const LineStringWithLineSnapping = AllStories.LineStringWithLineSnapping;
+export const LineStringWithDegreeSnapping =
+	AllStories.LineStringWithDegreeSnapping;
 export const LineStringEditable = AllStories.LineStringEditable;
 export const LineStringWithCoordinatePoints =
 	AllStories.LineStringWithCoordinatePoints;

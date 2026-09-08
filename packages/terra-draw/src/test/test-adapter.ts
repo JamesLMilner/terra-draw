@@ -53,16 +53,7 @@ export class TerraDrawTestAdapter extends TerraDrawBaseAdapter {
 	public unproject(x: number, y: number): ReturnType<Unproject> {
 		return { lng: x, lat: y };
 	}
-	public setCursor(
-		_:
-			| "move"
-			| "unset"
-			| "grab"
-			| "grabbing"
-			| "crosshair"
-			| "pointer"
-			| "wait",
-	): ReturnType<SetCursor> {
+	public setCursor(_: TerraDrawExtend.Cursor): ReturnType<SetCursor> {
 		// pass
 	}
 	public getLngLatFromEvent(

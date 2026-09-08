@@ -23,6 +23,7 @@ import {
 	SnapToCustom,
 	SnappableContext,
 	Snappable,
+	SnapToDegree,
 } from "./common";
 import {
 	ModeTypes,
@@ -30,6 +31,7 @@ import {
 	TerraDrawBaseSelectMode,
 } from "./modes/base.mode";
 import { TerraDrawCircleMode } from "./modes/circle/circle.mode";
+import { TerraDrawEllipseMode } from "./modes/ellipse/ellipse.mode";
 import { TerraDrawFreehandMode } from "./modes/freehand/freehand.mode";
 import { TerraDrawLineStringMode } from "./modes/linestring/linestring.mode";
 import { TerraDrawPolyLineMode } from "./modes/polyline/polyline.mode";
@@ -1587,6 +1589,7 @@ export {
 	TerraDrawPolyLineMode,
 	TerraDrawPolygonMode,
 	TerraDrawCircleMode,
+	TerraDrawEllipseMode,
 	TerraDrawFreehandMode,
 	TerraDrawFreehandLineStringMode,
 	TerraDrawRenderMode,
@@ -1607,6 +1610,7 @@ export {
 	type Snappable,
 	type SnappableContext,
 	type SnapToCustom,
+	type SnapToDegree,
 	type TerraDrawMouseEvent,
 	type TerraDrawAdapterStyling,
 	type TerraDrawKeyboardEvent,

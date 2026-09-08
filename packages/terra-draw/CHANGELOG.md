@@ -2,6 +2,30 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.33.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.32.3...terra-draw@1.33.0) (2026-09-01)
+
+
+### feat
+
+* **terra-draw:** add ellipse mode (#944) ([](https://github.com/JamesLMilner/terra-draw/commit/e7f7dfe632d6c0b7c0d49e1ceea5e56b1a32857a)), closes [#944](https://github.com/JamesLMilner/terra-draw/issues/944)
+* **terra-draw:** support degree snapping (#947) ([](https://github.com/JamesLMilner/terra-draw/commit/115cf41a575dff453c7dcef0aa4a97c5f7adb369)), closes [#947](https://github.com/JamesLMilner/terra-draw/issues/947)
+
+
+### fix
+
+* **terra-draw:** fix issues with select mode resizeable  (#943) ([](https://github.com/JamesLMilner/terra-draw/commit/200a48e372426e8cf1a893f80a8f5cdd845dfddf)), closes [#943](https://github.com/JamesLMilner/terra-draw/issues/943)
+* **terra-draw:** resolve minor bugs in circle mode (#936) ([](https://github.com/JamesLMilner/terra-draw/commit/2cfda20add2fc96a5f446b51d788ef4a0f9acca0)), closes [#936](https://github.com/JamesLMilner/terra-draw/issues/936)
+* **terra-draw:** small freehand mode bugfixes (#937) ([](https://github.com/JamesLMilner/terra-draw/commit/bf77370fe7bae51f718300ad878499510407894f)), closes [#937](https://github.com/JamesLMilner/terra-draw/issues/937)
+* **terra-draw:** use the correct projection on initial ellipse creation (#946) ([](https://github.com/JamesLMilner/terra-draw/commit/929a656f323f963c8b127bb85046eefd426eaaa1)), closes [#946](https://github.com/JamesLMilner/terra-draw/issues/946)
+* **terra-draw:** validate mode options more thoroughly (#939) ([](https://github.com/JamesLMilner/terra-draw/commit/a7e36a6e3b44af149f2f73036f47b53bb64e6c03)), closes [#939](https://github.com/JamesLMilner/terra-draw/issues/939)
+
+
+### chore
+
+* **terra-draw:** enforce preventing unused variables and imports (#935) ([](https://github.com/JamesLMilner/terra-draw/commit/3d6213c4603509d3c8699e729783a2060c093c67)), closes [#935](https://github.com/JamesLMilner/terra-draw/issues/935)
+* **terra-draw:** fix type error when running tests (#945) ([](https://github.com/JamesLMilner/terra-draw/commit/3e5494556f0931e6f0929c05c57eb1c09d23fd51)), closes [#945](https://github.com/JamesLMilner/terra-draw/issues/945)
+* **terra-draw:** remove benchmark from coverage (#940) ([](https://github.com/JamesLMilner/terra-draw/commit/113c51a5bfd729a8447e76f578e3434f65eddda5)), closes [#940](https://github.com/JamesLMilner/terra-draw/issues/940)
+
 ## [1.32.3](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.32.2...terra-draw@1.32.3) (2026-08-08)
 
 

@@ -1,24 +1,33 @@
+# Editor and OS files
 .vscode
+.idea
+.DS_Store
+
+# Dependencies
+node_modules/
+
+# Build and test output
 coverage/
 dist/
 !docs/dist/
-node_modules/
 example/dist/
-example/node_modules/
-ROADMAP.md
-data/
-scratch/
-.idea
-.env*
-!.env.example
-.DS_Store
 packages/e2e/test-results/
 packages/e2e/playwright-report/
 packages/e2e/blob-report/
 packages/e2e/playwright/.cache/
-packages/storybook/node_modules/
 packages/storybook/storybook-static/
 packages/storybook/dist/
+
+# Local environment and data
+.env*
+!.env.example
+data/
+scratch/
+packages/e2e/test-results/
 packages/storybook/.env
 packages/storybook/.env.local
-packages/storybook/.DS_Store
+
+# AI related files
+AGENTS.md
+CLAUDE.md
+.github/copilot-instructions.md

@@ -36,6 +36,20 @@ describe("TerraDrawPolyLineMode", () => {
 			});
 			expect(polyLineMode.mode).toBe("custom-polyline");
 		});
+
+		it("constructs with coordinate point options", () => {
+			new TerraDrawPolyLineMode({
+				showCoordinatePoints: true,
+				styles: {
+					coordinatePointColor: "#ffffff",
+					coordinatePointWidth: 6,
+					coordinatePointOpacity: 0.8,
+					coordinatePointOutlineColor: "#000000",
+					coordinatePointOutlineWidth: 2,
+					coordinatePointOutlineOpacity: 0.5,
+				},
+			});
+		});
 	});
 
 	describe("lifecycle", () => {
@@ -185,6 +199,34 @@ describe("TerraDrawPolyLineMode", () => {
 
 			expect(mockConfig.setCursor).toHaveBeenCalledWith("crosshair");
 		});
+
+		it("can enable and disable coordinate points for existing features", () => {
+			const polyLineMode = new TerraDrawPolyLineMode();
+			const config = MockModeConfig(polyLineMode.mode);
+			polyLineMode.register(config);
+			polyLineMode.start();
+
+			polyLineMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			polyLineMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 0 }));
+			polyLineMode.onClick(MockCursorEvent({ lng: 1, lat: 0 }));
+			polyLineMode.onKeyUp(MockKeyboardEvent({ key: "Enter" }));
+
+			polyLineMode.updateOptions({ showCoordinatePoints: true });
+			expect(
+				config.store.copyAllWhere(
+					(properties) =>
+						properties[COMMON_PROPERTIES.COORDINATE_POINT] as boolean,
+				),
+			).toHaveLength(2);
+
+			polyLineMode.updateOptions({ showCoordinatePoints: false });
+			expect(
+				config.store.copyAllWhere(
+					(properties) =>
+						properties[COMMON_PROPERTIES.COORDINATE_POINT] as boolean,
+				),
+			).toHaveLength(0);
+		});
 	});
 
 	describe("onMouseMove", () => {
@@ -209,9 +251,70 @@ describe("TerraDrawPolyLineMode", () => {
 				[2, 0],
 			]);
 		});
+
+		it("updates coordinate points while drawing", () => {
+			const polyLineMode = new TerraDrawPolyLineMode({
+				showCoordinatePoints: true,
+			});
+			const config = MockModeConfig(polyLineMode.mode);
+			polyLineMode.register(config);
+			polyLineMode.start();
+
+			polyLineMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			polyLineMode.onMouseMove(MockCursorEvent({ lng: 2, lat: 1 }));
+
+			const coordinates = config.store
+				.copyAllWhere(
+					(properties) =>
+						properties[COMMON_PROPERTIES.COORDINATE_POINT] as boolean,
+				)
+				.map((feature) => feature.geometry.coordinates);
+			expect(coordinates).toStrictEqual([
+				[0, 0],
+				[2, 1],
+			]);
+		});
 	});
 
 	describe("onClick", () => {
+		it("keeps coordinate points when converting to a Polygon", () => {
+			const polyLineMode = new TerraDrawPolyLineMode({
+				showCoordinatePoints: true,
+			});
+			const config = MockModeConfig(polyLineMode.mode);
+			polyLineMode.register(config);
+			polyLineMode.start();
+
+			polyLineMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			polyLineMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 0 }));
+			polyLineMode.onClick(MockCursorEvent({ lng: 1, lat: 0 }));
+			polyLineMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
+			polyLineMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
+			polyLineMode.onMouseMove(MockCursorEvent({ lng: 0, lat: 0 }));
+			polyLineMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+			const parent = config.store.copyAllWhere(
+				(properties) =>
+					properties.mode === polyLineMode.mode &&
+					!properties[COMMON_PROPERTIES.COORDINATE_POINT] &&
+					!properties[COMMON_PROPERTIES.CLOSING_POINT],
+			)[0];
+			const coordinatePoints = config.store.copyAllWhere(
+				(properties) =>
+					properties[COMMON_PROPERTIES.COORDINATE_POINT] as boolean,
+			);
+
+			expect(parent.geometry.type).toBe("Polygon");
+			expect(coordinatePoints).toHaveLength(3);
+			expect(
+				coordinatePoints.every(
+					(point) =>
+						point.properties[COMMON_PROPERTIES.COORDINATE_POINT_FEATURE_ID] ===
+						parent.id,
+				),
+			).toBe(true);
+		});
+
 		it("converts to a Polygon when closing on the starting point", () => {
 			const polyLineMode = new TerraDrawPolyLineMode();
 			const config = MockModeConfig(polyLineMode.mode);
@@ -280,7 +383,9 @@ describe("TerraDrawPolyLineMode", () => {
 
 	describe("onKeyUp", () => {
 		it("finishes as a LineString when finish key is used", () => {
-			const polyLineMode = new TerraDrawPolyLineMode();
+			const polyLineMode = new TerraDrawPolyLineMode({
+				showCoordinatePoints: true,
+			});
 			const config = MockModeConfig(polyLineMode.mode);
 
 			polyLineMode.register(config);
@@ -294,8 +399,12 @@ describe("TerraDrawPolyLineMode", () => {
 
 			polyLineMode.onKeyUp(MockKeyboardEvent({ key: "Enter" }));
 
-			const features = config.store.copyAllWhere(
-				(properties) => properties.mode === polyLineMode.mode,
+			const features = config.store
+				.copyAllWhere((properties) => properties.mode === polyLineMode.mode)
+				.filter((feature) => feature.geometry.type === "LineString");
+			const coordinatePoints = config.store.copyAllWhere(
+				(properties) =>
+					properties[COMMON_PROPERTIES.COORDINATE_POINT] as boolean,
 			);
 
 			expect(features).toHaveLength(1);
@@ -305,6 +414,7 @@ describe("TerraDrawPolyLineMode", () => {
 				[1, 0],
 				[2, 0],
 			]);
+			expect(coordinatePoints).toHaveLength(3);
 			expect(config.onFinish).toHaveBeenCalledTimes(1);
 		});
 	});
@@ -330,9 +440,55 @@ describe("TerraDrawPolyLineMode", () => {
 			);
 			expect(features).toHaveLength(0);
 		});
+
+		it("removes coordinate points for the in-progress feature", () => {
+			const polyLineMode = new TerraDrawPolyLineMode({
+				showCoordinatePoints: true,
+			});
+			const config = MockModeConfig(polyLineMode.mode);
+			polyLineMode.register(config);
+			polyLineMode.start();
+			polyLineMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+			polyLineMode.cleanUp();
+
+			expect(config.store.copyAll()).toHaveLength(0);
+		});
 	});
 
 	describe("styleFeature", () => {
+		it("styles coordinate points", () => {
+			const polyLineMode = new TerraDrawPolyLineMode({
+				styles: {
+					coordinatePointColor: "#ffffff",
+					coordinatePointWidth: 6,
+					coordinatePointOpacity: 0.8,
+					coordinatePointOutlineColor: "#111111",
+					coordinatePointOutlineWidth: 2,
+					coordinatePointOutlineOpacity: 0.5,
+				},
+			});
+			const feature = {
+				id: "test",
+				type: "Feature",
+				geometry: { type: "Point", coordinates: [0, 0] },
+				properties: {
+					mode: "polyline",
+					[COMMON_PROPERTIES.COORDINATE_POINT]: true,
+				},
+			} as GeoJSONStoreFeatures;
+
+			expect(polyLineMode.styleFeature(feature)).toMatchObject({
+				pointColor: "#ffffff",
+				pointWidth: 6,
+				pointOpacity: 0.8,
+				pointOutlineColor: "#111111",
+				pointOutlineWidth: 2,
+				pointOutlineOpacity: 0.5,
+				zIndex: 20,
+			});
+		});
+
 		it("styles a closing point with a white default outline", () => {
 			const polyLineMode = new TerraDrawPolyLineMode();
 			const feature = {
@@ -415,9 +571,83 @@ describe("TerraDrawPolyLineMode", () => {
 				polyLineMode.afterFeatureAdded(MockLineString() as any);
 			}).not.toThrow();
 		});
+
+		it("adds coordinate points when enabled", () => {
+			const polyLineMode = new TerraDrawPolyLineMode({
+				showCoordinatePoints: true,
+			});
+			const config = MockModeConfig(polyLineMode.mode);
+			polyLineMode.register(config);
+			const [featureId] = config.store.create([
+				{
+					geometry: {
+						type: "LineString",
+						coordinates: [
+							[0, 0],
+							[1, 1],
+						],
+					},
+					properties: { mode: polyLineMode.mode },
+				},
+			]);
+
+			polyLineMode.afterFeatureAdded(config.store.copy(featureId));
+
+			expect(
+				config.store.copyAllWhere(
+					(properties) =>
+						properties[COMMON_PROPERTIES.COORDINATE_POINT] as boolean,
+				),
+			).toHaveLength(2);
+		});
 	});
 
 	describe("afterFeatureUpdated", () => {
+		it("updates coordinate points when enabled", () => {
+			const polyLineMode = new TerraDrawPolyLineMode({
+				showCoordinatePoints: true,
+			});
+			const config = MockModeConfig(polyLineMode.mode);
+			polyLineMode.register(config);
+			const [featureId] = config.store.create([
+				{
+					geometry: {
+						type: "LineString",
+						coordinates: [
+							[0, 0],
+							[1, 1],
+						],
+					},
+					properties: { mode: polyLineMode.mode },
+				},
+			]);
+			const feature = config.store.copy(featureId);
+			polyLineMode.afterFeatureAdded(feature);
+
+			polyLineMode.afterFeatureUpdated({
+				...feature,
+				geometry: {
+					type: "LineString",
+					coordinates: [
+						[2, 2],
+						[3, 3],
+					],
+				},
+			});
+
+			expect(
+				config.store
+					.copyAllWhere(
+						(properties) =>
+							properties[COMMON_PROPERTIES.COORDINATE_POINT] as boolean,
+					)
+					.map((point) => point.geometry.coordinates),
+			).toStrictEqual([
+				[2, 2],
+				[3, 3],
+			]);
+		});
+
 		it("resets drawing state when the current drawing feature is externally updated", () => {
 			const polyLineMode = new TerraDrawPolyLineMode();
 			const config = MockModeConfig(polyLineMode.mode);

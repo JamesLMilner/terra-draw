@@ -39,7 +39,8 @@ import { ClosingPointsBehavior } from "../closing-points.behavior";
 import { DegreeSnappingBehavior } from "../degree-snapping.behavior";
 import { MutateFeatureBehavior, Mutations } from "../mutate-feature.behavior";
 import { ReadFeatureBehavior } from "../read-feature.behavior";
-import { isNonNullObject, isNull } from "../../common/checks";
+import { isBoolean, isNonNullObject, isNull } from "../../common/checks";
+import { CoordinatePointBehavior } from "../select/behaviors/coordinate-point.behavior";
 
 type TerraDrawPolyLineModeKeyEvents = {
 	cancel: KeyboardEvent["key"] | null;
@@ -73,6 +74,12 @@ type PolyLineStyling = {
 	snappingPointOutlineColor: HexColorStyling;
 	snappingPointOutlineWidth: NumericStyling;
 	snappingPointOutlineOpacity: NumericStyling;
+	coordinatePointColor: HexColorStyling;
+	coordinatePointWidth: NumericStyling;
+	coordinatePointOpacity: NumericStyling;
+	coordinatePointOutlineColor: HexColorStyling;
+	coordinatePointOutlineWidth: NumericStyling;
+	coordinatePointOutlineOpacity: NumericStyling;
 };
 
 interface Cursors {
@@ -91,6 +98,7 @@ interface TerraDrawPolyLineModeOptions<
 	snapping?: Snapping;
 	keyEvents?: TerraDrawPolyLineModeKeyEvents | null;
 	cursors?: Cursors;
+	showCoordinatePoints?: boolean;
 }
 
 export class TerraDrawPolyLineMode extends TerraDrawBaseDrawMode<PolyLineStyling> {
@@ -103,6 +111,7 @@ export class TerraDrawPolyLineMode extends TerraDrawBaseDrawMode<PolyLineStyling
 	private mouseMove = false;
 	private snapping: Snapping | undefined;
 	private snappedPointId: FeatureId | undefined;
+	private showCoordinatePoints = false;
 
 	private mutateFeature!: MutateFeatureBehavior;
 	private readFeature!: ReadFeatureBehavior;
@@ -113,6 +122,7 @@ export class TerraDrawPolyLineMode extends TerraDrawBaseDrawMode<PolyLineStyling
 	private coordinateSnapping!: CoordinateSnappingBehavior;
 	private featureSnapping!: FeatureSnappingBehavior;
 	private degreeSnapping!: DegreeSnappingBehavior;
+	private coordinatePoints!: CoordinatePointBehavior;
 
 	constructor(options?: TerraDrawPolyLineModeOptions<PolyLineStyling>) {
 		super(options, true);
@@ -136,6 +146,11 @@ export class TerraDrawPolyLineMode extends TerraDrawBaseDrawMode<PolyLineStyling
 			this.keyEvents = { cancel: null, finish: null };
 		} else if (isNonNullObject(options?.keyEvents)) {
 			this.keyEvents = { ...this.keyEvents, ...options.keyEvents };
+		}
+
+		if (isBoolean(options?.showCoordinatePoints)) {
+			this.showCoordinatePoints = options.showCoordinatePoints;
+			this.coordinatePoints?.setEnabled(this.showCoordinatePoints);
 		}
 	}
 
@@ -168,6 +183,11 @@ export class TerraDrawPolyLineMode extends TerraDrawBaseDrawMode<PolyLineStyling
 			this.mutateFeature,
 			this.readFeature,
 		);
+		this.coordinatePoints = new CoordinatePointBehavior(
+			config,
+			this.readFeature,
+			this.mutateFeature,
+		);
 	}
 
 	/** @internal */
@@ -199,6 +219,13 @@ export class TerraDrawPolyLineMode extends TerraDrawBaseDrawMode<PolyLineStyling
 
 		if (!updated) {
 			return;
+		}
+
+		if (this.showCoordinatePoints) {
+			this.coordinatePoints.createOrUpdate({
+				featureId: this.currentId,
+				featureCoordinates: updated.geometry.coordinates,
+			});
 		}
 
 		const featureId = this.currentId;
@@ -253,6 +280,14 @@ export class TerraDrawPolyLineMode extends TerraDrawBaseDrawMode<PolyLineStyling
 			return;
 		}
 
+		if (this.showCoordinatePoints) {
+			this.coordinatePoints.deletePointsByFeatureIds([featureIdToRemove]);
+			this.coordinatePoints.createOrUpdate({
+				featureId: created.id,
+				featureCoordinates: created.geometry.coordinates,
+			});
+		}
+
 		this.mutateFeature.deleteFeatureIfPresent(featureIdToRemove);
 
 		this.currentCoordinate = 0;
@@ -297,6 +332,13 @@ export class TerraDrawPolyLineMode extends TerraDrawBaseDrawMode<PolyLineStyling
 			return;
 		}
 
+		if (this.showCoordinatePoints) {
+			this.coordinatePoints.createOrUpdate({
+				featureId: this.currentId,
+				featureCoordinates: updated.geometry.coordinates,
+			});
+		}
+
 		const { isClosing, isPreviousClosing } =
 			this.closingPoints.isPolygonClosingPoints(event);
 		if (
@@ -322,6 +364,14 @@ export class TerraDrawPolyLineMode extends TerraDrawBaseDrawMode<PolyLineStyling
 
 			this.currentId = created.id as FeatureId;
 			this.currentCoordinate = 1;
+
+			if (this.showCoordinatePoints) {
+				this.coordinatePoints.createOrUpdate({
+					featureId: created.id,
+					featureCoordinates: created.geometry.coordinates,
+				});
+			}
+
 			this.setDrawing();
 			return;
 		}
@@ -360,6 +410,13 @@ export class TerraDrawPolyLineMode extends TerraDrawBaseDrawMode<PolyLineStyling
 		}
 
 		this.currentCoordinate++;
+
+		if (this.showCoordinatePoints) {
+			this.coordinatePoints.createOrUpdate({
+				featureId: this.currentId,
+				featureCoordinates: updated.geometry.coordinates,
+			});
+		}
 
 		if (this.currentCoordinate >= 2) {
 			const polygonLikeCoordinates = this.toPolygonLikeCoordinates(
@@ -417,6 +474,10 @@ export class TerraDrawPolyLineMode extends TerraDrawBaseDrawMode<PolyLineStyling
 
 		if (this.state === "drawing") {
 			this.setStarted();
+		}
+
+		if (currentId && this.showCoordinatePoints) {
+			this.coordinatePoints.deletePointsByFeatureIds([currentId]);
 		}
 
 		this.mutateFeature.deleteFeatureIfPresent(currentId);
@@ -611,15 +672,19 @@ export class TerraDrawPolyLineMode extends TerraDrawBaseDrawMode<PolyLineStyling
 				feature.properties[COMMON_PROPERTIES.CLOSING_POINT] === true;
 			const snappingPoint =
 				feature.properties[COMMON_PROPERTIES.SNAPPING_POINT] === true;
+			const coordinatePoint =
+				feature.properties[COMMON_PROPERTIES.COORDINATE_POINT] === true;
 
-			if (!closingPoint && !snappingPoint) {
+			if (!closingPoint && !snappingPoint && !coordinatePoint) {
 				return styles;
 			}
 
 			styles.pointColor = this.getHexColorStylingValue(
 				closingPoint
 					? this.styles.closingPointColor
-					: this.styles.snappingPointColor,
+					: snappingPoint
+						? this.styles.snappingPointColor
+						: this.styles.coordinatePointColor,
 				styles.pointColor,
 				feature,
 			);
@@ -627,7 +692,9 @@ export class TerraDrawPolyLineMode extends TerraDrawBaseDrawMode<PolyLineStyling
 			styles.pointWidth = this.getNumericStylingValue(
 				closingPoint
 					? this.styles.closingPointWidth
-					: this.styles.snappingPointWidth,
+					: snappingPoint
+						? this.styles.snappingPointWidth
+						: this.styles.coordinatePointWidth,
 				styles.pointWidth,
 				feature,
 			);
@@ -635,7 +702,9 @@ export class TerraDrawPolyLineMode extends TerraDrawBaseDrawMode<PolyLineStyling
 			styles.pointOpacity = this.getNumericStylingValue(
 				closingPoint
 					? this.styles.closingPointOpacity
-					: this.styles.snappingPointOpacity,
+					: snappingPoint
+						? this.styles.snappingPointOpacity
+						: this.styles.coordinatePointOpacity,
 				1,
 				feature,
 			);
@@ -643,7 +712,9 @@ export class TerraDrawPolyLineMode extends TerraDrawBaseDrawMode<PolyLineStyling
 			styles.pointOutlineColor = this.getHexColorStylingValue(
 				closingPoint
 					? this.styles.closingPointOutlineColor
-					: this.styles.snappingPointOutlineColor,
+					: snappingPoint
+						? this.styles.snappingPointOutlineColor
+						: this.styles.coordinatePointOutlineColor,
 				styles.pointOutlineColor,
 				feature,
 			);
@@ -651,7 +722,9 @@ export class TerraDrawPolyLineMode extends TerraDrawBaseDrawMode<PolyLineStyling
 			styles.pointOutlineWidth = this.getNumericStylingValue(
 				closingPoint
 					? this.styles.closingPointOutlineWidth
-					: this.styles.snappingPointOutlineWidth,
+					: snappingPoint
+						? this.styles.snappingPointOutlineWidth
+						: this.styles.coordinatePointOutlineWidth,
 				2,
 				feature,
 			);
@@ -659,20 +732,44 @@ export class TerraDrawPolyLineMode extends TerraDrawBaseDrawMode<PolyLineStyling
 			styles.pointOutlineOpacity = this.getNumericStylingValue(
 				closingPoint
 					? this.styles.closingPointOutlineOpacity
-					: this.styles.snappingPointOutlineOpacity,
+					: snappingPoint
+						? this.styles.snappingPointOutlineOpacity
+						: this.styles.coordinatePointOutlineOpacity,
 				1,
 				feature,
 			);
 
-			styles.zIndex = Z_INDEX.LAYER_THREE;
+			styles.zIndex = coordinatePoint ? Z_INDEX.LAYER_TWO : Z_INDEX.LAYER_THREE;
 		}
 
 		return styles;
 	}
 
-	afterFeatureAdded(_feature: GeoJSONStoreFeatures) {}
+	afterFeatureAdded(feature: GeoJSONStoreFeatures) {
+		if (
+			this.showCoordinatePoints &&
+			(feature.geometry.type === "LineString" ||
+				feature.geometry.type === "Polygon")
+		) {
+			this.coordinatePoints.createOrUpdate({
+				featureId: feature.id as FeatureId,
+				featureCoordinates: feature.geometry.coordinates,
+			});
+		}
+	}
 
 	afterFeatureUpdated(feature: GeoJSONStoreFeatures) {
+		if (
+			this.showCoordinatePoints &&
+			(feature.geometry.type === "LineString" ||
+				feature.geometry.type === "Polygon")
+		) {
+			this.coordinatePoints.createOrUpdate({
+				featureId: feature.id as FeatureId,
+				featureCoordinates: feature.geometry.coordinates,
+			});
+		}
+
 		if (this.snappedPointId) {
 			this.mutateFeature.deleteFeatureIfPresent(this.snappedPointId);
 			this.snappedPointId = undefined;

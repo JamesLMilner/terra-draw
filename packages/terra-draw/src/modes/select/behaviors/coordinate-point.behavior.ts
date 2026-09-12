@@ -15,6 +15,36 @@ export class CoordinatePointBehavior extends TerraDrawModeBehavior {
 		super(config);
 	}
 
+	public setEnabled(enabled: boolean) {
+		const features = this.store
+			.copyAllWhere((properties) => properties.mode === this.mode)
+			.filter(
+				(feature) =>
+					feature.geometry.type === "LineString" ||
+					feature.geometry.type === "Polygon",
+			);
+
+		if (enabled) {
+			features.forEach((feature) => {
+				this.createOrUpdate({
+					featureId: feature.id as FeatureId,
+					featureCoordinates: feature.geometry.coordinates as
+						| Position[]
+						| Position[][],
+				});
+			});
+			return;
+		} else {
+			this.deletePointsByFeatureIds(
+				features
+					.filter((feature) =>
+						Boolean(feature.properties[COMMON_PROPERTIES.COORDINATE_POINT_IDS]),
+					)
+					.map((feature) => feature.id as FeatureId),
+			);
+		}
+	}
+
 	public createOrUpdate({
 		featureId,
 		featureCoordinates,

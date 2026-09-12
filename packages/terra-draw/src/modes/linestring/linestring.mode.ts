@@ -199,35 +199,7 @@ export class TerraDrawLineStringMode extends TerraDrawBaseDrawMode<LineStringSty
 
 		if (options?.showCoordinatePoints !== undefined) {
 			this.showCoordinatePoints = options.showCoordinatePoints;
-
-			// If we are showing coordinate points, we need to add them all
-			if (this.coordinatePoints && options.showCoordinatePoints === true) {
-				const features = this.store.copyAllWhere(
-					(properties) => properties.mode === this.mode,
-				);
-				features.forEach((feature) => {
-					this.coordinatePoints.createOrUpdate({
-						featureId: feature.id as FeatureId,
-						featureCoordinates: feature.geometry.coordinates as Position[],
-					});
-				});
-			} else if (this.coordinatePoints && this.showCoordinatePoints === false) {
-				const featuresWithCoordinates = this.store.copyAllWhere(
-					(properties) =>
-						properties.mode === this.mode &&
-						Boolean(
-							(
-								properties[
-									COMMON_PROPERTIES.COORDINATE_POINT_IDS
-								] as FeatureId[]
-							)?.length,
-						),
-				);
-
-				this.coordinatePoints.deletePointsByFeatureIds(
-					featuresWithCoordinates.map((f) => f.id as FeatureId),
-				);
-			}
+			this.coordinatePoints?.setEnabled(this.showCoordinatePoints);
 		}
 	}
 

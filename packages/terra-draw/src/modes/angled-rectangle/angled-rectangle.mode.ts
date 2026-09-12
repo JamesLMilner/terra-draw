@@ -45,7 +45,8 @@ import {
 } from "../mutate-feature.behavior";
 import { BehaviorConfig } from "../base.behavior";
 import { ReadFeatureBehavior } from "../read-feature.behavior";
-import { isNonNullObject, isNull } from "../../common/checks";
+import { isBoolean, isNonNullObject, isNull } from "../../common/checks";
+import { CoordinatePointBehavior } from "../select/behaviors/coordinate-point.behavior";
 
 type TerraDrawPolygonModeKeyEvents = {
 	cancel?: KeyboardEvent["key"] | null;
@@ -63,6 +64,12 @@ type PolygonStyling = {
 	outlineColor: HexColorStyling;
 	outlineOpacity: NumericStyling;
 	outlineWidth: NumericStyling;
+	coordinatePointWidth: NumericStyling;
+	coordinatePointColor: HexColorStyling;
+	coordinatePointOpacity: NumericStyling;
+	coordinatePointOutlineWidth: NumericStyling;
+	coordinatePointOutlineColor: HexColorStyling;
+	coordinatePointOutlineOpacity: NumericStyling;
 };
 
 interface Cursors {
@@ -81,6 +88,7 @@ interface TerraDrawAngledRectangleModeOptions<
 	pointerDistance?: number;
 	keyEvents?: TerraDrawPolygonModeKeyEvents | null;
 	cursors?: Cursors;
+	showCoordinatePoints?: boolean;
 }
 
 export class TerraDrawAngledRectangleMode extends TerraDrawBaseDrawMode<PolygonStyling> {
@@ -91,10 +99,12 @@ export class TerraDrawAngledRectangleMode extends TerraDrawBaseDrawMode<PolygonS
 	private keyEvents: TerraDrawPolygonModeKeyEvents = defaultKeyEvents;
 	private cursors: Required<Cursors> = defaultCursors;
 	private mouseMove = false;
+	private showCoordinatePoints = false;
 
 	// Behaviors
 	private mutateFeature!: MutateFeatureBehavior;
 	private readFeature!: ReadFeatureBehavior;
+	private coordinatePoints!: CoordinatePointBehavior;
 
 	constructor(options?: TerraDrawAngledRectangleModeOptions<PolygonStyling>) {
 		super(options, true);
@@ -117,6 +127,11 @@ export class TerraDrawAngledRectangleMode extends TerraDrawBaseDrawMode<PolygonS
 		} else if (isNonNullObject(options?.keyEvents)) {
 			this.keyEvents = { ...this.keyEvents, ...options.keyEvents };
 		}
+
+		if (isBoolean(options?.showCoordinatePoints)) {
+			this.showCoordinatePoints = options.showCoordinatePoints;
+			this.coordinatePoints?.setEnabled(this.showCoordinatePoints);
+		}
 	}
 
 	private close() {
@@ -134,6 +149,13 @@ export class TerraDrawAngledRectangleMode extends TerraDrawBaseDrawMode<PolygonS
 
 		if (!updated) {
 			return;
+		}
+
+		if (this.showCoordinatePoints) {
+			this.coordinatePoints.createOrUpdate({
+				featureId: this.currentId,
+				featureCoordinates: updated.geometry.coordinates,
+			});
 		}
 
 		const featureId = this.currentId;
@@ -184,11 +206,18 @@ export class TerraDrawAngledRectangleMode extends TerraDrawBaseDrawMode<PolygonS
 			return;
 		}
 
-		this.mutateFeature.updatePolygon({
+		const updated = this.mutateFeature.updatePolygon({
 			featureId: this.currentId,
 			coordinateMutations,
 			context: { updateType: UpdateTypes.Provisional },
 		});
+
+		if (updated && this.showCoordinatePoints) {
+			this.coordinatePoints.createOrUpdate({
+				featureId: this.currentId,
+				featureCoordinates: updated.geometry.coordinates,
+			});
+		}
 	}
 
 	private getUpdateForSecondCoordinate(
@@ -320,7 +349,7 @@ export class TerraDrawAngledRectangleMode extends TerraDrawBaseDrawMode<PolygonS
 			this.mouseMove = false;
 
 			if (this.currentCoordinate === 0) {
-				const { id: newId } = this.mutateFeature.createPolygon({
+				const created = this.mutateFeature.createPolygon({
 					coordinates: [
 						[event.lng, event.lat],
 						[event.lng, event.lat],
@@ -333,8 +362,15 @@ export class TerraDrawAngledRectangleMode extends TerraDrawBaseDrawMode<PolygonS
 						[COMMON_PROPERTIES.CURRENTLY_DRAWING]: true,
 					},
 				});
-				this.currentId = newId;
+				this.currentId = created.id;
 				this.currentCoordinate++;
+
+				if (this.showCoordinatePoints) {
+					this.coordinatePoints.createOrUpdate({
+						featureId: created.id,
+						featureCoordinates: created.geometry.coordinates,
+					});
+				}
 
 				// Ensure the state is updated to reflect drawing has started
 				this.setDrawing();
@@ -372,6 +408,13 @@ export class TerraDrawAngledRectangleMode extends TerraDrawBaseDrawMode<PolygonS
 
 				if (!updated) {
 					return;
+				}
+
+				if (this.showCoordinatePoints) {
+					this.coordinatePoints.createOrUpdate({
+						featureId: this.currentId,
+						featureCoordinates: updated.geometry.coordinates,
+					});
 				}
 
 				this.currentCoordinate++;
@@ -417,6 +460,10 @@ export class TerraDrawAngledRectangleMode extends TerraDrawBaseDrawMode<PolygonS
 			this.setStarted();
 		}
 
+		if (currentId && this.showCoordinatePoints) {
+			this.coordinatePoints.deletePointsByFeatureIds([currentId]);
+		}
+
 		this.mutateFeature.deleteFeatureIfPresent(currentId);
 	}
 
@@ -457,6 +504,41 @@ export class TerraDrawAngledRectangleMode extends TerraDrawBaseDrawMode<PolygonS
 				);
 
 				styles.zIndex = Z_INDEX.LAYER_ONE;
+			} else if (
+				feature.geometry.type === "Point" &&
+				feature.properties[COMMON_PROPERTIES.COORDINATE_POINT]
+			) {
+				styles.pointWidth = this.getNumericStylingValue(
+					this.styles.coordinatePointWidth,
+					styles.pointWidth,
+					feature,
+				);
+				styles.pointColor = this.getHexColorStylingValue(
+					this.styles.coordinatePointColor,
+					styles.pointColor,
+					feature,
+				);
+				styles.pointOpacity = this.getNumericStylingValue(
+					this.styles.coordinatePointOpacity,
+					1,
+					feature,
+				);
+				styles.pointOutlineWidth = this.getNumericStylingValue(
+					this.styles.coordinatePointOutlineWidth,
+					2,
+					feature,
+				);
+				styles.pointOutlineColor = this.getHexColorStylingValue(
+					this.styles.coordinatePointOutlineColor,
+					styles.pointOutlineColor,
+					feature,
+				);
+				styles.pointOutlineOpacity = this.getNumericStylingValue(
+					this.styles.coordinatePointOutlineOpacity,
+					1,
+					feature,
+				);
+				styles.zIndex = Z_INDEX.LAYER_TWO;
 			}
 		}
 
@@ -473,6 +555,13 @@ export class TerraDrawAngledRectangleMode extends TerraDrawBaseDrawMode<PolygonS
 	}
 
 	afterFeatureUpdated(feature: GeoJSONStoreFeatures): void {
+		if (this.showCoordinatePoints && feature.geometry.type === "Polygon") {
+			this.coordinatePoints.createOrUpdate({
+				featureId: feature.id as FeatureId,
+				featureCoordinates: feature.geometry.coordinates,
+			});
+		}
+
 		// If we are in the middle of drawing a rectangle and the feature being updated is the current rectangle,
 		// we need to reset the drawing state
 		if (this.currentId === feature.id) {
@@ -484,10 +573,24 @@ export class TerraDrawAngledRectangleMode extends TerraDrawBaseDrawMode<PolygonS
 		}
 	}
 
+	afterFeatureAdded(feature: GeoJSONStoreFeatures): void {
+		if (this.showCoordinatePoints && feature.geometry.type === "Polygon") {
+			this.coordinatePoints.createOrUpdate({
+				featureId: feature.id as FeatureId,
+				featureCoordinates: feature.geometry.coordinates,
+			});
+		}
+	}
+
 	registerBehaviors(config: BehaviorConfig) {
 		this.readFeature = new ReadFeatureBehavior(config);
 		this.mutateFeature = new MutateFeatureBehavior(config, {
 			validate: this.validate,
 		});
+		this.coordinatePoints = new CoordinatePointBehavior(
+			config,
+			this.readFeature,
+			this.mutateFeature,
+		);
 	}
 }

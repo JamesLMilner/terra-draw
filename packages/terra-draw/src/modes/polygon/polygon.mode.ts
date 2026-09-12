@@ -185,36 +185,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 
 		if (isBoolean(options?.showCoordinatePoints)) {
 			this.showCoordinatePoints = options.showCoordinatePoints;
-
-			// If we are not showing coordinate points, we need to add them all
-			if (this.coordinatePoints && options.showCoordinatePoints === true) {
-				const polygonFeatures = this.store
-					.copyAllWhere((properties) => properties.mode === this.mode)
-					.filter((feature) => feature.geometry.type === "Polygon");
-
-				polygonFeatures.forEach((feature) => {
-					this.coordinatePoints.createOrUpdate({
-						featureId: feature.id as FeatureId,
-						featureCoordinates: feature.geometry.coordinates as Position[][],
-					});
-				});
-			} else if (this.coordinatePoints && this.showCoordinatePoints === false) {
-				const featuresWithCoordinates = this.store
-					.copyAllWhere(
-						(properties) =>
-							properties.mode === this.mode &&
-							Boolean(
-								properties[
-									COMMON_PROPERTIES.COORDINATE_POINT_IDS
-								] as FeatureId[],
-							),
-					)
-					.filter((feature) => feature.geometry.type === "Polygon");
-
-				this.coordinatePoints.deletePointsByFeatureIds(
-					featuresWithCoordinates.map((f) => f.id as FeatureId),
-				);
-			}
+			this.coordinatePoints?.setEnabled(this.showCoordinatePoints);
 		}
 	}
 

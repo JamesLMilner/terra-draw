@@ -51,6 +51,20 @@ describe("TerraDrawAngledRectangleMode", () => {
 			});
 			expect(angledRectangleMode.mode).toBe("custom");
 		});
+
+		it("constructs with coordinate point options", () => {
+			new TerraDrawAngledRectangleMode({
+				showCoordinatePoints: true,
+				styles: {
+					coordinatePointWidth: 6,
+					coordinatePointColor: "#ffffff",
+					coordinatePointOpacity: 0.8,
+					coordinatePointOutlineWidth: 2,
+					coordinatePointOutlineColor: "#000000",
+					coordinatePointOutlineOpacity: 0.5,
+				},
+			});
+		});
 	});
 
 	describe("lifecycle", () => {
@@ -179,6 +193,35 @@ describe("TerraDrawAngledRectangleMode", () => {
 
 			expect(mockConfig.onChange).toHaveBeenCalledTimes(1);
 		});
+
+		it("can enable and disable coordinate points for existing rectangles", () => {
+			const angledRectangleMode = new TerraDrawAngledRectangleMode();
+			const mockConfig = MockModeConfig(angledRectangleMode.mode);
+			angledRectangleMode.register(mockConfig);
+			angledRectangleMode.start();
+
+			angledRectangleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			angledRectangleMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
+			angledRectangleMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
+			angledRectangleMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 0 }));
+			angledRectangleMode.onClick(MockCursorEvent({ lng: 1, lat: 0 }));
+
+			angledRectangleMode.updateOptions({ showCoordinatePoints: true });
+			expect(
+				mockConfig.store.copyAllWhere(
+					(properties) =>
+						properties[COMMON_PROPERTIES.COORDINATE_POINT] as boolean,
+				),
+			).toHaveLength(4);
+
+			angledRectangleMode.updateOptions({ showCoordinatePoints: false });
+			expect(
+				mockConfig.store.copyAllWhere(
+					(properties) =>
+						properties[COMMON_PROPERTIES.COORDINATE_POINT] as boolean,
+				),
+			).toHaveLength(0);
+		});
 	});
 
 	describe("onMouseMove", () => {
@@ -288,6 +331,41 @@ describe("TerraDrawAngledRectangleMode", () => {
 					[0, 0],
 				],
 			]);
+		});
+
+		it("updates coordinate points while drawing", () => {
+			angledRectangleMode.updateOptions({ showCoordinatePoints: true });
+			angledRectangleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			angledRectangleMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
+
+			const coordinates = store
+				.copyAllWhere(
+					(properties) =>
+						properties[COMMON_PROPERTIES.COORDINATE_POINT] as boolean,
+				)
+				.map((feature) => feature.geometry.coordinates);
+
+			expect(coordinates).toStrictEqual([
+				[0, 0],
+				[1, 1],
+				[1, 1],
+			]);
+		});
+	});
+
+	describe("cleanUp", () => {
+		it("removes coordinate points for the rectangle being drawn", () => {
+			const angledRectangleMode = new TerraDrawAngledRectangleMode({
+				showCoordinatePoints: true,
+			});
+			const mockConfig = MockModeConfig(angledRectangleMode.mode);
+			angledRectangleMode.register(mockConfig);
+			angledRectangleMode.start();
+			angledRectangleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+			angledRectangleMode.cleanUp();
+
+			expect(mockConfig.store.copyAll()).toHaveLength(0);
 		});
 	});
 
@@ -669,9 +747,75 @@ describe("TerraDrawAngledRectangleMode", () => {
 				polygonFillOpacity: 0.5,
 			});
 		});
+
+		it("returns the correct styles for a coordinate point", () => {
+			const rectangleMode = new TerraDrawAngledRectangleMode({
+				styles: {
+					coordinatePointWidth: 6,
+					coordinatePointColor: "#ffffff",
+					coordinatePointOpacity: 0.8,
+					coordinatePointOutlineWidth: 2,
+					coordinatePointOutlineColor: "#111111",
+					coordinatePointOutlineOpacity: 0.5,
+				},
+			});
+
+			expect(
+				rectangleMode.styleFeature({
+					type: "Feature",
+					geometry: { type: "Point", coordinates: [0, 0] },
+					properties: {
+						mode: "angled-rectangle",
+						[COMMON_PROPERTIES.COORDINATE_POINT]: true,
+					},
+				}),
+			).toMatchObject({
+				pointWidth: 6,
+				pointColor: "#ffffff",
+				pointOpacity: 0.8,
+				pointOutlineWidth: 2,
+				pointOutlineColor: "#111111",
+				pointOutlineOpacity: 0.5,
+				zIndex: 20,
+			});
+		});
 	});
 
 	describe("afterFeatureUpdated", () => {
+		it("adds coordinate points when enabled", () => {
+			const angledRectangleMode = new TerraDrawAngledRectangleMode({
+				showCoordinatePoints: true,
+			});
+			const mockConfig = MockModeConfig(angledRectangleMode.mode);
+			angledRectangleMode.register(mockConfig);
+			const [featureId] = mockConfig.store.create([
+				{
+					geometry: {
+						type: "Polygon",
+						coordinates: [
+							[
+								[0, 0],
+								[1, 1],
+								[1.5, 0.5],
+								[0.5, -0.5],
+								[0, 0],
+							],
+						],
+					},
+					properties: { mode: angledRectangleMode.mode },
+				},
+			]);
+
+			angledRectangleMode.afterFeatureUpdated(mockConfig.store.copy(featureId));
+
+			expect(
+				mockConfig.store.copyAllWhere(
+					(properties) =>
+						properties[COMMON_PROPERTIES.COORDINATE_POINT] as boolean,
+				),
+			).toHaveLength(4);
+		});
+
 		it("does nothing when update is not for the currently drawn polygon", () => {
 			const angledRectangleMode = new TerraDrawAngledRectangleMode();
 			const mockConfig = MockModeConfig(angledRectangleMode.mode);
@@ -721,6 +865,42 @@ describe("TerraDrawAngledRectangleMode", () => {
 			});
 
 			expect(mockConfig.setDoubleClickToZoom).toHaveBeenCalledTimes(1);
+		});
+	});
+
+	describe("afterFeatureAdded", () => {
+		it("adds coordinate points when enabled", () => {
+			const angledRectangleMode = new TerraDrawAngledRectangleMode({
+				showCoordinatePoints: true,
+			});
+			const mockConfig = MockModeConfig(angledRectangleMode.mode);
+			angledRectangleMode.register(mockConfig);
+			const [featureId] = mockConfig.store.create([
+				{
+					geometry: {
+						type: "Polygon",
+						coordinates: [
+							[
+								[0, 0],
+								[1, 1],
+								[1.5, 0.5],
+								[0.5, -0.5],
+								[0, 0],
+							],
+						],
+					},
+					properties: { mode: angledRectangleMode.mode },
+				},
+			]);
+
+			angledRectangleMode.afterFeatureAdded(mockConfig.store.copy(featureId));
+
+			expect(
+				mockConfig.store.copyAllWhere(
+					(properties) =>
+						properties[COMMON_PROPERTIES.COORDINATE_POINT] as boolean,
+				),
+			).toHaveLength(4);
 		});
 	});
 });

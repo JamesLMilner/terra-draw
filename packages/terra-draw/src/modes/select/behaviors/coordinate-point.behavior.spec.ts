@@ -2,7 +2,7 @@ import { Position } from "geojson";
 import { COMMON_PROPERTIES } from "../../../common";
 import { JSONObject } from "../../../store/store";
 import { MockBehaviorConfig } from "../../../test/mock-behavior-config";
-import { MockPolygonSquare } from "../../../test/mock-features";
+import { MockLineString, MockPolygonSquare } from "../../../test/mock-features";
 import { CoordinatePointBehavior } from "./coordinate-point.behavior";
 import { MutateFeatureBehavior } from "../../mutate-feature.behavior";
 import { ReadFeatureBehavior } from "../../read-feature.behavior";
@@ -41,6 +41,136 @@ describe("CoordinatePointBehavior", () => {
 					validate: jest.fn(() => ({ valid: true })),
 				}),
 			);
+		});
+
+		it("setEnabled creates and removes points for supported mode features", () => {
+			const mockPolygon = MockPolygonSquare();
+			const mockLineString = MockLineString();
+			const [polygonId, lineStringId] = config.store.create([
+				{
+					geometry: mockPolygon.geometry,
+					properties: { mode: "test" },
+				},
+				{
+					geometry: mockLineString.geometry,
+					properties: { mode: "test" },
+				},
+				{
+					geometry: mockLineString.geometry,
+					properties: { mode: "other" },
+				},
+				{
+					geometry: { type: "Point", coordinates: [0, 0] },
+					properties: { mode: "test" },
+				},
+			]);
+
+			coordinatePointBehavior.setEnabled(true);
+
+			// Ensure all coordinate points are created
+			expect(
+				config.store.copyAllWhere((properties) =>
+					Boolean(properties[COMMON_PROPERTIES.COORDINATE_POINT]),
+				),
+			).toHaveLength(6);
+
+			// Ensure the coordinate point ids are set on the parent features
+			expect(
+				config.store.getPropertiesCopy(polygonId)[
+					COMMON_PROPERTIES.COORDINATE_POINT_IDS
+				],
+			).toHaveLength(4);
+
+			// Ensure the coordinate point ids are set on the parent features
+			expect(
+				config.store.getPropertiesCopy(lineStringId)[
+					COMMON_PROPERTIES.COORDINATE_POINT_IDS
+				],
+			).toHaveLength(2);
+
+			coordinatePointBehavior.setEnabled(false);
+
+			// Ensure all coordinate points are removed
+			expect(
+				config.store.copyAllWhere((properties) =>
+					Boolean(properties[COMMON_PROPERTIES.COORDINATE_POINT]),
+				),
+			).toHaveLength(0);
+
+			// Ensure the coordinate point ids are removed from the parent features
+			expect(
+				config.store.getPropertiesCopy(polygonId)[
+					COMMON_PROPERTIES.COORDINATE_POINT_IDS
+				],
+			).toBeNull();
+
+			// Ensure the coordinate point ids are removed from the parent features
+			expect(
+				config.store.getPropertiesCopy(lineStringId)[
+					COMMON_PROPERTIES.COORDINATE_POINT_IDS
+				],
+			).toBeNull();
+		});
+
+		it("setEnabled does not duplicate or replace points when repeatedly enabled", () => {
+			const mockPolygon = MockPolygonSquare();
+			const [featureId] = config.store.create([
+				{
+					geometry: mockPolygon.geometry,
+					properties: { mode: "test" },
+				},
+			]);
+
+			coordinatePointBehavior.setEnabled(true);
+			const coordinatePointIds = config.store.getPropertiesCopy(featureId)[
+				COMMON_PROPERTIES.COORDINATE_POINT_IDS
+			] as string[];
+
+			coordinatePointBehavior.setEnabled(true);
+
+			// Ensure the coordinate point ids have not changed
+			expect(
+				config.store.getPropertiesCopy(featureId)[
+					COMMON_PROPERTIES.COORDINATE_POINT_IDS
+				],
+			).toStrictEqual(coordinatePointIds);
+
+			// Ensure all coordinate points are created
+			expect(
+				config.store.copyAllWhere((properties) =>
+					Boolean(properties[COMMON_PROPERTIES.COORDINATE_POINT]),
+				),
+			).toHaveLength(4);
+		});
+
+		it("setEnabled remains disabled when repeatedly disabled", () => {
+			const mockPolygon = MockPolygonSquare();
+			const [featureId] = config.store.create([
+				{
+					geometry: mockPolygon.geometry,
+					properties: { mode: "test" },
+				},
+			]);
+
+			coordinatePointBehavior.setEnabled(true);
+			coordinatePointBehavior.setEnabled(false);
+
+			expect(() => coordinatePointBehavior.setEnabled(false)).not.toThrow();
+			expect(
+				config.store.getPropertiesCopy(featureId)[
+					COMMON_PROPERTIES.COORDINATE_POINT_IDS
+				],
+			).toBeNull();
+			expect(
+				config.store.copyAllWhere((properties) =>
+					Boolean(properties[COMMON_PROPERTIES.COORDINATE_POINT]),
+				),
+			).toHaveLength(0);
+		});
+
+		it("setEnabled handles a mode without supported features", () => {
+			expect(() => coordinatePointBehavior.setEnabled(true)).not.toThrow();
+			expect(() => coordinatePointBehavior.setEnabled(false)).not.toThrow();
 		});
 
 		it("createOrUpdate", () => {

@@ -59,6 +59,80 @@ describe("TerraDrawRectangleMode", () => {
 				drawInteraction: "click-move-or-drag",
 			});
 		});
+
+		it("constructs with coordinate point options", () => {
+			new TerraDrawRectangleMode({
+				showCoordinatePoints: true,
+				styles: {
+					coordinatePointWidth: 6,
+					coordinatePointColor: "#ffffff",
+					coordinatePointOpacity: 0.8,
+					coordinatePointOutlineWidth: 2,
+					coordinatePointOutlineColor: "#000000",
+					coordinatePointOutlineOpacity: 0.5,
+				},
+			});
+		});
+	});
+
+	describe("showCoordinatePoints", () => {
+		it("creates and updates a point for each rectangle coordinate", () => {
+			const rectangleMode = new TerraDrawRectangleMode({
+				showCoordinatePoints: true,
+			});
+			const mockConfig = MockModeConfig(rectangleMode.mode);
+			rectangleMode.register(mockConfig);
+			rectangleMode.start();
+
+			rectangleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			rectangleMode.onMouseMove(MockCursorEvent({ lng: 2, lat: 1 }));
+			rectangleMode.onClick(MockCursorEvent({ lng: 2, lat: 1 }));
+
+			const coordinatePoints = mockConfig.store
+				.copyAllWhere(
+					(properties) =>
+						properties[COMMON_PROPERTIES.COORDINATE_POINT] as boolean,
+				)
+				.map((feature) => feature.geometry.coordinates);
+
+			expect(coordinatePoints).toStrictEqual([
+				[0, 0],
+				[2, 0],
+				[2, 1],
+				[0, 1],
+			]);
+		});
+
+		it("can be enabled and disabled for existing rectangles", () => {
+			const rectangleMode = new TerraDrawRectangleMode();
+			const mockConfig = MockModeConfig(rectangleMode.mode);
+			rectangleMode.register(mockConfig);
+			rectangleMode.start();
+
+			rectangleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			rectangleMode.onMouseMove(MockCursorEvent({ lng: 2, lat: 1 }));
+			rectangleMode.onClick(MockCursorEvent({ lng: 2, lat: 1 }));
+
+			rectangleMode.updateOptions({ showCoordinatePoints: true });
+			expect(
+				mockConfig.store.copyAllWhere(
+					(properties) =>
+						properties[COMMON_PROPERTIES.COORDINATE_POINT] as boolean,
+				),
+			).toHaveLength(4);
+
+			expect(() =>
+				rectangleMode.updateOptions({ showCoordinatePoints: true }),
+			).not.toThrow();
+
+			rectangleMode.updateOptions({ showCoordinatePoints: false });
+			expect(
+				mockConfig.store.copyAllWhere(
+					(properties) =>
+						properties[COMMON_PROPERTIES.COORDINATE_POINT] as boolean,
+				),
+			).toHaveLength(0);
+		});
 	});
 
 	describe("lifecycle", () => {
@@ -506,6 +580,7 @@ describe("TerraDrawRectangleMode", () => {
 	describe("cleanUp", () => {
 		let rectangleMode: TerraDrawRectangleMode;
 		let onChange: jest.Mock;
+		let store: TerraDrawGeoJSONStore;
 
 		beforeEach(() => {
 			rectangleMode = new TerraDrawRectangleMode();
@@ -513,6 +588,7 @@ describe("TerraDrawRectangleMode", () => {
 			const mockConfig = MockModeConfig(rectangleMode.mode);
 
 			onChange = mockConfig.onChange;
+			store = mockConfig.store;
 
 			rectangleMode.register(mockConfig);
 			rectangleMode.start();
@@ -535,6 +611,15 @@ describe("TerraDrawRectangleMode", () => {
 				"delete",
 				undefined,
 			);
+		});
+
+		it("deletes coordinate points for the rectangle being drawn", () => {
+			rectangleMode.updateOptions({ showCoordinatePoints: true });
+			rectangleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+			rectangleMode.cleanUp();
+
+			expect(store.copyAll()).toHaveLength(0);
 		});
 	});
 
@@ -1063,6 +1148,38 @@ describe("TerraDrawRectangleMode", () => {
 				polygonFillOpacity: 0.5,
 			});
 		});
+
+		it("returns the correct styles for a coordinate point", () => {
+			const rectangleMode = new TerraDrawRectangleMode({
+				styles: {
+					coordinatePointWidth: 6,
+					coordinatePointColor: "#ffffff",
+					coordinatePointOpacity: 0.8,
+					coordinatePointOutlineWidth: 2,
+					coordinatePointOutlineColor: "#111111",
+					coordinatePointOutlineOpacity: 0.5,
+				},
+			});
+
+			expect(
+				rectangleMode.styleFeature({
+					type: "Feature",
+					geometry: { type: "Point", coordinates: [0, 0] },
+					properties: {
+						mode: "rectangle",
+						[COMMON_PROPERTIES.COORDINATE_POINT]: true,
+					},
+				}),
+			).toMatchObject({
+				pointWidth: 6,
+				pointColor: "#ffffff",
+				pointOpacity: 0.8,
+				pointOutlineWidth: 2,
+				pointOutlineColor: "#111111",
+				pointOutlineOpacity: 0.5,
+				zIndex: 20,
+			});
+		});
 	});
 
 	describe("validateFeature", () => {
@@ -1205,6 +1322,43 @@ describe("TerraDrawRectangleMode", () => {
 	});
 
 	describe("afterFeatureUpdated", () => {
+		it("adds coordinate points when showCoordinatePoints is true", () => {
+			const rectangleMode = new TerraDrawRectangleMode({
+				showCoordinatePoints: true,
+			});
+			const mockConfig = MockModeConfig(rectangleMode.mode);
+			rectangleMode.register(mockConfig);
+			rectangleMode.start();
+
+			const [featureId] = mockConfig.store.create([
+				{
+					geometry: {
+						type: "Polygon",
+						coordinates: [
+							[
+								[0, 0],
+								[1, 0],
+								[1, 1],
+								[0, 1],
+								[0, 0],
+							],
+						],
+					},
+					properties: { mode: "rectangle" },
+				},
+			]);
+			const feature = mockConfig.store.copy(featureId);
+
+			rectangleMode.afterFeatureUpdated(feature);
+
+			expect(
+				mockConfig.store.copyAllWhere(
+					(properties) =>
+						properties[COMMON_PROPERTIES.COORDINATE_POINT] as boolean,
+				),
+			).toHaveLength(4);
+		});
+
 		it("does nothing when update is not for the currently drawn polygon", () => {
 			const rectangleMode = new TerraDrawRectangleMode();
 			const mockConfig = MockModeConfig(rectangleMode.mode);
@@ -1252,6 +1406,44 @@ describe("TerraDrawRectangleMode", () => {
 			});
 
 			expect(mockConfig.setDoubleClickToZoom).toHaveBeenCalledTimes(1);
+		});
+	});
+
+	describe("afterFeatureAdded", () => {
+		it("adds coordinate points when showCoordinatePoints is true", () => {
+			const rectangleMode = new TerraDrawRectangleMode({
+				showCoordinatePoints: true,
+			});
+			const mockConfig = MockModeConfig(rectangleMode.mode);
+			rectangleMode.register(mockConfig);
+			rectangleMode.start();
+
+			const [featureId] = mockConfig.store.create([
+				{
+					geometry: {
+						type: "Polygon",
+						coordinates: [
+							[
+								[0, 0],
+								[1, 0],
+								[1, 1],
+								[0, 1],
+								[0, 0],
+							],
+						],
+					},
+					properties: { mode: "rectangle" },
+				},
+			]);
+
+			rectangleMode.afterFeatureAdded(mockConfig.store.copy(featureId));
+
+			expect(
+				mockConfig.store.copyAllWhere(
+					(properties) =>
+						properties[COMMON_PROPERTIES.COORDINATE_POINT] as boolean,
+				),
+			).toHaveLength(4);
 		});
 	});
 });

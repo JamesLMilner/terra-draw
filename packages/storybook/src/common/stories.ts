@@ -460,12 +460,36 @@ const AngledRectangle: Story = {
 	},
 };
 
+const arcPoints = 64;
+
+// Reduce visual noise by hiding all arc coordinate points
+// This will show 3 points for the sector: the center, the
+// start of the arc, and the end of the arc.
+const hideArcPoints = (feature: GeoJSONStoreFeatures) => {
+	const index = feature.properties.index;
+	if (index === 0 || index === 1 || index === arcPoints + 1) {
+		return 1;
+	}
+	return 0;
+};
+
 // Sector drawing story
 const Sector: Story = {
 	...DefaultStory,
 	args: {
 		id: "sector",
-		modes: [() => new TerraDrawSectorMode()],
+		modes: [
+			() =>
+				new TerraDrawSectorMode({
+					arcPoints,
+					showCoordinatePoints: true,
+					styles: {
+						coordinatePointColor: "#ff0000",
+						coordinatePointOpacity: hideArcPoints,
+						coordinatePointOutlineOpacity: hideArcPoints,
+					},
+				}),
+		],
 		...DefaultStory.args,
 	},
 };

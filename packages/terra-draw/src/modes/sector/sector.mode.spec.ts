@@ -32,6 +32,77 @@ describe("TerraDrawSectorMode", () => {
 			});
 		});
 
+		describe("showCoordinatePoints", () => {
+			it("constructs with coordinate point options", () => {
+				new TerraDrawSectorMode({
+					showCoordinatePoints: true,
+					styles: {
+						coordinatePointWidth: 6,
+						coordinatePointColor: "#ffffff",
+						coordinatePointOpacity: 0.8,
+						coordinatePointOutlineWidth: 2,
+						coordinatePointOutlineColor: "#000000",
+						coordinatePointOutlineOpacity: 0.5,
+					},
+				});
+			});
+
+			it("creates and updates points for sector coordinates", () => {
+				const sectorMode = new TerraDrawSectorMode({
+					showCoordinatePoints: true,
+					arcPoints: 4,
+				});
+				const mockConfig = MockModeConfig(sectorMode.mode);
+				sectorMode.register(mockConfig);
+				sectorMode.start();
+
+				sectorMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+				sectorMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
+
+				let coordinatePoints = mockConfig.store.copyAllWhere(
+					(properties) =>
+						properties[COMMON_PROPERTIES.COORDINATE_POINT] as boolean,
+				);
+				expect(coordinatePoints).toHaveLength(3);
+
+				sectorMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
+				sectorMode.onMouseMove(MockCursorEvent({ lng: 2, lat: 0 }));
+
+				coordinatePoints = mockConfig.store.copyAllWhere(
+					(properties) =>
+						properties[COMMON_PROPERTIES.COORDINATE_POINT] as boolean,
+				);
+				expect(coordinatePoints.length).toBeGreaterThan(3);
+			});
+
+			it("can be enabled and disabled for existing sectors", () => {
+				const sectorMode = new TerraDrawSectorMode();
+				const mockConfig = MockModeConfig(sectorMode.mode);
+				sectorMode.register(mockConfig);
+				sectorMode.start();
+
+				sectorMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+				sectorMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
+				sectorMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
+				sectorMode.onMouseMove(MockCursorEvent({ lng: 2, lat: 0 }));
+
+				sectorMode.updateOptions({ showCoordinatePoints: true });
+				expect(
+					mockConfig.store.copyAllWhere(
+						(properties) =>
+							properties[COMMON_PROPERTIES.COORDINATE_POINT] as boolean,
+					),
+				).not.toHaveLength(0);
+
+				sectorMode.updateOptions({ showCoordinatePoints: false });
+				expect(
+					mockConfig.store.copyAllWhere(
+						(properties) =>
+							properties[COMMON_PROPERTIES.COORDINATE_POINT] as boolean,
+					),
+				).toHaveLength(0);
+			});
+		});
 		it("constructs with null key events", () => {
 			new TerraDrawSectorMode({
 				styles: { fillColor: "#ffffff" },

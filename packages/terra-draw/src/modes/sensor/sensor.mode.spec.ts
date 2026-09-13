@@ -3,7 +3,7 @@ import { MockModeConfig } from "../../test/mock-mode-config";
 import { MockCursorEvent } from "../../test/mock-cursor-event";
 import { TerraDrawSensorMode } from "./sensor.mode";
 import { MockKeyboardEvent } from "../../test/mock-keyboard-event";
-import { Polygon } from "geojson";
+import { LineString, Polygon } from "geojson";
 import { followsRightHandRule } from "../../geometry/boolean/right-hand-rule";
 import { COMMON_PROPERTIES, TerraDrawGeoJSONStore } from "../../common";
 import { DefaultPointerEvents } from "../base.mode";
@@ -33,6 +33,19 @@ describe("TerraDrawSensorMode", () => {
 			});
 		});
 
+		it("constructs with coordinate point options", () => {
+			new TerraDrawSensorMode({
+				showCoordinatePoints: true,
+				styles: {
+					coordinatePointWidth: 6,
+					coordinatePointColor: "#ffffff",
+					coordinatePointOpacity: 0.8,
+					coordinatePointOutlineWidth: 2,
+					coordinatePointOutlineColor: "#000000",
+					coordinatePointOutlineOpacity: 0.5,
+				},
+			});
+		});
 		it("constructs with null key events", () => {
 			new TerraDrawSensorMode({
 				styles: { fillColor: "#ffffff" },
@@ -134,6 +147,137 @@ describe("TerraDrawSensorMode", () => {
 			expect(mockConfig.setCursor).toHaveBeenCalledWith("pointer");
 		});
 
+		describe("showCoordinatePoints", () => {
+			it("shows initial arc coordinate points and updates them while drawing", () => {
+				const sensorMode = new TerraDrawSensorMode({
+					showCoordinatePoints: true,
+					arcPoints: 4,
+				});
+				const mockConfig = MockModeConfig(sensorMode.mode);
+				sensorMode.register(mockConfig);
+				sensorMode.start();
+				const getPoints = () =>
+					mockConfig.store.copyAllWhere(
+						(properties) =>
+							properties[COMMON_PROPERTIES.COORDINATE_POINT] as boolean,
+					);
+				const expectArcPoints = () => {
+					const arc = mockConfig.store
+						.copyAll()
+						.find((feature) => feature.geometry.type === "LineString")!;
+					const coordinates = (arc.geometry as LineString).coordinates;
+					expect(
+						getPoints().map((point) => point.geometry.coordinates),
+					).toEqual(coordinates);
+				};
+
+				sensorMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+				expect(getPoints()).toHaveLength(0);
+				sensorMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
+				expectArcPoints();
+				sensorMode.onMouseMove(MockCursorEvent({ lng: 2, lat: 1 }));
+				expectArcPoints();
+				const previousPoints = getPoints();
+				sensorMode.onMouseMove(MockCursorEvent({ lng: 2, lat: 2 }));
+				expectArcPoints();
+				expect(getPoints()).not.toEqual(previousPoints);
+
+				sensorMode.updateOptions({ showCoordinatePoints: false });
+				expect(getPoints()).toHaveLength(0);
+				sensorMode.updateOptions({ showCoordinatePoints: true });
+				expectArcPoints();
+			});
+
+			it.each(["cancel", "finish", "stop"])(
+				"removes initial arc endpoints on %s",
+				(action) => {
+					const sensorMode = new TerraDrawSensorMode({
+						showCoordinatePoints: true,
+					});
+					const mockConfig = MockModeConfig(sensorMode.mode);
+					sensorMode.register(mockConfig);
+					sensorMode.start();
+					sensorMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+					sensorMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
+					sensorMode.onMouseMove(MockCursorEvent({ lng: 2, lat: 2 }));
+
+					if (action === "stop") {
+						sensorMode.stop();
+					} else {
+						sensorMode.onKeyUp(
+							MockKeyboardEvent({
+								key: action === "cancel" ? "Escape" : "Enter",
+							}),
+						);
+					}
+					expect(mockConfig.store.copyAll()).toHaveLength(0);
+				},
+			);
+
+			it("creates and updates points for the sensor polygon", () => {
+				const sensorMode = new TerraDrawSensorMode({
+					showCoordinatePoints: true,
+					arcPoints: 4,
+				});
+				const mockConfig = MockModeConfig(sensorMode.mode);
+				sensorMode.register(mockConfig);
+				sensorMode.start();
+
+				sensorMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+				sensorMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
+				sensorMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
+				sensorMode.onMouseMove(MockCursorEvent({ lng: 2, lat: 2 }));
+				sensorMode.onClick(MockCursorEvent({ lng: 3, lat: 3 }));
+				sensorMode.onMouseMove(MockCursorEvent({ lng: 1.5, lat: 1.5 }));
+
+				let coordinatePoints = mockConfig.store.copyAllWhere(
+					(properties) =>
+						properties[COMMON_PROPERTIES.COORDINATE_POINT] as boolean,
+				);
+				expect(coordinatePoints.length).toBeGreaterThan(3);
+
+				sensorMode.onClick(MockCursorEvent({ lng: 1.5, lat: 1.5 }));
+				coordinatePoints = mockConfig.store.copyAllWhere(
+					(properties) =>
+						properties[COMMON_PROPERTIES.COORDINATE_POINT] as boolean,
+				);
+				expect(coordinatePoints).toHaveLength(10);
+				expect(mockConfig.store.copyAll()).toHaveLength(
+					coordinatePoints.length + 1,
+				);
+			});
+
+			it("can be enabled and disabled for existing sensors", () => {
+				const sensorMode = new TerraDrawSensorMode();
+				const mockConfig = MockModeConfig(sensorMode.mode);
+				sensorMode.register(mockConfig);
+				sensorMode.start();
+
+				sensorMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+				sensorMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
+				sensorMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
+				sensorMode.onMouseMove(MockCursorEvent({ lng: 2, lat: 2 }));
+				sensorMode.onClick(MockCursorEvent({ lng: 3, lat: 3 }));
+				sensorMode.onMouseMove(MockCursorEvent({ lng: 1.5, lat: 1.5 }));
+				sensorMode.onClick(MockCursorEvent({ lng: 1.5, lat: 1.5 }));
+
+				sensorMode.updateOptions({ showCoordinatePoints: true });
+				expect(
+					mockConfig.store.copyAllWhere(
+						(properties) =>
+							properties[COMMON_PROPERTIES.COORDINATE_POINT] as boolean,
+					),
+				).not.toHaveLength(0);
+
+				sensorMode.updateOptions({ showCoordinatePoints: false });
+				expect(
+					mockConfig.store.copyAllWhere(
+						(properties) =>
+							properties[COMMON_PROPERTIES.COORDINATE_POINT] as boolean,
+					),
+				).toHaveLength(0);
+			});
+		});
 		it("can change key events", () => {
 			const sensorMode = new TerraDrawSensorMode();
 			sensorMode.updateOptions({
@@ -176,6 +320,97 @@ describe("TerraDrawSensorMode", () => {
 
 			expect(mockConfig.onChange).toHaveBeenCalledTimes(1);
 		});
+
+		it("keeps coordinate point indexes stable after finishing the sensor", () => {
+			const sensorMode = new TerraDrawSensorMode({
+				showCoordinatePoints: true,
+				arcPoints: 4,
+			});
+			const mockConfig = MockModeConfig(sensorMode.mode);
+			sensorMode.register(mockConfig);
+			sensorMode.start();
+
+			sensorMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			sensorMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
+			sensorMode.onClick(MockCursorEvent({ lng: 1, lat: 1 }));
+			sensorMode.onMouseMove(MockCursorEvent({ lng: 2, lat: 2 }));
+			sensorMode.onClick(MockCursorEvent({ lng: 3, lat: 3 }));
+			sensorMode.onMouseMove(MockCursorEvent({ lng: 1.5, lat: 1.5 }));
+			const drawingCoordinatePoints = mockConfig.store
+				.copyAllWhere(
+					(properties) =>
+						properties[COMMON_PROPERTIES.COORDINATE_POINT] as boolean,
+				)
+				.map((feature) => ({
+					coordinate: feature.geometry.coordinates,
+					index: feature.properties.index,
+				}));
+			sensorMode.onClick(MockCursorEvent({ lng: 1.5, lat: 1.5 }));
+
+			const coordinatePoints = mockConfig.store
+				.copyAllWhere(
+					(properties) =>
+						properties[COMMON_PROPERTIES.COORDINATE_POINT] as boolean,
+				)
+				.map((feature) => ({
+					coordinate: feature.geometry.coordinates,
+					index: feature.properties.index,
+				}));
+
+			expect(coordinatePoints).toEqual(drawingCoordinatePoints);
+		});
+
+		it.each([
+			["counter-clockwise", [0, 1], [1, 1]],
+			["clockwise", [0, -1], [1, -1]],
+		])(
+			"preserves corner indexes for mobile clicks (%s)",
+			(_direction, arcEnd, finish) => {
+				const sensorMode = new TerraDrawSensorMode({
+					showCoordinatePoints: true,
+					arcPoints: 4,
+				});
+				const mockConfig = MockModeConfig(sensorMode.mode);
+				sensorMode.register(mockConfig);
+				sensorMode.start();
+
+				sensorMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+				sensorMode.onClick(MockCursorEvent({ lng: 1, lat: 0 }));
+				sensorMode.onClick(MockCursorEvent({ lng: arcEnd[0], lat: arcEnd[1] }));
+				sensorMode.onClick(MockCursorEvent({ lng: finish[0], lat: finish[1] }));
+
+				const coordinatePoints = mockConfig.store
+					.copyAllWhere(
+						(properties) =>
+							properties[COMMON_PROPERTIES.COORDINATE_POINT] as boolean,
+					)
+					.sort(
+						(first, second) =>
+							(first.properties.index as number) -
+							(second.properties.index as number),
+					);
+
+				expect(coordinatePoints).toHaveLength(10);
+
+				const visibleIndexes = [0, 4, 5, 9];
+				const visibleCoordinates = coordinatePoints
+					.filter((feature) =>
+						visibleIndexes.includes(feature.properties.index as number),
+					)
+					.map((feature) => feature.geometry.coordinates);
+
+				expect(visibleCoordinates[0]).toEqual([1, 0]);
+				expect(visibleCoordinates[1][0]).toBeCloseTo(arcEnd[0]);
+				expect(visibleCoordinates[1][1]).toBeCloseTo(arcEnd[1]);
+				expect(visibleCoordinates[2][0]).toBeCloseTo(arcEnd[0]);
+				expect(visibleCoordinates[2][1]).toBeCloseTo(
+					Math.sign(arcEnd[1]) * Math.SQRT2,
+					3,
+				);
+				expect(visibleCoordinates[3][0]).toBeCloseTo(Math.SQRT2, 3);
+				expect(visibleCoordinates[3][1]).toBeCloseTo(0);
+			},
+		);
 	});
 
 	describe("onMouseMove", () => {

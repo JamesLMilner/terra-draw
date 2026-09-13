@@ -40,6 +40,7 @@ import { isClockwiseWebMercator } from "../../geometry/clockwise";
 import { limitPrecision } from "../../geometry/limit-decimal-precision";
 import { BehaviorConfig } from "../base.behavior";
 import { ReadFeatureBehavior } from "../read-feature.behavior";
+import { CoordinatePointBehavior } from "../select/behaviors/coordinate-point.behavior";
 import {
 	CoordinateMutation,
 	MutateFeatureBehavior,
@@ -48,6 +49,7 @@ import {
 } from "../mutate-feature.behavior";
 import {
 	isFiniteNonNegativeNumber,
+	isBoolean,
 	isNonNullObject,
 	isNull,
 } from "../../common/checks";
@@ -68,6 +70,12 @@ type SectorPolygonStyling = {
 	outlineWidth: NumericStyling;
 	outlineOpacity: NumericStyling;
 	fillOpacity: NumericStyling;
+	coordinatePointWidth: NumericStyling;
+	coordinatePointColor: HexColorStyling;
+	coordinatePointOpacity: NumericStyling;
+	coordinatePointOutlineWidth: NumericStyling;
+	coordinatePointOutlineColor: HexColorStyling;
+	coordinatePointOutlineOpacity: NumericStyling;
 };
 
 interface Cursors {
@@ -87,6 +95,7 @@ interface TerraDrawSectorModeOptions<
 	pointerDistance?: number;
 	keyEvents?: TerraDrawSectorModeKeyEvents | null;
 	cursors?: Cursors;
+	showCoordinatePoints?: boolean;
 }
 
 export class TerraDrawSectorMode extends TerraDrawBaseDrawMode<SectorPolygonStyling> {
@@ -99,10 +108,12 @@ export class TerraDrawSectorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 	private arcPoints: number = 64;
 	private cursors: Required<Cursors> = defaultCursors;
 	private mouseMove = false;
+	private showCoordinatePoints = false;
 
 	// Behaviors
 	private readFeature!: ReadFeatureBehavior;
 	private mutateFeature!: MutateFeatureBehavior;
+	private coordinatePoints!: CoordinatePointBehavior;
 
 	constructor(options?: TerraDrawSectorModeOptions<SectorPolygonStyling>) {
 		super(options, true);
@@ -132,6 +143,11 @@ export class TerraDrawSectorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 		) {
 			this.arcPoints = options.arcPoints;
 		}
+
+		if (isBoolean(options?.showCoordinatePoints)) {
+			this.showCoordinatePoints = options.showCoordinatePoints;
+			this.coordinatePoints?.setEnabled(this.showCoordinatePoints);
+		}
 	}
 
 	private close() {
@@ -158,6 +174,13 @@ export class TerraDrawSectorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 
 		if (!updated) {
 			return;
+		}
+
+		if (this.showCoordinatePoints) {
+			this.coordinatePoints.createOrUpdate({
+				featureId: this.currentId,
+				featureCoordinates: updated.geometry.coordinates,
+			});
 		}
 
 		const featureId = this.currentId;
@@ -328,13 +351,20 @@ export class TerraDrawSectorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 			return;
 		}
 
-		this.mutateFeature.updatePolygon({
+		const updated = this.mutateFeature.updatePolygon({
 			featureId: this.currentId,
 			coordinateMutations: mutations,
 			context: {
 				updateType: UpdateTypes.Provisional,
 			},
 		});
+
+		if (updated && this.showCoordinatePoints) {
+			this.coordinatePoints.createOrUpdate({
+				featureId: this.currentId,
+				featureCoordinates: updated.geometry.coordinates,
+			});
+		}
 	}
 
 	/** @internal */
@@ -371,6 +401,13 @@ export class TerraDrawSectorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 				});
 				this.currentId = created?.id;
 				this.currentCoordinate++;
+
+				if (created && this.showCoordinatePoints) {
+					this.coordinatePoints.createOrUpdate({
+						featureId: created.id,
+						featureCoordinates: created.geometry.coordinates,
+					});
+				}
 
 				// Ensure the state is updated to reflect drawing has started
 				this.setDrawing();
@@ -456,6 +493,9 @@ export class TerraDrawSectorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 		}
 
 		this.mutateFeature.deleteFeatureIfPresent(currentId);
+		if (currentId && this.showCoordinatePoints) {
+			this.coordinatePoints.deletePointsByFeatureIds([currentId]);
+		}
 	}
 
 	/** @internal */
@@ -495,6 +535,42 @@ export class TerraDrawSectorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 				);
 
 				styles.zIndex = Z_INDEX.LAYER_ONE;
+			} else if (
+				feature.geometry.type === "Point" &&
+				feature.properties[COMMON_PROPERTIES.COORDINATE_POINT]
+			) {
+				styles.pointWidth = this.getNumericStylingValue(
+					this.styles.coordinatePointWidth,
+					styles.pointWidth,
+					feature,
+				);
+				styles.pointColor = this.getHexColorStylingValue(
+					this.styles.coordinatePointColor,
+					styles.pointColor,
+					feature,
+				);
+				styles.pointOpacity = this.getNumericStylingValue(
+					this.styles.coordinatePointOpacity,
+					1,
+					feature,
+				);
+				styles.pointOutlineWidth = this.getNumericStylingValue(
+					this.styles.coordinatePointOutlineWidth,
+					2,
+					feature,
+				);
+				styles.pointOutlineColor = this.getHexColorStylingValue(
+					this.styles.coordinatePointOutlineColor,
+					styles.pointOutlineColor,
+					feature,
+				);
+				styles.pointOutlineOpacity = this.getNumericStylingValue(
+					this.styles.coordinatePointOutlineOpacity,
+					1,
+					feature,
+				);
+
+				styles.zIndex = Z_INDEX.LAYER_TWO;
 			}
 		}
 
@@ -521,6 +597,13 @@ export class TerraDrawSectorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 				this.setStarted();
 			}
 		}
+
+		if (this.showCoordinatePoints && feature.geometry.type === "Polygon") {
+			this.coordinatePoints.createOrUpdate({
+				featureId: feature.id as FeatureId,
+				featureCoordinates: feature.geometry.coordinates,
+			});
+		}
 	}
 
 	registerBehaviors(config: BehaviorConfig) {
@@ -528,5 +611,10 @@ export class TerraDrawSectorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 		this.mutateFeature = new MutateFeatureBehavior(config, {
 			validate: this.validate,
 		});
+		this.coordinatePoints = new CoordinatePointBehavior(
+			config,
+			this.readFeature,
+			this.mutateFeature,
+		);
 	}
 }

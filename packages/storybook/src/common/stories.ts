@@ -460,36 +460,12 @@ const AngledRectangle: Story = {
 	},
 };
 
-const arcPoints = 64;
-
-// Reduce visual noise by hiding all arc coordinate points
-// This will show 3 points for the sector: the center, the
-// start of the arc, and the end of the arc.
-const hideArcPoints = (feature: GeoJSONStoreFeatures) => {
-	const index = feature.properties.index;
-	if (index === 0 || index === 1 || index === arcPoints + 1) {
-		return 1;
-	}
-	return 0;
-};
-
 // Sector drawing story
 const Sector: Story = {
 	...DefaultStory,
 	args: {
 		id: "sector",
-		modes: [
-			() =>
-				new TerraDrawSectorMode({
-					arcPoints,
-					showCoordinatePoints: true,
-					styles: {
-						coordinatePointColor: "#ff0000",
-						coordinatePointOpacity: hideArcPoints,
-						coordinatePointOutlineOpacity: hideArcPoints,
-					},
-				}),
-		],
+		modes: [() => new TerraDrawSectorMode()],
 		...DefaultStory.args,
 	},
 };
@@ -676,12 +652,30 @@ const FreehandWithAutoClose: Story = {
 	},
 };
 
+const arcPoints = 64;
+
+const showSensorCorners = (feature: GeoJSONStoreFeatures) => {
+	const index = feature.properties.index as number;
+	const visibleIndexes = [0, arcPoints, arcPoints + 1, 2 * arcPoints + 1];
+
+	return visibleIndexes.includes(index) ? 1 : 0;
+};
+
 // Sensor drawing story
 const Sensor: Story = {
 	...DefaultStory,
 	args: {
 		id: "sensor",
-		modes: [() => new TerraDrawSensorMode()],
+		modes: [
+			() =>
+				new TerraDrawSensorMode({
+					showCoordinatePoints: true,
+					styles: {
+						coordinatePointOpacity: showSensorCorners,
+						coordinatePointOutlineOpacity: showSensorCorners,
+					},
+				}),
+		],
 		...DefaultStory.args,
 	},
 };

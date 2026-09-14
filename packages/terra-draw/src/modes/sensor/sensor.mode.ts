@@ -40,9 +40,11 @@ import { isClockwiseWebMercator } from "../../geometry/clockwise";
 import { limitPrecision } from "../../geometry/limit-decimal-precision";
 import { BehaviorConfig } from "../base.behavior";
 import { ReadFeatureBehavior } from "../read-feature.behavior";
+import { CoordinatePointBehavior } from "../select/behaviors/coordinate-point.behavior";
 import { MutateFeatureBehavior, Mutations } from "../mutate-feature.behavior";
 import {
 	isFiniteNonNegativeNumber,
+	isBoolean,
 	isNonNullObject,
 	isNull,
 } from "../../common/checks";
@@ -69,6 +71,12 @@ type SensorPolygonStyling = {
 	outlineOpacity: NumericStyling;
 	fillColor: HexColorStyling;
 	fillOpacity: NumericStyling;
+	coordinatePointWidth: NumericStyling;
+	coordinatePointColor: HexColorStyling;
+	coordinatePointOpacity: NumericStyling;
+	coordinatePointOutlineWidth: NumericStyling;
+	coordinatePointOutlineColor: HexColorStyling;
+	coordinatePointOutlineOpacity: NumericStyling;
 };
 
 interface Cursors {
@@ -88,6 +96,7 @@ interface TerraDrawSensorModeOptions<
 	pointerDistance?: number;
 	keyEvents?: TerraDrawSensorModeKeyEvents | null;
 	cursors?: Cursors;
+	showCoordinatePoints?: boolean;
 }
 
 export class TerraDrawSensorMode extends TerraDrawBaseDrawMode<SensorPolygonStyling> {
@@ -102,10 +111,12 @@ export class TerraDrawSensorMode extends TerraDrawBaseDrawMode<SensorPolygonStyl
 	private arcPoints: number = 64;
 	private cursors: Required<Cursors> = defaultCursors;
 	private mouseMove = false;
+	private showCoordinatePoints = false;
 
 	// Behaviors
 	private readFeature!: ReadFeatureBehavior;
 	private mutateFeature!: MutateFeatureBehavior;
+	private coordinatePoints!: CoordinatePointBehavior;
 
 	constructor(options?: TerraDrawSensorModeOptions<SensorPolygonStyling>) {
 		super(options, true);
@@ -134,6 +145,12 @@ export class TerraDrawSensorMode extends TerraDrawBaseDrawMode<SensorPolygonStyl
 			options.arcPoints > 0
 		) {
 			this.arcPoints = options.arcPoints;
+		}
+
+		if (isBoolean(options?.showCoordinatePoints)) {
+			this.showCoordinatePoints = options.showCoordinatePoints;
+			this.coordinatePoints?.setEnabled(this.showCoordinatePoints);
+			this.updateInitialArcCoordinatePoints();
 		}
 	}
 
@@ -169,7 +186,7 @@ export class TerraDrawSensorMode extends TerraDrawBaseDrawMode<SensorPolygonStyl
 				return;
 			}
 
-			this.mutateFeature.updateLineString({
+			const updated = this.mutateFeature.updateLineString({
 				featureId: this.currentInitialArcId,
 				coordinateMutations: {
 					type: Mutations.Replace,
@@ -179,11 +196,17 @@ export class TerraDrawSensorMode extends TerraDrawBaseDrawMode<SensorPolygonStyl
 					updateType: UpdateTypes.Provisional,
 				},
 			});
+			if (updated) {
+				this.updateInitialArcCoordinatePoints();
+			}
 		} else if (this.currentCoordinate === 3) {
 			const coordinates = this.getUpdatedPolygonCoordinates(event);
 			if (!coordinates) {
 				return;
 			}
+			const coordinatePointCoordinates = coordinates.map((coordinate) => [
+				...coordinate,
+			]);
 
 			// If the polygon doesn't exist, create it
 			// else update the existing geometry
@@ -199,8 +222,17 @@ export class TerraDrawSensorMode extends TerraDrawBaseDrawMode<SensorPolygonStyl
 					return;
 				}
 				this.currentId = created.id;
+				this.coordinatePoints.deletePointsByFeatureIds([
+					this.currentInitialArcId,
+				]);
+				if (this.showCoordinatePoints) {
+					this.coordinatePoints.createOrUpdate({
+						featureId: created.id,
+						featureCoordinates: [coordinatePointCoordinates],
+					});
+				}
 			} else {
-				this.mutateFeature.updatePolygon({
+				const updated = this.mutateFeature.updatePolygon({
 					featureId: this.currentId,
 					coordinateMutations: {
 						type: Mutations.Replace,
@@ -208,6 +240,12 @@ export class TerraDrawSensorMode extends TerraDrawBaseDrawMode<SensorPolygonStyl
 					},
 					context: { updateType: UpdateTypes.Provisional },
 				});
+				if (updated && this.showCoordinatePoints) {
+					this.coordinatePoints.createOrUpdate({
+						featureId: this.currentId,
+						featureCoordinates: [coordinatePointCoordinates],
+					});
+				}
 			}
 		}
 	}
@@ -256,6 +294,7 @@ export class TerraDrawSensorMode extends TerraDrawBaseDrawMode<SensorPolygonStyl
 					return;
 				}
 				this.currentInitialArcId = created.id;
+				this.updateInitialArcCoordinatePoints();
 				this.currentCoordinate++;
 			} else if (this.currentCoordinate === 2 && this.currentStartingPointId) {
 				this.currentCoordinate++;
@@ -298,7 +337,10 @@ export class TerraDrawSensorMode extends TerraDrawBaseDrawMode<SensorPolygonStyl
 	/** @internal */
 	cleanUp() {
 		this.mutateFeature.deleteFeatureIfPresent(this.currentStartingPointId);
-		this.mutateFeature.deleteFeatureIfPresent(this.currentInitialArcId);
+		this.deleteInitialArc();
+		if (this.currentId && this.showCoordinatePoints) {
+			this.coordinatePoints.deletePointsByFeatureIds([this.currentId]);
+		}
 		this.mutateFeature.deleteFeatureIfPresent(this.currentId);
 
 		this.currentStartingPointId = undefined;
@@ -361,6 +403,41 @@ export class TerraDrawSensorMode extends TerraDrawBaseDrawMode<SensorPolygonStyl
 				);
 
 				styles.zIndex = Z_INDEX.LAYER_ONE;
+			} else if (
+				feature.geometry.type === "Point" &&
+				feature.properties[COMMON_PROPERTIES.COORDINATE_POINT]
+			) {
+				styles.pointColor = this.getHexColorStylingValue(
+					this.styles.coordinatePointColor,
+					styles.pointColor,
+					feature,
+				);
+				styles.pointOpacity = this.getNumericStylingValue(
+					this.styles.coordinatePointOpacity,
+					1,
+					feature,
+				);
+				styles.pointWidth = this.getNumericStylingValue(
+					this.styles.coordinatePointWidth,
+					styles.pointWidth,
+					feature,
+				);
+				styles.pointOutlineColor = this.getHexColorStylingValue(
+					this.styles.coordinatePointOutlineColor,
+					styles.pointOutlineColor,
+					feature,
+				);
+				styles.pointOutlineOpacity = this.getNumericStylingValue(
+					this.styles.coordinatePointOutlineOpacity,
+					1,
+					feature,
+				);
+				styles.pointOutlineWidth = this.getNumericStylingValue(
+					this.styles.coordinatePointOutlineWidth,
+					2,
+					feature,
+				);
+				styles.zIndex = Z_INDEX.LAYER_TWO;
 			} else if (feature.geometry.type === "Point") {
 				styles.pointColor = this.getHexColorStylingValue(
 					this.styles.centerPointColor,
@@ -418,8 +495,15 @@ export class TerraDrawSensorMode extends TerraDrawBaseDrawMode<SensorPolygonStyl
 		// If we are in the middle of drawing a sensor and the feature being updated is the current sensor,
 		// we need to reset the drawing state
 		if (this.currentId === feature.id) {
+			if (this.showCoordinatePoints && feature.geometry.type === "Polygon") {
+				this.coordinatePoints.createOrUpdate({
+					featureId: feature.id as FeatureId,
+					featureCoordinates: feature.geometry.coordinates,
+				});
+			}
+
 			this.mutateFeature.deleteFeatureIfPresent(this.currentStartingPointId);
-			this.mutateFeature.deleteFeatureIfPresent(this.currentInitialArcId);
+			this.deleteInitialArc();
 			this.currentStartingPointId = undefined;
 			this.direction = undefined;
 			this.currentId = undefined;
@@ -436,6 +520,40 @@ export class TerraDrawSensorMode extends TerraDrawBaseDrawMode<SensorPolygonStyl
 		this.mutateFeature = new MutateFeatureBehavior(config, {
 			validate: this.validate,
 		});
+		this.coordinatePoints = new CoordinatePointBehavior(
+			config,
+			this.readFeature,
+			this.mutateFeature,
+		);
+	}
+
+	private updateInitialArcCoordinatePoints() {
+		if (!this.showCoordinatePoints || this.currentInitialArcId === undefined) {
+			return;
+		}
+
+		if (this.currentId !== undefined) {
+			this.coordinatePoints.deletePointsByFeatureIds([
+				this.currentInitialArcId,
+			]);
+			return;
+		}
+
+		const coordinates = this.readFeature.getCoordinates<LineString>(
+			this.currentInitialArcId,
+		);
+		this.coordinatePoints.createOrUpdate({
+			featureId: this.currentInitialArcId,
+			featureCoordinates: coordinates,
+		});
+	}
+
+	private deleteInitialArc(featureId = this.currentInitialArcId) {
+		if (featureId !== undefined) {
+			this.coordinatePoints.deletePointsByFeatureIds([featureId]);
+			this.mutateFeature.deleteFeatureIfPresent(featureId);
+		}
+		this.currentInitialArcId = undefined;
 	}
 
 	private close() {
@@ -445,7 +563,6 @@ export class TerraDrawSensorMode extends TerraDrawBaseDrawMode<SensorPolygonStyl
 
 		const finishedCurrentStartingPointId = this.currentStartingPointId;
 		const finishedInitialArcId = this.currentInitialArcId;
-
 		// Fix right hand rule if necessary
 		if (this.currentId) {
 			const updated = this.mutateFeature.updatePolygon({
@@ -470,7 +587,7 @@ export class TerraDrawSensorMode extends TerraDrawBaseDrawMode<SensorPolygonStyl
 		const featureId = this.currentId;
 
 		this.mutateFeature.deleteFeatureIfPresent(finishedCurrentStartingPointId);
-		this.mutateFeature.deleteFeatureIfPresent(finishedInitialArcId);
+		this.deleteInitialArc(finishedInitialArcId);
 
 		this.currentCoordinate = 0;
 		this.currentStartingPointId = undefined;
@@ -610,7 +727,7 @@ export class TerraDrawSensorMode extends TerraDrawBaseDrawMode<SensorPolygonStyl
 			];
 
 			const notIdentical =
-				nextCoord[0] !== coordinates[coordinates.length - 1][0] &&
+				nextCoord[0] !== coordinates[coordinates.length - 1][0] ||
 				nextCoord[1] !== coordinates[coordinates.length - 1][1];
 			if (notIdentical) {
 				finalArc.unshift(nextCoord);
@@ -719,7 +836,7 @@ export class TerraDrawSensorMode extends TerraDrawBaseDrawMode<SensorPolygonStyl
 			];
 
 			const notIdentical =
-				nextCoord[0] !== coordinates[coordinates.length - 1][0] &&
+				nextCoord[0] !== coordinates[coordinates.length - 1][0] ||
 				nextCoord[1] !== coordinates[coordinates.length - 1][1];
 			if (notIdentical) {
 				coordinates.push(nextCoord);

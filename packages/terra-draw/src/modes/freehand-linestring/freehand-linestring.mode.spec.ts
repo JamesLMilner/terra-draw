@@ -594,7 +594,7 @@ describe("TerraDrawFreehandLineStringMode", () => {
 			const freehandMode = new TerraDrawFreehandLineStringMode();
 
 			expect(() => {
-				freehandMode.onDrag();
+				freehandMode.onDrag(MockCursorEvent({ lng: 0, lat: 0 }), jest.fn());
 			}).not.toThrow();
 		});
 	});
@@ -604,7 +604,10 @@ describe("TerraDrawFreehandLineStringMode", () => {
 			const freehandMode = new TerraDrawFreehandLineStringMode();
 
 			expect(() => {
-				freehandMode.onDragStart();
+				freehandMode.onDragStart(
+					MockCursorEvent({ lng: 0, lat: 0 }),
+					jest.fn(),
+				);
 			}).not.toThrow();
 		});
 	});
@@ -614,9 +617,167 @@ describe("TerraDrawFreehandLineStringMode", () => {
 			const freehandMode = new TerraDrawFreehandLineStringMode();
 
 			expect(() => {
-				freehandMode.onDragEnd();
+				freehandMode.onDragEnd(MockCursorEvent({ lng: 0, lat: 0 }), jest.fn());
 			}).not.toThrow();
 		});
+	});
+
+	describe("drawInteraction", () => {
+		const start = MockCursorEvent({ lng: 0, lat: 0 });
+		const move = MockCursorEvent({ lng: 1, lat: 1 });
+
+		beforeEach(() => jest.useFakeTimers());
+		afterEach(() => {
+			jest.runOnlyPendingTimers();
+			jest.useRealTimers();
+		});
+
+		it.each([undefined, "click-move", "click-move-or-drag"] as const)(
+			"draws with clicks for %s",
+			(drawInteraction) => {
+				const mode = new TerraDrawFreehandLineStringMode({ drawInteraction });
+				const config = MockModeConfig(mode.mode);
+				mode.register(config);
+				mode.start();
+				const setMapDraggability = jest.fn();
+				mode.onClick(start);
+				const initial = config.store.copyAll();
+				mode.onDragStart(move, setMapDraggability);
+				mode.onDrag(move, setMapDraggability);
+				mode.onDragEnd(move, setMapDraggability);
+				expect(config.store.copyAll()).toEqual(initial);
+				expect(setMapDraggability).not.toHaveBeenCalled();
+				mode.onMouseMove(move);
+				mode.onClick(move);
+				expect(config.store.copyAll()).toHaveLength(1);
+				expect(config.store.copyAll()[0].geometry.coordinates).toEqual([
+					[0, 0],
+					[0, 0],
+					[1, 1],
+				]);
+				expect(config.onFinish).toHaveBeenCalledTimes(1);
+				expect(mode.state).toBe("started");
+			},
+		);
+
+		it.each(["click-drag", "click-move-or-drag"] as const)(
+			"draws by dragging for %s and suppresses the following click",
+			(drawInteraction) => {
+				const mode = new TerraDrawFreehandLineStringMode({ drawInteraction });
+				const config = MockModeConfig(mode.mode);
+				mode.register(config);
+				mode.start();
+				const setMapDraggability = jest.fn();
+				mode.onDragStart(start, setMapDraggability);
+				expect(mode.state).toBe("drawing");
+				expect(setMapDraggability).toHaveBeenLastCalledWith(false);
+				const initial = config.store.copyAll();
+				mode.onMouseMove(move);
+				mode.onClick(move);
+				mode.onDragStart(move, setMapDraggability);
+				mode.onDrag(
+					MockCursorEvent({ lng: 0.01, lat: 0.01 }),
+					setMapDraggability,
+				);
+				expect(config.store.copyAll()).toEqual(initial);
+				mode.onDrag(move, setMapDraggability);
+				mode.onDragEnd(move, setMapDraggability);
+				const [feature] = config.store.copyAll();
+				expect(config.store.copyAll()).toHaveLength(1);
+				expect(feature.geometry.coordinates).toEqual([
+					[0, 0],
+					[0, 0],
+					[1, 1],
+				]);
+				expect(
+					feature.properties[COMMON_PROPERTIES.CURRENTLY_DRAWING],
+				).toBeUndefined();
+				expect(config.onFinish).toHaveBeenCalledWith(feature.id, {
+					mode: mode.mode,
+					action: "draw",
+				});
+				expect(mode.state).toBe("started");
+				expect(setMapDraggability).toHaveBeenLastCalledWith(true);
+				mode.onClick(move);
+				mode.onDragStart(move, setMapDraggability);
+				expect(config.store.copyAll()).toHaveLength(1);
+				jest.advanceTimersByTime(500);
+				mode.onDragStart(move, setMapDraggability);
+				expect(mode.state).toBe("drawing");
+				expect(config.store.copyAll()).toHaveLength(3);
+			},
+		);
+
+		it("can update the interaction and ignores clicks in drag-only mode", () => {
+			const mode = new TerraDrawFreehandLineStringMode();
+			const config = MockModeConfig(mode.mode);
+			mode.register(config);
+			mode.start();
+			mode.updateOptions({ drawInteraction: "click-drag" });
+			mode.onClick(start);
+			mode.onMouseMove(move);
+			expect(config.store.copyAll()).toHaveLength(0);
+			mode.onDragStart(start, jest.fn());
+			expect(mode.state).toBe("drawing");
+		});
+
+		it.each(["onDragStart", "onDrag", "onDragEnd"] as const)(
+			"respects the %s pointer event setting",
+			(pointerEvent) => {
+				const mode = new TerraDrawFreehandLineStringMode({
+					drawInteraction: "click-drag",
+					pointerEvents: { ...DefaultPointerEvents, [pointerEvent]: false },
+				});
+				const config = MockModeConfig(mode.mode);
+				mode.register(config);
+				mode.start();
+				const setMapDraggability = jest.fn();
+				if (pointerEvent !== "onDragStart") {
+					mode.onDragStart(start, setMapDraggability);
+				}
+				const initial = config.store.copyAll();
+				setMapDraggability.mockClear();
+				mode[pointerEvent](move, setMapDraggability);
+				expect(config.store.copyAll()).toEqual(initial);
+				expect(setMapDraggability).not.toHaveBeenCalled();
+				expect(config.onFinish).not.toHaveBeenCalled();
+			},
+		);
+
+		it.each(["cancel", "finish", "stop"] as const)(
+			"resets the interaction after %s",
+			(action) => {
+				const mode = new TerraDrawFreehandLineStringMode({
+					drawInteraction: "click-move-or-drag",
+				});
+				const config = MockModeConfig(mode.mode);
+				mode.register(config);
+				mode.start();
+				mode.onDragStart(start, jest.fn());
+				mode.onDrag(move, jest.fn());
+				if (action === "stop") {
+					mode.stop();
+					mode.start();
+				} else {
+					mode.onKeyUp(
+						MockKeyboardEvent({
+							key: action === "cancel" ? "Escape" : "Enter",
+						}),
+					);
+				}
+				const initial = config.store.copyAll();
+				mode.onDrag(move, jest.fn());
+				mode.onDragEnd(move, jest.fn());
+				expect(config.store.copyAll()).toEqual(initial);
+				mode.onClick(start);
+				mode.onMouseMove(move);
+				mode.onClick(move);
+				expect(mode.state).toBe("started");
+				expect(config.store.copyAll()).toHaveLength(
+					action === "finish" ? 2 : 1,
+				);
+			},
+		);
 	});
 
 	describe("styleFeature", () => {

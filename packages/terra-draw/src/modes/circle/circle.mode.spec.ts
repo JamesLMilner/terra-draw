@@ -69,6 +69,131 @@ describe("TerraDrawCircleMode", () => {
 		});
 	});
 
+	describe("showCoordinatePoints", () => {
+		const setup = (enabled = true) => {
+			const mode = new TerraDrawCircleMode({ showCoordinatePoints: enabled });
+			const config = MockModeConfig(mode.mode);
+			mode.register(config);
+			mode.start();
+			const points = () =>
+				config.store.copyAllWhere((properties) =>
+					Boolean(properties[COMMON_PROPERTIES.COORDINATE_POINT]),
+				);
+			const polygon = () =>
+				config.store
+					.copyAll()
+					.find((feature) => feature.geometry.type === "Polygon")!;
+			const expectMatchingPoints = (count = 64) => {
+				const feature = polygon();
+				expect(points()).toHaveLength(count);
+				expect(points().map((point) => point.geometry.coordinates)).toEqual(
+					(feature.geometry as Polygon).coordinates[0].slice(0, -1),
+				);
+				points().forEach((point, index) => {
+					expect(point.properties.index).toBe(index);
+					expect(
+						point.properties[COMMON_PROPERTIES.COORDINATE_POINT_FEATURE_ID],
+					).toBe(feature.id);
+				});
+			};
+			return { mode, config, points, polygon, expectMatchingPoints };
+		};
+
+		it("keeps points aligned while drawing and after finishing", () => {
+			const { mode, expectMatchingPoints } = setup();
+			mode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			expectMatchingPoints();
+			mode.onMouseMove(MockCursorEvent({ lng: 2, lat: 1 }));
+			expectMatchingPoints();
+			mode.onClick(MockCursorEvent({ lng: 3, lat: 1 }));
+			expectMatchingPoints();
+		});
+
+		it("supports drag drawing and changes to the segment count", () => {
+			const { mode, expectMatchingPoints } = setup();
+			mode.updateOptions({ drawInteraction: "click-drag", segments: 12 });
+			mode.onDragStart(MockCursorEvent({ lng: 0, lat: 0 }), jest.fn());
+			mode.onDrag(MockCursorEvent({ lng: 2, lat: 1 }), jest.fn());
+			expectMatchingPoints(12);
+			mode.updateOptions({ segments: 24 });
+			mode.onDragEnd(MockCursorEvent({ lng: 3, lat: 1 }), jest.fn());
+			expectMatchingPoints(24);
+		});
+
+		it("toggles points for existing circles without duplicating them", () => {
+			const { mode, points, expectMatchingPoints } = setup(false);
+			mode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			mode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			expect(points()).toHaveLength(0);
+			mode.updateOptions({ showCoordinatePoints: true });
+			expectMatchingPoints();
+			mode.updateOptions({ showCoordinatePoints: true });
+			expectMatchingPoints();
+			mode.updateOptions({ showCoordinatePoints: false });
+			expect(points()).toHaveLength(0);
+		});
+
+		it.each(["cancel", "stop"])("removes unfinished points on %s", (action) => {
+			const { mode, config } = setup();
+			mode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			if (action === "cancel") {
+				mode.onKeyUp(MockKeyboardEvent({ key: "Escape" }));
+			} else {
+				mode.stop();
+			}
+			expect(config.store.copyAll()).toHaveLength(0);
+		});
+
+		it("creates and updates points for externally added and updated circles", () => {
+			const { mode, config, polygon, expectMatchingPoints } = setup(false);
+			mode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			mode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			const feature = polygon();
+			const target = setup();
+			const [addedId] = target.config.store.create([feature]);
+			target.mode.afterFeatureAdded(target.config.store.copy(addedId));
+			target.expectMatchingPoints();
+			mode.updateOptions({ showCoordinatePoints: true });
+			const coordinates = (feature.geometry as Polygon).coordinates.map(
+				(ring) => ring.map(([lng, lat]) => [lng + 1, lat + 1]),
+			);
+			config.store.updateGeometry([
+				{ id: feature.id!, geometry: { type: "Polygon", coordinates } },
+			]);
+			mode.afterFeatureUpdated(polygon());
+			expectMatchingPoints();
+		});
+
+		it("supports static styling and hiding every second point including its outline", () => {
+			const { mode, points } = setup();
+			const opacity = (feature: GeoJSONStoreFeatures) =>
+				(feature.properties.index as number) % 2 === 0 ? 1 : 0;
+			mode.updateOptions({
+				styles: {
+					coordinatePointWidth: 6,
+					coordinatePointColor: "#ffffff",
+					coordinatePointOpacity: opacity,
+					coordinatePointOutlineWidth: 3,
+					coordinatePointOutlineColor: "#111111",
+					coordinatePointOutlineOpacity: opacity,
+				},
+			});
+			mode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			expect(mode.styleFeature(points()[0])).toMatchObject({
+				pointWidth: 6,
+				pointColor: "#ffffff",
+				pointOpacity: 1,
+				pointOutlineWidth: 3,
+				pointOutlineColor: "#111111",
+				pointOutlineOpacity: 1,
+			});
+			expect(mode.styleFeature(points()[1])).toMatchObject({
+				pointOpacity: 0,
+				pointOutlineOpacity: 0,
+			});
+		});
+	});
+
 	describe("lifecycle", () => {
 		it("registers correctly", () => {
 			const circleMode = new TerraDrawCircleMode();

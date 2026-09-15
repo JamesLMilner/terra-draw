@@ -36,6 +36,7 @@ import {
 	webMercatorXYToLngLat,
 } from "../../geometry/project/web-mercator";
 import { cartesianDistance } from "../../geometry/measure/pixel-distance";
+import { getUpdatedArcDirection } from "../../geometry/arc-direction";
 import { isClockwiseWebMercator } from "../../geometry/clockwise";
 import { limitPrecision } from "../../geometry/limit-decimal-precision";
 import { BehaviorConfig } from "../base.behavior";
@@ -96,6 +97,8 @@ interface TerraDrawSectorModeOptions<
 	keyEvents?: TerraDrawSectorModeKeyEvents | null;
 	cursors?: Cursors;
 	showCoordinatePoints?: boolean;
+	/** Allow reversing the arc by crossing back over its starting radius. Defaults to false. */
+	allowDirectionChange?: boolean;
 }
 
 export class TerraDrawSectorMode extends TerraDrawBaseDrawMode<SectorPolygonStyling> {
@@ -109,6 +112,8 @@ export class TerraDrawSectorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 	private cursors: Required<Cursors> = defaultCursors;
 	private mouseMove = false;
 	private showCoordinatePoints = false;
+	private allowDirectionChange = false;
+	private previousEndBearing: number | undefined;
 
 	// Behaviors
 	private readFeature!: ReadFeatureBehavior;
@@ -126,6 +131,10 @@ export class TerraDrawSectorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 		>,
 	) {
 		super.updateOptions(options);
+
+		if (isBoolean(options?.allowDirectionChange)) {
+			this.allowDirectionChange = options.allowDirectionChange;
+		}
 
 		if (isNonNullObject(options?.cursors)) {
 			this.cursors = { ...this.cursors, ...options.cursors };
@@ -188,6 +197,7 @@ export class TerraDrawSectorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 		this.currentCoordinate = 0;
 		this.currentId = undefined;
 		this.direction = undefined;
+		this.previousEndBearing = undefined;
 
 		// Go back to started state
 		if (this.state === "drawing") {
@@ -242,6 +252,16 @@ export class TerraDrawSectorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 			webMercatorCenter,
 			webMercatorArcCoordTwo,
 		);
+
+		if (this.allowDirectionChange && this.previousEndBearing !== undefined) {
+			this.direction = getUpdatedArcDirection(
+				this.direction,
+				startBearing,
+				this.previousEndBearing,
+				endBearing,
+			);
+		}
+		this.previousEndBearing = endBearing;
 
 		// Generate points along the arc in Web Mercator
 		const numberOfPoints = this.arcPoints; // Number of points to approximate the arc
@@ -487,6 +507,7 @@ export class TerraDrawSectorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 
 		this.currentId = undefined;
 		this.direction = undefined;
+		this.previousEndBearing = undefined;
 		this.currentCoordinate = 0;
 		if (this.state === "drawing") {
 			this.setStarted();
@@ -592,6 +613,7 @@ export class TerraDrawSectorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 		if (this.currentId === feature.id) {
 			this.currentId = undefined;
 			this.direction = undefined;
+			this.previousEndBearing = undefined;
 			this.currentCoordinate = 0;
 			if (this.state === "drawing") {
 				this.setStarted();

@@ -40,7 +40,10 @@ import {
 	isFiniteNonNegativeNumber,
 	isNonNullObject,
 	isNull,
+	isBoolean,
 } from "../../common/checks";
+
+import { CoordinatePointBehavior } from "../select/behaviors/coordinate-point.behavior";
 
 type TerraDrawFreehandLineStringModeKeyEvents = {
 	cancel: KeyboardEvent["key"] | null;
@@ -57,6 +60,12 @@ type FreehandLineStringStyling = {
 	lineStringColor: HexColorStyling;
 	lineStringOpacity: NumericStyling;
 	lineStringDash: DashArrayStyling;
+	coordinatePointWidth: NumericStyling;
+	coordinatePointColor: HexColorStyling;
+	coordinatePointOpacity: NumericStyling;
+	coordinatePointOutlineWidth: NumericStyling;
+	coordinatePointOutlineColor: HexColorStyling;
+	coordinatePointOutlineOpacity: NumericStyling;
 	closingPointColor: HexColorStyling;
 	closingPointOpacity: NumericStyling;
 	closingPointWidth: NumericStyling;
@@ -82,12 +91,14 @@ interface TerraDrawFreehandLineStringModeOptions<
 	keyEvents?: TerraDrawFreehandLineStringModeKeyEvents | null;
 	cursors?: Cursors;
 	drawInteraction?: DrawInteractions;
+	showCoordinatePoints?: boolean;
 }
 
 export class TerraDrawFreehandLineStringMode extends TerraDrawBaseDrawMode<FreehandLineStringStyling> {
 	mode = "freehand-linestring";
 
 	private canClose = false;
+	private showCoordinatePoints = false;
 	private currentId: FeatureId | undefined;
 	private minDistance: number = 20;
 	private keyEvents: TerraDrawFreehandLineStringModeKeyEvents =
@@ -98,6 +109,7 @@ export class TerraDrawFreehandLineStringMode extends TerraDrawBaseDrawMode<Freeh
 	private drawType: DrawType | undefined;
 
 	// Behaviors
+	private coordinatePoints!: CoordinatePointBehavior;
 	private mutateFeature!: MutateFeatureBehavior;
 	private readFeature!: ReadFeatureBehavior;
 	private pixelDistance!: PixelDistanceBehavior;
@@ -116,6 +128,11 @@ export class TerraDrawFreehandLineStringMode extends TerraDrawBaseDrawMode<Freeh
 		>,
 	): void {
 		super.updateOptions(options);
+
+		if (isBoolean(options?.showCoordinatePoints)) {
+			this.showCoordinatePoints = options.showCoordinatePoints;
+			this.coordinatePoints?.setEnabled(this.showCoordinatePoints);
+		}
 
 		if (isFiniteNonNegativeNumber(options?.minDistance)) {
 			this.minDistance = options.minDistance;
@@ -165,6 +182,13 @@ export class TerraDrawFreehandLineStringMode extends TerraDrawBaseDrawMode<Freeh
 
 		if (!updated) {
 			return;
+		}
+
+		if (this.showCoordinatePoints) {
+			this.coordinatePoints.createOrUpdate({
+				featureId: this.currentId,
+				featureCoordinates: updated.geometry.coordinates,
+			});
 		}
 
 		const featureId = this.currentId;
@@ -253,6 +277,13 @@ export class TerraDrawFreehandLineStringMode extends TerraDrawBaseDrawMode<Freeh
 			return;
 		}
 
+		if (this.showCoordinatePoints) {
+			this.coordinatePoints.createOrUpdate({
+				featureId: this.currentId,
+				featureCoordinates: updated.geometry.coordinates,
+			});
+		}
+
 		this.closingPoints.update(updated.geometry.coordinates);
 	}
 
@@ -273,6 +304,14 @@ export class TerraDrawFreehandLineStringMode extends TerraDrawBaseDrawMode<Freeh
 
 		this.closingPoints.create(geometry.coordinates);
 		this.currentId = createdId;
+
+		if (this.showCoordinatePoints) {
+			this.coordinatePoints.createOrUpdate({
+				featureId: createdId,
+				featureCoordinates: geometry.coordinates,
+			});
+		}
+
 		this.drawType = drawType;
 		this.canClose = true;
 
@@ -400,6 +439,10 @@ export class TerraDrawFreehandLineStringMode extends TerraDrawBaseDrawMode<Freeh
 			this.setStarted();
 		}
 
+		if (cleanUpId !== undefined && this.showCoordinatePoints) {
+			this.coordinatePoints.deletePointsByFeatureIds([cleanUpId]);
+		}
+
 		this.mutateFeature.deleteFeatureIfPresent(cleanUpId);
 		this.closingPoints.delete();
 	}
@@ -438,6 +481,45 @@ export class TerraDrawFreehandLineStringMode extends TerraDrawBaseDrawMode<Freeh
 			);
 
 			styles.zIndex = Z_INDEX.LAYER_ONE;
+
+			return styles;
+		} else if (
+			feature.type === "Feature" &&
+			feature.properties.mode === this.mode &&
+			feature.geometry.type === "Point" &&
+			feature.properties[COMMON_PROPERTIES.COORDINATE_POINT]
+		) {
+			styles.pointWidth = this.getNumericStylingValue(
+				this.styles.coordinatePointWidth,
+				styles.pointWidth,
+				feature,
+			);
+			styles.pointColor = this.getHexColorStylingValue(
+				this.styles.coordinatePointColor,
+				styles.pointColor,
+				feature,
+			);
+			styles.pointOpacity = this.getNumericStylingValue(
+				this.styles.coordinatePointOpacity,
+				1,
+				feature,
+			);
+			styles.pointOutlineWidth = this.getNumericStylingValue(
+				this.styles.coordinatePointOutlineWidth,
+				2,
+				feature,
+			);
+			styles.pointOutlineColor = this.getHexColorStylingValue(
+				this.styles.coordinatePointOutlineColor,
+				styles.pointOutlineColor,
+				feature,
+			);
+			styles.pointOutlineOpacity = this.getNumericStylingValue(
+				this.styles.coordinatePointOutlineOpacity,
+				1,
+				feature,
+			);
+			styles.zIndex = Z_INDEX.LAYER_TWO;
 
 			return styles;
 		} else if (
@@ -496,6 +578,13 @@ export class TerraDrawFreehandLineStringMode extends TerraDrawBaseDrawMode<Freeh
 	}
 
 	afterFeatureUpdated(feature: GeoJSONStoreFeatures) {
+		if (this.showCoordinatePoints && feature.geometry.type === "LineString") {
+			this.coordinatePoints.createOrUpdate({
+				featureId: feature.id as FeatureId,
+				featureCoordinates: feature.geometry.coordinates,
+			});
+		}
+
 		// NOTE: This handles the case we are currently drawing a linestring
 		// We need to reset the drawing state because it is very complicated (impossible?)
 		// to recover the drawing state after a feature update
@@ -507,11 +596,25 @@ export class TerraDrawFreehandLineStringMode extends TerraDrawBaseDrawMode<Freeh
 		}
 	}
 
+	afterFeatureAdded(feature: GeoJSONStoreFeatures): void {
+		if (this.showCoordinatePoints && feature.geometry.type === "LineString") {
+			this.coordinatePoints.createOrUpdate({
+				featureId: feature.id as FeatureId,
+				featureCoordinates: feature.geometry.coordinates,
+			});
+		}
+	}
+
 	registerBehaviors(config: BehaviorConfig) {
 		this.readFeature = new ReadFeatureBehavior(config);
 		this.mutateFeature = new MutateFeatureBehavior(config, {
 			validate: this.validate,
 		});
+		this.coordinatePoints = new CoordinatePointBehavior(
+			config,
+			this.readFeature,
+			this.mutateFeature,
+		);
 		this.pixelDistance = new PixelDistanceBehavior(config);
 		this.closingPoints = new ClosingPointsBehavior(
 			config,

@@ -10,6 +10,8 @@ import {
 	Z_INDEX,
 	FinishActions,
 	DashArrayStyling,
+	DrawInteractions,
+	DrawType,
 } from "../../common";
 import { KeyboardEventKey } from "../../common/keys";
 import { CursorValues } from "../../common/cursors";
@@ -34,6 +36,7 @@ import { BehaviorConfig } from "../base.behavior";
 import { ClosingPointsBehavior } from "../closing-points.behavior";
 import { PixelDistanceBehavior } from "../pixel-distance.behavior";
 import {
+	isDrawInteraction,
 	isFiniteNonNegativeNumber,
 	isNonNullObject,
 	isNull,
@@ -78,6 +81,7 @@ interface TerraDrawFreehandLineStringModeOptions<
 	minDistance?: number;
 	keyEvents?: TerraDrawFreehandLineStringModeKeyEvents | null;
 	cursors?: Cursors;
+	drawInteraction?: DrawInteractions;
 }
 
 export class TerraDrawFreehandLineStringMode extends TerraDrawBaseDrawMode<FreehandLineStringStyling> {
@@ -90,6 +94,8 @@ export class TerraDrawFreehandLineStringMode extends TerraDrawBaseDrawMode<Freeh
 		defaultKeyEvents;
 	private cursors: Required<Cursors> = defaultCursors;
 	private preventNewFeature = false;
+	private drawInteraction: DrawInteractions = "click-move";
+	private drawType: DrawType | undefined;
 
 	// Behaviors
 	private mutateFeature!: MutateFeatureBehavior;
@@ -121,9 +127,27 @@ export class TerraDrawFreehandLineStringMode extends TerraDrawBaseDrawMode<Freeh
 			this.keyEvents = { ...this.keyEvents, ...options.keyEvents };
 		}
 
+		if (isDrawInteraction(options?.drawInteraction)) {
+			this.drawInteraction = options.drawInteraction;
+		}
+
 		if (isNonNullObject(options?.cursors)) {
 			this.cursors = { ...this.cursors, ...options.cursors };
 		}
+	}
+
+	private moveDrawAllowed() {
+		return (
+			this.drawInteraction === "click-move" ||
+			this.drawInteraction === "click-move-or-drag"
+		);
+	}
+
+	private dragDrawAllowed() {
+		return (
+			this.drawInteraction === "click-drag" ||
+			this.drawInteraction === "click-move-or-drag"
+		);
 	}
 
 	private close() {
@@ -149,6 +173,7 @@ export class TerraDrawFreehandLineStringMode extends TerraDrawBaseDrawMode<Freeh
 
 		this.canClose = false;
 		this.currentId = undefined;
+		this.drawType = undefined;
 
 		// Go back to started state
 		if (this.state === "drawing") {
@@ -174,8 +199,7 @@ export class TerraDrawFreehandLineStringMode extends TerraDrawBaseDrawMode<Freeh
 		this.setCursor(CursorValues.Unset);
 	}
 
-	/** @internal */
-	onMouseMove(event: TerraDrawMouseEvent) {
+	private addCoordinate(event: TerraDrawMouseEvent) {
 		if (this.currentId === undefined || this.canClose === false) {
 			this.setCursor(this.cursors.start);
 			return;
@@ -232,8 +256,47 @@ export class TerraDrawFreehandLineStringMode extends TerraDrawBaseDrawMode<Freeh
 		this.closingPoints.update(updated.geometry.coordinates);
 	}
 
+	private beginDrawing(
+		event: TerraDrawMouseEvent,
+		drawType: DrawType = "click",
+	) {
+		const { id: createdId, geometry } = this.mutateFeature.createLineString({
+			coordinates: [
+				[event.lng, event.lat],
+				[event.lng, event.lat],
+			],
+			properties: {
+				mode: this.mode,
+				[COMMON_PROPERTIES.CURRENTLY_DRAWING]: true,
+			},
+		});
+
+		this.closingPoints.create(geometry.coordinates);
+		this.currentId = createdId;
+		this.drawType = drawType;
+		this.canClose = true;
+
+		// We could already be in drawing due to updating the existing linestring
+		// via afterFeatureUpdated
+		if (this.state !== "drawing") {
+			this.setDrawing();
+		}
+	}
+
+	/** @internal */
+	onMouseMove(event: TerraDrawMouseEvent) {
+		if (!this.moveDrawAllowed() || this.drawType !== "click") {
+			return;
+		}
+		this.addCoordinate(event);
+	}
+
 	/** @internal */
 	onClick(event: TerraDrawMouseEvent) {
+		if (!this.moveDrawAllowed() || this.drawType === "drag") {
+			return;
+		}
+
 		if (
 			(event.button === "right" &&
 				this.allowPointerEvent(this.pointerEvents.rightClick, event)) ||
@@ -247,28 +310,7 @@ export class TerraDrawFreehandLineStringMode extends TerraDrawBaseDrawMode<Freeh
 			}
 
 			if (this.canClose === false) {
-				const { id: createdId, geometry } = this.mutateFeature.createLineString(
-					{
-						coordinates: [
-							[event.lng, event.lat],
-							[event.lng, event.lat],
-						],
-						properties: {
-							mode: this.mode,
-							[COMMON_PROPERTIES.CURRENTLY_DRAWING]: true,
-						},
-					},
-				);
-
-				this.closingPoints.create(geometry.coordinates);
-				this.currentId = createdId;
-				this.canClose = true;
-
-				// We could already be in drawing due to updating the existing linestring
-				// via afterFeatureUpdated
-				if (this.state !== "drawing") {
-					this.setDrawing();
-				}
+				this.beginDrawing(event);
 
 				return;
 			}
@@ -292,19 +334,67 @@ export class TerraDrawFreehandLineStringMode extends TerraDrawBaseDrawMode<Freeh
 	}
 
 	/** @internal */
-	onDragStart() {}
+	onDragStart(
+		event: TerraDrawMouseEvent,
+		setMapDraggability: (enabled: boolean) => void,
+	) {
+		if (this.state === "drawing") {
+			return;
+		}
+
+		if (this.preventNewFeature) {
+			return;
+		}
+
+		if (
+			this.allowPointerEvent(this.pointerEvents.onDragStart, event) &&
+			this.dragDrawAllowed()
+		) {
+			this.beginDrawing(event, "drag");
+			setMapDraggability(false);
+		}
+	}
 
 	/** @internal */
-	onDrag() {}
+	onDrag(
+		event: TerraDrawMouseEvent,
+		_setMapDraggability: (enabled: boolean) => void,
+	) {
+		if (
+			this.allowPointerEvent(this.pointerEvents.onDrag, event) &&
+			this.dragDrawAllowed() &&
+			this.drawType === "drag"
+		) {
+			this.addCoordinate(event);
+		}
+	}
 
 	/** @internal */
-	onDragEnd() {}
+	onDragEnd(
+		event: TerraDrawMouseEvent,
+		setMapDraggability: (enabled: boolean) => void,
+	) {
+		if (
+			this.allowPointerEvent(this.pointerEvents.onDragEnd, event) &&
+			this.dragDrawAllowed() &&
+			this.drawType === "drag"
+		) {
+			this.preventNewFeature = true;
+			setTimeout(() => {
+				this.preventNewFeature = false;
+			}, 500);
+
+			this.close();
+			setMapDraggability(true);
+		}
+	}
 
 	/** @internal */
 	cleanUp() {
 		const cleanUpId = this.currentId;
 
 		this.currentId = undefined;
+		this.drawType = undefined;
 		this.canClose = false;
 		if (this.state === "drawing") {
 			this.setStarted();
@@ -413,6 +503,7 @@ export class TerraDrawFreehandLineStringMode extends TerraDrawBaseDrawMode<Freeh
 			this.closingPoints.delete();
 			this.canClose = false;
 			this.currentId = undefined;
+			this.drawType = undefined;
 		}
 	}
 

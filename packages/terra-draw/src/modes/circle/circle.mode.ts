@@ -40,7 +40,11 @@ import {
 	isDrawInteraction,
 	isNonNullObject,
 	isNull,
+	isBoolean,
 } from "../../common/checks";
+
+import { ReadFeatureBehavior } from "../read-feature.behavior";
+import { CoordinatePointBehavior } from "../select/behaviors/coordinate-point.behavior";
 
 type TerraDrawCircleModeKeyEvents = {
 	cancel: KeyboardEvent["key"] | null;
@@ -58,6 +62,12 @@ type CirclePolygonStyling = {
 	outlineColor: HexColorStyling;
 	outlineWidth: NumericStyling;
 	outlineOpacity: NumericStyling;
+	coordinatePointWidth: NumericStyling;
+	coordinatePointColor: HexColorStyling;
+	coordinatePointOpacity: NumericStyling;
+	coordinatePointOutlineWidth: NumericStyling;
+	coordinatePointOutlineColor: HexColorStyling;
+	coordinatePointOutlineOpacity: NumericStyling;
 };
 
 interface Cursors {
@@ -77,6 +87,7 @@ interface TerraDrawCircleModeOptions<
 	projection?: Projection;
 	drawInteraction?: DrawInteractions;
 	segments?: number;
+	showCoordinatePoints?: boolean;
 }
 
 export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyling> {
@@ -95,8 +106,11 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 	private cancelled = false;
 
 	private minimumSegments = 3;
+	private showCoordinatePoints = false;
 
 	// Behaviors
+	private readFeature!: ReadFeatureBehavior;
+	private coordinatePoints!: CoordinatePointBehavior;
 	private mutateFeature!: MutateFeatureBehavior;
 
 	/**
@@ -108,6 +122,7 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 	 * @param options.pointerDistance - Distance in pixels to consider a pointer close to a vertex
 	 * @param options.startingRadiusKilometers - The starting radius of the circle in kilometers
 	 * @param options.projection - The map projection being used
+	 * @param options.showCoordinatePoints - Render a point at each circle vertex
 	 * @param options.drawInteraction - The type of draw interaction to use
 	 *
 	 */
@@ -122,6 +137,11 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 		>,
 	) {
 		super.updateOptions(options);
+
+		if (isBoolean(options?.showCoordinatePoints)) {
+			this.showCoordinatePoints = options.showCoordinatePoints;
+			this.coordinatePoints?.setEnabled(this.showCoordinatePoints);
+		}
 
 		if (isNonNullObject(options?.cursors)) {
 			this.cursors = { ...this.cursors, ...options.cursors };
@@ -207,6 +227,14 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 		}
 
 		this.currentCircleId = created.id;
+
+		if (this.showCoordinatePoints) {
+			this.coordinatePoints.createOrUpdate({
+				featureId: created.id,
+				featureCoordinates: created.geometry.coordinates,
+			});
+		}
+
 		this.cursorMovedAfterInitialCursorDown = false;
 		this.drawType = drawType;
 		this.setDrawing();
@@ -351,6 +379,10 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 			this.setStarted();
 		}
 
+		if (currentId !== undefined && this.showCoordinatePoints) {
+			this.coordinatePoints.deletePointsByFeatureIds([currentId]);
+		}
+
 		this.mutateFeature.deleteFeatureIfPresent(currentId);
 	}
 
@@ -394,6 +426,45 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 			);
 
 			styles.zIndex = Z_INDEX.LAYER_ONE;
+
+			return styles;
+		} else if (
+			feature.type === "Feature" &&
+			feature.properties.mode === this.mode &&
+			feature.geometry.type === "Point" &&
+			feature.properties[COMMON_PROPERTIES.COORDINATE_POINT]
+		) {
+			styles.pointWidth = this.getNumericStylingValue(
+				this.styles.coordinatePointWidth,
+				styles.pointWidth,
+				feature,
+			);
+			styles.pointColor = this.getHexColorStylingValue(
+				this.styles.coordinatePointColor,
+				styles.pointColor,
+				feature,
+			);
+			styles.pointOpacity = this.getNumericStylingValue(
+				this.styles.coordinatePointOpacity,
+				1,
+				feature,
+			);
+			styles.pointOutlineWidth = this.getNumericStylingValue(
+				this.styles.coordinatePointOutlineWidth,
+				2,
+				feature,
+			);
+			styles.pointOutlineColor = this.getHexColorStylingValue(
+				this.styles.coordinatePointOutlineColor,
+				styles.pointOutlineColor,
+				feature,
+			);
+			styles.pointOutlineOpacity = this.getNumericStylingValue(
+				this.styles.coordinatePointOutlineOpacity,
+				1,
+				feature,
+			);
+			styles.zIndex = Z_INDEX.LAYER_TWO;
 
 			return styles;
 		}
@@ -462,7 +533,7 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 			propertyMutations[COMMON_PROPERTIES.CURRENTLY_DRAWING] = undefined;
 		}
 
-		return this.mutateFeature.updatePolygon({
+		const updated = this.mutateFeature.updatePolygon({
 			featureId: this.currentCircleId,
 			coordinateMutations: updatedCircle
 				? {
@@ -478,9 +549,25 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 					}
 				: { updateType },
 		});
+
+		if (updated && this.showCoordinatePoints) {
+			this.coordinatePoints.createOrUpdate({
+				featureId: this.currentCircleId,
+				featureCoordinates: updated.geometry.coordinates,
+			});
+		}
+
+		return updated;
 	}
 
 	afterFeatureUpdated(feature: GeoJSONStoreFeatures): void {
+		if (this.showCoordinatePoints && feature.geometry.type === "Polygon") {
+			this.coordinatePoints.createOrUpdate({
+				featureId: feature.id as FeatureId,
+				featureCoordinates: feature.geometry.coordinates,
+			});
+		}
+
 		// If we are in the middle of drawing a circle and the feature being updated is the current circle,
 		// we need to reset the drawing state
 		if (this.currentCircleId === feature.id) {
@@ -494,9 +581,24 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 		}
 	}
 
+	afterFeatureAdded(feature: GeoJSONStoreFeatures): void {
+		if (this.showCoordinatePoints && feature.geometry.type === "Polygon") {
+			this.coordinatePoints.createOrUpdate({
+				featureId: feature.id as FeatureId,
+				featureCoordinates: feature.geometry.coordinates,
+			});
+		}
+	}
+
 	registerBehaviors(config: BehaviorConfig) {
+		this.readFeature = new ReadFeatureBehavior(config);
 		this.mutateFeature = new MutateFeatureBehavior(config, {
 			validate: this.validate,
 		});
+		this.coordinatePoints = new CoordinatePointBehavior(
+			config,
+			this.readFeature,
+			this.mutateFeature,
+		);
 	}
 }

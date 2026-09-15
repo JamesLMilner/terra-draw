@@ -40,7 +40,11 @@ import {
 	isFiniteNonNegativeNumber,
 	isNonNullObject,
 	isNull,
+	isBoolean,
 } from "../../common/checks";
+
+import { ReadFeatureBehavior } from "../read-feature.behavior";
+import { CoordinatePointBehavior } from "../select/behaviors/coordinate-point.behavior";
 
 type TerraDrawEllipseModeKeyEvents = {
 	cancel: KeyboardEvent["key"] | null;
@@ -53,6 +57,12 @@ type EllipsePolygonStyling = {
 	outlineColor: HexColorStyling;
 	outlineWidth: NumericStyling;
 	outlineOpacity: NumericStyling;
+	coordinatePointWidth: NumericStyling;
+	coordinatePointColor: HexColorStyling;
+	coordinatePointOpacity: NumericStyling;
+	coordinatePointOutlineWidth: NumericStyling;
+	coordinatePointOutlineColor: HexColorStyling;
+	coordinatePointOutlineOpacity: NumericStyling;
 };
 
 interface Cursors {
@@ -68,6 +78,7 @@ interface TerraDrawEllipseModeOptions<
 	projection?: Projection;
 	drawInteraction?: DrawInteractions;
 	segments?: number;
+	showCoordinatePoints?: boolean;
 }
 
 const defaultKeyEvents = { cancel: "Escape", finish: "Enter" };
@@ -86,9 +97,12 @@ export class TerraDrawEllipseMode extends TerraDrawBaseDrawMode<EllipsePolygonSt
 	private drawInteraction: DrawInteractions = "click-move";
 	private drawType: DrawType | undefined;
 	private minimumSegments = 3;
+	private showCoordinatePoints = false;
 	private cancelled = false;
 
 	// Behaviors
+	private readFeature!: ReadFeatureBehavior;
+	private coordinatePoints!: CoordinatePointBehavior;
 	private mutateFeature!: MutateFeatureBehavior;
 
 	constructor(options?: TerraDrawEllipseModeOptions<EllipsePolygonStyling>) {
@@ -102,6 +116,11 @@ export class TerraDrawEllipseMode extends TerraDrawBaseDrawMode<EllipsePolygonSt
 		>,
 	) {
 		super.updateOptions(options);
+
+		if (isBoolean(options?.showCoordinatePoints)) {
+			this.showCoordinatePoints = options.showCoordinatePoints;
+			this.coordinatePoints?.setEnabled(this.showCoordinatePoints);
+		}
 
 		if (isNonNullObject(options?.cursors)) {
 			this.cursors = { ...this.cursors, ...options.cursors };
@@ -197,6 +216,14 @@ export class TerraDrawEllipseMode extends TerraDrawBaseDrawMode<EllipsePolygonSt
 		}
 
 		this.currentEllipseId = created.id;
+
+		if (this.showCoordinatePoints) {
+			this.coordinatePoints.createOrUpdate({
+				featureId: created.id,
+				featureCoordinates: created.geometry.coordinates,
+			});
+		}
+
 		this.cursorMovedAfterInitialCursorDown = false;
 		this.drawType = drawType;
 		this.setDrawing();
@@ -341,6 +368,10 @@ export class TerraDrawEllipseMode extends TerraDrawBaseDrawMode<EllipsePolygonSt
 			this.setStarted();
 		}
 
+		if (currentId !== undefined && this.showCoordinatePoints) {
+			this.coordinatePoints.deletePointsByFeatureIds([currentId]);
+		}
+
 		this.mutateFeature.deleteFeatureIfPresent(currentId);
 	}
 
@@ -378,7 +409,47 @@ export class TerraDrawEllipseMode extends TerraDrawBaseDrawMode<EllipsePolygonSt
 				feature,
 			);
 			styles.zIndex = Z_INDEX.LAYER_ONE;
+		} else if (
+			feature.type === "Feature" &&
+			feature.properties.mode === this.mode &&
+			feature.geometry.type === "Point" &&
+			feature.properties[COMMON_PROPERTIES.COORDINATE_POINT]
+		) {
+			styles.pointWidth = this.getNumericStylingValue(
+				this.styles.coordinatePointWidth,
+				styles.pointWidth,
+				feature,
+			);
+			styles.pointColor = this.getHexColorStylingValue(
+				this.styles.coordinatePointColor,
+				styles.pointColor,
+				feature,
+			);
+			styles.pointOpacity = this.getNumericStylingValue(
+				this.styles.coordinatePointOpacity,
+				1,
+				feature,
+			);
+			styles.pointOutlineWidth = this.getNumericStylingValue(
+				this.styles.coordinatePointOutlineWidth,
+				2,
+				feature,
+			);
+			styles.pointOutlineColor = this.getHexColorStylingValue(
+				this.styles.coordinatePointOutlineColor,
+				styles.pointOutlineColor,
+				feature,
+			);
+			styles.pointOutlineOpacity = this.getNumericStylingValue(
+				this.styles.coordinatePointOutlineOpacity,
+				1,
+				feature,
+			);
+			styles.zIndex = Z_INDEX.LAYER_TWO;
+
+			return styles;
 		}
+
 		return styles;
 	}
 
@@ -454,7 +525,7 @@ export class TerraDrawEllipseMode extends TerraDrawBaseDrawMode<EllipsePolygonSt
 			propertyMutations[COMMON_PROPERTIES.CURRENTLY_DRAWING] = undefined;
 		}
 
-		return this.mutateFeature.updatePolygon({
+		const updated = this.mutateFeature.updatePolygon({
 			featureId: this.currentEllipseId,
 			coordinateMutations: updatedEllipse
 				? {
@@ -467,9 +538,25 @@ export class TerraDrawEllipseMode extends TerraDrawBaseDrawMode<EllipsePolygonSt
 				? { updateType, action: FinishActions.Draw }
 				: { updateType },
 		});
+
+		if (updated && this.showCoordinatePoints) {
+			this.coordinatePoints.createOrUpdate({
+				featureId: this.currentEllipseId,
+				featureCoordinates: updated.geometry.coordinates,
+			});
+		}
+
+		return updated;
 	}
 
 	afterFeatureUpdated(feature: GeoJSONStoreFeatures): void {
+		if (this.showCoordinatePoints && feature.geometry.type === "Polygon") {
+			this.coordinatePoints.createOrUpdate({
+				featureId: feature.id as FeatureId,
+				featureCoordinates: feature.geometry.coordinates,
+			});
+		}
+
 		if (this.currentEllipseId === feature.id) {
 			this.cursorMovedAfterInitialCursorDown = false;
 			this.center = undefined;
@@ -479,9 +566,24 @@ export class TerraDrawEllipseMode extends TerraDrawBaseDrawMode<EllipsePolygonSt
 		}
 	}
 
+	afterFeatureAdded(feature: GeoJSONStoreFeatures): void {
+		if (this.showCoordinatePoints && feature.geometry.type === "Polygon") {
+			this.coordinatePoints.createOrUpdate({
+				featureId: feature.id as FeatureId,
+				featureCoordinates: feature.geometry.coordinates,
+			});
+		}
+	}
+
 	registerBehaviors(config: BehaviorConfig) {
+		this.readFeature = new ReadFeatureBehavior(config);
 		this.mutateFeature = new MutateFeatureBehavior(config, {
 			validate: this.validate,
 		});
+		this.coordinatePoints = new CoordinatePointBehavior(
+			config,
+			this.readFeature,
+			this.mutateFeature,
+		);
 	}
 }

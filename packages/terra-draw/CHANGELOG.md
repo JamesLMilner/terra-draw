@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.34.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.33.0...terra-draw@1.34.0) (2026-09-17)
+
+
+### feat
+
+* **terra-draw:** add circle and ellipse support for showCoordinatePoints (#953) ([](https://github.com/JamesLMilner/terra-draw/commit/4e39bdb689c838810f458910bca12bfd5d68856d)), closes [#953](https://github.com/JamesLMilner/terra-draw/issues/953)
+* **terra-draw:** add more mode support for showCoordinatePoints (#948) ([](https://github.com/JamesLMilner/terra-draw/commit/a9f8322f3c00b4bde5526c158d4568334e189f79)), closes [#948](https://github.com/JamesLMilner/terra-draw/issues/948)
+* **terra-draw:** add support for coordinate points in sensor and sector modes (#951) ([](https://github.com/JamesLMilner/terra-draw/commit/91231521ba1fa59685ac8337c0ea04a5005ab857)), closes [#951](https://github.com/JamesLMilner/terra-draw/issues/951)
+* **terra-draw:** add support for coordinate points to sector mode (#950) ([](https://github.com/JamesLMilner/terra-draw/commit/035843389a81f1def4bc4b94164f9203953235c5)), closes [#950](https://github.com/JamesLMilner/terra-draw/issues/950)
+* **terra-draw:** support changing arc direction for sensor and sector modes (#955) ([](https://github.com/JamesLMilner/terra-draw/commit/b560d387e5f844c612fe7b52d73e503d1dc80da6)), closes [#955](https://github.com/JamesLMilner/terra-draw/issues/955)
+* **terra-draw:** support coordinate points in freehand modes (#954) ([](https://github.com/JamesLMilner/terra-draw/commit/0f085e46b03811bd586cd6c1130c5fe90081632a)), closes [#954](https://github.com/JamesLMilner/terra-draw/issues/954)
+* **terra-draw:** support drawInteraction for freehand linestring mode (#952) ([](https://github.com/JamesLMilner/terra-draw/commit/bc227e0a7b65d95e0fdd2fdda08ce7f12d73f388)), closes [#952](https://github.com/JamesLMilner/terra-draw/issues/952)
+
+
+### chore
+
+* **terra-draw:** clean up .gitignore file (#949) ([](https://github.com/JamesLMilner/terra-draw/commit/4307af20ad1e3873ef4e197be13bdc7838722873)), closes [#949](https://github.com/JamesLMilner/terra-draw/issues/949)
+
 ## [1.33.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.32.3...terra-draw@1.33.0) (2026-09-01)
 
 

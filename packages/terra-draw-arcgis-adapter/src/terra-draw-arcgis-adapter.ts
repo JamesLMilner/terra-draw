@@ -6,25 +6,32 @@ import {
 	TerraDrawExtend,
 	TerraDrawChanges,
 	TerraDrawStylingFunction,
+	TerraDrawAdapterStyling,
 	GeoJSONStoreFeatures,
 } from "terra-draw";
 
-import MapView from "@arcgis/core/views/MapView";
-import Point from "@arcgis/core/geometry/Point";
-import Polyline from "@arcgis/core/geometry/Polyline";
-import Polygon from "@arcgis/core/geometry/Polygon";
-import GraphicsLayer from "@arcgis/core/layers/GraphicsLayer";
-import Graphic from "@arcgis/core/Graphic";
-import SimpleMarkerSymbol from "@arcgis/core/symbols/SimpleMarkerSymbol";
+import {
+	load,
+	isLoaded,
+	execute,
+} from "@arcgis/core/geometry/operators/projectOperator.js";
+import SpatialReference from "@arcgis/core/geometry/SpatialReference";
+import type MapView from "@arcgis/core/views/MapView";
+import type Point from "@arcgis/core/geometry/Point";
+import type Polyline from "@arcgis/core/geometry/Polyline";
+import type Polygon from "@arcgis/core/geometry/Polygon";
+import type GraphicsLayer from "@arcgis/core/layers/GraphicsLayer";
+import type Graphic from "@arcgis/core/Graphic";
+import type SimpleMarkerSymbol from "@arcgis/core/symbols/SimpleMarkerSymbol";
 import type { SymbolUnion } from "@arcgis/core/symbols/types";
-
-import PictureMarkerSymbol from "@arcgis/core/symbols/PictureMarkerSymbol.js";
-import SimpleLineSymbol from "@arcgis/core/symbols/SimpleLineSymbol";
-import SimpleFillSymbol from "@arcgis/core/symbols/SimpleFillSymbol";
-import Color from "@arcgis/core/Color";
-import Geometry from "@arcgis/core/geometry/Geometry";
-import { DoubleClickEvent } from "@arcgis/core/views/input/types";
-import { ResourceHandle } from "@arcgis/core/core/Handles";
+import type PictureMarkerSymbol from "@arcgis/core/symbols/PictureMarkerSymbol.js";
+import type SimpleLineSymbol from "@arcgis/core/symbols/SimpleLineSymbol";
+import type SimpleFillSymbol from "@arcgis/core/symbols/SimpleFillSymbol";
+import type Color from "@arcgis/core/Color";
+import type Geometry from "@arcgis/core/geometry/Geometry";
+import type { GeometryWithoutMeshUnion } from "@arcgis/core/geometry/types.js";
+import type { DoubleClickEvent } from "@arcgis/core/views/input/types";
+import type { ResourceHandle } from "@arcgis/core/core/Handles";
 
 type InjectableArcGISMapsSDK = {
 	GraphicsLayer: typeof GraphicsLayer;
@@ -74,6 +81,7 @@ export class TerraDrawArcGISMapsSDKAdapter
 		}
 
 		this._mapView.map.add(this._featureLayer);
+		this._mapView.when(() => this.loadProjector());
 	}
 
 	public register(callbacks: TerraDrawExtend.TerraDrawCallbacks) {
@@ -162,9 +170,31 @@ export class TerraDrawArcGISMapsSDKAdapter
 	 * @returns An object with 'lng' and 'lat' properties representing the longitude and latitude coordinates.
 	 */
 	public unproject(x: number, y: number) {
-		const { latitude, longitude } = this._mapView.toMap({ x, y });
-		if (latitude == null || longitude == null)
-			throw new Error("Map point has invalid coordinates");
+		const mapPoint = this._mapView.toMap({ x, y });
+		if (!mapPoint) throw new Error("ArcGIS could not resolve the map point");
+
+		if (
+			mapPoint.spatialReference.isWGS84 ||
+			mapPoint.spatialReference.isWebMercator
+		) {
+			const { longitude, latitude } = mapPoint;
+
+			if (longitude == null || latitude == null) {
+				throw new Error("WGS84 map point has invalid coordinates");
+			}
+
+			return { lng: longitude, lat: latitude };
+		}
+
+		const { longitude, latitude } = execute(
+			mapPoint,
+			SpatialReference.WGS84,
+		) as Point;
+
+		if (longitude == null || latitude == null) {
+			throw new Error("Projected map point has invalid coordinates");
+		}
+
 		return { lng: longitude, lat: latitude };
 	}
 
@@ -199,12 +229,18 @@ export class TerraDrawArcGISMapsSDKAdapter
 		});
 
 		changes.updated.forEach((updatedFeature) => {
-			this.removeFeatureById(updatedFeature.id);
-			this.addFeature(updatedFeature, styling);
+			const updateFeature = this.getFeatureById(updatedFeature.id);
+			if (updateFeature) {
+				updateFeature.geometry =
+					this.convertGeoJSONToArcGisGeometry(updatedFeature);
+			}
 		});
 
 		changes.deletedIds.forEach((deletedId) => {
-			this.removeFeatureById(deletedId);
+			const deleteFeature = this.getFeatureById(deletedId);
+			if (deleteFeature) {
+				this._featureLayer.graphics.remove(deleteFeature);
+			}
 		});
 	}
 
@@ -216,13 +252,23 @@ export class TerraDrawArcGISMapsSDKAdapter
 		this._featureLayer.graphics.removeAll();
 	}
 
-	private removeFeatureById(id: string | number | undefined) {
-		const feature = this._featureLayer.graphics.find(
+	private projectionRequired(spatialReference: SpatialReference): boolean {
+		return !spatialReference.isWGS84 && !spatialReference.isWebMercator;
+	}
+
+	private async loadProjector() {
+		if (
+			this.projectionRequired(this._mapView.spatialReference) &&
+			!isLoaded()
+		) {
+			await load();
+		}
+	}
+
+	private getFeatureById(id: string | number | undefined) {
+		return this._featureLayer.graphics.find(
 			(g) => g.attributes[this._featureIdAttributeName] === id,
 		);
-
-		if (!feature) return;
-		this._featureLayer.remove(feature);
 	}
 
 	private pxToArcGisPoints(value: number): number {
@@ -259,75 +305,110 @@ export class TerraDrawArcGISMapsSDKAdapter
 		feature: GeoJSONStoreFeatures,
 		styling: TerraDrawStylingFunction,
 	) {
-		const { coordinates, type } = feature.geometry;
+		const { type } = feature.geometry;
 		const style = styling[feature.properties.mode as string](feature);
+		const geometry = this.convertGeoJSONToArcGisGeometry(feature);
+		const symbol = this.convertStyleToArcGisSymbol(style, type);
 
-		let symbol: SymbolUnion;
-		let geometry: Geometry | undefined = undefined;
+		const graphic = new this._lib.Graphic({
+			geometry,
+			symbol,
+			attributes: { [this._featureIdAttributeName]: feature.id },
+		});
 
+		// ensure we add points at the topmost position by adding other geometries at index 0
+		if (type === "Point" && style.zIndex >= 30) {
+			this._featureLayer.graphics.add(graphic);
+		} else {
+			this._featureLayer.graphics.add(graphic, 0);
+		}
+	}
+
+	private convertGeoJSONToArcGisGeometry(
+		feature: GeoJSONStoreFeatures,
+	): Geometry {
+		const { type, coordinates } = feature.geometry;
+
+		let geometry: GeometryWithoutMeshUnion;
+		switch (type) {
+			case "Point":
+				geometry = new this._lib.Point({
+					latitude: coordinates[1],
+					longitude: coordinates[0],
+				});
+				break;
+			case "LineString":
+				geometry = new this._lib.Polyline({ paths: [coordinates] });
+				break;
+			case "Polygon":
+				// A ring needs 3 distinct vertices to be a valid polygon, so render it as a line until then
+				geometry = this.isIncompletePolygonPreview(feature)
+					? new this._lib.Polyline({ paths: coordinates })
+					: new this._lib.Polygon({ rings: coordinates });
+				break;
+			default:
+				throw new Error(`Unsupported geometry type: ${type}`);
+		}
+
+		return geometry;
+	}
+
+	private isIncompletePolygonPreview(feature: GeoJSONStoreFeatures): boolean {
+		if (feature.geometry.type !== "Polygon") return false;
+
+		const committedCoordinateCount =
+			feature.properties["committedCoordinateCount"];
+
+		return (
+			typeof committedCoordinateCount === "number" &&
+			committedCoordinateCount < 3
+		);
+	}
+
+	private convertStyleToArcGisSymbol(
+		style: TerraDrawAdapterStyling,
+		type: GeoJSONStoreFeatures["geometry"]["type"],
+	): SymbolUnion {
 		switch (type) {
 			case "Point":
 				if (style.markerUrl && style.markerHeight && style.markerWidth) {
-					geometry = new this._lib.Point({
-						latitude: coordinates[1],
-						longitude: coordinates[0],
-					});
-					symbol = new this._lib.PictureMarkerSymbol({
+					return new this._lib.PictureMarkerSymbol({
 						url: style.markerUrl,
 						width: style.markerWidth + "px",
 						height: style.markerHeight + "px",
-						xoffset: 0, // center horizontally
-						yoffset: ((style.markerHeight as number) ?? 0) / 2, // anchor bottom center
-					});
-				} else {
-					geometry = new this._lib.Point({
-						latitude: coordinates[1],
-						longitude: coordinates[0],
-					});
-					const pointOpacity = (style as { pointOpacity?: number })
-						.pointOpacity;
-					const pointOutlineOpacity = (
-						style as { pointOutlineOpacity?: number }
-					).pointOutlineOpacity;
-
-					symbol = new this._lib.SimpleMarkerSymbol({
-						color: this.getColorFromHex(
-							style.pointColor,
-							pointOpacity === undefined ? 1 : pointOpacity,
-						),
-						size: style.pointWidth * 2 + "px",
-						outline: {
-							color: this.getColorFromHex(
-								style.pointOutlineColor,
-								pointOutlineOpacity === undefined ? 1 : pointOutlineOpacity,
-							),
-							width: style.pointOutlineWidth + "px",
-						},
+						xoffset: 0,
+						yoffset: style.markerHeight / 2,
 					});
 				}
 
-				break;
-			case "LineString":
-				// Backwards compatible read: pre Terra Draw v1.24.0 will not have this field in the interface
-				const lineStringOpacity = (style as { lineStringOpacity?: number })
-					.lineStringOpacity;
+				return new this._lib.SimpleMarkerSymbol({
+					color: this.getColorFromHex(
+						style.pointColor,
+						style.pointOpacity === undefined ? 1 : style.pointOpacity,
+					),
+					size: style.pointWidth * 2 + "px",
+					outline: {
+						color: this.getColorFromHex(
+							style.pointOutlineColor,
+							style.pointOutlineOpacity === undefined
+								? 1
+								: style.pointOutlineOpacity,
+						),
+						width: style.pointOutlineWidth + "px",
+					},
+				});
+			case "LineString": {
 				const lineColor = this.getColorFromHex(
 					style.lineStringColor,
-					lineStringOpacity === undefined ? 1 : lineStringOpacity,
+					style.lineStringOpacity === undefined ? 1 : style.lineStringOpacity,
 				);
-
-				geometry = new this._lib.Polyline({ paths: [coordinates] });
-
-				// Backwards compatible read: pre Terra Draw v1.24.0 will not have this field in the interface
-				const lineStringDash = (
-					style as {
-						lineStringDash?: [number, number];
-					}
-				).lineStringDash;
+				const lineStringDash = style.lineStringDash as
+					| [number, number]
+					| undefined;
 				const dashTemplate = this.toArcGisDashTemplate(lineStringDash);
 
 				if (dashTemplate) {
-					symbol = {
+					return {
 						type: "cim",
 						data: {
 							type: "CIMSymbolReference",
@@ -342,7 +423,7 @@ export class TerraDrawArcGISMapsSDKAdapter
 											lineColor.r,
 											lineColor.g,
 											lineColor.b,
-											this.toArcGisAlpha(lineStringOpacity),
+											this.toArcGisAlpha(style.lineStringOpacity),
 										],
 										capStyle: "Butt",
 										joinStyle: "Round",
@@ -351,8 +432,7 @@ export class TerraDrawArcGISMapsSDKAdapter
 												type: "CIMGeometricEffectDashes",
 												dashTemplate,
 												lineDashEnding: "FullGap",
-												offsetAlongLine: 0,
-												// controlPointEnding: "NoConstraint"
+												offsetAlong: 0,
 											},
 										],
 									},
@@ -360,20 +440,15 @@ export class TerraDrawArcGISMapsSDKAdapter
 							},
 						},
 					} as any;
-				} else {
-					symbol = new this._lib.SimpleLineSymbol({
-						color: lineColor,
-						width: style.lineStringWidth + "px",
-					});
 				}
-				break;
-			case "Polygon":
-				const polygonOutlineOpacity = (
-					style as { polygonOutlineOpacity?: number }
-				).polygonOutlineOpacity;
 
-				geometry = new this._lib.Polygon({ rings: coordinates });
-				symbol = new this._lib.SimpleFillSymbol({
+				return new this._lib.SimpleLineSymbol({
+					color: lineColor,
+					width: style.lineStringWidth + "px",
+				});
+			}
+			case "Polygon":
+				return new this._lib.SimpleFillSymbol({
 					color: this.getColorFromHex(
 						style.polygonFillColor,
 						style.polygonFillOpacity,
@@ -381,25 +456,11 @@ export class TerraDrawArcGISMapsSDKAdapter
 					outline: {
 						color: this.getColorFromHex(
 							style.polygonOutlineColor,
-							polygonOutlineOpacity,
+							style.polygonOutlineOpacity,
 						),
 						width: style.polygonOutlineWidth + "px",
 					},
 				});
-				break;
-		}
-
-		const graphic = new this._lib.Graphic({
-			geometry,
-			symbol,
-			attributes: { [this._featureIdAttributeName]: feature.id },
-		});
-
-		// ensure we add points at the topmost position by adding other geometries at index 0
-		if (type === "Point" && style.zIndex >= 30) {
-			this._featureLayer.graphics.add(graphic);
-		} else {
-			this._featureLayer.graphics.add(graphic, 0);
 		}
 	}
 

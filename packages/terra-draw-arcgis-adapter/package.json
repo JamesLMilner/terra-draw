@@ -4,7 +4,7 @@
 	"description": "Terra Draw Adapter for ArcGIS API for JavaScript",
 	"peerDependencies": {
 		"terra-draw": "^1.0.0",
-		"@arcgis/core": "^4.31.6"
+		"@arcgis/core": "^5.1.0"
 	},
 	"scripts": {
 		"release": "TYPE=$(node ../../bump.mjs) && commit-and-tag-version .versionrc.cjs -t terra-draw-arcgis-adapter@ --release-as $TYPE",

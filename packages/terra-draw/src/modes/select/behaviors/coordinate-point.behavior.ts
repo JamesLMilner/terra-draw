@@ -1,6 +1,6 @@
 import { Position } from "geojson";
 import { BehaviorConfig, TerraDrawModeBehavior } from "../../base.behavior";
-import { FeatureId } from "../../../store/store";
+import { FeatureId, JSONObject } from "../../../store/store";
 import { COMMON_PROPERTIES, UpdateTypes } from "../../../common";
 import { ReadFeatureBehavior } from "../../read-feature.behavior";
 import { MutateFeatureBehavior } from "../../mutate-feature.behavior";
@@ -118,6 +118,10 @@ export class CoordinatePointBehavior extends TerraDrawModeBehavior {
 				});
 
 				this.mutateFeature.updateGuidancePoints(updates);
+				this.syncCurrentlyDrawing(
+					existingCoordinatePointIds,
+					existingProperties,
+				);
 			}
 		}
 		// If the existing coordinate points are not present in the store, delete them and recreate
@@ -205,6 +209,10 @@ export class CoordinatePointBehavior extends TerraDrawModeBehavior {
 		mode: string,
 		featureId: FeatureId,
 	) {
+		const properties = this.readFeature.getProperties(featureId);
+		const currentlyDrawing =
+			properties[COMMON_PROPERTIES.CURRENTLY_DRAWING] === true;
+
 		return this.mutateFeature.createGuidancePoints({
 			coordinates: featureCoordinates,
 			type: COMMON_PROPERTIES.COORDINATE_POINT,
@@ -212,8 +220,35 @@ export class CoordinatePointBehavior extends TerraDrawModeBehavior {
 				mode,
 				[COMMON_PROPERTIES.COORDINATE_POINT]: true,
 				[COMMON_PROPERTIES.COORDINATE_POINT_FEATURE_ID]: featureId,
+				...(currentlyDrawing
+					? { [COMMON_PROPERTIES.CURRENTLY_DRAWING]: true }
+					: {}),
 				index: i,
 			}),
+		});
+	}
+
+	private syncCurrentlyDrawing(
+		coordinatePointIds: FeatureId[],
+		parentProperties: JSONObject,
+	) {
+		const currentlyDrawing =
+			parentProperties[COMMON_PROPERTIES.CURRENTLY_DRAWING] === true;
+
+		coordinatePointIds.forEach((featureId) => {
+			if (!this.readFeature.hasFeature(featureId)) {
+				return;
+			}
+
+			this.mutateFeature.updatePoint({
+				featureId,
+				propertyMutations: {
+					[COMMON_PROPERTIES.CURRENTLY_DRAWING]: currentlyDrawing
+						? true
+						: undefined,
+				},
+				context: { updateType: UpdateTypes.Commit },
+			});
 		});
 	}
 

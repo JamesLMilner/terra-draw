@@ -217,6 +217,57 @@ describe("CoordinatePointBehavior", () => {
 			).toBe(true);
 		});
 
+		it("synchronizes currentlyDrawing with the parent feature", () => {
+			const mockPolygon = MockPolygonSquare();
+			const [featureId] = config.store.create([
+				{
+					geometry: mockPolygon.geometry,
+					properties: {
+						...mockPolygon.properties,
+						[COMMON_PROPERTIES.CURRENTLY_DRAWING]: true,
+					} as JSONObject,
+				},
+			]);
+
+			coordinatePointBehavior.createOrUpdate({
+				featureId,
+				featureCoordinates: mockPolygon.geometry.coordinates,
+			});
+
+			let coordinatePoints = config.store.copyAllWhere((properties) =>
+				Boolean(properties[COMMON_PROPERTIES.COORDINATE_POINT]),
+			);
+			expect(
+				coordinatePoints.every(
+					(point) =>
+						point.properties[COMMON_PROPERTIES.CURRENTLY_DRAWING] === true,
+				),
+			).toBe(true);
+
+			config.store.updateProperty([
+				{
+					id: featureId,
+					property: COMMON_PROPERTIES.CURRENTLY_DRAWING,
+					value: undefined,
+				},
+			]);
+
+			coordinatePointBehavior.createOrUpdate({
+				featureId,
+				featureCoordinates: mockPolygon.geometry.coordinates,
+			});
+
+			coordinatePoints = config.store.copyAllWhere((properties) =>
+				Boolean(properties[COMMON_PROPERTIES.COORDINATE_POINT]),
+			);
+			expect(
+				coordinatePoints.every(
+					(point) =>
+						point.properties[COMMON_PROPERTIES.CURRENTLY_DRAWING] === undefined,
+				),
+			).toBe(true);
+		});
+
 		it("createOrUpdate creates new points if previous ones have been deleted", () => {
 			const mockPolygon = MockPolygonSquare();
 			const [featureId] = config.store.create([

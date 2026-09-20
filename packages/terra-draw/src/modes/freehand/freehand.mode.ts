@@ -40,6 +40,8 @@ import {
 	isNull,
 } from "../../common/checks";
 
+import { CoordinatePointBehavior } from "../select/behaviors/coordinate-point.behavior";
+
 type TerraDrawFreehandModeKeyEvents = {
 	cancel: KeyboardEvent["key"] | null;
 	finish: KeyboardEvent["key"] | null;
@@ -56,6 +58,12 @@ type FreehandPolygonStyling = {
 	outlineColor: HexColorStyling;
 	outlineOpacity: NumericStyling;
 	outlineWidth: NumericStyling;
+	coordinatePointWidth: NumericStyling;
+	coordinatePointColor: HexColorStyling;
+	coordinatePointOpacity: NumericStyling;
+	coordinatePointOutlineWidth: NumericStyling;
+	coordinatePointOutlineColor: HexColorStyling;
+	coordinatePointOutlineOpacity: NumericStyling;
 	closingPointColor: HexColorStyling;
 	closingPointOpacity: NumericStyling;
 	closingPointWidth: NumericStyling;
@@ -85,6 +93,7 @@ interface TerraDrawFreehandModeOptions<
 	keyEvents?: TerraDrawFreehandModeKeyEvents | null;
 	cursors?: Cursors;
 	drawInteraction?: DrawInteractions;
+	showCoordinatePoints?: boolean;
 }
 
 export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygonStyling> {
@@ -104,8 +113,10 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 	private drawInteraction = "click-move";
 	private drawType: DrawType | undefined;
 	private smoothing = 0;
+	private showCoordinatePoints = false;
 
 	// Behaviors
+	private coordinatePoints!: CoordinatePointBehavior;
 	private mutateFeature!: MutateFeatureBehavior;
 	private readFeature!: ReadFeatureBehavior;
 
@@ -120,6 +131,11 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 		>,
 	): void {
 		super.updateOptions(options);
+
+		if (isBoolean(options?.showCoordinatePoints)) {
+			this.showCoordinatePoints = options.showCoordinatePoints;
+			this.coordinatePoints?.setEnabled(this.showCoordinatePoints);
+		}
 
 		if (isFiniteNonNegativeNumber(options?.minDistance)) {
 			this.minDistance = options.minDistance;
@@ -179,7 +195,7 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 		event: TerraDrawMouseEvent,
 		drawType: DrawType = "click",
 	) {
-		const { id: createdId } = this.mutateFeature.createPolygon({
+		const created = this.mutateFeature.createPolygon({
 			coordinates: [
 				[event.lng, event.lat],
 				[event.lng, event.lat],
@@ -192,7 +208,14 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 			},
 		});
 
-		this.currentId = createdId;
+		this.currentId = created.id;
+
+		if (this.showCoordinatePoints) {
+			this.coordinatePoints.createOrUpdate({
+				featureId: created.id,
+				featureCoordinates: created.geometry.coordinates,
+			});
+		}
 		this.drawType = drawType;
 
 		this.closingPointId = this.mutateFeature.createGuidancePoint({
@@ -263,7 +286,7 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 			[event.lng, event.lat],
 		);
 
-		this.mutateFeature.updatePolygon({
+		const updated = this.mutateFeature.updatePolygon({
 			featureId: this.currentId,
 			coordinateMutations: [
 				{
@@ -274,6 +297,13 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 			],
 			context: { updateType: UpdateTypes.Provisional },
 		});
+
+		if (updated && this.showCoordinatePoints) {
+			this.coordinatePoints.createOrUpdate({
+				featureId: this.currentId,
+				featureCoordinates: updated.geometry.coordinates,
+			});
+		}
 	}
 
 	/**
@@ -319,6 +349,13 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 
 		if (!updated) {
 			return;
+		}
+
+		if (this.showCoordinatePoints) {
+			this.coordinatePoints.createOrUpdate({
+				featureId: this.currentId,
+				featureCoordinates: updated.geometry.coordinates,
+			});
 		}
 
 		const featureId = this.currentId;
@@ -476,6 +513,10 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 			this.setStarted();
 		}
 
+		if (cleanUpId !== undefined && this.showCoordinatePoints) {
+			this.coordinatePoints.deletePointsByFeatureIds([cleanUpId]);
+		}
+
 		this.mutateFeature.deleteFeatureIfPresent(cleanUpId);
 		this.mutateFeature.deleteFeatureIfPresent(cleanUpClosingPointId);
 	}
@@ -520,6 +561,45 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 			);
 
 			styles.zIndex = Z_INDEX.LAYER_ONE;
+
+			return styles;
+		} else if (
+			feature.type === "Feature" &&
+			feature.properties.mode === this.mode &&
+			feature.geometry.type === "Point" &&
+			feature.properties[COMMON_PROPERTIES.COORDINATE_POINT]
+		) {
+			styles.pointWidth = this.getNumericStylingValue(
+				this.styles.coordinatePointWidth,
+				styles.pointWidth,
+				feature,
+			);
+			styles.pointColor = this.getHexColorStylingValue(
+				this.styles.coordinatePointColor,
+				styles.pointColor,
+				feature,
+			);
+			styles.pointOpacity = this.getNumericStylingValue(
+				this.styles.coordinatePointOpacity,
+				1,
+				feature,
+			);
+			styles.pointOutlineWidth = this.getNumericStylingValue(
+				this.styles.coordinatePointOutlineWidth,
+				2,
+				feature,
+			);
+			styles.pointOutlineColor = this.getHexColorStylingValue(
+				this.styles.coordinatePointOutlineColor,
+				styles.pointOutlineColor,
+				feature,
+			);
+			styles.pointOutlineOpacity = this.getNumericStylingValue(
+				this.styles.coordinatePointOutlineOpacity,
+				1,
+				feature,
+			);
+			styles.zIndex = Z_INDEX.LAYER_TWO;
 
 			return styles;
 		} else if (
@@ -580,6 +660,13 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 	}
 
 	afterFeatureUpdated(feature: GeoJSONStoreFeatures) {
+		if (this.showCoordinatePoints && feature.geometry.type === "Polygon") {
+			this.coordinatePoints.createOrUpdate({
+				featureId: feature.id as FeatureId,
+				featureCoordinates: feature.geometry.coordinates,
+			});
+		}
+
 		// NOTE: This handles the case we are currently drawing a polygon
 		// We need to reset the drawing state because it is very complicated (impossible?)
 		// to recover the drawing state after a feature update
@@ -592,10 +679,24 @@ export class TerraDrawFreehandMode extends TerraDrawBaseDrawMode<FreehandPolygon
 		}
 	}
 
+	afterFeatureAdded(feature: GeoJSONStoreFeatures): void {
+		if (this.showCoordinatePoints && feature.geometry.type === "Polygon") {
+			this.coordinatePoints.createOrUpdate({
+				featureId: feature.id as FeatureId,
+				featureCoordinates: feature.geometry.coordinates,
+			});
+		}
+	}
+
 	registerBehaviors(config: BehaviorConfig) {
 		this.readFeature = new ReadFeatureBehavior(config);
 		this.mutateFeature = new MutateFeatureBehavior(config, {
 			validate: this.validate,
 		});
+		this.coordinatePoints = new CoordinatePointBehavior(
+			config,
+			this.readFeature,
+			this.mutateFeature,
+		);
 	}
 }

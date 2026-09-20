@@ -8,6 +8,106 @@ import { followsRightHandRule } from "../../geometry/boolean/right-hand-rule";
 import { COMMON_PROPERTIES, TerraDrawGeoJSONStore } from "../../common";
 
 describe("TerraDrawSectorMode", () => {
+	describe("allowDirectionChange", () => {
+		const setup = (allowDirectionChange = false) => {
+			const mode = new TerraDrawSectorMode({ allowDirectionChange });
+			const config = MockModeConfig(mode.mode);
+			mode.register(config);
+			mode.start();
+			mode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			mode.onClick(MockCursorEvent({ lng: 1, lat: 0 }));
+			const move = (lng: number, lat: number) =>
+				mode.onMouseMove(MockCursorEvent({ lng, lat }));
+			const arc = () => {
+				const feature = config.store
+					.copyAll()
+					.find((feature) => feature.geometry.type === "Polygon")!;
+				return (feature.geometry as Polygon).coordinates[0];
+			};
+			return { mode, config, move, arc };
+		};
+
+		it.each([1, -1])(
+			"reverses across the starting radius from side %s",
+			(side) => {
+				const { move, arc } = setup(true);
+				move(1, side);
+				move(1, -side);
+				expect(arc().every(([lng]) => lng >= 0)).toBe(true);
+				expect(arc().every(([, lat]) => lat * side <= 0)).toBe(true);
+				move(1, side);
+				expect(arc().every(([, lat]) => lat * side >= 0)).toBe(true);
+			},
+		);
+
+		it("keeps the original direction by default", () => {
+			const { move, arc } = setup();
+			move(1, 1);
+			move(1, -1);
+			expect(arc().some(([lng]) => lng < 0)).toBe(true);
+			expect(arc().some(([, lat]) => lat > 0)).toBe(true);
+		});
+
+		it.each([1, -1])(
+			"preserves arcs larger than 180 degrees from side %s",
+			(side) => {
+				const { move, arc } = setup(true);
+				move(1, side);
+				move(-1, side);
+				move(-1, -side);
+				expect(arc().some(([, lat]) => lat * side > 0.9)).toBe(true);
+				expect(arc().some(([, lat]) => lat * side < -0.1)).toBe(true);
+			},
+		);
+
+		it("can enable and disable direction changes during drawing", () => {
+			const { mode, move, arc } = setup();
+			move(1, 1);
+			mode.updateOptions({ allowDirectionChange: true });
+			move(1, -1);
+			expect(arc().every(([, lat]) => lat <= 0)).toBe(true);
+			mode.updateOptions({ allowDirectionChange: false });
+			move(1, 1);
+			expect(arc().some(([lng]) => lng < 0)).toBe(true);
+		});
+
+		it.each([1, -1])(
+			"finishes a reversed arc from side %s with coordinate points",
+			(side) => {
+				const { mode, config, move } = setup(true);
+				mode.updateOptions({ showCoordinatePoints: true });
+				move(1, side);
+				move(1, -side);
+				mode.onClick(MockCursorEvent({ lng: 1, lat: -side }));
+
+				expect(mode.state).toBe("started");
+				expect(config.onFinish).toHaveBeenCalledTimes(1);
+				const feature = config.store
+					.copyAll()
+					.find((feature) => feature.geometry.type === "Polygon")!;
+				const ring = (feature.geometry as Polygon).coordinates[0];
+				expect(ring.every(([, lat]) => lat * side <= 0)).toBe(true);
+				expect(followsRightHandRule(feature.geometry as Polygon)).toBe(true);
+				const points = config.store.copyAllWhere((properties) =>
+					Boolean(properties[COMMON_PROPERTIES.COORDINATE_POINT]),
+				);
+				expect(points.map((point) => point.geometry.coordinates)).toEqual(
+					ring.slice(0, -1),
+				);
+			},
+		);
+
+		it("resets direction tracking when cancelled", () => {
+			const { mode, move, arc } = setup(true);
+			move(-1, 1);
+			mode.onKeyUp(MockKeyboardEvent({ key: "Escape" }));
+			mode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			mode.onClick(MockCursorEvent({ lng: 1, lat: 0 }));
+			move(1, -1);
+			expect(arc().every(([, lat]) => lat <= 0)).toBe(true);
+		});
+	});
+
 	describe("constructor", () => {
 		it("constructs with no options", () => {
 			const sectorMode = new TerraDrawSectorMode();

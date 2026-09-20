@@ -606,7 +606,17 @@ const FreehandLineString: Story = {
 	...DefaultStory,
 	args: {
 		id: "freehand-linestring",
-		modes: [() => new TerraDrawFreehandLineStringMode()],
+		modes: [
+			() =>
+				new TerraDrawFreehandLineStringMode({
+					showCoordinatePoints: true,
+					drawInteraction: "click-drag",
+					styles: {
+						coordinatePointWidth: 2,
+						coordinatePointOutlineOpacity: 0.5,
+					},
+				}),
+		],
 		...DefaultStory.args,
 	},
 };
@@ -616,7 +626,17 @@ const Freehand: Story = {
 	...DefaultStory,
 	args: {
 		id: "freehand",
-		modes: [() => new TerraDrawFreehandMode()],
+		modes: [
+			() =>
+				new TerraDrawFreehandMode({
+					showCoordinatePoints: true,
+					drawInteraction: "click-drag",
+					styles: {
+						coordinatePointWidth: 2,
+						coordinatePointOutlineOpacity: 0.5,
+					},
+				}),
+		],
 		...DefaultStory.args,
 	},
 };

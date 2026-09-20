@@ -16,7 +16,7 @@
 	"author": "James Milner",
 	"license": "MIT",
 	"dependencies": {
-		"@arcgis/core": "4.31.6",
+		"@arcgis/core": "5.1.24",
 		"@googlemaps/js-api-loader": "2.0.2",
 		"@types/leaflet": "1.9.15",
 		"leaflet": "1.9.4",

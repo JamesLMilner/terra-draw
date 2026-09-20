@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.35.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.34.0...terra-draw@1.35.0) (2026-09-20)
+
+
+### feat
+
+* **terra-draw:** set currently drawing property on coordinate points (#958) ([](https://github.com/JamesLMilner/terra-draw/commit/c5b9dd387f5677b9b02225eb661ec1cca7e93ff0)), closes [#958](https://github.com/JamesLMilner/terra-draw/issues/958)
+
 ## [1.34.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.33.0...terra-draw@1.34.0) (2026-09-17)
 
 

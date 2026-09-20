@@ -465,7 +465,7 @@ const Sector: Story = {
 	...DefaultStory,
 	args: {
 		id: "sector",
-		modes: [() => new TerraDrawSectorMode()],
+		modes: [() => new TerraDrawSectorMode({ allowDirectionChange: false })],
 		...DefaultStory.args,
 	},
 };
@@ -689,6 +689,7 @@ const Sensor: Story = {
 		modes: [
 			() =>
 				new TerraDrawSensorMode({
+					allowDirectionChange: true,
 					showCoordinatePoints: true,
 					styles: {
 						coordinatePointOpacity: showSensorCorners,
@@ -711,6 +712,8 @@ const Select: Story = {
 					showCoordinatePoints: true,
 					styles: {
 						coordinatePointColor: "#ff0000",
+						coordinatePointWidth: ({ properties }) =>
+							properties.currentlyDrawing ? 5 : 0,
 					},
 				}),
 			() =>

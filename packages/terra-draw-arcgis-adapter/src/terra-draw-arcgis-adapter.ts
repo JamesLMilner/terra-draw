@@ -55,6 +55,7 @@ export class TerraDrawArcGISMapsSDKAdapter
 	private readonly _featureIdAttributeName = "__tdId";
 	private readonly _featureLayerName = "__terraDrawFeatures";
 	private readonly _featureLayer: GraphicsLayer;
+	private readonly _projectorReady: Promise<void>;
 
 	private _dragEnabled = true;
 	private _zoomEnabled = true;
@@ -81,7 +82,9 @@ export class TerraDrawArcGISMapsSDKAdapter
 		}
 
 		this._mapView.map.add(this._featureLayer);
-		this._mapView.when(() => this.loadProjector());
+		this._projectorReady = this._mapView
+			.when()
+			.then(() => this.loadProjector());
 	}
 
 	public register(callbacks: TerraDrawExtend.TerraDrawCallbacks) {
@@ -101,9 +104,9 @@ export class TerraDrawArcGISMapsSDKAdapter
 			},
 		);
 
-		if (this._currentModeCallbacks?.onReady) {
-			this._currentModeCallbacks.onReady();
-		}
+		this._projectorReady.then(() => {
+			this._currentModeCallbacks?.onReady?.();
+		});
 	}
 
 	public unregister() {
@@ -129,6 +132,15 @@ export class TerraDrawArcGISMapsSDKAdapter
 	 * @returns An object with 'lng' and 'lat' properties representing the longitude and latitude, or null if the conversion is not possible.
 	 */
 	public getLngLatFromEvent(event: PointerEvent | MouseEvent) {
+		const spatialReference = this._mapView.spatialReference;
+
+		if (
+			!spatialReference ||
+			(this.projectionRequired(spatialReference) && !isLoaded())
+		) {
+			return null;
+		}
+
 		const { containerX: x, containerY: y } =
 			this.getMapElementXYPosition(event);
 		return this.unproject(x, y);
@@ -239,7 +251,7 @@ export class TerraDrawArcGISMapsSDKAdapter
 		changes.deletedIds.forEach((deletedId) => {
 			const deleteFeature = this.getFeatureById(deletedId);
 			if (deleteFeature) {
-				this._featureLayer.graphics.remove(deleteFeature);
+				this._featureLayer.remove(deleteFeature);
 			}
 		});
 	}
@@ -249,7 +261,7 @@ export class TerraDrawArcGISMapsSDKAdapter
 	 * @returns void
 	 * */
 	public clear() {
-		this._featureLayer.graphics.removeAll();
+		this._featureLayer.removeAll();
 	}
 
 	private projectionRequired(spatialReference: SpatialReference): boolean {
@@ -360,8 +372,10 @@ export class TerraDrawArcGISMapsSDKAdapter
 			feature.properties["committedCoordinateCount"];
 
 		return (
-			typeof committedCoordinateCount === "number" &&
-			committedCoordinateCount < 3
+			(typeof committedCoordinateCount === "number" &&
+				committedCoordinateCount < 3) ||
+			(feature.properties.mode === "sector" &&
+				feature.properties.currentlyDrawing === true)
 		);
 	}
 

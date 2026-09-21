@@ -831,7 +831,9 @@ class TerraDraw {
 	 * after the mode has been started. You can also use this method to update styles
 	 * as these are passed from the options object.
 	 * @param mode - the mode name you wish to update (the mode name is the public 'mode' property of the mode class)
-	 * @param options - the options object - this allows _partial_ updating of the modes options (i.e. you do not need to pass the whole options object)
+	 * @param options - the options to update; you do not need to pass the whole options object.
+	 * Nested objects are not recursively merged. For example, select mode merges flags by mode name,
+	 * so passing flags.polygon replaces all polygon flags. Include every polygon flag you want to retain.
 	 */
 	updateModeOptions<Mode extends { new (...args: any[]): any }>(
 		mode: InstanceType<Mode>["mode"],

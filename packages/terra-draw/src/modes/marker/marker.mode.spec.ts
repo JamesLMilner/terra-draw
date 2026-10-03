@@ -216,6 +216,71 @@ describe("TerraDrawMarkerMode", () => {
 			});
 		});
 
+		it("snaps to an existing marker coordinate", () => {
+			const markerMode = new TerraDrawMarkerMode({
+				snapping: { toCoordinate: true },
+			});
+			const mockConfig = MockModeConfig(markerMode.mode);
+			mockConfig.store.create([
+				{
+					geometry: { type: "Point", coordinates: [0, 0] },
+					properties: { mode: markerMode.mode },
+				},
+			]);
+			markerMode.register(mockConfig);
+
+			markerMode.onClick(MockCursorEvent({ lng: 0.1, lat: 0.1 }));
+
+			expect(mockConfig.store.copyAll()[1].geometry.coordinates).toEqual([
+				0, 0,
+			]);
+		});
+
+		it("snaps to a filtered line feature", () => {
+			const markerMode = new TerraDrawMarkerMode({
+				snapping: {
+					toFeature: {
+						filter: (feature) => feature.properties?.mode === "linestring",
+						toLine: true,
+					},
+				},
+			});
+			const mockConfig = MockModeConfig(markerMode.mode);
+			mockConfig.store.create([
+				{
+					geometry: {
+						type: "LineString",
+						coordinates: [
+							[0, 0],
+							[1, 0],
+						],
+					},
+					properties: { mode: "linestring" },
+				},
+			]);
+			markerMode.register(mockConfig);
+
+			markerMode.onClick(MockCursorEvent({ lng: 0.5, lat: 0.1 }));
+
+			expect(mockConfig.store.copyAll()[1].geometry.coordinates).toEqual([
+				0.5, 0,
+			]);
+		});
+
+		it("snaps to a custom coordinate", () => {
+			const markerMode = new TerraDrawMarkerMode({
+				snapping: { toCustom: () => [1, 2] },
+			});
+			const mockConfig = MockModeConfig(markerMode.mode);
+			markerMode.register(mockConfig);
+
+			markerMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+			expect(mockConfig.store.copyAll()[0].geometry.coordinates).toEqual([
+				1, 2,
+			]);
+		});
+
 		it("right click can delete a point if editable is true", () => {
 			const markerMode = new TerraDrawMarkerMode({ editable: true });
 
@@ -511,6 +576,37 @@ describe("TerraDrawMarkerMode", () => {
 
 			// On finished called from onClick and is then only called after onDragEnd
 			expect(mockConfig.onFinish).toHaveBeenCalledTimes(1);
+		});
+
+		it("snaps an edited marker to another marker coordinate", () => {
+			const markerMode = new TerraDrawMarkerMode({
+				editable: true,
+				snapping: { toCoordinate: true },
+			});
+			const mockConfig = MockModeConfig("marker");
+			markerMode.register(mockConfig);
+
+			markerMode.onClick(MockCursorEvent({ lng: -1, lat: -1 }));
+			mockConfig.store.create([
+				{
+					geometry: { type: "Point", coordinates: [0, 0] },
+					properties: { mode: markerMode.mode },
+				},
+			]);
+
+			const setMapDraggability = jest.fn();
+			markerMode.onDragStart(
+				MockCursorEvent({ lng: -1, lat: -1 }),
+				setMapDraggability,
+			);
+			markerMode.onDrag(
+				MockCursorEvent({ lng: 0.1, lat: 0.1 }),
+				setMapDraggability,
+			);
+
+			expect(mockConfig.store.copyAll()[0].geometry.coordinates).toEqual([
+				0, 0,
+			]);
 		});
 
 		it("handles the falsy validation when editable true", () => {

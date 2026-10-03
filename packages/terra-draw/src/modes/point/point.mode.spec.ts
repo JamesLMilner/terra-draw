@@ -199,6 +199,71 @@ describe("TerraDrawPointMode", () => {
 			});
 		});
 
+		it("snaps to an existing point coordinate", () => {
+			const pointMode = new TerraDrawPointMode({
+				snapping: { toCoordinate: true },
+			});
+			const mockConfig = MockModeConfig(pointMode.mode);
+			mockConfig.store.create([
+				{
+					geometry: { type: "Point", coordinates: [0, 0] },
+					properties: { mode: pointMode.mode },
+				},
+			]);
+			pointMode.register(mockConfig);
+
+			pointMode.onClick(MockCursorEvent({ lng: 0.1, lat: 0.1 }));
+
+			expect(mockConfig.store.copyAll()[1].geometry.coordinates).toEqual([
+				0, 0,
+			]);
+		});
+
+		it("snaps to a filtered feature", () => {
+			const pointMode = new TerraDrawPointMode({
+				snapping: {
+					toFeature: {
+						filter: (feature) => feature.properties?.mode === "linestring",
+						toLine: true,
+					},
+				},
+			});
+			const mockConfig = MockModeConfig(pointMode.mode);
+			mockConfig.store.create([
+				{
+					geometry: {
+						type: "LineString",
+						coordinates: [
+							[0, 0],
+							[1, 0],
+						],
+					},
+					properties: { mode: "linestring" },
+				},
+			]);
+			pointMode.register(mockConfig);
+
+			pointMode.onClick(MockCursorEvent({ lng: 0.5, lat: 0.1 }));
+
+			expect(mockConfig.store.copyAll()[1].geometry.coordinates).toEqual([
+				0.5, 0,
+			]);
+		});
+
+		it("snaps to a custom coordinate", () => {
+			const pointMode = new TerraDrawPointMode({
+				snapping: { toCustom: () => [1, 2] },
+			});
+			const mockConfig = MockModeConfig(pointMode.mode);
+			pointMode.register(mockConfig);
+
+			pointMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+			expect(mockConfig.store.copyAll()[0].geometry.coordinates).toEqual([
+				1, 2,
+			]);
+		});
+
 		it("right click can delete a point if editable is true", () => {
 			const pointMode = new TerraDrawPointMode({ editable: true });
 
@@ -488,6 +553,37 @@ describe("TerraDrawPointMode", () => {
 
 			// On finished called from onClick and is then only called after onDragEnd
 			expect(mockConfig.onFinish).toHaveBeenCalledTimes(1);
+		});
+
+		it("snaps an edited point to another point coordinate", () => {
+			const pointMode = new TerraDrawPointMode({
+				editable: true,
+				snapping: { toCoordinate: true },
+			});
+			const mockConfig = MockModeConfig("point");
+			pointMode.register(mockConfig);
+
+			pointMode.onClick(MockCursorEvent({ lng: -1, lat: -1 }));
+			mockConfig.store.create([
+				{
+					geometry: { type: "Point", coordinates: [0, 0] },
+					properties: { mode: pointMode.mode },
+				},
+			]);
+
+			const setMapDraggability = jest.fn();
+			pointMode.onDragStart(
+				MockCursorEvent({ lng: -1, lat: -1 }),
+				setMapDraggability,
+			);
+			pointMode.onDrag(
+				MockCursorEvent({ lng: 0.1, lat: 0.1 }),
+				setMapDraggability,
+			);
+
+			expect(mockConfig.store.copyAll()[0].geometry.coordinates).toEqual([
+				0, 0,
+			]);
 		});
 
 		it("handles the falsy validation when editable true", () => {

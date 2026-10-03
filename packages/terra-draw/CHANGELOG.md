@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.36.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.35.0...terra-draw@1.36.0) (2026-10-03)
+
+
+### feat
+
+* **terra-draw:** support snapping in point and marker modes (#964) ([](https://github.com/JamesLMilner/terra-draw/commit/4e653ef271eb07c03dffd889ea8ff123dac035b4)), closes [#964](https://github.com/JamesLMilner/terra-draw/issues/964)
+
 ## [1.35.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.34.0...terra-draw@1.35.0) (2026-09-20)
 
 

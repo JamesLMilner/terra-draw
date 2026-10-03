@@ -219,11 +219,14 @@ export type SnapToDegree = {
 	backTracking?: boolean;
 };
 
-export interface Snapping {
-	toLine?: boolean;
+export interface OneDimensionalSnapping {
 	toCoordinate?: boolean;
 	toFeature?: SnapToFeature;
 	toCustom?: SnapToCustom;
+}
+
+export interface Snapping extends OneDimensionalSnapping {
+	toLine?: boolean;
 	toDegree?: SnapToDegree;
 }
 

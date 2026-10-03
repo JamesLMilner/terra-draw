@@ -8,8 +8,10 @@ import {
 	COMMON_PROPERTIES,
 	Z_INDEX,
 	FinishActions,
+	OneDimensionalSnapping,
 } from "../../common";
 import { CursorValues } from "../../common/cursors";
+import { Position } from "geojson";
 import {
 	FeatureId,
 	GeoJSONStoreFeatures,
@@ -29,6 +31,9 @@ import { PixelDistanceBehavior } from "../pixel-distance.behavior";
 import { PointSearchBehavior } from "../point-search.behavior";
 import { MutateFeatureBehavior, Mutations } from "../mutate-feature.behavior";
 import { isBoolean, isNonNullObject } from "../../common/checks";
+import { CoordinateSnappingBehavior } from "../coordinate-snapping.behavior";
+import { LineSnappingBehavior } from "../line-snapping.behavior";
+import { FeatureSnappingBehavior } from "../feature-snapping.behavior";
 
 type PointModeStyling = {
 	pointWidth: NumericStyling;
@@ -58,6 +63,7 @@ const defaultCursors = {
 interface TerraDrawPointModeOptions<
 	T extends CustomStyling,
 > extends BaseModeOptions<T> {
+	snapping?: OneDimensionalSnapping;
 	cursors?: Cursors;
 	editable?: boolean;
 }
@@ -68,6 +74,7 @@ export class TerraDrawPointMode extends TerraDrawBaseDrawMode<PointModeStyling> 
 	// Options
 	private cursors: Required<Cursors> = defaultCursors;
 	private editable: boolean = false;
+	private snapping: OneDimensionalSnapping | undefined;
 
 	// Internal state
 	private editedFeatureId: FeatureId | undefined;
@@ -77,6 +84,9 @@ export class TerraDrawPointMode extends TerraDrawBaseDrawMode<PointModeStyling> 
 	private clickBoundingBox!: ClickBoundingBoxBehavior;
 	private pointSearch!: PointSearchBehavior;
 	private mutateFeature!: MutateFeatureBehavior;
+	private coordinateSnapping!: CoordinateSnappingBehavior;
+	private lineSnapping!: LineSnappingBehavior;
+	private featureSnapping!: FeatureSnappingBehavior;
 
 	constructor(options?: TerraDrawPointModeOptions<PointModeStyling>) {
 		super(options, true);
@@ -90,6 +100,10 @@ export class TerraDrawPointMode extends TerraDrawBaseDrawMode<PointModeStyling> 
 
 		if (isNonNullObject(options?.cursors)) {
 			this.cursors = { ...this.cursors, ...options.cursors };
+		}
+
+		if (isNonNullObject(options?.snapping)) {
+			this.snapping = options.snapping;
 		}
 
 		if (isBoolean(options?.editable)) {
@@ -186,7 +200,7 @@ export class TerraDrawPointMode extends TerraDrawBaseDrawMode<PointModeStyling> 
 			featureId: this.editedFeatureId,
 			coordinateMutations: {
 				type: Mutations.Replace,
-				coordinates: [event.lng, event.lat],
+				coordinates: this.snapCoordinate(event, this.editedFeatureId),
 			},
 			propertyMutations: {
 				[COMMON_PROPERTIES.EDITED]: true,
@@ -240,6 +254,20 @@ export class TerraDrawPointMode extends TerraDrawBaseDrawMode<PointModeStyling> 
 			config,
 			this.pixelDistance,
 			this.clickBoundingBox,
+		);
+		this.coordinateSnapping = new CoordinateSnappingBehavior(
+			config,
+			this.pixelDistance,
+			this.clickBoundingBox,
+		);
+		this.lineSnapping = new LineSnappingBehavior(
+			config,
+			this.pixelDistance,
+			this.clickBoundingBox,
+		);
+		this.featureSnapping = new FeatureSnappingBehavior(
+			this.coordinateSnapping,
+			this.lineSnapping,
 		);
 		this.mutateFeature = new MutateFeatureBehavior(config, {
 			validate: this.validate,
@@ -315,7 +343,7 @@ export class TerraDrawPointMode extends TerraDrawBaseDrawMode<PointModeStyling> 
 
 	private onLeftClick(event: TerraDrawMouseEvent) {
 		const feature = this.mutateFeature.createPoint({
-			coordinates: [event.lng, event.lat],
+			coordinates: this.snapCoordinate(event),
 			properties: {
 				mode: this.mode,
 			},
@@ -328,6 +356,58 @@ export class TerraDrawPointMode extends TerraDrawBaseDrawMode<PointModeStyling> 
 				action: FinishActions.Draw,
 			});
 		}
+	}
+
+	private snapCoordinate(
+		event: TerraDrawMouseEvent,
+		currentFeatureId?: FeatureId,
+	): Position {
+		let snappedCoordinate: Position = [event.lng, event.lat];
+
+		if (this.snapping?.toCoordinate) {
+			const snapped = currentFeatureId
+				? this.coordinateSnapping.getSnappableCoordinate(
+						event,
+						currentFeatureId,
+					)
+				: this.coordinateSnapping.getSnappableCoordinateFirstClick(event);
+
+			if (snapped) {
+				snappedCoordinate = snapped;
+			}
+		}
+
+		if (this.snapping?.toFeature) {
+			const snappable = this.featureSnapping.getSnappable(
+				event,
+				currentFeatureId,
+				this.snapping.toFeature.filter,
+				{
+					toLine: this.snapping.toFeature.toLine,
+					toCoordinate: this.snapping.toFeature.toCoordinate,
+				},
+			);
+
+			if (snappable.coordinate) {
+				snappedCoordinate = snappable.coordinate;
+			}
+		}
+
+		if (this.snapping?.toCustom) {
+			const snapped = this.snapping.toCustom(event, {
+				currentCoordinate: 0,
+				currentId: currentFeatureId,
+				getCurrentGeometrySnapshot: () => null,
+				project: this.project,
+				unproject: this.unproject,
+			});
+
+			if (snapped) {
+				snappedCoordinate = snapped;
+			}
+		}
+
+		return snappedCoordinate;
 	}
 
 	private onRightClick(event: TerraDrawMouseEvent) {

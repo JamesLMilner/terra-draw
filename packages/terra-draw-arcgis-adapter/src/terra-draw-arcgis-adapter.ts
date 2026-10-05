@@ -26,6 +26,18 @@ import SimpleFillSymbol from "@arcgis/core/symbols/SimpleFillSymbol";
 import Color from "@arcgis/core/Color";
 import Geometry from "@arcgis/core/geometry/Geometry";
 
+const markerAnchorOffsets: Record<string, [number, number]> = {
+	"top-left": [0.5, -0.5],
+	top: [0, -0.5],
+	"top-right": [-0.5, -0.5],
+	left: [0.5, 0],
+	center: [0, 0],
+	right: [-0.5, 0],
+	"bottom-left": [0.5, 0.5],
+	bottom: [0, 0.5],
+	"bottom-right": [-0.5, 0.5],
+};
+
 type InjectableArcGISMapsSDK = {
 	GraphicsLayer: typeof GraphicsLayer;
 	Point: typeof Point;
@@ -256,6 +268,12 @@ export class TerraDrawArcGISMapsSDKAdapter
 		switch (type) {
 			case "Point":
 				if (style.markerUrl && style.markerHeight && style.markerWidth) {
+					// Backwards compatible read: older Terra Draw versions will not have this field in the interface
+					const markerAnchor = (style as { markerAnchor?: string })
+						.markerAnchor;
+					const [anchorX, anchorY] =
+						markerAnchorOffsets[markerAnchor ?? "bottom"];
+
 					geometry = new this._lib.Point({
 						latitude: coordinates[1],
 						longitude: coordinates[0],
@@ -264,8 +282,8 @@ export class TerraDrawArcGISMapsSDKAdapter
 						url: style.markerUrl,
 						width: style.markerWidth + "px",
 						height: style.markerHeight + "px",
-						xoffset: 0, // center horizontally
-						yoffset: ((style.markerHeight as number) ?? 0) / 2, // anchor bottom center
+						xoffset: style.markerWidth * anchorX,
+						yoffset: style.markerHeight * anchorY,
 					});
 				} else {
 					geometry = new this._lib.Point({

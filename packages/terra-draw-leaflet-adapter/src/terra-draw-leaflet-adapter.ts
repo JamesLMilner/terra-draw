@@ -10,6 +10,18 @@ import {
 } from "terra-draw";
 import L from "leaflet";
 
+const markerAnchorCoordinates: Record<string, [number, number]> = {
+	"top-left": [0, 0],
+	top: [0.5, 0],
+	"top-right": [1, 0],
+	left: [0, 0.5],
+	center: [0.5, 0.5],
+	right: [1, 0.5],
+	"bottom-left": [0, 1],
+	bottom: [0.5, 1],
+	"bottom-right": [1, 1],
+};
+
 export class TerraDrawLeafletAdapter
 	extends TerraDrawExtend.TerraDrawBaseAdapter
 {
@@ -110,12 +122,18 @@ export class TerraDrawLeafletAdapter
 				const markerWidth = featureStyles.markerWidth;
 
 				if (markerUrl && markerHeight && markerWidth) {
+					// Backwards compatible read: older Terra Draw versions will not have this field in the interface
+					const markerAnchor = (featureStyles as { markerAnchor?: string })
+						.markerAnchor;
+					const [anchorX, anchorY] =
+						markerAnchorCoordinates[markerAnchor ?? "bottom"];
+
 					// If a markerUrl is provided, use a divIcon to render the image
 					const icon = L.divIcon({
 						className: "",
 						html: `<img src="${markerUrl}" style="width: ${markerWidth}px; height: ${markerHeight}px;" />`,
 						iconSize: [markerWidth, markerHeight],
-						iconAnchor: [markerWidth / 2, markerHeight],
+						iconAnchor: [markerWidth * anchorX, markerHeight * anchorY],
 					});
 
 					return L.marker(latlng, {

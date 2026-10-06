@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.7.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw-google-maps-adapter@1.6.2...terra-draw-google-maps-adapter@1.7.0) (2026-10-06)
+
+
+### feat
+
+* **terra-draw-google-maps-adapter:** support markerAnchor style property (#969) ([](https://github.com/JamesLMilner/terra-draw/commit/6ef739fde4d01ca5d60b50eabd19f5b5c999ab7c)), closes [#969](https://github.com/JamesLMilner/terra-draw/issues/969)
+
 ## [1.6.2](https://github.com/JamesLMilner/terra-draw/compare/terra-draw-google-maps-adapter@1.6.1...terra-draw-google-maps-adapter@1.6.2) (2026-09-08)
 
 

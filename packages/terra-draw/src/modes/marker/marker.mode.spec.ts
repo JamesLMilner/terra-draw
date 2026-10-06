@@ -36,6 +36,14 @@ describe("TerraDrawMarkerMode", () => {
 			});
 		});
 
+		it("constructs with a marker anchor", () => {
+			const markerMode = new TerraDrawMarkerMode({
+				styles: { markerAnchor: "top-left" },
+			});
+
+			expect(markerMode.styles).toStrictEqual({ markerAnchor: "top-left" });
+		});
+
 		it("constructs with custom mode name", () => {
 			const markerMode = new TerraDrawMarkerMode({
 				modeName: "custom-marker",
@@ -777,6 +785,7 @@ describe("TerraDrawMarkerMode", () => {
 				markerHeight: 32,
 				markerWidth: 32,
 				markerUrl: "test.png",
+				markerAnchor: "bottom",
 			});
 		});
 
@@ -786,6 +795,7 @@ describe("TerraDrawMarkerMode", () => {
 					markerHeight: () => 32,
 					markerWidth: () => 32,
 					markerUrl: () => "test.png",
+					markerAnchor: () => "top-left",
 				},
 			});
 
@@ -799,6 +809,7 @@ describe("TerraDrawMarkerMode", () => {
 				markerHeight: 32,
 				markerWidth: 32,
 				markerUrl: "test.png",
+				markerAnchor: "top-left",
 			});
 		});
 

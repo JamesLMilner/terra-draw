@@ -11,6 +11,18 @@ import {
 
 import { GeoJsonObject } from "geojson";
 
+const markerAnchorCoordinates: Record<string, [number, number]> = {
+	"top-left": [0, 0],
+	top: [0.5, 0],
+	"top-right": [1, 0],
+	left: [0, 0.5],
+	center: [0.5, 0.5],
+	right: [1, 0.5],
+	"bottom-left": [0, 1],
+	bottom: [0.5, 1],
+	"bottom-right": [1, 1],
+};
+
 export class TerraDrawGoogleMapsAdapter
 	extends TerraDrawExtend.TerraDrawBaseAdapter
 {
@@ -320,15 +332,27 @@ export class TerraDrawGoogleMapsAdapter
 		switch (type) {
 			case "Point":
 				if (calculatedStyles.markerUrl) {
+					const markerWidth = calculatedStyles.markerWidth;
+					const markerHeight = calculatedStyles.markerHeight;
+					// Backwards compatible read: older Terra Draw versions will not have this field in the interface
+					const markerAnchor = (calculatedStyles as { markerAnchor?: string })
+						.markerAnchor;
+					const [anchorX, anchorY] =
+						markerAnchorCoordinates[markerAnchor ?? "bottom"];
+
 					return {
 						clickable: false,
 						icon: {
 							url: calculatedStyles.markerUrl as string,
 							scaledSize:
-								calculatedStyles.markerWidth && calculatedStyles.markerHeight
-									? new this._lib.Size(
-											calculatedStyles.markerWidth,
-											calculatedStyles.markerHeight,
+								markerWidth && markerHeight
+									? new this._lib.Size(markerWidth, markerHeight)
+									: undefined,
+							anchor:
+								markerWidth && markerHeight
+									? new this._lib.Point(
+											markerWidth * anchorX,
+											markerHeight * anchorY,
 										)
 									: undefined,
 						},

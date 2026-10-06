@@ -22,6 +22,21 @@ export type DashArrayStyling =
 
 export type UrlStyling = string | ((feature: GeoJSONStoreFeatures) => string);
 
+type MarkerAnchor =
+	| "center"
+	| "top"
+	| "bottom"
+	| "left"
+	| "right"
+	| "top-left"
+	| "top-right"
+	| "bottom-left"
+	| "bottom-right";
+
+export type MarkerAnchorStyling =
+	| MarkerAnchor
+	| ((feature: GeoJSONStoreFeatures) => MarkerAnchor | undefined);
+
 export interface TerraDrawAdapterStyling {
 	pointColor: HexColor;
 	pointWidth: number;
@@ -43,6 +58,7 @@ export interface TerraDrawAdapterStyling {
 	markerUrl?: string;
 	markerHeight?: number;
 	markerWidth?: number;
+	markerAnchor?: MarkerAnchor;
 }
 
 export type CartesianPoint = { x: number; y: number };

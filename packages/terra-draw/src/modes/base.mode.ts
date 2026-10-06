@@ -16,6 +16,7 @@ import {
 	NumericStyling,
 	UrlStyling,
 	DashArrayStyling,
+	MarkerAnchorStyling,
 } from "../common";
 import {
 	FeatureId,
@@ -39,6 +40,7 @@ export type CustomStyling = Record<
 	| NumericStyling
 	| UrlStyling
 	| DashArrayStyling
+	| MarkerAnchorStyling
 >;
 
 export enum ModeTypes {

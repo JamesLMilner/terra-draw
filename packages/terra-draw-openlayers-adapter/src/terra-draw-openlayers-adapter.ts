@@ -25,6 +25,18 @@ import { Coordinate } from "ol/coordinate";
 import { Pixel } from "ol/pixel";
 import { Icon } from "ol/style";
 
+const markerAnchorCoordinates: Record<string, [number, number]> = {
+	"top-left": [0, 0],
+	top: [0.5, 0],
+	"top-right": [1, 0],
+	left: [0, 0.5],
+	center: [0.5, 0.5],
+	right: [1, 0.5],
+	"bottom-left": [0, 1],
+	bottom: [0.5, 1],
+	"bottom-right": [1, 1],
+};
+
 export type InjectableOL = {
 	Icon: typeof Icon;
 	Fill: typeof Fill;
@@ -125,13 +137,19 @@ export class TerraDrawOpenLayersAdapter
 				});
 
 				if (style.markerUrl && style.markerWidth && style.markerHeight) {
+					// Backwards compatible read: older Terra Draw versions will not have this field in the interface
+					const markerAnchor = (style as { markerAnchor?: string })
+						.markerAnchor;
+					const resolvedMarkerAnchorCoordinates =
+						markerAnchorCoordinates[markerAnchor ?? "bottom"];
+
 					return new this._lib.Style({
 						zIndex: this.baseZIndex + style.zIndex,
 						image: new this._lib.Icon({
 							src: style.markerUrl as string,
 							width: style.markerWidth,
 							height: style.markerHeight,
-							anchor: [0.5, 1], // Anchor the icon at the bottom center
+							anchor: resolvedMarkerAnchorCoordinates,
 						}),
 					});
 				}

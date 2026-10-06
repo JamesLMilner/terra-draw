@@ -248,7 +248,7 @@ export class TerraDrawMapLibreGLAdapter<MapType>
 			filter: ["has", "markerId"],
 			layout: {
 				"icon-image": ["image", ["get", "markerId"]],
-				"icon-anchor": "bottom", // bottom center of icon will be aligned to point
+				"icon-anchor": ["get", "markerAnchor"],
 				"icon-allow-overlap": true,
 			},
 		});
@@ -494,6 +494,10 @@ export class TerraDrawMapLibreGLAdapter<MapType>
 						.pointOpacity;
 					properties.pointOpacity =
 						pointOpacity === undefined ? 1 : pointOpacity;
+					// Backwards compatible read: older Terra Draw versions will not have this field in the interface
+					const markerAnchor = (styles as { markerAnchor?: string })
+						.markerAnchor;
+					properties.markerAnchor = markerAnchor ?? "bottom";
 
 					if (styles.markerUrl && styles.markerWidth && styles.markerHeight) {
 						const id = `marker-${this.hashCode(styles.markerUrl)}`;

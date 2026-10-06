@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.5.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw-mapbox-gl-adapter@1.4.0...terra-draw-mapbox-gl-adapter@1.5.0) (2026-10-06)
+
+
+### feat
+
+* **terra-draw-mapbox-gl-adapter:** support markerAnchor style property (#966) ([](https://github.com/JamesLMilner/terra-draw/commit/479c16e62a1ecdd1ac1d3b4a8987d7f9c7b00243)), closes [#966](https://github.com/JamesLMilner/terra-draw/issues/966)
+
 ## [1.4.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw-mapbox-gl-adapter@1.3.0...terra-draw-mapbox-gl-adapter@1.4.0) (2026-05-07)
 
 

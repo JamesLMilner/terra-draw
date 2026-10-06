@@ -7,6 +7,7 @@ import {
 	COMMON_PROPERTIES,
 	Z_INDEX,
 	UrlStyling,
+	MarkerAnchorStyling,
 	MARKER_URL_DEFAULT,
 	FinishActions,
 	OneDimensionalSnapping,
@@ -41,6 +42,7 @@ type MarkerModeStyling = {
 	markerUrl: UrlStyling;
 	markerHeight: NumericStyling;
 	markerWidth: NumericStyling;
+	markerAnchor: MarkerAnchorStyling;
 };
 
 interface Cursors {
@@ -294,9 +296,20 @@ export class TerraDrawMarkerMode extends TerraDrawBaseDrawMode<MarkerModeStyling
 				MARKER_URL_DEFAULT,
 				feature,
 			);
+			styles.markerAnchor = this.getMarkerAnchorStylingValue(feature);
 		}
 
 		return styles;
+	}
+
+	private getMarkerAnchorStylingValue(feature: GeoJSONStoreFeatures) {
+		const markerAnchor = this.styles?.markerAnchor;
+
+		if (typeof markerAnchor === "function") {
+			return markerAnchor(feature) ?? "bottom";
+		}
+
+		return markerAnchor ?? "bottom";
 	}
 
 	validateFeature(feature: unknown): StoreValidation {

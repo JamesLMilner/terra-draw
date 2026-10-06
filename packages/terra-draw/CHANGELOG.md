@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.37.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.36.0...terra-draw@1.37.0) (2026-10-06)
+
+
+### feat
+
+* **terra-draw:** support markerAnchor style property (#965) ([](https://github.com/JamesLMilner/terra-draw/commit/240fbbcaa9dc02a0c500bb0e363e44d2ba4ff6cc)), closes [#965](https://github.com/JamesLMilner/terra-draw/issues/965)
+
 ## [1.36.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.35.0...terra-draw@1.36.0) (2026-10-03)
 
 

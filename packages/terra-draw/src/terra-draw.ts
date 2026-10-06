@@ -831,7 +831,8 @@ class TerraDraw {
 	 * after the mode has been started. You can also use this method to update styles
 	 * as these are passed from the options object.
 	 * @param mode - the mode name you wish to update (the mode name is the public 'mode' property of the mode class)
-	 * @param options - the options object - this allows _partial_ updating of the modes options (i.e. you do not need to pass the whole options object)
+	 * @param options - the options object. You do not need to pass the whole options object.
+	 * Updates are not deeply merged. Nested objects are replaced in their entirety when provided.
 	 */
 	updateModeOptions<Mode extends { new (...args: any[]): any }>(
 		mode: InstanceType<Mode>["mode"],

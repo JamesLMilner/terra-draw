@@ -203,7 +203,7 @@ export class TerraDrawMapboxGLAdapter
 			filter: ["has", "markerId"],
 			layout: {
 				"icon-image": ["get", "markerId"],
-				"icon-anchor": "bottom", // bottom center of icon will be aligned to point
+				"icon-anchor": ["get", "markerAnchor"],
 				"icon-allow-overlap": true,
 			},
 		});
@@ -438,6 +438,10 @@ export class TerraDrawMapboxGLAdapter
 					properties.pointWidth = styles.pointWidth;
 					properties.pointOpacity =
 						pointOpacity === undefined ? 1 : pointOpacity;
+					// Backwards compatible read: older Terra Draw versions will not have this field in the interface
+					const markerAnchor = (styles as { markerAnchor?: string })
+						.markerAnchor;
+					properties.markerAnchor = markerAnchor ?? "bottom";
 
 					if (
 						styles.markerUrl &&

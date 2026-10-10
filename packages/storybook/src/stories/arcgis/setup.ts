@@ -1,14 +1,15 @@
 import EsriMap from "@arcgis/core/Map";
 import MapView from "@arcgis/core/views/MapView.js";
 import GraphicsLayer from "@arcgis/core/layers/GraphicsLayer";
+import Graphic from "@arcgis/core/Graphic";
 import Point from "@arcgis/core/geometry/Point";
 import Polyline from "@arcgis/core/geometry/Polyline";
 import ArcGISPolygon from "@arcgis/core/geometry/Polygon";
-import Graphic from "@arcgis/core/Graphic";
 import SimpleFillSymbol from "@arcgis/core/symbols/SimpleFillSymbol";
 import SimpleLineSymbol from "@arcgis/core/symbols/SimpleLineSymbol";
-import Color from "@arcgis/core/Color";
 import SimpleMarkerSymbol from "@arcgis/core/symbols/SimpleMarkerSymbol";
+import PictureMarkerSymbol from "@arcgis/core/symbols/PictureMarkerSymbol.js";
+import Color from "@arcgis/core/Color";
 import {
 	setupMapContainer,
 	setupControls,
@@ -18,7 +19,6 @@ import {
 import { TerraDraw } from "../../../../terra-draw/src/terra-draw";
 import { TerraDrawArcGISMapsSDKAdapter } from "../../../../terra-draw-arcgis-adapter/src/terra-draw-arcgis-adapter";
 import { StoryArgs } from "../../common/config";
-import { PictureMarkerSymbol } from "@arcgis/core/symbols";
 
 export const initialiseArcGISMap = ({
 	mapContainer,

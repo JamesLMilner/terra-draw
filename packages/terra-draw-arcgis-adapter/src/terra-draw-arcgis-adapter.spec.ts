@@ -1,7 +1,6 @@
 import MapView from "@arcgis/core/views/MapView.js";
 import Point from "@arcgis/core/geometry/Point";
 import Color from "@arcgis/core/Color";
-import MapViewScreenPoint = __esri.MapViewScreenPoint;
 
 import { TerraDrawAdapterStyling, TerraDrawExtend } from "terra-draw";
 
@@ -101,8 +100,8 @@ describe("TerraDrawArcGISMapsSDKAdapter", () => {
 			expect(lib.GraphicsLayer).toHaveBeenCalledWith({
 				id: adapter["_featureLayerName"],
 			});
-			expect(mockMapView.map.add).toHaveBeenCalledTimes(1);
-			expect(mockMapView.map.add).toHaveBeenCalledWith(mockGraphicsLayer);
+			expect(mockMapView.map!.add).toHaveBeenCalledTimes(1);
+			expect(mockMapView.map!.add).toHaveBeenCalledWith(mockGraphicsLayer);
 		});
 	});
 
@@ -169,7 +168,7 @@ describe("TerraDrawArcGISMapsSDKAdapter", () => {
 			map.toMap = jest.fn(() => ({
 				latitude: 51.507222,
 				longitude: -0.1275,
-			})) as unknown as (point: MapViewScreenPoint | MouseEvent) => Point;
+			})) as unknown as (point: MouseEvent) => Point;
 
 			const result = adapter.getLngLatFromEvent(MockPointerEvent());
 			expect(result).toEqual({ lat: 51.507222, lng: -0.1275 });

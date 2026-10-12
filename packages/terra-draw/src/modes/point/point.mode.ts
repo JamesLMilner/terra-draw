@@ -408,7 +408,9 @@ export class TerraDrawPointMode extends TerraDrawBaseDrawMode<PointModeStyling> 
 	private updateSnappedCoordinate(event: TerraDrawMouseEvent) {
 		const snappedCoordinate = this.getSnappedCoordinate(event);
 
-		if (snappedCoordinate && this.snapping?.showSnappingPoint !== false) {
+		// NOTE: Defaults to showing only if the snapping option is enabled - this differs
+		// from other non-point modes where snapping might be shown by default.
+		if (snappedCoordinate && this.snapping?.showSnappingPoint === true) {
 			if (this.snappedPointId) {
 				this.mutateFeature.updateGuidancePoints([
 					{

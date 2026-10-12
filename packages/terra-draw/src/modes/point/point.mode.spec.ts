@@ -417,7 +417,7 @@ describe("TerraDrawPointMode", () => {
 
 		it("creates, updates, and removes a snapping guidance point", () => {
 			const pointMode = new TerraDrawPointMode({
-				snapping: { toCoordinate: true },
+				snapping: { toCoordinate: true, showSnappingPoint: true },
 			});
 			const mockConfig = MockModeConfig(pointMode.mode);
 			mockConfig.store.create([
@@ -489,6 +489,26 @@ describe("TerraDrawPointMode", () => {
 					toCustom: () => [1, 2],
 					showSnappingPoint: false,
 				},
+			});
+			const mockConfig = MockModeConfig(pointMode.mode);
+			pointMode.register(mockConfig);
+
+			pointMode.onMouseMove(MockCursorEvent({ lng: 0, lat: 0 }));
+			pointMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+			expect(
+				mockConfig.store.copyAllWhere(
+					(properties) => properties[COMMON_PROPERTIES.SNAPPING_POINT] === true,
+				),
+			).toHaveLength(0);
+			expect(mockConfig.store.copyAll()[0].geometry.coordinates).toStrictEqual([
+				1, 2,
+			]);
+		});
+
+		it("hides snapping guidance by default while still snapping", () => {
+			const pointMode = new TerraDrawPointMode({
+				snapping: { toCustom: () => [1, 2] },
 			});
 			const mockConfig = MockModeConfig(pointMode.mode);
 			pointMode.register(mockConfig);

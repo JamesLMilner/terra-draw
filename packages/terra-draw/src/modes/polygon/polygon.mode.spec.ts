@@ -145,6 +145,36 @@ describe("TerraDrawPolygonMode", () => {
 			]);
 		});
 
+		it("can hide the snapping guidance point", () => {
+			const polygonMode = new TerraDrawPolygonMode({
+				snapping: {
+					toCustom: () => [1, 1],
+					showSnappingPoint: false,
+				},
+			});
+			const mockConfig = MockModeConfig(polygonMode.mode);
+			polygonMode.register(mockConfig);
+			polygonMode.start();
+
+			polygonMode.onMouseMove(MockCursorEvent({ lng: 0, lat: 0 }));
+			polygonMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+			expect(
+				mockConfig.store.copyAllWhere(
+					(properties) => properties[COMMON_PROPERTIES.SNAPPING_POINT] === true,
+				),
+			).toHaveLength(0);
+			const [feature] = mockConfig.store.copyAll();
+			expect(feature.geometry.coordinates).toStrictEqual([
+				[
+					[1, 1],
+					[1, 1],
+					[1, 1],
+					[1, 1],
+				],
+			]);
+		});
+
 		it("can set editable", () => {
 			const polygonMode = new TerraDrawPolygonMode();
 			polygonMode.updateOptions({

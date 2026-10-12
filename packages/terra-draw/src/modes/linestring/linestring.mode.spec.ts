@@ -282,6 +282,32 @@ describe("TerraDrawLineStringMode", () => {
 			]);
 		});
 
+		it("hides the snapping guidance point when configured", () => {
+			lineStringMode = new TerraDrawLineStringMode({
+				snapping: {
+					toCustom: () => [5, 5],
+					showSnappingPoint: false,
+				},
+			});
+			const mockConfig = MockModeConfig(lineStringMode.mode);
+			store = mockConfig.store;
+			lineStringMode.register(mockConfig);
+			lineStringMode.start();
+
+			lineStringMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			lineStringMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
+
+			expect(
+				store.copyAllWhere(
+					(properties) => properties[COMMON_PROPERTIES.SNAPPING_POINT] === true,
+				),
+			).toHaveLength(0);
+			expect(store.copyAll()[0].geometry.coordinates).toStrictEqual([
+				[5, 5],
+				[5, 5],
+			]);
+		});
+
 		it("keeps a coordinate point at the current cursor position when showCoordinatePoints is true", () => {
 			lineStringMode = new TerraDrawLineStringMode({
 				showCoordinatePoints: true,

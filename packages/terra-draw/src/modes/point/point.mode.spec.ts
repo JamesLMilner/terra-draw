@@ -482,6 +482,29 @@ describe("TerraDrawPointMode", () => {
 				0, 0,
 			]);
 		});
+
+		it("hides the snapping guidance point when configured", () => {
+			const pointMode = new TerraDrawPointMode({
+				snapping: {
+					toCustom: () => [1, 2],
+					showSnappingPoint: false,
+				},
+			});
+			const mockConfig = MockModeConfig(pointMode.mode);
+			pointMode.register(mockConfig);
+
+			pointMode.onMouseMove(MockCursorEvent({ lng: 0, lat: 0 }));
+			pointMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+			expect(
+				mockConfig.store.copyAllWhere(
+					(properties) => properties[COMMON_PROPERTIES.SNAPPING_POINT] === true,
+				),
+			).toHaveLength(0);
+			expect(mockConfig.store.copyAll()[0].geometry.coordinates).toStrictEqual([
+				1, 2,
+			]);
+		});
 	});
 
 	describe("cleanUp", () => {

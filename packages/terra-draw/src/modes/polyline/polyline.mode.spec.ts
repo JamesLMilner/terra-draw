@@ -252,6 +252,32 @@ describe("TerraDrawPolyLineMode", () => {
 			]);
 		});
 
+		it("hides the snapping guidance point when configured", () => {
+			const polyLineMode = new TerraDrawPolyLineMode({
+				snapping: {
+					toCustom: () => [5, 5],
+					showSnappingPoint: false,
+				},
+			});
+			const config = MockModeConfig(polyLineMode.mode);
+			polyLineMode.register(config);
+			polyLineMode.start();
+
+			polyLineMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			polyLineMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 1 }));
+
+			expect(
+				config.store.copyAllWhere(
+					(properties) => properties[COMMON_PROPERTIES.SNAPPING_POINT] === true,
+				),
+			).toHaveLength(0);
+			const [feature] = config.store.copyAll();
+			expect(feature.geometry.coordinates).toStrictEqual([
+				[5, 5],
+				[5, 5],
+			]);
+		});
+
 		it("updates coordinate points while drawing", () => {
 			const polyLineMode = new TerraDrawPolyLineMode({
 				showCoordinatePoints: true,

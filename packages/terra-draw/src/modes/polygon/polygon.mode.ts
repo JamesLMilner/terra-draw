@@ -316,7 +316,7 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 	private updateSnappedCoordinate(event: TerraDrawMouseEvent) {
 		const snappedCoordinate = this.snapCoordinate(event);
 
-		if (snappedCoordinate) {
+		if (snappedCoordinate && this.snapping?.showSnappingPoint !== false) {
 			if (this.snappedPointId) {
 				this.mutateFeature.updateGuidancePoints([
 					{
@@ -330,12 +330,14 @@ export class TerraDrawPolygonMode extends TerraDrawBaseDrawMode<PolygonStyling> 
 					type: COMMON_PROPERTIES.SNAPPING_POINT,
 				});
 			}
-
-			event.lng = snappedCoordinate[0];
-			event.lat = snappedCoordinate[1];
 		} else if (this.snappedPointId) {
 			this.mutateFeature.deleteFeatureIfPresent(this.snappedPointId);
 			this.snappedPointId = undefined;
+		}
+
+		if (snappedCoordinate) {
+			event.lng = snappedCoordinate[0];
+			event.lat = snappedCoordinate[1];
 		}
 	}
 

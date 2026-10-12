@@ -489,7 +489,7 @@ export class TerraDrawPolyLineMode extends TerraDrawBaseDrawMode<PolyLineStyling
 	private updateSnappedCoordinate(event: TerraDrawMouseEvent) {
 		const snappedCoordinate = this.snapCoordinate(event);
 
-		if (snappedCoordinate) {
+		if (snappedCoordinate && this.snapping?.showSnappingPoint !== false) {
 			if (this.snappedPointId) {
 				this.mutateFeature.updateGuidancePoints([
 					{
@@ -503,12 +503,14 @@ export class TerraDrawPolyLineMode extends TerraDrawBaseDrawMode<PolyLineStyling
 					type: COMMON_PROPERTIES.SNAPPING_POINT,
 				});
 			}
-
-			event.lng = snappedCoordinate[0];
-			event.lat = snappedCoordinate[1];
 		} else if (this.snappedPointId) {
 			this.mutateFeature.deleteFeatureIfPresent(this.snappedPointId);
 			this.snappedPointId = undefined;
+		}
+
+		if (snappedCoordinate) {
+			event.lng = snappedCoordinate[0];
+			event.lat = snappedCoordinate[1];
 		}
 	}
 

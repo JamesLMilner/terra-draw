@@ -239,6 +239,7 @@ export interface OneDimensionalSnapping {
 	toCoordinate?: boolean;
 	toFeature?: SnapToFeature;
 	toCustom?: SnapToCustom;
+	showSnappingPoint?: boolean;
 }
 
 export interface Snapping extends OneDimensionalSnapping {

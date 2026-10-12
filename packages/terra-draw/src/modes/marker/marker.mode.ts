@@ -362,7 +362,7 @@ export class TerraDrawMarkerMode extends TerraDrawBaseDrawMode<MarkerModeStyling
 	private updateSnappedCoordinate(event: TerraDrawMouseEvent) {
 		const snappedCoordinate = this.getSnappedCoordinate(event);
 
-		if (snappedCoordinate) {
+		if (snappedCoordinate && this.snapping?.showSnappingPoint !== false) {
 			if (this.snappedPointId) {
 				this.mutateFeature.updateGuidancePoints([
 					{

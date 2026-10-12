@@ -439,6 +439,74 @@ describe("TerraDrawMarkerMode", () => {
 				markerMode.onMouseMove();
 			}).not.toThrow();
 		});
+
+		it("creates, updates, and removes a snapping guidance point", () => {
+			const markerMode = new TerraDrawMarkerMode({
+				snapping: { toCoordinate: true },
+			});
+			const mockConfig = MockModeConfig(markerMode.mode);
+			mockConfig.store.create([
+				{
+					geometry: { type: "Point", coordinates: [0, 0] },
+					properties: { mode: markerMode.mode },
+				},
+				{
+					geometry: { type: "Point", coordinates: [1, 1] },
+					properties: { mode: markerMode.mode },
+				},
+			]);
+			markerMode.register(mockConfig);
+
+			markerMode.onMouseMove(MockCursorEvent({ lng: 0.1, lat: 0.1 }));
+
+			let snappingPoints = mockConfig.store.copyAllWhere(
+				(properties) => properties[COMMON_PROPERTIES.SNAPPING_POINT] === true,
+			);
+			expect(snappingPoints).toHaveLength(1);
+			expect(snappingPoints[0].geometry.coordinates).toStrictEqual([0, 0]);
+
+			markerMode.onMouseMove(MockCursorEvent({ lng: 0.9, lat: 0.9 }));
+
+			snappingPoints = mockConfig.store.copyAllWhere(
+				(properties) => properties[COMMON_PROPERTIES.SNAPPING_POINT] === true,
+			);
+			expect(snappingPoints).toHaveLength(1);
+			expect(snappingPoints[0].geometry.coordinates).toStrictEqual([1, 1]);
+
+			markerMode.onMouseMove(MockCursorEvent({ lng: 10, lat: 10 }));
+
+			expect(
+				mockConfig.store.copyAllWhere(
+					(properties) => properties[COMMON_PROPERTIES.SNAPPING_POINT] === true,
+				),
+			).toHaveLength(0);
+		});
+
+		it("removes the snapping guidance point when placing a marker", () => {
+			const markerMode = new TerraDrawMarkerMode({
+				snapping: { toCoordinate: true },
+			});
+			const mockConfig = MockModeConfig(markerMode.mode);
+			mockConfig.store.create([
+				{
+					geometry: { type: "Point", coordinates: [0, 0] },
+					properties: { mode: markerMode.mode },
+				},
+			]);
+			markerMode.register(mockConfig);
+
+			markerMode.onMouseMove(MockCursorEvent({ lng: 0.1, lat: 0.1 }));
+			markerMode.onClick(MockCursorEvent({ lng: 0.1, lat: 0.1 }));
+
+			expect(
+				mockConfig.store.copyAllWhere(
+					(properties) => properties[COMMON_PROPERTIES.SNAPPING_POINT] === true,
+				),
+			).toHaveLength(0);
+			expect(mockConfig.store.copyAll()[1].geometry.coordinates).toStrictEqual([
+				0, 0,
+			]);
+		});
 	});
 
 	describe("cleanUp", () => {

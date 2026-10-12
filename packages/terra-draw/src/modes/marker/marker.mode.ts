@@ -75,6 +75,7 @@ export class TerraDrawMarkerMode extends TerraDrawBaseDrawMode<MarkerModeStyling
 
 	// Internal state
 	private editedFeatureId: FeatureId | undefined;
+	private snappedPointId: FeatureId | undefined;
 
 	// Behaviors
 	private pixelDistance!: PixelDistanceBehavior;
@@ -141,7 +142,13 @@ export class TerraDrawMarkerMode extends TerraDrawBaseDrawMode<MarkerModeStyling
 	}
 
 	/** @internal */
-	onMouseMove() {}
+	onMouseMove(event?: TerraDrawMouseEvent) {
+		if (!event) {
+			return;
+		}
+
+		this.updateSnappedCoordinate(event);
+	}
 
 	/** @internal */
 	onKeyDown() {}
@@ -152,6 +159,7 @@ export class TerraDrawMarkerMode extends TerraDrawBaseDrawMode<MarkerModeStyling
 	/** @internal */
 	cleanUp() {
 		this.editedFeatureId = undefined;
+		this.deleteSnappedPoint();
 	}
 
 	onDragStart(
@@ -236,6 +244,7 @@ export class TerraDrawMarkerMode extends TerraDrawBaseDrawMode<MarkerModeStyling
 
 		this.setCursor(this.cursors.dragEnd);
 		this.editedFeatureId = undefined;
+		this.deleteSnappedPoint();
 		setMapDraggability(true);
 
 		this.onFinish(featureId, {
@@ -319,6 +328,8 @@ export class TerraDrawMarkerMode extends TerraDrawBaseDrawMode<MarkerModeStyling
 	}
 
 	private onLeftClick(event: TerraDrawMouseEvent) {
+		this.deleteSnappedPoint();
+
 		const feature = this.mutateFeature.createPoint({
 			coordinates: this.snapCoordinate(event),
 			properties: {
@@ -340,7 +351,50 @@ export class TerraDrawMarkerMode extends TerraDrawBaseDrawMode<MarkerModeStyling
 		event: TerraDrawMouseEvent,
 		currentFeatureId?: FeatureId,
 	): Position {
-		let snappedCoordinate: Position = [event.lng, event.lat];
+		return (
+			this.getSnappedCoordinate(event, currentFeatureId) ?? [
+				event.lng,
+				event.lat,
+			]
+		);
+	}
+
+	private updateSnappedCoordinate(event: TerraDrawMouseEvent) {
+		const snappedCoordinate = this.getSnappedCoordinate(event);
+
+		if (snappedCoordinate) {
+			if (this.snappedPointId) {
+				this.mutateFeature.updateGuidancePoints([
+					{
+						featureId: this.snappedPointId,
+						coordinate: snappedCoordinate,
+					},
+				]);
+			} else {
+				this.snappedPointId = this.mutateFeature.createGuidancePoint({
+					coordinate: snappedCoordinate,
+					type: COMMON_PROPERTIES.SNAPPING_POINT,
+				});
+			}
+		} else {
+			this.deleteSnappedPoint();
+		}
+	}
+
+	private deleteSnappedPoint() {
+		if (!this.snappedPointId) {
+			return;
+		}
+
+		this.mutateFeature.deleteFeatureIfPresent(this.snappedPointId);
+		this.snappedPointId = undefined;
+	}
+
+	private getSnappedCoordinate(
+		event: TerraDrawMouseEvent,
+		currentFeatureId?: FeatureId,
+	): Position | undefined {
+		let snappedCoordinate: Position | undefined;
 
 		if (this.snapping?.toCoordinate) {
 			const snapped = currentFeatureId

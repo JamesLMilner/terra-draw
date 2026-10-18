@@ -347,21 +347,15 @@ export class TerraDrawMarkerMode extends TerraDrawBaseDrawMode<MarkerModeStyling
 					MARKER_URL_DEFAULT,
 					feature,
 				);
-				styles.markerAnchor = this.getMarkerAnchorStylingValue(feature);
+				styles.markerAnchor = this.getMarkerAnchorStylingValue(
+					this.styles?.markerAnchor,
+					"bottom",
+					feature,
+				);
 			}
 		}
 
 		return styles;
-	}
-
-	private getMarkerAnchorStylingValue(feature: GeoJSONStoreFeatures) {
-		const markerAnchor = this.styles?.markerAnchor;
-
-		if (typeof markerAnchor === "function") {
-			return markerAnchor(feature) ?? "bottom";
-		}
-
-		return markerAnchor ?? "bottom";
 	}
 
 	validateFeature(feature: unknown): StoreValidation {

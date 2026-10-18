@@ -40,19 +40,7 @@ const Point: Story = {
 	...DefaultStory,
 	args: {
 		id: "point",
-		modes: [
-			() =>
-				new TerraDrawPointMode({
-					styles: {
-						snappingPointColor: "#ff0000",
-						snappingPointOutlineColor: "#00ff00",
-					},
-					snapping: {
-						showSnappingPoint: true,
-						toCoordinate: true,
-					},
-				}),
-		],
+		modes: [() => new TerraDrawPointMode()],
 		...DefaultStory.args,
 	},
 };
@@ -69,10 +57,6 @@ const MarkerPNG: Story = {
 							"https://leafletjs.com/examples/custom-icons/leaf-green.png",
 						markerWidth: 25,
 						markerHeight: 60,
-					},
-					snapping: {
-						showSnappingPoint: true,
-						toCoordinate: true,
 					},
 				}),
 		],

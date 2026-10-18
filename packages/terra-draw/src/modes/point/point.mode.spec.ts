@@ -906,16 +906,16 @@ describe("TerraDrawPointMode", () => {
 				},
 			});
 
-			expect(
-				pointMode.styleFeature({
-					type: "Feature",
-					geometry: { type: "Point", coordinates: [] },
-					properties: {
-						mode: "point",
-						[COMMON_PROPERTIES.SNAPPING_POINT]: true,
-					},
-				}),
-			).toMatchObject({
+			const snappingPointStyles = pointMode.styleFeature({
+				type: "Feature",
+				geometry: { type: "Point", coordinates: [] },
+				properties: {
+					mode: "point",
+					[COMMON_PROPERTIES.SNAPPING_POINT]: true,
+				},
+			});
+
+			expect(snappingPointStyles).toMatchObject({
 				pointColor: "#222222",
 				pointWidth: 3,
 				pointOpacity: 0.5,
@@ -923,6 +923,13 @@ describe("TerraDrawPointMode", () => {
 				pointOutlineWidth: 2,
 				pointOutlineOpacity: 0.75,
 			});
+			expect(snappingPointStyles.zIndex).toBeGreaterThan(
+				pointMode.styleFeature({
+					type: "Feature",
+					geometry: { type: "Point", coordinates: [] },
+					properties: { mode: "point" },
+				}).zIndex,
+			);
 		});
 
 		it("returns the correct styles for edited point", () => {

@@ -924,6 +924,61 @@ describe("TerraDrawMarkerMode", () => {
 			});
 		});
 
+		it("returns the correct styles for snapping guidance point", () => {
+			const markerMode = new TerraDrawMarkerMode({
+				styles: {
+					snappingPointColor: "#222222",
+					snappingPointWidth: 3,
+					snappingPointOpacity: 0.5,
+					snappingPointOutlineColor: "#555555",
+					snappingPointOutlineWidth: 2,
+					snappingPointOutlineOpacity: 0.75,
+					markerUrl: "marker.png",
+				},
+			});
+
+			const snappingPointStyles = markerMode.styleFeature({
+				type: "Feature",
+				geometry: { type: "Point", coordinates: [] },
+				properties: {
+					mode: "marker",
+					[COMMON_PROPERTIES.SNAPPING_POINT]: true,
+				},
+			});
+
+			expect(snappingPointStyles).toMatchObject({
+				pointColor: "#222222",
+				pointWidth: 3,
+				pointOpacity: 0.5,
+				pointOutlineColor: "#555555",
+				pointOutlineWidth: 2,
+				pointOutlineOpacity: 0.75,
+				markerUrl: undefined,
+			});
+			expect(snappingPointStyles.zIndex).toBeGreaterThan(
+				markerMode.styleFeature({
+					type: "Feature",
+					geometry: { type: "Point", coordinates: [] },
+					properties: { mode: "marker" },
+				}).zIndex,
+			);
+		});
+
+		it("defaults the snapping guidance point outline width to 2", () => {
+			const markerMode = new TerraDrawMarkerMode();
+
+			expect(
+				markerMode.styleFeature({
+					type: "Feature",
+					geometry: { type: "Point", coordinates: [] },
+					properties: {
+						mode: "marker",
+						[COMMON_PROPERTIES.SNAPPING_POINT]: true,
+					},
+				}),
+			).toMatchObject({ pointOutlineWidth: 2 });
+		});
+
 		it("returns the correct styles for edited point", () => {
 			const markerMode = new TerraDrawMarkerMode({
 				editable: true,

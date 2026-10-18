@@ -2,6 +2,7 @@ import {
 	TerraDrawMouseEvent,
 	TerraDrawAdapterStyling,
 	NumericStyling,
+	HexColorStyling,
 	Cursor,
 	UpdateTypes,
 	COMMON_PROPERTIES,
@@ -43,6 +44,12 @@ type MarkerModeStyling = {
 	markerHeight: NumericStyling;
 	markerWidth: NumericStyling;
 	markerAnchor: MarkerAnchorStyling;
+	snappingPointColor: HexColorStyling;
+	snappingPointWidth: NumericStyling;
+	snappingPointOpacity: NumericStyling;
+	snappingPointOutlineColor: HexColorStyling;
+	snappingPointOutlineWidth: NumericStyling;
+	snappingPointOutlineOpacity: NumericStyling;
 };
 
 interface Cursors {
@@ -289,23 +296,59 @@ export class TerraDrawMarkerMode extends TerraDrawBaseDrawMode<MarkerModeStyling
 			feature.geometry.type === "Point" &&
 			feature.properties.mode === this.mode
 		) {
-			styles.zIndex = Z_INDEX.LAYER_THREE;
-			styles.markerHeight = this.getNumericStylingValue(
-				this.styles?.markerHeight,
-				40,
-				feature,
-			);
-			styles.markerWidth = this.getNumericStylingValue(
-				this.styles?.markerWidth,
-				32,
-				feature,
-			);
-			styles.markerUrl = this.getUrlStylingValue(
-				this.styles?.markerUrl,
-				MARKER_URL_DEFAULT,
-				feature,
-			);
-			styles.markerAnchor = this.getMarkerAnchorStylingValue(feature);
+			const snappingPoint =
+				feature.properties[COMMON_PROPERTIES.SNAPPING_POINT] === true;
+			styles.zIndex = snappingPoint ? Z_INDEX.LAYER_FOUR : Z_INDEX.LAYER_THREE;
+
+			if (snappingPoint) {
+				styles.pointColor = this.getHexColorStylingValue(
+					this.styles.snappingPointColor,
+					styles.pointColor,
+					feature,
+				);
+				styles.pointWidth = this.getNumericStylingValue(
+					this.styles.snappingPointWidth,
+					styles.pointWidth,
+					feature,
+				);
+				styles.pointOpacity = this.getNumericStylingValue(
+					this.styles.snappingPointOpacity,
+					styles.pointOpacity ?? 1,
+					feature,
+				);
+				styles.pointOutlineColor = this.getHexColorStylingValue(
+					this.styles.snappingPointOutlineColor,
+					styles.pointOutlineColor,
+					feature,
+				);
+				styles.pointOutlineWidth = this.getNumericStylingValue(
+					this.styles.snappingPointOutlineWidth,
+					2,
+					feature,
+				);
+				styles.pointOutlineOpacity = this.getNumericStylingValue(
+					this.styles.snappingPointOutlineOpacity,
+					styles.pointOutlineOpacity ?? 1,
+					feature,
+				);
+			} else {
+				styles.markerHeight = this.getNumericStylingValue(
+					this.styles?.markerHeight,
+					40,
+					feature,
+				);
+				styles.markerWidth = this.getNumericStylingValue(
+					this.styles?.markerWidth,
+					32,
+					feature,
+				);
+				styles.markerUrl = this.getUrlStylingValue(
+					this.styles?.markerUrl,
+					MARKER_URL_DEFAULT,
+					feature,
+				);
+				styles.markerAnchor = this.getMarkerAnchorStylingValue(feature);
+			}
 		}
 
 		return styles;

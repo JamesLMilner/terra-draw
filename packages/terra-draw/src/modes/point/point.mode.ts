@@ -362,7 +362,11 @@ export class TerraDrawPointMode extends TerraDrawBaseDrawMode<PointModeStyling> 
 				feature,
 			);
 
-			styles.zIndex = Z_INDEX.LAYER_THREE;
+			if (snappingPoint) {
+				styles.zIndex = Z_INDEX.LAYER_FOUR;
+			} else {
+				styles.zIndex = Z_INDEX.LAYER_THREE;
+			}
 		}
 
 		return styles;

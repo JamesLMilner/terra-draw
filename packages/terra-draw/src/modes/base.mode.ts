@@ -379,6 +379,14 @@ export abstract class TerraDrawBaseDrawMode<Styling extends CustomStyling> {
 		return this.getStylingValue(value, defaultValue, feature);
 	}
 
+	protected getMarkerAnchorStylingValue(
+		value: MarkerAnchorStyling | undefined,
+		defaultValue: NonNullable<TerraDrawAdapterStyling["markerAnchor"]>,
+		feature: GeoJSONStoreFeatures,
+	): NonNullable<TerraDrawAdapterStyling["markerAnchor"]> {
+		return this.getStylingValue(value, defaultValue, feature);
+	}
+
 	protected getDashArrayStylingValue(
 		value:
 			| [number, number]

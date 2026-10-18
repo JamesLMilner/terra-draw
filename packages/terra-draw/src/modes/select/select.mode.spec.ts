@@ -3674,6 +3674,7 @@ describe("TerraDrawSelectMode", () => {
 					selectedMarkerUrl: "https://www.example.com/selected.png",
 					selectedMarkerHeight: 40,
 					selectedMarkerWidth: 40,
+					selectedMarkerAnchor: "top-left",
 				},
 			});
 
@@ -3691,6 +3692,7 @@ describe("TerraDrawSelectMode", () => {
 				markerUrl: "https://www.example.com/selected.png",
 				markerHeight: 40,
 				markerWidth: 40,
+				markerAnchor: "top-left",
 			});
 
 			expect(
@@ -3712,6 +3714,7 @@ describe("TerraDrawSelectMode", () => {
 					selectedMarkerUrl: () => "https://www.example.com/selected.png",
 					selectedMarkerHeight: () => 40,
 					selectedMarkerWidth: () => 40,
+					selectedMarkerAnchor: () => "top-right",
 				},
 			});
 
@@ -3729,6 +3732,7 @@ describe("TerraDrawSelectMode", () => {
 				markerUrl: "https://www.example.com/selected.png",
 				markerHeight: 40,
 				markerWidth: 40,
+				markerAnchor: "top-right",
 			});
 
 			expect(

@@ -15,6 +15,7 @@ import {
 	MARKER_URL_DEFAULT,
 	FinishActions,
 	DashArrayStyling,
+	MarkerAnchorStyling,
 } from "../../common";
 import { LineString, Point, Polygon, Position } from "geojson";
 import {
@@ -104,6 +105,7 @@ type SelectionStyling = {
 	selectedMarkerUrl: UrlStyling;
 	selectedMarkerHeight: NumericStyling;
 	selectedMarkerWidth: NumericStyling;
+	selectedMarkerAnchor: MarkerAnchorStyling;
 
 	// LineString
 	selectedLineStringColor: HexColorStyling;
@@ -1275,6 +1277,11 @@ export class TerraDrawSelectMode extends TerraDrawBaseSelectMode<SelectionStylin
 				styles.markerWidth = this.getNumericStylingValue(
 					this.styles.selectedMarkerWidth,
 					32,
+					feature,
+				);
+				styles.markerAnchor = this.getMarkerAnchorStylingValue(
+					this.styles.selectedMarkerAnchor,
+					"bottom",
 					feature,
 				);
 				return styles;

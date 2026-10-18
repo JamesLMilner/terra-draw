@@ -439,6 +439,117 @@ describe("TerraDrawMarkerMode", () => {
 				markerMode.onMouseMove();
 			}).not.toThrow();
 		});
+
+		it("creates, updates, and removes a snapping guidance point", () => {
+			const markerMode = new TerraDrawMarkerMode({
+				snapping: { toCoordinate: true, showSnappingPoint: true },
+			});
+			const mockConfig = MockModeConfig(markerMode.mode);
+			mockConfig.store.create([
+				{
+					geometry: { type: "Point", coordinates: [0, 0] },
+					properties: { mode: markerMode.mode },
+				},
+				{
+					geometry: { type: "Point", coordinates: [1, 1] },
+					properties: { mode: markerMode.mode },
+				},
+			]);
+			markerMode.register(mockConfig);
+
+			markerMode.onMouseMove(MockCursorEvent({ lng: 0.1, lat: 0.1 }));
+
+			let snappingPoints = mockConfig.store.copyAllWhere(
+				(properties) => properties[COMMON_PROPERTIES.SNAPPING_POINT] === true,
+			);
+			expect(snappingPoints).toHaveLength(1);
+			expect(snappingPoints[0].geometry.coordinates).toStrictEqual([0, 0]);
+
+			markerMode.onMouseMove(MockCursorEvent({ lng: 0.9, lat: 0.9 }));
+
+			snappingPoints = mockConfig.store.copyAllWhere(
+				(properties) => properties[COMMON_PROPERTIES.SNAPPING_POINT] === true,
+			);
+			expect(snappingPoints).toHaveLength(1);
+			expect(snappingPoints[0].geometry.coordinates).toStrictEqual([1, 1]);
+
+			markerMode.onMouseMove(MockCursorEvent({ lng: 10, lat: 10 }));
+
+			expect(
+				mockConfig.store.copyAllWhere(
+					(properties) => properties[COMMON_PROPERTIES.SNAPPING_POINT] === true,
+				),
+			).toHaveLength(0);
+		});
+
+		it("removes the snapping guidance point when placing a marker", () => {
+			const markerMode = new TerraDrawMarkerMode({
+				snapping: { toCoordinate: true },
+			});
+			const mockConfig = MockModeConfig(markerMode.mode);
+			mockConfig.store.create([
+				{
+					geometry: { type: "Point", coordinates: [0, 0] },
+					properties: { mode: markerMode.mode },
+				},
+			]);
+			markerMode.register(mockConfig);
+
+			markerMode.onMouseMove(MockCursorEvent({ lng: 0.1, lat: 0.1 }));
+			markerMode.onClick(MockCursorEvent({ lng: 0.1, lat: 0.1 }));
+
+			expect(
+				mockConfig.store.copyAllWhere(
+					(properties) => properties[COMMON_PROPERTIES.SNAPPING_POINT] === true,
+				),
+			).toHaveLength(0);
+			expect(mockConfig.store.copyAll()[1].geometry.coordinates).toStrictEqual([
+				0, 0,
+			]);
+		});
+
+		it("hides the snapping guidance point when configured", () => {
+			const markerMode = new TerraDrawMarkerMode({
+				snapping: {
+					toCustom: () => [1, 2],
+					showSnappingPoint: false,
+				},
+			});
+			const mockConfig = MockModeConfig(markerMode.mode);
+			markerMode.register(mockConfig);
+
+			markerMode.onMouseMove(MockCursorEvent({ lng: 0, lat: 0 }));
+			markerMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+			expect(
+				mockConfig.store.copyAllWhere(
+					(properties) => properties[COMMON_PROPERTIES.SNAPPING_POINT] === true,
+				),
+			).toHaveLength(0);
+			expect(mockConfig.store.copyAll()[0].geometry.coordinates).toStrictEqual([
+				1, 2,
+			]);
+		});
+
+		it("hides snapping guidance by default while still snapping", () => {
+			const markerMode = new TerraDrawMarkerMode({
+				snapping: { toCustom: () => [1, 2] },
+			});
+			const mockConfig = MockModeConfig(markerMode.mode);
+			markerMode.register(mockConfig);
+
+			markerMode.onMouseMove(MockCursorEvent({ lng: 0, lat: 0 }));
+			markerMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+
+			expect(
+				mockConfig.store.copyAllWhere(
+					(properties) => properties[COMMON_PROPERTIES.SNAPPING_POINT] === true,
+				),
+			).toHaveLength(0);
+			expect(mockConfig.store.copyAll()[0].geometry.coordinates).toStrictEqual([
+				1, 2,
+			]);
+		});
 	});
 
 	describe("cleanUp", () => {
@@ -811,6 +922,61 @@ describe("TerraDrawMarkerMode", () => {
 				markerUrl: "test.png",
 				markerAnchor: "top-left",
 			});
+		});
+
+		it("returns the correct styles for snapping guidance point", () => {
+			const markerMode = new TerraDrawMarkerMode({
+				styles: {
+					snappingPointColor: "#222222",
+					snappingPointWidth: 3,
+					snappingPointOpacity: 0.5,
+					snappingPointOutlineColor: "#555555",
+					snappingPointOutlineWidth: 2,
+					snappingPointOutlineOpacity: 0.75,
+					markerUrl: "marker.png",
+				},
+			});
+
+			const snappingPointStyles = markerMode.styleFeature({
+				type: "Feature",
+				geometry: { type: "Point", coordinates: [] },
+				properties: {
+					mode: "marker",
+					[COMMON_PROPERTIES.SNAPPING_POINT]: true,
+				},
+			});
+
+			expect(snappingPointStyles).toMatchObject({
+				pointColor: "#222222",
+				pointWidth: 3,
+				pointOpacity: 0.5,
+				pointOutlineColor: "#555555",
+				pointOutlineWidth: 2,
+				pointOutlineOpacity: 0.75,
+				markerUrl: undefined,
+			});
+			expect(snappingPointStyles.zIndex).toBeGreaterThan(
+				markerMode.styleFeature({
+					type: "Feature",
+					geometry: { type: "Point", coordinates: [] },
+					properties: { mode: "marker" },
+				}).zIndex,
+			);
+		});
+
+		it("defaults the snapping guidance point outline width to 2", () => {
+			const markerMode = new TerraDrawMarkerMode();
+
+			expect(
+				markerMode.styleFeature({
+					type: "Feature",
+					geometry: { type: "Point", coordinates: [] },
+					properties: {
+						mode: "marker",
+						[COMMON_PROPERTIES.SNAPPING_POINT]: true,
+					},
+				}),
+			).toMatchObject({ pointOutlineWidth: 2 });
 		});
 
 		it("returns the correct styles for edited point", () => {

@@ -42,6 +42,12 @@ type PointModeStyling = {
 	pointOutlineColor: HexColorStyling;
 	pointOutlineOpacity: NumericStyling;
 	pointOutlineWidth: NumericStyling;
+	snappingPointColor: HexColorStyling;
+	snappingPointWidth: NumericStyling;
+	snappingPointOpacity: NumericStyling;
+	snappingPointOutlineColor: HexColorStyling;
+	snappingPointOutlineWidth: NumericStyling;
+	snappingPointOutlineOpacity: NumericStyling;
 	editedPointColor: HexColorStyling;
 	editedPointWidth: NumericStyling;
 	editedPointOutlineColor: HexColorStyling;
@@ -78,6 +84,7 @@ export class TerraDrawPointMode extends TerraDrawBaseDrawMode<PointModeStyling> 
 
 	// Internal state
 	private editedFeatureId: FeatureId | undefined;
+	private snappedPointId: FeatureId | undefined;
 
 	// Behaviors
 	private pixelDistance!: PixelDistanceBehavior;
@@ -144,7 +151,13 @@ export class TerraDrawPointMode extends TerraDrawBaseDrawMode<PointModeStyling> 
 	}
 
 	/** @internal */
-	onMouseMove() {}
+	onMouseMove(event?: TerraDrawMouseEvent) {
+		if (!event) {
+			return;
+		}
+
+		this.updateSnappedCoordinate(event);
+	}
 
 	/** @internal */
 	onKeyDown() {}
@@ -155,6 +168,7 @@ export class TerraDrawPointMode extends TerraDrawBaseDrawMode<PointModeStyling> 
 	/** @internal */
 	cleanUp() {
 		this.editedFeatureId = undefined;
+		this.deleteSnappedPoint();
 	}
 
 	onDragStart(
@@ -239,6 +253,7 @@ export class TerraDrawPointMode extends TerraDrawBaseDrawMode<PointModeStyling> 
 
 		this.setCursor(this.cursors.dragEnd);
 		this.editedFeatureId = undefined;
+		this.deleteSnappedPoint();
 		setMapDraggability(true);
 
 		this.onFinish(featureId, {
@@ -283,38 +298,54 @@ export class TerraDrawPointMode extends TerraDrawBaseDrawMode<PointModeStyling> 
 			feature.geometry.type === "Point" &&
 			feature.properties.mode === this.mode
 		) {
+			const snappingPoint =
+				feature.properties[COMMON_PROPERTIES.SNAPPING_POINT];
 			const isEdited = Boolean(
 				feature.id && this.editedFeatureId === feature.id,
 			);
 
 			styles.pointWidth = this.getNumericStylingValue(
-				isEdited ? this.styles.editedPointWidth : this.styles.pointWidth,
+				snappingPoint
+					? this.styles.snappingPointWidth
+					: isEdited
+						? this.styles.editedPointWidth
+						: this.styles.pointWidth,
 				styles.pointWidth,
 				feature,
 			);
 
 			styles.pointOpacity = this.getNumericStylingValue(
-				this.styles.pointOpacity,
+				snappingPoint
+					? this.styles.snappingPointOpacity
+					: this.styles.pointOpacity,
 				styles.pointOpacity === undefined ? 1 : styles.pointOpacity,
 				feature,
 			);
 
 			styles.pointColor = this.getHexColorStylingValue(
-				isEdited ? this.styles.editedPointColor : this.styles.pointColor,
+				snappingPoint
+					? this.styles.snappingPointColor
+					: isEdited
+						? this.styles.editedPointColor
+						: this.styles.pointColor,
 				styles.pointColor,
 				feature,
 			);
 
 			styles.pointOutlineColor = this.getHexColorStylingValue(
-				isEdited
-					? this.styles.editedPointOutlineColor
-					: this.styles.pointOutlineColor,
+				snappingPoint
+					? this.styles.snappingPointOutlineColor
+					: isEdited
+						? this.styles.editedPointOutlineColor
+						: this.styles.pointOutlineColor,
 				styles.pointOutlineColor,
 				feature,
 			);
 
 			styles.pointOutlineOpacity = this.getNumericStylingValue(
-				this.styles.pointOutlineOpacity,
+				snappingPoint
+					? this.styles.snappingPointOutlineOpacity
+					: this.styles.pointOutlineOpacity,
 				styles.pointOutlineOpacity === undefined
 					? 1
 					: styles.pointOutlineOpacity,
@@ -322,14 +353,20 @@ export class TerraDrawPointMode extends TerraDrawBaseDrawMode<PointModeStyling> 
 			);
 
 			styles.pointOutlineWidth = this.getNumericStylingValue(
-				isEdited
-					? this.styles.editedPointOutlineWidth
-					: this.styles.pointOutlineWidth,
+				snappingPoint
+					? this.styles.snappingPointOutlineWidth
+					: isEdited
+						? this.styles.editedPointOutlineWidth
+						: this.styles.pointOutlineWidth,
 				2,
 				feature,
 			);
 
-			styles.zIndex = Z_INDEX.LAYER_THREE;
+			if (snappingPoint) {
+				styles.zIndex = Z_INDEX.LAYER_FOUR;
+			} else {
+				styles.zIndex = Z_INDEX.LAYER_THREE;
+			}
 		}
 
 		return styles;
@@ -342,6 +379,8 @@ export class TerraDrawPointMode extends TerraDrawBaseDrawMode<PointModeStyling> 
 	}
 
 	private onLeftClick(event: TerraDrawMouseEvent) {
+		this.deleteSnappedPoint();
+
 		const feature = this.mutateFeature.createPoint({
 			coordinates: this.snapCoordinate(event),
 			properties: {
@@ -362,7 +401,52 @@ export class TerraDrawPointMode extends TerraDrawBaseDrawMode<PointModeStyling> 
 		event: TerraDrawMouseEvent,
 		currentFeatureId?: FeatureId,
 	): Position {
-		let snappedCoordinate: Position = [event.lng, event.lat];
+		return (
+			this.getSnappedCoordinate(event, currentFeatureId) ?? [
+				event.lng,
+				event.lat,
+			]
+		);
+	}
+
+	private updateSnappedCoordinate(event: TerraDrawMouseEvent) {
+		const snappedCoordinate = this.getSnappedCoordinate(event);
+
+		// NOTE: Defaults to showing only if the snapping option is enabled - this differs
+		// from other non-point modes where snapping might be shown by default.
+		if (snappedCoordinate && this.snapping?.showSnappingPoint === true) {
+			if (this.snappedPointId) {
+				this.mutateFeature.updateGuidancePoints([
+					{
+						featureId: this.snappedPointId,
+						coordinate: snappedCoordinate,
+					},
+				]);
+			} else {
+				this.snappedPointId = this.mutateFeature.createGuidancePoint({
+					coordinate: snappedCoordinate,
+					type: COMMON_PROPERTIES.SNAPPING_POINT,
+				});
+			}
+		} else {
+			this.deleteSnappedPoint();
+		}
+	}
+
+	private deleteSnappedPoint() {
+		if (!this.snappedPointId) {
+			return;
+		}
+
+		this.mutateFeature.deleteFeatureIfPresent(this.snappedPointId);
+		this.snappedPointId = undefined;
+	}
+
+	private getSnappedCoordinate(
+		event: TerraDrawMouseEvent,
+		currentFeatureId?: FeatureId,
+	): Position | undefined {
+		let snappedCoordinate: Position | undefined;
 
 		if (this.snapping?.toCoordinate) {
 			const snapped = currentFeatureId

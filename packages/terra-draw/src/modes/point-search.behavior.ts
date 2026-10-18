@@ -1,5 +1,5 @@
 import { Position } from "geojson";
-import { TerraDrawMouseEvent } from "../common";
+import { COMMON_PROPERTIES, TerraDrawMouseEvent } from "../common";
 import { BBoxPolygon, GeoJSONStoreFeatures } from "../store/store";
 import { BehaviorConfig, TerraDrawModeBehavior } from "./base.behavior";
 import { ClickBoundingBoxBehavior } from "./click-bounding-box.behavior";
@@ -25,7 +25,8 @@ export class PointSearchBehavior extends TerraDrawModeBehavior {
 			const feature = features[i];
 			const isPoint =
 				feature.geometry.type === "Point" &&
-				feature.properties.mode === this.mode;
+				feature.properties.mode === this.mode &&
+				!feature.properties[COMMON_PROPERTIES.SNAPPING_POINT];
 
 			if (!isPoint) {
 				continue;

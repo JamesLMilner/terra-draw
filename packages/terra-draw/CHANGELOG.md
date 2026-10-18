@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.38.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.37.0...terra-draw@1.38.0) (2026-10-18)
+
+
+### fix
+
+* **terra-draw:** make marker anchor stylable in select mode (#976) ([](https://github.com/JamesLMilner/terra-draw/commit/75d7cd1c491f8aa3b722fdc0bc7f34b1f709aa93)), closes [#976](https://github.com/JamesLMilner/terra-draw/issues/976)
+
+
+### feat
+
+* **terra-draw:** add guidance snapping point for point and marker modes, support hiding it (#974) ([](https://github.com/JamesLMilner/terra-draw/commit/f274ecd0315b4f108392ab75211778571e576469)), closes [#974](https://github.com/JamesLMilner/terra-draw/issues/974)
+
 ## [1.37.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.36.0...terra-draw@1.37.0) (2026-10-06)
 
 

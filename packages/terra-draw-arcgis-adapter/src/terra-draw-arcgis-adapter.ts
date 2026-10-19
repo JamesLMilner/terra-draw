@@ -16,15 +16,15 @@ import Polygon from "@arcgis/core/geometry/Polygon";
 import GraphicsLayer from "@arcgis/core/layers/GraphicsLayer";
 import Graphic from "@arcgis/core/Graphic";
 import SimpleMarkerSymbol from "@arcgis/core/symbols/SimpleMarkerSymbol";
+import type { SymbolUnion } from "@arcgis/core/symbols/types";
 
-import {
-	Symbol as ArcGISSymbol,
-	PictureMarkerSymbol,
-} from "@arcgis/core/symbols";
+import PictureMarkerSymbol from "@arcgis/core/symbols/PictureMarkerSymbol.js";
 import SimpleLineSymbol from "@arcgis/core/symbols/SimpleLineSymbol";
 import SimpleFillSymbol from "@arcgis/core/symbols/SimpleFillSymbol";
 import Color from "@arcgis/core/Color";
 import Geometry from "@arcgis/core/geometry/Geometry";
+import { DoubleClickEvent } from "@arcgis/core/views/input/types";
+import { ResourceHandle } from "@arcgis/core/core/Handles";
 
 type InjectableArcGISMapsSDK = {
 	GraphicsLayer: typeof GraphicsLayer;
@@ -51,8 +51,8 @@ export class TerraDrawArcGISMapsSDKAdapter
 
 	private _dragEnabled = true;
 	private _zoomEnabled = true;
-	private _dragHandler: undefined | IHandle;
-	private _doubleClickHandler: undefined | IHandle;
+	private _dragHandler: undefined | ResourceHandle;
+	private _doubleClickHandler: undefined | ResourceHandle;
 
 	constructor(
 		config: {
@@ -64,10 +64,14 @@ export class TerraDrawArcGISMapsSDKAdapter
 
 		this._mapView = config.map;
 		this._lib = config.lib;
-		this._container = this._mapView.container;
+		this._container = this._mapView.container!;
 		this._featureLayer = new this._lib.GraphicsLayer({
 			id: this._featureLayerName,
 		});
+
+		if (!this._mapView.map) {
+			throw new Error("MapView does not have a valid map instance");
+		}
 
 		this._mapView.map.add(this._featureLayer);
 	}
@@ -75,16 +79,19 @@ export class TerraDrawArcGISMapsSDKAdapter
 	public register(callbacks: TerraDrawExtend.TerraDrawCallbacks) {
 		super.register(callbacks);
 
-		this._dragHandler = this._mapView.on("drag", (event) => {
+		this._dragHandler = this._mapView.on("drag", (event: DragEvent) => {
 			if (!this._dragEnabled) {
 				event.stopPropagation();
 			}
 		});
-		this._doubleClickHandler = this._mapView.on("double-click", (event) => {
-			if (!this._zoomEnabled) {
-				event.stopPropagation();
-			}
-		});
+		this._doubleClickHandler = this._mapView.on(
+			"double-click",
+			(event: DoubleClickEvent) => {
+				if (!this._zoomEnabled) {
+					event.stopPropagation();
+				}
+			},
+		);
 
 		if (this._currentModeCallbacks?.onReady) {
 			this._currentModeCallbacks.onReady();
@@ -143,8 +150,9 @@ export class TerraDrawArcGISMapsSDKAdapter
 	 */
 	public project(lng: number, lat: number) {
 		const point = new this._lib.Point({ longitude: lng, latitude: lat });
-		const { x, y } = this._mapView.toScreen(point);
-		return { x, y };
+		const screenPoint = this._mapView.toScreen(point);
+		if (!screenPoint) throw new Error("Screen point could not be determined");
+		return { x: screenPoint.x, y: screenPoint.y };
 	}
 
 	/**
@@ -155,6 +163,8 @@ export class TerraDrawArcGISMapsSDKAdapter
 	 */
 	public unproject(x: number, y: number) {
 		const { latitude, longitude } = this._mapView.toMap({ x, y });
+		if (latitude == null || longitude == null)
+			throw new Error("Map point has invalid coordinates");
 		return { lng: longitude, lat: latitude };
 	}
 
@@ -210,6 +220,8 @@ export class TerraDrawArcGISMapsSDKAdapter
 		const feature = this._featureLayer.graphics.find(
 			(g) => g.attributes[this._featureIdAttributeName] === id,
 		);
+
+		if (!feature) return;
 		this._featureLayer.remove(feature);
 	}
 
@@ -250,7 +262,7 @@ export class TerraDrawArcGISMapsSDKAdapter
 		const { coordinates, type } = feature.geometry;
 		const style = styling[feature.properties.mode as string](feature);
 
-		let symbol: ArcGISSymbol | undefined = undefined;
+		let symbol: SymbolUnion;
 		let geometry: Geometry | undefined = undefined;
 
 		switch (type) {
@@ -393,6 +405,8 @@ export class TerraDrawArcGISMapsSDKAdapter
 
 	private getColorFromHex(hexColor: string, opacity?: number): Color {
 		const color = this._lib.Color.fromHex(hexColor);
+		if (!color) throw new Error(`Invalid color: ${hexColor}`);
+
 		if (opacity !== undefined) {
 			color.a = opacity;
 		}

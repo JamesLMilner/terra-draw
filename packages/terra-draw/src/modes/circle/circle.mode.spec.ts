@@ -4,6 +4,7 @@ import { MockCursorEvent } from "../../test/mock-cursor-event";
 import { TerraDrawCircleMode } from "./circle.mode";
 import { Polygon } from "geojson";
 import { followsRightHandRule } from "../../geometry/boolean/right-hand-rule";
+import { haversineDistanceKilometers } from "../../geometry/measure/haversine-distance";
 import { MockKeyboardEvent } from "../../test/mock-keyboard-event";
 import { COMMON_PROPERTIES, TerraDrawGeoJSONStore } from "../../common";
 import { DefaultPointerEvents } from "../base.mode";
@@ -902,6 +903,252 @@ describe("TerraDrawCircleMode", () => {
 		});
 	});
 
+	describe("snapping", () => {
+		const snappingPoints = (store: TerraDrawGeoJSONStore) =>
+			store.copyAllWhere(
+				(properties) => properties[COMMON_PROPERTIES.SNAPPING_POINT] === true,
+			);
+
+		const circles = (store: TerraDrawGeoJSONStore) =>
+			store.copyAllWhere(
+				(properties) =>
+					properties.mode === "circle" &&
+					properties[COMMON_PROPERTIES.SNAPPING_POINT] !== true &&
+					properties[COMMON_PROPERTIES.COORDINATE_POINT] !== true,
+			);
+
+		const existingCircle = (center: [number, number]) => ({
+			geometry: {
+				type: "Polygon" as const,
+				coordinates: [
+					[
+						[center[0], center[1] + 1],
+						[center[0] + 1, center[1]],
+						[center[0], center[1] - 1],
+						[center[0] - 1, center[1]],
+						[center[0], center[1] + 1],
+					],
+				],
+			},
+			properties: { mode: "circle" },
+		});
+
+		it("snaps the center to an existing circle coordinate on click", () => {
+			const circleMode = new TerraDrawCircleMode({
+				snapping: { toCoordinate: true },
+			});
+			const mockConfig = MockModeConfig(circleMode.mode);
+			mockConfig.store.create([existingCircle([0, 0])]);
+			circleMode.register(mockConfig);
+			circleMode.start();
+
+			circleMode.onClick(MockCursorEvent({ lng: 1.1, lat: 0.1 }));
+			circleMode.onMouseMove(MockCursorEvent({ lng: 2, lat: 0 }));
+			circleMode.onClick(MockCursorEvent({ lng: 2, lat: 0 }));
+
+			const drawn = circles(mockConfig.store)[1];
+			const ring = (drawn.geometry as Polygon).coordinates[0];
+			const centerLng =
+				ring.slice(0, -1).reduce((sum, [lng]) => sum + lng, 0) /
+				(ring.length - 1);
+			const centerLat =
+				ring.slice(0, -1).reduce((sum, [, lat]) => sum + lat, 0) /
+				(ring.length - 1);
+
+			expect(centerLng).toBeCloseTo(1, 5);
+			expect(centerLat).toBeCloseTo(0, 5);
+			expect(drawn.properties.radiusKilometers).toBeCloseTo(
+				haversineDistanceKilometers([1, 0], [2, 0]),
+				5,
+			);
+		});
+
+		it("snaps the center to a custom coordinate on click", () => {
+			const circleMode = new TerraDrawCircleMode({
+				snapping: { toCustom: () => [1, 2] },
+			});
+			const mockConfig = MockModeConfig(circleMode.mode);
+			circleMode.register(mockConfig);
+			circleMode.start();
+
+			circleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			circleMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 3 }));
+			circleMode.onClick(MockCursorEvent({ lng: 1, lat: 3 }));
+
+			const drawn = circles(mockConfig.store)[0];
+			expect(drawn.properties.radiusKilometers).toBeCloseTo(
+				haversineDistanceKilometers([1, 2], [1, 3]),
+				5,
+			);
+		});
+
+		it("snaps the center to a custom coordinate on drag start", () => {
+			const circleMode = new TerraDrawCircleMode({
+				drawInteraction: "click-drag",
+				snapping: { toCustom: () => [1, 2] },
+			});
+			const mockConfig = MockModeConfig(circleMode.mode);
+			circleMode.register(mockConfig);
+			circleMode.start();
+
+			circleMode.onDragStart(MockCursorEvent({ lng: 0, lat: 0 }), jest.fn());
+			circleMode.onDrag(MockCursorEvent({ lng: 1, lat: 3 }), jest.fn());
+			circleMode.onDragEnd(MockCursorEvent({ lng: 1, lat: 3 }), jest.fn());
+
+			const drawn = circles(mockConfig.store)[0];
+			expect(drawn.properties.radiusKilometers).toBeCloseTo(
+				haversineDistanceKilometers([1, 2], [1, 3]),
+				5,
+			);
+		});
+
+		it("snaps the center to a filtered feature", () => {
+			const circleMode = new TerraDrawCircleMode({
+				snapping: {
+					toFeature: {
+						filter: (feature) => feature.properties?.mode === "linestring",
+						toLine: true,
+					},
+				},
+			});
+			const mockConfig = MockModeConfig(circleMode.mode);
+			mockConfig.store.create([
+				{
+					geometry: {
+						type: "LineString",
+						coordinates: [
+							[0, 0],
+							[1, 0],
+						],
+					},
+					properties: { mode: "linestring" },
+				},
+			]);
+			circleMode.register(mockConfig);
+			circleMode.start();
+
+			circleMode.onClick(MockCursorEvent({ lng: 0.5, lat: 0.1 }));
+			circleMode.onMouseMove(MockCursorEvent({ lng: 0.5, lat: 1 }));
+			circleMode.onClick(MockCursorEvent({ lng: 0.5, lat: 1 }));
+
+			const drawn = circles(mockConfig.store)[0];
+			expect(drawn.properties.radiusKilometers).toBeCloseTo(
+				haversineDistanceKilometers([0.5, 0], [0.5, 1]),
+				5,
+			);
+		});
+
+		it("creates, updates, and removes a snapping guidance point before drawing", () => {
+			const circleMode = new TerraDrawCircleMode({
+				snapping: { toCoordinate: true },
+			});
+			const mockConfig = MockModeConfig(circleMode.mode);
+			mockConfig.store.create([
+				existingCircle([0, 0]),
+				existingCircle([10, 10]),
+			]);
+			circleMode.register(mockConfig);
+			circleMode.start();
+
+			circleMode.onMouseMove(MockCursorEvent({ lng: 1.1, lat: 0.1 }));
+			expect(snappingPoints(mockConfig.store)).toHaveLength(1);
+			expect(
+				snappingPoints(mockConfig.store)[0].geometry.coordinates,
+			).toStrictEqual([1, 0]);
+
+			circleMode.onMouseMove(MockCursorEvent({ lng: 11.1, lat: 10.1 }));
+			expect(snappingPoints(mockConfig.store)).toHaveLength(1);
+			expect(
+				snappingPoints(mockConfig.store)[0].geometry.coordinates,
+			).toStrictEqual([11, 10]);
+
+			circleMode.onMouseMove(MockCursorEvent({ lng: 50, lat: 50 }));
+			expect(snappingPoints(mockConfig.store)).toHaveLength(0);
+		});
+
+		it("removes the snapping guidance point when drawing begins", () => {
+			const circleMode = new TerraDrawCircleMode({
+				snapping: { toCustom: () => [1, 2] },
+			});
+			const mockConfig = MockModeConfig(circleMode.mode);
+			circleMode.register(mockConfig);
+			circleMode.start();
+
+			circleMode.onMouseMove(MockCursorEvent({ lng: 0, lat: 0 }));
+			expect(snappingPoints(mockConfig.store)).toHaveLength(1);
+
+			circleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			expect(snappingPoints(mockConfig.store)).toHaveLength(0);
+
+			circleMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 3 }));
+			expect(snappingPoints(mockConfig.store)).toHaveLength(0);
+		});
+
+		it("removes the snapping guidance point on cleanUp", () => {
+			const circleMode = new TerraDrawCircleMode({
+				snapping: { toCustom: () => [1, 2] },
+			});
+			const mockConfig = MockModeConfig(circleMode.mode);
+			circleMode.register(mockConfig);
+			circleMode.start();
+
+			circleMode.onMouseMove(MockCursorEvent({ lng: 0, lat: 0 }));
+			expect(snappingPoints(mockConfig.store)).toHaveLength(1);
+
+			circleMode.cleanUp();
+			expect(snappingPoints(mockConfig.store)).toHaveLength(0);
+		});
+
+		it("hides the snapping guidance point when configured", () => {
+			const circleMode = new TerraDrawCircleMode({
+				snapping: { toCustom: () => [1, 2], showSnappingPoint: false },
+			});
+			const mockConfig = MockModeConfig(circleMode.mode);
+			circleMode.register(mockConfig);
+			circleMode.start();
+
+			circleMode.onMouseMove(MockCursorEvent({ lng: 0, lat: 0 }));
+			expect(snappingPoints(mockConfig.store)).toHaveLength(0);
+
+			circleMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			circleMode.onMouseMove(MockCursorEvent({ lng: 1, lat: 3 }));
+			circleMode.onClick(MockCursorEvent({ lng: 1, lat: 3 }));
+
+			const drawn = circles(mockConfig.store)[0];
+			expect(drawn.properties.radiusKilometers).toBeCloseTo(
+				haversineDistanceKilometers([1, 2], [1, 3]),
+				5,
+			);
+		});
+
+		it("does not create a snapping guidance point without snapping options", () => {
+			const circleMode = new TerraDrawCircleMode();
+			const mockConfig = MockModeConfig(circleMode.mode);
+			mockConfig.store.create([existingCircle([0, 0])]);
+			circleMode.register(mockConfig);
+			circleMode.start();
+
+			circleMode.onMouseMove(MockCursorEvent({ lng: 1.1, lat: 0.1 }));
+			expect(snappingPoints(mockConfig.store)).toHaveLength(0);
+			expect(mockConfig.onChange).not.toHaveBeenCalled();
+		});
+
+		it("can enable snapping through updateOptions", () => {
+			const circleMode = new TerraDrawCircleMode();
+			const mockConfig = MockModeConfig(circleMode.mode);
+			circleMode.register(mockConfig);
+			circleMode.start();
+
+			circleMode.updateOptions({ snapping: { toCustom: () => [1, 2] } });
+
+			circleMode.onMouseMove(MockCursorEvent({ lng: 0, lat: 0 }));
+			expect(snappingPoints(mockConfig.store)).toHaveLength(1);
+			expect(
+				snappingPoints(mockConfig.store)[0].geometry.coordinates,
+			).toStrictEqual([1, 2]);
+		});
+	});
+
 	describe("cleanUp", () => {
 		let circleMode: TerraDrawCircleMode;
 		let onChange: jest.Mock;
@@ -1504,6 +1751,45 @@ describe("TerraDrawCircleMode", () => {
 				polygonOutlineWidth: 2,
 				polygonFillOpacity: 0.5,
 			});
+		});
+
+		it("returns the correct styles for snapping guidance point", () => {
+			const circleMode = new TerraDrawCircleMode({
+				styles: {
+					snappingPointColor: "#222222",
+					snappingPointWidth: 3,
+					snappingPointOpacity: 0.5,
+					snappingPointOutlineColor: "#555555",
+					snappingPointOutlineWidth: 2,
+					snappingPointOutlineOpacity: 0.75,
+				},
+			});
+
+			const snappingPointStyles = circleMode.styleFeature({
+				type: "Feature",
+				geometry: { type: "Point", coordinates: [0, 0] },
+				properties: {
+					mode: "circle",
+					[COMMON_PROPERTIES.SNAPPING_POINT]: true,
+				},
+			});
+
+			expect(snappingPointStyles).toMatchObject({
+				pointColor: "#222222",
+				pointWidth: 3,
+				pointOpacity: 0.5,
+				pointOutlineColor: "#555555",
+				pointOutlineWidth: 2,
+				pointOutlineOpacity: 0.75,
+			});
+
+			expect(snappingPointStyles.zIndex).toBeGreaterThan(
+				circleMode.styleFeature({
+					type: "Feature",
+					geometry: { type: "Polygon", coordinates: [] },
+					properties: { mode: "circle" },
+				}).zIndex,
+			);
 		});
 	});
 

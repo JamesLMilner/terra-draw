@@ -13,6 +13,7 @@ import {
 	FinishActions,
 	DrawInteractions,
 	DrawType,
+	OneDimensionalSnapping,
 } from "../../common";
 import { KeyboardEventKey } from "../../common/keys";
 import { CursorValues } from "../../common/cursors";
@@ -45,6 +46,11 @@ import {
 
 import { ReadFeatureBehavior } from "../read-feature.behavior";
 import { CoordinatePointBehavior } from "../select/behaviors/coordinate-point.behavior";
+import { PixelDistanceBehavior } from "../pixel-distance.behavior";
+import { ClickBoundingBoxBehavior } from "../click-bounding-box.behavior";
+import { CoordinateSnappingBehavior } from "../coordinate-snapping.behavior";
+import { LineSnappingBehavior } from "../line-snapping.behavior";
+import { FeatureSnappingBehavior } from "../feature-snapping.behavior";
 
 type TerraDrawCircleModeKeyEvents = {
 	cancel: KeyboardEvent["key"] | null;
@@ -68,6 +74,12 @@ type CirclePolygonStyling = {
 	coordinatePointOutlineWidth: NumericStyling;
 	coordinatePointOutlineColor: HexColorStyling;
 	coordinatePointOutlineOpacity: NumericStyling;
+	snappingPointColor: HexColorStyling;
+	snappingPointWidth: NumericStyling;
+	snappingPointOpacity: NumericStyling;
+	snappingPointOutlineColor: HexColorStyling;
+	snappingPointOutlineWidth: NumericStyling;
+	snappingPointOutlineOpacity: NumericStyling;
 };
 
 interface Cursors {
@@ -88,6 +100,7 @@ interface TerraDrawCircleModeOptions<
 	drawInteraction?: DrawInteractions;
 	segments?: number;
 	showCoordinatePoints?: boolean;
+	snapping?: OneDimensionalSnapping;
 }
 
 export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyling> {
@@ -107,11 +120,18 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 
 	private minimumSegments = 3;
 	private showCoordinatePoints = false;
+	private snapping: OneDimensionalSnapping | undefined;
+	private snappedPointId: FeatureId | undefined;
 
 	// Behaviors
 	private readFeature!: ReadFeatureBehavior;
 	private coordinatePoints!: CoordinatePointBehavior;
 	private mutateFeature!: MutateFeatureBehavior;
+	private pixelDistance!: PixelDistanceBehavior;
+	private clickBoundingBox!: ClickBoundingBoxBehavior;
+	private coordinateSnapping!: CoordinateSnappingBehavior;
+	private lineSnapping!: LineSnappingBehavior;
+	private featureSnapping!: FeatureSnappingBehavior;
 
 	/**
 	 * Create a new circle mode instance
@@ -124,6 +144,7 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 	 * @param options.projection - The map projection being used
 	 * @param options.showCoordinatePoints - Render a point at each circle vertex
 	 * @param options.drawInteraction - The type of draw interaction to use
+	 * @param options.snapping - Snapping options applied to the circle center coordinate
 	 *
 	 */
 	constructor(options?: TerraDrawCircleModeOptions<CirclePolygonStyling>) {
@@ -145,6 +166,10 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 
 		if (isNonNullObject(options?.cursors)) {
 			this.cursors = { ...this.cursors, ...options.cursors };
+		}
+
+		if (isNonNullObject(options?.snapping)) {
+			this.snapping = options.snapping;
 		}
 
 		if (isNull(options?.keyEvents)) {
@@ -203,7 +228,9 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 		event: TerraDrawMouseEvent,
 		drawType: DrawType = "click",
 	): void {
-		this.center = [event.lng, event.lat];
+		this.deleteSnappedPoint();
+
+		this.center = this.getSnappedCoordinate(event) ?? [event.lng, event.lat];
 		this.endPosition = [event.lng, event.lat];
 
 		const startingCircle = circle({
@@ -291,9 +318,92 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 
 	/** @internal */
 	onMouseMove(event: TerraDrawMouseEvent) {
+		if (this.center === undefined) {
+			this.updateSnappedCoordinate(event);
+			return;
+		}
+
 		this.cursorMovedAfterInitialCursorDown = true;
 		this.endPosition = [event.lng, event.lat];
 		this.updateCircle(this.endPosition, UpdateTypes.Provisional);
+	}
+
+	private updateSnappedCoordinate(event: TerraDrawMouseEvent) {
+		const snappedCoordinate = this.getSnappedCoordinate(event);
+
+		if (snappedCoordinate && this.snapping?.showSnappingPoint !== false) {
+			if (this.snappedPointId) {
+				this.mutateFeature.updateGuidancePoints([
+					{
+						featureId: this.snappedPointId,
+						coordinate: snappedCoordinate,
+					},
+				]);
+			} else {
+				this.snappedPointId = this.mutateFeature.createGuidancePoint({
+					coordinate: snappedCoordinate,
+					type: COMMON_PROPERTIES.SNAPPING_POINT,
+				});
+			}
+		} else {
+			this.deleteSnappedPoint();
+		}
+	}
+
+	private deleteSnappedPoint() {
+		if (!this.snappedPointId) {
+			return;
+		}
+
+		this.mutateFeature.deleteFeatureIfPresent(this.snappedPointId);
+		this.snappedPointId = undefined;
+	}
+
+	private getSnappedCoordinate(
+		event: TerraDrawMouseEvent,
+	): Position | undefined {
+		let snappedCoordinate: Position | undefined;
+
+		if (this.snapping?.toCoordinate) {
+			const snapped =
+				this.coordinateSnapping.getSnappableCoordinateFirstClick(event);
+
+			if (snapped) {
+				snappedCoordinate = snapped;
+			}
+		}
+
+		if (this.snapping?.toFeature) {
+			const snappable = this.featureSnapping.getSnappable(
+				event,
+				undefined,
+				this.snapping.toFeature.filter,
+				{
+					toLine: this.snapping.toFeature.toLine,
+					toCoordinate: this.snapping.toFeature.toCoordinate,
+				},
+			);
+
+			if (snappable.coordinate) {
+				snappedCoordinate = snappable.coordinate;
+			}
+		}
+
+		if (this.snapping?.toCustom) {
+			const snapped = this.snapping.toCustom(event, {
+				currentCoordinate: 0,
+				currentId: undefined,
+				getCurrentGeometrySnapshot: () => null,
+				project: this.project,
+				unproject: this.unproject,
+			});
+
+			if (snapped) {
+				snappedCoordinate = snapped;
+			}
+		}
+
+		return snappedCoordinate;
 	}
 
 	/** @internal */
@@ -370,6 +480,8 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 	/** @internal */
 	cleanUp() {
 		const currentId = this.currentCircleId;
+
+		this.deleteSnappedPoint();
 
 		this.center = undefined;
 		this.currentCircleId = undefined;
@@ -465,6 +577,45 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 				feature,
 			);
 			styles.zIndex = Z_INDEX.LAYER_TWO;
+
+			return styles;
+		} else if (
+			feature.type === "Feature" &&
+			feature.properties.mode === this.mode &&
+			feature.geometry.type === "Point" &&
+			feature.properties[COMMON_PROPERTIES.SNAPPING_POINT]
+		) {
+			styles.pointWidth = this.getNumericStylingValue(
+				this.styles.snappingPointWidth,
+				styles.pointWidth,
+				feature,
+			);
+			styles.pointColor = this.getHexColorStylingValue(
+				this.styles.snappingPointColor,
+				styles.pointColor,
+				feature,
+			);
+			styles.pointOpacity = this.getNumericStylingValue(
+				this.styles.snappingPointOpacity,
+				1,
+				feature,
+			);
+			styles.pointOutlineWidth = this.getNumericStylingValue(
+				this.styles.snappingPointOutlineWidth,
+				2,
+				feature,
+			);
+			styles.pointOutlineColor = this.getHexColorStylingValue(
+				this.styles.snappingPointOutlineColor,
+				styles.pointOutlineColor,
+				feature,
+			);
+			styles.pointOutlineOpacity = this.getNumericStylingValue(
+				this.styles.snappingPointOutlineOpacity,
+				1,
+				feature,
+			);
+			styles.zIndex = Z_INDEX.LAYER_THREE;
 
 			return styles;
 		}
@@ -599,6 +750,22 @@ export class TerraDrawCircleMode extends TerraDrawBaseDrawMode<CirclePolygonStyl
 			config,
 			this.readFeature,
 			this.mutateFeature,
+		);
+		this.pixelDistance = new PixelDistanceBehavior(config);
+		this.clickBoundingBox = new ClickBoundingBoxBehavior(config);
+		this.coordinateSnapping = new CoordinateSnappingBehavior(
+			config,
+			this.pixelDistance,
+			this.clickBoundingBox,
+		);
+		this.lineSnapping = new LineSnappingBehavior(
+			config,
+			this.pixelDistance,
+			this.clickBoundingBox,
+		);
+		this.featureSnapping = new FeatureSnappingBehavior(
+			this.coordinateSnapping,
+			this.lineSnapping,
 		);
 	}
 }

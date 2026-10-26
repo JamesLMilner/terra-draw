@@ -264,6 +264,38 @@ describe("TerraDrawMapLibreGLAdapter", () => {
 			expect(map.getCanvas).toHaveBeenCalledTimes(2);
 			expect(container.style.cursor).toBe("pointer");
 		});
+
+		describe("when an onCursorChange callback is provided", () => {
+			it("forwards the cursor intent to the callback instead of touching the canvas", () => {
+				const map = createMapLibreGLMap();
+				const onCursorChange = jest.fn();
+				const adapter = new TerraDrawMapLibreGLAdapter({
+					map: map as maplibregl.Map,
+					onCursorChange,
+				});
+
+				const container = {
+					offsetLeft: 0,
+					offsetTop: 0,
+					style: { removeProperty: jest.fn(), cursor: "initial" },
+				} as unknown as HTMLCanvasElement;
+
+				map.getCanvas = jest.fn(() => container);
+
+				adapter.setCursor("pointer");
+				expect(onCursorChange).toHaveBeenCalledTimes(1);
+				expect(onCursorChange).toHaveBeenLastCalledWith("pointer");
+
+				adapter.setCursor("unset");
+				expect(onCursorChange).toHaveBeenCalledTimes(2);
+				expect(onCursorChange).toHaveBeenLastCalledWith("unset");
+
+				// Canvas cursor is left untouched — the host owns rendering.
+				expect(map.getCanvas).not.toHaveBeenCalled();
+				expect(container.style.cursor).toBe("initial");
+				expect(container.style.removeProperty).not.toHaveBeenCalled();
+			});
+		});
 	});
 
 	describe("setDoubleClickToZoom", () => {

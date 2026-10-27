@@ -350,7 +350,18 @@ const Circle: Story = {
 	...DefaultStory,
 	args: {
 		id: "circle",
-		modes: [() => new TerraDrawCircleMode()],
+		modes: [
+			() => new TerraDrawPointMode({}),
+			() =>
+				new TerraDrawCircleMode({
+					snapping: {
+						// toCoordinate: true,
+						toFeature: {
+							filter: (feature) => feature.geometry.type === "Point",
+						},
+					},
+				}),
+		],
 		...DefaultStory.args,
 	},
 };

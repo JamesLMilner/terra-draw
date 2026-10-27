@@ -3,6 +3,8 @@ import { MockModeConfig } from "../../test/mock-mode-config";
 import { MockCursorEvent } from "../../test/mock-cursor-event";
 import { TerraDrawEllipseMode } from "./ellipse.mode";
 import { Polygon } from "geojson";
+import { lngLatToWebMercatorXY } from "../../geometry/project/web-mercator";
+import { haversineDistanceKilometers } from "../../geometry/measure/haversine-distance";
 import { followsRightHandRule } from "../../geometry/boolean/right-hand-rule";
 import { MockKeyboardEvent } from "../../test/mock-keyboard-event";
 import { COMMON_PROPERTIES, TerraDrawGeoJSONStore } from "../../common";
@@ -71,6 +73,336 @@ describe("TerraDrawEllipseMode", () => {
 		it("constructs with projection option", () => {
 			new TerraDrawEllipseMode({ projection: "web-mercator" });
 			new TerraDrawEllipseMode({ projection: "globe" });
+		});
+	});
+
+	describe("snapping", () => {
+		const expectEllipse = (
+			feature: GeoJSONStoreFeatures,
+			center: [number, number],
+			end: [number, number],
+		) => {
+			const xRadiusKilometers = haversineDistanceKilometers(center, [
+				end[0],
+				center[1],
+			]);
+			const yRadiusKilometers = haversineDistanceKilometers(center, [
+				center[0],
+				end[1],
+			]);
+			expect(feature.properties.xRadiusKilometers).toBeCloseTo(
+				xRadiusKilometers,
+				5,
+			);
+			expect(feature.properties.yRadiusKilometers).toBeCloseTo(
+				yRadiusKilometers,
+				5,
+			);
+			const ring = (feature.geometry as Polygon).coordinates[0];
+			expect(ring[0][0]).toBeCloseTo(center[0], 5);
+			const latitudes = ring.map((coordinate) => coordinate[1]);
+			expect((Math.min(...latitudes) + Math.max(...latitudes)) / 2).toBeCloseTo(
+				center[1],
+				5,
+			);
+		};
+
+		const snappingPoints = (store: TerraDrawGeoJSONStore) =>
+			store.copyAllWhere(
+				(properties) => properties[COMMON_PROPERTIES.SNAPPING_POINT] === true,
+			);
+
+		const ellipses = (store: TerraDrawGeoJSONStore) =>
+			store.copyAllWhere(
+				(properties) =>
+					properties.mode === "ellipse" &&
+					properties[COMMON_PROPERTIES.SNAPPING_POINT] !== true &&
+					properties[COMMON_PROPERTIES.COORDINATE_POINT] !== true,
+			);
+
+		const existingEllipse = (center: [number, number]) => ({
+			geometry: {
+				type: "Polygon" as const,
+				coordinates: [
+					[
+						[center[0], center[1] + 1],
+						[center[0] + 1, center[1]],
+						[center[0], center[1] - 1],
+						[center[0] - 1, center[1]],
+						[center[0], center[1] + 1],
+					],
+				],
+			},
+			properties: { mode: "ellipse" },
+		});
+
+		it("snaps the center to an existing ellipse coordinate on click", () => {
+			const ellipseMode = new TerraDrawEllipseMode({
+				projection: "globe",
+				snapping: { toCoordinate: true },
+			});
+			const mockConfig = MockModeConfig(ellipseMode.mode);
+			mockConfig.store.create([existingEllipse([0, 0])]);
+			ellipseMode.register(mockConfig);
+			ellipseMode.start();
+
+			ellipseMode.onClick(MockCursorEvent({ lng: 1.1, lat: 0.1 }));
+			ellipseMode.onMouseMove(MockCursorEvent({ lng: 2, lat: 1 }));
+			ellipseMode.onClick(MockCursorEvent({ lng: 2, lat: 1 }));
+
+			const drawn = ellipses(mockConfig.store)[1];
+			expectEllipse(drawn, [1, 0], [2, 1]);
+		});
+
+		it("snaps the center to a custom coordinate on click", () => {
+			const ellipseMode = new TerraDrawEllipseMode({
+				projection: "globe",
+				snapping: { toCustom: () => [1, 2] },
+			});
+			const mockConfig = MockModeConfig(ellipseMode.mode);
+			ellipseMode.register(mockConfig);
+			ellipseMode.start();
+
+			ellipseMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			ellipseMode.onMouseMove(MockCursorEvent({ lng: 3, lat: 4 }));
+			ellipseMode.onClick(MockCursorEvent({ lng: 3, lat: 4 }));
+
+			const drawn = ellipses(mockConfig.store)[0];
+			expectEllipse(drawn, [1, 2], [3, 4]);
+		});
+
+		it("snaps the center to a custom coordinate on drag start", () => {
+			const ellipseMode = new TerraDrawEllipseMode({
+				projection: "globe",
+				drawInteraction: "click-drag",
+				snapping: { toCustom: () => [1, 2] },
+			});
+			const mockConfig = MockModeConfig(ellipseMode.mode);
+			ellipseMode.register(mockConfig);
+			ellipseMode.start();
+
+			ellipseMode.onDragStart(MockCursorEvent({ lng: 0, lat: 0 }), jest.fn());
+			ellipseMode.onDrag(MockCursorEvent({ lng: 3, lat: 4 }), jest.fn());
+			ellipseMode.onDragEnd(MockCursorEvent({ lng: 3, lat: 4 }), jest.fn());
+
+			const drawn = ellipses(mockConfig.store)[0];
+			expectEllipse(drawn, [1, 2], [3, 4]);
+		});
+
+		it("snaps the center in web mercator while sizing from the pointer", () => {
+			const mode = new TerraDrawEllipseMode({
+				snapping: { toCustom: () => [1, 2] },
+			});
+			const config = MockModeConfig(mode.mode);
+			mode.register(config);
+			mode.start();
+			mode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			mode.onMouseMove(MockCursorEvent({ lng: 3, lat: 4 }));
+			mode.onClick(MockCursorEvent({ lng: 3, lat: 4 }));
+
+			const drawn = ellipses(config.store)[0];
+			const center = lngLatToWebMercatorXY(1, 2);
+			const end = lngLatToWebMercatorXY(3, 4);
+			expect(drawn.properties.xRadiusKilometers).toBeCloseTo(
+				(end.x - center.x) / 1000,
+				5,
+			);
+			expect(drawn.properties.yRadiusKilometers).toBeCloseTo(
+				(end.y - center.y) / 1000,
+				5,
+			);
+			const ring = (drawn.geometry as Polygon).coordinates[0];
+			const longitudes = ring.map((coordinate) => coordinate[0]);
+			expect(
+				(Math.min(...longitudes) + Math.max(...longitudes)) / 2,
+			).toBeCloseTo(1, 5);
+			expect(Math.max(...ring.map((coordinate) => coordinate[1]))).toBeCloseTo(
+				4,
+				5,
+			);
+		});
+
+		it("snaps the center to a filtered feature", () => {
+			const ellipseMode = new TerraDrawEllipseMode({
+				projection: "globe",
+				snapping: {
+					toFeature: {
+						filter: (feature) => feature.properties?.mode === "linestring",
+						toLine: true,
+					},
+				},
+			});
+			const mockConfig = MockModeConfig(ellipseMode.mode);
+			mockConfig.store.create([
+				{
+					geometry: {
+						type: "LineString",
+						coordinates: [
+							[0, 0],
+							[1, 0],
+						],
+					},
+					properties: { mode: "linestring" },
+				},
+			]);
+			ellipseMode.register(mockConfig);
+			ellipseMode.start();
+
+			ellipseMode.onClick(MockCursorEvent({ lng: 0.5, lat: 0.1 }));
+			ellipseMode.onMouseMove(MockCursorEvent({ lng: 1.5, lat: 1 }));
+			ellipseMode.onClick(MockCursorEvent({ lng: 1.5, lat: 1 }));
+
+			const drawn = ellipses(mockConfig.store)[0];
+			expectEllipse(drawn, [0.5, 0], [1.5, 1]);
+		});
+
+		it("creates, updates, and removes a snapping guidance point before drawing", () => {
+			const ellipseMode = new TerraDrawEllipseMode({
+				projection: "globe",
+				snapping: { toCoordinate: true },
+			});
+			const mockConfig = MockModeConfig(ellipseMode.mode);
+			mockConfig.store.create([
+				existingEllipse([0, 0]),
+				existingEllipse([10, 10]),
+			]);
+			ellipseMode.register(mockConfig);
+			ellipseMode.start();
+
+			ellipseMode.onMouseMove(MockCursorEvent({ lng: 1.1, lat: 0.1 }));
+			expect(snappingPoints(mockConfig.store)).toHaveLength(1);
+			expect(
+				snappingPoints(mockConfig.store)[0].geometry.coordinates,
+			).toStrictEqual([1, 0]);
+
+			ellipseMode.onMouseMove(MockCursorEvent({ lng: 11.1, lat: 10.1 }));
+			expect(snappingPoints(mockConfig.store)).toHaveLength(1);
+			expect(
+				snappingPoints(mockConfig.store)[0].geometry.coordinates,
+			).toStrictEqual([11, 10]);
+
+			ellipseMode.onMouseMove(MockCursorEvent({ lng: 50, lat: 50 }));
+			expect(snappingPoints(mockConfig.store)).toHaveLength(0);
+		});
+
+		it("removes the snapping guidance point when drawing begins", () => {
+			const ellipseMode = new TerraDrawEllipseMode({
+				projection: "globe",
+				snapping: { toCustom: () => [1, 2] },
+			});
+			const mockConfig = MockModeConfig(ellipseMode.mode);
+			ellipseMode.register(mockConfig);
+			ellipseMode.start();
+
+			ellipseMode.onMouseMove(MockCursorEvent({ lng: 0, lat: 0 }));
+			expect(snappingPoints(mockConfig.store)).toHaveLength(1);
+
+			ellipseMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			expect(snappingPoints(mockConfig.store)).toHaveLength(0);
+
+			ellipseMode.onMouseMove(MockCursorEvent({ lng: 3, lat: 4 }));
+			expect(snappingPoints(mockConfig.store)).toHaveLength(0);
+		});
+
+		it("removes the snapping guidance point on cleanUp", () => {
+			const ellipseMode = new TerraDrawEllipseMode({
+				projection: "globe",
+				snapping: { toCustom: () => [1, 2] },
+			});
+			const mockConfig = MockModeConfig(ellipseMode.mode);
+			ellipseMode.register(mockConfig);
+			ellipseMode.start();
+
+			ellipseMode.onMouseMove(MockCursorEvent({ lng: 0, lat: 0 }));
+			expect(snappingPoints(mockConfig.store)).toHaveLength(1);
+
+			ellipseMode.cleanUp();
+			expect(snappingPoints(mockConfig.store)).toHaveLength(0);
+		});
+
+		it("hides the snapping guidance point when configured", () => {
+			const ellipseMode = new TerraDrawEllipseMode({
+				projection: "globe",
+				snapping: { toCustom: () => [1, 2], showSnappingPoint: false },
+			});
+			const mockConfig = MockModeConfig(ellipseMode.mode);
+			ellipseMode.register(mockConfig);
+			ellipseMode.start();
+
+			ellipseMode.onMouseMove(MockCursorEvent({ lng: 0, lat: 0 }));
+			expect(snappingPoints(mockConfig.store)).toHaveLength(0);
+
+			ellipseMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			ellipseMode.onMouseMove(MockCursorEvent({ lng: 3, lat: 4 }));
+			ellipseMode.onClick(MockCursorEvent({ lng: 3, lat: 4 }));
+
+			const drawn = ellipses(mockConfig.store)[0];
+			expectEllipse(drawn, [1, 2], [3, 4]);
+		});
+
+		it("does not create a snapping guidance point without snapping options", () => {
+			const ellipseMode = new TerraDrawEllipseMode();
+			const mockConfig = MockModeConfig(ellipseMode.mode);
+			mockConfig.store.create([existingEllipse([0, 0])]);
+			ellipseMode.register(mockConfig);
+			ellipseMode.start();
+
+			ellipseMode.onMouseMove(MockCursorEvent({ lng: 1.1, lat: 0.1 }));
+			expect(snappingPoints(mockConfig.store)).toHaveLength(0);
+			expect(mockConfig.onChange).not.toHaveBeenCalled();
+		});
+
+		it("can enable snapping through updateOptions", () => {
+			const ellipseMode = new TerraDrawEllipseMode();
+			const mockConfig = MockModeConfig(ellipseMode.mode);
+			ellipseMode.register(mockConfig);
+			ellipseMode.start();
+
+			ellipseMode.updateOptions({ snapping: { toCustom: () => [1, 2] } });
+
+			ellipseMode.onMouseMove(MockCursorEvent({ lng: 0, lat: 0 }));
+			expect(snappingPoints(mockConfig.store)).toHaveLength(1);
+			expect(
+				snappingPoints(mockConfig.store)[0].geometry.coordinates,
+			).toStrictEqual([1, 2]);
+		});
+		it("returns the correct styles for snapping guidance point", () => {
+			const ellipseMode = new TerraDrawEllipseMode({
+				styles: {
+					snappingPointColor: "#222222",
+					snappingPointWidth: 3,
+					snappingPointOpacity: 0.5,
+					snappingPointOutlineColor: "#555555",
+					snappingPointOutlineWidth: 2,
+					snappingPointOutlineOpacity: 0.75,
+				},
+			});
+
+			const snappingPointStyles = ellipseMode.styleFeature({
+				type: "Feature",
+				geometry: { type: "Point", coordinates: [0, 0] },
+				properties: {
+					mode: "ellipse",
+					[COMMON_PROPERTIES.SNAPPING_POINT]: true,
+				},
+			});
+
+			expect(snappingPointStyles).toMatchObject({
+				pointColor: "#222222",
+				pointWidth: 3,
+				pointOpacity: 0.5,
+				pointOutlineColor: "#555555",
+				pointOutlineWidth: 2,
+				pointOutlineOpacity: 0.75,
+			});
+
+			expect(snappingPointStyles.zIndex).toBeGreaterThan(
+				ellipseMode.styleFeature({
+					type: "Feature",
+					geometry: { type: "Polygon", coordinates: [] },
+					properties: { mode: "ellipse" },
+				}).zIndex,
+			);
 		});
 	});
 

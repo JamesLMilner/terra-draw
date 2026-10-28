@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.39.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.38.0...terra-draw@1.39.0) (2026-10-28)
+
+
+### feat
+
+* **terra-draw:** allow circle mode to specify snapping options (#978) ([](https://github.com/JamesLMilner/terra-draw/commit/7e50c76119f5a1cc90c845d7fc075c1d02e573f4)), closes [#978](https://github.com/JamesLMilner/terra-draw/issues/978)
+* **terra-draw:** support snapping for ellipsis mode (#979) ([](https://github.com/JamesLMilner/terra-draw/commit/9691cd29a42c7568751b283b82121154e5e4c830)), closes [#979](https://github.com/JamesLMilner/terra-draw/issues/979)
+
 ## [1.38.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.37.0...terra-draw@1.38.0) (2026-10-18)
 
 

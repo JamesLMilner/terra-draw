@@ -1,17 +1,22 @@
 import MapView from "@arcgis/core/views/MapView.js";
 import Point from "@arcgis/core/geometry/Point";
 import Color from "@arcgis/core/Color";
-import MapViewScreenPoint = __esri.MapViewScreenPoint;
 
 import { TerraDrawAdapterStyling, TerraDrawExtend } from "terra-draw";
 
 import { TerraDrawArcGISMapsSDKAdapter } from "./terra-draw-arcgis-adapter";
 
 jest.mock("@arcgis/core/views/MapView", () => jest.fn());
-jest.mock("@arcgis/core/geometry/Point");
+jest.mock("@arcgis/core/geometry/Point", () => jest.fn());
 jest.mock("@arcgis/core/geometry/Polyline", () => jest.fn());
 jest.mock("@arcgis/core/geometry/Polygon", () => jest.fn());
 jest.mock("@arcgis/core/layers/GraphicsLayer");
+jest.mock("@arcgis/core/geometry/SpatialReference", () => {});
+jest.mock("@arcgis/core/geometry/operators/projectOperator.js", () => ({
+	load: jest.fn(() => Promise.resolve()),
+	isLoaded: jest.fn(),
+	execute: jest.fn(),
+}));
 
 const remove = jest.fn();
 
@@ -28,12 +33,18 @@ const createMockEsriMapView = () => {
 				getBoundingClientRect: jest.fn(() => ({ top: 0, left: 0 })),
 			})),
 		} as any,
+		spatialReference: { isWGS84: true, isWebMercator: false },
 		getViewport: jest.fn(() => ({
 			setAttribute: jest.fn(),
 		})),
 		toScreen: jest.fn(() => ({ x: 0, y: 0 })),
-		toMap: jest.fn(() => ({ latitude: 0, longitude: 0 })),
+		toMap: jest.fn(() => ({
+			latitude: 0,
+			longitude: 0,
+			spatialReference: { isWGS84: true, isWebMercator: false },
+		})),
 		on: jest.fn(() => ({ remove })),
+		when: jest.fn(() => Promise.resolve()),
 	} as unknown as MapView;
 };
 
@@ -101,8 +112,8 @@ describe("TerraDrawArcGISMapsSDKAdapter", () => {
 			expect(lib.GraphicsLayer).toHaveBeenCalledWith({
 				id: adapter["_featureLayerName"],
 			});
-			expect(mockMapView.map.add).toHaveBeenCalledTimes(1);
-			expect(mockMapView.map.add).toHaveBeenCalledWith(mockGraphicsLayer);
+			expect(mockMapView.map!.add).toHaveBeenCalledTimes(1);
+			expect(mockMapView.map!.add).toHaveBeenCalledWith(mockGraphicsLayer);
 		});
 	});
 
@@ -141,7 +152,7 @@ describe("TerraDrawArcGISMapsSDKAdapter", () => {
 			const adapter = new TerraDrawArcGISMapsSDKAdapter({
 				map: mockMapView,
 				lib: {
-					GraphicsLayer: jest.fn(() => ({ graphics: { removeAll } })),
+					GraphicsLayer: jest.fn(() => ({ removeAll })),
 				} as any,
 			});
 
@@ -169,7 +180,8 @@ describe("TerraDrawArcGISMapsSDKAdapter", () => {
 			map.toMap = jest.fn(() => ({
 				latitude: 51.507222,
 				longitude: -0.1275,
-			})) as unknown as (point: MapViewScreenPoint | MouseEvent) => Point;
+				spatialReference: { isWGS84: true, isWebMercator: false },
+			})) as unknown as (point: MouseEvent) => Point;
 
 			const result = adapter.getLngLatFromEvent(MockPointerEvent());
 			expect(result).toEqual({ lat: 51.507222, lng: -0.1275 });
@@ -281,20 +293,18 @@ describe("TerraDrawArcGISMapsSDKAdapter", () => {
 	});
 
 	it("clear", () => {
-		const graphicsMock = {
-			removeAll: jest.fn(),
-		};
+		const removeAllMock = jest.fn();
 		const map = createMockEsriMapView();
 		const adapter = new TerraDrawArcGISMapsSDKAdapter({
 			lib: {
-				GraphicsLayer: jest.fn(() => ({ graphics: graphicsMock })),
+				GraphicsLayer: jest.fn(() => ({ removeAll: removeAllMock })),
 			} as any,
 			map,
 			coordinatePrecision: 9,
 		});
 
 		adapter.clear();
-		expect(graphicsMock.removeAll).toHaveBeenCalledTimes(1);
+		expect(removeAllMock).toHaveBeenCalledTimes(1);
 	});
 
 	describe("render", () => {
@@ -311,8 +321,10 @@ describe("TerraDrawArcGISMapsSDKAdapter", () => {
 			mockedGraphicCall = { x: 0, y: 0 };
 			mockedFeature = { x: 0, y: 0 };
 			graphicsMock = {
-				add: jest.fn(),
-				find: jest.fn().mockReturnValue(mockedFeature),
+				add: jest.fn((graphic) => {
+					mockedFeature = graphic;
+				}),
+				find: jest.fn(() => mockedFeature),
 			};
 			removeMock = jest.fn();
 			lib = {
@@ -326,7 +338,9 @@ describe("TerraDrawArcGISMapsSDKAdapter", () => {
 				SimpleMarkerSymbol: jest.fn(),
 				SimpleLineSymbol: jest.fn(),
 				SimpleFillSymbol: jest.fn(),
-				Graphic: jest.fn().mockReturnValue(mockedGraphicCall),
+				Graphic: jest.fn((options) =>
+					Object.assign(mockedGraphicCall, options),
+				),
 				Color: { fromHex: jest.fn(() => ({ r: 255, g: 255, b: 255, a: 1 })) },
 			} as any;
 			adapter = new TerraDrawArcGISMapsSDKAdapter({
@@ -376,6 +390,9 @@ describe("TerraDrawArcGISMapsSDKAdapter", () => {
 		});
 
 		it("handles updated ids", () => {
+			const updatedGeometry = {};
+			lib.Point.mockReturnValue(updatedGeometry);
+
 			adapter.render(
 				{
 					unchanged: [],
@@ -401,10 +418,10 @@ describe("TerraDrawArcGISMapsSDKAdapter", () => {
 			);
 
 			expect(graphicsMock.find).toHaveBeenCalledTimes(1);
-			expect(removeMock).toHaveBeenCalledTimes(1);
-			expect(removeMock).toHaveBeenLastCalledWith(mockedFeature);
-			expect(graphicsMock.add).toHaveBeenCalledTimes(1);
-			expect(graphicsMock.add).toHaveBeenLastCalledWith(mockedGraphicCall, 0);
+			expect(lib.Point).toHaveBeenCalledWith({ latitude: 1, longitude: 1 });
+			expect(mockedFeature.geometry).toBe(updatedGeometry);
+			expect(removeMock).not.toHaveBeenCalled();
+			expect(graphicsMock.add).not.toHaveBeenCalled();
 		});
 
 		it("handles deleted ids", () => {
@@ -654,6 +671,7 @@ describe("TerraDrawArcGISMapsSDKAdapter", () => {
 					[
 						[1, 2],
 						[3, 4],
+						[5, 6],
 					],
 				];
 				const testId = "1";
@@ -682,11 +700,130 @@ describe("TerraDrawArcGISMapsSDKAdapter", () => {
 				);
 
 				expect(lib.Polygon).toHaveBeenCalledWith({ rings: testCoordinates });
+				expect(lib.Polyline).not.toHaveBeenCalled();
 				expect(lib.Graphic).toHaveBeenCalledWith(
 					expect.objectContaining({
 						attributes: { [adapter["_featureIdAttributeName"]]: testId },
 					}),
 				);
+			});
+
+			it("creates a polygon as a polyline when fewer than three points are committed", () => {
+				const testCoordinates = [
+					[
+						[1, 2],
+						[3, 4],
+					],
+				];
+
+				adapter.render(
+					{
+						unchanged: [],
+						created: [
+							{
+								id: "1",
+								type: "Feature",
+								geometry: {
+									type: "Polygon",
+									coordinates: testCoordinates,
+								},
+								properties: {
+									mode: "test",
+									committedCoordinateCount: 2,
+								},
+							},
+						],
+						deletedIds: [],
+						updated: [],
+					},
+					{
+						test: () => ({}) as any,
+					},
+				);
+
+				expect(lib.Polyline).toHaveBeenCalledWith({ paths: testCoordinates });
+				expect(lib.Polygon).not.toHaveBeenCalled();
+			});
+
+			it("updates a polyline to polygon when the third point gets committed", () => {
+				const previewCoordinates = [
+					[
+						[1, 2],
+						[3, 4],
+					],
+				];
+				const polygonCoordinates = [
+					[
+						[1, 2],
+						[3, 4],
+						[5, 6],
+					],
+				];
+				const previewGeometry = {};
+				const polygonGeometry = {};
+				lib.Polyline.mockReturnValue(previewGeometry);
+
+				adapter.render(
+					{
+						unchanged: [],
+						created: [
+							{
+								id: "1",
+								type: "Feature",
+								geometry: {
+									type: "Polygon",
+									coordinates: previewCoordinates,
+								},
+								properties: {
+									mode: "test",
+									committedCoordinateCount: 2,
+								},
+							},
+						],
+						deletedIds: [],
+						updated: [],
+					},
+					{
+						test: () => ({}) as any,
+					},
+				);
+
+				expect(mockedFeature.geometry).toBe(previewGeometry);
+				expect(lib.Polyline).toHaveBeenCalledWith({
+					paths: previewCoordinates,
+				});
+
+				graphicsMock.add.mockClear();
+				lib.Polyline.mockClear();
+				lib.Polygon.mockReturnValue(polygonGeometry);
+
+				adapter.render(
+					{
+						unchanged: [],
+						created: [],
+						deletedIds: [],
+						updated: [
+							{
+								id: "1",
+								type: "Feature",
+								geometry: {
+									type: "Polygon",
+									coordinates: polygonCoordinates,
+								},
+								properties: {
+									mode: "test",
+									committedCoordinateCount: 3,
+								},
+							},
+						],
+					},
+					{
+						test: () => ({}) as any,
+					},
+				);
+
+				expect(lib.Polygon).toHaveBeenCalledWith({ rings: polygonCoordinates });
+				expect(mockedFeature.geometry).toBe(polygonGeometry);
 			});
 
 			it("symbolizes the polygon correctly", () => {

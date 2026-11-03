@@ -9,6 +9,7 @@ import {
 	Z_INDEX,
 	COMMON_PROPERTIES,
 	FinishActions,
+	OneDimensionalSnapping,
 } from "../../common";
 import { KeyboardEventKey } from "../../common/keys";
 import { CursorValues } from "../../common/cursors";
@@ -42,6 +43,11 @@ import { limitPrecision } from "../../geometry/limit-decimal-precision";
 import { BehaviorConfig } from "../base.behavior";
 import { ReadFeatureBehavior } from "../read-feature.behavior";
 import { CoordinatePointBehavior } from "../select/behaviors/coordinate-point.behavior";
+import { PixelDistanceBehavior } from "../pixel-distance.behavior";
+import { ClickBoundingBoxBehavior } from "../click-bounding-box.behavior";
+import { CoordinateSnappingBehavior } from "../coordinate-snapping.behavior";
+import { LineSnappingBehavior } from "../line-snapping.behavior";
+import { FeatureSnappingBehavior } from "../feature-snapping.behavior";
 import {
 	CoordinateMutation,
 	MutateFeatureBehavior,
@@ -77,6 +83,12 @@ type SectorPolygonStyling = {
 	coordinatePointOutlineWidth: NumericStyling;
 	coordinatePointOutlineColor: HexColorStyling;
 	coordinatePointOutlineOpacity: NumericStyling;
+	snappingPointColor: HexColorStyling;
+	snappingPointWidth: NumericStyling;
+	snappingPointOpacity: NumericStyling;
+	snappingPointOutlineColor: HexColorStyling;
+	snappingPointOutlineWidth: NumericStyling;
+	snappingPointOutlineOpacity: NumericStyling;
 };
 
 interface Cursors {
@@ -99,6 +111,8 @@ interface TerraDrawSectorModeOptions<
 	showCoordinatePoints?: boolean;
 	/** Allow reversing the arc by crossing back over its starting radius. Defaults to false. */
 	allowDirectionChange?: boolean;
+	/** Snapping options applied to the sector center coordinate */
+	snapping?: OneDimensionalSnapping;
 }
 
 export class TerraDrawSectorMode extends TerraDrawBaseDrawMode<SectorPolygonStyling> {
@@ -114,11 +128,18 @@ export class TerraDrawSectorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 	private showCoordinatePoints = false;
 	private allowDirectionChange = false;
 	private previousEndBearing: number | undefined;
+	private snapping: OneDimensionalSnapping | undefined;
+	private snappedPointId: FeatureId | undefined;
 
 	// Behaviors
 	private readFeature!: ReadFeatureBehavior;
 	private mutateFeature!: MutateFeatureBehavior;
 	private coordinatePoints!: CoordinatePointBehavior;
+	private pixelDistance!: PixelDistanceBehavior;
+	private clickBoundingBox!: ClickBoundingBoxBehavior;
+	private coordinateSnapping!: CoordinateSnappingBehavior;
+	private lineSnapping!: LineSnappingBehavior;
+	private featureSnapping!: FeatureSnappingBehavior;
 
 	constructor(options?: TerraDrawSectorModeOptions<SectorPolygonStyling>) {
 		super(options, true);
@@ -138,6 +159,10 @@ export class TerraDrawSectorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 
 		if (isNonNullObject(options?.cursors)) {
 			this.cursors = { ...this.cursors, ...options.cursors };
+		}
+
+		if (isNonNullObject(options?.snapping)) {
+			this.snapping = options.snapping;
 		}
 
 		if (isNull(options?.keyEvents)) {
@@ -340,6 +365,7 @@ export class TerraDrawSectorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 		this.setCursor(this.cursors.start);
 
 		if (this.currentId === undefined || this.currentCoordinate === 0) {
+			this.updateSnappedCoordinate(event);
 			return;
 		}
 
@@ -407,13 +433,15 @@ export class TerraDrawSectorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 			this.mouseMove = false;
 
 			if (this.currentCoordinate === 0) {
+				this.deleteSnappedPoint();
+
+				const center = this.getSnappedCoordinate(event) ?? [
+					event.lng,
+					event.lat,
+				];
+
 				const created = this.mutateFeature.createPolygon({
-					coordinates: [
-						[event.lng, event.lat],
-						[event.lng, event.lat],
-						[event.lng, event.lat],
-						[event.lng, event.lat],
-					],
+					coordinates: [center, center, center, center],
 					properties: {
 						mode: this.mode,
 						[COMMON_PROPERTIES.CURRENTLY_DRAWING]: true,
@@ -472,6 +500,84 @@ export class TerraDrawSectorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 		}
 	}
 
+	private updateSnappedCoordinate(event: TerraDrawMouseEvent) {
+		const snappedCoordinate = this.getSnappedCoordinate(event);
+
+		if (snappedCoordinate && this.snapping?.showSnappingPoint !== false) {
+			if (this.snappedPointId) {
+				this.mutateFeature.updateGuidancePoints([
+					{
+						featureId: this.snappedPointId,
+						coordinate: snappedCoordinate,
+					},
+				]);
+			} else {
+				this.snappedPointId = this.mutateFeature.createGuidancePoint({
+					coordinate: snappedCoordinate,
+					type: COMMON_PROPERTIES.SNAPPING_POINT,
+				});
+			}
+		} else {
+			this.deleteSnappedPoint();
+		}
+	}
+
+	private deleteSnappedPoint() {
+		if (!this.snappedPointId) {
+			return;
+		}
+
+		this.mutateFeature.deleteFeatureIfPresent(this.snappedPointId);
+		this.snappedPointId = undefined;
+	}
+
+	private getSnappedCoordinate(
+		event: TerraDrawMouseEvent,
+	): Position | undefined {
+		let snappedCoordinate: Position | undefined;
+
+		if (this.snapping?.toCoordinate) {
+			const snapped =
+				this.coordinateSnapping.getSnappableCoordinateFirstClick(event);
+
+			if (snapped) {
+				snappedCoordinate = snapped;
+			}
+		}
+
+		if (this.snapping?.toFeature) {
+			const snappable = this.featureSnapping.getSnappable(
+				event,
+				undefined,
+				this.snapping.toFeature.filter,
+				{
+					toLine: this.snapping.toFeature.toLine,
+					toCoordinate: this.snapping.toFeature.toCoordinate,
+				},
+			);
+
+			if (snappable.coordinate) {
+				snappedCoordinate = snappable.coordinate;
+			}
+		}
+
+		if (this.snapping?.toCustom) {
+			const snapped = this.snapping.toCustom(event, {
+				currentCoordinate: 0,
+				currentId: undefined,
+				getCurrentGeometrySnapshot: () => null,
+				project: this.project,
+				unproject: this.unproject,
+			});
+
+			if (snapped) {
+				snappedCoordinate = snapped;
+			}
+		}
+
+		return snappedCoordinate;
+	}
+
 	/** @internal */
 	onKeyUp(event: TerraDrawKeyboardEvent) {
 		if (event.key === this.keyEvents.cancel) {
@@ -504,6 +610,8 @@ export class TerraDrawSectorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 	/** @internal */
 	cleanUp() {
 		const currentId = this.currentId;
+
+		this.deleteSnappedPoint();
 
 		this.currentId = undefined;
 		this.direction = undefined;
@@ -592,6 +700,42 @@ export class TerraDrawSectorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 				);
 
 				styles.zIndex = Z_INDEX.LAYER_TWO;
+			} else if (
+				feature.geometry.type === "Point" &&
+				feature.properties[COMMON_PROPERTIES.SNAPPING_POINT]
+			) {
+				styles.pointWidth = this.getNumericStylingValue(
+					this.styles.snappingPointWidth,
+					styles.pointWidth,
+					feature,
+				);
+				styles.pointColor = this.getHexColorStylingValue(
+					this.styles.snappingPointColor,
+					styles.pointColor,
+					feature,
+				);
+				styles.pointOpacity = this.getNumericStylingValue(
+					this.styles.snappingPointOpacity,
+					1,
+					feature,
+				);
+				styles.pointOutlineWidth = this.getNumericStylingValue(
+					this.styles.snappingPointOutlineWidth,
+					2,
+					feature,
+				);
+				styles.pointOutlineColor = this.getHexColorStylingValue(
+					this.styles.snappingPointOutlineColor,
+					styles.pointOutlineColor,
+					feature,
+				);
+				styles.pointOutlineOpacity = this.getNumericStylingValue(
+					this.styles.snappingPointOutlineOpacity,
+					1,
+					feature,
+				);
+
+				styles.zIndex = Z_INDEX.LAYER_THREE;
 			}
 		}
 
@@ -637,6 +781,22 @@ export class TerraDrawSectorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 			config,
 			this.readFeature,
 			this.mutateFeature,
+		);
+		this.pixelDistance = new PixelDistanceBehavior(config);
+		this.clickBoundingBox = new ClickBoundingBoxBehavior(config);
+		this.coordinateSnapping = new CoordinateSnappingBehavior(
+			config,
+			this.pixelDistance,
+			this.clickBoundingBox,
+		);
+		this.lineSnapping = new LineSnappingBehavior(
+			config,
+			this.pixelDistance,
+			this.clickBoundingBox,
+		);
+		this.featureSnapping = new FeatureSnappingBehavior(
+			this.coordinateSnapping,
+			this.lineSnapping,
 		);
 	}
 }

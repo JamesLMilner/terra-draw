@@ -653,6 +653,248 @@ describe("TerraDrawSectorMode", () => {
 		});
 	});
 
+	describe("snapping", () => {
+		const snappingPoints = (store: TerraDrawGeoJSONStore) =>
+			store.copyAllWhere(
+				(properties) => properties[COMMON_PROPERTIES.SNAPPING_POINT] === true,
+			);
+
+		const sectors = (store: TerraDrawGeoJSONStore) =>
+			store.copyAllWhere(
+				(properties) =>
+					properties.mode === "sector" &&
+					properties[COMMON_PROPERTIES.SNAPPING_POINT] !== true &&
+					properties[COMMON_PROPERTIES.COORDINATE_POINT] !== true,
+			);
+
+		const centerOf = (feature: GeoJSONStoreFeatures) =>
+			(feature.geometry as Polygon).coordinates[0][0];
+
+		const existingSector = (center: [number, number]) => ({
+			geometry: {
+				type: "Polygon" as const,
+				coordinates: [
+					[
+						[center[0], center[1] + 1],
+						[center[0] + 1, center[1]],
+						[center[0], center[1] - 1],
+						[center[0] - 1, center[1]],
+						[center[0], center[1] + 1],
+					],
+				],
+			},
+			properties: { mode: "sector" },
+		});
+
+		const drawSector = (
+			sectorMode: TerraDrawSectorMode,
+			center: [number, number],
+		) => {
+			sectorMode.onClick(MockCursorEvent({ lng: center[0], lat: center[1] }));
+			sectorMode.onClick(MockCursorEvent({ lng: 5, lat: 5 }));
+			sectorMode.onMouseMove(MockCursorEvent({ lng: 5, lat: 6 }));
+			sectorMode.onClick(MockCursorEvent({ lng: 5, lat: 6 }));
+		};
+
+		it("snaps the center to an existing sector coordinate on click", () => {
+			const sectorMode = new TerraDrawSectorMode({
+				snapping: { toCoordinate: true },
+			});
+			const mockConfig = MockModeConfig(sectorMode.mode);
+			mockConfig.store.create([existingSector([0, 0])]);
+			sectorMode.register(mockConfig);
+			sectorMode.start();
+
+			drawSector(sectorMode, [1.1, 0.1]);
+
+			const drawn = sectors(mockConfig.store)[1];
+			expect(centerOf(drawn)).toStrictEqual([1, 0]);
+		});
+
+		it("snaps the center to a custom coordinate on click", () => {
+			const sectorMode = new TerraDrawSectorMode({
+				snapping: { toCustom: () => [1, 2] },
+			});
+			const mockConfig = MockModeConfig(sectorMode.mode);
+			sectorMode.register(mockConfig);
+			sectorMode.start();
+
+			drawSector(sectorMode, [0, 0]);
+
+			const drawn = sectors(mockConfig.store)[0];
+			expect(centerOf(drawn)).toStrictEqual([1, 2]);
+		});
+
+		it("snaps the center to a filtered feature", () => {
+			const sectorMode = new TerraDrawSectorMode({
+				snapping: {
+					toFeature: {
+						filter: (feature) => feature.properties?.mode === "linestring",
+						toLine: true,
+					},
+				},
+			});
+			const mockConfig = MockModeConfig(sectorMode.mode);
+			mockConfig.store.create([
+				{
+					geometry: {
+						type: "LineString",
+						coordinates: [
+							[0, 0],
+							[1, 0],
+						],
+					},
+					properties: { mode: "linestring" },
+				},
+			]);
+			sectorMode.register(mockConfig);
+			sectorMode.start();
+
+			drawSector(sectorMode, [0.5, 0.1]);
+
+			const drawn = sectors(mockConfig.store)[0];
+			const [lng, lat] = centerOf(drawn);
+			expect(lng).toBeCloseTo(0.5, 5);
+			expect(lat).toBeCloseTo(0, 5);
+		});
+
+		it("does not snap the arc start or arc end coordinates", () => {
+			const sectorMode = new TerraDrawSectorMode({
+				snapping: { toCustom: () => [1, 2] },
+			});
+			const mockConfig = MockModeConfig(sectorMode.mode);
+			sectorMode.register(mockConfig);
+			sectorMode.start();
+
+			drawSector(sectorMode, [0, 0]);
+
+			const ring = (sectors(mockConfig.store)[0].geometry as Polygon)
+				.coordinates[0];
+			expect(ring[0]).toStrictEqual([1, 2]);
+			expect(ring[1]).toStrictEqual([5, 5]);
+		});
+
+		it("creates, updates, and removes a snapping guidance point before drawing", () => {
+			const sectorMode = new TerraDrawSectorMode({
+				snapping: { toCoordinate: true },
+			});
+			const mockConfig = MockModeConfig(sectorMode.mode);
+			mockConfig.store.create([
+				existingSector([0, 0]),
+				existingSector([10, 10]),
+			]);
+			sectorMode.register(mockConfig);
+			sectorMode.start();
+
+			sectorMode.onMouseMove(MockCursorEvent({ lng: 1.1, lat: 0.1 }));
+			expect(snappingPoints(mockConfig.store)).toHaveLength(1);
+			expect(
+				snappingPoints(mockConfig.store)[0].geometry.coordinates,
+			).toStrictEqual([1, 0]);
+
+			sectorMode.onMouseMove(MockCursorEvent({ lng: 11.1, lat: 10.1 }));
+			expect(snappingPoints(mockConfig.store)).toHaveLength(1);
+			expect(
+				snappingPoints(mockConfig.store)[0].geometry.coordinates,
+			).toStrictEqual([11, 10]);
+
+			sectorMode.onMouseMove(MockCursorEvent({ lng: 50, lat: 50 }));
+			expect(snappingPoints(mockConfig.store)).toHaveLength(0);
+		});
+
+		it("removes the snapping guidance point when drawing begins", () => {
+			const sectorMode = new TerraDrawSectorMode({
+				snapping: { toCustom: () => [1, 2] },
+			});
+			const mockConfig = MockModeConfig(sectorMode.mode);
+			sectorMode.register(mockConfig);
+			sectorMode.start();
+
+			sectorMode.onMouseMove(MockCursorEvent({ lng: 0, lat: 0 }));
+			expect(snappingPoints(mockConfig.store)).toHaveLength(1);
+
+			sectorMode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			expect(snappingPoints(mockConfig.store)).toHaveLength(0);
+
+			sectorMode.onMouseMove(MockCursorEvent({ lng: 5, lat: 5 }));
+			expect(snappingPoints(mockConfig.store)).toHaveLength(0);
+		});
+
+		it("removes the snapping guidance point on cleanUp", () => {
+			const sectorMode = new TerraDrawSectorMode({
+				snapping: { toCustom: () => [1, 2] },
+			});
+			const mockConfig = MockModeConfig(sectorMode.mode);
+			sectorMode.register(mockConfig);
+			sectorMode.start();
+
+			sectorMode.onMouseMove(MockCursorEvent({ lng: 0, lat: 0 }));
+			expect(snappingPoints(mockConfig.store)).toHaveLength(1);
+
+			sectorMode.cleanUp();
+			expect(snappingPoints(mockConfig.store)).toHaveLength(0);
+		});
+
+		it("removes the snapping guidance point on stop", () => {
+			const sectorMode = new TerraDrawSectorMode({
+				snapping: { toCustom: () => [1, 2] },
+			});
+			const mockConfig = MockModeConfig(sectorMode.mode);
+			sectorMode.register(mockConfig);
+			sectorMode.start();
+
+			sectorMode.onMouseMove(MockCursorEvent({ lng: 0, lat: 0 }));
+			expect(snappingPoints(mockConfig.store)).toHaveLength(1);
+
+			sectorMode.stop();
+			expect(snappingPoints(mockConfig.store)).toHaveLength(0);
+		});
+
+		it("hides the snapping guidance point when configured", () => {
+			const sectorMode = new TerraDrawSectorMode({
+				snapping: { toCustom: () => [1, 2], showSnappingPoint: false },
+			});
+			const mockConfig = MockModeConfig(sectorMode.mode);
+			sectorMode.register(mockConfig);
+			sectorMode.start();
+
+			sectorMode.onMouseMove(MockCursorEvent({ lng: 0, lat: 0 }));
+			expect(snappingPoints(mockConfig.store)).toHaveLength(0);
+
+			drawSector(sectorMode, [0, 0]);
+
+			const drawn = sectors(mockConfig.store)[0];
+			expect(centerOf(drawn)).toStrictEqual([1, 2]);
+		});
+
+		it("does not create a snapping guidance point without snapping options", () => {
+			const sectorMode = new TerraDrawSectorMode();
+			const mockConfig = MockModeConfig(sectorMode.mode);
+			mockConfig.store.create([existingSector([0, 0])]);
+			sectorMode.register(mockConfig);
+			sectorMode.start();
+
+			sectorMode.onMouseMove(MockCursorEvent({ lng: 1.1, lat: 0.1 }));
+			expect(snappingPoints(mockConfig.store)).toHaveLength(0);
+			expect(mockConfig.onChange).not.toHaveBeenCalled();
+		});
+
+		it("can enable snapping through updateOptions", () => {
+			const sectorMode = new TerraDrawSectorMode();
+			const mockConfig = MockModeConfig(sectorMode.mode);
+			sectorMode.register(mockConfig);
+			sectorMode.start();
+
+			sectorMode.updateOptions({ snapping: { toCustom: () => [1, 2] } });
+
+			sectorMode.onMouseMove(MockCursorEvent({ lng: 0, lat: 0 }));
+			expect(snappingPoints(mockConfig.store)).toHaveLength(1);
+			expect(
+				snappingPoints(mockConfig.store)[0].geometry.coordinates,
+			).toStrictEqual([1, 2]);
+		});
+	});
+
 	describe("validateFeature", () => {
 		it("returns true for valid sector feature with validation that returns true", () => {
 			const sectorMode = new TerraDrawSectorMode({
@@ -802,6 +1044,45 @@ describe("TerraDrawSectorMode", () => {
 				polygonOutlineWidth: 2,
 				polygonFillOpacity: 0.5,
 			});
+		});
+
+		it("returns the correct styles for snapping guidance point", () => {
+			const sectorMode = new TerraDrawSectorMode({
+				styles: {
+					snappingPointColor: "#222222",
+					snappingPointWidth: 3,
+					snappingPointOpacity: 0.5,
+					snappingPointOutlineColor: "#555555",
+					snappingPointOutlineWidth: 2,
+					snappingPointOutlineOpacity: 0.75,
+				},
+			});
+
+			const snappingPointStyles = sectorMode.styleFeature({
+				type: "Feature",
+				geometry: { type: "Point", coordinates: [0, 0] },
+				properties: {
+					mode: "sector",
+					[COMMON_PROPERTIES.SNAPPING_POINT]: true,
+				},
+			});
+
+			expect(snappingPointStyles).toMatchObject({
+				pointColor: "#222222",
+				pointWidth: 3,
+				pointOpacity: 0.5,
+				pointOutlineColor: "#555555",
+				pointOutlineWidth: 2,
+				pointOutlineOpacity: 0.75,
+			});
+
+			expect(snappingPointStyles.zIndex).toBeGreaterThan(
+				sectorMode.styleFeature({
+					type: "Feature",
+					geometry: { type: "Polygon", coordinates: [] },
+					properties: { mode: "sector" },
+				}).zIndex,
+			);
 		});
 	});
 

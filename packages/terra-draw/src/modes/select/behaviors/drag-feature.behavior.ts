@@ -49,7 +49,11 @@ export class DragFeatureBehavior extends TerraDrawModeBehavior {
 	}
 
 	canDrag(event: TerraDrawMouseEvent, selectedId: FeatureId) {
-		const { clickedFeature } = this.featuresAtCursorEvent.find(event, true);
+		const { clickedFeature } = this.featuresAtCursorEvent.find(
+			event,
+			true,
+			selectedId,
+		);
 
 		// If the cursor is not over the selected
 		// feature then we don't want to drag

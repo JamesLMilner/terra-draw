@@ -10,6 +10,7 @@ import {
 	TerraDrawMouseEvent,
 } from "../../common";
 import { DefaultPointerEvents } from "../base.mode";
+import { FeatureId } from "../../store/store";
 
 describe("TerraDrawSelectMode", () => {
 	let selectMode: TerraDrawSelectMode;
@@ -2005,6 +2006,63 @@ describe("TerraDrawSelectMode", () => {
 						target: "geometry",
 					});
 				});
+
+				it.each([
+					["smaller polygon first", true],
+					["larger polygon first", false],
+				])(
+					"drags a selected polygon that sits inside a larger polygon (%s)",
+					(_, smallerFirst) => {
+						setSelectMode({
+							flags: { polygon: { feature: { draggable: true } } },
+						});
+
+						const addSmaller = () =>
+							addPolygonToStore([
+								[0.4, 0.4],
+								[0.4, 0.6],
+								[0.6, 0.6],
+								[0.6, 0.4],
+								[0.4, 0.4],
+							]);
+						const addLarger = () =>
+							addPolygonToStore([
+								[0, 0],
+								[0, 1],
+								[1, 1],
+								[1, 0],
+								[0, 0],
+							]);
+
+						let smallerId: FeatureId;
+						let largerId: FeatureId;
+						if (smallerFirst) {
+							smallerId = addSmaller();
+							largerId = addLarger();
+						} else {
+							largerId = addLarger();
+							smallerId = addSmaller();
+						}
+
+						selectMode.selectFeature(smallerId);
+
+						const largerBefore = store.getGeometryCopy(largerId);
+
+						selectMode.onDragStart(
+							MockCursorEvent({ lng: 0.5, lat: 0.5 }),
+							jest.fn(),
+						);
+						selectMode.onDrag(
+							MockCursorEvent({ lng: 0.55, lat: 0.55 }),
+							jest.fn(),
+						);
+
+						const smaller = store.getGeometryCopy<Polygon>(smallerId);
+						expect(smaller.coordinates[0][0][0]).toBeCloseTo(0.45);
+						expect(smaller.coordinates[0][0][1]).toBeCloseTo(0.45, 2);
+						expect(store.getGeometryCopy(largerId)).toEqual(largerBefore);
+					},
+				);
 			});
 		});
 

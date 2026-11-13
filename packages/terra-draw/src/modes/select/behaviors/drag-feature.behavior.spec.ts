@@ -128,6 +128,57 @@ describe("DragFeatureBehavior", () => {
 
 				expect(canDrag).toBe(false);
 			});
+
+			describe("with a selected polygon inside a larger polygon", () => {
+				const small = [
+					[
+						[0.4, 0.4],
+						[0.4, 0.6],
+						[0.6, 0.6],
+						[0.6, 0.4],
+						[0.4, 0.4],
+					],
+				];
+				const large = [
+					[
+						[0, 0],
+						[0, 1],
+						[1, 1],
+						[1, 0],
+						[0, 0],
+					],
+				];
+
+				it.each([
+					["small polygon first", true],
+					["large polygon first", false],
+				])(
+					"returns true when the pointer is inside the selected smaller polygon (%s)",
+					(_, smallFirst) => {
+						let smallId;
+						if (smallFirst) {
+							smallId = createStorePolygon(config, small);
+							createStorePolygon(config, large, false);
+						} else {
+							createStorePolygon(config, large, false);
+							smallId = createStorePolygon(config, small);
+						}
+
+						const event = MockCursorEvent({ lat: 0.5, lng: 0.5 });
+
+						expect(dragFeatureBehavior.canDrag(event, smallId)).toBe(true);
+					},
+				);
+
+				it("returns false when the pointer is only inside the larger polygon", () => {
+					const smallId = createStorePolygon(config, small);
+					createStorePolygon(config, large, false);
+
+					const event = MockCursorEvent({ lat: 0.9, lng: 0.9 });
+
+					expect(dragFeatureBehavior.canDrag(event, smallId)).toBe(false);
+				});
+			});
 		});
 
 		describe("drag", () => {

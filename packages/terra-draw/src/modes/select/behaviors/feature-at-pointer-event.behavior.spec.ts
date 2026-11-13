@@ -165,6 +165,83 @@ describe("FeatureAtPointerEventBehavior", () => {
 				expect(result.clickedFeature?.geometry.type).toBe("Polygon");
 			});
 
+			describe("with overlapping polygons", () => {
+				const small = [
+					[
+						[0.4, 0.4],
+						[0.4, 0.6],
+						[0.6, 0.6],
+						[0.6, 0.4],
+						[0.4, 0.4],
+					],
+				];
+				const large = [
+					[
+						[0, 0],
+						[0, 1],
+						[1, 1],
+						[1, 0],
+						[0, 0],
+					],
+				];
+
+				it.each([
+					["small polygon first", true],
+					["large polygon first", false],
+				])(
+					"returns the preferred polygon when the pointer is inside both (%s)",
+					(_, smallFirst) => {
+						let smallId;
+						let largeId;
+						if (smallFirst) {
+							smallId = createStorePolygon(config, small);
+							largeId = createStorePolygon(config, large);
+						} else {
+							largeId = createStorePolygon(config, large);
+							smallId = createStorePolygon(config, small);
+						}
+
+						const event = MockCursorEvent({ lng: 0.5, lat: 0.5 });
+
+						expect(
+							featureAtPointerEventBehavior.find(event, true, smallId)
+								.clickedFeature?.id,
+						).toBe(smallId);
+						expect(
+							featureAtPointerEventBehavior.find(event, true, largeId)
+								.clickedFeature?.id,
+						).toBe(largeId);
+					},
+				);
+
+				it("ignores the preferred polygon when the pointer is not inside it", () => {
+					const smallId = createStorePolygon(config, small);
+					const largeId = createStorePolygon(config, large);
+
+					const result = featureAtPointerEventBehavior.find(
+						MockCursorEvent({ lng: 0.9, lat: 0.9 }),
+						true,
+						smallId,
+					);
+
+					expect(result.clickedFeature?.id).toBe(largeId);
+				});
+
+				it("still prefers a point over the preferred polygon", () => {
+					const smallId = createStorePolygon(config, small);
+					createStorePolygon(config, large);
+					const pointId = createStorePoint(config, [0.5, 0.5]);
+
+					const result = featureAtPointerEventBehavior.find(
+						MockCursorEvent({ lng: 0.5, lat: 0.5 }),
+						true,
+						smallId,
+					);
+
+					expect(result.clickedFeature?.id).toBe(pointId);
+				});
+			});
+
 			it("returns clicked linestring if only linestring present", () => {
 				createStoreLineString(config);
 

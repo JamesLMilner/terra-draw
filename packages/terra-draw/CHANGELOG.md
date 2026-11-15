@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.40.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.39.0...terra-draw@1.40.0) (2026-11-15)
+
+
+### feat
+
+* **terra-draw:** add support for snapping in TerraDrawSectorMode (#985) ([](https://github.com/JamesLMilner/terra-draw/commit/ddd8278384fb949d56db8cd7e44e26bacbdf6286)), closes [#985](https://github.com/JamesLMilner/terra-draw/issues/985)
+
+
+### chore
+
+* **terra-draw:** bump playwright, storybook, knip packages (#986) ([](https://github.com/JamesLMilner/terra-draw/commit/91d62007bd6b6b827e204c70869854a49d8b278f)), closes [#986](https://github.com/JamesLMilner/terra-draw/issues/986)
+
 ## [1.39.0](https://github.com/JamesLMilner/terra-draw/compare/terra-draw@1.38.0...terra-draw@1.39.0) (2026-10-28)
 
 

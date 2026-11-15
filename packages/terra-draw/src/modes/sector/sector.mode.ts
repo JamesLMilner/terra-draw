@@ -9,6 +9,7 @@ import {
 	Z_INDEX,
 	COMMON_PROPERTIES,
 	FinishActions,
+	OneDimensionalSnapping,
 } from "../../common";
 import { KeyboardEventKey } from "../../common/keys";
 import { CursorValues } from "../../common/cursors";
@@ -54,6 +55,11 @@ import {
 	isNonNullObject,
 	isNull,
 } from "../../common/checks";
+import { ClickBoundingBoxBehavior } from "../click-bounding-box.behavior";
+import { PixelDistanceBehavior } from "../pixel-distance.behavior";
+import { CoordinateSnappingBehavior } from "../coordinate-snapping.behavior";
+import { LineSnappingBehavior } from "../line-snapping.behavior";
+import { FeatureSnappingBehavior } from "../feature-snapping.behavior";
 
 type TerraDrawSectorModeKeyEvents = {
 	cancel?: KeyboardEvent["key"] | null;
@@ -66,6 +72,13 @@ const defaultKeyEvents = {
 } as const;
 
 type SectorPolygonStyling = {
+	snappingPointColor: HexColorStyling;
+	snappingPointWidth: NumericStyling;
+	snappingPointOpacity: NumericStyling;
+	snappingPointOutlineColor: HexColorStyling;
+	snappingPointOutlineWidth: NumericStyling;
+	snappingPointOutlineOpacity: NumericStyling;
+
 	fillColor: HexColorStyling;
 	outlineColor: HexColorStyling;
 	outlineWidth: NumericStyling;
@@ -92,6 +105,8 @@ const defaultCursors = {
 interface TerraDrawSectorModeOptions<
 	T extends CustomStyling,
 > extends BaseModeOptions<T> {
+	/** Snap the center and initial radius endpoint only. */
+	snapping?: OneDimensionalSnapping;
 	arcPoints?: number;
 	pointerDistance?: number;
 	keyEvents?: TerraDrawSectorModeKeyEvents | null;
@@ -104,6 +119,8 @@ interface TerraDrawSectorModeOptions<
 export class TerraDrawSectorMode extends TerraDrawBaseDrawMode<SectorPolygonStyling> {
 	mode = "sector";
 
+	private snapping: OneDimensionalSnapping | undefined;
+	private snappedPointId: FeatureId | undefined;
 	private currentCoordinate = 0;
 	private currentId: FeatureId | undefined;
 	private keyEvents: TerraDrawSectorModeKeyEvents = defaultKeyEvents;
@@ -116,6 +133,8 @@ export class TerraDrawSectorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 	private previousEndBearing: number | undefined;
 
 	// Behaviors
+	private coordinateSnapping!: CoordinateSnappingBehavior;
+	private featureSnapping!: FeatureSnappingBehavior;
 	private readFeature!: ReadFeatureBehavior;
 	private mutateFeature!: MutateFeatureBehavior;
 	private coordinatePoints!: CoordinatePointBehavior;
@@ -131,6 +150,10 @@ export class TerraDrawSectorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 		>,
 	) {
 		super.updateOptions(options);
+
+		if (isNonNullObject(options?.snapping)) {
+			this.snapping = options.snapping;
+		}
 
 		if (isBoolean(options?.allowDirectionChange)) {
 			this.allowDirectionChange = options.allowDirectionChange;
@@ -157,6 +180,95 @@ export class TerraDrawSectorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 			this.showCoordinatePoints = options.showCoordinatePoints;
 			this.coordinatePoints?.setEnabled(this.showCoordinatePoints);
 		}
+	}
+
+	private updateSnappedCoordinate(snappedCoordinate: Position | undefined) {
+		if (snappedCoordinate && this.snapping?.showSnappingPoint !== false) {
+			if (this.snappedPointId) {
+				this.mutateFeature.updateGuidancePoints([
+					{
+						featureId: this.snappedPointId,
+						coordinate: snappedCoordinate,
+					},
+				]);
+			} else {
+				this.snappedPointId = this.mutateFeature.createGuidancePoint({
+					coordinate: snappedCoordinate,
+					type: COMMON_PROPERTIES.SNAPPING_POINT,
+				});
+			}
+		} else {
+			this.deleteSnappedPoint();
+		}
+	}
+
+	private deleteSnappedPoint() {
+		if (!this.snappedPointId) {
+			return;
+		}
+
+		this.mutateFeature.deleteFeatureIfPresent(this.snappedPointId);
+		this.snappedPointId = undefined;
+	}
+
+	private getSnappedCoordinate(
+		event: TerraDrawMouseEvent,
+	): Position | undefined {
+		if (this.currentCoordinate >= 2) {
+			return;
+		}
+
+		const currentFeatureId = this.currentId;
+		let snappedCoordinate: Position | undefined;
+
+		if (this.snapping?.toCoordinate) {
+			const snapped =
+				currentFeatureId !== undefined
+					? this.coordinateSnapping.getSnappableCoordinate(
+							event,
+							currentFeatureId,
+						)
+					: this.coordinateSnapping.getSnappableCoordinateFirstClick(event);
+
+			if (snapped) {
+				snappedCoordinate = snapped;
+			}
+		}
+
+		if (this.snapping?.toFeature) {
+			const snappable = this.featureSnapping.getSnappable(
+				event,
+				currentFeatureId,
+				this.snapping.toFeature.filter,
+				{
+					toLine: this.snapping.toFeature.toLine,
+					toCoordinate: this.snapping.toFeature.toCoordinate,
+				},
+			);
+
+			if (snappable.coordinate) {
+				snappedCoordinate = snappable.coordinate;
+			}
+		}
+
+		if (this.snapping?.toCustom) {
+			const snapped = this.snapping.toCustom(event, {
+				currentCoordinate: this.currentCoordinate,
+				currentId: currentFeatureId,
+				getCurrentGeometrySnapshot:
+					currentFeatureId !== undefined
+						? () => this.readFeature.getGeometry<Polygon>(currentFeatureId)
+						: () => null,
+				project: this.project,
+				unproject: this.unproject,
+			});
+
+			if (snapped) {
+				snappedCoordinate = snapped;
+			}
+		}
+
+		return snappedCoordinate;
 	}
 
 	private close() {
@@ -191,6 +303,8 @@ export class TerraDrawSectorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 				featureCoordinates: updated.geometry.coordinates,
 			});
 		}
+
+		this.deleteSnappedPoint();
 
 		const featureId = this.currentId;
 
@@ -339,6 +453,10 @@ export class TerraDrawSectorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 		this.mouseMove = true;
 		this.setCursor(this.cursors.start);
 
+		const snappedCoordinate = this.getSnappedCoordinate(event);
+		this.updateSnappedCoordinate(snappedCoordinate);
+		const coordinate = snappedCoordinate ?? [event.lng, event.lat];
+
 		if (this.currentId === undefined || this.currentCoordinate === 0) {
 			return;
 		}
@@ -350,12 +468,12 @@ export class TerraDrawSectorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 				{
 					type: Mutations.Update,
 					index: 1,
-					coordinate: [event.lng, event.lat],
+					coordinate,
 				},
 				{
 					type: Mutations.Update,
 					index: 2,
-					coordinate: [event.lng, event.lat],
+					coordinate,
 				},
 			];
 		} else if (this.currentCoordinate === 2) {
@@ -406,14 +524,15 @@ export class TerraDrawSectorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 			}
 			this.mouseMove = false;
 
+			const coordinate = this.getSnappedCoordinate(event) ?? [
+				event.lng,
+				event.lat,
+			];
+			this.deleteSnappedPoint();
+
 			if (this.currentCoordinate === 0) {
 				const created = this.mutateFeature.createPolygon({
-					coordinates: [
-						[event.lng, event.lat],
-						[event.lng, event.lat],
-						[event.lng, event.lat],
-						[event.lng, event.lat],
-					],
+					coordinates: [coordinate, coordinate, coordinate, coordinate],
 					properties: {
 						mode: this.mode,
 						[COMMON_PROPERTIES.CURRENTLY_DRAWING]: true,
@@ -435,7 +554,7 @@ export class TerraDrawSectorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 				const isIdentical = this.readFeature.coordinateAtIndexIsIdentical({
 					featureId: this.currentId,
 					index: 0,
-					newCoordinate: [event.lng, event.lat],
+					newCoordinate: coordinate,
 				});
 
 				if (isIdentical) {
@@ -448,12 +567,12 @@ export class TerraDrawSectorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 						{
 							type: Mutations.Update,
 							index: 1,
-							coordinate: [event.lng, event.lat],
+							coordinate,
 						},
 						{
 							type: Mutations.Update,
 							index: 2,
-							coordinate: [event.lng, event.lat],
+							coordinate,
 						},
 					],
 					context: {
@@ -503,6 +622,7 @@ export class TerraDrawSectorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 
 	/** @internal */
 	cleanUp() {
+		this.deleteSnappedPoint();
 		const currentId = this.currentId;
 
 		this.currentId = undefined;
@@ -558,6 +678,43 @@ export class TerraDrawSectorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 				styles.zIndex = Z_INDEX.LAYER_ONE;
 			} else if (
 				feature.geometry.type === "Point" &&
+				feature.properties[COMMON_PROPERTIES.SNAPPING_POINT]
+			) {
+				styles.zIndex = Z_INDEX.LAYER_FOUR;
+				styles.pointColor = this.getHexColorStylingValue(
+					this.styles.snappingPointColor,
+					styles.pointColor,
+					feature,
+				);
+				styles.pointWidth = this.getNumericStylingValue(
+					this.styles.snappingPointWidth,
+					styles.pointWidth,
+					feature,
+				);
+				styles.pointOpacity = this.getNumericStylingValue(
+					this.styles.snappingPointOpacity,
+					styles.pointOpacity ?? 1,
+					feature,
+				);
+				styles.pointOutlineColor = this.getHexColorStylingValue(
+					this.styles.snappingPointOutlineColor,
+					styles.pointOutlineColor,
+					feature,
+				);
+				styles.pointOutlineWidth = this.getNumericStylingValue(
+					this.styles.snappingPointOutlineWidth,
+					2,
+					feature,
+				);
+				styles.pointOutlineOpacity = this.getNumericStylingValue(
+					this.styles.snappingPointOutlineOpacity,
+					styles.pointOutlineOpacity ?? 1,
+					feature,
+				);
+
+				styles.zIndex = Z_INDEX.LAYER_FOUR;
+			} else if (
+				feature.geometry.type === "Point" &&
 				feature.properties[COMMON_PROPERTIES.COORDINATE_POINT]
 			) {
 				styles.pointWidth = this.getNumericStylingValue(
@@ -611,6 +768,7 @@ export class TerraDrawSectorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 		// If we are in the middle of drawing a sector and the feature being updated is the current sector,
 		// we need to reset the drawing state
 		if (this.currentId === feature.id) {
+			this.deleteSnappedPoint();
 			this.currentId = undefined;
 			this.direction = undefined;
 			this.previousEndBearing = undefined;
@@ -629,6 +787,23 @@ export class TerraDrawSectorMode extends TerraDrawBaseDrawMode<SectorPolygonStyl
 	}
 
 	registerBehaviors(config: BehaviorConfig) {
+		const pixelDistance = new PixelDistanceBehavior(config);
+		const clickBoundingBox = new ClickBoundingBoxBehavior(config);
+		this.coordinateSnapping = new CoordinateSnappingBehavior(
+			config,
+			pixelDistance,
+			clickBoundingBox,
+		);
+		const lineSnapping = new LineSnappingBehavior(
+			config,
+			pixelDistance,
+			clickBoundingBox,
+		);
+		this.featureSnapping = new FeatureSnappingBehavior(
+			this.coordinateSnapping,
+			lineSnapping,
+		);
+
 		this.readFeature = new ReadFeatureBehavior(config);
 		this.mutateFeature = new MutateFeatureBehavior(config, {
 			validate: this.validate,

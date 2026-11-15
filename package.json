@@ -44,7 +44,7 @@
 		"husky": "7.0.4",
 		"jest": "30.2.0",
 		"jest-environment-jsdom": "30.2.0",
-		"knip": "5.30.2",
+		"knip": "5.87.0",
 		"microbundle": "0.15.0",
 		"serve": "14.2.4",
 		"tinybench": "5.0.1",

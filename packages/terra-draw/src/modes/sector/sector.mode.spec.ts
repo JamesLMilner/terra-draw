@@ -5,9 +5,301 @@ import { TerraDrawSectorMode } from "./sector.mode";
 import { MockCursorEvent } from "../../test/mock-cursor-event";
 import { MockKeyboardEvent } from "../../test/mock-keyboard-event";
 import { followsRightHandRule } from "../../geometry/boolean/right-hand-rule";
-import { COMMON_PROPERTIES, TerraDrawGeoJSONStore } from "../../common";
+import {
+	COMMON_PROPERTIES,
+	OneDimensionalSnapping,
+	TerraDrawGeoJSONStore,
+} from "../../common";
 
 describe("TerraDrawSectorMode", () => {
+	describe("snapping", () => {
+		const setup = (snapping?: OneDimensionalSnapping) => {
+			const mode = new TerraDrawSectorMode({ snapping });
+			const config = MockModeConfig(mode.mode);
+			mode.register(config);
+			mode.start();
+			const ring = () =>
+				(
+					config.store
+						.copyAll()
+						.find(
+							(feature) =>
+								feature.geometry.type === "Polygon" &&
+								feature.properties[COMMON_PROPERTIES.CURRENTLY_DRAWING],
+						)!.geometry as Polygon
+				).coordinates[0];
+			const guidance = () =>
+				config.store.copyAllWhere((properties) =>
+					Boolean(properties[COMMON_PROPERTIES.SNAPPING_POINT]),
+				);
+			return { mode, config, ring, guidance };
+		};
+
+		it.each([true, false])(
+			"snaps both radius clicks to existing coordinates (hover: %s)",
+			(hover) => {
+				const { mode, config, ring } = setup({ toCoordinate: true });
+				config.store.create([
+					{
+						geometry: {
+							type: "Polygon",
+							coordinates: [
+								[
+									[0, 0],
+									[2, 0],
+									[2, 2],
+									[0, 0],
+								],
+							],
+						},
+						properties: { mode: "sector" },
+					},
+				]);
+				const center = MockCursorEvent({ lng: 0.1, lat: 0.1 });
+				const endpoint = MockCursorEvent({ lng: 2.1, lat: 0.1 });
+				if (hover) mode.onMouseMove(center);
+				mode.onClick(center);
+				expect(ring()).toEqual([
+					[0, 0],
+					[0, 0],
+					[0, 0],
+					[0, 0],
+				]);
+				if (hover) {
+					mode.onMouseMove(endpoint);
+					expect(ring()[1]).toEqual([2, 0]);
+				}
+				mode.onClick(endpoint);
+				expect(ring()).toEqual([
+					[0, 0],
+					[2, 0],
+					[2, 0],
+					[0, 0],
+				]);
+			},
+		);
+
+		it.each(["toCoordinate", "toFeature"] as const)(
+			"excludes the sector being drawn from %s targets",
+			(type) => {
+				const { mode, ring } = setup(
+					type === "toCoordinate"
+						? { toCoordinate: true }
+						: {
+								toFeature: {
+									filter: () => true,
+									toCoordinate: true,
+									toLine: true,
+								},
+							},
+				);
+				mode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+				mode.onClick(MockCursorEvent({ lng: 0.1, lat: 0.1 }));
+				expect(ring()[1]).toEqual([0.1, 0.1]);
+			},
+		);
+
+		it("snaps both radius points to filtered feature lines", () => {
+			const { mode, config, ring } = setup({
+				toFeature: {
+					filter: (feature) => feature.properties?.mode === "linestring",
+					toLine: true,
+				},
+			});
+			config.store.create([
+				{
+					geometry: {
+						type: "LineString",
+						coordinates: [
+							[0, 0],
+							[4, 0],
+						],
+					},
+					properties: { mode: "linestring" },
+				},
+			]);
+			mode.onClick(MockCursorEvent({ lng: 1, lat: 0.1 }));
+			mode.onClick(MockCursorEvent({ lng: 3, lat: 0.1 }));
+			expect(ring()).toEqual([
+				[1, 0],
+				[3, 0],
+				[3, 0],
+				[1, 0],
+			]);
+		});
+
+		it("passes drawing context to custom snapping and leaves the arc stage unsnapped", () => {
+			const toCustom = jest.fn<
+				ReturnType<NonNullable<OneDimensionalSnapping["toCustom"]>>,
+				Parameters<NonNullable<OneDimensionalSnapping["toCustom"]>>
+			>((_event, context) => {
+				const geometry = context.getCurrentGeometrySnapshot();
+				if (context.currentCoordinate === 0) {
+					expect(context.currentId).toBeUndefined();
+					expect(geometry).toBeNull();
+					return [0, 0];
+				}
+				expect(context.currentCoordinate).toBe(1);
+				expect(context.currentId).toBeDefined();
+				expect(geometry?.type).toBe("Polygon");
+				expect(geometry?.coordinates[0][0]).toEqual([0, 0]);
+				return [2, 0];
+			});
+			const { mode, config, ring, guidance } = setup({
+				toCustom,
+				showSnappingPoint: true,
+			});
+			mode.onClick(MockCursorEvent({ lng: 0.1, lat: 0.1 }));
+			mode.onClick(MockCursorEvent({ lng: 2.1, lat: 0.1 }));
+			expect(ring()[1]).toEqual([2, 0]);
+			toCustom.mockClear();
+			const endpoint = MockCursorEvent({ lng: 1, lat: 2 });
+			mode.onMouseMove(endpoint);
+			const expected = setup();
+			expected.mode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			expected.mode.onClick(MockCursorEvent({ lng: 2, lat: 0 }));
+			expected.mode.onMouseMove(endpoint);
+			expect(ring()).toEqual(expected.ring());
+			mode.onClick(endpoint);
+			expect(toCustom).not.toHaveBeenCalled();
+			expect(guidance()).toHaveLength(0);
+			expect(config.onFinish).toHaveBeenCalledTimes(1);
+			mode.onClick(MockCursorEvent({ lng: 4, lat: 4 }));
+			expect(toCustom).toHaveBeenCalled();
+			expect(ring()[0]).toEqual([0, 0]);
+		});
+
+		it("rejects a radius endpoint snapped to the center", () => {
+			const { mode, ring } = setup({ toCustom: () => [1, 1] });
+			mode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			mode.onClick(MockCursorEvent({ lng: 2, lat: 2 }));
+			mode.updateOptions({ snapping: { toCustom: () => [2, 2] } });
+			mode.onClick(MockCursorEvent({ lng: 3, lat: 3 }));
+			expect(ring()).toEqual([
+				[1, 1],
+				[2, 2],
+				[2, 2],
+				[1, 1],
+			]);
+		});
+
+		it.each([undefined, false, true])(
+			"shows guidance unless explicitly disabled (%s) and clears it after radius selection",
+			(showSnappingPoint) => {
+				const { mode, ring, guidance } = setup({
+					toCustom: (event) => [event.lng + 1, event.lat + 1],
+					showSnappingPoint,
+				});
+				const center = MockCursorEvent({ lng: 0, lat: 0 });
+				const endpoint = MockCursorEvent({ lng: 2, lat: 2 });
+				mode.onMouseMove(center);
+				expect(guidance()).toHaveLength(showSnappingPoint !== false ? 1 : 0);
+				mode.onClick(center);
+				mode.onMouseMove(center);
+				mode.onMouseMove(endpoint);
+				if (showSnappingPoint !== false)
+					expect(guidance()[0].geometry.coordinates).toEqual([3, 3]);
+				mode.onClick(endpoint);
+				expect(ring()[1]).toEqual([3, 3]);
+				expect(guidance()).toHaveLength(0);
+				mode.onMouseMove(center);
+				expect(guidance()).toHaveLength(0);
+			},
+		);
+
+		it("removes guidance when a snap target is lost", () => {
+			const { mode, guidance } = setup({
+				toCustom: (event) => (event.lng === 0 ? [1, 1] : undefined),
+				showSnappingPoint: true,
+			});
+			mode.onMouseMove(MockCursorEvent({ lng: 0, lat: 0 }));
+			expect(guidance()).toHaveLength(1);
+			mode.onMouseMove(MockCursorEvent({ lng: 5, lat: 5 }));
+			expect(guidance()).toHaveLength(0);
+		});
+
+		it.each(["cancel", "stop", "update"])("clears guidance on %s", (action) => {
+			const { mode, config, guidance } = setup({
+				toCustom: () => [1, 1],
+				showSnappingPoint: true,
+			});
+			mode.onClick(MockCursorEvent({ lng: 0, lat: 0 }));
+			mode.onMouseMove(MockCursorEvent({ lng: 2, lat: 2 }));
+			expect(guidance()).toHaveLength(1);
+			if (action === "cancel")
+				mode.onKeyUp(MockKeyboardEvent({ key: "Escape" }));
+			else if (action === "stop") mode.stop();
+			else
+				mode.afterFeatureUpdated(
+					config.store
+						.copyAll()
+						.find((feature) => feature.geometry.type === "Polygon")!,
+				);
+			expect(guidance()).toHaveLength(0);
+		});
+
+		it("renders styled guidance for point feature snapping without an explicit visibility option", () => {
+			const mode = new TerraDrawSectorMode({
+				snapping: {
+					toFeature: { filter: (feature) => feature.geometry.type === "Point" },
+				},
+				styles: {
+					snappingPointColor: "#ff0000",
+					snappingPointOutlineColor: "#00ff00",
+				},
+			});
+			const config = MockModeConfig(mode.mode);
+			config.store.create([
+				{
+					geometry: { type: "Point", coordinates: [1, 1] },
+					properties: { mode: "point" },
+				},
+			]);
+			mode.register(config);
+			mode.start();
+			mode.onMouseMove(MockCursorEvent({ lng: 1.1, lat: 1.1 }));
+			const guidance = config.store.copyAllWhere((properties) =>
+				Boolean(properties[COMMON_PROPERTIES.SNAPPING_POINT]),
+			);
+			expect(guidance).toHaveLength(1);
+			expect(guidance[0].geometry.coordinates).toEqual([1, 1]);
+			expect(mode.styleFeature(guidance[0])).toMatchObject({
+				pointColor: "#ff0000",
+				pointOutlineColor: "#00ff00",
+			});
+		});
+
+		it("styles snapping guidance points", () => {
+			const mode = new TerraDrawSectorMode({
+				styles: {
+					snappingPointColor: "#222222",
+					snappingPointWidth: 3,
+					snappingPointOpacity: 0.5,
+					snappingPointOutlineColor: "#555555",
+					snappingPointOutlineWidth: 2,
+					snappingPointOutlineOpacity: 0.75,
+				},
+			});
+			expect(
+				mode.styleFeature({
+					type: "Feature",
+					geometry: { type: "Point", coordinates: [0, 0] },
+					properties: {
+						mode: "sector",
+						[COMMON_PROPERTIES.SNAPPING_POINT]: true,
+					},
+				}),
+			).toMatchObject({
+				pointColor: "#222222",
+				pointWidth: 3,
+				pointOpacity: 0.5,
+				pointOutlineColor: "#555555",
+				pointOutlineWidth: 2,
+				pointOutlineOpacity: 0.75,
+			});
+		});
+	});
+
 	describe("allowDirectionChange", () => {
 		const setup = (allowDirectionChange = false) => {
 			const mode = new TerraDrawSectorMode({ allowDirectionChange });

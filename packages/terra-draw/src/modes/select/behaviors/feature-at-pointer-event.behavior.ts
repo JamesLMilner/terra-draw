@@ -1,5 +1,9 @@
 import { SELECT_PROPERTIES, TerraDrawMouseEvent } from "../../../common";
-import { BBoxPolygon, GeoJSONStoreFeatures } from "../../../store/store";
+import {
+	BBoxPolygon,
+	FeatureId,
+	GeoJSONStoreFeatures,
+} from "../../../store/store";
 
 import { BehaviorConfig, TerraDrawModeBehavior } from "../../base.behavior";
 import { ClickBoundingBoxBehavior } from "../../click-bounding-box.behavior";
@@ -17,7 +21,17 @@ export class FeatureAtPointerEventBehavior extends TerraDrawModeBehavior {
 		super(config);
 	}
 
-	public find(event: TerraDrawMouseEvent, hasSelection: boolean) {
+	/**
+	 * Find the feature under the pointer. Points win over linestrings, and linestrings win
+	 * over polygons. When several polygons contain the pointer, the one with
+	 * `preferredFeatureId` is returned if it is one of them, so a selected polygon that is
+	 * overlapped by another polygon can still be found.
+	 */
+	public find(
+		event: TerraDrawMouseEvent,
+		hasSelection: boolean,
+		preferredFeatureId?: FeatureId,
+	) {
 		let clickedPoint: GeoJSONStoreFeatures | undefined = undefined;
 		let clickedPointDistance = Infinity;
 		let clickedLineString: GeoJSONStoreFeatures | undefined = undefined;
@@ -90,7 +104,11 @@ export class FeatureAtPointerEventBehavior extends TerraDrawModeBehavior {
 					geometry.coordinates,
 				);
 
-				if (clickInsidePolygon) {
+				if (
+					clickInsidePolygon &&
+					(preferredFeatureId === undefined ||
+						clickedPolygon?.id !== preferredFeatureId)
+				) {
 					clickedPolygon = feature;
 				}
 			}

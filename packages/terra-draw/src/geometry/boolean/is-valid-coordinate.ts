@@ -36,6 +36,12 @@ export function getDecimalPlaces(value: number): number {
 	while (Math.round(value * current) / current !== value) {
 		current *= 10;
 		precision++;
+
+		// Past 10^308 the multiplier overflows to Infinity, so values below
+		// ~1e-308 (and NaN) never match and the loop would never end
+		if (current === Infinity) {
+			return Infinity;
+		}
 	}
 
 	return precision;

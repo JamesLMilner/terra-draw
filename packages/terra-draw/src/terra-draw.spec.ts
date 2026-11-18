@@ -369,6 +369,42 @@ describe("Terra Draw", () => {
 			expect(onChange).not.toHaveBeenCalled();
 		});
 
+		it("returns valid false instead of hanging for a coordinate value below 1e-308", () => {
+			const draw = new TerraDraw({
+				adapter: new TerraDrawTestAdapter({
+					lib: {},
+					coordinatePrecision: 9,
+				}),
+				modes: [new TerraDrawPointMode()],
+			});
+
+			const onChange = jest.fn();
+
+			draw.on("change", onChange);
+
+			draw.start();
+			const [result] = draw.addFeatures([
+				{
+					id: "f8e5a38d-ecfa-4294-8461-d9cff0e0d7f8",
+					type: "Feature",
+					geometry: {
+						type: "Point",
+						coordinates: [1e-320, 34.355907891],
+					},
+					properties: {
+						mode: "point",
+					},
+				},
+			]);
+
+			expect(result.valid).toBe(false);
+			expect(result.reason).toBe(
+				"Feature has coordinates with excessive precision",
+			);
+
+			expect(onChange).not.toHaveBeenCalled();
+		});
+
 		it("returns valid true if the coordinate precision is exactly the adapter coordinate precision", () => {
 			const draw = new TerraDraw({
 				adapter: new TerraDrawTestAdapter({

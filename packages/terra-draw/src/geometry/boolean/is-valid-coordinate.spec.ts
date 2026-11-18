@@ -84,6 +84,21 @@ describe("getDecimalPlaces", () => {
 	it("returns the correct number of decimal places for a float less than 0", () => {
 		expect(getDecimalPlaces(-0.123)).toBe(3);
 	});
+
+	it("returns Infinity instead of looping forever for values below 1e-308", () => {
+		expect(getDecimalPlaces(1e-320)).toBe(Infinity);
+		expect(getDecimalPlaces(-1e-310)).toBe(Infinity);
+		expect(getDecimalPlaces(Number.MIN_VALUE)).toBe(Infinity);
+	});
+
+	it("returns Infinity instead of looping forever for NaN", () => {
+		expect(getDecimalPlaces(NaN)).toBe(Infinity);
+	});
+
+	it("still counts the decimal places of very small normal values", () => {
+		expect(getDecimalPlaces(1e-300)).toBeGreaterThanOrEqual(300);
+		expect(getDecimalPlaces(1e-300)).not.toBe(Infinity);
+	});
 });
 
 describe("coordinatePrecisionIsValid", () => {
@@ -93,5 +108,10 @@ describe("coordinatePrecisionIsValid", () => {
 
 	it("should return false for coordinate with more decimal places than given", () => {
 		expect(coordinatePrecisionIsValid([45.123, 90.123], 2)).toBe(false);
+	});
+
+	it("should return false for coordinate with a value below 1e-308", () => {
+		expect(coordinatePrecisionIsValid([1e-320, 0], 9)).toBe(false);
+		expect(coordinatePrecisionIsValid([0, -1e-310], 9)).toBe(false);
 	});
 });

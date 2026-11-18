@@ -21,14 +21,15 @@ Terra Draw centralizes map drawing logic and provides a host of out-of-the-box d
 
 Terra Draw uses the concept of 'adapters' to allow it to work with a host of different mapping libraries. Built-in adapters are currently exposed as different packages in this monorepo; you can find out more in [the adapters guide](./guides/3.ADAPTERS.md). The currently supported libraries are:
 
-|  Library                                                                                    | Version supported |           npm package            |
-|---------------------------------------------------------------------------------------------|-------------------|----------------------------------|
-|  [Leaflet](https://leafletjs.com/)                                                          |        v1         | terra-draw-leaflet-adapter       |
-|  [OpenLayers](https://openlayers.org/)                                                      |        v10        | terra-draw-openlayers-adapter    |
-|  [MapLibre GL JS](https://maplibre.org/maplibre-gl-js/docs/)                                |        v4/5       | terra-draw-maplibre-gl-adapter   |
-|  [Google Maps JS API](https://developers.google.com/maps/documentation/javascript/overview) |        v3         | terra-draw-google-maps-adapter   |
-|  [Mapbox GL JS](https://www.mapbox.com/mapbox-gljs)                                         |        v3         | terra-draw-mapbox-gl-adapter     |
-|  [ArcGIS JavaScript SDK](https://developers.arcgis.com/javascript/latest/)                  |        v4         | terra-draw-arcgis-adapter        | 
+|  Library                                                                                    | Version supported |           npm package              |
+|---------------------------------------------------------------------------------------------|-------------------|------------------------------------|
+|  [Leaflet](https://leafletjs.com/)                                                          |        v1         | terra-draw-leaflet-adapter         |
+|  [OpenLayers](https://openlayers.org/)                                                      |        v10        | terra-draw-openlayers-adapter      |
+|  [MapLibre GL JS](https://maplibre.org/maplibre-gl-js/docs/)                                |        v4/5       | terra-draw-maplibre-gl-adapter     |
+|  [Google Maps JS API](https://developers.google.com/maps/documentation/javascript/overview) |        v3         | terra-draw-google-maps-adapter     |
+|  [Mapbox GL JS](https://www.mapbox.com/mapbox-gljs)                                         |        v3         | terra-draw-mapbox-gl-adapter       |
+|  [ArcGIS JavaScript SDK](https://developers.arcgis.com/javascript/latest/)                  |        v4         | terra-draw-arcgis-adapter          |
+|  [CesiumJS](https://cesium.com/platform/cesiumjs/)                                          |        v1         | @watergis/terra-draw-cesium-adapter|
 
 ### Getting Started
 

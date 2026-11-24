@@ -46,6 +46,11 @@ export function webMercatorNearestPointOnLine(
 
 		// Short circuit if snap point is start or end position of the line segment.
 		if (
+			startPosition[0] === stopPosition[0] &&
+			startPosition[1] === stopPosition[1]
+		) {
+			intersectPosition = startPosition;
+		} else if (
 			startPosition[0] === inputCoordinate[0] &&
 			startPosition[1] === inputCoordinate[1]
 		) {
@@ -117,6 +122,10 @@ function findNearestPointOnLine(
 	// Compute the length squared of the line vector
 	const lineLengthSquared =
 		lineVector.x * lineVector.x + lineVector.y * lineVector.y;
+
+	if (lineLengthSquared === 0) {
+		return pointA;
+	}
 
 	// Find the projection of the target vector onto the line vector
 	const t = Math.max(0, Math.min(1, dotProduct / lineLengthSquared));

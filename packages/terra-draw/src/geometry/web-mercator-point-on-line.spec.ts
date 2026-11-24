@@ -56,4 +56,19 @@ describe("webMercatorNearestPointOnLine", () => {
 
 		expect(result?.distance).toBeCloseTo(111359.06563915969);
 	});
+
+	it("returns the endpoint for a zero length segment", () => {
+		const result = webMercatorNearestPointOnLine(
+			[1, 2],
+			[
+				[
+					[0, 1],
+					[0, 1],
+				],
+			],
+		);
+
+		expect(result?.coordinate).toEqual([0, 1]);
+		expect(Number.isFinite(result?.distance)).toBe(true);
+	});
 });

@@ -56,4 +56,19 @@ describe("nearestPointOnLine", () => {
 
 		expect(result?.distance).toBeCloseTo(111.19492664455873);
 	});
+
+	it("returns the endpoint for a zero length segment", () => {
+		const result = nearestPointOnLine(
+			[1, 2],
+			[
+				[
+					[0, 1],
+					[0, 1],
+				],
+			],
+		);
+
+		expect(result?.coordinate).toEqual([0, 1]);
+		expect(Number.isFinite(result?.distance)).toBe(true);
+	});
 });

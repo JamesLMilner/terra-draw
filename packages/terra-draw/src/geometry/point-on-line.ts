@@ -29,6 +29,11 @@ export function nearestPointOnLine(
 
 		// Short circuit if snap point is start or end position of the line segment.
 		if (
+			startPosition[0] === stopPosition[0] &&
+			startPosition[1] === stopPosition[1]
+		) {
+			intersectPosition = startPosition;
+		} else if (
 			startPosition[0] === inputCoordinate[0] &&
 			startPosition[1] === inputCoordinate[1]
 		) {

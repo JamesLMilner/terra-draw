@@ -7,12 +7,14 @@ import { earthRadius } from "../helpers";
 export function rhumbDistance(destination: Position, origin: Position): number {
 	// compensate the crossing of the 180th meridian (https://macwright.org/2016/09/26/the-180th-meridian.html)
 	// solution from https://github.com/mapbox/mapbox-gl-js/issues/3250#issuecomment-294887678
-	destination[0] +=
-		destination[0] - origin[0] > 180
+	// kept in a local so the caller's coordinate is not changed
+	const destinationLng =
+		destination[0] +
+		(destination[0] - origin[0] > 180
 			? -360
 			: origin[0] - destination[0] > 180
 				? 360
-				: 0;
+				: 0);
 
 	// see www.edwilliams.org/avform.htm#Rhumb
 
@@ -20,7 +22,7 @@ export function rhumbDistance(destination: Position, origin: Position): number {
 	const phi1 = (origin[1] * Math.PI) / 180;
 	const phi2 = (destination[1] * Math.PI) / 180;
 	const DeltaPhi = phi2 - phi1;
-	let DeltaLambda = (Math.abs(destination[0] - origin[0]) * Math.PI) / 180;
+	let DeltaLambda = (Math.abs(destinationLng - origin[0]) * Math.PI) / 180;
 
 	// if dLon over 180° take shorter rhumb line across the anti-meridian:
 	if (DeltaLambda > Math.PI) {

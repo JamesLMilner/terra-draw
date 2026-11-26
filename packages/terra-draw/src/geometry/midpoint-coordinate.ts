@@ -1,9 +1,9 @@
 import { Position } from "geojson";
 import { limitPrecision } from "./limit-decimal-precision";
 import { Project, Unproject } from "../common";
-import { haversineDistanceKilometers } from "./measure/haversine-distance";
 import { rhumbBearing } from "./measure/rhumb-bearing";
 import { rhumbDestination } from "./measure/rhumb-destination";
+import { rhumbDistance } from "./measure/rhumb-distance";
 
 // midpointCoordinate is adapted from the @turf/midpoint which is MIT Licensed
 // https://github.com/Turfjs/turf/tree/master/packages/turf-midpoint
@@ -32,7 +32,7 @@ export function geodesicMidpointCoordinate(
 	coordinates2: Position,
 	precision: number,
 ) {
-	const dist = haversineDistanceKilometers(coordinates1, coordinates2) * 1000;
+	const dist = rhumbDistance(coordinates2, coordinates1);
 	const heading = rhumbBearing(coordinates1, coordinates2);
 	const midpoint = rhumbDestination(coordinates1, dist / 2, heading);
 	return [

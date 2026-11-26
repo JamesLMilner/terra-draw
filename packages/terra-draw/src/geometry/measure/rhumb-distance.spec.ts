@@ -30,4 +30,14 @@ describe("rhumbDistance", () => {
 		const result = rhumbDistance([-180, -90], [180, 90]);
 		expect(result).toBe(20015114.442035925);
 	});
+
+	it("does not change the passed coordinates when crossing the anti-meridian", () => {
+		const destination = [179, 0];
+		const origin = [-179, 0];
+		const result = rhumbDistance(destination, origin);
+
+		expect(result).toBeCloseTo(222390.16, 1);
+		expect(destination).toStrictEqual([179, 0]);
+		expect(origin).toStrictEqual([-179, 0]);
+	});
 });
